@@ -1,4 +1,4 @@
-import { Selection, NumberValue, BaseType, HierarchyNode, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, SeriesPoint, HierarchyCircularNode, ValueFn, HierarchyRectangularNode, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
+import { Selection, NumberValue, BaseType, HierarchyNode, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, HierarchyCircularNode, ValueFn, SeriesPoint, HierarchyRectangularNode, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
 import * as d3_transition from 'd3-transition';
 import * as d3_selection from 'd3-selection';
 
@@ -1739,566 +1739,6 @@ declare const groupedBarsHorizontal: <T = unknown>() => GroupedBarsComponent<T>;
 declare const groupedBars: <T = unknown>() => GroupedBarsComponent<T>;
 
 /**
- * Stacked Bar components
- *
- * This module holds the vertical and the horizontal stacked bar chart, together with the two
- * data layout functions that prepare their input. Both components are variations on the same
- * concept and read the same intermediate representation of a stack, but they lay it out along
- * different dimensions, which is why there are two constructors rather than an orientation
- * property.
- *
- * The layout functions, stackedBarVerticalData and stackedBarHorizontalData, take their
- * accessors in the order (stackAcc, seriesAcc, valueAcc) and return a function over a flat
- * array of rows: stackAcc groups the rows into stacks, seriesAcc into the layers within a
- * stack, and valueAcc supplies the number that is stacked. The accessors are deliberately not
- * named after the axes, because which axis each one belongs to depends on the orientation: the
- * examples call stackedBarVerticalData(xAcc, cAcc, yAcc) but stackedBarHorizontalData(yAcc,
- * cAcc, xAcc) - see docs/bar-chart-vertical-stacked/basic.js and
- * docs/bar-chart-horizontal-stacked/basic.js.
- *
- * The result is an array of series, one per series key, each holding the [y0, y1] pairs
- * d3.stack computed, and each pair tagged with its `series`, its `stack` and, as `data`, the
- * single source row it was computed from. That array is what gets bound to the chart layer. The
- * rows passed in are not modified: the d3v3 stack layout used to write `y0` and `y` onto every
- * data object, but d3v7 returns pairs instead and leaves the source data alone.
- *
- * @module sszvis/component/stackedBar/horizontal
- * @module sszvis/component/stackedBar/vertical
- *
- * @requires sszvis.component.bar
- *
- * @template T The type of the data objects behind the stack slices
- * @template X The type of the stack values, i.e. the domain of the ordinal scale
- *
- * @property {function} xScale          Required. On a vertical chart, a band scale over the
- *                                      stack values, used to position each stack. On a
- *                                      horizontal chart, a linear scale over the stacked
- *                                      values, used for both the left edge and the width of
- *                                      every segment. Not defaulted: unset, it throws.
- * @property {function} yScale          Required, and the mirror image of xScale. On a vertical
- *                                      chart, a linear scale over the stacked values, used for
- *                                      both the top edge and the height of every segment; on a
- *                                      horizontal chart, a band scale over the stack values.
- *                                      Also not defaulted, and also throws when unset.
- * @property {number, function} width   Required by the vertical orientation, which sizes its
- *                                      bars with it - usually xScale.bandwidth(). The
- *                                      horizontal orientation computes its width from xScale
- *                                      and never reads the property. Omitting it on a vertical
- *                                      chart is not reported: every bar gets width 0.
- * @property {number, function} height  Required by the horizontal orientation, and ignored by
- *                                      the vertical one, which computes its height from yScale.
- *                                      Fails just as silently when omitted on a horizontal
- *                                      chart: every bar gets height 0.
- * @property {string, function} fill    Optional. A constant or an accessor over a slice. When
- *                                      unset, no fill attribute is written at all and the
- *                                      rectangles fall back to the SVG/CSS default.
- * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
- *                                      unset, a 1px #FFFFFF stroke separates the segments -
- *                                      centred on the bar edge, so it overpaints half a pixel
- *                                      on each side. A truthy value such as "none" replaces the
- *                                      separator, but every falsy value falls back to it, so it
- *                                      cannot be removed by null or an empty string.
- *
- * Note: the two layout functions are the same computation and differ only in the stack order,
- * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
- * order, so the last key sits on the baseline; the horizontal one keeps the key order, so the
- * first key does.
- *
- * Note: the value of a cell is read from its first row only, so data that is not already
- * aggregated to one row per (stack, series) pair is silently truncated rather than summed. The
- * same unguarded read throws when a stack is missing one of the series keys, so every stack has
- * to carry a row for every series - callers with sparse data have to pad it with zero rows.
- *
- * Note: the series keys come from Object.keys over the grouped data, and JavaScript orders
- * integer-like keys numerically regardless of insertion order. A series accessor returning
- * years or numeric codes therefore loses the caller's ordering, and since the key order is the
- * stacking order, the stack silently changes shape. The stacks themselves are reordered the
- * same way, which is only cosmetic, since each slice is positioned by its own stack value.
- *
- * Note: `keys` and `maxValue` are hung off the returned array rather than wrapped in an object,
- * so any array operation - a spread, a map, a filter, a trip through JSON - drops them, and
- * `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array. `maxValue`
- * is the maximum of the upper bounds only, so it is not the extent of the data when a value is
- * negative, and it is undefined rather than 0 for an empty layout, which turns into a NaN axis
- * when it is fed straight into a scale domain the way the examples do.
- *
- * Note: a negative value produces a negative rect width on a horizontal chart, which the
- * browser rejects, so the segment is simply not drawn. Neither orientation supports values
- * below the baseline.
- *
- * Note: the four scale and size properties are required but neither defaulted nor validated.
- * Two of them fail silently as zero-size bars, and the two scales throw a low-level TypeError
- * that names neither the property nor the component.
- *
- * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
- * selector and no key function, so any pre-existing stack below the target group, at any depth,
- * is captured and re-bound, and surviving groups and rects are matched by index rather than by
- * series. The component also forwards neither bar's `transition` property nor its tooltip
- * anchor properties, so every render attaches a transition that is immediately discarded, and
- * the tooltip anchor is always at the top centre of a segment. See
- * test/component/stackedBar.test.ts.
- *
- * @return {sszvis.component}
- */
-
-/**
- * One slice of a stack: the [y0, y1] point d3.stack produces, with `data` narrowed from the
- * whole cascade row to the single datum the slice was computed from, and tagged with the
- * series and the stack it belongs to. It is d3's own SeriesPoint, which is why it is an
- * Array rather than a two-element tuple.
- */
-type StackedBarSlice$1<T, X extends string | number = string> = SeriesPoint<T> & {
-    /** The series key the slice belongs to. */
-    series: string;
-    /** The stack the slice belongs to, as the stack accessor returned it. */
-    stack: X;
-};
-/** All slices sharing a series key, i.e. one layer of the stack, as d3 hands it over. */
-type StackedBarSeries$1<T, X extends string | number = string> = StackedBarSlice$1<T, X>[] & {
-    key: string;
-    index: number;
-};
-/**
- * What stackedBar*Data returns: the series, with the series keys and the largest stacked
- * total hung off the array itself rather than wrapped in an object.
- *
- * `keys` shadows Array.prototype.keys, so the inherited member is omitted before the
- * property is declared. Intersecting the two instead would leave the layout callable as
- * `layout.keys()`, which type-checks as the built-in iterator but throws a TypeError at
- * runtime. Omitting it costs assignability back to a plain array, which is the point: the
- * layout is not a well-behaved one. Indexing, length, the array methods, spread and for-of
- * all still work.
- */
-type StackedBarLayout<T, X extends string | number = string> = Omit<StackedBarSeries$1<T, X>[], "keys"> & {
-    keys: string[];
-    maxValue: number | undefined;
-};
-declare const stackedBarHorizontalData: <T, X extends string | number = string>(_stackAcc: (datum: T) => X, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number) => (data: T[]) => StackedBarLayout<T, X>;
-declare const stackedBarVerticalData: <T, X extends string | number = string>(_stackAcc: (datum: T) => X, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number) => (data: T[]) => StackedBarLayout<T, X>;
-/** A scale over the stack values - a band scale in practice, hence the undefined. */
-type StackScale<X> = (value: X) => number | undefined;
-/** A scale over the stacked values. */
-type ValueScale = (value: number) => number;
-/** A constant or an accessor over one slice; fn.functor normalises both on set. */
-type SliceValue<U, R> = R | ((slice: U, index: number) => R);
-/**
- * How a bar dimension reads back once it is stored: the four dimensions are wrapped by
- * fn.functor on set, so they are always functions by the time the renderer reads them. Both
- * parameters are optional because a constant becomes a functor that ignores its arguments.
- */
-type StoredDimension<T, X extends string | number> = (slice?: StackedBarSlice$1<T, X>, index?: number) => number;
-/** fill is stored exactly as set, and may be left unset, in which case no fill is written. */
-type FillValue$1<T, X extends string | number> = SliceValue<StackedBarSlice$1<T, X>, string | undefined>;
-/**
- * stroke is stored exactly as set. Every falsy value is accepted and means the same thing,
- * since the renderer falls back to the white default for all of them.
- */
-type StrokeValue$1<T, X extends string | number> = string | null | undefined | ((slice: StackedBarSlice$1<T, X>, index: number) => string | undefined);
-/**
- * `component()` hands back whatever interface it is asked for, but the two builder methods
- * it inherits are declared as returning the plain Component, so a component interface has
- * to re-declare them to survive its own construction chain.
- */
-interface StackedBarBuilder<C extends Component> extends Component {
-    prop<V>(prop: string, setter?: PropertySetter<V>): C;
-    render(callback: RenderCallback): C;
-}
-/**
- * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
- * component's generics at the call site.
- */
-interface StackedBarVerticalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarVerticalComponent<T, X>> {
-    xScale(): StackScale<X>;
-    xScale<V = X>(scale: (value: V) => number | undefined): StackedBarVerticalComponent<T, X>;
-    width(): StoredDimension<T, X>;
-    width<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, number>): StackedBarVerticalComponent<T, X>;
-    yScale(): ValueScale;
-    yScale(scale: ValueScale): StackedBarVerticalComponent<T, X>;
-    height(): StoredDimension<T, X>;
-    height<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, number>): StackedBarVerticalComponent<T, X>;
-    fill(): FillValue$1<T, X>;
-    fill<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, string | undefined>): StackedBarVerticalComponent<T, X>;
-    stroke(): StrokeValue$1<T, X>;
-    stroke<U = StackedBarSlice$1<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarVerticalComponent<T, X>;
-}
-interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarHorizontalComponent<T, X>> {
-    xScale(): ValueScale;
-    xScale(scale: ValueScale): StackedBarHorizontalComponent<T, X>;
-    width(): StoredDimension<T, X>;
-    width<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, number>): StackedBarHorizontalComponent<T, X>;
-    yScale(): StackScale<X>;
-    yScale<V = X>(scale: (value: V) => number | undefined): StackedBarHorizontalComponent<T, X>;
-    height(): StoredDimension<T, X>;
-    height<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, number>): StackedBarHorizontalComponent<T, X>;
-    fill(): FillValue$1<T, X>;
-    fill<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, string | undefined>): StackedBarHorizontalComponent<T, X>;
-    stroke(): StrokeValue$1<T, X>;
-    stroke<U = StackedBarSlice$1<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarHorizontalComponent<T, X>;
-}
-declare function stackedBarHorizontal<T = unknown, X extends string | number = string>(): StackedBarHorizontalComponent<T, X>;
-declare function stackedBarVertical<T = unknown, X extends string | number = string>(): StackedBarVerticalComponent<T, X>;
-
-/**
- * Stacked Pyramid component
- *
- * The pyramid component is primarily used to show a distribution of age groups
- * in a population (population pyramid). The chart is mirrored vertically,
- * meaning that it has a horizontal axis that extends in a positive and negative
- * direction having the same domain.
- *
- * This chart's horizontal point of origin is at its spine, i.e. the center of
- * the chart.
- *
- * The datum bound to the chart layer is the output of stackedPyramidData(sideAcc, rowAcc,
- * seriesAcc, valueAcc), which returns a function over a flat array of rows. Each accessor is called
- * with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc into the
- * vertical positions within a side, seriesAcc into the layers of each row's stack, and valueAcc
- * supplies the number that is stacked.
- *
- * The result is an array of sides, each an array of the series d3.stack produced for that side,
- * each series an array of the [y0, y1] slices it computed - so a slice is addressed as
- * data[side][series][row], and the caller picks the two sides positionally. Every slice carries
- * five properties beyond its pair: its `series` key, its `side` as the side accessor returned it,
- * its `row`, its own `value`, and its `data`, narrowed from the whole grouped row to the single
- * source row the slice was computed from. d3's own `key` and `index` are carried across onto each
- * series. The largest stacked total across both sides is attached to the returned array as
- * `maxValue`, which is what the horizontal scale's domain is built from. The rows passed in are not
- * modified.
- *
- * The component always creates four sub-groups, in this order: leftStack, rightStack, leftReference
- * and rightReference. The order is load-bearing, since it makes the reference lines paint over the
- * bars, and the reference groups are created even when no reference accessor is configured. Within
- * a side each series gets its own group, marked with a [data-sszvis-stack] attribute and no class -
- * stackedBar uses a .sszvis-stack class for the same job - and is drawn by its own bar component,
- * the left one mirrored across the spine. Both sides are pushed outwards by SPINE_PADDING, so a one
- * pixel gap runs down the middle of the chart, and every bar dimension is read from the same
- * accessors on both sides.
- *
- * @module sszvis/component/stackedPyramid
- *
- * @requires sszvis.component.bar
- *
- * @template T The type of one row of the input data, i.e. of a slice's `data`
- * @template S The type the side accessor returns, i.e. of a slice's `side`
- *
- * @property {string, function} [barFill]     The color of a bar. Defaults to #000 and applies to
- *                                            both sides; a per-datum accessor is the usual way to
- *                                            colour the series. It is composed with the slice's
- *                                            `data`, so it reads a source row rather than a slice,
- *                                            and fn.compose forwards d3's arguments only to the
- *                                            innermost function, so it is called with that row
- *                                            alone.
- * @property {number, function} barHeight     The height of a bar. Required, but omitting it is not
- *                                            reported: it is the one dimension handed straight to
- *                                            bar, so the value reaches bar's missing-value guard as
- *                                            undefined and becomes 0, and the chart renders an
- *                                            empty axis frame with no bars and no warning. Of the
- *                                            three required dimensions only this one fails
- *                                            silently. Shared with pyramid.
- * @property {number, function} barWidth      The width of a bar. Required, and an unset prop throws
- *                                            a TypeError from the component's own closure, because
- *                                            the component computes both the x and the width of
- *                                            every bar itself. It is called with one of the numbers
- *                                            out of a slice's [y0, y1] pair rather than with the
- *                                            slice, so it has to be a scale over stacked values and
- *                                            not an accessor over data - pyramid calls the same
- *                                            property with the bar's datum, and an accessor written
- *                                            for pyramid reads properties off a number here and
- *                                            yields NaN, which bar's guard turns into 0. It is also
- *                                            called without d3's index and group, so an index-aware
- *                                            or node-aware accessor collapses every width and every
- *                                            x to 0 on both sides; pyramid has the same omission on
- *                                            its left side only. A constant is accepted and is
- *                                            worse than an error: the width is computed as
- *                                            barWidth(d[1]) - barWidth(d[0]), so a constant
- *                                            subtracts itself and every segment disappears while
- *                                            still being positioned at the constant offset.
- * @property {number, function} barPosition   The vertical position of a bar, i.e. its top edge.
- *                                            Required, and an unset prop throws too, but from
- *                                            inside fn.compose ("Cannot read properties of
- *                                            undefined (reading 'call')") rather than from the
- *                                            component's own closure the way barWidth does. Both
- *                                            surface while bar is applying its attributes. It is
- *                                            called with the slice's `row`, which is that row's
- *                                            index within its side and not the value the row
- *                                            accessor returned, and with nothing else, so an
- *                                            index-aware accessor yields NaN and bar's guard
- *                                            flattens it to 0.
- * @property {Array<number>} [tooltipAnchor]  The anchor position for the tooltips. Uses
- *                                            sszvis.component.bar.tooltipAnchor under the hood to
- *                                            optionally reposition the tooltip anchors in the
- *                                            pyramid chart. Default value is [0.5, 0.5], which
- *                                            centers tooltips on the bars. The value is handed to
- *                                            both bars unchanged rather than being mirrored, and
- *                                            bar measures from its own upper left corner, which on
- *                                            the left side is a segment's outer edge, so any x
- *                                            other than 0.5 lands on visually opposite sides of the
- *                                            pyramid. An array with fewer than two entries yields a
- *                                            NaN coordinate, as documented on bar; the component
- *                                            adds no validation of its own. Shared with pyramid.
- * @property {function} leftAccessor          Data for the left side, i.e. a function picking one
- *                                            side out of the layout - the sides are an array, so
- *                                            docs/population-pyramid/pyramid-stacked.js uses
- *                                            prop("0") and prop("1"). Required: an unset accessor
- *                                            throws "props.leftAccessor is not a function" from the
- *                                            renderer, and an accessor that returns undefined or
- *                                            null throws from d3's data join instead, with a
- *                                            message that names neither the property nor the
- *                                            component.
- * @property {function} rightAccessor         Data for the right side. Same requirements as
- *                                            leftAccessor.
- * @property {function} [leftRefAccessor]     Reference data for the left side, drawn as a single
- *                                            path outlining the reference series. The elements are
- *                                            handed to barWidth for x and to barPosition for y, so
- *                                            they have to be plain numbers. Optional, but the guard
- *                                            tests whether the accessor was set, not what it
- *                                            returns: an accessor that yields undefined or null for
- *                                            some states throws instead of hiding the line.
- *                                            Returning an empty array does hide it, though the
- *                                            classed path element stays in the DOM with no d
- *                                            attribute, where CSS and hit tests can still find it.
- * @property {function} [rightRefAccessor]    Reference data for the right side. Same as
- *                                            leftRefAccessor.
- *
- * Note: a side's series keys are read off that side's first row alone, with Object.keys, so a
- * series absent from the first row is dropped from the whole side and its values appear neither in
- * the chart nor in maxValue - stackedBarData takes the union of the keys across every row instead.
- * The stack value is then read as x[key][0] with no guard, so a later row that is missing one of
- * the first row's keys dies on an undefined cell with a TypeError. Between them the two mean every
- * row of a side has to carry every series and the first row decides which, so callers with sparse
- * data have to pad it with zero rows.
- *
- * Note: a slice's `row` is the position of its row within the side, not the value the row accessor
- * returned, and that index is what the component feeds to barPosition. It lines up with the data
- * only when the row values happen to be a dense zero-based range, which is what
- * docs/population-pyramid/pyramid-stacked.js relies on: it builds its position scale over
- * d3.range(0, 101) and its ages happen to run from 0 to 100. The source row still knows its real
- * value; only the tag on the slice is an index.
- *
- * Note: the cascade groups on String(key) - for the sides, the rows and the series alike - so keys
- * that differ only in type merge, and the number 1 and the string "1" land in the same cell where
- * only the first of them is stacked. The ordering follows from the same coercion: JavaScript
- * iterates array-index keys in ascending numeric order regardless of insertion order, so dense
- * non-negative integer rows sort themselves, which is what makes the index-as-position quirk above
- * survivable, while negative, fractional or plain string rows fall back to insertion order and are
- * laid out in whatever order the input happened to be in. The sides are ordered the same way and
- * picked positionally, so a dataset whose first row is male puts men on the left and silently
- * mirrors the chart. For the series the key order is the stacking order, so a series accessor
- * returning years or numeric codes restacks the chart in ascending numeric order, and the `series`
- * tag comes back as a string even when the accessor returned a number. Nothing enforces the
- * cardinality of two the layout function's own documentation requires of the side accessor either:
- * a single side leaves the right accessor returning undefined, which throws from d3's data join,
- * and a third side is returned and then dropped without a word by the caller's positional
- * accessors. Shared with stackedBarData.
- *
- * Note: the value of a cell is read from its first row only, so data that is not already aggregated
- * to one row per (side, row, series) triplet is silently truncated rather than summed. The layout
- * function requires the triplet to appear exactly once and says it makes no effort to normalize the
- * data if that is not the case, but nothing reports a violation. Shared with stackedBarData.
- *
- * Note: `maxValue` is hung off the returned array rather than wrapped in an object, so any array
- * operation - a spread, a map, a filter, a trip through JSON - drops it. It is the maximum of the
- * upper bounds only, so it is not the extent of the data when a value is negative, and it is
- * undefined rather than 0 for an empty layout, where it coerces to NaN in the scale domain the
- * examples feed it into, so the scale maps every value to NaN and the axis draws its domain line
- * with no ticks at all. A slice's `value` is a convenience of the same kind:
- * the component never reads it, and it duplicates d[1] - d[0] as it stood when the layout ran, so
- * it goes stale if a caller rewrites the pair. Shared with stackedBarData. See
- * test/component/stackedPyramid.test.ts.
- *
- * Note: the reference lines cannot be drawn in the coordinate system the bars use. The line
- * generator is d3.line().x(barWidth).y(barPosition), so both props are called with the same
- * reference element, while in the bars barWidth is called with a stacked value and barPosition with
- * a row index. No element satisfies both: a series of stacked values gives an x that is right and a
- * y that is as many rows down as the value is large. d3.line also calls its x accessor as (d, i,
- * data), so barWidth receives the index on the line and nowhere else, which leaves one property
- * with two calling conventions as well as two coordinate systems. The only stackedPyramid example
- * sets neither reference accessor; the reference-line example uses the plain pyramid instead, where
- * both props read the datum and the problem does not arise.
- *
- * Note: two smaller mismatches ride along, both of them shared with pyramid. The bars are pushed
- * outwards by SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn
- * straight from barWidth and so agrees with the axis scale, which puts a reference value equal to a
- * bar value half a pixel inside that bar's outer edge, symmetrically on both sides. And the line
- * takes its y from barPosition alone and never accounts for barHeight, so the outline runs along
- * the bars' top edges rather than their mid-lines, half a bar height above the values it describes.
- *
- * Note: a reference line's d attribute is only ever written through a transition, so a freshly
- * rendered path carries no geometry until the first animation frame and anything that measures the
- * chart synchronously - getBBox, a snapshot, an export to PNG - sees an empty path. Entering lines
- * then snap into place, because d3 has no previous d to interpolate from; only updates animate. The
- * bars underneath do not animate at all - bar's transition property is inert - so on a state change
- * the outline eases towards its new position while the bars jump, and the two visibly detach for
- * the length of the transition. bar also guards every geometry value against NaN while the line
- * hands barWidth and barPosition straight to d3.line, so one missing value poisons the path string
- * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
- * with pyramid.
- *
- * Note: the reference path is classed .sszvis-path, which no rule in sszvis.css defines - its
- * appearance comes from four inlined attributes instead, the opposite choice from pyramid, which
- * sets only .sszvis-pyramid__referenceline and takes all four values from the stylesheet. The class
- * collides with the one pie, stackedArea and stackedAreaMultiples use for their own paths, so a
- * selector written for any of those also matches a stackedPyramid reference line, and since the
- * join has no key function a foreign path that happens to carry the class is adopted as the
- * reference line and repainted rather than left alone. That is harmless while each component owns
- * its own selectGroup, which is how every example is written.
- *
- * Note: the reference datum is wrapped in an array, one array of points per path, so each side is
- * capped at a single line and, while a reference accessor is set, the join always has exactly one
- * element and the exit selection can never fire: once a line has been rendered its path element
- * stays in the DOM even after the reference data goes away, with only its d attribute dropped. Only
- * removing the accessor itself empties the group. The mirror property writes transform="" on the
- * right side rather than omitting the attribute. Shared with pyramid.
- *
- * Note: the stack join is selectAll("[data-sszvis-stack]"), a descendant selector rather than a
- * child selector, so a stack group nested at any depth below a side's group is captured alongside
- * the direct children. The exit selection then removes a legitimate series group, and the reorder
- * that follows has to sort a selection in which one element is an ancestor of another, so d3 throws
- * a HierarchyRequestError and aborts the whole render rather than just that side. A child selector
- * would make it unreachable. Nothing nests stack groups today, so reaching it needs a caller to
- * have put something of its own inside one. stackedBar's version of the same unscoped selector only
- * re-binds.
- *
- * Note: neither join uses a key function, so on a re-render the stack groups and the rects inside
- * them are matched by index rather than by series. When a series is dropped from anywhere but the
- * end, the groups that remain are re-bound to different series and every bar in them is rewritten.
- * Only the geometry moves, so it is invisible, but any state held on a stack group - a class, a
- * listener, an in-flight transition - follows the position rather than the series. Shared with
- * stackedBar.
- *
- * Note: bar defaults its transition property to true and this component neither sets it nor exposes
- * it, so every render creates a d3 transition per rect and then overwrites the geometry on the
- * plain selection immediately. Nothing animates, but the transition state is still attached and
- * interrupts any transition already running on those rects. Shared with stackedBar. The component
- * also leaves bar's stroke unset, so unlike stackedBar, which paints a 1px white separator between
- * segments, the segments of a row touch without a seam.
- *
- * Note: bar guards NaN but not negative numbers. A negative stacked value inverts the pair, so the
- * width goes negative, which the browser rejects and the segment is not drawn, and on the left side
- * the double sign flip moves x to the right of the spine. Neither side of the pyramid supports
- * values below the baseline. Reaching this needs negative input data, which a population pyramid
- * should not see. See test/component/stackedPyramid.test.ts.
- *
- * @return {sszvis.component}
- */
-
-/**
- * One slice of a stack: the [y0, y1] point d3.stack produced, with `data` narrowed from the
- * whole cascade row to the single row the slice was computed from, and tagged with the
- * series, the side and the row it belongs to. It is d3's own SeriesPoint, which is why it is
- * an Array rather than a two-element tuple.
- */
-type StackedPyramidSlice<T, S extends string | number = string> = SeriesPoint<T> & {
-    /** The series key the slice belongs to. */
-    series: string;
-    /** The side the slice belongs to, as the side accessor returned it. */
-    side: S;
-    /** The position of the slice's row within its side - an index, not the row's own value. */
-    row: number;
-    /** The slice's own value, i.e. d[1] - d[0] as it was when the layout ran. */
-    value: number;
-};
-/** All slices sharing a series key, i.e. one layer of one side's stack, as d3 hands it over. */
-type StackedPyramidSeries<T, S extends string | number = string> = StackedPyramidSlice<T, S>[] & {
-    key: string;
-    index: number;
-};
-/** One side of the pyramid: the series d3.stack produced for it. */
-type StackedPyramidSide<T, S extends string | number = string> = StackedPyramidSeries<T, S>[];
-/**
- * What stackedPyramidData returns: the sides, with the largest stacked total across both of
- * them hung off the array itself rather than wrapped in an object.
- */
-type StackedPyramidLayout<T, S extends string | number = string> = StackedPyramidSide<T, S>[] & {
-    maxValue: number | undefined;
-};
-/**
- * This function prepares the data for the stackedPyramid component
- *
- * The input data is expected to have at least four columns:
- *
- *  - side: determines on which side (left/right) the value goes. MUST have cardinality of two!
- *  - row: determines on which row (vertical position) the value goes.
- *  - series: determines in which series (for the stack) the value is.
- *  - value: the numerical value.
- *
- * The combination of each distinct (side,row,series) triplet MUST appear only once
- * in the data. This function makes no effort to normalize the data if that's not the case.
- */
-declare function stackedPyramidData<T, S extends string | number = string>(sideAcc: (datum: T) => S, _rowAcc: (datum: T) => string | number, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number): (data: T[]) => StackedPyramidLayout<T, S>;
-/**
- * How barWidth reads back once it is stored. It is wrapped by fn.functor on set, so it is
- * always a function by the time the renderer reads it, and the component calls it with one of
- * the numbers out of a slice's [y0, y1] pair - never with the slice itself. Both parameters
- * are optional because a constant becomes a functor that ignores its arguments, and because
- * the component passes neither d3's index nor its group.
- */
-type StoredWidth = (value?: number, index?: number) => number;
-/**
- * How barPosition reads back. In the bars it is called with a slice's row index; on a
- * reference line d3.line calls it with the reference element itself, which is why a reference
- * series has to be an array of numbers.
- */
-type StoredPosition = (value?: number, index?: number) => number;
-/** How barHeight reads back: unlike the other two dimensions it is handed straight to bar. */
-type StoredHeight<T, S extends string | number> = (slice?: StackedPyramidSlice<T, S>, index?: number) => number;
-/** How barFill reads back. It is composed with the slice's `data`, so it reads a source row. */
-type StoredFill<T> = (datum?: T, index?: number) => string | undefined;
-/** Pulls one side's series out of the datum bound to the chart layer. */
-type SideAccessor$1<T, S extends string | number> = (data: StackedPyramidLayout<T, S>) => StackedPyramidSide<T, S>;
-/**
- * Pulls one side's reference series out of the datum bound to the chart layer. The elements
- * are handed to barWidth for x and to barPosition for y, so they have to be plain numbers.
- */
-type ReferenceAccessor<T, S extends string | number> = (data: StackedPyramidLayout<T, S>) => number[];
-/** A constant or an accessor; either is accepted, since fn.functor normalises both. */
-type PyramidValue$1<A, R> = R | ((value: A, index: number) => R);
-/**
- * A constant or an accessor over a slice's source row. barFill is composed with the slice's
- * `data`, and fn.compose forwards d3's index only to the innermost function, so unlike bar's
- * own fill this one is called with the datum alone.
- */
-type FillValue<U> = string | undefined | ((datum: U) => string | undefined);
-/**
- * `component()` hands back whatever interface it is asked for, but the three builder methods
- * it inherits are declared as returning the plain Component, so a component interface has to
- * re-declare them to survive its own construction chain. Without this the chain's type
- * degrades to `any` at the first undeclared setter - `.barFill("#000")` resolves through
- * Component's index signature - and the interface below is then never checked against the
- * component that is actually built.
- */
-interface ComponentBuilder<C extends Component> extends Component {
-    prop<V>(prop: string, setter?: PropertySetter<V>): C;
-    render(callback: RenderCallback): C;
-    renderSelection(callback: SelectionRenderCallback): C;
-}
-/**
- * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
- * component's generics at the call site.
- */
-interface StackedPyramidComponent<T = unknown, S extends string | number = string> extends ComponentBuilder<StackedPyramidComponent<T, S>> {
-    barHeight(): StoredHeight<T, S>;
-    barHeight<U = StackedPyramidSlice<T, S>>(value: PyramidValue$1<U, number>): StackedPyramidComponent<T, S>;
-    barWidth(): StoredWidth;
-    barWidth(value: PyramidValue$1<number, number>): StackedPyramidComponent<T, S>;
-    barPosition(): StoredPosition;
-    barPosition(value: PyramidValue$1<number, number>): StackedPyramidComponent<T, S>;
-    barFill(): StoredFill<T>;
-    barFill<U = T>(value: FillValue<U>): StackedPyramidComponent<T, S>;
-    tooltipAnchor(): (number | string)[];
-    tooltipAnchor(anchor: (number | string)[]): StackedPyramidComponent<T, S>;
-    leftAccessor(): SideAccessor$1<T, S>;
-    leftAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidSide<T, S>): StackedPyramidComponent<T, S>;
-    rightAccessor(): SideAccessor$1<T, S>;
-    rightAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidSide<T, S>): StackedPyramidComponent<T, S>;
-    leftRefAccessor(): ReferenceAccessor<T, S> | undefined;
-    leftRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => number[]): StackedPyramidComponent<T, S>;
-    rightRefAccessor(): ReferenceAccessor<T, S> | undefined;
-    rightRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => number[]): StackedPyramidComponent<T, S>;
-}
-declare function stackedPyramid<T = unknown, S extends string | number = string>(): StackedPyramidComponent<T, S>;
-
-/**
  * Line component
  *
  * The line component is a general-purpose component used to render lines.
@@ -2466,18 +1906,18 @@ declare function export_default$h<P = unknown, L = unknown>(): LineComponent<P, 
  * One slice of a stack: the [y0, y1] pair produced by d3.stack, extended with the
  * properties that stackedBarVerticalData attaches to it.
  */
-type StackedBarSlice<T, X extends string | number = string> = [number, number] & {
+type StackedBarSlice$1<T, X extends string | number = string> = [number, number] & {
     data: T;
     series: string;
     stack: X;
 };
 /** All slices sharing a series key, i.e. one layer of a stack layout. */
-type StackedBarSeries<T, X extends string | number = string> = StackedBarSlice<T, X>[];
+type StackedBarSeries$1<T, X extends string | number = string> = StackedBarSlice$1<T, X>[];
 /**
  * The stack layout of a single nested group, as returned by stackedBarVerticalData.
  * Callers usually tag it with the key they cascaded by, which is what `offset` reads.
  */
-type NestedStack<T, X extends string | number = string> = StackedBarSeries<T, X>[];
+type NestedStack<T, X extends string | number = string> = StackedBarSeries$1<T, X>[];
 /**
  * Setters take `<U = T>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
@@ -2489,8 +1929,8 @@ interface NestedStackedBarsVerticalComponent<T = unknown, X extends string | num
     xScale(scale: ScaleBand<X>): this;
     yScale(): (value: number) => number;
     yScale(scale: (value: number) => number): this;
-    fill(): string | ((slice: StackedBarSlice<T, X>) => string);
-    fill<U = StackedBarSlice<T, X>>(value: string | ((slice: U) => string)): this;
+    fill(): string | ((slice: StackedBarSlice$1<T, X>) => string);
+    fill<U = StackedBarSlice$1<T, X>>(value: string | ((slice: U) => string)): this;
     tooltip(): (selection: AnySelection) => void;
     tooltip(tooltip: (selection: AnySelection) => void): this;
     xAcc(): (datum: T) => X;
@@ -2777,7 +2217,7 @@ type ValueAccessor<D, R> = (datum: D, index: number) => R;
  * stored exactly as they were set, so they are always functions, and the datum they read
  * is whatever the caller bound to the chart layer.
  */
-type SideAccessor<T, D> = (data: T) => D[];
+type SideAccessor$1<T, D> = (data: T) => D[];
 /**
  * How a bar dimension reads back once it is stored. Both parameters are optional because a
  * constant becomes a functor that ignores its arguments, and because the component calls
@@ -2788,26 +2228,26 @@ type StoredAccessor$1<D, R> = (datum?: D, index?: number) => R;
  * A constant or an accessor over one bar's datum; either is accepted for the bar
  * dimensions, since fn.functor normalises both.
  */
-type PyramidValue<D, R> = R | ValueAccessor<D, R>;
+type PyramidValue$1<D, R> = R | ValueAccessor<D, R>;
 interface PyramidComponent<T = unknown, D = unknown> extends Component {
     barHeight(): StoredAccessor$1<D, number>;
-    barHeight<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
+    barHeight<V = D>(value: PyramidValue$1<V, number>): PyramidComponent<T, D>;
     barWidth(): StoredAccessor$1<D, number>;
-    barWidth<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
+    barWidth<V = D>(value: PyramidValue$1<V, number>): PyramidComponent<T, D>;
     barPosition(): StoredAccessor$1<D, number>;
-    barPosition<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
+    barPosition<V = D>(value: PyramidValue$1<V, number>): PyramidComponent<T, D>;
     barFill(): StoredAccessor$1<D, string | undefined>;
-    barFill<V = D>(value: PyramidValue<V, string | undefined>): PyramidComponent<T, D>;
+    barFill<V = D>(value: PyramidValue$1<V, string | undefined>): PyramidComponent<T, D>;
     tooltipAnchor(): (number | string)[];
     tooltipAnchor(anchor: (number | string)[]): PyramidComponent<T, D>;
-    leftAccessor(): SideAccessor<T, D>;
-    leftAccessor<U = T, V = D>(accessor: SideAccessor<U, V>): PyramidComponent<T, D>;
-    rightAccessor(): SideAccessor<T, D>;
-    rightAccessor<U = T, V = D>(accessor: SideAccessor<U, V>): PyramidComponent<T, D>;
-    leftRefAccessor(): SideAccessor<T, D> | undefined;
-    leftRefAccessor<U = T, V = D>(accessor: SideAccessor<U, V>): PyramidComponent<T, D>;
-    rightRefAccessor(): SideAccessor<T, D> | undefined;
-    rightRefAccessor<U = T, V = D>(accessor: SideAccessor<U, V>): PyramidComponent<T, D>;
+    leftAccessor(): SideAccessor$1<T, D>;
+    leftAccessor<U = T, V = D>(accessor: SideAccessor$1<U, V>): PyramidComponent<T, D>;
+    rightAccessor(): SideAccessor$1<T, D>;
+    rightAccessor<U = T, V = D>(accessor: SideAccessor$1<U, V>): PyramidComponent<T, D>;
+    leftRefAccessor(): SideAccessor$1<T, D> | undefined;
+    leftRefAccessor<U = T, V = D>(accessor: SideAccessor$1<U, V>): PyramidComponent<T, D>;
+    rightRefAccessor(): SideAccessor$1<T, D> | undefined;
+    rightRefAccessor<U = T, V = D>(accessor: SideAccessor$1<U, V>): PyramidComponent<T, D>;
 }
 declare function export_default$e<T = unknown, D = unknown>(): PyramidComponent<T, D>;
 
@@ -3539,6 +2979,566 @@ interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends Component 
     transition(enabled: boolean): StackedAreaMultiplesComponent<P, L>;
 }
 declare function export_default$b<P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L>;
+
+/**
+ * Stacked Bar components
+ *
+ * This module holds the vertical and the horizontal stacked bar chart, together with the two
+ * data layout functions that prepare their input. Both components are variations on the same
+ * concept and read the same intermediate representation of a stack, but they lay it out along
+ * different dimensions, which is why there are two constructors rather than an orientation
+ * property.
+ *
+ * The layout functions, stackedBarVerticalData and stackedBarHorizontalData, take their
+ * accessors in the order (stackAcc, seriesAcc, valueAcc) and return a function over a flat
+ * array of rows: stackAcc groups the rows into stacks, seriesAcc into the layers within a
+ * stack, and valueAcc supplies the number that is stacked. The accessors are deliberately not
+ * named after the axes, because which axis each one belongs to depends on the orientation: the
+ * examples call stackedBarVerticalData(xAcc, cAcc, yAcc) but stackedBarHorizontalData(yAcc,
+ * cAcc, xAcc) - see docs/bar-chart-vertical-stacked/basic.js and
+ * docs/bar-chart-horizontal-stacked/basic.js.
+ *
+ * The result is an array of series, one per series key, each holding the [y0, y1] pairs
+ * d3.stack computed, and each pair tagged with its `series`, its `stack` and, as `data`, the
+ * single source row it was computed from. That array is what gets bound to the chart layer. The
+ * rows passed in are not modified: the d3v3 stack layout used to write `y0` and `y` onto every
+ * data object, but d3v7 returns pairs instead and leaves the source data alone.
+ *
+ * @module sszvis/component/stackedBar/horizontal
+ * @module sszvis/component/stackedBar/vertical
+ *
+ * @requires sszvis.component.bar
+ *
+ * @template T The type of the data objects behind the stack slices
+ * @template X The type of the stack values, i.e. the domain of the ordinal scale
+ *
+ * @property {function} xScale          Required. On a vertical chart, a band scale over the
+ *                                      stack values, used to position each stack. On a
+ *                                      horizontal chart, a linear scale over the stacked
+ *                                      values, used for both the left edge and the width of
+ *                                      every segment. Not defaulted: unset, it throws.
+ * @property {function} yScale          Required, and the mirror image of xScale. On a vertical
+ *                                      chart, a linear scale over the stacked values, used for
+ *                                      both the top edge and the height of every segment; on a
+ *                                      horizontal chart, a band scale over the stack values.
+ *                                      Also not defaulted, and also throws when unset.
+ * @property {number, function} width   Required by the vertical orientation, which sizes its
+ *                                      bars with it - usually xScale.bandwidth(). The
+ *                                      horizontal orientation computes its width from xScale
+ *                                      and never reads the property. Omitting it on a vertical
+ *                                      chart is not reported: every bar gets width 0.
+ * @property {number, function} height  Required by the horizontal orientation, and ignored by
+ *                                      the vertical one, which computes its height from yScale.
+ *                                      Fails just as silently when omitted on a horizontal
+ *                                      chart: every bar gets height 0.
+ * @property {string, function} fill    Optional. A constant or an accessor over a slice. When
+ *                                      unset, no fill attribute is written at all and the
+ *                                      rectangles fall back to the SVG/CSS default.
+ * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
+ *                                      unset, a 1px #FFFFFF stroke separates the segments -
+ *                                      centred on the bar edge, so it overpaints half a pixel
+ *                                      on each side. A truthy value such as "none" replaces the
+ *                                      separator, but every falsy value falls back to it, so it
+ *                                      cannot be removed by null or an empty string.
+ *
+ * Note: the two layout functions are the same computation and differ only in the stack order,
+ * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
+ * order, so the last key sits on the baseline; the horizontal one keeps the key order, so the
+ * first key does.
+ *
+ * Note: the value of a cell is read from its first row only, so data that is not already
+ * aggregated to one row per (stack, series) pair is silently truncated rather than summed. The
+ * same unguarded read throws when a stack is missing one of the series keys, so every stack has
+ * to carry a row for every series - callers with sparse data have to pad it with zero rows.
+ *
+ * Note: the series keys come from Object.keys over the grouped data, and JavaScript orders
+ * integer-like keys numerically regardless of insertion order. A series accessor returning
+ * years or numeric codes therefore loses the caller's ordering, and since the key order is the
+ * stacking order, the stack silently changes shape. The stacks themselves are reordered the
+ * same way, which is only cosmetic, since each slice is positioned by its own stack value.
+ *
+ * Note: `keys` and `maxValue` are hung off the returned array rather than wrapped in an object,
+ * so any array operation - a spread, a map, a filter, a trip through JSON - drops them, and
+ * `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array. `maxValue`
+ * is the maximum of the upper bounds only, so it is not the extent of the data when a value is
+ * negative, and it is undefined rather than 0 for an empty layout, which turns into a NaN axis
+ * when it is fed straight into a scale domain the way the examples do.
+ *
+ * Note: a negative value produces a negative rect width on a horizontal chart, which the
+ * browser rejects, so the segment is simply not drawn. Neither orientation supports values
+ * below the baseline.
+ *
+ * Note: the four scale and size properties are required but neither defaulted nor validated.
+ * Two of them fail silently as zero-size bars, and the two scales throw a low-level TypeError
+ * that names neither the property nor the component.
+ *
+ * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
+ * selector and no key function, so any pre-existing stack below the target group, at any depth,
+ * is captured and re-bound, and surviving groups and rects are matched by index rather than by
+ * series. The component also forwards neither bar's `transition` property nor its tooltip
+ * anchor properties, so every render attaches a transition that is immediately discarded, and
+ * the tooltip anchor is always at the top centre of a segment. See
+ * test/component/stackedBar.test.ts.
+ *
+ * @return {sszvis.component}
+ */
+
+/**
+ * One slice of a stack: the [y0, y1] point d3.stack produces, with `data` narrowed from the
+ * whole cascade row to the single datum the slice was computed from, and tagged with the
+ * series and the stack it belongs to. It is d3's own SeriesPoint, which is why it is an
+ * Array rather than a two-element tuple.
+ */
+type StackedBarSlice<T, X extends string | number = string> = SeriesPoint<T> & {
+    /** The series key the slice belongs to. */
+    series: string;
+    /** The stack the slice belongs to, as the stack accessor returned it. */
+    stack: X;
+};
+/** All slices sharing a series key, i.e. one layer of the stack, as d3 hands it over. */
+type StackedBarSeries<T, X extends string | number = string> = StackedBarSlice<T, X>[] & {
+    key: string;
+    index: number;
+};
+/**
+ * What stackedBar*Data returns: the series, with the series keys and the largest stacked
+ * total hung off the array itself rather than wrapped in an object.
+ *
+ * `keys` shadows Array.prototype.keys, so the inherited member is omitted before the
+ * property is declared. Intersecting the two instead would leave the layout callable as
+ * `layout.keys()`, which type-checks as the built-in iterator but throws a TypeError at
+ * runtime. Omitting it costs assignability back to a plain array, which is the point: the
+ * layout is not a well-behaved one. Indexing, length, the array methods, spread and for-of
+ * all still work.
+ */
+type StackedBarLayout<T, X extends string | number = string> = Omit<StackedBarSeries<T, X>[], "keys"> & {
+    keys: string[];
+    maxValue: number | undefined;
+};
+declare const stackedBarHorizontalData: <T, X extends string | number = string>(_stackAcc: (datum: T) => X, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number) => (data: T[]) => StackedBarLayout<T, X>;
+declare const stackedBarVerticalData: <T, X extends string | number = string>(_stackAcc: (datum: T) => X, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number) => (data: T[]) => StackedBarLayout<T, X>;
+/** A scale over the stack values - a band scale in practice, hence the undefined. */
+type StackScale<X> = (value: X) => number | undefined;
+/** A scale over the stacked values. */
+type ValueScale = (value: number) => number;
+/** A constant or an accessor over one slice; fn.functor normalises both on set. */
+type SliceValue<U, R> = R | ((slice: U, index: number) => R);
+/**
+ * How a bar dimension reads back once it is stored: the four dimensions are wrapped by
+ * fn.functor on set, so they are always functions by the time the renderer reads them. Both
+ * parameters are optional because a constant becomes a functor that ignores its arguments.
+ */
+type StoredDimension<T, X extends string | number> = (slice?: StackedBarSlice<T, X>, index?: number) => number;
+/** fill is stored exactly as set, and may be left unset, in which case no fill is written. */
+type FillValue$1<T, X extends string | number> = SliceValue<StackedBarSlice<T, X>, string | undefined>;
+/**
+ * stroke is stored exactly as set. Every falsy value is accepted and means the same thing,
+ * since the renderer falls back to the white default for all of them.
+ */
+type StrokeValue$1<T, X extends string | number> = string | null | undefined | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
+/**
+ * `component()` hands back whatever interface it is asked for, but the two builder methods
+ * it inherits are declared as returning the plain Component, so a component interface has
+ * to re-declare them to survive its own construction chain.
+ */
+interface StackedBarBuilder<C extends Component> extends Component {
+    prop<V>(prop: string, setter?: PropertySetter<V>): C;
+    render(callback: RenderCallback): C;
+}
+/**
+ * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
+ * component's generics at the call site.
+ */
+interface StackedBarVerticalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarVerticalComponent<T, X>> {
+    xScale(): StackScale<X>;
+    xScale<V = X>(scale: (value: V) => number | undefined): StackedBarVerticalComponent<T, X>;
+    width(): StoredDimension<T, X>;
+    width<U = StackedBarSlice<T, X>>(value: SliceValue<U, number>): StackedBarVerticalComponent<T, X>;
+    yScale(): ValueScale;
+    yScale(scale: ValueScale): StackedBarVerticalComponent<T, X>;
+    height(): StoredDimension<T, X>;
+    height<U = StackedBarSlice<T, X>>(value: SliceValue<U, number>): StackedBarVerticalComponent<T, X>;
+    fill(): FillValue$1<T, X>;
+    fill<U = StackedBarSlice<T, X>>(value: SliceValue<U, string | undefined>): StackedBarVerticalComponent<T, X>;
+    stroke(): StrokeValue$1<T, X>;
+    stroke<U = StackedBarSlice<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarVerticalComponent<T, X>;
+}
+interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarHorizontalComponent<T, X>> {
+    xScale(): ValueScale;
+    xScale(scale: ValueScale): StackedBarHorizontalComponent<T, X>;
+    width(): StoredDimension<T, X>;
+    width<U = StackedBarSlice<T, X>>(value: SliceValue<U, number>): StackedBarHorizontalComponent<T, X>;
+    yScale(): StackScale<X>;
+    yScale<V = X>(scale: (value: V) => number | undefined): StackedBarHorizontalComponent<T, X>;
+    height(): StoredDimension<T, X>;
+    height<U = StackedBarSlice<T, X>>(value: SliceValue<U, number>): StackedBarHorizontalComponent<T, X>;
+    fill(): FillValue$1<T, X>;
+    fill<U = StackedBarSlice<T, X>>(value: SliceValue<U, string | undefined>): StackedBarHorizontalComponent<T, X>;
+    stroke(): StrokeValue$1<T, X>;
+    stroke<U = StackedBarSlice<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarHorizontalComponent<T, X>;
+}
+declare function stackedBarHorizontal<T = unknown, X extends string | number = string>(): StackedBarHorizontalComponent<T, X>;
+declare function stackedBarVertical<T = unknown, X extends string | number = string>(): StackedBarVerticalComponent<T, X>;
+
+/**
+ * Stacked Pyramid component
+ *
+ * The pyramid component is primarily used to show a distribution of age groups
+ * in a population (population pyramid). The chart is mirrored vertically,
+ * meaning that it has a horizontal axis that extends in a positive and negative
+ * direction having the same domain.
+ *
+ * This chart's horizontal point of origin is at its spine, i.e. the center of
+ * the chart.
+ *
+ * The datum bound to the chart layer is the output of stackedPyramidData(sideAcc, rowAcc,
+ * seriesAcc, valueAcc), which returns a function over a flat array of rows. Each accessor is called
+ * with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc into the
+ * vertical positions within a side, seriesAcc into the layers of each row's stack, and valueAcc
+ * supplies the number that is stacked.
+ *
+ * The result is an array of sides, each an array of the series d3.stack produced for that side,
+ * each series an array of the [y0, y1] slices it computed - so a slice is addressed as
+ * data[side][series][row], and the caller picks the two sides positionally. Every slice carries
+ * five properties beyond its pair: its `series` key, its `side` as the side accessor returned it,
+ * its `row`, its own `value`, and its `data`, narrowed from the whole grouped row to the single
+ * source row the slice was computed from. d3's own `key` and `index` are carried across onto each
+ * series. The largest stacked total across both sides is attached to the returned array as
+ * `maxValue`, which is what the horizontal scale's domain is built from. The rows passed in are not
+ * modified.
+ *
+ * The component always creates four sub-groups, in this order: leftStack, rightStack, leftReference
+ * and rightReference. The order is load-bearing, since it makes the reference lines paint over the
+ * bars, and the reference groups are created even when no reference accessor is configured. Within
+ * a side each series gets its own group, marked with a [data-sszvis-stack] attribute and no class -
+ * stackedBar uses a .sszvis-stack class for the same job - and is drawn by its own bar component,
+ * the left one mirrored across the spine. Both sides are pushed outwards by SPINE_PADDING, so a one
+ * pixel gap runs down the middle of the chart, and every bar dimension is read from the same
+ * accessors on both sides.
+ *
+ * @module sszvis/component/stackedPyramid
+ *
+ * @requires sszvis.component.bar
+ *
+ * @template T The type of one row of the input data, i.e. of a slice's `data`
+ * @template S The type the side accessor returns, i.e. of a slice's `side`
+ *
+ * @property {string, function} [barFill]     The color of a bar. Defaults to #000 and applies to
+ *                                            both sides; a per-datum accessor is the usual way to
+ *                                            colour the series. It is composed with the slice's
+ *                                            `data`, so it reads a source row rather than a slice,
+ *                                            and fn.compose forwards d3's arguments only to the
+ *                                            innermost function, so it is called with that row
+ *                                            alone.
+ * @property {number, function} barHeight     The height of a bar. Required, but omitting it is not
+ *                                            reported: it is the one dimension handed straight to
+ *                                            bar, so the value reaches bar's missing-value guard as
+ *                                            undefined and becomes 0, and the chart renders an
+ *                                            empty axis frame with no bars and no warning. Of the
+ *                                            three required dimensions only this one fails
+ *                                            silently. Shared with pyramid.
+ * @property {number, function} barWidth      The width of a bar. Required, and an unset prop throws
+ *                                            a TypeError from the component's own closure, because
+ *                                            the component computes both the x and the width of
+ *                                            every bar itself. It is called with one of the numbers
+ *                                            out of a slice's [y0, y1] pair rather than with the
+ *                                            slice, so it has to be a scale over stacked values and
+ *                                            not an accessor over data - pyramid calls the same
+ *                                            property with the bar's datum, and an accessor written
+ *                                            for pyramid reads properties off a number here and
+ *                                            yields NaN, which bar's guard turns into 0. It is also
+ *                                            called without d3's index and group, so an index-aware
+ *                                            or node-aware accessor collapses every width and every
+ *                                            x to 0 on both sides; pyramid has the same omission on
+ *                                            its left side only. A constant is accepted and is
+ *                                            worse than an error: the width is computed as
+ *                                            barWidth(d[1]) - barWidth(d[0]), so a constant
+ *                                            subtracts itself and every segment disappears while
+ *                                            still being positioned at the constant offset.
+ * @property {number, function} barPosition   The vertical position of a bar, i.e. its top edge.
+ *                                            Required, and an unset prop throws too, but from
+ *                                            inside fn.compose ("Cannot read properties of
+ *                                            undefined (reading 'call')") rather than from the
+ *                                            component's own closure the way barWidth does. Both
+ *                                            surface while bar is applying its attributes. It is
+ *                                            called with the slice's `row`, which is that row's
+ *                                            index within its side and not the value the row
+ *                                            accessor returned, and with nothing else, so an
+ *                                            index-aware accessor yields NaN and bar's guard
+ *                                            flattens it to 0.
+ * @property {Array<number>} [tooltipAnchor]  The anchor position for the tooltips. Uses
+ *                                            sszvis.component.bar.tooltipAnchor under the hood to
+ *                                            optionally reposition the tooltip anchors in the
+ *                                            pyramid chart. Default value is [0.5, 0.5], which
+ *                                            centers tooltips on the bars. The value is handed to
+ *                                            both bars unchanged rather than being mirrored, and
+ *                                            bar measures from its own upper left corner, which on
+ *                                            the left side is a segment's outer edge, so any x
+ *                                            other than 0.5 lands on visually opposite sides of the
+ *                                            pyramid. An array with fewer than two entries yields a
+ *                                            NaN coordinate, as documented on bar; the component
+ *                                            adds no validation of its own. Shared with pyramid.
+ * @property {function} leftAccessor          Data for the left side, i.e. a function picking one
+ *                                            side out of the layout - the sides are an array, so
+ *                                            docs/population-pyramid/pyramid-stacked.js uses
+ *                                            prop("0") and prop("1"). Required: an unset accessor
+ *                                            throws "props.leftAccessor is not a function" from the
+ *                                            renderer, and an accessor that returns undefined or
+ *                                            null throws from d3's data join instead, with a
+ *                                            message that names neither the property nor the
+ *                                            component.
+ * @property {function} rightAccessor         Data for the right side. Same requirements as
+ *                                            leftAccessor.
+ * @property {function} [leftRefAccessor]     Reference data for the left side, drawn as a single
+ *                                            path outlining the reference series. The elements are
+ *                                            handed to barWidth for x and to barPosition for y, so
+ *                                            they have to be plain numbers. Optional, but the guard
+ *                                            tests whether the accessor was set, not what it
+ *                                            returns: an accessor that yields undefined or null for
+ *                                            some states throws instead of hiding the line.
+ *                                            Returning an empty array does hide it, though the
+ *                                            classed path element stays in the DOM with no d
+ *                                            attribute, where CSS and hit tests can still find it.
+ * @property {function} [rightRefAccessor]    Reference data for the right side. Same as
+ *                                            leftRefAccessor.
+ *
+ * Note: a side's series keys are read off that side's first row alone, with Object.keys, so a
+ * series absent from the first row is dropped from the whole side and its values appear neither in
+ * the chart nor in maxValue - stackedBarData takes the union of the keys across every row instead.
+ * The stack value is then read as x[key][0] with no guard, so a later row that is missing one of
+ * the first row's keys dies on an undefined cell with a TypeError. Between them the two mean every
+ * row of a side has to carry every series and the first row decides which, so callers with sparse
+ * data have to pad it with zero rows.
+ *
+ * Note: a slice's `row` is the position of its row within the side, not the value the row accessor
+ * returned, and that index is what the component feeds to barPosition. It lines up with the data
+ * only when the row values happen to be a dense zero-based range, which is what
+ * docs/population-pyramid/pyramid-stacked.js relies on: it builds its position scale over
+ * d3.range(0, 101) and its ages happen to run from 0 to 100. The source row still knows its real
+ * value; only the tag on the slice is an index.
+ *
+ * Note: the cascade groups on String(key) - for the sides, the rows and the series alike - so keys
+ * that differ only in type merge, and the number 1 and the string "1" land in the same cell where
+ * only the first of them is stacked. The ordering follows from the same coercion: JavaScript
+ * iterates array-index keys in ascending numeric order regardless of insertion order, so dense
+ * non-negative integer rows sort themselves, which is what makes the index-as-position quirk above
+ * survivable, while negative, fractional or plain string rows fall back to insertion order and are
+ * laid out in whatever order the input happened to be in. The sides are ordered the same way and
+ * picked positionally, so a dataset whose first row is male puts men on the left and silently
+ * mirrors the chart. For the series the key order is the stacking order, so a series accessor
+ * returning years or numeric codes restacks the chart in ascending numeric order, and the `series`
+ * tag comes back as a string even when the accessor returned a number. Nothing enforces the
+ * cardinality of two the layout function's own documentation requires of the side accessor either:
+ * a single side leaves the right accessor returning undefined, which throws from d3's data join,
+ * and a third side is returned and then dropped without a word by the caller's positional
+ * accessors. Shared with stackedBarData.
+ *
+ * Note: the value of a cell is read from its first row only, so data that is not already aggregated
+ * to one row per (side, row, series) triplet is silently truncated rather than summed. The layout
+ * function requires the triplet to appear exactly once and says it makes no effort to normalize the
+ * data if that is not the case, but nothing reports a violation. Shared with stackedBarData.
+ *
+ * Note: `maxValue` is hung off the returned array rather than wrapped in an object, so any array
+ * operation - a spread, a map, a filter, a trip through JSON - drops it. It is the maximum of the
+ * upper bounds only, so it is not the extent of the data when a value is negative, and it is
+ * undefined rather than 0 for an empty layout, where it coerces to NaN in the scale domain the
+ * examples feed it into, so the scale maps every value to NaN and the axis draws its domain line
+ * with no ticks at all. A slice's `value` is a convenience of the same kind:
+ * the component never reads it, and it duplicates d[1] - d[0] as it stood when the layout ran, so
+ * it goes stale if a caller rewrites the pair. Shared with stackedBarData. See
+ * test/component/stackedPyramid.test.ts.
+ *
+ * Note: the reference lines cannot be drawn in the coordinate system the bars use. The line
+ * generator is d3.line().x(barWidth).y(barPosition), so both props are called with the same
+ * reference element, while in the bars barWidth is called with a stacked value and barPosition with
+ * a row index. No element satisfies both: a series of stacked values gives an x that is right and a
+ * y that is as many rows down as the value is large. d3.line also calls its x accessor as (d, i,
+ * data), so barWidth receives the index on the line and nowhere else, which leaves one property
+ * with two calling conventions as well as two coordinate systems. The only stackedPyramid example
+ * sets neither reference accessor; the reference-line example uses the plain pyramid instead, where
+ * both props read the datum and the problem does not arise.
+ *
+ * Note: two smaller mismatches ride along, both of them shared with pyramid. The bars are pushed
+ * outwards by SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn
+ * straight from barWidth and so agrees with the axis scale, which puts a reference value equal to a
+ * bar value half a pixel inside that bar's outer edge, symmetrically on both sides. And the line
+ * takes its y from barPosition alone and never accounts for barHeight, so the outline runs along
+ * the bars' top edges rather than their mid-lines, half a bar height above the values it describes.
+ *
+ * Note: a reference line's d attribute is only ever written through a transition, so a freshly
+ * rendered path carries no geometry until the first animation frame and anything that measures the
+ * chart synchronously - getBBox, a snapshot, an export to PNG - sees an empty path. Entering lines
+ * then snap into place, because d3 has no previous d to interpolate from; only updates animate. The
+ * bars underneath do not animate at all - bar's transition property is inert - so on a state change
+ * the outline eases towards its new position while the bars jump, and the two visibly detach for
+ * the length of the transition. bar also guards every geometry value against NaN while the line
+ * hands barWidth and barPosition straight to d3.line, so one missing value poisons the path string
+ * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
+ * with pyramid.
+ *
+ * Note: the reference path is classed .sszvis-path, which no rule in sszvis.css defines - its
+ * appearance comes from four inlined attributes instead, the opposite choice from pyramid, which
+ * sets only .sszvis-pyramid__referenceline and takes all four values from the stylesheet. The class
+ * collides with the one pie, stackedArea and stackedAreaMultiples use for their own paths, so a
+ * selector written for any of those also matches a stackedPyramid reference line, and since the
+ * join has no key function a foreign path that happens to carry the class is adopted as the
+ * reference line and repainted rather than left alone. That is harmless while each component owns
+ * its own selectGroup, which is how every example is written.
+ *
+ * Note: the reference datum is wrapped in an array, one array of points per path, so each side is
+ * capped at a single line and, while a reference accessor is set, the join always has exactly one
+ * element and the exit selection can never fire: once a line has been rendered its path element
+ * stays in the DOM even after the reference data goes away, with only its d attribute dropped. Only
+ * removing the accessor itself empties the group. The mirror property writes transform="" on the
+ * right side rather than omitting the attribute. Shared with pyramid.
+ *
+ * Note: the stack join is selectAll("[data-sszvis-stack]"), a descendant selector rather than a
+ * child selector, so a stack group nested at any depth below a side's group is captured alongside
+ * the direct children. The exit selection then removes a legitimate series group, and the reorder
+ * that follows has to sort a selection in which one element is an ancestor of another, so d3 throws
+ * a HierarchyRequestError and aborts the whole render rather than just that side. A child selector
+ * would make it unreachable. Nothing nests stack groups today, so reaching it needs a caller to
+ * have put something of its own inside one. stackedBar's version of the same unscoped selector only
+ * re-binds.
+ *
+ * Note: neither join uses a key function, so on a re-render the stack groups and the rects inside
+ * them are matched by index rather than by series. When a series is dropped from anywhere but the
+ * end, the groups that remain are re-bound to different series and every bar in them is rewritten.
+ * Only the geometry moves, so it is invisible, but any state held on a stack group - a class, a
+ * listener, an in-flight transition - follows the position rather than the series. Shared with
+ * stackedBar.
+ *
+ * Note: bar defaults its transition property to true and this component neither sets it nor exposes
+ * it, so every render creates a d3 transition per rect and then overwrites the geometry on the
+ * plain selection immediately. Nothing animates, but the transition state is still attached and
+ * interrupts any transition already running on those rects. Shared with stackedBar. The component
+ * also leaves bar's stroke unset, so unlike stackedBar, which paints a 1px white separator between
+ * segments, the segments of a row touch without a seam.
+ *
+ * Note: bar guards NaN but not negative numbers. A negative stacked value inverts the pair, so the
+ * width goes negative, which the browser rejects and the segment is not drawn, and on the left side
+ * the double sign flip moves x to the right of the spine. Neither side of the pyramid supports
+ * values below the baseline. Reaching this needs negative input data, which a population pyramid
+ * should not see. See test/component/stackedPyramid.test.ts.
+ *
+ * @return {sszvis.component}
+ */
+
+/**
+ * One slice of a stack: the [y0, y1] point d3.stack produced, with `data` narrowed from the
+ * whole cascade row to the single row the slice was computed from, and tagged with the
+ * series, the side and the row it belongs to. It is d3's own SeriesPoint, which is why it is
+ * an Array rather than a two-element tuple.
+ */
+type StackedPyramidSlice<T, S extends string | number = string> = SeriesPoint<T> & {
+    /** The series key the slice belongs to. */
+    series: string;
+    /** The side the slice belongs to, as the side accessor returned it. */
+    side: S;
+    /** The position of the slice's row within its side - an index, not the row's own value. */
+    row: number;
+    /** The slice's own value, i.e. d[1] - d[0] as it was when the layout ran. */
+    value: number;
+};
+/** All slices sharing a series key, i.e. one layer of one side's stack, as d3 hands it over. */
+type StackedPyramidSeries<T, S extends string | number = string> = StackedPyramidSlice<T, S>[] & {
+    key: string;
+    index: number;
+};
+/** One side of the pyramid: the series d3.stack produced for it. */
+type StackedPyramidSide<T, S extends string | number = string> = StackedPyramidSeries<T, S>[];
+/**
+ * What stackedPyramidData returns: the sides, with the largest stacked total across both of
+ * them hung off the array itself rather than wrapped in an object.
+ */
+type StackedPyramidLayout<T, S extends string | number = string> = StackedPyramidSide<T, S>[] & {
+    maxValue: number | undefined;
+};
+/**
+ * This function prepares the data for the stackedPyramid component
+ *
+ * The input data is expected to have at least four columns:
+ *
+ *  - side: determines on which side (left/right) the value goes. MUST have cardinality of two!
+ *  - row: determines on which row (vertical position) the value goes.
+ *  - series: determines in which series (for the stack) the value is.
+ *  - value: the numerical value.
+ *
+ * The combination of each distinct (side,row,series) triplet MUST appear only once
+ * in the data. This function makes no effort to normalize the data if that's not the case.
+ */
+declare function stackedPyramidData<T, S extends string | number = string>(sideAcc: (datum: T) => S, _rowAcc: (datum: T) => string | number, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number): (data: T[]) => StackedPyramidLayout<T, S>;
+/**
+ * How barWidth reads back once it is stored. It is wrapped by fn.functor on set, so it is
+ * always a function by the time the renderer reads it, and the component calls it with one of
+ * the numbers out of a slice's [y0, y1] pair - never with the slice itself. Both parameters
+ * are optional because a constant becomes a functor that ignores its arguments, and because
+ * the component passes neither d3's index nor its group.
+ */
+type StoredWidth = (value?: number, index?: number) => number;
+/**
+ * How barPosition reads back. In the bars it is called with a slice's row index; on a
+ * reference line d3.line calls it with the reference element itself, which is why a reference
+ * series has to be an array of numbers.
+ */
+type StoredPosition = (value?: number, index?: number) => number;
+/** How barHeight reads back: unlike the other two dimensions it is handed straight to bar. */
+type StoredHeight<T, S extends string | number> = (slice?: StackedPyramidSlice<T, S>, index?: number) => number;
+/** How barFill reads back. It is composed with the slice's `data`, so it reads a source row. */
+type StoredFill<T> = (datum?: T, index?: number) => string | undefined;
+/** Pulls one side's series out of the datum bound to the chart layer. */
+type SideAccessor<T, S extends string | number> = (data: StackedPyramidLayout<T, S>) => StackedPyramidSide<T, S>;
+/**
+ * Pulls one side's reference series out of the datum bound to the chart layer. The elements
+ * are handed to barWidth for x and to barPosition for y, so they have to be plain numbers.
+ */
+type ReferenceAccessor<T, S extends string | number> = (data: StackedPyramidLayout<T, S>) => number[];
+/** A constant or an accessor; either is accepted, since fn.functor normalises both. */
+type PyramidValue<A, R> = R | ((value: A, index: number) => R);
+/**
+ * A constant or an accessor over a slice's source row. barFill is composed with the slice's
+ * `data`, and fn.compose forwards d3's index only to the innermost function, so unlike bar's
+ * own fill this one is called with the datum alone.
+ */
+type FillValue<U> = string | undefined | ((datum: U) => string | undefined);
+/**
+ * `component()` hands back whatever interface it is asked for, but the three builder methods
+ * it inherits are declared as returning the plain Component, so a component interface has to
+ * re-declare them to survive its own construction chain. Without this the chain's type
+ * degrades to `any` at the first undeclared setter - `.barFill("#000")` resolves through
+ * Component's index signature - and the interface below is then never checked against the
+ * component that is actually built.
+ */
+interface ComponentBuilder<C extends Component> extends Component {
+    prop<V>(prop: string, setter?: PropertySetter<V>): C;
+    render(callback: RenderCallback): C;
+    renderSelection(callback: SelectionRenderCallback): C;
+}
+/**
+ * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
+ * component's generics at the call site.
+ */
+interface StackedPyramidComponent<T = unknown, S extends string | number = string> extends ComponentBuilder<StackedPyramidComponent<T, S>> {
+    barHeight(): StoredHeight<T, S>;
+    barHeight<U = StackedPyramidSlice<T, S>>(value: PyramidValue<U, number>): StackedPyramidComponent<T, S>;
+    barWidth(): StoredWidth;
+    barWidth(value: PyramidValue<number, number>): StackedPyramidComponent<T, S>;
+    barPosition(): StoredPosition;
+    barPosition(value: PyramidValue<number, number>): StackedPyramidComponent<T, S>;
+    barFill(): StoredFill<T>;
+    barFill<U = T>(value: FillValue<U>): StackedPyramidComponent<T, S>;
+    tooltipAnchor(): (number | string)[];
+    tooltipAnchor(anchor: (number | string)[]): StackedPyramidComponent<T, S>;
+    leftAccessor(): SideAccessor<T, S>;
+    leftAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidSide<T, S>): StackedPyramidComponent<T, S>;
+    rightAccessor(): SideAccessor<T, S>;
+    rightAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidSide<T, S>): StackedPyramidComponent<T, S>;
+    leftRefAccessor(): ReferenceAccessor<T, S> | undefined;
+    leftRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => number[]): StackedPyramidComponent<T, S>;
+    rightRefAccessor(): ReferenceAccessor<T, S> | undefined;
+    rightRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => number[]): StackedPyramidComponent<T, S>;
+}
+declare function stackedPyramid<T = unknown, S extends string | number = string>(): StackedPyramidComponent<T, S>;
 
 /**
  * Sunburst component
@@ -4606,6 +4606,158 @@ type PopulationPyramidLayout = {
 declare function export_default$6(spaceWidth: number, numBars: number): PopulationPyramidLayout;
 
 /**
+ * @module sszvis/layout/sankey
+ *
+ * A module of helper functions for computing the data structure
+ * and layout required by the sankey component.
+ *
+ * Behaviour notes:
+ * - prepareData's source/target/value accessors default to fn.identity, which only matches when
+ *   the rows are themselves the id strings; for the object rows this layout is built around, no
+ *   link ever matches a node id.
+ * - a link with an unknown source or target id becomes a null entry left in the returned links
+ *   array. Any such null throws a TypeError from the value sort as soon as a second link exists,
+ *   valid or not; a sole invalid row survives only because sort skips a one-element array.
+ * - link ids come from a module-level counter shared across every builder instance, so they
+ *   are unique but not stable between renders.
+ * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
+ *   on the link, so the link stack runs outside its node.
+ * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
+ *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
+ *   is discarded by the minimum rather than distorting the others.
+ * - a single-column diagram gives computeLayout's columnRange an Infinity step (issue #120);
+ *   an empty column list gives a negative step and NaN/undefined elsewhere.
+ */
+
+/** A node as this module builds it: every link list is present, unlike the component's view. */
+type PreparedNode = SankeyNode & {
+    linksFrom: SankeyLink[];
+    linksTo: SankeyLink[];
+};
+/** What prepareData returns. Links can contain nulls; see the module's behaviour notes. */
+type SankeyPreparedData = {
+    nodes: PreparedNode[];
+    /** One entry per input row. An invalid row leaves a null behind - see the behaviour notes. */
+    links: (SankeyLink | null)[];
+    columnTotals: number[];
+    columnLengths: number[];
+};
+/**
+ * The data preparation builder. It is callable, and also exposes `apply` as an alias, which
+ * shadows Function.prototype.apply - see the behaviour notes.
+ */
+interface SankeyDataPreparation<T = unknown> {
+    (inputData: T[]): SankeyPreparedData;
+    apply(data: T[]): SankeyPreparedData;
+    /** The id of the link's source node. Must be one of the ids passed to idLists. */
+    source(func: (d: T) => string): SankeyDataPreparation<T>;
+    /** The id of the link's target node. Must be one of the ids passed to idLists. */
+    target(func: (d: T) => string): SankeyDataPreparation<T>;
+    /** The size of the flow. A string is coerced with Number(); anything unparseable becomes 0. */
+    value(func: (d: T) => number | string): SankeyDataPreparation<T>;
+    descendingSort(): SankeyDataPreparation<T>;
+    ascendingSort(): SankeyDataPreparation<T>;
+    idLists(idLists: string[][]): SankeyDataPreparation<T>;
+}
+type SankeyComputedLayout = {
+    valuePadding: number;
+    /** undefined when there are no columns at all - see the behaviour notes. */
+    nodePadding: number | undefined;
+    columnPaddings: number[];
+    /** The upper bound is undefined when there are no columns at all. */
+    valueDomain: [number, number | undefined];
+    valueRange: [number, number];
+    nodeThickness: number;
+    columnDomain: [number, number];
+    columnRange: [number, number];
+};
+/**
+ * sszvis.layout.sankey.prepareData
+ *
+ * Returns a data preparation component for the sankey data.
+ *
+ * Throughout the code, the rectangles representing entities are referred to as 'nodes', while
+ * the chords connection them which represent flows among those entities are referred to as 'links'.
+ *
+ * @property {Array} apply                    Applies the preparation to a dataset of links. Expects a list of links, where the (unique) id
+ *                                            of the source node can be accessed with the source function, and the (unique) id of the target
+ *                                            can be accessed with the target function. Note that no source can have the same id as a target and
+ *                                            vice versa. The nodes are defined implicitly by the fact that they have a link going to them or
+ *                                            from them.
+ * @property {Function} source                An accessor function for getting the source of a link
+ * @property {Function} target                An accessor function for getting the target of a link
+ * @property {Function} value                 An accessor function for getting the value of a link. Must be a number. The total value of a node
+ *                                            is the greater of the sum of the values of its sourced links and its targeting links.
+ * @property {} descendingSort                Toggles the use of a descending value sort for the nodes
+ * @property {} ascendingSort                 Toggles the use of an ascending value sort for the nodes
+ * @property {Array(Array)} idLists           An array of arrays of id values. For each array of ids, the sankey diagram will create a column
+ *                                            of nodes. Each node should have links going to it or coming from it. All ids should be unique.
+ *
+ * @return {Function}                         The data preparation function. Can be called directly, or applied using the '.apply' function.
+ *         When called, returns an object with data to be used in constructing the chart.
+ *               @property {Array} nodes             An array of node data. Each one will become a rectangle in the sankey
+ *               @property {Array} links             An array of link data. Each one will become a path in the sankey
+ *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
+ *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
+ *
+ * Behaviour notes:
+ * - source/target/value default to fn.identity, which only matches when a row is itself the id
+ *   string; omitting them makes every link invalid for the usual object rows.
+ * - a link whose source or target id is not in idLists is warned about and replaced by null, and
+ *   the null stays in the returned links array. Any null throws a TypeError from the value sort
+ *   once a second link exists, valid or not; a sole invalid row survives only because sort skips
+ *   a one-element array.
+ * - link ids come from a module-level counter shared by every builder instance, so they are
+ *   unique but not stable across renders.
+ * - a duplicate id warns and keeps only the last column.
+ * - a non-numeric value silently becomes 0; a negative value is kept on the link but clamped
+ *   away at the node (node.value is Math.max(0, from, to)), so the link stack runs outside
+ *   its node.
+ * - nothing checks that the two ends of a link are in different columns.
+ * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
+ *   or builder(data).
+ * - nodes are sorted across all columns at once (descending by default), then offsets are
+ *   assigned per column.
+ */
+declare const prepareData: <T = unknown>() => SankeyDataPreparation<T>;
+/**
+ * sszvis.layout.sankey.computeLayout
+ *
+ * Automatically computes visual display properties needed by the sankey component,
+ * including padding between each node, paddings for the tops of columns to vertically center
+ * them, the domain and range of values in the nodes (used for scaling the node rectangles),
+ * the node thickness, and the domain and range of the column positioning scale.
+ *
+ * @param  {Array} columnLengths      An array of lengths (number of nodes) of each column in the diagram.
+ *                                    Used to compute optimal padding between nodes. Provided by the layout.sankey.prepareData function
+ * @param  {Array} columnTotals       An array of column totals (total of all values of all ndoes). Provided by the
+ * @param  {Number} columnHeight      The vertical height available for the columns. The tallest column will be this height. (Usually bounds.innerHeight)
+ * @param  {Number} columnWidth       The width of all columns. The sankey chart will be this width. (Usually bounds.innerWidth)
+ * @return {Object}                   An object of configuration parameters to be passed to the sankey component
+ *         @property {Number} nodePadding         The amount of padding to add between nodes. pass to component.sankey.nodePadding
+ *         @property {Array} columnPaddings       An array of padding values for each column. Index into this with the columnIndex and return to component.sankey.columnPadding
+ *         @property {Array} valueDomain          The domain for the node size scale. Use to configure a linear scale for component.sankey.sizeScale
+ *         @property {Array} valueRange           The range for the node size scale. Use to configure a linear scale for component.sankey.sizeScale
+ *         @property {Number} nodeThickness       The thickness of nodes. Pass to component.sankey.nodeThickness
+ *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
+ *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
+ *
+ * Behaviour notes:
+ * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
+ *   minimum across the columns is used for all of them. A single-node column divides by zero and
+ *   contributes a phantom 50px candidate, but 50 is the cap, so that candidate only wins when
+ *   every column is at 50 anyway - it never shrinks another column.
+ * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
+ *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
+ *   every total is 0; in that case the value range comes back [0, NaN].
+ * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
+ *   (numColumns - 1); a single column gives Infinity (issue #120) and an empty column list
+ *   gives a negative step, an undefined nodePadding and NaN elsewhere.
+ * - nodeThickness is always 20.
+ */
+declare const computeLayout$1: (columnLengths: number[], columnTotals: number[], columnHeight: number, columnWidth: number) => SankeyComputedLayout;
+
+/**
  * Small Multiples layout
  *
  * Used to generate group elements which contain small multiples charts.
@@ -4777,207 +4929,6 @@ type StackedAreaMultiplesLayout = {
 declare function export_default$4(height: number, num: number, pct?: number): StackedAreaMultiplesLayout;
 
 /**
- * Vertical Bar Chart Dimensions
- *
- * Generates a dimension configuration object to be used for laying out the vertical bar chart.
- *
- * @module sszvis/layout/verticalBarChartDimensions
- *
- * @param  {number} width         the total width available to the horizontal bar chart. The computed chart layout is not guaranteed
- *                                to fit inside this width.
- * @param  {number} numBars       The number of bars in the bar chart.
- * @return {object}               An object containing configuration properties for use in laying out the vertical bar chart.
- *                                {
- *                                  barWidth:             the width of each bar in the bar chart
- *                                  padWidth:             the width of the padding between the bars in the bar chart
- *                                  padRatio:             the ratio between the padding and the step (barWidth + padding). This can be passed
- *                                                        as the second parameter to d3.scaleOrdinal().rangeBands().
- *                                  outerRatio:           the outer ratio between the outer padding and the step. This can be passed as the
- *                                                        third parameter to d3.scaleOrdinal().rangeBands().
- *                                  barGroupWidth:        the width of all the bars plus all the padding between the bars.
- *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
- *                                }
- *
- * Behaviour notes:
- * - Targets a 70/30 split of each step between bar width and padding.
- * - Bar width is capped at 48px; when capped, padding is recomputed from the leftover width.
- * - Padding is then clamped to [2, 100] WITHOUT recomputing the bar width, so the bar group
- *   can overflow or underflow the given width (outerRatio can go negative).
- * - padRatio/outerRatio are derived from the clamped barWidth/padding, not from the 0.7/0.3 target.
- * - numBars === 1 has zero padding spaces, so its padWidth is a phantom that is never drawn but
- *   still feeds padRatio. When the single bar would be wider than the 48px cap, the padding
- *   recompute additionally divides by zero and the resulting Infinity is masked by the 100px
- *   clamp; a narrower single bar skips that branch and keeps its finite target padding.
- * - numBars === 0 yields NaN for barWidth, padRatio, outerRatio, and barGroupWidth (0/0), while
- *   padWidth still clamps to the 2px minimum.
- * - width === 0 gives barWidth 0 and padRatio exactly 1 (outside the [0, 1) range band scales expect).
- * - Negative width produces a negative barWidth and a padRatio outside the [0, 1) range band
- *   scales accept - above 1 for small negative widths (width -1 gives 1.04) and below 0 for
- *   larger ones (width -200 gives -0.16). There is no input validation.
- */
-type VerticalBarChartDimensions = {
-    barWidth: number;
-    padWidth: number;
-    padRatio: number;
-    outerRatio: number;
-    barGroupWidth: number;
-    totalWidth: number;
-};
-declare function export_default$3(width: number, numBars: number): VerticalBarChartDimensions;
-
-/**
- * @module sszvis/layout/sankey
- *
- * A module of helper functions for computing the data structure
- * and layout required by the sankey component.
- *
- * Behaviour notes:
- * - prepareData's source/target/value accessors default to fn.identity, which only matches when
- *   the rows are themselves the id strings; for the object rows this layout is built around, no
- *   link ever matches a node id.
- * - a link with an unknown source or target id becomes a null entry left in the returned links
- *   array. Any such null throws a TypeError from the value sort as soon as a second link exists,
- *   valid or not; a sole invalid row survives only because sort skips a one-element array.
- * - link ids come from a module-level counter shared across every builder instance, so they
- *   are unique but not stable between renders.
- * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
- *   on the link, so the link stack runs outside its node.
- * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
- *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
- *   is discarded by the minimum rather than distorting the others.
- * - a single-column diagram gives computeLayout's columnRange an Infinity step (issue #120);
- *   an empty column list gives a negative step and NaN/undefined elsewhere.
- */
-
-/** A node as this module builds it: every link list is present, unlike the component's view. */
-type PreparedNode = SankeyNode & {
-    linksFrom: SankeyLink[];
-    linksTo: SankeyLink[];
-};
-/** What prepareData returns. Links can contain nulls; see the module's behaviour notes. */
-type SankeyPreparedData = {
-    nodes: PreparedNode[];
-    /** One entry per input row. An invalid row leaves a null behind - see the behaviour notes. */
-    links: (SankeyLink | null)[];
-    columnTotals: number[];
-    columnLengths: number[];
-};
-/**
- * The data preparation builder. It is callable, and also exposes `apply` as an alias, which
- * shadows Function.prototype.apply - see the behaviour notes.
- */
-interface SankeyDataPreparation<T = unknown> {
-    (inputData: T[]): SankeyPreparedData;
-    apply(data: T[]): SankeyPreparedData;
-    /** The id of the link's source node. Must be one of the ids passed to idLists. */
-    source(func: (d: T) => string): SankeyDataPreparation<T>;
-    /** The id of the link's target node. Must be one of the ids passed to idLists. */
-    target(func: (d: T) => string): SankeyDataPreparation<T>;
-    /** The size of the flow. A string is coerced with Number(); anything unparseable becomes 0. */
-    value(func: (d: T) => number | string): SankeyDataPreparation<T>;
-    descendingSort(): SankeyDataPreparation<T>;
-    ascendingSort(): SankeyDataPreparation<T>;
-    idLists(idLists: string[][]): SankeyDataPreparation<T>;
-}
-type SankeyComputedLayout = {
-    valuePadding: number;
-    /** undefined when there are no columns at all - see the behaviour notes. */
-    nodePadding: number | undefined;
-    columnPaddings: number[];
-    /** The upper bound is undefined when there are no columns at all. */
-    valueDomain: [number, number | undefined];
-    valueRange: [number, number];
-    nodeThickness: number;
-    columnDomain: [number, number];
-    columnRange: [number, number];
-};
-/**
- * sszvis.layout.sankey.prepareData
- *
- * Returns a data preparation component for the sankey data.
- *
- * Throughout the code, the rectangles representing entities are referred to as 'nodes', while
- * the chords connection them which represent flows among those entities are referred to as 'links'.
- *
- * @property {Array} apply                    Applies the preparation to a dataset of links. Expects a list of links, where the (unique) id
- *                                            of the source node can be accessed with the source function, and the (unique) id of the target
- *                                            can be accessed with the target function. Note that no source can have the same id as a target and
- *                                            vice versa. The nodes are defined implicitly by the fact that they have a link going to them or
- *                                            from them.
- * @property {Function} source                An accessor function for getting the source of a link
- * @property {Function} target                An accessor function for getting the target of a link
- * @property {Function} value                 An accessor function for getting the value of a link. Must be a number. The total value of a node
- *                                            is the greater of the sum of the values of its sourced links and its targeting links.
- * @property {} descendingSort                Toggles the use of a descending value sort for the nodes
- * @property {} ascendingSort                 Toggles the use of an ascending value sort for the nodes
- * @property {Array(Array)} idLists           An array of arrays of id values. For each array of ids, the sankey diagram will create a column
- *                                            of nodes. Each node should have links going to it or coming from it. All ids should be unique.
- *
- * @return {Function}                         The data preparation function. Can be called directly, or applied using the '.apply' function.
- *         When called, returns an object with data to be used in constructing the chart.
- *               @property {Array} nodes             An array of node data. Each one will become a rectangle in the sankey
- *               @property {Array} links             An array of link data. Each one will become a path in the sankey
- *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
- *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
- *
- * Behaviour notes:
- * - source/target/value default to fn.identity, which only matches when a row is itself the id
- *   string; omitting them makes every link invalid for the usual object rows.
- * - a link whose source or target id is not in idLists is warned about and replaced by null, and
- *   the null stays in the returned links array. Any null throws a TypeError from the value sort
- *   once a second link exists, valid or not; a sole invalid row survives only because sort skips
- *   a one-element array.
- * - link ids come from a module-level counter shared by every builder instance, so they are
- *   unique but not stable across renders.
- * - a duplicate id warns and keeps only the last column.
- * - a non-numeric value silently becomes 0; a negative value is kept on the link but clamped
- *   away at the node (node.value is Math.max(0, from, to)), so the link stack runs outside
- *   its node.
- * - nothing checks that the two ends of a link are in different columns.
- * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
- *   or builder(data).
- * - nodes are sorted across all columns at once (descending by default), then offsets are
- *   assigned per column.
- */
-declare const prepareData: <T = unknown>() => SankeyDataPreparation<T>;
-/**
- * sszvis.layout.sankey.computeLayout
- *
- * Automatically computes visual display properties needed by the sankey component,
- * including padding between each node, paddings for the tops of columns to vertically center
- * them, the domain and range of values in the nodes (used for scaling the node rectangles),
- * the node thickness, and the domain and range of the column positioning scale.
- *
- * @param  {Array} columnLengths      An array of lengths (number of nodes) of each column in the diagram.
- *                                    Used to compute optimal padding between nodes. Provided by the layout.sankey.prepareData function
- * @param  {Array} columnTotals       An array of column totals (total of all values of all ndoes). Provided by the
- * @param  {Number} columnHeight      The vertical height available for the columns. The tallest column will be this height. (Usually bounds.innerHeight)
- * @param  {Number} columnWidth       The width of all columns. The sankey chart will be this width. (Usually bounds.innerWidth)
- * @return {Object}                   An object of configuration parameters to be passed to the sankey component
- *         @property {Number} nodePadding         The amount of padding to add between nodes. pass to component.sankey.nodePadding
- *         @property {Array} columnPaddings       An array of padding values for each column. Index into this with the columnIndex and return to component.sankey.columnPadding
- *         @property {Array} valueDomain          The domain for the node size scale. Use to configure a linear scale for component.sankey.sizeScale
- *         @property {Array} valueRange           The range for the node size scale. Use to configure a linear scale for component.sankey.sizeScale
- *         @property {Number} nodeThickness       The thickness of nodes. Pass to component.sankey.nodeThickness
- *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
- *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
- *
- * Behaviour notes:
- * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
- *   minimum across the columns is used for all of them. A single-node column divides by zero and
- *   contributes a phantom 50px candidate, but 50 is the cap, so that candidate only wins when
- *   every column is at 50 anyway - it never shrinks another column.
- * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
- *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
- *   every total is 0; in that case the value range comes back [0, NaN].
- * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
- *   (numColumns - 1); a single column gives Infinity (issue #120) and an empty column list
- *   gives a negative step, an undefined nodePadding and NaN elsewhere.
- * - nodeThickness is always 20.
- */
-declare const computeLayout$1: (columnLengths: number[], columnTotals: number[], columnHeight: number, columnWidth: number) => SankeyComputedLayout;
-
-/**
  * @module sszvis/layout/sunburst
  *
  * Helper functions for transforming your data to match the format required by the sunburst chart.
@@ -5038,6 +4989,55 @@ declare const getRadiusExtent: (formattedData: Array<{
     y0?: number;
     y1?: number;
 }>) => [number | undefined, number | undefined];
+
+/**
+ * Vertical Bar Chart Dimensions
+ *
+ * Generates a dimension configuration object to be used for laying out the vertical bar chart.
+ *
+ * @module sszvis/layout/verticalBarChartDimensions
+ *
+ * @param  {number} width         the total width available to the horizontal bar chart. The computed chart layout is not guaranteed
+ *                                to fit inside this width.
+ * @param  {number} numBars       The number of bars in the bar chart.
+ * @return {object}               An object containing configuration properties for use in laying out the vertical bar chart.
+ *                                {
+ *                                  barWidth:             the width of each bar in the bar chart
+ *                                  padWidth:             the width of the padding between the bars in the bar chart
+ *                                  padRatio:             the ratio between the padding and the step (barWidth + padding). This can be passed
+ *                                                        as the second parameter to d3.scaleOrdinal().rangeBands().
+ *                                  outerRatio:           the outer ratio between the outer padding and the step. This can be passed as the
+ *                                                        third parameter to d3.scaleOrdinal().rangeBands().
+ *                                  barGroupWidth:        the width of all the bars plus all the padding between the bars.
+ *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
+ *                                }
+ *
+ * Behaviour notes:
+ * - Targets a 70/30 split of each step between bar width and padding.
+ * - Bar width is capped at 48px; when capped, padding is recomputed from the leftover width.
+ * - Padding is then clamped to [2, 100] WITHOUT recomputing the bar width, so the bar group
+ *   can overflow or underflow the given width (outerRatio can go negative).
+ * - padRatio/outerRatio are derived from the clamped barWidth/padding, not from the 0.7/0.3 target.
+ * - numBars === 1 has zero padding spaces, so its padWidth is a phantom that is never drawn but
+ *   still feeds padRatio. When the single bar would be wider than the 48px cap, the padding
+ *   recompute additionally divides by zero and the resulting Infinity is masked by the 100px
+ *   clamp; a narrower single bar skips that branch and keeps its finite target padding.
+ * - numBars === 0 yields NaN for barWidth, padRatio, outerRatio, and barGroupWidth (0/0), while
+ *   padWidth still clamps to the 2px minimum.
+ * - width === 0 gives barWidth 0 and padRatio exactly 1 (outside the [0, 1) range band scales expect).
+ * - Negative width produces a negative barWidth and a padRatio outside the [0, 1) range band
+ *   scales accept - above 1 for small negative widths (width -1 gives 1.04) and below 0 for
+ *   larger ones (width -200 gives -0.16). There is no input validation.
+ */
+type VerticalBarChartDimensions = {
+    barWidth: number;
+    padWidth: number;
+    padRatio: number;
+    outerRatio: number;
+    barGroupWidth: number;
+    totalWidth: number;
+};
+declare function export_default$3(width: number, numBars: number): VerticalBarChartDimensions;
 
 /**
  * Binned Color Scale Legend
@@ -5644,4 +5644,4 @@ declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
 export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$w as annotationCircle, export_default$v as annotationConfidenceArea, export_default$u as annotationConfidenceBar, export_default$s as annotationLine, export_default$r as annotationRangeFlag, export_default$q as annotationRangeRuler, export_default$p as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$j as bar, bounds, export_default$x as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$c as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$8 as dimensionsHeatTable, export_default$7 as dimensionsHorizontalBarChart, export_default$3 as dimensionsVerticalBarChart, export_default$i as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$t as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$b as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, export_default$6 as layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, export_default$4 as layoutStackedAreaMultiples, export_default$2 as legendColorBinned, export_default$1 as legendColorLinear, legendColorOrdinal, export_default as legendRadius, export_default$h as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$m as move, muchDarker, nestedStackedBarsVertical, not, export_default$g as pack, export_default$l as panning, parseDate, parseNumber, parseYear, export_default$f as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$e as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$d as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$a as selectMenu, set, _default$9 as slider, slightlyDarker, slowTransition, some, export_default$c as stackedArea, export_default$b as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$a as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$o as tooltip, export_default$n as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$9 as treemap, viewport, export_default$k as voronoi, widthAdaptiveMapPathStroke, withAlpha };
-export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries$1 as StackedBarSeries, StackedBarSlice$1 as StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter };
+export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter };
