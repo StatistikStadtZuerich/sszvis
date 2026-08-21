@@ -1,5 +1,4 @@
-import { Selection, NumberValue, BaseType, HierarchyNode, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, HierarchyCircularNode, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
-import * as d3_shape from 'd3-shape';
+import { Selection, NumberValue, BaseType, HierarchyNode, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, SeriesPoint, HierarchyCircularNode, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
 import * as d3_transition from 'd3-transition';
 import * as d3_selection from 'd3-selection';
 
@@ -1739,14 +1738,205 @@ declare const groupedBarsHorizontal: <T = unknown>() => GroupedBarsComponent<T>;
  */
 declare const groupedBars: <T = unknown>() => GroupedBarsComponent<T>;
 
-declare function stackedBarHorizontalData(_stackAcc: any, seriesAcc: any, valueAcc: any): (data: any) => d3_shape.Series<{
-    [key: string]: number;
-}, string>[];
-declare function stackedBarVerticalData(_stackAcc: any, seriesAcc: any, valueAcc: any): (data: any) => d3_shape.Series<{
-    [key: string]: number;
-}, string>[];
-declare function stackedBarHorizontal(): Component;
-declare function stackedBarVertical(): Component;
+/**
+ * Stacked Bar components
+ *
+ * This module holds the vertical and the horizontal stacked bar chart, together with the two
+ * data layout functions that prepare their input. Both components are variations on the same
+ * concept and read the same intermediate representation of a stack, but they lay it out along
+ * different dimensions, which is why there are two constructors rather than an orientation
+ * property.
+ *
+ * The layout functions, stackedBarVerticalData and stackedBarHorizontalData, take their
+ * accessors in the order (stackAcc, seriesAcc, valueAcc) and return a function over a flat
+ * array of rows: stackAcc groups the rows into stacks, seriesAcc into the layers within a
+ * stack, and valueAcc supplies the number that is stacked. The accessors are deliberately not
+ * named after the axes, because which axis each one belongs to depends on the orientation: the
+ * examples call stackedBarVerticalData(xAcc, cAcc, yAcc) but stackedBarHorizontalData(yAcc,
+ * cAcc, xAcc) - see docs/bar-chart-vertical-stacked/basic.js and
+ * docs/bar-chart-horizontal-stacked/basic.js.
+ *
+ * The result is an array of series, one per series key, each holding the [y0, y1] pairs
+ * d3.stack computed, and each pair tagged with its `series`, its `stack` and, as `data`, the
+ * single source row it was computed from. That array is what gets bound to the chart layer. The
+ * rows passed in are not modified: the d3v3 stack layout used to write `y0` and `y` onto every
+ * data object, but d3v7 returns pairs instead and leaves the source data alone.
+ *
+ * @module sszvis/component/stackedBar/horizontal
+ * @module sszvis/component/stackedBar/vertical
+ *
+ * @requires sszvis.component.bar
+ *
+ * @template T The type of the data objects behind the stack slices
+ * @template X The type of the stack values, i.e. the domain of the ordinal scale
+ *
+ * @property {function} xScale          Required. On a vertical chart, a band scale over the
+ *                                      stack values, used to position each stack. On a
+ *                                      horizontal chart, a linear scale over the stacked
+ *                                      values, used for both the left edge and the width of
+ *                                      every segment. Not defaulted: unset, it throws.
+ * @property {function} yScale          Required, and the mirror image of xScale. On a vertical
+ *                                      chart, a linear scale over the stacked values, used for
+ *                                      both the top edge and the height of every segment; on a
+ *                                      horizontal chart, a band scale over the stack values.
+ *                                      Also not defaulted, and also throws when unset.
+ * @property {number, function} width   Required by the vertical orientation, which sizes its
+ *                                      bars with it - usually xScale.bandwidth(). The
+ *                                      horizontal orientation computes its width from xScale
+ *                                      and never reads the property. Omitting it on a vertical
+ *                                      chart is not reported: every bar gets width 0.
+ * @property {number, function} height  Required by the horizontal orientation, and ignored by
+ *                                      the vertical one, which computes its height from yScale.
+ *                                      Fails just as silently when omitted on a horizontal
+ *                                      chart: every bar gets height 0.
+ * @property {string, function} fill    Optional. A constant or an accessor over a slice. When
+ *                                      unset, no fill attribute is written at all and the
+ *                                      rectangles fall back to the SVG/CSS default.
+ * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
+ *                                      unset, a 1px #FFFFFF stroke separates the segments -
+ *                                      centred on the bar edge, so it overpaints half a pixel
+ *                                      on each side. A truthy value such as "none" replaces the
+ *                                      separator, but every falsy value falls back to it, so it
+ *                                      cannot be removed by null or an empty string.
+ *
+ * Note: the two layout functions are the same computation and differ only in the stack order,
+ * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
+ * order, so the last key sits on the baseline; the horizontal one keeps the key order, so the
+ * first key does.
+ *
+ * Note: the value of a cell is read from its first row only, so data that is not already
+ * aggregated to one row per (stack, series) pair is silently truncated rather than summed. The
+ * same unguarded read throws when a stack is missing one of the series keys, so every stack has
+ * to carry a row for every series - callers with sparse data have to pad it with zero rows.
+ *
+ * Note: the series keys come from Object.keys over the grouped data, and JavaScript orders
+ * integer-like keys numerically regardless of insertion order. A series accessor returning
+ * years or numeric codes therefore loses the caller's ordering, and since the key order is the
+ * stacking order, the stack silently changes shape. The stacks themselves are reordered the
+ * same way, which is only cosmetic, since each slice is positioned by its own stack value.
+ *
+ * Note: `keys` and `maxValue` are hung off the returned array rather than wrapped in an object,
+ * so any array operation - a spread, a map, a filter, a trip through JSON - drops them, and
+ * `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array. `maxValue`
+ * is the maximum of the upper bounds only, so it is not the extent of the data when a value is
+ * negative, and it is undefined rather than 0 for an empty layout, which turns into a NaN axis
+ * when it is fed straight into a scale domain the way the examples do.
+ *
+ * Note: a negative value produces a negative rect width on a horizontal chart, which the
+ * browser rejects, so the segment is simply not drawn. Neither orientation supports values
+ * below the baseline.
+ *
+ * Note: the four scale and size properties are required but neither defaulted nor validated.
+ * Two of them fail silently as zero-size bars, and the two scales throw a low-level TypeError
+ * that names neither the property nor the component.
+ *
+ * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
+ * selector and no key function, so any pre-existing stack below the target group, at any depth,
+ * is captured and re-bound, and surviving groups and rects are matched by index rather than by
+ * series. The component also forwards neither bar's `transition` property nor its tooltip
+ * anchor properties, so every render attaches a transition that is immediately discarded, and
+ * the tooltip anchor is always at the top centre of a segment. See
+ * test/component/stackedBar.test.ts.
+ *
+ * @return {sszvis.component}
+ */
+
+/**
+ * One slice of a stack: the [y0, y1] point d3.stack produces, with `data` narrowed from the
+ * whole cascade row to the single datum the slice was computed from, and tagged with the
+ * series and the stack it belongs to. It is d3's own SeriesPoint, which is why it is an
+ * Array rather than a two-element tuple.
+ */
+type StackedBarSlice$1<T, X extends string | number = string> = SeriesPoint<T> & {
+    /** The series key the slice belongs to. */
+    series: string;
+    /** The stack the slice belongs to, as the stack accessor returned it. */
+    stack: X;
+};
+/** All slices sharing a series key, i.e. one layer of the stack, as d3 hands it over. */
+type StackedBarSeries$1<T, X extends string | number = string> = StackedBarSlice$1<T, X>[] & {
+    key: string;
+    index: number;
+};
+/**
+ * What stackedBar*Data returns: the series, with the series keys and the largest stacked
+ * total hung off the array itself rather than wrapped in an object.
+ *
+ * `keys` shadows Array.prototype.keys, so the inherited member is omitted before the
+ * property is declared. Intersecting the two instead would leave the layout callable as
+ * `layout.keys()`, which type-checks as the built-in iterator but throws a TypeError at
+ * runtime. Omitting it costs assignability back to a plain array, which is the point: the
+ * layout is not a well-behaved one. Indexing, length, the array methods, spread and for-of
+ * all still work.
+ */
+type StackedBarLayout<T, X extends string | number = string> = Omit<StackedBarSeries$1<T, X>[], "keys"> & {
+    keys: string[];
+    maxValue: number | undefined;
+};
+declare const stackedBarHorizontalData: <T, X extends string | number = string>(_stackAcc: (datum: T) => X, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number) => (data: T[]) => StackedBarLayout<T, X>;
+declare const stackedBarVerticalData: <T, X extends string | number = string>(_stackAcc: (datum: T) => X, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number) => (data: T[]) => StackedBarLayout<T, X>;
+/** A scale over the stack values - a band scale in practice, hence the undefined. */
+type StackScale<X> = (value: X) => number | undefined;
+/** A scale over the stacked values. */
+type ValueScale = (value: number) => number;
+/** A constant or an accessor over one slice; fn.functor normalises both on set. */
+type SliceValue<U, R> = R | ((slice: U, index: number) => R);
+/**
+ * How a bar dimension reads back once it is stored: the four dimensions are wrapped by
+ * fn.functor on set, so they are always functions by the time the renderer reads them. Both
+ * parameters are optional because a constant becomes a functor that ignores its arguments.
+ */
+type StoredDimension<T, X extends string | number> = (slice?: StackedBarSlice$1<T, X>, index?: number) => number;
+/** fill is stored exactly as set, and may be left unset, in which case no fill is written. */
+type FillValue<T, X extends string | number> = SliceValue<StackedBarSlice$1<T, X>, string | undefined>;
+/**
+ * stroke is stored exactly as set. Every falsy value is accepted and means the same thing,
+ * since the renderer falls back to the white default for all of them.
+ */
+type StrokeValue<T, X extends string | number> = string | null | undefined | ((slice: StackedBarSlice$1<T, X>, index: number) => string | undefined);
+/**
+ * `component()` hands back whatever interface it is asked for, but the two builder methods
+ * it inherits are declared as returning the plain Component, so a component interface has
+ * to re-declare them to survive its own construction chain.
+ */
+interface StackedBarBuilder<C extends Component> extends Component {
+    prop<V>(prop: string, setter?: PropertySetter<V>): C;
+    render(callback: RenderCallback): C;
+}
+/**
+ * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
+ * component's generics at the call site.
+ */
+interface StackedBarVerticalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarVerticalComponent<T, X>> {
+    xScale(): StackScale<X>;
+    xScale<V = X>(scale: (value: V) => number | undefined): StackedBarVerticalComponent<T, X>;
+    width(): StoredDimension<T, X>;
+    width<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, number>): StackedBarVerticalComponent<T, X>;
+    yScale(): ValueScale;
+    yScale(scale: ValueScale): StackedBarVerticalComponent<T, X>;
+    height(): StoredDimension<T, X>;
+    height<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, number>): StackedBarVerticalComponent<T, X>;
+    fill(): FillValue<T, X>;
+    fill<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, string | undefined>): StackedBarVerticalComponent<T, X>;
+    stroke(): StrokeValue<T, X>;
+    stroke<U = StackedBarSlice$1<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarVerticalComponent<T, X>;
+}
+interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarHorizontalComponent<T, X>> {
+    xScale(): ValueScale;
+    xScale(scale: ValueScale): StackedBarHorizontalComponent<T, X>;
+    width(): StoredDimension<T, X>;
+    width<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, number>): StackedBarHorizontalComponent<T, X>;
+    yScale(): StackScale<X>;
+    yScale<V = X>(scale: (value: V) => number | undefined): StackedBarHorizontalComponent<T, X>;
+    height(): StoredDimension<T, X>;
+    height<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, number>): StackedBarHorizontalComponent<T, X>;
+    fill(): FillValue<T, X>;
+    fill<U = StackedBarSlice$1<T, X>>(value: SliceValue<U, string | undefined>): StackedBarHorizontalComponent<T, X>;
+    stroke(): StrokeValue<T, X>;
+    stroke<U = StackedBarSlice$1<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarHorizontalComponent<T, X>;
+}
+declare function stackedBarHorizontal<T = unknown, X extends string | number = string>(): StackedBarHorizontalComponent<T, X>;
+declare function stackedBarVertical<T = unknown, X extends string | number = string>(): StackedBarVerticalComponent<T, X>;
 
 /**
  * This function prepares the data for the stackedPyramid component
@@ -3723,4 +3913,4 @@ declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
 export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$m as annotationCircle, export_default$l as annotationConfidenceArea, export_default$k as annotationConfidenceBar, export_default$i as annotationLine, export_default$h as annotationRangeFlag, export_default$g as annotationRangeRuler, export_default$f as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$9 as bar, bounds, export_default$n as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$i as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$e as dimensionsHeatTable, _default$d as dimensionsHorizontalBarChart, _default$9 as dimensionsVerticalBarChart, export_default$8 as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$j as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$h as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$c as layoutPopulationPyramid, _default$b as layoutSmallMultiples, _default$a as layoutStackedAreaMultiples, export_default$2 as legendColorBinned, export_default$1 as legendColorLinear, legendColorOrdinal, export_default as legendRadius, export_default$7 as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$c as move, muchDarker, nestedStackedBarsVertical, not, export_default$6 as pack, export_default$b as panning, parseDate, parseNumber, parseYear, export_default$5 as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$4 as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$m as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$g as selectMenu, set, _default$f as slider, slightlyDarker, slowTransition, some, _default$l as stackedArea, _default$k as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$j as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$e as tooltip, export_default$d as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$3 as treemap, viewport, export_default$a as voronoi, widthAdaptiveMapPathStroke, withAlpha };
-export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, SvgLayerMetadata, ValueSorter };
+export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries$1 as StackedBarSeries, StackedBarSlice$1 as StackedBarSlice, StackedBarVerticalComponent, SvgLayerMetadata, ValueSorter };
