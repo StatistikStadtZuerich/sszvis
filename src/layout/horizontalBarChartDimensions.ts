@@ -25,7 +25,17 @@
  *                                 }
  */
 
-export default function (numBars) {
+export type HorizontalBarChartDimensions = {
+  barHeight: number;
+  padHeight: number;
+  padRatio: number;
+  outerRatio: number;
+  axisOffset: number;
+  barGroupHeight: number;
+  totalHeight: number;
+};
+
+export default function (numBars: number): HorizontalBarChartDimensions {
   const DEFAULT_HEIGHT = 24, // the default bar height
     MIN_PADDING = 20, // the minimum padding size
     barHeight = DEFAULT_HEIGHT, // the bar height
