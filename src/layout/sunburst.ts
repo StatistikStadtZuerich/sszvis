@@ -4,22 +4,49 @@
  * Helper functions for transforming your data to match the format required by the sunburst chart.
  */
 
-import { max, min, partition } from "d3";
-import { prepareHierarchyData } from "./hierarchy.js";
+import { type HierarchyNode, max, min, partition } from "d3";
+import { type NodeDatum, prepareHierarchyData } from "./hierarchy.js";
+
+/** A node of the prepared hierarchy after d3.partition has written its positions onto it. */
+export type SunburstNode<T = unknown> = HierarchyNode<NodeDatum<T>> & {
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+};
+
+/** The chained builder returned by the deprecated prepareData. */
+export type SunburstDataBuilder<T = unknown> = {
+  calculate: (data: T[]) => SunburstNode<T>[];
+  layer: (keyFunc: (d: T) => string | null | undefined) => SunburstDataBuilder<T>;
+  value: (accfn: (d: T) => number) => SunburstDataBuilder<T>;
+  sort: (
+    sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number
+  ) => SunburstDataBuilder<T>;
+};
+
+export type SunburstLayout = {
+  centerRadius: number;
+  numLayers: number;
+  ringWidth: number;
+};
 
 /**
  * sszvis.layout.sunburst.prepareData
  *
  * @deprecated since v3.4.0 - use sszvis.layout.hierarchy.prepareHierarchyData instead
  */
-export const prepareData = () => {
-  const hierarchyBuilder = prepareHierarchyData();
-  const api = {
+export const prepareData = <T = unknown>(): SunburstDataBuilder<T> => {
+  const hierarchyBuilder = prepareHierarchyData<T>();
+  const api: SunburstDataBuilder<T> = {
     calculate: (data) => {
       const root = hierarchyBuilder.calculate(data);
-      partition()(root);
-      function flatten(node) {
-        return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
+      partition<NodeDatum<T>>()(root);
+      function flatten(node: HierarchyNode<NodeDatum<T>>): SunburstNode<T>[] {
+        return Array.prototype.concat.apply(
+          [node],
+          (node.children || []).map((child) => flatten(child))
+        );
       }
       return flatten(root).filter((d) => d.data._tag !== "root");
     },
@@ -57,7 +84,7 @@ const MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  */
-export const computeLayout = (numLayers, chartWidth) => {
+export const computeLayout = (numLayers: number, chartWidth: number): SunburstLayout => {
   // Diameter of the center circle is one-third the width
   const halfWidth = chartWidth / 2;
   const centerRadius = halfWidth / 3;
@@ -79,6 +106,9 @@ export const computeLayout = (numLayers, chartWidth) => {
  *                                    function which abstracts away the way d3 stores positions within the partition layout used
  *                                    by the sunburst chart.
  */
-export const getRadiusExtent = (formattedData) => {
-  return [min(formattedData, (d) => d.y0), max(formattedData, (d) => d.y1)];
-};
+export const getRadiusExtent = (
+  formattedData: Array<{ y0?: number; y1?: number }>
+): [number | undefined, number | undefined] => [
+  min(formattedData, (d) => d.y0),
+  max(formattedData, (d) => d.y1),
+];
