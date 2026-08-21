@@ -23,6 +23,15 @@
  *                                  totalHeight: barGroupHeight plus the height of the outerPadding. This distance can be used
  *                                               to translate scales below the bars.
  *                                 }
+ *
+ * Behaviour notes:
+ * - The layout is fixed: 24px bars separated by 20px of padding. Nothing scales with the
+ *   available space - the caller sizes the container from barGroupHeight, not the reverse.
+ * - outerRatio is always 0, so totalHeight always equals barGroupHeight. The two properties
+ *   are kept distinct only to match the shape of the vertical bar chart layout.
+ * - axisOffset is derived from the constant bar height and is therefore always -22.
+ * - numBars is not validated: 0 gives a barGroupHeight of -20 (numPads goes to -1), and
+ *   negative or fractional counts pass through unchanged.
  */
 function horizontalBarChartDimensions (numBars) {
   const DEFAULT_HEIGHT = 24,
