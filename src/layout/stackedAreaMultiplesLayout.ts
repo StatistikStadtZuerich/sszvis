@@ -24,11 +24,17 @@
  *                              }
  */
 
-export default function (height, num, pct) {
-  pct || (pct = 0.1);
-  const step = height / (num - pct),
-    bandHeight = step * (1 - pct),
-    range = [];
+export type StackedAreaMultiplesLayout = {
+  range: number[];
+  bandHeight: number;
+  padHeight: number;
+};
+
+export default function (height: number, num: number, pct?: number): StackedAreaMultiplesLayout {
+  const padRatio = pct || 0.1;
+  const step = height / (num - padRatio),
+    bandHeight = step * (1 - padRatio),
+    range: number[] = [];
   let level = bandHeight; // count from the top, and start at the bottom of the first band
   while (level - height < 1) {
     range.push(level);
@@ -37,6 +43,6 @@ export default function (height, num, pct) {
   return {
     range,
     bandHeight,
-    padHeight: step * pct,
+    padHeight: step * padRatio,
   };
 }
