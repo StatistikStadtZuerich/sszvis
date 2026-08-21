@@ -25,8 +25,24 @@ import { aspectRatioPortrait } from '../aspectRatio.js';
  *                                      In situations with very wide screens, this limits the width of the entire pyramid to a reasonable size.
  *                                      chartPadding: left padding for the chart. When the maxBarLength is less than what would fill the entire width
  *                                      of the chart, this value is needed to offset the axes and legend so that they line up with the chart. Otherwise,
- *                                      the value is 0 and no padding is needed.
+ *                                      the value is floored at 1 and no further padding is needed.
  *                                    }
+ *
+ * Behaviour notes:
+ * - Chart height is the 4:5 portrait ratio, capped at 480px.
+ * - Bar heights are rounded to whole pixels with a 2px floor; the floor wins over the height
+ *   cap, so totalHeight can exceed 480px.
+ * - Padding is always exactly 1px.
+ * - Positions are top-edge y coordinates for the bars, in the order an ascending age domain
+ *   expects them: the first is the bottom bar (the largest y) and the last is the top bar at
+ *   exactly 0. There is one position per bar for a positive whole numBars, since the integer
+ *   arithmetic guarantees the loop lands on 0; a fractional or negative count is not validated.
+ * - maxBarLength is capped at 240 (= aspectRatioPortrait.MAX_HEIGHT * 4/5 / 2), which only
+ *   coincidentally equals this module's own MAX_HEIGHT / 2 and can drift if either constant changes.
+ * - chartPadding is floored at 1.
+ * - numBars === 0 gives an Infinity barHeight, a NaN totalHeight, and no positions.
+ * - A zero or negative spaceWidth is not validated. Both produce 2px bars and a 1px
+ *   chartPadding; maxBarLength is 0 for a zero width and negative for a negative one.
  */
 function populationPyramidLayout (spaceWidth, numBars) {
   const MAX_HEIGHT = 480; // Chart no taller than this
