@@ -29,7 +29,16 @@
 
 import { aspectRatioPortrait } from "../aspectRatio.js";
 
-export default function (spaceWidth, numBars) {
+export type PopulationPyramidLayout = {
+  barHeight: number;
+  padding: number;
+  totalHeight: number;
+  positions: number[];
+  maxBarLength: number;
+  chartPadding: number;
+};
+
+export default function (spaceWidth: number, numBars: number): PopulationPyramidLayout {
   const MAX_HEIGHT = 480; // Chart no taller than this
   const MIN_BAR_HEIGHT = 2; // Bars no shorter than this
   const defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);
@@ -44,7 +53,7 @@ export default function (spaceWidth, numBars) {
 
   let barPos = totalHeight - roundedBarHeight;
   const step = roundedBarHeight + padding,
-    positions = [];
+    positions: number[] = [];
   while (barPos >= 0) {
     positions.push(barPos);
     barPos -= step;
