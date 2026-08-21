@@ -44,7 +44,7 @@ describe("layout/smallMultiples", () => {
 
   /** A 3 x 2 grid of 100 x 100 units with 10px gutters. */
   const grid = () =>
-    layoutSmallMultiples().width(320).height(210).cols(3).rows(2).paddingX(10).paddingY(10);
+    layoutSmallMultiples<Group>().width(320).height(210).cols(3).rows(2).paddingX(10).paddingY(10);
 
   const multiples = (node: SVGGElement) => [...node.querySelectorAll("g.sszvis-multiple")];
   const transformOf = (el: Element) => el.getAttribute("transform");
@@ -85,7 +85,7 @@ describe("layout/smallMultiples", () => {
     });
 
     test("a single column stacks the groups vertically", () => {
-      const layout = layoutSmallMultiples()
+      const layout = layoutSmallMultiples<Group>()
         .width(100)
         .height(320)
         .cols(1)
@@ -101,7 +101,7 @@ describe("layout/smallMultiples", () => {
     });
 
     test("zero padding lets the units touch", () => {
-      const layout = layoutSmallMultiples()
+      const layout = layoutSmallMultiples<Group>()
         .width(300)
         .height(200)
         .cols(3)
@@ -278,7 +278,7 @@ describe("layout/smallMultiples", () => {
       // silently produces NaN geometry and groups the browser cannot place.
       // got: transform "translate(NaN,NaN)"
       // want: an explicit error, or a sensible default.
-      const layout = layoutSmallMultiples().width(320).height(210).paddingX(10).paddingY(10);
+      const layout = layoutSmallMultiples<Group>().width(320).height(210).paddingX(10).paddingY(10);
       const node = render(layout, groups(2));
       expect(transformOf(multiples(node)[0] as Element)).toBe("translate(NaN,NaN)");
     });
@@ -288,7 +288,7 @@ describe("layout/smallMultiples", () => {
       // geometry properties this component cannot work without have none.
       // got: NaN geometry
       // want: paddingX and paddingY defaulting to 0.
-      const layout = layoutSmallMultiples().width(320).height(210).cols(3).rows(2);
+      const layout = layoutSmallMultiples<Group>().width(320).height(210).cols(3).rows(2);
       const node = render(layout, groups(2));
       const datum = (multiples(node)[0] as SVGGElement & { __data__: Group }).__data__;
       expect(datum.gw).toBeNaN();

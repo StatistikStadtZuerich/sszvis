@@ -79,8 +79,8 @@ import { type Component, component } from "../d3-component.js";
  * One group of the grid. `values` carries the data for the chart drawn inside the group;
  * the layout writes its geometry back onto the same object.
  */
-export type SmallMultipleGroup<T = unknown> = {
-  values: T;
+export type SmallMultipleGroup<V = unknown> = {
+  values: V;
   /** x-position of the group within the grid */
   gx?: number;
   /** y-position of the group within the grid */
@@ -95,7 +95,9 @@ export type SmallMultipleGroup<T = unknown> = {
   cy?: number;
 };
 
-type SmallMultiplesProps<T> = {
+type SmallMultiplesProps<G> = {
+  // the six geometry props are read straight out of the props object, which holds undefined
+  // for any of them the caller never set; that is what yields the documented NaN geometry
   width: number;
   height: number;
   paddingX: number;
@@ -103,37 +105,45 @@ type SmallMultiplesProps<T> = {
   rows: number;
   cols: number;
   showTitle: boolean;
-  titleLabel: (d: SmallMultipleGroup<T>, i: number) => string;
+  titleLabel: (d: G, i: number) => string;
   titleAnchor: string;
   titleY: number;
 };
 
-export interface SmallMultiplesComponent<T = unknown> extends Component {
-  width(): number;
-  width(width: number): SmallMultiplesComponent<T>;
-  height(): number;
-  height(height: number): SmallMultiplesComponent<T>;
-  paddingX(): number;
-  paddingX(padding: number): SmallMultiplesComponent<T>;
-  paddingY(): number;
-  paddingY(padding: number): SmallMultiplesComponent<T>;
-  rows(): number;
-  rows(rows: number): SmallMultiplesComponent<T>;
-  cols(): number;
-  cols(cols: number): SmallMultiplesComponent<T>;
+export interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGroup>
+  extends Component {
+  /**
+   * The six geometry properties have no defaults, so their getters report undefined until the
+   * corresponding setter has been called. Reading one before then is what produces the NaN
+   * geometry described in the module's behaviour notes.
+   */
+  width(): number | undefined;
+  width(width: number): SmallMultiplesComponent<G>;
+  height(): number | undefined;
+  height(height: number): SmallMultiplesComponent<G>;
+  paddingX(): number | undefined;
+  paddingX(padding: number): SmallMultiplesComponent<G>;
+  paddingY(): number | undefined;
+  paddingY(padding: number): SmallMultiplesComponent<G>;
+  rows(): number | undefined;
+  rows(rows: number): SmallMultiplesComponent<G>;
+  cols(): number | undefined;
+  cols(cols: number): SmallMultiplesComponent<G>;
   showTitle(): boolean;
-  showTitle(show: boolean): SmallMultiplesComponent<T>;
-  titleLabel(): (d: SmallMultipleGroup<T>, i: number) => string;
-  titleLabel(accessor: (d: SmallMultipleGroup<T>, i: number) => string): SmallMultiplesComponent<T>;
+  showTitle(show: boolean): SmallMultiplesComponent<G>;
+  titleLabel(): (d: G, i: number) => string;
+  titleLabel(accessor: (d: G, i: number) => string): SmallMultiplesComponent<G>;
   /** "start", "middle" or "end"; any other value is positioned as "middle" but written to
    * the text-anchor attribute verbatim. */
   titleAnchor(): string;
-  titleAnchor(anchor: string): SmallMultiplesComponent<T>;
+  titleAnchor(anchor: string): SmallMultiplesComponent<G>;
   titleY(): number;
-  titleY(y: number): SmallMultiplesComponent<T>;
+  titleY(y: number): SmallMultiplesComponent<G>;
 }
 
-export default function <T = unknown>(): SmallMultiplesComponent<T> {
+export default function <
+  G extends SmallMultipleGroup = SmallMultipleGroup,
+>(): SmallMultiplesComponent<G> {
   return component()
     .prop("width")
     .prop("height")
@@ -149,9 +159,9 @@ export default function <T = unknown>(): SmallMultiplesComponent<T> {
     .titleAnchor("middle")
     .prop("titleY")
     .titleY(0)
-    .render(function (this: Element, data: SmallMultipleGroup<T>[]) {
+    .render(function (this: Element, data: G[]) {
       const selection = select<Element, unknown>(this);
-      const props = selection.props<SmallMultiplesProps<T>>();
+      const props = selection.props<SmallMultiplesProps<G>>();
 
       const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
       const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
@@ -160,7 +170,7 @@ export default function <T = unknown>(): SmallMultiplesComponent<T> {
       const verticalCenter = unitHeight / 2;
 
       const multiples = selection
-        .selectAll<SVGGElement, SmallMultipleGroup<T>>("g.sszvis-multiple")
+        .selectAll<SVGGElement, G>("g.sszvis-multiple")
         .data(data)
         .join("g")
         .classed("sszvis-g sszvis-multiple", true);
