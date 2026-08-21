@@ -9046,6 +9046,13 @@
      * @module sszvis/layout/sunburst
      *
      * Helper functions for transforming your data to match the format required by the sunburst chart.
+     *
+     * Behaviour notes:
+     * - computeLayout does not validate its inputs and can silently produce a layout that
+     *   overflows or under-fills the chart; see the notes on computeLayout below.
+     * - prepareData is deprecated but is still the only builder that produces the partition
+     *   positions (x0/x1/y0/y1) that getRadiusExtent reads. The sunburst component accepts either:
+     *   handed a plain hierarchy it runs d3.partition itself.
      */
     const MAX_SUNBURST_RING_WIDTH = 60;
     const MAX_RW = MAX_SUNBURST_RING_WIDTH;
@@ -9062,6 +9069,17 @@
      *       @property {Number} centerRadius      The central radius of the chart (used by the sunburst component)
      *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
      *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
+     *
+     * Behaviour notes:
+     * - centerRadius is always chartWidth / 6.
+     * - ringWidth is the remaining radius divided by numLayers, clamped to [10, 60].
+     * - Because the clamp does not feed back into centerRadius, a deep hierarchy in a narrow
+     *   chart overflows (centerRadius + ringWidth * numLayers can exceed chartWidth / 2, which
+     *   is exactly the outer radius the sunburst component draws, per docs/sunburst/basic.js),
+     *   and a shallow one leaves empty space.
+     * - numLayers === 0 divides by zero and the resulting Infinity is masked by the 60px cap.
+     * - A negative numLayers or a zero/negative chartWidth is not validated (the 10px floor
+     *   hides the negative ring width).
      */
     const computeLayout = (numLayers, chartWidth) => {
       // Diameter of the center circle is one-third the width
@@ -9082,10 +9100,14 @@
      *                                    The domain of the radius scale you use to configure the sunburst chart. This is a convenience
      *                                    function which abstracts away the way d3 stores positions within the partition layout used
      *                                    by the sunburst chart.
+     *
+     * Behaviour notes:
+     * - Returns [min y0, max y1] taken independently of each other.
+     * - d3.min/max skip undefined and NaN nodes.
+     * - An empty array gives [undefined, undefined], which produces a NaN radius when used as
+     *   a scale domain.
      */
-    const getRadiusExtent = formattedData => {
-      return [d3.min(formattedData, d => d.y0), d3.max(formattedData, d => d.y1)];
-    };
+    const getRadiusExtent = formattedData => [d3.min(formattedData, d => d.y0), d3.max(formattedData, d => d.y1)];
 
     /**
      * Vertical Bar Chart Dimensions
