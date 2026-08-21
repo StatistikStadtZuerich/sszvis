@@ -7,13 +7,28 @@ import { warn } from '../logger.js';
  *
  * A module of helper functions for computing the data structure
  * and layout required by the sankey component.
+ *
+ * Behaviour notes:
+ * - prepareData's source/target/value accessors default to fn.identity, which only matches when
+ *   the rows are themselves the id strings; for the object rows this layout is built around, no
+ *   link ever matches a node id.
+ * - a link with an unknown source or target id becomes a null entry left in the returned links
+ *   array. Any such null throws a TypeError from the value sort as soon as a second link exists,
+ *   valid or not; a sole invalid row survives only because sort skips a one-element array.
+ * - link ids come from a module-level counter shared across every builder instance, so they
+ *   are unique but not stable between renders.
+ * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
+ *   on the link, so the link stack runs outside its node.
+ * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
+ *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
+ *   is discarded by the minimum rather than distorting the others.
+ * - a single-column diagram gives computeLayout's columnRange an Infinity step (issue #120);
+ *   an empty column list gives a negative step and NaN/undefined elsewhere.
  */
-const newLinkId = function () {
+const newLinkId = (() => {
   let id = 0;
-  return function () {
-    return ++id;
-  };
-}();
+  return () => ++id;
+})();
 /**
  * sszvis.layout.sankey.prepareData
  *
@@ -42,22 +57,47 @@ const newLinkId = function () {
  *               @property {Array} links             An array of link data. Each one will become a path in the sankey
  *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
+ *
+ * Behaviour notes:
+ * - source/target/value default to fn.identity, which only matches when a row is itself the id
+ *   string; omitting them makes every link invalid for the usual object rows.
+ * - a link whose source or target id is not in idLists is warned about and replaced by null, and
+ *   the null stays in the returned links array. Any null throws a TypeError from the value sort
+ *   once a second link exists, valid or not; a sole invalid row survives only because sort skips
+ *   a one-element array.
+ * - link ids come from a module-level counter shared by every builder instance, so they are
+ *   unique but not stable across renders.
+ * - a duplicate id warns and keeps only the last column.
+ * - a non-numeric value silently becomes 0; a negative value is kept on the link but clamped
+ *   away at the node (node.value is Math.max(0, from, to)), so the link stack runs outside
+ *   its node.
+ * - nothing checks that the two ends of a link are in different columns.
+ * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
+ *   or builder(data).
+ * - nodes are sorted across all columns at once (descending by default), then offsets are
+ *   assigned per column.
  */
-const prepareData = function () {
+const prepareData = () => {
   let mGetSource = identity;
   let mGetTarget = identity;
   let mGetValue = identity;
   let mColumnIds = [];
   // Helper functions
   const valueAcc = prop("value");
-  const byAscendingValue = function (a, b) {
-    return ascending(valueAcc(a), valueAcc(b));
+  /**
+   * Reads a link's value. The links array can hold nulls for rows whose source or target was
+   * not found, and reading through one throws, exactly as the original property accessor did.
+   */
+  const linkValue = link => {
+    if (link === null) {
+      throw new TypeError("Cannot read properties of null (reading 'value')");
+    }
+    return link.value;
   };
-  const byDescendingValue = function (a, b) {
-    return descending(valueAcc(a), valueAcc(b));
-  };
+  const byAscendingValue = (a, b) => ascending(valueAcc(a), valueAcc(b));
+  const byDescendingValue = (a, b) => descending(valueAcc(a), valueAcc(b));
   let valueSortFunc = byDescendingValue;
-  const main = function (inputData) {
+  const main = inputData => {
     const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
       for (const id of columnIdsList) {
         if (index.has(id)) {
@@ -81,7 +121,7 @@ const prepareData = function () {
     const listOfLinks = inputData.map(datum => {
       const srcId = mGetSource(datum);
       const tgtId = mGetTarget(datum);
-      const value = +mGetValue(datum) || 0; // Cast this to number
+      const value = Number(mGetValue(datum)) || 0; // Cast this to number
       const srcNode = columnIndex.get(srcId);
       const tgtNode = columnIndex.get(tgtId);
       if (!srcNode) {
@@ -123,7 +163,7 @@ const prepareData = function () {
     // Sort the links in descending order of value. This means smaller links will render
     // on top of larger links.
     // (note, this sorts all links for all columns in the same array)
-    listOfLinks.sort(byDescendingValue);
+    listOfLinks.sort((a, b) => descending(linkValue(a), linkValue(b)));
     // Assign the valueOffset and nodeIndex properties
     // Here, columnData[0] is an array adding up value totals
     // and columnData[1] is an array adding up the number of nodes in each column
@@ -160,35 +200,39 @@ const prepareData = function () {
       columnLengths
     };
   };
-  main.apply = function (data) {
-    return main(data);
-  };
-  main.source = function (func) {
-    mGetSource = func;
-    return main;
-  };
-  main.target = function (func) {
-    mGetTarget = func;
-    return main;
-  };
-  main.value = function (func) {
-    mGetValue = func;
-    return main;
-  };
-  main.descendingSort = function () {
-    valueSortFunc = byDescendingValue;
-    return main;
-  };
-  main.ascendingSort = function () {
-    valueSortFunc = byAscendingValue;
-    return main;
-  };
-  main.idLists = function (idLists) {
-    mColumnIds = idLists;
-    return main;
-  };
-  return main;
+  const api = Object.assign(main, {
+    apply(data) {
+      return main(data);
+    },
+    source(func) {
+      mGetSource = func;
+      return api;
+    },
+    target(func) {
+      mGetTarget = func;
+      return api;
+    },
+    value(func) {
+      mGetValue = func;
+      return api;
+    },
+    descendingSort() {
+      valueSortFunc = byDescendingValue;
+      return api;
+    },
+    ascendingSort() {
+      valueSortFunc = byAscendingValue;
+      return api;
+    },
+    idLists(idLists) {
+      mColumnIds = idLists;
+      return api;
+    }
+  });
+  return api;
 };
+/** Matches JavaScript's implicit undefined -> NaN coercion in arithmetic. */
+const num = value => value === undefined ? Number.NaN : value;
 /**
  * sszvis.layout.sankey.computeLayout
  *
@@ -210,8 +254,21 @@ const prepareData = function () {
  *         @property {Number} nodeThickness       The thickness of nodes. Pass to component.sankey.nodeThickness
  *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
+ *
+ * Behaviour notes:
+ * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
+ *   minimum across the columns is used for all of them. A single-node column divides by zero and
+ *   contributes a phantom 50px candidate, but 50 is the cap, so that candidate only wins when
+ *   every column is at 50 anyway - it never shrinks another column.
+ * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
+ *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
+ *   every total is 0; in that case the value range comes back [0, NaN].
+ * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
+ *   (numColumns - 1); a single column gives Infinity (issue #120) and an empty column list
+ *   gives a negative step, an undefined nodePadding and NaN elsewhere.
+ * - nodeThickness is always 20.
  */
-const computeLayout = function (columnLengths, columnTotals, columnHeight, columnWidth) {
+const computeLayout = (columnLengths, columnTotals, columnHeight, columnWidth) => {
   // Calculate appropriate scale and padding values (in pixels)
   const padSpaceRatio = 0.15;
   const padMin = 12;
@@ -229,23 +286,23 @@ const computeLayout = function (columnLengths, columnTotals, columnHeight, colum
   // after padding pixels have been subtracted. Then take the minimum value of that.
   const pixPerUnit = min(columnLengths.map((colLength, colIndex) => {
     // The non-padding pixels must have at least minDisplayPixels
-    const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
-    return nonPaddingPixels / columnTotals[colIndex];
+    const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * num(computedPixPadding));
+    return nonPaddingPixels / num(columnTotals[colIndex]);
   }));
   // The padding between bars, in bar value units
-  const valuePadding = computedPixPadding / pixPerUnit;
+  const valuePadding = num(computedPixPadding) / num(pixPerUnit);
   // The padding between bars, in pixels
   const nodePadding = computedPixPadding;
   // The maximum total value of any column
   const maxTotal = max(columnTotals);
   // Compute y-padding required to vertically center each column (in pixels)
-  const paddedHeights = columnLengths.map((colLength, colIndex) => columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding);
+  const paddedHeights = columnLengths.map((colLength, colIndex) => num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * num(nodePadding));
   const maxPaddedHeight = max(paddedHeights);
-  const columnPaddings = columnLengths.map((colLength, colIndex) => (maxPaddedHeight - paddedHeights[colIndex]) / 2);
+  const columnPaddings = columnLengths.map((_colLength, colIndex) => (num(maxPaddedHeight) - num(paddedHeights[colIndex])) / 2);
   // The domain of the size scale
   const valueDomain = [0, maxTotal];
   // The range of the size scale
-  const valueRange = [0, maxTotal * pixPerUnit];
+  const valueRange = [0, num(maxTotal) * num(pixPerUnit)];
   // Calculate column (or row, as the case may be) positioning values
   const nodeThickness = 20;
   const numColumns = columnLengths.length;

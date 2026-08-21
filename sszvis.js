@@ -6251,83 +6251,175 @@
      *
      * @module sszvis/component/sankey
      *
-     * @property {Function} sizeScale                    A scale function for the size of the nodes. The domain and the range should
-     *                                                   be configured using values returned by the sszvis.layout.sankey.computeLayout
-     *                                                   function.
-     * @property {Function} columnPosition               A scale function for the position of the columns of nodes.
-     *                                                   Should be configured using a value returned by the sszvis.layout.sankey.computeLayout function.
-     * @property {Number} nodeThickness                  A number for the horizontal thickness of the node bars.
-     *                                                   Should be configured using a value returned by the sszvis.layout.sankey.computeLayout function.
-     * @property {Number} nodePadding                    A number for padding between the nodes.
-     *                                                   Should be configured using a value returned by the sszvis.layout.sankey.computeLayout function.
-     * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number,
-     *                                                   for padding at the top of each column. Used to vertically center the columns.
-     * @property {String, Function} columnLabel          A string, or a function that returns a string, for the label at the top of each column.
-     * @property {Number} columnLabelOffset              A value for offsetting the column labels in the x axis. Used to move the column labels around if you
-     *                                                   don't want them to be centered on the columns. This is useful in situations where the normal label would
-     *                                                   overlap outer boundaries or otherwise be inconveniently positioned. You can usually forget this, except
-     *                                                   perhaps in very narrow screen layouts.
-     * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default 0.5.
-     * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color.
-     * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color.
+     * @requires sszvis.component.bar
+     *
+     * @property {Function} sizeScale                    A scale function for the size of the nodes. The domain and the range should be configured using
+     *                                                   values returned by the sszvis.layout.sankey.computeLayout function. It scales the links as well:
+     *                                                   a link's thickness is sizeScale(value) and its offset within its node sizeScale(srcOffset).
+     *                                                   Required, and an unset scale throws "props.sizeScale is not a function".
+     * @property {Function} columnPosition               A scale function for the position of the columns of nodes. Should be configured using a value
+     *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required, and throws like sizeScale
+     *                                                   when unset. It is called with a column index for the column labels as well as for the nodes, so
+     *                                                   it is also consulted for columns that hold no node.
+     * @property {Number} nodeThickness                  A number for the horizontal thickness of the node bars. Should be configured using a value
+     *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required, but omitting it is not
+     *                                                   reported: Math.max(undefined, 1) is NaN, which bar's missing-value guard turns into zero-width
+     *                                                   bars, while the column labels, the hit boxes and the tooltip anchors keep the NaN. Must be a
+     *                                                   plain number - an accessor, which most other properties in this library accept, is used in
+     *                                                   arithmetic and yields the same NaN. The bar's width is floored at one pixel but the link starts
+     *                                                   and the column label centring read the raw value, so below a thickness of one the two disagree.
+     * @property {Number} nodePadding                    A number for padding between the nodes. Should be configured using a value returned by the
+     *                                                   sszvis.layout.sankey.computeLayout function. It applies between nodes only; the links stacked
+     *                                                   inside a node are spaced by the size scale alone and fill it exactly. It also sets how far a
+     *                                                   label hit box extends past its node, half of it above and half below. Required, must be a plain
+     *                                                   number, and fails as silently as nodeThickness: every node's position becomes NaN, which bar
+     *                                                   turns into 0, so the whole column collapses onto one row.
+     * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number, for padding at the top of
+     *                                                   each column. Used to vertically center the columns. Required despite the functor wrapper: it has
+     *                                                   no default, so leaving it unset throws "props.columnPadding is not a function". An accessor is
+     *                                                   called with the column index alone, without d3's index and group arguments.
+     * @property {String, Function} columnLabel          A string, or a function that returns a string, for the label at the top of each column. Defaults
+     *                                                   to "", so the text elements are always in the DOM, and so are their ticks - which sszvis.css
+     *                                                   gives a stroke, so an unlabelled chart still shows a short line per column pointing at nothing. A
+     *                                                   function is called with the column index alone, not with the label's own datum, which is that
+     *                                                   column's node count; columnLabelOffset decorates the same element but takes the datum first. One
+     *                                                   label and one tick are drawn per entry in data.columnLengths, whether or not a node lives in that
+     *                                                   column.
+     * @property {Number, Function} columnLabelOffset    A value for offsetting the column labels in the x axis. Used to move the column labels around if
+     *                                                   you don't want them to be centered on the columns. This is useful in situations where the normal
+     *                                                   label would overlap outer boundaries or otherwise be inconveniently positioned. You can usually
+     *                                                   forget this, except perhaps in very narrow screen layouts. Default 0. It shifts the label only -
+     *                                                   the tick stays centred on the column - and horizontally only; the vertical position is fixed. A
+     *                                                   function is applied by d3 rather than by the renderer, so it receives the label's datum, that
+     *                                                   column's node count, followed by the column index.
+     * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default
+     *                                                   0.5, which puts both control points at the horizontal midpoint. Never clamped: at 1 the control
+     *                                                   points swap ends, which still keeps the curve inside the column gap as a pronounced S, and above
+     *                                                   1 they leave the gap altogether and the curve swings out past both columns. Must be a plain
+     *                                                   number, like nodeThickness; an accessor yields NaN control points and the browser drops the path.
+     * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color. Optional:
+     *                                                   when unset no fill attribute is written and the bars fall back to the stylesheet.
+     * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color. Optional, as
+     *                                                   nodeColor: unset leaves the stroke attribute off the paths.
      * @property {Function} linkSort                     A function determining how to sort the links, which are rendered stacked on top of each other.
-     *                                                   The default implementation stacks links in decresing order of value, i.e. larger, thicker links
-     *                                                   are below smaller, thinner ones.
+     *                                                   The comparator is handed to d3's selection.sort, which orders the elements ascending, so the
+     *                                                   comparator's largest link is the last one in the document and paints over all the others. The
+     *                                                   default comparator is ascending by value, so the thickest links paint over the thinnest, undoing
+     *                                                   in the DOM the descending order sszvis.layout.sankey.prepareData put the array in for the
+     *                                                   opposite reason. Reverse it to keep the thin links on top. The property is wrapped in fn.functor,
+     *                                                   so a value that is not a function is silently turned into a comparator claiming every pair is
+     *                                                   already ordered. The sort reorders elements only; the data array, and with it the link tooltip
+     *                                                   anchors, keeps its original order.
      * @property {String, Function} labelSide            A function determining the position of labels for the nodes. Should take a column index and
-     *                                                   return a side ('left' or 'right'). Default is always 'left'.
-     * @property {Boolean} labelSideSwitch               A boolean used to determine whether to switch the label side. When true, 'left' labels will be shown on
-     *                                                   the right side, and 'right' labels on the left side. This is useful as a switch to be flipped in very
-     *                                                   narrow screen layouts, when you want the labels to appear on the opposite side of the columns they refer to.
-     * @property {Number} labelOpacity                   A value for the opacity of the column labels. You can change this to affect the visibility of the column
-     *                                                   labels, for instance to hide them when they would overlap with user-triggered hover labels.
-     * @property {Number} labelHitBoxSize                A number for the width of 'hit boxes' added underneath the labels. This should basically be
-     *                                                   equal to the width of the widest label. For performance reasons, it doesn't make sense to calculate
-     *                                                   this value at run time while the component is rendered. Far better is to position the chart so that the
-     *                                                   labels are visible, find the value of the widest label, and use that.
-     * @property {Function} nameLabel                    A function which takes the id of a node and should return the label for that node. Defaults tousing
-     *                                                   the id directly.
-     * @property {Array} linkSourceLabels                An array containing the data for links which should have labels on their 'source' end, that is the
-     *                                                   end of the link which is connected to the source node. These data values should match the values
-     *                                                   returned by sszvis.layout.sankey.prepareData. For performance reasons, you need to give the data
-     *                                                   values themselves here. See the examples for an implementation of the most straightforward
-     *                                                   mechanism for this.
+     *                                                   return a side ('left' or 'right'). Default is always 'left'. A function receives the column index
+     *                                                   alone, without d3's index and group arguments. The test is `=== "left"`, so any other value, a
+     *                                                   typo included, silently lands the label on the right, and labelSideSwitch then maps it to 'left'.
+     * @property {Boolean} labelSideSwitch               A boolean used to determine whether to switch the label side. When true, 'left' labels will be
+     *                                                   shown on the right side, and 'right' labels on the left side. This is useful as a switch to be
+     *                                                   flipped in very narrow screen layouts, when you want the labels to appear on the opposite side of
+     *                                                   the columns they refer to. The hit boxes follow the switch as well.
+     * @property {Number, Function} labelOpacity         A value for the opacity of the node labels, or a function over a node returning one. Default 1.
+     *                                                   Despite what this property used to claim, it is applied to the node labels: the column labels
+     *                                                   never receive an opacity at all, and no property hides them. Use it to fade the node names out
+     *                                                   when they would overlap with user-triggered hover labels.
+     * @property {Number} labelHitBoxSize                A number for the width of the transparent 'hit boxes' drawn over the labels. This should
+     *                                                   basically be equal to the width of the widest label. For performance reasons, it doesn't make
+     *                                                   sense to calculate this value at run time while the component is rendered. Far better is to
+     *                                                   position the chart so that the labels are visible, find the value of the widest label, and use
+     *                                                   that. Default 0, which leaves a box exactly as wide as a node. Must be a plain number: the width
+     *                                                   is computed once, from labelHitBoxSize plus nodeThickness, so every box is the same width
+     *                                                   whatever its own label says. The boxes are appended after the labels and so paint over them,
+     *                                                   which is what lets them catch the pointer.
+     * @property {Function} nameLabel                    A function which takes the id of a node and should return the label for that node. Defaults to
+     *                                                   using the id directly. The only label accessor that has to be a function: it is not wrapped in
+     *                                                   fn.functor, so a constant throws "props.nameLabel is not a function".
+     * @property {Array} linkSourceLabels                An array containing the data for links which should have labels on their 'source' end, that is
+     *                                                   the end of the link which is connected to the source node. These data values should match the
+     *                                                   values returned by sszvis.layout.sankey.prepareData. For performance reasons, you need to give
+     *                                                   the data values themselves here. See the examples for an implementation of the most
+     *                                                   straightforward mechanism for this. Defaults to []. The array is used as given and never checked
+     *                                                   against data.links, so a stale link object still renders a label, positioned from its own src and
+     *                                                   tgt and so at a place where no link is drawn.
      * @property {Array} linkTargetLabels                An array containing data for links which should have labels on their 'target' end, that is the
-     *                                                   end of the link which is connected to the target node. Works the same as linkSourceLabels, but used
-     *                                                   for another set of possible link labels.
-     * @property {String, Function} linkLabel            A string or function returning a string to use for the label of each link. Function
-     *                                                   versions should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels)
-     *                                                   and return text.
+     *                                                   end of the link which is connected to the target node. Works the same as linkSourceLabels, but
+     *                                                   used for another set of possible link labels.
+     * @property {String, Function} linkLabel            A string or function returning a string to use for the label of each link. Function versions
+     *                                                   should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels) and
+     *                                                   return text. Optional: when unset the label elements are still created for every entry in
+     *                                                   linkSourceLabels and linkTargetLabels, with no text in them.
+     *
+     * Note: the component always creates four sub-groups, in this order: nodes, links,
+     * linklabels and nodelabels. The order is load-bearing, since it makes the links paint over
+     * the node bars, and every group is created even when there is nothing to put in it. The
+     * column labels and their ticks are not among them: they are selected off the same selection
+     * the bars are rendered into, so they live in the nodes group alongside the rects and the
+     * tooltip anchors. They can still be styled by class - .sszvis-sankey-column-label in
+     * sszvis.css does exactly that - but there is no group of their own to transform, fade or
+     * make click-through as a unit. Their vertical position is a hard-coded -24, above the
+     * group's origin, so they depend on the chart's top padding to be visible at all.
+     *
+     * Note: a one pixel gap is left between a node and the links attached to it, so the curves
+     * never quite touch the bars. It is a local constant, deliberately not a property, and it
+     * does not scale with the chart.
+     *
+     * Note: only the node bars are guarded against missing values. They are drawn by bar, which
+     * replaces NaN with 0, while the link paths, the labels and the hit boxes are written here
+     * by hand from the same numbers. A size scale that returns NaN for one value - a d3 scale
+     * fed undefined, a gap in the data - therefore gives that node a bar of zero height and its
+     * links a d and a stroke-width of NaN, which the browser drops entirely: the node renders
+     * and the link disappears. Nothing is logged either way.
+     *
+     * Note: a node's box is snapped to whole pixels, the position floored and the height ceiled,
+     * so neighbouring nodes never leave a sub-pixel gap between them. The link geometry is not
+     * rounded. The links do start from the same floored position as the bar, so they stay glued
+     * to its top edge, but the stack of links inside a node can finish up to a pixel short of
+     * the bar's bottom edge.
+     *
+     * Note: the nodes end up with their tooltip anchors written twice. bar renders its own
+     * anchors into the group it is called on, and the component then calls a second
+     * tooltipAnchor on the same group. Both join to [data-tooltip-anchor] over data.nodes, so
+     * the second pass reuses the first one's rects and overwrites their transforms rather than
+     * adding any. What is observable is four anchors rather than eight, centred on the nodes
+     * rather than at bar's default top-centre.
+     *
+     * Note: the links are keyed by id, so a link keeps its path element across renders, but the
+     * nodes go through bar, whose join is unkeyed, so rect identity follows the array index. A
+     * reordered node array moves no element; it rewrites the attributes in place, and each rect
+     * ends up bound to a different node. That matters for anything holding on to a rect, such as
+     * a hover handler.
+     *
+     * Note: the component never sets bar's transition property, so it keeps bar's default of
+     * true - and that transition does not animate anything, so the nodes jump straight to their
+     * new geometry. It is not free either: a d3 transition is still created and discarded on
+     * every node rect on every render. See test/component/sankey.test.ts.
      *
      * @return {sszvis.component}
      */
-    const linkPathString = function (x0, x1, x2, x3, y0, y1) {
-      return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
-    };
-    const linkBounds = function (x0, x1, y0, y1) {
-      return [x0, x1, y0, y1];
-    };
+    /* Constants
+    ----------------------------------------------- */
+    /** Padding between the nodes and the links attached to them. Deliberately not a property. */
+    const LINK_PADDING = 1;
+    /** How far above the columns the column labels and their ticks are drawn. */
+    const COLUMN_LABEL_Y = -24;
+    /* Helper functions
+    ----------------------------------------------- */
+    const linkPathString = (x0, x1, x2, x3, y0, y1) => "M".concat(x0, ",").concat(y0, "C").concat(x1, ",").concat(y0, " ").concat(x2, ",").concat(y1, " ").concat(x3, ",").concat(y1);
+    const linkBounds = (x0, x1, y0, y1) => [x0, x1, y0, y1];
+    /** The links are keyed on their id, so a redrawn link keeps its path element. */
+    const idAcc = link => link.id;
+    /* Module
+    ----------------------------------------------- */
     function sankey () {
-      return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort", functor).linkSort((a, b) => a.value - b.value) // Default sorts in descending order of value
+      return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort", functor).linkSort((a, b) => a.value - b.value) // Ascending, so the thickest links paint on top
       .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel").nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
+        var _props$linkColor, _props$linkLabel, _props$linkLabel2;
         const selection = d3.select(this);
         const props = selection.props();
-        const idAcc = prop("id");
-        const getNodePosition = function (node) {
-          return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
-        };
-        const xPosition = function (node) {
-          return props.columnPosition(node.columnIndex);
-        };
-        const yPosition = function (node) {
-          return getNodePosition(node);
-        };
-        const xExtent = function () {
-          return Math.max(props.nodeThickness, 1);
-        };
-        const yExtent = function (node) {
-          return Math.ceil(Math.max(props.sizeScale(node.value), 1));
-        };
-        const linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
+        const getNodePosition = node => Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
+        const xPosition = node => props.columnPosition(node.columnIndex);
+        const yPosition = node => getNodePosition(node);
+        const xExtent = () => Math.max(props.nodeThickness, 1);
+        const yExtent = node => Math.ceil(Math.max(props.sizeScale(node.value), 1));
         // Draw the nodes
         const barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor);
         const barGroup = selection.selectGroup("nodes").datum(data.nodes);
@@ -6335,42 +6427,37 @@
         const barTooltipAnchor = tooltipAnchor().position(node => [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2]);
         barGroup.call(barTooltipAnchor);
         // Draw the column labels
-        const columnLabelX = function (colIndex) {
-          return props.columnPosition(colIndex) + props.nodeThickness / 2;
-        };
-        const columnLabelY = -24;
+        const columnLabelX = colIndex => props.columnPosition(colIndex) + props.nodeThickness / 2;
         const columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
         // One number for each column
         .data(data.columnLengths).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
-        columnLabels.attr("transform", (d, i) => translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY)).text((d, i) => props.columnLabel(i));
+        columnLabels.attr("transform", (d, i) => translateString(columnLabelX(i) + props.columnLabelOffset(d, i), COLUMN_LABEL_Y)).text((_d, i) => props.columnLabel(i));
         const columnLabelTicks = barGroup.selectAll(".sszvis-sankey-column-label-tick").data(data.columnLengths).join("line").attr("class", "sszvis-sankey-column-label-tick");
-        columnLabelTicks.attr("x1", (d, i) => halfPixel(columnLabelX(i))).attr("x2", (d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12));
+        columnLabelTicks.attr("x1", (_d, i) => halfPixel(columnLabelX(i))).attr("x2", (_d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(COLUMN_LABEL_Y + 8)).attr("y2", halfPixel(COLUMN_LABEL_Y + 12));
         // Draw the links
-        const linkPoints = function (link) {
-          const curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
-            curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
+        const linkPoints = link => {
+          const curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + LINK_PADDING,
+            curveEnd = props.columnPosition(link.tgt.columnIndex) - LINK_PADDING,
             startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + props.sizeScale(link.value) / 2,
             endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + props.sizeScale(link.value) / 2;
           return [curveStart, curveEnd, startLevel, endLevel];
         };
-        const linkPath = function (link) {
+        const linkPath = link => {
           const points = linkPoints(link),
             curveInterp = d3.interpolateNumber(points[0], points[1]),
             curveControlPtA = curveInterp(props.linkCurvature),
             curveControlPtB = curveInterp(1 - props.linkCurvature);
           return linkPathString(points[0], curveControlPtA, curveControlPtB, points[1], points[2], points[3]);
         };
-        const linkBoundingBox = function (link) {
+        const linkBoundingBox = link => {
           const points = linkPoints(link);
           return linkBounds(points[0], points[1], points[2], points[3]);
         };
-        const linkThickness = function (link) {
-          return Math.max(props.sizeScale(link.value), 1);
-        };
+        const linkThickness = link => Math.max(props.sizeScale(link.value), 1);
         // Render the links
         const linksGroup = selection.selectGroup("links");
         const linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc).join("path").attr("class", "sszvis-link");
-        linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", props.linkColor).sort(props.linkSort);
+        linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", (_props$linkColor = props.linkColor) !== null && _props$linkColor !== void 0 ? _props$linkColor : null).sort(props.linkSort);
         linksGroup.datum(data.links);
         const linkTooltipAnchor = tooltipAnchor().position(link => {
           const bbox = linkBoundingBox(link);
@@ -6384,15 +6471,15 @@
         linkSourceLabels.attr("transform", link => {
           const bbox = linkBoundingBox(link);
           return translateString(bbox[0] + 6, bbox[2]);
-        }).text(props.linkLabel);
+        }).text((_props$linkLabel = props.linkLabel) !== null && _props$linkLabel !== void 0 ? _props$linkLabel : null);
         // If no props.linkTargetLabels are provided, most of this rendering is no-op
         const linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
         linkTargetLabels.attr("transform", link => {
           const bbox = linkBoundingBox(link);
           return translateString(bbox[1] - 6, bbox[3]);
-        }).text(props.linkLabel);
+        }).text((_props$linkLabel2 = props.linkLabel) !== null && _props$linkLabel2 !== void 0 ? _props$linkLabel2 : null);
         // Render the node labels and their hit boxes
-        const getLabelSide = function (colIndex) {
+        const getLabelSide = colIndex => {
           let side = props.labelSide(colIndex);
           if (props.labelSideSwitch) {
             side = side === "left" ? "right" : "left";
@@ -7851,13 +7938,28 @@
      *
      * A module of helper functions for computing the data structure
      * and layout required by the sankey component.
+     *
+     * Behaviour notes:
+     * - prepareData's source/target/value accessors default to fn.identity, which only matches when
+     *   the rows are themselves the id strings; for the object rows this layout is built around, no
+     *   link ever matches a node id.
+     * - a link with an unknown source or target id becomes a null entry left in the returned links
+     *   array. Any such null throws a TypeError from the value sort as soon as a second link exists,
+     *   valid or not; a sole invalid row survives only because sort skips a one-element array.
+     * - link ids come from a module-level counter shared across every builder instance, so they
+     *   are unique but not stable between renders.
+     * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
+     *   on the link, so the link stack runs outside its node.
+     * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
+     *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
+     *   is discarded by the minimum rather than distorting the others.
+     * - a single-column diagram gives computeLayout's columnRange an Infinity step (issue #120);
+     *   an empty column list gives a negative step and NaN/undefined elsewhere.
      */
-    const newLinkId = function () {
+    const newLinkId = (() => {
       let id = 0;
-      return function () {
-        return ++id;
-      };
-    }();
+      return () => ++id;
+    })();
     /**
      * sszvis.layout.sankey.prepareData
      *
@@ -7886,22 +7988,47 @@
      *               @property {Array} links             An array of link data. Each one will become a path in the sankey
      *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
      *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
+     *
+     * Behaviour notes:
+     * - source/target/value default to fn.identity, which only matches when a row is itself the id
+     *   string; omitting them makes every link invalid for the usual object rows.
+     * - a link whose source or target id is not in idLists is warned about and replaced by null, and
+     *   the null stays in the returned links array. Any null throws a TypeError from the value sort
+     *   once a second link exists, valid or not; a sole invalid row survives only because sort skips
+     *   a one-element array.
+     * - link ids come from a module-level counter shared by every builder instance, so they are
+     *   unique but not stable across renders.
+     * - a duplicate id warns and keeps only the last column.
+     * - a non-numeric value silently becomes 0; a negative value is kept on the link but clamped
+     *   away at the node (node.value is Math.max(0, from, to)), so the link stack runs outside
+     *   its node.
+     * - nothing checks that the two ends of a link are in different columns.
+     * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
+     *   or builder(data).
+     * - nodes are sorted across all columns at once (descending by default), then offsets are
+     *   assigned per column.
      */
-    const prepareData = function () {
+    const prepareData = () => {
       let mGetSource = identity;
       let mGetTarget = identity;
       let mGetValue = identity;
       let mColumnIds = [];
       // Helper functions
       const valueAcc = prop("value");
-      const byAscendingValue = function (a, b) {
-        return d3.ascending(valueAcc(a), valueAcc(b));
+      /**
+       * Reads a link's value. The links array can hold nulls for rows whose source or target was
+       * not found, and reading through one throws, exactly as the original property accessor did.
+       */
+      const linkValue = link => {
+        if (link === null) {
+          throw new TypeError("Cannot read properties of null (reading 'value')");
+        }
+        return link.value;
       };
-      const byDescendingValue = function (a, b) {
-        return d3.descending(valueAcc(a), valueAcc(b));
-      };
+      const byAscendingValue = (a, b) => d3.ascending(valueAcc(a), valueAcc(b));
+      const byDescendingValue = (a, b) => d3.descending(valueAcc(a), valueAcc(b));
       let valueSortFunc = byDescendingValue;
-      const main = function (inputData) {
+      const main = inputData => {
         const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
           for (const id of columnIdsList) {
             if (index.has(id)) {
@@ -7925,7 +8052,7 @@
         const listOfLinks = inputData.map(datum => {
           const srcId = mGetSource(datum);
           const tgtId = mGetTarget(datum);
-          const value = +mGetValue(datum) || 0; // Cast this to number
+          const value = Number(mGetValue(datum)) || 0; // Cast this to number
           const srcNode = columnIndex.get(srcId);
           const tgtNode = columnIndex.get(tgtId);
           if (!srcNode) {
@@ -7967,7 +8094,7 @@
         // Sort the links in descending order of value. This means smaller links will render
         // on top of larger links.
         // (note, this sorts all links for all columns in the same array)
-        listOfLinks.sort(byDescendingValue);
+        listOfLinks.sort((a, b) => d3.descending(linkValue(a), linkValue(b)));
         // Assign the valueOffset and nodeIndex properties
         // Here, columnData[0] is an array adding up value totals
         // and columnData[1] is an array adding up the number of nodes in each column
@@ -8004,35 +8131,39 @@
           columnLengths
         };
       };
-      main.apply = function (data) {
-        return main(data);
-      };
-      main.source = function (func) {
-        mGetSource = func;
-        return main;
-      };
-      main.target = function (func) {
-        mGetTarget = func;
-        return main;
-      };
-      main.value = function (func) {
-        mGetValue = func;
-        return main;
-      };
-      main.descendingSort = function () {
-        valueSortFunc = byDescendingValue;
-        return main;
-      };
-      main.ascendingSort = function () {
-        valueSortFunc = byAscendingValue;
-        return main;
-      };
-      main.idLists = function (idLists) {
-        mColumnIds = idLists;
-        return main;
-      };
-      return main;
+      const api = Object.assign(main, {
+        apply(data) {
+          return main(data);
+        },
+        source(func) {
+          mGetSource = func;
+          return api;
+        },
+        target(func) {
+          mGetTarget = func;
+          return api;
+        },
+        value(func) {
+          mGetValue = func;
+          return api;
+        },
+        descendingSort() {
+          valueSortFunc = byDescendingValue;
+          return api;
+        },
+        ascendingSort() {
+          valueSortFunc = byAscendingValue;
+          return api;
+        },
+        idLists(idLists) {
+          mColumnIds = idLists;
+          return api;
+        }
+      });
+      return api;
     };
+    /** Matches JavaScript's implicit undefined -> NaN coercion in arithmetic. */
+    const num = value => value === undefined ? Number.NaN : value;
     /**
      * sszvis.layout.sankey.computeLayout
      *
@@ -8054,8 +8185,21 @@
      *         @property {Number} nodeThickness       The thickness of nodes. Pass to component.sankey.nodeThickness
      *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
      *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
+     *
+     * Behaviour notes:
+     * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
+     *   minimum across the columns is used for all of them. A single-node column divides by zero and
+     *   contributes a phantom 50px candidate, but 50 is the cap, so that candidate only wins when
+     *   every column is at 50 anyway - it never shrinks another column.
+     * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
+     *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
+     *   every total is 0; in that case the value range comes back [0, NaN].
+     * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
+     *   (numColumns - 1); a single column gives Infinity (issue #120) and an empty column list
+     *   gives a negative step, an undefined nodePadding and NaN elsewhere.
+     * - nodeThickness is always 20.
      */
-    const computeLayout$1 = function (columnLengths, columnTotals, columnHeight, columnWidth) {
+    const computeLayout$1 = (columnLengths, columnTotals, columnHeight, columnWidth) => {
       // Calculate appropriate scale and padding values (in pixels)
       const padSpaceRatio = 0.15;
       const padMin = 12;
@@ -8073,23 +8217,23 @@
       // after padding pixels have been subtracted. Then take the minimum value of that.
       const pixPerUnit = d3.min(columnLengths.map((colLength, colIndex) => {
         // The non-padding pixels must have at least minDisplayPixels
-        const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
-        return nonPaddingPixels / columnTotals[colIndex];
+        const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * num(computedPixPadding));
+        return nonPaddingPixels / num(columnTotals[colIndex]);
       }));
       // The padding between bars, in bar value units
-      const valuePadding = computedPixPadding / pixPerUnit;
+      const valuePadding = num(computedPixPadding) / num(pixPerUnit);
       // The padding between bars, in pixels
       const nodePadding = computedPixPadding;
       // The maximum total value of any column
       const maxTotal = d3.max(columnTotals);
       // Compute y-padding required to vertically center each column (in pixels)
-      const paddedHeights = columnLengths.map((colLength, colIndex) => columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding);
+      const paddedHeights = columnLengths.map((colLength, colIndex) => num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * num(nodePadding));
       const maxPaddedHeight = d3.max(paddedHeights);
-      const columnPaddings = columnLengths.map((colLength, colIndex) => (maxPaddedHeight - paddedHeights[colIndex]) / 2);
+      const columnPaddings = columnLengths.map((_colLength, colIndex) => (num(maxPaddedHeight) - num(paddedHeights[colIndex])) / 2);
       // The domain of the size scale
       const valueDomain = [0, maxTotal];
       // The range of the size scale
-      const valueRange = [0, maxTotal * pixPerUnit];
+      const valueRange = [0, num(maxTotal) * num(pixPerUnit)];
       // Calculate column (or row, as the case may be) positioning values
       const nodeThickness = 20;
       const numColumns = columnLengths.length;

@@ -245,7 +245,7 @@ interface BreadcrumbComponent<T = unknown> extends Component {
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$o<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$p<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -277,7 +277,7 @@ interface CircleComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$n<T = unknown>(): CircleComponent<T>;
+declare function export_default$o<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -317,7 +317,7 @@ interface ConfidenceAreaComponent<T = unknown> extends Component {
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$m<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function export_default$n<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -357,7 +357,7 @@ interface ConfidenceBarComponent<T = unknown> extends Component {
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$l<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$m<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -383,7 +383,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$k<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$l<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -422,7 +422,7 @@ interface LineComponent$1<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent$1<T>;
 }
-declare function export_default$j<T = unknown>(): LineComponent$1<T>;
+declare function export_default$k<T = unknown>(): LineComponent$1<T>;
 
 /**
  * Range Flag annotation
@@ -448,7 +448,7 @@ interface RangeFlagComponent<T = unknown> extends Component {
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$i<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$j<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -485,7 +485,7 @@ interface RangeRulerComponent<T = unknown> extends Component {
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$h<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$i<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -519,7 +519,7 @@ interface RectangleComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$g<T = unknown>(): RectangleComponent<T>;
+declare function export_default$h<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -624,7 +624,7 @@ interface TooltipComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$f<T = unknown>(): TooltipComponent<T>;
+declare function export_default$g<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -674,7 +674,7 @@ interface TooltipAnchorComponent<T = unknown> extends Component {
     position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
     debug(value?: boolean): TooltipAnchorComponent<T>;
 }
-declare function export_default$e<T = unknown>(): TooltipAnchorComponent<T>;
+declare function export_default$f<T = unknown>(): TooltipAnchorComponent<T>;
 
 declare function app({ init, render, actions, fallback }: {
     init: any;
@@ -943,7 +943,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Component {
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$d<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$e<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -993,7 +993,7 @@ interface PanningComponent extends Component {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$c(): PanningComponent;
+declare function export_default$d(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -1055,7 +1055,7 @@ interface VoronoiComponent<T = unknown> extends Component {
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default$b<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$c<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -1506,7 +1506,7 @@ type ValueAccessor$2<T> = (datum?: T, index?: number) => unknown;
  * fn.functor then yields undefined, which d3 treats exactly like null and removes the
  * attribute for.
  */
-type ColorAccessor$1<T> = (datum?: T, index?: number) => string | null;
+type ColorAccessor$2<T> = (datum?: T, index?: number) => string | null;
 /**
  * A constant or an accessor over the component's datum type; either is accepted, since
  * fn.functor normalises both. d3 hands an accessor the datum and its index, and declaring
@@ -1522,9 +1522,9 @@ interface BarComponent<T = unknown> extends Component {
     width<U = T>(value: BarValue<U, number>): BarComponent<T>;
     height(): ValueAccessor$2<T>;
     height<U = T>(value: BarValue<U, number>): BarComponent<T>;
-    fill(): ColorAccessor$1<T>;
+    fill(): ColorAccessor$2<T>;
     fill<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
-    stroke(): ColorAccessor$1<T>;
+    stroke(): ColorAccessor$2<T>;
     stroke<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
     centerTooltip(): boolean | undefined;
     centerTooltip(center: boolean): BarComponent<T>;
@@ -1533,7 +1533,7 @@ interface BarComponent<T = unknown> extends Component {
     transition(): boolean;
     transition(enabled: boolean): BarComponent<T>;
 }
-declare function export_default$a<T = unknown>(): BarComponent<T>;
+declare function export_default$b<T = unknown>(): BarComponent<T>;
 
 /**
  * Dot component
@@ -1615,7 +1615,7 @@ type ValueAccessor$1<T, R> = (datum: T, index: number) => R;
  * tooltip anchor below calls x and y with the datum alone. One of these is still assignable
  * to a setter, so a value read from a getter can be handed straight back.
  */
-type StoredAccessor$1<T, R> = (datum?: T, index?: number) => R;
+type StoredAccessor$2<T, R> = (datum?: T, index?: number) => R;
 /**
  * A constant or an accessor; either is accepted for every visual property. x and y are
  * wrapped by fn.functor on set, so a constant handed to them is stored as a function.
@@ -1629,11 +1629,11 @@ type DotValue<T, R> = R | ValueAccessor$1<T, R>;
  */
 type RawValue<T, R> = DotValue<T, R | null | undefined>;
 /** The getter counterpart of RawValue: the constant or the accessor that was set. */
-type StoredRawValue<T, R> = R | null | undefined | StoredAccessor$1<T, R | null | undefined>;
+type StoredRawValue<T, R> = R | null | undefined | StoredAccessor$2<T, R | null | undefined>;
 interface DotComponent<T = unknown> extends Component {
-    x(): StoredAccessor$1<T, number>;
+    x(): StoredAccessor$2<T, number>;
     x<U = T>(value: DotValue<U, number>): DotComponent<T>;
-    y(): StoredAccessor$1<T, number>;
+    y(): StoredAccessor$2<T, number>;
     y<U = T>(value: DotValue<U, number>): DotComponent<T>;
     radius(): StoredRawValue<T, number>;
     radius<U = T>(value: RawValue<U, number>): DotComponent<T>;
@@ -1644,7 +1644,7 @@ interface DotComponent<T = unknown> extends Component {
     transition(): boolean;
     transition(enabled: boolean): DotComponent<T>;
 }
-declare function export_default$9<T = unknown>(): DotComponent<T>;
+declare function export_default$a<T = unknown>(): DotComponent<T>;
 
 /**
  * Grouped Bars component
@@ -2057,7 +2057,7 @@ interface LineComponent<P = unknown, L = unknown> extends Component {
     transition(): boolean;
     transition(enabled: boolean): LineComponent<P, L>;
 }
-declare function export_default$8<P = unknown, L = unknown>(): LineComponent<P, L>;
+declare function export_default$9<P = unknown, L = unknown>(): LineComponent<P, L>;
 
 /**
  * Nested Stacked Bars Vertical component
@@ -2226,7 +2226,7 @@ interface PackComponent<T = unknown> extends Component {
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$7<T = unknown>(): PackComponent<T>;
+declare function export_default$8<T = unknown>(): PackComponent<T>;
 
 /**
  * Pie component
@@ -2297,8 +2297,8 @@ type AngleAccessor<T = PieAngles> = (d: PieDatum<T>) => number;
  * reads both, so one nullish-aware alias describes what the setters accept and what the
  * getters return.
  */
-type ColorAccessor<T = PieAngles> = (d: PieDatum<T>, i: number) => string | null | undefined;
-type ColorValue<T = PieAngles> = string | ColorAccessor<T>;
+type ColorAccessor$1<T = PieAngles> = (d: PieDatum<T>, i: number) => string | null | undefined;
+type ColorValue<T = PieAngles> = string | ColorAccessor$1<T>;
 /**
  * The getters return whatever was last set, which is undefined for radius and angle until
  * the caller sets them - both are required, and rendering without them fails, so both
@@ -2314,7 +2314,7 @@ interface PieComponent<T = PieAngles> extends Component {
     angle(): AngleAccessor<T> | undefined;
     angle<U = T>(angle: number | AngleAccessor<U>): PieComponent<T>;
 }
-declare function export_default$6<T = PieAngles>(): PieComponent<T>;
+declare function export_default$7<T = PieAngles>(): PieComponent<T>;
 
 /**
  * Pyramid component
@@ -2439,20 +2439,20 @@ type SideAccessor<T, D> = (data: T) => D[];
  * constant becomes a functor that ignores its arguments, and because the component calls
  * barWidth itself with the datum alone when placing the left bars.
  */
-type StoredAccessor<D, R> = (datum?: D, index?: number) => R;
+type StoredAccessor$1<D, R> = (datum?: D, index?: number) => R;
 /**
  * A constant or an accessor over one bar's datum; either is accepted for the bar
  * dimensions, since fn.functor normalises both.
  */
 type PyramidValue<D, R> = R | ValueAccessor<D, R>;
 interface PyramidComponent<T = unknown, D = unknown> extends Component {
-    barHeight(): StoredAccessor<D, number>;
+    barHeight(): StoredAccessor$1<D, number>;
     barHeight<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
-    barWidth(): StoredAccessor<D, number>;
+    barWidth(): StoredAccessor$1<D, number>;
     barWidth<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
-    barPosition(): StoredAccessor<D, number>;
+    barPosition(): StoredAccessor$1<D, number>;
     barPosition<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
-    barFill(): StoredAccessor<D, string | undefined>;
+    barFill(): StoredAccessor$1<D, string | undefined>;
     barFill<V = D>(value: PyramidValue<V, string | undefined>): PyramidComponent<T, D>;
     tooltipAnchor(): (number | string)[];
     tooltipAnchor(anchor: (number | string)[]): PyramidComponent<T, D>;
@@ -2465,9 +2465,314 @@ interface PyramidComponent<T = unknown, D = unknown> extends Component {
     rightRefAccessor(): SideAccessor<T, D> | undefined;
     rightRefAccessor<U = T, V = D>(accessor: SideAccessor<U, V>): PyramidComponent<T, D>;
 }
-declare function export_default$5<T = unknown, D = unknown>(): PyramidComponent<T, D>;
+declare function export_default$6<T = unknown, D = unknown>(): PyramidComponent<T, D>;
 
-declare function _default$l(): any;
+/**
+ * Sankey component
+ *
+ * This component is used for making sankey diagrams, also known as parallel sets diagrams. They
+ * depict individual entities as bars, and flows between those entities as thick links connecting
+ * those bars. The entities can be many things associated with flows, for example organizations,
+ * geographic regions, or websites, while the links between them can represent many kinds of flows,
+ * for example payments of money, movements of people, or referral of browsing traffic. In this component,
+ * the entities are referred to as 'nodes', and the connections between them are referred to as 'links'.
+ *
+ * @module sszvis/component/sankey
+ *
+ * @requires sszvis.component.bar
+ *
+ * @property {Function} sizeScale                    A scale function for the size of the nodes. The domain and the range should be configured using
+ *                                                   values returned by the sszvis.layout.sankey.computeLayout function. It scales the links as well:
+ *                                                   a link's thickness is sizeScale(value) and its offset within its node sizeScale(srcOffset).
+ *                                                   Required, and an unset scale throws "props.sizeScale is not a function".
+ * @property {Function} columnPosition               A scale function for the position of the columns of nodes. Should be configured using a value
+ *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required, and throws like sizeScale
+ *                                                   when unset. It is called with a column index for the column labels as well as for the nodes, so
+ *                                                   it is also consulted for columns that hold no node.
+ * @property {Number} nodeThickness                  A number for the horizontal thickness of the node bars. Should be configured using a value
+ *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required, but omitting it is not
+ *                                                   reported: Math.max(undefined, 1) is NaN, which bar's missing-value guard turns into zero-width
+ *                                                   bars, while the column labels, the hit boxes and the tooltip anchors keep the NaN. Must be a
+ *                                                   plain number - an accessor, which most other properties in this library accept, is used in
+ *                                                   arithmetic and yields the same NaN. The bar's width is floored at one pixel but the link starts
+ *                                                   and the column label centring read the raw value, so below a thickness of one the two disagree.
+ * @property {Number} nodePadding                    A number for padding between the nodes. Should be configured using a value returned by the
+ *                                                   sszvis.layout.sankey.computeLayout function. It applies between nodes only; the links stacked
+ *                                                   inside a node are spaced by the size scale alone and fill it exactly. It also sets how far a
+ *                                                   label hit box extends past its node, half of it above and half below. Required, must be a plain
+ *                                                   number, and fails as silently as nodeThickness: every node's position becomes NaN, which bar
+ *                                                   turns into 0, so the whole column collapses onto one row.
+ * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number, for padding at the top of
+ *                                                   each column. Used to vertically center the columns. Required despite the functor wrapper: it has
+ *                                                   no default, so leaving it unset throws "props.columnPadding is not a function". An accessor is
+ *                                                   called with the column index alone, without d3's index and group arguments.
+ * @property {String, Function} columnLabel          A string, or a function that returns a string, for the label at the top of each column. Defaults
+ *                                                   to "", so the text elements are always in the DOM, and so are their ticks - which sszvis.css
+ *                                                   gives a stroke, so an unlabelled chart still shows a short line per column pointing at nothing. A
+ *                                                   function is called with the column index alone, not with the label's own datum, which is that
+ *                                                   column's node count; columnLabelOffset decorates the same element but takes the datum first. One
+ *                                                   label and one tick are drawn per entry in data.columnLengths, whether or not a node lives in that
+ *                                                   column.
+ * @property {Number, Function} columnLabelOffset    A value for offsetting the column labels in the x axis. Used to move the column labels around if
+ *                                                   you don't want them to be centered on the columns. This is useful in situations where the normal
+ *                                                   label would overlap outer boundaries or otherwise be inconveniently positioned. You can usually
+ *                                                   forget this, except perhaps in very narrow screen layouts. Default 0. It shifts the label only -
+ *                                                   the tick stays centred on the column - and horizontally only; the vertical position is fixed. A
+ *                                                   function is applied by d3 rather than by the renderer, so it receives the label's datum, that
+ *                                                   column's node count, followed by the column index.
+ * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default
+ *                                                   0.5, which puts both control points at the horizontal midpoint. Never clamped: at 1 the control
+ *                                                   points swap ends, which still keeps the curve inside the column gap as a pronounced S, and above
+ *                                                   1 they leave the gap altogether and the curve swings out past both columns. Must be a plain
+ *                                                   number, like nodeThickness; an accessor yields NaN control points and the browser drops the path.
+ * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color. Optional:
+ *                                                   when unset no fill attribute is written and the bars fall back to the stylesheet.
+ * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color. Optional, as
+ *                                                   nodeColor: unset leaves the stroke attribute off the paths.
+ * @property {Function} linkSort                     A function determining how to sort the links, which are rendered stacked on top of each other.
+ *                                                   The comparator is handed to d3's selection.sort, which orders the elements ascending, so the
+ *                                                   comparator's largest link is the last one in the document and paints over all the others. The
+ *                                                   default comparator is ascending by value, so the thickest links paint over the thinnest, undoing
+ *                                                   in the DOM the descending order sszvis.layout.sankey.prepareData put the array in for the
+ *                                                   opposite reason. Reverse it to keep the thin links on top. The property is wrapped in fn.functor,
+ *                                                   so a value that is not a function is silently turned into a comparator claiming every pair is
+ *                                                   already ordered. The sort reorders elements only; the data array, and with it the link tooltip
+ *                                                   anchors, keeps its original order.
+ * @property {String, Function} labelSide            A function determining the position of labels for the nodes. Should take a column index and
+ *                                                   return a side ('left' or 'right'). Default is always 'left'. A function receives the column index
+ *                                                   alone, without d3's index and group arguments. The test is `=== "left"`, so any other value, a
+ *                                                   typo included, silently lands the label on the right, and labelSideSwitch then maps it to 'left'.
+ * @property {Boolean} labelSideSwitch               A boolean used to determine whether to switch the label side. When true, 'left' labels will be
+ *                                                   shown on the right side, and 'right' labels on the left side. This is useful as a switch to be
+ *                                                   flipped in very narrow screen layouts, when you want the labels to appear on the opposite side of
+ *                                                   the columns they refer to. The hit boxes follow the switch as well.
+ * @property {Number, Function} labelOpacity         A value for the opacity of the node labels, or a function over a node returning one. Default 1.
+ *                                                   Despite what this property used to claim, it is applied to the node labels: the column labels
+ *                                                   never receive an opacity at all, and no property hides them. Use it to fade the node names out
+ *                                                   when they would overlap with user-triggered hover labels.
+ * @property {Number} labelHitBoxSize                A number for the width of the transparent 'hit boxes' drawn over the labels. This should
+ *                                                   basically be equal to the width of the widest label. For performance reasons, it doesn't make
+ *                                                   sense to calculate this value at run time while the component is rendered. Far better is to
+ *                                                   position the chart so that the labels are visible, find the value of the widest label, and use
+ *                                                   that. Default 0, which leaves a box exactly as wide as a node. Must be a plain number: the width
+ *                                                   is computed once, from labelHitBoxSize plus nodeThickness, so every box is the same width
+ *                                                   whatever its own label says. The boxes are appended after the labels and so paint over them,
+ *                                                   which is what lets them catch the pointer.
+ * @property {Function} nameLabel                    A function which takes the id of a node and should return the label for that node. Defaults to
+ *                                                   using the id directly. The only label accessor that has to be a function: it is not wrapped in
+ *                                                   fn.functor, so a constant throws "props.nameLabel is not a function".
+ * @property {Array} linkSourceLabels                An array containing the data for links which should have labels on their 'source' end, that is
+ *                                                   the end of the link which is connected to the source node. These data values should match the
+ *                                                   values returned by sszvis.layout.sankey.prepareData. For performance reasons, you need to give
+ *                                                   the data values themselves here. See the examples for an implementation of the most
+ *                                                   straightforward mechanism for this. Defaults to []. The array is used as given and never checked
+ *                                                   against data.links, so a stale link object still renders a label, positioned from its own src and
+ *                                                   tgt and so at a place where no link is drawn.
+ * @property {Array} linkTargetLabels                An array containing data for links which should have labels on their 'target' end, that is the
+ *                                                   end of the link which is connected to the target node. Works the same as linkSourceLabels, but
+ *                                                   used for another set of possible link labels.
+ * @property {String, Function} linkLabel            A string or function returning a string to use for the label of each link. Function versions
+ *                                                   should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels) and
+ *                                                   return text. Optional: when unset the label elements are still created for every entry in
+ *                                                   linkSourceLabels and linkTargetLabels, with no text in them.
+ *
+ * Note: the component always creates four sub-groups, in this order: nodes, links,
+ * linklabels and nodelabels. The order is load-bearing, since it makes the links paint over
+ * the node bars, and every group is created even when there is nothing to put in it. The
+ * column labels and their ticks are not among them: they are selected off the same selection
+ * the bars are rendered into, so they live in the nodes group alongside the rects and the
+ * tooltip anchors. They can still be styled by class - .sszvis-sankey-column-label in
+ * sszvis.css does exactly that - but there is no group of their own to transform, fade or
+ * make click-through as a unit. Their vertical position is a hard-coded -24, above the
+ * group's origin, so they depend on the chart's top padding to be visible at all.
+ *
+ * Note: a one pixel gap is left between a node and the links attached to it, so the curves
+ * never quite touch the bars. It is a local constant, deliberately not a property, and it
+ * does not scale with the chart.
+ *
+ * Note: only the node bars are guarded against missing values. They are drawn by bar, which
+ * replaces NaN with 0, while the link paths, the labels and the hit boxes are written here
+ * by hand from the same numbers. A size scale that returns NaN for one value - a d3 scale
+ * fed undefined, a gap in the data - therefore gives that node a bar of zero height and its
+ * links a d and a stroke-width of NaN, which the browser drops entirely: the node renders
+ * and the link disappears. Nothing is logged either way.
+ *
+ * Note: a node's box is snapped to whole pixels, the position floored and the height ceiled,
+ * so neighbouring nodes never leave a sub-pixel gap between them. The link geometry is not
+ * rounded. The links do start from the same floored position as the bar, so they stay glued
+ * to its top edge, but the stack of links inside a node can finish up to a pixel short of
+ * the bar's bottom edge.
+ *
+ * Note: the nodes end up with their tooltip anchors written twice. bar renders its own
+ * anchors into the group it is called on, and the component then calls a second
+ * tooltipAnchor on the same group. Both join to [data-tooltip-anchor] over data.nodes, so
+ * the second pass reuses the first one's rects and overwrites their transforms rather than
+ * adding any. What is observable is four anchors rather than eight, centred on the nodes
+ * rather than at bar's default top-centre.
+ *
+ * Note: the links are keyed by id, so a link keeps its path element across renders, but the
+ * nodes go through bar, whose join is unkeyed, so rect identity follows the array index. A
+ * reordered node array moves no element; it rewrites the attributes in place, and each rect
+ * ends up bound to a different node. That matters for anything holding on to a rect, such as
+ * a hover handler.
+ *
+ * Note: the component never sets bar's transition property, so it keeps bar's default of
+ * true - and that transition does not animate anything, so the nodes jump straight to their
+ * new geometry. It is not free either: a d3 transition is still created and discarded on
+ * every node rect on every render. See test/component/sankey.test.ts.
+ *
+ * @return {sszvis.component}
+ */
+
+/**
+ * One entity in the diagram, drawn as a bar, as sszvis.layout.sankey.prepareData produces
+ * it. Everything up to valueOffset is what the component reads.
+ */
+type SankeyNode = {
+    /** The node's unique id, also its default label. */
+    id: string;
+    /** Which column the node belongs to. Indexes both columnPosition and columnPadding. */
+    columnIndex: number;
+    /** The node's position within its column, counted in nodes. */
+    nodeIndex: number;
+    /** The node's total flow, which becomes its height once passed through sizeScale. */
+    value: number;
+    /** The total flow of all the nodes above this one in its column. */
+    valueOffset: number;
+    /**
+     * The links leaving this node. Filled in by the layout and never read by the component,
+     * but the usual handle for hover and highlight code - see the linkSourceLabels examples.
+     */
+    linksFrom?: SankeyLink[];
+    /** The links arriving at this node. As linksFrom, the component never reads it. */
+    linksTo?: SankeyLink[];
+};
+/**
+ * One flow between two nodes, drawn as a curve. The source and target are the node objects
+ * themselves rather than ids, so a link carries its own geometry.
+ */
+type SankeyLink = {
+    /** Identifies the link across renders; the data join is keyed on it. */
+    id: number;
+    /** The size of the flow, which becomes the curve's thickness once passed through sizeScale. */
+    value: number;
+    /** The node the link leaves. */
+    src: SankeyNode;
+    /** The total flow of all the links leaving the same node above this one. */
+    srcOffset: number;
+    /** The node the link arrives at. */
+    tgt: SankeyNode;
+    /** The total flow of all the links arriving at the same node above this one. */
+    tgtOffset: number;
+};
+/** Which side of its node a label is drawn on. */
+type LabelSide = "left" | "right";
+/** Maps a node's or a link's value to a number of pixels. A d3 linear scale in practice. */
+type SizeScale = (value: number) => number;
+/** Maps a column index to that column's horizontal position. A d3 linear scale in practice. */
+type ColumnScale = (columnIndex: number) => number;
+/**
+ * A constant or an accessor over a datum; either is accepted wherever fn.functor normalises
+ * the value on set. d3 hands an accessor the datum and its index, and declaring fewer
+ * parameters is fine.
+ */
+type SankeyValue<D, R> = R | ((datum: D, index: number) => R);
+/**
+ * How a functor-wrapped property reads back once it is stored. Both parameters are optional,
+ * because a constant becomes a functor that ignores its arguments, and because the renderer
+ * calls several of these itself with only some of the arguments d3 would pass.
+ */
+type StoredAccessor<D, R> = (datum?: D, index?: number) => R;
+/**
+ * A colour, or nothing when the property was never set - fn.functor then yields undefined,
+ * which d3 treats exactly like null and removes the attribute for. The null is for d3's
+ * benefit: its attr overloads accept null but not undefined. Same convention as bar's fill
+ * and stroke.
+ */
+type ColorAccessor<D> = (datum?: D, index?: number) => string | null;
+/** A label's text, or nothing when the property was never set. As ColorAccessor. */
+type LabelAccessor<D> = (datum?: D, index?: number) => string | null;
+/**
+ * How the three column-driven properties read back. The renderer calls each of them itself,
+ * with a column index and nothing else, so unlike the datum accessors above they never see
+ * an index in the second position.
+ */
+type ColumnAccessor<R> = (columnIndex?: number) => R;
+/** A constant, or that same single-argument accessor. */
+type ColumnValue<R> = R | ((columnIndex: number) => R);
+/**
+ * Orders the links against each other, deciding which one is painted on top. Unlike the
+ * accessors above, both parameters are required: the renderer never calls the comparator
+ * itself, it only hands it to d3's own sort, which always passes two links. A constant is
+ * still accepted on set, because fn.functor wraps it into a function that ignores its
+ * arguments and declaring fewer parameters is fine.
+ */
+type LinkComparator = (a: SankeyLink, b: SankeyLink) => number;
+/**
+ * The column label offset is the one column property that is applied by d3 rather than by
+ * the renderer, so it is handed the datum bound to the label - the column's node count -
+ * followed by the column index. Note that columnLabel, which decorates the same element,
+ * takes the index in the first position instead. The parameter names are the point of this
+ * type; structurally it is the same shape as the datum accessors.
+ */
+type ColumnLabelOffset = (columnLength?: number, index?: number) => number;
+/** What may be passed for the column label offset: a constant, or that same accessor. */
+type ColumnLabelOffsetValue = number | ((columnLength: number, index: number) => number);
+/**
+ * `component()` hands back whatever interface it is asked for, but the two builder methods it
+ * inherits are declared as returning the plain Component, so a component interface has to
+ * re-declare them to survive its own construction chain. Without this the chain widens to
+ * `any` at the first default and nothing in it is checked.
+ */
+interface SankeyBuilder extends Component {
+    prop<V>(prop: string, setter?: PropertySetter<V>): SankeyComponent;
+    render(callback: RenderCallback): SankeyComponent;
+}
+/**
+ * Setters take `<U = ...>` so that an accessor over a narrower datum type can be passed
+ * without naming it at the call site.
+ */
+interface SankeyComponent extends SankeyBuilder {
+    sizeScale(): SizeScale;
+    sizeScale(scale: SizeScale): SankeyComponent;
+    columnPosition(): ColumnScale;
+    columnPosition(scale: ColumnScale): SankeyComponent;
+    nodeThickness(): number;
+    nodeThickness(thickness: number): SankeyComponent;
+    nodePadding(): number;
+    nodePadding(padding: number): SankeyComponent;
+    columnPadding(): ColumnAccessor<number>;
+    columnPadding(value: ColumnValue<number>): SankeyComponent;
+    columnLabel(): ColumnAccessor<string>;
+    columnLabel(value: ColumnValue<string>): SankeyComponent;
+    columnLabelOffset(): ColumnLabelOffset;
+    columnLabelOffset(value: ColumnLabelOffsetValue): SankeyComponent;
+    linkCurvature(): number;
+    linkCurvature(curvature: number): SankeyComponent;
+    nodeColor(): StoredAccessor<SankeyNode, string | undefined> | undefined;
+    nodeColor<U = SankeyNode>(value: SankeyValue<U, string | undefined>): SankeyComponent;
+    linkColor(): ColorAccessor<SankeyLink> | undefined;
+    linkColor<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
+    linkSort(): LinkComparator;
+    linkSort<L = SankeyLink>(comparator: (a: L, b: L) => number): SankeyComponent;
+    labelSide(): ColumnAccessor<LabelSide>;
+    labelSide(value: ColumnValue<LabelSide>): SankeyComponent;
+    labelSideSwitch(): boolean | undefined;
+    labelSideSwitch(value: boolean): SankeyComponent;
+    labelOpacity(): StoredAccessor<SankeyNode, number>;
+    labelOpacity<U = SankeyNode>(value: SankeyValue<U, number>): SankeyComponent;
+    labelHitBoxSize(): number;
+    labelHitBoxSize(size: number): SankeyComponent;
+    nameLabel(): (id: string) => string;
+    nameLabel(accessor: (id: string) => string): SankeyComponent;
+    linkSourceLabels(): SankeyLink[];
+    linkSourceLabels(links: SankeyLink[]): SankeyComponent;
+    linkTargetLabels(): SankeyLink[];
+    linkTargetLabels(links: SankeyLink[]): SankeyComponent;
+    linkLabel(): LabelAccessor<SankeyLink> | undefined;
+    linkLabel<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
+}
+declare function export_default$5(): SankeyComponent;
 
 /**
  * Stacked Area component
@@ -3415,8 +3720,157 @@ declare function _default$a(height: number, num: number, pct: number): object;
  */
 declare function _default$9(width: number, numBars: number): object;
 
-declare function prepareData(): Function;
-declare function computeLayout$1(columnLengths: any[], columnTotals: any[], columnHeight: number, columnWidth: number): Object;
+/**
+ * @module sszvis/layout/sankey
+ *
+ * A module of helper functions for computing the data structure
+ * and layout required by the sankey component.
+ *
+ * Behaviour notes:
+ * - prepareData's source/target/value accessors default to fn.identity, which only matches when
+ *   the rows are themselves the id strings; for the object rows this layout is built around, no
+ *   link ever matches a node id.
+ * - a link with an unknown source or target id becomes a null entry left in the returned links
+ *   array. Any such null throws a TypeError from the value sort as soon as a second link exists,
+ *   valid or not; a sole invalid row survives only because sort skips a one-element array.
+ * - link ids come from a module-level counter shared across every builder instance, so they
+ *   are unique but not stable between renders.
+ * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
+ *   on the link, so the link stack runs outside its node.
+ * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
+ *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
+ *   is discarded by the minimum rather than distorting the others.
+ * - a single-column diagram gives computeLayout's columnRange an Infinity step (issue #120);
+ *   an empty column list gives a negative step and NaN/undefined elsewhere.
+ */
+
+/** A node as this module builds it: every link list is present, unlike the component's view. */
+type PreparedNode = SankeyNode & {
+    linksFrom: SankeyLink[];
+    linksTo: SankeyLink[];
+};
+/** What prepareData returns. Links can contain nulls; see the module's behaviour notes. */
+type SankeyPreparedData = {
+    nodes: PreparedNode[];
+    /** One entry per input row. An invalid row leaves a null behind - see the behaviour notes. */
+    links: (SankeyLink | null)[];
+    columnTotals: number[];
+    columnLengths: number[];
+};
+/**
+ * The data preparation builder. It is callable, and also exposes `apply` as an alias, which
+ * shadows Function.prototype.apply - see the behaviour notes.
+ */
+interface SankeyDataPreparation<T = unknown> {
+    (inputData: T[]): SankeyPreparedData;
+    apply(data: T[]): SankeyPreparedData;
+    /** The id of the link's source node. Must be one of the ids passed to idLists. */
+    source(func: (d: T) => string): SankeyDataPreparation<T>;
+    /** The id of the link's target node. Must be one of the ids passed to idLists. */
+    target(func: (d: T) => string): SankeyDataPreparation<T>;
+    /** The size of the flow. A string is coerced with Number(); anything unparseable becomes 0. */
+    value(func: (d: T) => number | string): SankeyDataPreparation<T>;
+    descendingSort(): SankeyDataPreparation<T>;
+    ascendingSort(): SankeyDataPreparation<T>;
+    idLists(idLists: string[][]): SankeyDataPreparation<T>;
+}
+type SankeyComputedLayout = {
+    valuePadding: number;
+    /** undefined when there are no columns at all - see the behaviour notes. */
+    nodePadding: number | undefined;
+    columnPaddings: number[];
+    /** The upper bound is undefined when there are no columns at all. */
+    valueDomain: [number, number | undefined];
+    valueRange: [number, number];
+    nodeThickness: number;
+    columnDomain: [number, number];
+    columnRange: [number, number];
+};
+/**
+ * sszvis.layout.sankey.prepareData
+ *
+ * Returns a data preparation component for the sankey data.
+ *
+ * Throughout the code, the rectangles representing entities are referred to as 'nodes', while
+ * the chords connection them which represent flows among those entities are referred to as 'links'.
+ *
+ * @property {Array} apply                    Applies the preparation to a dataset of links. Expects a list of links, where the (unique) id
+ *                                            of the source node can be accessed with the source function, and the (unique) id of the target
+ *                                            can be accessed with the target function. Note that no source can have the same id as a target and
+ *                                            vice versa. The nodes are defined implicitly by the fact that they have a link going to them or
+ *                                            from them.
+ * @property {Function} source                An accessor function for getting the source of a link
+ * @property {Function} target                An accessor function for getting the target of a link
+ * @property {Function} value                 An accessor function for getting the value of a link. Must be a number. The total value of a node
+ *                                            is the greater of the sum of the values of its sourced links and its targeting links.
+ * @property {} descendingSort                Toggles the use of a descending value sort for the nodes
+ * @property {} ascendingSort                 Toggles the use of an ascending value sort for the nodes
+ * @property {Array(Array)} idLists           An array of arrays of id values. For each array of ids, the sankey diagram will create a column
+ *                                            of nodes. Each node should have links going to it or coming from it. All ids should be unique.
+ *
+ * @return {Function}                         The data preparation function. Can be called directly, or applied using the '.apply' function.
+ *         When called, returns an object with data to be used in constructing the chart.
+ *               @property {Array} nodes             An array of node data. Each one will become a rectangle in the sankey
+ *               @property {Array} links             An array of link data. Each one will become a path in the sankey
+ *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
+ *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
+ *
+ * Behaviour notes:
+ * - source/target/value default to fn.identity, which only matches when a row is itself the id
+ *   string; omitting them makes every link invalid for the usual object rows.
+ * - a link whose source or target id is not in idLists is warned about and replaced by null, and
+ *   the null stays in the returned links array. Any null throws a TypeError from the value sort
+ *   once a second link exists, valid or not; a sole invalid row survives only because sort skips
+ *   a one-element array.
+ * - link ids come from a module-level counter shared by every builder instance, so they are
+ *   unique but not stable across renders.
+ * - a duplicate id warns and keeps only the last column.
+ * - a non-numeric value silently becomes 0; a negative value is kept on the link but clamped
+ *   away at the node (node.value is Math.max(0, from, to)), so the link stack runs outside
+ *   its node.
+ * - nothing checks that the two ends of a link are in different columns.
+ * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
+ *   or builder(data).
+ * - nodes are sorted across all columns at once (descending by default), then offsets are
+ *   assigned per column.
+ */
+declare const prepareData: <T = unknown>() => SankeyDataPreparation<T>;
+/**
+ * sszvis.layout.sankey.computeLayout
+ *
+ * Automatically computes visual display properties needed by the sankey component,
+ * including padding between each node, paddings for the tops of columns to vertically center
+ * them, the domain and range of values in the nodes (used for scaling the node rectangles),
+ * the node thickness, and the domain and range of the column positioning scale.
+ *
+ * @param  {Array} columnLengths      An array of lengths (number of nodes) of each column in the diagram.
+ *                                    Used to compute optimal padding between nodes. Provided by the layout.sankey.prepareData function
+ * @param  {Array} columnTotals       An array of column totals (total of all values of all ndoes). Provided by the
+ * @param  {Number} columnHeight      The vertical height available for the columns. The tallest column will be this height. (Usually bounds.innerHeight)
+ * @param  {Number} columnWidth       The width of all columns. The sankey chart will be this width. (Usually bounds.innerWidth)
+ * @return {Object}                   An object of configuration parameters to be passed to the sankey component
+ *         @property {Number} nodePadding         The amount of padding to add between nodes. pass to component.sankey.nodePadding
+ *         @property {Array} columnPaddings       An array of padding values for each column. Index into this with the columnIndex and return to component.sankey.columnPadding
+ *         @property {Array} valueDomain          The domain for the node size scale. Use to configure a linear scale for component.sankey.sizeScale
+ *         @property {Array} valueRange           The range for the node size scale. Use to configure a linear scale for component.sankey.sizeScale
+ *         @property {Number} nodeThickness       The thickness of nodes. Pass to component.sankey.nodeThickness
+ *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
+ *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
+ *
+ * Behaviour notes:
+ * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
+ *   minimum across the columns is used for all of them. A single-node column divides by zero and
+ *   contributes a phantom 50px candidate, but 50 is the cap, so that candidate only wins when
+ *   every column is at 50 anyway - it never shrinks another column.
+ * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
+ *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
+ *   every total is 0; in that case the value range comes back [0, NaN].
+ * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
+ *   (numColumns - 1); a single column gives Infinity (issue #120) and an empty column list
+ *   gives a negative step, an undefined nodePadding and NaN elsewhere.
+ * - nodeThickness is always 20.
+ */
+declare const computeLayout$1: (columnLengths: number[], columnTotals: number[], columnHeight: number, columnWidth: number) => SankeyComputedLayout;
 
 declare function computeLayout(numLayers: number, chartWidth: number): Object;
 declare function getRadiusExtent(formattedData: any[]): any[];
@@ -4093,5 +4547,5 @@ declare function on(name: any, cb: any): any;
 declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$n as annotationCircle, export_default$m as annotationConfidenceArea, export_default$l as annotationConfidenceBar, export_default$j as annotationLine, export_default$i as annotationRangeFlag, export_default$h as annotationRangeRuler, export_default$g as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$a as bar, bounds, export_default$o as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$i as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$e as dimensionsHeatTable, _default$d as dimensionsHorizontalBarChart, _default$9 as dimensionsVerticalBarChart, export_default$9 as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$k as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$h as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$c as layoutPopulationPyramid, _default$b as layoutSmallMultiples, _default$a as layoutStackedAreaMultiples, export_default$2 as legendColorBinned, export_default$1 as legendColorLinear, legendColorOrdinal, export_default as legendRadius, export_default$8 as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$d as move, muchDarker, nestedStackedBarsVertical, not, export_default$7 as pack, export_default$c as panning, parseDate, parseNumber, parseYear, export_default$6 as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$5 as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$l as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$g as selectMenu, set, _default$f as slider, slightlyDarker, slowTransition, some, export_default$4 as stackedArea, _default$k as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$j as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$f as tooltip, export_default$e as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$3 as treemap, viewport, export_default$b as voronoi, widthAdaptiveMapPathStroke, withAlpha };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$o as annotationCircle, export_default$n as annotationConfidenceArea, export_default$m as annotationConfidenceBar, export_default$k as annotationLine, export_default$j as annotationRangeFlag, export_default$i as annotationRangeRuler, export_default$h as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$b as bar, bounds, export_default$p as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$i as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$e as dimensionsHeatTable, _default$d as dimensionsHorizontalBarChart, _default$9 as dimensionsVerticalBarChart, export_default$a as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$l as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$h as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$c as layoutPopulationPyramid, _default$b as layoutSmallMultiples, _default$a as layoutStackedAreaMultiples, export_default$2 as legendColorBinned, export_default$1 as legendColorLinear, legendColorOrdinal, export_default as legendRadius, export_default$9 as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$e as move, muchDarker, nestedStackedBarsVertical, not, export_default$8 as pack, export_default$d as panning, parseDate, parseNumber, parseYear, export_default$7 as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$6 as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$5 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$g as selectMenu, set, _default$f as slider, slightlyDarker, slowTransition, some, export_default$4 as stackedArea, _default$k as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$j as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$g as tooltip, export_default$f as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$3 as treemap, viewport, export_default$c as voronoi, widthAdaptiveMapPathStroke, withAlpha };
 export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor$1 as KeyAccessor, KeySorter, LayerMetadata, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries$1 as StackedBarSeries, StackedBarSlice$1 as StackedBarSlice, StackedBarVerticalComponent, SvgLayerMetadata, ValueSorter };
