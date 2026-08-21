@@ -8948,11 +8948,26 @@
      *                                                This height represents the height of the y-axis of the individual area multiple.
      *                                padHeight:      This is the amount of vertical padding between each area multiple.
      *                              }
+     *
+     * Behaviour notes:
+     * - step = height / (num - pct); band and pad split that step in a (1 - pct) / pct ratio.
+     * - By construction, step * (num - pct) === height, so baseline number `num` always lands exactly on `height`.
+     * - The baseline loop terminates on an absolute 1px slack (`level - height < 1`), not a fraction of the step,
+     *   so charts whose step is under ~1px get MORE baselines than there are stacks.
+     * - pct defaults via `pct || 0.1`, so an explicit 0 (or NaN) is silently replaced by 0.1.
+     * - num === pct divides by zero. With the default pct the step is Infinity and the range comes
+     *   back empty; with a pct above 1 the first baseline is -Infinity and the range holds that one
+     *   unusable value.
+     * - 0.1 < num < 1 also yields an empty range (the first baseline already sits below the chart).
+     * - A zero height, or num < pct < 1, makes both the step and the first baseline non-positive, and
+     *   the baseline loop then runs forever (WARNING: no guard). A pct above 1 escapes this, because
+     *   the negative step is multiplied by a negative (1 - pct) and the loop never starts.
+     * - A negative height returns an empty range with a negative, unusable bandHeight.
      */
     function stackedAreaMultiplesLayout (height, num, pct) {
-      pct || (pct = 0.1);
-      const step = height / (num - pct),
-        bandHeight = step * (1 - pct),
+      const padRatio = pct || 0.1;
+      const step = height / (num - padRatio),
+        bandHeight = step * (1 - padRatio),
         range = [];
       let level = bandHeight; // count from the top, and start at the bottom of the first band
       while (level - height < 1) {
@@ -8962,7 +8977,7 @@
       return {
         range,
         bandHeight,
-        padHeight: step * pct
+        padHeight: step * padRatio
       };
     }
 
