@@ -2,10 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import sankey from "../../src/component/sankey.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
-import {
-  computeLayout as untypedComputeLayout,
-  prepareData as untypedPrepareData,
-} from "../../src/layout/sankey.js";
+import { computeLayout, prepareData } from "../../src/layout/sankey.js";
 
 /** The shape of a node as produced by sszvis.layout.sankey.prepareData. */
 type Node = {
@@ -28,29 +25,7 @@ type Link = {
 
 type SankeyData = { nodes: Node[]; links: Link[]; columnLengths: number[] };
 
-/**
- * src/layout/sankey.js is still plain JavaScript, so its two exports carry no useful types.
- * They are described here as narrowly as the integration test at the bottom of this file
- * needs them; the declarations can go away once the layout module is ported too.
- */
 type Row = { from: string; to: string; value: number };
-type PreparedData = SankeyData & { columnTotals: number[] };
-type PrepareData = {
-  source(accessor: (d: Row) => string): PrepareData;
-  target(accessor: (d: Row) => string): PrepareData;
-  value(accessor: (d: Row) => number): PrepareData;
-  idLists(lists: string[][]): PrepareData;
-  apply(data: Row[]): PreparedData;
-};
-type Layout = { nodeThickness: number; nodePadding: number; columnPaddings: number[] };
-
-const prepareData = untypedPrepareData as unknown as () => PrepareData;
-const computeLayout = untypedComputeLayout as unknown as (
-  columnLengths: number[],
-  columnTotals: number[],
-  columnHeight: number,
-  columnWidth: number
-) => Layout;
 
 describe("component/sankey", () => {
   let container: HTMLDivElement;
@@ -1154,10 +1129,10 @@ describe("component/sankey", () => {
     test("works with the data and layout the layout module computes", () => {
       // An integration check that the component's expectations still match what
       // layout.sankey produces, since neither module validates the other's output.
-      const prepared = prepareData()
-        .source((d: { from: string }) => d.from)
-        .target((d: { to: string }) => d.to)
-        .value((d: { value: number }) => d.value)
+      const prepared = prepareData<Row>()
+        .source((d) => d.from)
+        .target((d) => d.to)
+        .value((d) => d.value)
         .idLists([
           ["A", "B"],
           ["C", "D"],
@@ -1174,7 +1149,8 @@ describe("component/sankey", () => {
           .sizeScale((v: number) => v * 2)
           .columnPosition((i: number) => i * 100)
           .nodeThickness(layout.nodeThickness)
-          .nodePadding(layout.nodePadding)
+          // computeLayout only returns undefined here for an empty column list
+          .nodePadding(layout.nodePadding ?? 0)
           .columnPadding((i: number) => layout.columnPaddings[i]),
         prepared
       );

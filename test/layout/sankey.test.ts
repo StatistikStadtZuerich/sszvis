@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
+import type { SankeyLink } from "../../src/component/sankey.js";
 import { computeLayout, prepareData } from "../../src/layout/sankey.js";
 
 type Row = { from: string; to: string; value: number };
@@ -15,14 +16,18 @@ const COLUMNS = [
 ];
 
 const prepare = (data: Row[] = LINKS, columns: string[][] = COLUMNS) =>
-  prepareData()
+  prepareData<Row>()
     .source((d: Row) => d.from)
     .target((d: Row) => d.to)
     .value((d: Row) => d.value)
     .idLists(columns)
     .apply(data);
 
-const byId = (nodes: { id: string }[], id: string) => nodes.find((n) => n.id === id);
+const byId = <N extends { id: string }>(nodes: N[], id: string) => nodes.find((n) => n.id === id);
+
+/** The links of a prepared dataset, with the nulls invalid rows leave behind filtered out. */
+const validLinks = (links: (SankeyLink | null)[]): SankeyLink[] =>
+  links.filter((l): l is SankeyLink => l !== null);
 
 describe("layout/sankey", () => {
   describe("prepareData", () => {
@@ -58,7 +63,7 @@ describe("layout/sankey", () => {
     });
 
     test("sorts the nodes ascending when asked", () => {
-      const data = prepareData()
+      const data = prepareData<Row>()
         .source((d: Row) => d.from)
         .target((d: Row) => d.to)
         .value((d: Row) => d.value)
@@ -78,7 +83,7 @@ describe("layout/sankey", () => {
     });
 
     test("sorts the links by descending value so small ones paint last", () => {
-      const { links } = prepare();
+      const links = validLinks(prepare().links);
       expect(links.map((l) => l.value)).toEqual([10, 5, 3]);
     });
 
@@ -89,7 +94,7 @@ describe("layout/sankey", () => {
     });
 
     test("stacks the links within each node, ordered by the node they attach to", () => {
-      const { links } = prepare();
+      const links = validLinks(prepare().links);
       const ac = links.find((l) => l.src.id === "a" && l.tgt.id === "c");
       const ad = links.find((l) => l.src.id === "a" && l.tgt.id === "d");
       const bc = links.find((l) => l.src.id === "b" && l.tgt.id === "c");
@@ -102,7 +107,7 @@ describe("layout/sankey", () => {
     });
 
     test("gives every link a unique id", () => {
-      const { links } = prepare();
+      const links = validLinks(prepare().links);
       expect(new Set(links.map((l) => l.id)).size).toBe(links.length);
     });
 
@@ -198,8 +203,8 @@ describe("layout/sankey", () => {
       // BUG: undocumented. The counter is shared by every prepareData instance in the page and never
       // resets, so link ids are unique but not stable between renders. Anything keying a
       // d3 join on a link id therefore sees a completely new set of keys on every update.
-      const first = prepare().links.map((l) => l.id);
-      const second = prepare().links.map((l) => l.id);
+      const first = validLinks(prepare().links).map((l) => l.id);
+      const second = validLinks(prepare().links).map((l) => l.id);
       expect(Math.min(...second)).toBeGreaterThan(Math.max(...first));
     });
 
@@ -235,7 +240,7 @@ describe("layout/sankey", () => {
       // first argument is treated as the dataset.
       // got: prepared.apply(null, [data]) prepares `null` and throws
       // want: a differently named method, e.g. calculate().
-      const builder = prepareData()
+      const builder = prepareData<Row>()
         .source((d: Row) => d.from)
         .target((d: Row) => d.to)
         .value((d: Row) => d.value)
@@ -321,13 +326,15 @@ describe("layout/sankey", () => {
       // but the link keeps its negative value and stacks the links after it backwards.
       // got: node value 0 with a link of value -5
       // want: negative values rejected.
-      const { nodes, links } = prepare(
+      const prepared = prepare(
         [
           { from: "a", to: "c", value: -5 },
           { from: "a", to: "d", value: 2 },
         ],
         COLUMNS
       );
+      const nodes = prepared.nodes;
+      const links = validLinks(prepared.links);
       expect(byId(nodes, "a")?.value).toBe(0);
       expect(links.find((l) => l.tgt.id === "c")?.value).toBe(-5);
       // a is a zero-height node, yet its two links are stacked at 0 and 2 and the stack
