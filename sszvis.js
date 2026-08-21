@@ -8124,7 +8124,7 @@
           cols = Math.ceil(domain.length / rows);
         }
         const groups = selection.selectAll(".sszvis-legend--entry").data(domain).join("g").classed("sszvis-legend--entry", true);
-        groups.selectAll(".sszvis-legend__mark").data(d => [d]).join("circle").classed("sszvis-legend__mark", true).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => props.scale(d)).attr("stroke", d => props.scale(d)).attr("stroke-width", 1);
+        groups.selectAll(".sszvis-legend__mark").data(d => [d]).join("circle").classed("sszvis-legend__mark", true).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => String(props.scale(d))).attr("stroke", d => String(props.scale(d))).attr("stroke-width", 1);
         groups.selectAll(".sszvis-legend__label").data(d => [d]).join("text").classed("sszvis-legend__label", true).text(d => String(d)).attr("dy", "0.35em") // vertically-center
         .style("text-anchor", () => props.rightAlign ? "end" : "start").attr("transform", () => {
           const x = props.rightAlign ? -18 : 18;
@@ -8152,10 +8152,12 @@
         } else {
           groups.attr("transform", (_d, i) => {
             if (props.orientation === "horizontal") {
-              return "".concat(verticalOffset, "translate(").concat(i % cols * props.columnWidth, ",").concat(Math.floor(i / cols) * props.rowHeight, ")");
+              var _props$columnWidth;
+              return "".concat(verticalOffset, "translate(").concat(i % cols * ((_props$columnWidth = props.columnWidth) !== null && _props$columnWidth !== void 0 ? _props$columnWidth : 0), ",").concat(Math.floor(i / cols) * props.rowHeight, ")");
             }
             if (props.orientation === "vertical") {
-              return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * props.columnWidth, ",").concat(i % rows * props.rowHeight, ")");
+              var _props$columnWidth2;
+              return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * ((_props$columnWidth2 = props.columnWidth) !== null && _props$columnWidth2 !== void 0 ? _props$columnWidth2 : 0), ",").concat(i % rows * props.rowHeight, ")");
             }
             // No orientation: d3 removes the attribute for a null value, matching the
             // original implementation's implicit undefined return.
@@ -8172,14 +8174,26 @@
      *
      * Generate a color scale and a legend for the given labels. Compute how much
      * padding labels plus legend needs for use with `sszvis.bounds()`
+     *
+     * Behaviour notes:
+     * - scaleQual6 is used up to six labels, scaleQual12 above six; colours repeat
+     *   silently beyond twelve labels.
+     * - axisLabelPadding is 60 for slant "horizontal" (and for any unrecognised slant),
+     *   40 + widest axis label for "vertical", and 40 + widest axis label / sqrt(2) for
+     *   "diagonal".
+     * - A "vertical" or "diagonal" slant with no axisLabels gives NaN, which propagates
+     *   into bottomPadding and thus into sszvis.bounds().
+     * - legendPadding is rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT.
      */
     function colorLegendLayout(_ref, container) {
+      var _measureDimensions$wi;
       let {
         legendLabels,
         axisLabels = [],
         slant = "horizontal"
       } = _ref;
-      const containerWidth = measureDimensions(container).width;
+      // an unmeasurable container yields undefined; NaN keeps every comparison below false
+      const containerWidth = (_measureDimensions$wi = measureDimensions(container).width) !== null && _measureDimensions$wi !== void 0 ? _measureDimensions$wi : Number.NaN;
       const layout = colorLegendDimensions(legendLabels, containerWidth);
       const scale = legendLabels.length > 6 ? scaleQual12().domain(legendLabels) : scaleQual6().domain(legendLabels);
       const legend = legendColorOrdinal().scale(scale).horizontalFloat(layout.horizontalFloat).rows(layout.rows).columnWidth(layout.columnWidth).orientation(layout.orientation);
@@ -8198,10 +8212,24 @@
      * colorLegendDimensions
      *
      * Compute all the dimensions necessary to generate an ordinal color legend.
+     *
+     * Behaviour notes:
+     * - Single column for four or fewer labels; otherwise at most two columns
+     *   (numCols only counts down from DEFAULT_COLUMN_COUNT = 2).
+     * - Horizontal float only when there is one column AND all labels fit on one line.
+     * - Each label is padded by 40px.
+     * - columnWidth is null for a single column.
+     * - legendWidth is columns * widest label, so for a floated legend it under-reports
+     *   the actual line width.
+     * - An empty label list gives legendWidth NaN.
+     * - An unmeasurable container (width 0 or undefined) silently degrades to one
+     *   column, one row per label.
      */
     function colorLegendDimensions(labels, containerWidth) {
+      var _max;
       const labelCount = labels.length;
-      const maxLabelWidth = d3.max(labels, labelWidth);
+      // d3.max is undefined for an empty label list; NaN propagates the same way
+      const maxLabelWidth = (_max = d3.max(labels, labelWidth)) !== null && _max !== void 0 ? _max : Number.NaN;
       const totalLabelsWidth = d3.sum(labels, labelWidth);
       // Use a single column for four or fewer items
       const columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
@@ -8222,11 +8250,13 @@
       switch (slant) {
         case "vertical":
           {
-            return 40 + d3.max(labels, measureAxisLabel);
+            var _max2;
+            return 40 + ((_max2 = d3.max(labels, measureAxisLabel)) !== null && _max2 !== void 0 ? _max2 : Number.NaN);
           }
         case "diagonal":
           {
-            return 40 + Math.sqrt(2 * Math.pow(d3.max(labels, measureAxisLabel) / 2, 2));
+            var _max3;
+            return 40 + Math.sqrt(2 * (((_max3 = d3.max(labels, measureAxisLabel)) !== null && _max3 !== void 0 ? _max3 : Number.NaN) / 2) ** 2);
           }
         default:
           {

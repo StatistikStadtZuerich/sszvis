@@ -115,7 +115,7 @@ function legendColorOrdinal() {
       cols = Math.ceil(domain.length / rows);
     }
     const groups = selection.selectAll(".sszvis-legend--entry").data(domain).join("g").classed("sszvis-legend--entry", true);
-    groups.selectAll(".sszvis-legend__mark").data(d => [d]).join("circle").classed("sszvis-legend__mark", true).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => props.scale(d)).attr("stroke", d => props.scale(d)).attr("stroke-width", 1);
+    groups.selectAll(".sszvis-legend__mark").data(d => [d]).join("circle").classed("sszvis-legend__mark", true).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => String(props.scale(d))).attr("stroke", d => String(props.scale(d))).attr("stroke-width", 1);
     groups.selectAll(".sszvis-legend__label").data(d => [d]).join("text").classed("sszvis-legend__label", true).text(d => String(d)).attr("dy", "0.35em") // vertically-center
     .style("text-anchor", () => props.rightAlign ? "end" : "start").attr("transform", () => {
       const x = props.rightAlign ? -18 : 18;
@@ -143,10 +143,12 @@ function legendColorOrdinal() {
     } else {
       groups.attr("transform", (_d, i) => {
         if (props.orientation === "horizontal") {
-          return "".concat(verticalOffset, "translate(").concat(i % cols * props.columnWidth, ",").concat(Math.floor(i / cols) * props.rowHeight, ")");
+          var _props$columnWidth;
+          return "".concat(verticalOffset, "translate(").concat(i % cols * ((_props$columnWidth = props.columnWidth) !== null && _props$columnWidth !== void 0 ? _props$columnWidth : 0), ",").concat(Math.floor(i / cols) * props.rowHeight, ")");
         }
         if (props.orientation === "vertical") {
-          return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * props.columnWidth, ",").concat(i % rows * props.rowHeight, ")");
+          var _props$columnWidth2;
+          return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * ((_props$columnWidth2 = props.columnWidth) !== null && _props$columnWidth2 !== void 0 ? _props$columnWidth2 : 0), ",").concat(i % rows * props.rowHeight, ")");
         }
         // No orientation: d3 removes the attribute for a null value, matching the
         // original implementation's implicit undefined return.

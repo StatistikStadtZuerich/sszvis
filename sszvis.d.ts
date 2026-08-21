@@ -4279,9 +4279,14 @@ declare const formatText: StringConstructor;
  */
 
 declare const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
-/** The subset of a d3 scale this legend relies on, over its domain type T. */
+/**
+ * The subset of a d3 scale this legend relies on, over its domain type T. The return value
+ * only has to stringify to a colour, which is what the sszvis colour scales produce.
+ */
 interface OrdinalColorScale<T> {
-    (value: T): string;
+    (value: T): {
+        toString(): string;
+    };
     domain(): T[];
 }
 type LegendOrientation = "horizontal" | "vertical";
@@ -4290,16 +4295,16 @@ interface OrdinalColorScaleComponent<T = string> extends Component {
     scale(scale: OrdinalColorScale<T>): OrdinalColorScaleComponent<T>;
     rowHeight(): number;
     rowHeight(height: number): OrdinalColorScaleComponent<T>;
-    columnWidth(): number;
-    columnWidth(width: number): OrdinalColorScaleComponent<T>;
+    columnWidth(): number | null;
+    columnWidth(width: number | null): OrdinalColorScaleComponent<T>;
     rows(): number;
     rows(rows: number): OrdinalColorScaleComponent<T>;
     columns(): number;
     columns(columns: number): OrdinalColorScaleComponent<T>;
     verticallyCentered(): boolean;
     verticallyCentered(centered: boolean): OrdinalColorScaleComponent<T>;
-    orientation(): LegendOrientation | undefined;
-    orientation(orientation: LegendOrientation): OrdinalColorScaleComponent<T>;
+    orientation(): LegendOrientation | undefined | null;
+    orientation(orientation: LegendOrientation | null): OrdinalColorScaleComponent<T>;
     reverse(): boolean;
     reverse(reverse: boolean): OrdinalColorScaleComponent<T>;
     rightAlign(): boolean;
@@ -4314,36 +4319,131 @@ interface OrdinalColorScaleComponent<T = string> extends Component {
 declare function legendColorOrdinal<T = string>(): OrdinalColorScaleComponent<T>;
 
 /**
- * colorLegendLayout
+ * A collection of utilities to measure elements
  *
- * Generate a color scale and a legend for the given labels. Compute how much
- * padding labels plus legend needs for use with `sszvis.bounds()`
+ * @module sszvis/measure
  */
-declare function colorLegendLayout({ legendLabels, axisLabels, slant }: {
-    legendLabels: any;
-    axisLabels?: never[] | undefined;
-    slant?: string | undefined;
-}, container: any): {
+
+/**
+ * Type for elements that can be measured - selector string, DOM element, or d3 selection
+ */
+type MeasurableElement = string | Element | Selection<any, any, any, any>;
+/**
+ * measureDimensions
+ *
+ * Calculates the width of the first DOM element defined by a CSS selector string,
+ * a DOM element reference, or a d3 selection. If the DOM element can't be
+ * measured `undefined` is returned for the width. Returns also measurements of
+ * the screen, which are used by some responsive components.
+ *
+ * @param  {string|Element|d3.selection} arg The element to measure
+ *
+ * @return {DimensionMeasurement} The measurement of the width of the element, plus dimensions of the screen
+ *                  The returned object contains:
+ *                      width: {number|undefined} The width of the element
+ *                      screenWidth: {number} The innerWidth of the screen
+ *                      screenHeight: {number} The innerHeight of the screen
+ */
+declare const measureDimensions: (arg: MeasurableElement) => DimensionMeasurement;
+/**
+ * measureText
+ *
+ * Calculates the width of a string given a font size and a font face. It might
+ * be more convenient to use a preset based on this function that has the font
+ * size and family already set.
+ *
+ * @param {number} fontSize The font size in pixels
+ * @param {string} fontFace The font face ("Arial", "Helvetica", etc.)
+ * @param {string} text The text to measure
+ * @returns {number} The width of the text
+ *
+ * @example
+ * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
+ **/
+declare const measureText: (fontSize: number, fontFace: string, text: string) => number;
+/**
+ * measureAxisLabel
+ *
+ * A preset to measure the widths of axis labels.
+ *
+ * @param {string} text The text to measure
+ * @returns {number} The width of the text
+ *
+ * @example
+ * const labelWidth = sszvis.measureAxisLabel("Hello!")
+ */
+declare const measureAxisLabel: (text: string) => number;
+/**
+ * measureLegendLabel
+ *
+ * A preset to measure the widths of legend labels.
+ *
+ * @param {string} text The text to measure
+ * @returns {number} The width of the text
+ *
+ * @example
+ * const labelWidth = sszvis.measureLegendLabel("Hello!")
+ */
+declare const measureLegendLabel: (text: string) => number;
+
+type ColorLegendLayoutOptions = {
+    legendLabels: string[];
+    axisLabels?: string[];
+    /** "vertical" and "diagonal" reserve room for rotated labels; anything else, including an
+     * unrecognised value, is treated as horizontal. */
+    slant?: string;
+};
+type ColorLegendLayout = {
     axisLabelPadding: number;
     legendPadding: number;
     bottomPadding: number;
     legendWidth: number;
-    legend: (("horizontal" | "vertical") | undefined) & OrdinalColorScaleComponent<string>;
+    legend: OrdinalColorScaleComponent<string>;
     scale: ExtendedOrdinalScale;
 };
+type ColorLegendDimensions = {
+    columns: number;
+    rows: number;
+    columnWidth: number | null;
+    legendWidth: number;
+    horizontalFloat: boolean;
+    orientation: LegendOrientation | null;
+};
+/**
+ * colorLegendLayout
+ *
+ * Generate a color scale and a legend for the given labels. Compute how much
+ * padding labels plus legend needs for use with `sszvis.bounds()`
+ *
+ * Behaviour notes:
+ * - scaleQual6 is used up to six labels, scaleQual12 above six; colours repeat
+ *   silently beyond twelve labels.
+ * - axisLabelPadding is 60 for slant "horizontal" (and for any unrecognised slant),
+ *   40 + widest axis label for "vertical", and 40 + widest axis label / sqrt(2) for
+ *   "diagonal".
+ * - A "vertical" or "diagonal" slant with no axisLabels gives NaN, which propagates
+ *   into bottomPadding and thus into sszvis.bounds().
+ * - legendPadding is rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT.
+ */
+declare function colorLegendLayout({ legendLabels, axisLabels, slant }: ColorLegendLayoutOptions, container: MeasurableElement): ColorLegendLayout;
 /**
  * colorLegendDimensions
  *
  * Compute all the dimensions necessary to generate an ordinal color legend.
+ *
+ * Behaviour notes:
+ * - Single column for four or fewer labels; otherwise at most two columns
+ *   (numCols only counts down from DEFAULT_COLUMN_COUNT = 2).
+ * - Horizontal float only when there is one column AND all labels fit on one line.
+ * - Each label is padded by 40px.
+ * - columnWidth is null for a single column.
+ * - legendWidth is columns * widest label, so for a floated legend it under-reports
+ *   the actual line width.
+ * - An empty label list gives legendWidth NaN.
+ * - An unmeasurable container (width 0 or undefined) silently degrades to one
+ *   column, one row per label.
  */
-declare function colorLegendDimensions(labels: any, containerWidth: any): {
-    columns: any;
-    rows: number;
-    columnWidth: number | null | undefined;
-    legendWidth: number;
-    horizontalFloat: boolean;
-    orientation: string | null;
-};
+declare function colorLegendDimensions(labels: string[], containerWidth: number): ColorLegendDimensions;
 
 /**
  * Heat Table Dimensions
@@ -4987,74 +5087,6 @@ declare function _default$1(): any;
 declare function _default(): d3.component;
 
 /**
- * A collection of utilities to measure elements
- *
- * @module sszvis/measure
- */
-
-/**
- * Type for elements that can be measured - selector string, DOM element, or d3 selection
- */
-type MeasurableElement = string | Element | Selection<any, any, any, any>;
-/**
- * measureDimensions
- *
- * Calculates the width of the first DOM element defined by a CSS selector string,
- * a DOM element reference, or a d3 selection. If the DOM element can't be
- * measured `undefined` is returned for the width. Returns also measurements of
- * the screen, which are used by some responsive components.
- *
- * @param  {string|Element|d3.selection} arg The element to measure
- *
- * @return {DimensionMeasurement} The measurement of the width of the element, plus dimensions of the screen
- *                  The returned object contains:
- *                      width: {number|undefined} The width of the element
- *                      screenWidth: {number} The innerWidth of the screen
- *                      screenHeight: {number} The innerHeight of the screen
- */
-declare const measureDimensions: (arg: MeasurableElement) => DimensionMeasurement;
-/**
- * measureText
- *
- * Calculates the width of a string given a font size and a font face. It might
- * be more convenient to use a preset based on this function that has the font
- * size and family already set.
- *
- * @param {number} fontSize The font size in pixels
- * @param {string} fontFace The font face ("Arial", "Helvetica", etc.)
- * @param {string} text The text to measure
- * @returns {number} The width of the text
- *
- * @example
- * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
- **/
-declare const measureText: (fontSize: number, fontFace: string, text: string) => number;
-/**
- * measureAxisLabel
- *
- * A preset to measure the widths of axis labels.
- *
- * @param {string} text The text to measure
- * @returns {number} The width of the text
- *
- * @example
- * const labelWidth = sszvis.measureAxisLabel("Hello!")
- */
-declare const measureAxisLabel: (text: string) => number;
-/**
- * measureLegendLabel
- *
- * A preset to measure the widths of legend labels.
- *
- * @param {string} text The text to measure
- * @returns {number} The width of the text
- *
- * @example
- * const labelWidth = sszvis.measureLegendLabel("Hello!")
- */
-declare const measureLegendLabel: (text: string) => number;
-
-/**
  * Parsing functions
  *
  * @module sszvis/parse
@@ -5431,4 +5463,4 @@ declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
 export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$v as annotationCircle, export_default$u as annotationConfidenceArea, export_default$t as annotationConfidenceBar, export_default$r as annotationLine, export_default$q as annotationRangeFlag, export_default$p as annotationRangeRuler, export_default$o as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$i as bar, bounds, export_default$w as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$d as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$7 as dimensionsHeatTable, export_default$6 as dimensionsHorizontalBarChart, export_default$3 as dimensionsVerticalBarChart, export_default$h as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$s as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$c as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, export_default$5 as layoutPopulationPyramid, _default$9 as layoutSmallMultiples, export_default$4 as layoutStackedAreaMultiples, export_default$2 as legendColorBinned, export_default$1 as legendColorLinear, legendColorOrdinal, export_default as legendRadius, export_default$g as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$l as move, muchDarker, nestedStackedBarsVertical, not, export_default$f as pack, export_default$k as panning, parseDate, parseNumber, parseYear, export_default$e as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$d as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$c as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$b as selectMenu, set, _default$a as slider, slightlyDarker, slowTransition, some, export_default$b as stackedArea, export_default$a as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$9 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$n as tooltip, export_default$m as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$8 as treemap, viewport, export_default$j as voronoi, widthAdaptiveMapPathStroke, withAlpha };
-export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries$1 as StackedBarSeries, StackedBarSlice$1 as StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter };
+export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries$1 as StackedBarSeries, StackedBarSlice$1 as StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter };
