@@ -25,16 +25,39 @@
  *                          }
  */
 
-export default function (spaceWidth, squarePadding, numX, numY, chartPadding) {
-  chartPadding || (chartPadding = {});
-  chartPadding.top || (chartPadding.top = 0);
-  chartPadding.right || (chartPadding.right = 0);
-  chartPadding.bottom || (chartPadding.bottom = 0);
-  chartPadding.left || (chartPadding.left = 0);
+export type HeatTableChartPadding = {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+};
+
+export type HeatTableDimensions = {
+  side: number;
+  paddedSide: number;
+  padRatio: number;
+  width: number;
+  height: number;
+  centeredOffset: number;
+};
+
+export default function (
+  spaceWidth: number,
+  squarePadding: number,
+  numX: number,
+  numY: number,
+  chartPadding?: HeatTableChartPadding
+): HeatTableDimensions {
+  // the defaults are written back onto the caller's object, as the original did
+  const padding: HeatTableChartPadding = chartPadding || {};
+  padding.top ||= 0;
+  padding.right ||= 0;
+  padding.bottom ||= 0;
+  padding.left ||= 0;
 
   // this includes the default side length for the heat table
   const DEFAULT_SIDE = 30,
-    availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,
+    availableChartWidth = spaceWidth - (padding.left ?? 0) - (padding.right ?? 0),
     side = Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
     paddedSide = side + squarePadding,
     padRatio = 1 - side / paddedSide,
