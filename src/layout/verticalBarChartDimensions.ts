@@ -21,7 +21,16 @@
  *                                }
  */
 
-export default function (width, numBars) {
+export type VerticalBarChartDimensions = {
+  barWidth: number;
+  padWidth: number;
+  padRatio: number;
+  outerRatio: number;
+  barGroupWidth: number;
+  totalWidth: number;
+};
+
+export default function (width: number, numBars: number): VerticalBarChartDimensions {
   const MAX_BAR_WIDTH = 48, // the maximum width of a bar
     MIN_PADDING = 2, // the minimum padding value
     MAX_PADDING = 100, // the maximum padding value
