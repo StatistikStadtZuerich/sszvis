@@ -6954,24 +6954,238 @@
      * meaning that it has a horizontal axis that extends in a positive and negative
      * direction having the same domain.
      *
-     * This chart's horizontal point of origin is at it's spine, i.e. the center of
+     * This chart's horizontal point of origin is at its spine, i.e. the center of
      * the chart.
+     *
+     * The datum bound to the chart layer is the output of stackedPyramidData(sideAcc, rowAcc,
+     * seriesAcc, valueAcc), which returns a function over a flat array of rows. Each accessor is called
+     * with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc into the
+     * vertical positions within a side, seriesAcc into the layers of each row's stack, and valueAcc
+     * supplies the number that is stacked.
+     *
+     * The result is an array of sides, each an array of the series d3.stack produced for that side,
+     * each series an array of the [y0, y1] slices it computed - so a slice is addressed as
+     * data[side][series][row], and the caller picks the two sides positionally. Every slice carries
+     * five properties beyond its pair: its `series` key, its `side` as the side accessor returned it,
+     * its `row`, its own `value`, and its `data`, narrowed from the whole grouped row to the single
+     * source row the slice was computed from. d3's own `key` and `index` are carried across onto each
+     * series. The largest stacked total across both sides is attached to the returned array as
+     * `maxValue`, which is what the horizontal scale's domain is built from. The rows passed in are not
+     * modified.
+     *
+     * The component always creates four sub-groups, in this order: leftStack, rightStack, leftReference
+     * and rightReference. The order is load-bearing, since it makes the reference lines paint over the
+     * bars, and the reference groups are created even when no reference accessor is configured. Within
+     * a side each series gets its own group, marked with a [data-sszvis-stack] attribute and no class -
+     * stackedBar uses a .sszvis-stack class for the same job - and is drawn by its own bar component,
+     * the left one mirrored across the spine. Both sides are pushed outwards by SPINE_PADDING, so a one
+     * pixel gap runs down the middle of the chart, and every bar dimension is read from the same
+     * accessors on both sides.
      *
      * @module sszvis/component/stackedPyramid
      *
      * @requires sszvis.component.bar
      *
-     * @property {number, d3.scale} [barFill]          The color of a bar
-     * @property {number, d3.scale} barHeight          The height of a bar
-     * @property {number, d3.scale} barWidth           The width of a bar
-     * @property {number, d3.scale} barPosition        The vertical position of a bar
-     * @property {Array<number, number>} tooltipAnchor The anchor position for the tooltips. Uses sszvis.component.bar.tooltipAnchor
-     *                                                 under the hood to optionally reposition the tooltip anchors in the pyramid chart.
-     *                                                 Default value is [0.5, 0.5], which centers tooltips on the bars
-     * @property {function}         leftAccessor       Data for the left side
-     * @property {function}         rightAccessor      Data for the right side
-     * @property {function}         [leftRefAccessor]  Reference data for the left side
-     * @property {function}         [rightRefAccessor] Reference data for the right side
+     * @template T The type of one row of the input data, i.e. of a slice's `data`
+     * @template S The type the side accessor returns, i.e. of a slice's `side`
+     *
+     * @property {string, function} [barFill]     The color of a bar. Defaults to #000 and applies to
+     *                                            both sides; a per-datum accessor is the usual way to
+     *                                            colour the series. It is composed with the slice's
+     *                                            `data`, so it reads a source row rather than a slice,
+     *                                            and fn.compose forwards d3's arguments only to the
+     *                                            innermost function, so it is called with that row
+     *                                            alone.
+     * @property {number, function} barHeight     The height of a bar. Required, but omitting it is not
+     *                                            reported: it is the one dimension handed straight to
+     *                                            bar, so the value reaches bar's missing-value guard as
+     *                                            undefined and becomes 0, and the chart renders an
+     *                                            empty axis frame with no bars and no warning. Of the
+     *                                            three required dimensions only this one fails
+     *                                            silently. Shared with pyramid.
+     * @property {number, function} barWidth      The width of a bar. Required, and an unset prop throws
+     *                                            a TypeError from the component's own closure, because
+     *                                            the component computes both the x and the width of
+     *                                            every bar itself. It is called with one of the numbers
+     *                                            out of a slice's [y0, y1] pair rather than with the
+     *                                            slice, so it has to be a scale over stacked values and
+     *                                            not an accessor over data - pyramid calls the same
+     *                                            property with the bar's datum, and an accessor written
+     *                                            for pyramid reads properties off a number here and
+     *                                            yields NaN, which bar's guard turns into 0. It is also
+     *                                            called without d3's index and group, so an index-aware
+     *                                            or node-aware accessor collapses every width and every
+     *                                            x to 0 on both sides; pyramid has the same omission on
+     *                                            its left side only. A constant is accepted and is
+     *                                            worse than an error: the width is computed as
+     *                                            barWidth(d[1]) - barWidth(d[0]), so a constant
+     *                                            subtracts itself and every segment disappears while
+     *                                            still being positioned at the constant offset.
+     * @property {number, function} barPosition   The vertical position of a bar, i.e. its top edge.
+     *                                            Required, and an unset prop throws too, but from
+     *                                            inside fn.compose ("Cannot read properties of
+     *                                            undefined (reading 'call')") rather than from the
+     *                                            component's own closure the way barWidth does. Both
+     *                                            surface while bar is applying its attributes. It is
+     *                                            called with the slice's `row`, which is that row's
+     *                                            index within its side and not the value the row
+     *                                            accessor returned, and with nothing else, so an
+     *                                            index-aware accessor yields NaN and bar's guard
+     *                                            flattens it to 0.
+     * @property {Array<number>} [tooltipAnchor]  The anchor position for the tooltips. Uses
+     *                                            sszvis.component.bar.tooltipAnchor under the hood to
+     *                                            optionally reposition the tooltip anchors in the
+     *                                            pyramid chart. Default value is [0.5, 0.5], which
+     *                                            centers tooltips on the bars. The value is handed to
+     *                                            both bars unchanged rather than being mirrored, and
+     *                                            bar measures from its own upper left corner, which on
+     *                                            the left side is a segment's outer edge, so any x
+     *                                            other than 0.5 lands on visually opposite sides of the
+     *                                            pyramid. An array with fewer than two entries yields a
+     *                                            NaN coordinate, as documented on bar; the component
+     *                                            adds no validation of its own. Shared with pyramid.
+     * @property {function} leftAccessor          Data for the left side, i.e. a function picking one
+     *                                            side out of the layout - the sides are an array, so
+     *                                            docs/population-pyramid/pyramid-stacked.js uses
+     *                                            prop("0") and prop("1"). Required: an unset accessor
+     *                                            throws "props.leftAccessor is not a function" from the
+     *                                            renderer, and an accessor that returns undefined or
+     *                                            null throws from d3's data join instead, with a
+     *                                            message that names neither the property nor the
+     *                                            component.
+     * @property {function} rightAccessor         Data for the right side. Same requirements as
+     *                                            leftAccessor.
+     * @property {function} [leftRefAccessor]     Reference data for the left side, drawn as a single
+     *                                            path outlining the reference series. The elements are
+     *                                            handed to barWidth for x and to barPosition for y, so
+     *                                            they have to be plain numbers. Optional, but the guard
+     *                                            tests whether the accessor was set, not what it
+     *                                            returns: an accessor that yields undefined or null for
+     *                                            some states throws instead of hiding the line.
+     *                                            Returning an empty array does hide it, though the
+     *                                            classed path element stays in the DOM with no d
+     *                                            attribute, where CSS and hit tests can still find it.
+     * @property {function} [rightRefAccessor]    Reference data for the right side. Same as
+     *                                            leftRefAccessor.
+     *
+     * Note: a side's series keys are read off that side's first row alone, with Object.keys, so a
+     * series absent from the first row is dropped from the whole side and its values appear neither in
+     * the chart nor in maxValue - stackedBarData takes the union of the keys across every row instead.
+     * The stack value is then read as x[key][0] with no guard, so a later row that is missing one of
+     * the first row's keys dies on an undefined cell with a TypeError. Between them the two mean every
+     * row of a side has to carry every series and the first row decides which, so callers with sparse
+     * data have to pad it with zero rows.
+     *
+     * Note: a slice's `row` is the position of its row within the side, not the value the row accessor
+     * returned, and that index is what the component feeds to barPosition. It lines up with the data
+     * only when the row values happen to be a dense zero-based range, which is what
+     * docs/population-pyramid/pyramid-stacked.js relies on: it builds its position scale over
+     * d3.range(0, 101) and its ages happen to run from 0 to 100. The source row still knows its real
+     * value; only the tag on the slice is an index.
+     *
+     * Note: the cascade groups on String(key) - for the sides, the rows and the series alike - so keys
+     * that differ only in type merge, and the number 1 and the string "1" land in the same cell where
+     * only the first of them is stacked. The ordering follows from the same coercion: JavaScript
+     * iterates array-index keys in ascending numeric order regardless of insertion order, so dense
+     * non-negative integer rows sort themselves, which is what makes the index-as-position quirk above
+     * survivable, while negative, fractional or plain string rows fall back to insertion order and are
+     * laid out in whatever order the input happened to be in. The sides are ordered the same way and
+     * picked positionally, so a dataset whose first row is male puts men on the left and silently
+     * mirrors the chart. For the series the key order is the stacking order, so a series accessor
+     * returning years or numeric codes restacks the chart in ascending numeric order, and the `series`
+     * tag comes back as a string even when the accessor returned a number. Nothing enforces the
+     * cardinality of two the layout function's own documentation requires of the side accessor either:
+     * a single side leaves the right accessor returning undefined, which throws from d3's data join,
+     * and a third side is returned and then dropped without a word by the caller's positional
+     * accessors. Shared with stackedBarData.
+     *
+     * Note: the value of a cell is read from its first row only, so data that is not already aggregated
+     * to one row per (side, row, series) triplet is silently truncated rather than summed. The layout
+     * function requires the triplet to appear exactly once and says it makes no effort to normalize the
+     * data if that is not the case, but nothing reports a violation. Shared with stackedBarData.
+     *
+     * Note: `maxValue` is hung off the returned array rather than wrapped in an object, so any array
+     * operation - a spread, a map, a filter, a trip through JSON - drops it. It is the maximum of the
+     * upper bounds only, so it is not the extent of the data when a value is negative, and it is
+     * undefined rather than 0 for an empty layout, where it coerces to NaN in the scale domain the
+     * examples feed it into, so the scale maps every value to NaN and the axis draws its domain line
+     * with no ticks at all. A slice's `value` is a convenience of the same kind:
+     * the component never reads it, and it duplicates d[1] - d[0] as it stood when the layout ran, so
+     * it goes stale if a caller rewrites the pair. Shared with stackedBarData. See
+     * test/component/stackedPyramid.test.ts.
+     *
+     * Note: the reference lines cannot be drawn in the coordinate system the bars use. The line
+     * generator is d3.line().x(barWidth).y(barPosition), so both props are called with the same
+     * reference element, while in the bars barWidth is called with a stacked value and barPosition with
+     * a row index. No element satisfies both: a series of stacked values gives an x that is right and a
+     * y that is as many rows down as the value is large. d3.line also calls its x accessor as (d, i,
+     * data), so barWidth receives the index on the line and nowhere else, which leaves one property
+     * with two calling conventions as well as two coordinate systems. The only stackedPyramid example
+     * sets neither reference accessor; the reference-line example uses the plain pyramid instead, where
+     * both props read the datum and the problem does not arise.
+     *
+     * Note: two smaller mismatches ride along, both of them shared with pyramid. The bars are pushed
+     * outwards by SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn
+     * straight from barWidth and so agrees with the axis scale, which puts a reference value equal to a
+     * bar value half a pixel inside that bar's outer edge, symmetrically on both sides. And the line
+     * takes its y from barPosition alone and never accounts for barHeight, so the outline runs along
+     * the bars' top edges rather than their mid-lines, half a bar height above the values it describes.
+     *
+     * Note: a reference line's d attribute is only ever written through a transition, so a freshly
+     * rendered path carries no geometry until the first animation frame and anything that measures the
+     * chart synchronously - getBBox, a snapshot, an export to PNG - sees an empty path. Entering lines
+     * then snap into place, because d3 has no previous d to interpolate from; only updates animate. The
+     * bars underneath do not animate at all - bar's transition property is inert - so on a state change
+     * the outline eases towards its new position while the bars jump, and the two visibly detach for
+     * the length of the transition. bar also guards every geometry value against NaN while the line
+     * hands barWidth and barPosition straight to d3.line, so one missing value poisons the path string
+     * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
+     * with pyramid.
+     *
+     * Note: the reference path is classed .sszvis-path, which no rule in sszvis.css defines - its
+     * appearance comes from four inlined attributes instead, the opposite choice from pyramid, which
+     * sets only .sszvis-pyramid__referenceline and takes all four values from the stylesheet. The class
+     * collides with the one pie, stackedArea and stackedAreaMultiples use for their own paths, so a
+     * selector written for any of those also matches a stackedPyramid reference line, and since the
+     * join has no key function a foreign path that happens to carry the class is adopted as the
+     * reference line and repainted rather than left alone. That is harmless while each component owns
+     * its own selectGroup, which is how every example is written.
+     *
+     * Note: the reference datum is wrapped in an array, one array of points per path, so each side is
+     * capped at a single line and, while a reference accessor is set, the join always has exactly one
+     * element and the exit selection can never fire: once a line has been rendered its path element
+     * stays in the DOM even after the reference data goes away, with only its d attribute dropped. Only
+     * removing the accessor itself empties the group. The mirror property writes transform="" on the
+     * right side rather than omitting the attribute. Shared with pyramid.
+     *
+     * Note: the stack join is selectAll("[data-sszvis-stack]"), a descendant selector rather than a
+     * child selector, so a stack group nested at any depth below a side's group is captured alongside
+     * the direct children. The exit selection then removes a legitimate series group, and the reorder
+     * that follows has to sort a selection in which one element is an ancestor of another, so d3 throws
+     * a HierarchyRequestError and aborts the whole render rather than just that side. A child selector
+     * would make it unreachable. Nothing nests stack groups today, so reaching it needs a caller to
+     * have put something of its own inside one. stackedBar's version of the same unscoped selector only
+     * re-binds.
+     *
+     * Note: neither join uses a key function, so on a re-render the stack groups and the rects inside
+     * them are matched by index rather than by series. When a series is dropped from anywhere but the
+     * end, the groups that remain are re-bound to different series and every bar in them is rewritten.
+     * Only the geometry moves, so it is invisible, but any state held on a stack group - a class, a
+     * listener, an in-flight transition - follows the position rather than the series. Shared with
+     * stackedBar.
+     *
+     * Note: bar defaults its transition property to true and this component neither sets it nor exposes
+     * it, so every render creates a d3 transition per rect and then overwrites the geometry on the
+     * plain selection immediately. Nothing animates, but the transition state is still attached and
+     * interrupts any transition already running on those rects. Shared with stackedBar. The component
+     * also leaves bar's stroke unset, so unlike stackedBar, which paints a 1px white separator between
+     * segments, the segments of a row touch without a seam.
+     *
+     * Note: bar guards NaN but not negative numbers. A negative stacked value inverts the pair, so the
+     * width goes negative, which the browser rejects and the segment is not drawn, and on the left side
+     * the double sign flip moves x to the right of the spine. Neither side of the pyramid supports
+     * values below the baseline. Reaching this needs negative input data, which a population pyramid
+     * should not see. See test/component/stackedPyramid.test.ts.
      *
      * @return {sszvis.component}
      */
@@ -6980,6 +7194,8 @@
     const SPINE_PADDING = 0.5;
     const dataAcc = prop("data");
     const rowAcc = prop("row");
+    /* Data layout
+    ----------------------------------------------- */
     /**
      * This function prepares the data for the stackedPyramid component
      *
@@ -6993,27 +7209,49 @@
      * The combination of each distinct (side,row,series) triplet MUST appear only once
      * in the data. This function makes no effort to normalize the data if that's not the case.
      */
-    function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
-      return function (data) {
-        const sides = cascade().arrayBy(sideAcc).arrayBy(_rowAcc).objectBy(seriesAcc).apply(data).map(rows => {
+    function stackedPyramidData(sideAcc,
+    // cascade stringifies its keys, so a numeric row or series accessor - an age, a year, a
+    // category code - groups the same way a string one does. The series keys are read back off
+    // the cascade row with Object.keys, which is why `series` stays a string.
+    _rowAcc, seriesAcc, valueAcc) {
+      return data => {
+        const grouped = cascade().arrayBy(sideAcc).arrayBy(_rowAcc).objectBy(seriesAcc).apply(data);
+        const sides = grouped.map(rows => {
+          // Only the first row of the side is consulted, so a series that is absent from it is
+          // dropped from the whole side, and a later row missing one of these keys throws below.
           const keys = Object.keys(rows[0]);
           const side = sideAcc(rows[0][keys[0]][0]);
-          const stacks = d3.stack().keys(keys).value((x, key) => valueAcc(x[key][0]))(rows);
-          for (const [i, stack] of stacks.entries()) {
-            for (const [row, d] of stack.entries()) {
-              d.data = d.data[keys[i]][0];
-              d.series = keys[i];
-              d.side = side;
-              d.row = row;
-              d.value = valueAcc(d.data);
-            }
-          }
-          return stacks;
+          const stacks = d3.stack().keys(keys)
+          // Only the first datum of each cell is read, and the read is unguarded.
+          .value((x, key) => valueAcc(x[key][0]))(rows);
+          // Simplify the 'data' property. The slices themselves are the objects d3 created,
+          // rewritten in place, so a caller holding one sees the new shape. The series arrays are
+          // rebuilt, so d3's own `key` and `index` - the only two properties it hangs off a
+          // series - have to be carried across by hand.
+          return stacks.map((stack, i) => {
+            const slices = stack.map((d, row) => {
+              const datum = d.data[keys[i]][0];
+              return Object.assign(d, {
+                data: datum,
+                series: keys[i],
+                side,
+                // The row's position within the side, not the value the row accessor returned.
+                row,
+                value: valueAcc(datum)
+              });
+            });
+            return Object.assign(slices, {
+              key: stack.key,
+              index: stack.index
+            });
+          });
         });
         // Compute the max value, for convenience. This value is needed to construct
         // the horizontal scale.
-        sides.maxValue = d3.max(sides, side => d3.max(side, rows => d3.max(rows, row => row[1])));
-        return sides;
+        const maxValue = d3.max(sides, s => d3.max(s, rows => d3.max(rows, row => row[1])));
+        return Object.assign(sides, {
+          maxValue
+        });
       };
     }
     /* Module
@@ -7036,6 +7274,10 @@
         selection.selectGroup("rightReference").datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : []).call(rightLine);
       });
     }
+    /**
+     * Joins one group per series and draws that series' slices with the bar component it was
+     * given. The datum handed to this component is one side of the pyramid.
+     */
     function stackComponent() {
       return component().prop("stackElement").renderSelection(selection => {
         const datum = selection.datum();
@@ -7046,6 +7288,11 @@
         });
       });
     }
+    /**
+     * Draws one side's reference outline as a single path. The data is one array of points per
+     * path, so the datum handed to this component is an array of arrays - in practice always of
+     * length one, since each side has at most one reference line.
+     */
     function lineComponent() {
       return component().prop("barPosition").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
         const selection = d3.select(this);
@@ -7073,48 +7320,138 @@
      * When using raw hierarchical data, the component will automatically apply the partition layout
      * and flatten the data internally.
      *
-     * @property {Function} angleScale              Scale function for the angle of the segments of the sunburst chart. The domain
-     *                                              should usually be [0, 1] and the range [0, 2 * PI]. These are used as defaults.
-     * @property {Function} radiusScale             Scale function for the radius of segments. Can be configured using values returned from
-     *                                              sszvis.layout.sunburst.computeLayout. See the examples for how the scale setup works.
-     * @property {Number} centerRadius              The radius of the center of the chart. Can be configured with sszvis.layout.sunburst.computeLayout.
-     * @property {Function} fill                    Function that returns the fill color for the segments in the center of the chart. Note that this will only be
-     *                                              called on the centermost segments. The segments which are subcategories of these center segments
-     *                                              will have their fill determined recursively, by lightening the color of its parent segment.
+     * @module sszvis/component/sunburst
+     * @template T The type of the original flat data objects
+     *
+     * @property {Function} angleScale              Scale function for the angle of the segments of the
+     *                                              sunburst chart. The domain should usually be [0, 1]
+     *                                              and the range [0, 2 * PI]. These are used as
+     *                                              defaults: the factory installs a fresh
+     *                                              scaleLinear().range([0, 2 * Math.PI]) on every call,
+     *                                              so the property is optional. It is called with a
+     *                                              node's x0 and x1, which are positions in the scale's
+     *                                              domain and not radians. Both endpoints are then
+     *                                              clamped independently into [0, 2 * PI], so a
+     *                                              position outside the domain saturates rather than
+     *                                              wrapping, and a node whose x1 is below its x0 sweeps
+     *                                              backwards over its neighbours.
+     * @property {Function} radiusScale             Scale function for the radius of segments. Can be
+     *                                              configured using values returned from
+     *                                              sszvis.layout.sunburst.computeLayout. See the
+     *                                              examples for how the scale setup works. Required,
+     *                                              with no default. It is called with y0 and y1, again
+     *                                              positions in its own domain rather than pixels, and
+     *                                              a negative result is clamped to 0, which collapses
+     *                                              the ring onto the centre circle. The first thing to
+     *                                              call it is the tooltip anchor's position accessor,
+     *                                              so an unset scale throws "props.radiusScale is not a
+     *                                              function" after the arcs and their transition have
+     *                                              already been scheduled, and that transition then
+     *                                              re-throws on every frame for 300ms.
+     * @property {Number} centerRadius              The radius of the center of the chart. Can be
+     *                                              configured with
+     *                                              sszvis.layout.sunburst.computeLayout. Required, but
+     *                                              it is only ever added to a number, so leaving it out
+     *                                              fails silently instead of throwing the way an unset
+     *                                              radiusScale does: every radius becomes NaN, the arcs
+     *                                              degenerate to "M0,0Z" and every tooltip anchor keeps
+     *                                              an unparseable transform, which the browser drops,
+     *                                              leaving them all at the group's origin.
+     * @property {Function} fill                    Function that returns the fill color for the
+     *                                              segments in the center of the chart. Note that this
+     *                                              will only be called on the centermost segments. The
+     *                                              segments which are subcategories of these center
+     *                                              segments will have their fill determined
+     *                                              recursively, by lightening the color of its parent
+     *                                              segment. It is called with a node's key string, not
+     *                                              with the node. Required, and it has to be a
+     *                                              function: it is neither wrapped in fn.functor nor
+     *                                              normalised, so a constant colour throws "props.fill
+     *                                              is not a function", and so does leaving it unset.
+     *                                              Every ring further out multiplies its parent's
+     *                                              lightness by 1.15, which is never clamped, so the
+     *                                              colours run towards white from the inside out and
+     *                                              saturate. Siblings therefore share a colour, since
+     *                                              it depends only on the top-level ancestor's key and
+     *                                              on the depth.
      * @property {Color, Function} stroke           The stroke color of the segments. Defaults to white.
+     *                                              Takes a constant or an accessor, and an accessor is
+     *                                              handed to d3 untouched, so it is called with the
+     *                                              element as its receiver and with d3's index and
+     *                                              group arguments.
+     *
+     * Note: the component accepts either a hierarchy or an array of already flattened nodes. A
+     * hierarchy is re-partitioned in place on every render, always to the partition layout's default
+     * [1, 1] size, so any layout the caller applied is discarded, the radius scale's domain is always
+     * expressed in fractions, and the innermost band belongs to the invisible root: with n layers the
+     * first visible ring starts at 1/(n+1), not at 0. An array is passed through untouched, so it can
+     * be positioned by hand. Both the root filter and the colour lookup key off the `_tag` that
+     * prepareHierarchyData writes, so a plain d3.hierarchy keeps its root as a full-circle arc and
+     * takes every colour from the root's key; the component warns once per node and renders anyway.
+     *
+     * Note: only x0 and x1 are interpolated, and the geometry exists only from the first animation
+     * frame, since `d` is written by the arc tween alone and there is no transition property to opt out
+     * of - a chart serialised on the render tick is blank. The radii and the colours are not
+     * interpolated at all and snap to their new values. The angle handover matches the old arcs by
+     * index, so an arc that did not exist a render ago starts at its destination, and exits are removed
+     * with no transition.
+     *
+     * Note: the component keeps no state of its own. It writes x0/x1 (the positions currently on
+     * screen) and _x0/_x1 (the positions the running transition is heading for) onto every node it
+     * renders, so the data has to be mutable - frozen data throws - and re-rendering the same hierarchy
+     * object skips the animation, because the re-partition overwrites the positions the tween was
+     * starting from.
+     *
+     * Note: the tooltip anchors are rendered from the datum bound to the group rather than from the
+     * flattened array, so a hierarchy gets one anchor per node including the root, which has no arc and
+     * no key, and in breadth-first order while the arcs are depth-first. They are positioned from the
+     * pre-transition angles and are never repositioned when the transition ends, so after an update
+     * they describe the previous layout. See test/component/sunburst.test.ts.
      *
      * @return {sszvis.component}
      */
     const TWO_PI = 2 * Math.PI;
     function sunburst () {
-      return component().prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (inputData) {
+      // The chain is built on the component rather than returned from it: .prop() and .render()
+      // are declared to return the generic Component type, since the accessors they install only
+      // exist at runtime, so the typed instance has to come from the factory itself.
+      const sunburstComponent = component();
+      sunburstComponent.prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (inputData) {
         const selection = d3.select(this);
         const props = selection.props();
         // NOTE: Determine if we have raw hierarchical data or pre-computed sunburst data
         // @deprecated in v3.4.0
-        let data;
+        let nodes;
         if (Array.isArray(inputData)) {
           // Already computed sunburst data (backwards compatibility)
-          data = inputData;
+          nodes = inputData;
         } else {
-          d3.partition()(inputData);
-          function flatten(node) {
-            return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
-          }
-          data = flatten(inputData).filter(d => d.data._tag !== "root");
+          const root = d3.partition()(inputData);
+          const flatten = node => [node, ...(node.children || []).flatMap(flatten)];
+          nodes = flatten(root).filter(d => d.data._tag !== "root");
         }
+        // _x0 and _x1 are the destination values for the transition. We set these to the
+        // computed x0 and x1. Object.assign writes them onto the node the caller handed over
+        // and hands back that same node typed as carrying them, so no cast is needed further
+        // down. Array.from rather than map, because it visits the holes of a sparse array the
+        // way a for...of loop does, and so still fails before anything is rendered.
+        const data = Array.from(nodes, d => Object.assign(d, {
+          _x0: d.x0,
+          _x1: d.x1
+        }));
+        // The key a node's colour is looked up under. Only a root has none, and a root never
+        // reaches the recursion below: it is either filtered out of the data, painted
+        // transparent by fillColor, or caught by the parent check one level down.
+        const colorKey = node => node.data._tag === "root" ? "" : node.data.key;
         // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
         function getColorRecursive(node) {
-          // Center node (if the data were prepared using sszvis.prepareHierarchyData)
-          if (node.data._tag === "root") {
-            return "transparent";
-          } else if (!node.parent) {
+          if (!node.parent) {
             // Accounts for incorrectly formatted data which hasn't gone through sszvis.prepareHierarchyData
             warn("Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData");
-            return d3.hsl(props.fill(node.data.key));
+            return d3.hsl(props.fill(colorKey(node)));
           } else if (node.parent.data._tag === "root") {
             // Use the color scale
-            return d3.hsl(props.fill(node.data.key));
+            return d3.hsl(props.fill(colorKey(node)));
           } else {
             // Recurse up the tree and adjust the lightness value
             const pColor = getColorRecursive(node.parent);
@@ -7122,42 +7459,40 @@
             return pColor;
           }
         }
-        const startAngle = function (d) {
-          return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
-        };
-        const endAngle = function (d) {
-          return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
-        };
-        const innerRadius = function (d) {
-          return props.centerRadius + Math.max(0, props.radiusScale(d.y0));
-        };
-        const outerRadius = function (d) {
-          return props.centerRadius + Math.max(0, props.radiusScale(d.y1));
-        };
+        // Center node (if the data were prepared using sszvis.prepareHierarchyData). The colour
+        // is stringified here because the recursion needs the mutable d3 colour object while
+        // d3's attr only takes a primitive; setAttribute would have coerced it the same way.
+        const fillColor = node => node.data._tag === "root" ? "transparent" : String(getColorRecursive(node));
+        // The four geometry accessors only read positions, so they are declared over the node
+        // before its destination angles are stamped on: the tooltip anchors are rendered from
+        // the datum bound to the group, which for a hierarchy is every node including the root,
+        // and those never go through the data array above.
+        const startAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
+        const endAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
+        const innerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y0));
+        const outerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y1));
         const arcGen = d3.arc().startAngle(startAngle).endAngle(endAngle).innerRadius(innerRadius).outerRadius(outerRadius);
-        for (const d of data) {
-          // _x and _dx are the destination values for the transition.
-          // We set these to the computed x and dx.
-          d._x0 = d.x0;
-          d._x1 = d.x1;
-        }
         const arcs = selection.selectAll(".sszvis-sunburst-arc").each((d, i) => {
           if (data[i]) {
-            // x and dx are the current/transitioning values
+            // x0 and x1 are the current/transitioning values
             // We set these here, in case any datums already exist which have values set
             data[i].x0 = d.x0;
             data[i].x1 = d.x1;
-            // The transition tweens from x and dx to _x and _dx
+            // The transition tweens from x0 and x1 to _x0 and _x1
           }
         }).data(data).join("path").attr("class", "sszvis-sunburst-arc");
-        arcs.attr("stroke", props.stroke).attr("fill", getColorRecursive);
+        arcs.attr("stroke", strokeAccessor(props.stroke)).attr("fill", fillColor);
         arcs.transition(defaultTransition()).attrTween("d", d => {
           const x0Interp = d3.interpolate(d.x0, d._x0);
           const x1Interp = d3.interpolate(d.x1, d._x1);
-          return function (t) {
+          return t => {
+            var _arcGen;
             d.x0 = x0Interp(t);
             d.x1 = x1Interp(t);
-            return arcGen(d);
+            // arc returns null only for an empty path buffer, and every branch of it writes at
+            // least a moveTo - even for NaN radii, which come out as "M0,0Z" - so this is
+            // unreachable.
+            return (_arcGen = arcGen(d)) !== null && _arcGen !== void 0 ? _arcGen : "";
           };
         });
         // Add tooltip anchors
@@ -7170,6 +7505,16 @@
         });
         selection.call(arcTooltipAnchor);
       });
+      return sunburstComponent;
+    }
+    /**
+     * Resolves the stroke property to the accessor d3 needs, since its attr overloads do not take
+     * the constant-or-accessor union. An accessor is returned as it stands rather than wrapped, so
+     * d3 still calls it with the element as its receiver and with the index and group arguments;
+     * a constant becomes an accessor returning it, which d3 reads the same way as the constant.
+     */
+    function strokeAccessor(value) {
+      return typeof value === "function" ? value : () => value;
     }
 
     /**
