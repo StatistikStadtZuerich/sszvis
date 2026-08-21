@@ -58,9 +58,67 @@
  */
 
 import { select } from "d3";
-import { component } from "../d3-component.js";
+import { type Component, component } from "../d3-component.js";
 
-export default function () {
+/**
+ * One group of the grid. `values` carries the data for the chart drawn inside the group;
+ * the layout writes its geometry back onto the same object.
+ */
+export type SmallMultipleGroup<T = unknown> = {
+  values: T;
+  /** x-position of the group within the grid */
+  gx?: number;
+  /** y-position of the group within the grid */
+  gy?: number;
+  /** width of the group, without padding */
+  gw?: number;
+  /** height of the group, without padding */
+  gh?: number;
+  /** horizontal centre of the group, in the group's own frame */
+  cx?: number;
+  /** vertical centre of the group, in the group's own frame */
+  cy?: number;
+};
+
+type SmallMultiplesProps<T> = {
+  width: number;
+  height: number;
+  paddingX: number;
+  paddingY: number;
+  rows: number;
+  cols: number;
+  showTitle: boolean;
+  titleLabel: (d: SmallMultipleGroup<T>, i: number) => string;
+  titleAnchor: string;
+  titleY: number;
+};
+
+export interface SmallMultiplesComponent<T = unknown> extends Component {
+  width(): number;
+  width(width: number): SmallMultiplesComponent<T>;
+  height(): number;
+  height(height: number): SmallMultiplesComponent<T>;
+  paddingX(): number;
+  paddingX(padding: number): SmallMultiplesComponent<T>;
+  paddingY(): number;
+  paddingY(padding: number): SmallMultiplesComponent<T>;
+  rows(): number;
+  rows(rows: number): SmallMultiplesComponent<T>;
+  cols(): number;
+  cols(cols: number): SmallMultiplesComponent<T>;
+  showTitle(): boolean;
+  showTitle(show: boolean): SmallMultiplesComponent<T>;
+  titleLabel(): (d: SmallMultipleGroup<T>, i: number) => string;
+  titleLabel(accessor: (d: SmallMultipleGroup<T>, i: number) => string): SmallMultiplesComponent<T>;
+  /** "start", "middle" or "end"; any other value is positioned as "middle" but written to
+   * the text-anchor attribute verbatim. */
+  titleAnchor(): string;
+  titleAnchor(anchor: string): SmallMultiplesComponent<T>;
+  titleY(): number;
+  titleY(y: number): SmallMultiplesComponent<T>;
+}
+
+export default function <T = unknown>(): SmallMultiplesComponent<T> {
   return component()
     .prop("width")
     .prop("height")
@@ -76,9 +134,9 @@ export default function () {
     .titleAnchor("middle")
     .prop("titleY")
     .titleY(0)
-    .render(function (data) {
-      const selection = select(this);
-      const props = selection.props();
+    .render(function (this: Element, data: SmallMultipleGroup<T>[]) {
+      const selection = select<Element, unknown>(this);
+      const props = selection.props<SmallMultiplesProps<T>>();
 
       const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
       const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
@@ -87,7 +145,7 @@ export default function () {
       const verticalCenter = unitHeight / 2;
 
       const multiples = selection
-        .selectAll("g.sszvis-multiple")
+        .selectAll<SVGGElement, SmallMultipleGroup<T>>("g.sszvis-multiple")
         .data(data)
         .join("g")
         .classed("sszvis-g sszvis-multiple", true);
@@ -108,7 +166,7 @@ export default function () {
           d.cy = verticalCenter;
           return d;
         })
-        .attr("transform", (d) => "translate(" + d.gx + "," + d.gy + ")");
+        .attr("transform", (d) => `translate(${d.gx},${d.gy})`);
 
       // Render titles if showTitle is enabled
       if (props.showTitle) {
