@@ -64,10 +64,11 @@ describe("control/select", () => {
     expect(selectEl()?.value).toBe("1");
   });
 
-  test("should compare the current value by identity", () => {
-    const a = { toString: () => "A" };
-    const b = { toString: () => "B" };
-    render(selectMenu().values([a, b]).current(b));
+  test("should compare the current value strictly, not by rendered label", () => {
+    // The values are compared with `===`, so a value that merely stringifies like the
+    // current one is not treated as selected. The ported types constrain values to
+    // strings, so this is only observable for strings that differ in case or whitespace.
+    render(selectMenu().values(["A", "a"]).current("a"));
     expect(options().map((o) => o.getAttribute("selected"))).toEqual([null, "selected"]);
   });
 
@@ -224,7 +225,8 @@ describe("control/select", () => {
       // unconfigured select does nothing at all and warns about nothing. Harmless, but
       // it makes a forgotten `.change()` hard to notice.
       const menu = selectMenu().values(["A", "B"]).current("A");
-      expect(menu.change()("event", "value")).toBe("event");
+      const event = new Event("change");
+      expect(menu.change()(event, "value")).toBe(event);
     });
 
     test("a missing values prop throws mid-render and leaves a partial control behind", () => {
@@ -283,9 +285,16 @@ describe("control/select", () => {
       // because the recursion never runs, which makes this crash depend on the width.
       // current: TypeError for a long numeric value. expected: `String(d)` before
       // measuring, matching the `.text()` coercion every other control relies on.
-      expect(() => render(selectMenu().values([123_456_789_012_345]).current(1).width(60))).toThrow(
-        TypeError
-      );
+      expect(() =>
+        render(
+          selectMenu()
+            // @ts-expect-error - the ported types constrain values to strings, which is
+            // the type-level half of this fix; the runtime still crashes.
+            .values([123_456_789_012_345])
+            .current("")
+            .width(60)
+        )
+      ).toThrow(TypeError);
     });
 
     test("every value equal to current is marked selected", () => {
