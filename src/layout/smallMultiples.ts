@@ -54,6 +54,21 @@
  * @property {string} titleAnchor     text-anchor for the title: "start", "middle", or "end" (default: "middle")
  * @property {number} titleY          y-position offset for the title (default: 0)
  *
+ * Behaviour notes:
+ * - Groups are laid out left-to-right, then top-to-bottom, one group per datum.
+ * - gx/gy are grid-absolute; cx/cy are unit-relative and identical for every multiple,
+ *   since each group is translated to its own gx/gy.
+ * - The layout writes gx/gy/gw/gh/cx/cy back onto the bound data objects.
+ * - width, height, rows, cols, paddingX and paddingY have no defaults; omitting any of
+ *   them silently produces NaN geometry. Only the four title properties (showTitle,
+ *   titleLabel, titleAnchor, titleY) have defaults.
+ * - More data than rows * cols overflows the declared height rather than erroring.
+ * - A datum without a `values` property binds `undefined` to its inner chart group.
+ * - titleLabel is called after the layout fields have been attached to the datum, so it
+ *   sees gx/gy/gw/gh/cx/cy alongside the caller's own fields.
+ * - A titleAnchor other than "start"/"end" is positioned as "middle" but is still written
+ *   to the text-anchor attribute verbatim.
+ *
  * @return {sszvis.component}
  */
 
