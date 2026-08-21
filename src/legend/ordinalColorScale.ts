@@ -98,22 +98,25 @@ import translateString from "../svgUtils/translateString.js";
 
 export const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
 
-/** The subset of a d3 scale this legend relies on, over its domain type T. */
+/**
+ * The subset of a d3 scale this legend relies on, over its domain type T. The return value
+ * only has to stringify to a colour, which is what the sszvis colour scales produce.
+ */
 interface OrdinalColorScale<T> {
-  (value: T): string;
+  (value: T): { toString(): string };
   domain(): T[];
 }
 
-type LegendOrientation = "horizontal" | "vertical";
+export type LegendOrientation = "horizontal" | "vertical";
 
 type OrdinalColorScaleProps<T> = {
   scale: OrdinalColorScale<T>;
   rowHeight: number;
-  columnWidth: number;
+  columnWidth: number | null;
   rows: number;
   columns: number;
   verticallyCentered: boolean;
-  orientation?: LegendOrientation;
+  orientation?: LegendOrientation | null;
   reverse: boolean;
   rightAlign: boolean;
   horizontalFloat: boolean;
@@ -126,16 +129,16 @@ export interface OrdinalColorScaleComponent<T = string> extends Component {
   scale(scale: OrdinalColorScale<T>): OrdinalColorScaleComponent<T>;
   rowHeight(): number;
   rowHeight(height: number): OrdinalColorScaleComponent<T>;
-  columnWidth(): number;
-  columnWidth(width: number): OrdinalColorScaleComponent<T>;
+  columnWidth(): number | null;
+  columnWidth(width: number | null): OrdinalColorScaleComponent<T>;
   rows(): number;
   rows(rows: number): OrdinalColorScaleComponent<T>;
   columns(): number;
   columns(columns: number): OrdinalColorScaleComponent<T>;
   verticallyCentered(): boolean;
   verticallyCentered(centered: boolean): OrdinalColorScaleComponent<T>;
-  orientation(): LegendOrientation | undefined;
-  orientation(orientation: LegendOrientation): OrdinalColorScaleComponent<T>;
+  orientation(): LegendOrientation | undefined | null;
+  orientation(orientation: LegendOrientation | null): OrdinalColorScaleComponent<T>;
   reverse(): boolean;
   reverse(reverse: boolean): OrdinalColorScaleComponent<T>;
   rightAlign(): boolean;
@@ -207,8 +210,8 @@ export function legendColorOrdinal<T = string>(): OrdinalColorScaleComponent<T> 
         .attr("cx", props.rightAlign ? -6 : 6)
         .attr("cy", halfPixel(props.rowHeight / 2))
         .attr("r", 5)
-        .attr("fill", (d) => props.scale(d))
-        .attr("stroke", (d) => props.scale(d))
+        .attr("fill", (d) => String(props.scale(d)))
+        .attr("stroke", (d) => String(props.scale(d)))
         .attr("stroke-width", 1);
 
       groups
@@ -247,12 +250,12 @@ export function legendColorOrdinal<T = string>(): OrdinalColorScaleComponent<T> 
       } else {
         groups.attr("transform", (_d, i) => {
           if (props.orientation === "horizontal") {
-            return `${verticalOffset}translate(${(i % cols) * props.columnWidth},${
+            return `${verticalOffset}translate(${(i % cols) * (props.columnWidth ?? 0)},${
               Math.floor(i / cols) * props.rowHeight
             })`;
           }
           if (props.orientation === "vertical") {
-            return `${verticalOffset}translate(${Math.floor(i / rows) * props.columnWidth},${
+            return `${verticalOffset}translate(${Math.floor(i / rows) * (props.columnWidth ?? 0)},${
               (i % rows) * props.rowHeight
             })`;
           }
