@@ -7,14 +7,59 @@
 
 import { ascending, descending, max, min, sum } from "d3";
 
+import type { SankeyLink, SankeyNode } from "../component/sankey.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 
-const newLinkId = (function () {
+/** A node as this module builds it: every link list is present, unlike the component's view. */
+type PreparedNode = SankeyNode & {
+  linksFrom: SankeyLink[];
+  linksTo: SankeyLink[];
+};
+
+/** What prepareData returns. Links can contain nulls; see the module's behaviour notes. */
+export type SankeyPreparedData = {
+  nodes: PreparedNode[];
+  /** One entry per input row. An invalid row leaves a null behind - see the behaviour notes. */
+  links: (SankeyLink | null)[];
+  columnTotals: number[];
+  columnLengths: number[];
+};
+
+/**
+ * The data preparation builder. It is callable, and also exposes `apply` as an alias, which
+ * shadows Function.prototype.apply - see the behaviour notes.
+ */
+export interface SankeyDataPreparation<T = unknown> {
+  (inputData: T[]): SankeyPreparedData;
+  apply(data: T[]): SankeyPreparedData;
+  /** The id of the link's source node. Must be one of the ids passed to idLists. */
+  source(func: (d: T) => string): SankeyDataPreparation<T>;
+  /** The id of the link's target node. Must be one of the ids passed to idLists. */
+  target(func: (d: T) => string): SankeyDataPreparation<T>;
+  /** The size of the flow. A string is coerced with Number(); anything unparseable becomes 0. */
+  value(func: (d: T) => number | string): SankeyDataPreparation<T>;
+  descendingSort(): SankeyDataPreparation<T>;
+  ascendingSort(): SankeyDataPreparation<T>;
+  idLists(idLists: string[][]): SankeyDataPreparation<T>;
+}
+
+export type SankeyComputedLayout = {
+  valuePadding: number;
+  /** undefined when there are no columns at all - see the behaviour notes. */
+  nodePadding: number | undefined;
+  columnPaddings: number[];
+  /** The upper bound is undefined when there are no columns at all. */
+  valueDomain: [number, number | undefined];
+  valueRange: [number, number];
+  nodeThickness: number;
+  columnDomain: [number, number];
+  columnRange: [number, number];
+};
+
+const newLinkId = (() => {
   let id = 0;
-  return function () {
-    return ++id;
-  };
+  return () => ++id;
 })();
 
 /**
@@ -46,54 +91,65 @@ const newLinkId = (function () {
  *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
  */
-export const prepareData = function () {
-  let mGetSource = fn.identity;
-  let mGetTarget = fn.identity;
-  let mGetValue = fn.identity;
-  let mColumnIds = [];
+export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
+  let mGetSource: (d: T) => unknown = fn.identity;
+  let mGetTarget: (d: T) => unknown = fn.identity;
+  let mGetValue: (d: T) => unknown = fn.identity;
+  let mColumnIds: string[][] = [];
 
   // Helper functions
   const valueAcc = fn.prop("value");
-  const byAscendingValue = function (a, b) {
-    return ascending(valueAcc(a), valueAcc(b));
+  /**
+   * Reads a link's value. The links array can hold nulls for rows whose source or target was
+   * not found, and reading through one throws, exactly as the original property accessor did.
+   */
+  const linkValue = (link: SankeyLink | null): number => {
+    if (link === null) {
+      throw new TypeError("Cannot read properties of null (reading 'value')");
+    }
+    return link.value;
   };
-  const byDescendingValue = function (a, b) {
-    return descending(valueAcc(a), valueAcc(b));
-  };
+  const byAscendingValue = (a: { value: number }, b: { value: number }) =>
+    ascending(valueAcc(a), valueAcc(b));
+  const byDescendingValue = (a: { value: number }, b: { value: number }) =>
+    descending(valueAcc(a), valueAcc(b));
 
   let valueSortFunc = byDescendingValue;
 
-  const main = function (inputData) {
-    const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
-      for (const id of columnIdsList) {
-        if (index.has(id)) {
-          logger.warn(
-            "Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:",
+  const main = (inputData: T[]): SankeyPreparedData => {
+    const columnIndex = mColumnIds.reduce<Map<unknown, PreparedNode>>(
+      (index, columnIdsList, colIndex) => {
+        for (const id of columnIdsList) {
+          if (index.has(id)) {
+            logger.warn(
+              "Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:",
+              id,
+              "The existing value will be overwritten"
+            );
+          }
+
+          const item: PreparedNode = {
             id,
-            "The existing value will be overwritten"
-          );
+            columnIndex: colIndex, // This is the index of the column containing this node
+            nodeIndex: 0, // This will be overwritten at a later stage with the index of this node within its column
+            value: 0,
+            valueOffset: 0,
+            linksFrom: [] as SankeyLink[],
+            linksTo: [] as SankeyLink[],
+          };
+
+          index.set(id, item);
         }
 
-        const item = {
-          id,
-          columnIndex: colIndex, // This is the index of the column containing this node
-          nodeIndex: 0, // This will be overwritten at a later stage with the index of this node within its column
-          value: 0,
-          valueOffset: 0,
-          linksFrom: [],
-          linksTo: [],
-        };
-
-        index.set(id, item);
-      }
-
-      return index;
-    }, new Map());
+        return index;
+      },
+      new Map<unknown, PreparedNode>()
+    );
 
     const listOfLinks = inputData.map((datum) => {
       const srcId = mGetSource(datum);
       const tgtId = mGetTarget(datum);
-      const value = +mGetValue(datum) || 0; // Cast this to number
+      const value = Number(mGetValue(datum)) || 0; // Cast this to number
 
       const srcNode = columnIndex.get(srcId);
       const tgtNode = columnIndex.get(tgtId);
@@ -108,7 +164,7 @@ export const prepareData = function () {
         return null;
       }
 
-      const item = {
+      const item: SankeyLink = {
         id: newLinkId(),
         value,
         src: srcNode,
@@ -127,7 +183,7 @@ export const prepareData = function () {
     const listOfNodes = [...columnIndex.values()];
 
     // Calculate an array of total values for each column
-    const columnTotals = listOfNodes.reduce(
+    const columnTotals = listOfNodes.reduce<number[]>(
       (totals, node) => {
         const fromTotal = sum(node.linksFrom, valueAcc);
         const toTotal = sum(node.linksTo, valueAcc);
@@ -152,13 +208,13 @@ export const prepareData = function () {
     // Sort the links in descending order of value. This means smaller links will render
     // on top of larger links.
     // (note, this sorts all links for all columns in the same array)
-    listOfLinks.sort(byDescendingValue);
+    listOfLinks.sort((a, b) => descending(linkValue(a), linkValue(b)));
 
     // Assign the valueOffset and nodeIndex properties
     // Here, columnData[0] is an array adding up value totals
     // and columnData[1] is an array adding up the number of nodes in each column
     // Both are used to assign cumulative properties to the nodes of each column
-    listOfNodes.reduce(
+    listOfNodes.reduce<[number[], number[]]>(
       (columnData, node) => {
         // Assigns valueOffset and nodeIndex
         node.valueOffset = columnData[0][node.columnIndex];
@@ -201,41 +257,43 @@ export const prepareData = function () {
     };
   };
 
-  main.apply = function (data) {
-    return main(data);
-  };
+  const api: SankeyDataPreparation<T> = Object.assign(main, {
+    apply(data: T[]) {
+      return main(data);
+    },
 
-  main.source = function (func) {
-    mGetSource = func;
-    return main;
-  };
+    source(func: (d: T) => unknown) {
+      mGetSource = func;
+      return api;
+    },
 
-  main.target = function (func) {
-    mGetTarget = func;
-    return main;
-  };
+    target(func: (d: T) => unknown) {
+      mGetTarget = func;
+      return api;
+    },
 
-  main.value = function (func) {
-    mGetValue = func;
-    return main;
-  };
+    value(func: (d: T) => unknown) {
+      mGetValue = func;
+      return api;
+    },
 
-  main.descendingSort = function () {
-    valueSortFunc = byDescendingValue;
-    return main;
-  };
+    descendingSort() {
+      valueSortFunc = byDescendingValue;
+      return api;
+    },
 
-  main.ascendingSort = function () {
-    valueSortFunc = byAscendingValue;
-    return main;
-  };
+    ascendingSort() {
+      valueSortFunc = byAscendingValue;
+      return api;
+    },
 
-  main.idLists = function (idLists) {
-    mColumnIds = idLists;
-    return main;
-  };
+    idLists(idLists: string[][]) {
+      mColumnIds = idLists;
+      return api;
+    },
+  });
 
-  return main;
+  return api;
 };
 
 /**
@@ -260,7 +318,15 @@ export const prepareData = function () {
  *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  */
-export const computeLayout = function (columnLengths, columnTotals, columnHeight, columnWidth) {
+/** Matches JavaScript's implicit undefined -> NaN coercion in arithmetic. */
+const num = (value: number | undefined): number => (value === undefined ? Number.NaN : value);
+
+export const computeLayout = (
+  columnLengths: number[],
+  columnTotals: number[],
+  columnHeight: number,
+  columnWidth: number
+): SankeyComputedLayout => {
   // Calculate appropriate scale and padding values (in pixels)
   const padSpaceRatio = 0.15;
   const padMin = 12;
@@ -285,14 +351,14 @@ export const computeLayout = function (columnLengths, columnTotals, columnHeight
       // The non-padding pixels must have at least minDisplayPixels
       const nonPaddingPixels = Math.max(
         minDisplayPixels,
-        columnHeight - (colLength - 1) * computedPixPadding
+        columnHeight - (colLength - 1) * num(computedPixPadding)
       );
-      return nonPaddingPixels / columnTotals[colIndex];
+      return nonPaddingPixels / num(columnTotals[colIndex]);
     })
   );
 
   // The padding between bars, in bar value units
-  const valuePadding = computedPixPadding / pixPerUnit;
+  const valuePadding = num(computedPixPadding) / num(pixPerUnit);
   // The padding between bars, in pixels
   const nodePadding = computedPixPadding;
 
@@ -301,24 +367,25 @@ export const computeLayout = function (columnLengths, columnTotals, columnHeight
 
   // Compute y-padding required to vertically center each column (in pixels)
   const paddedHeights = columnLengths.map(
-    (colLength, colIndex) => columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding
+    (colLength, colIndex) =>
+      num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * num(nodePadding)
   );
   const maxPaddedHeight = max(paddedHeights);
   const columnPaddings = columnLengths.map(
-    (colLength, colIndex) => (maxPaddedHeight - paddedHeights[colIndex]) / 2
+    (_colLength, colIndex) => (num(maxPaddedHeight) - num(paddedHeights[colIndex])) / 2
   );
 
   // The domain of the size scale
-  const valueDomain = [0, maxTotal];
+  const valueDomain: [number, number | undefined] = [0, maxTotal];
   // The range of the size scale
-  const valueRange = [0, maxTotal * pixPerUnit];
+  const valueRange: [number, number] = [0, num(maxTotal) * num(pixPerUnit)];
 
   // Calculate column (or row, as the case may be) positioning values
   const nodeThickness = 20;
   const numColumns = columnLengths.length;
   const columnXMultiplier = (columnWidth - nodeThickness) / (numColumns - 1);
-  const columnDomain = [0, 1];
-  const columnRange = [0, columnXMultiplier];
+  const columnDomain: [number, number] = [0, 1];
+  const columnRange: [number, number] = [0, columnXMultiplier];
 
   return {
     valuePadding,
