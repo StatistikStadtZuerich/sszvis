@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { prepareHierarchyData } from "../../src/layout/hierarchy";
+import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
 import {
   computeLayout,
   getRadiusExtent,
   MAX_SUNBURST_RING_WIDTH,
   MIN_SUNBURST_RING_WIDTH,
   prepareData,
-} from "../../src/layout/sunburst";
+} from "../../src/layout/sunburst.js";
 
 type Row = { continent: string; country: string; value: number };
 
@@ -74,7 +74,7 @@ describe("layout/sunburst", () => {
     });
 
     test("works on the output of prepareData", () => {
-      const data = prepareData()
+      const data = prepareData<Row>()
         .layer((d: Row) => d.continent)
         .layer((d: Row) => d.country)
         .value((d: Row) => d.value)
@@ -89,7 +89,7 @@ describe("layout/sunburst", () => {
 
   describe("prepareData", () => {
     test("returns one flat node per branch and leaf, without the root", () => {
-      const data = prepareData()
+      const data = prepareData<Row>()
         .layer((d: Row) => d.continent)
         .layer((d: Row) => d.country)
         .value((d: Row) => d.value)
@@ -100,7 +100,7 @@ describe("layout/sunburst", () => {
     });
 
     test("gives every node the partition positions the chart needs", () => {
-      const data = prepareData()
+      const data = prepareData<Row>()
         .layer((d: Row) => d.continent)
         .value((d: Row) => d.value)
         .calculate(DATA);
@@ -113,7 +113,7 @@ describe("layout/sunburst", () => {
     });
 
     test("sums the values up the hierarchy", () => {
-      const data = prepareData()
+      const data = prepareData<Row>()
         .layer((d: Row) => d.continent)
         .layer((d: Row) => d.country)
         .value((d: Row) => d.value)
@@ -123,7 +123,7 @@ describe("layout/sunburst", () => {
     });
 
     test("is chainable in any order", () => {
-      const builder = prepareData();
+      const builder = prepareData<Row>();
       expect(builder.value((d: Row) => d.value)).toBe(builder);
       expect(builder.layer((d: Row) => d.continent)).toBe(builder);
       expect(builder.sort(() => 0)).toBe(builder);
@@ -212,11 +212,12 @@ describe("layout/sunburst", () => {
       expect(getRadiusExtent(nodes)).toEqual([0, 5]);
     });
 
-    test("prepareData is deprecated but still the only way to get partition positions", () => {
+    test("prepareData is deprecated but still the only source of partition positions", () => {
       // NOTE: prepareData is marked deprecated in favour of prepareHierarchyData, but
-      // prepareHierarchyData alone does not run d3.partition, so its nodes have no
-      // y0/y1 and getRadiusExtent cannot be used on them.
-      const partitioned = prepareData()
+      // prepareHierarchyData alone does not run d3.partition, so its nodes have no y0/y1 and
+      // getRadiusExtent cannot be used on them. The sunburst component is unaffected - it
+      // partitions a plain hierarchy itself - so the deprecation only strands this helper.
+      const partitioned = prepareData<Row>()
         .layer((d: Row) => d.continent)
         .value((d: Row) => d.value)
         .calculate(DATA);
