@@ -5502,7 +5502,7 @@
      * function returning null, which d3 removes the style for - the same thing it does when
      * handed undefined directly.
      */
-    const styleValue$1 = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
+    const styleValue$2 = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
     /**
      * Whether a value counts as missing, and so breaks the line at that point.
      *
@@ -5537,8 +5537,8 @@
         const pathData = function (datum, index) {
           return line(props.valuesAccessor.call(this, datum, index));
         };
-        const stroke = styleValue$1(props.stroke);
-        const strokeWidth = styleValue$1(props.strokeWidth);
+        const stroke = styleValue$2(props.stroke);
+        const strokeWidth = styleValue$2(props.strokeWidth);
         const path = selection.selectAll(".sszvis-line").data(data, props.key).join("path").classed("sszvis-line", true).style("stroke", stroke);
         path.order();
         // The visual properties are applied to the transition when there is one, so the two
@@ -6637,7 +6637,7 @@
      * dimension therefore still resolves to NaN, and a value that cannot be coerced still
      * throws before the data join rather than after it.
      */
-    const dimension = value => {
+    const dimension$1 = value => {
       if (typeof value === "function") return value;
       // An unset dimension is spelled out because TypeScript will not coerce undefined, and
       // +undefined is NaN.
@@ -6649,7 +6649,7 @@
      * which d3 removes the attribute for - the same thing it does when handed undefined
      * directly.
      */
-    const styleValue = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
+    const styleValue$1 = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
     function stackedArea () {
       return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
@@ -6662,7 +6662,7 @@
         // truthy, which is all d3 tests. The missing-value guard this was meant to be has
         // therefore never run. See test/component/stackedArea.test.ts.
         const defined = props.defined === undefined ? () => true : typeof props.defined === "function" ? props.defined : () => Boolean(props.defined);
-        const areaGen = d3.area().defined(defined).x(dimension(props.x)).y0(dimension(props.y0));
+        const areaGen = d3.area().defined(defined).x(dimension$1(props.x)).y0(dimension$1(props.y0));
         // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
         // why an unset y1 collapses every layer onto its own baseline. Its typings admit only
         // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
@@ -6670,15 +6670,15 @@
         if (props.y1 == null) {
           areaGen.y1(null);
         } else {
-          areaGen.y1(dimension(props.y1));
+          areaGen.y1(dimension$1(props.y1));
         }
         // Rendering
         const pathData = datum => areaGen(datum);
-        const fill = styleValue(props.fill);
+        const fill = styleValue$1(props.fill);
         // The white hairline separating two touching layers. Applied with a truthiness check
         // rather than an undefined one, so a null or empty stroke is replaced by it too.
-        const stroke = styleValue(props.stroke || "#ffffff");
-        const strokeWidth = styleValue(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+        const stroke = styleValue$1(props.stroke || "#ffffff");
+        const strokeWidth = styleValue$1(props.strokeWidth === undefined ? 1 : props.strokeWidth);
         const paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
         // Every visual property is applied to the transition when there is one, so the two
         // branches are spelled out rather than sharing a variable - a d3 transition and a d3
@@ -6694,44 +6694,255 @@
     /**
      * Stacked Area Multiples component
      *
-     * This component, like stackedArea, requires an array of layer objects, where each layer object is one of the multiples.
-     * In addition to stackedArea, this chart's layers can be separated to provide two views on the data: a sum of all
-     * elements as well as every element on its own.
+     * This component, like stackedArea, requires an array of layer objects, where each layer object is
+     * one of the multiples. In addition to stackedArea, this chart's layers can be separated to provide
+     * two views on the data: a sum of all elements as well as every element on its own. It renders the
+     * output of a d3 stack layout rather than computing one itself, so some of its configuration
+     * properties are similar; in the separated view the baseline comes from an ordinal position scale
+     * rather than from the stack, but the datum is the same. Each layer object is unwrapped by
+     * valuesAccessor, which defaults to treating it as the array of points along that layer's outline.
+     * Three independent dimensions are read from each point: x, and the two vertical bounds of the band
+     * at that x.
      *
      * @module sszvis/component/stackedAreaMultiples
      *
-     * @property {number, function} x             Accessor function for the *x*-values. Passed a data object and should return a value
-     *                                            in screen pixels.
-     * @property {number, function} y0            Accessor function for the *y0*-value (the baseline of the area). Passed a data object
-     *                                            and should return a value in screen pixels.
-     * @property {number, function} y1            Accessor function for the *y1*-value (the top line of the area). Passed a data object
-     *                                            and should return a value in screen pixels.
-     * @property {string, function} fill          Accessor function for the area fill. Passed a layer object.
-     * @property {string, function} stroke        Accessor function for the area stroke. Passed a layer object.
-     * @property {function} key                   Specify a key function for use in the data join. The value returned by the key should
-     *                                            be unique among stacks. This option is particularly important when creating a chart
-     *                                            which transitions between stacked and separated views.
-     * @property {function} valuesAccessor        Specify an accessor for the values of the layer objects. The default treats the layer object
-     *                                            as an array of values. Use this if your layer objects should be treated as something other than
-     *                                            arrays of values.
+     * @template P The type of one point along a layer
+     * @template L The type of one layer, whatever valuesAccessor unwraps into points
+     *
+     * @property {number, function} x             An accessor for the x-value of a point, or a constant.
+     *                                            Should return a value in screen pixels. Required, and
+     *                                            its absence is not reported: an unset dimension
+     *                                            resolves to a constant NaN, so every coordinate is
+     *                                            written as NaN, the browser rejects the path, and the
+     *                                            chart is simply empty.
+     * @property {number, function} y0            An accessor for the lower bound of the band at a
+     *                                            point, i.e. the baseline, or a constant. In screen
+     *                                            pixels. Required. When it is missing the top line is
+     *                                            still written and the baseline arrives as NaN.
+     * @property {number, function} y1            An accessor for the upper bound of the band at a
+     *                                            point, or a constant. In screen pixels. Required, and
+     *                                            the most damaging of the three to omit because it
+     *                                            renders successfully: d3 reads a null-ish upper bound
+     *                                            as no upper bound and falls back to y0, so each band
+     *                                            collapses onto its own baseline and becomes a
+     *                                            zero-height sliver - and with no default stroke to
+     *                                            draw it, there is nothing on screen. The code tests
+     *                                            `props.y1 == null`, as d3 does, so an explicit null is
+     *                                            read as unset too.
+     * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
+     *                                            layer. It has no default, and unlike .sszvis-line
+     *                                            there is no .sszvis-path rule in the stylesheet to
+     *                                            fall back on - the class is only a hook - so an area
+     *                                            with no fill renders as a black slab, the SVG initial
+     *                                            value. An accessor returning undefined removes the
+     *                                            attribute rather than warning, so a colour scale
+     *                                            configured with .unknown(undefined) is black too.
+     *                                            Every chart in docs/area-chart-stacked sets a fill.
+     * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
+     *                                            whole layer. Unlike stackedArea, which defaults it to
+     *                                            the #ffffff hairline that separates two touching
+     *                                            layers, this component has no default at all, so
+     *                                            touching bands run together, and null and "" are
+     *                                            passed through as given: null removes the attribute
+     *                                            and "" writes an invalid paint, both computing to
+     *                                            none, which is what an unset stroke does too.
+     *                                            Harmless in the separated view, where
+     *                                            stackedAreaMultiplesLayout spaces the bands so they
+     *                                            never touch - but since the docs example sets no
+     *                                            stroke on either component, the stacked view of a
+     *                                            chart gets stackedArea's white hairline while the
+     *                                            separated view gets none.
+     * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
+     *                                            whole layer. Defaults to 1, applied with an explicit
+     *                                            undefined check, so 0 survives where a falsy fallback
+     *                                            would have replaced it. null is passed through to d3,
+     *                                            which reads a null-ish value as a removal: unset means
+     *                                            1, null means no attribute at all. Since there is no
+     *                                            default stroke, the width is inert until a stroke is
+     *                                            set, and setting only strokeWidth draws nothing.
+     * @property {boolean, function} [defined]    A per-point predicate handed to d3.area, deciding
+     *                                            whether a point is drawn; a constant is coerced to a
+     *                                            boolean. Each surviving run of points becomes its own
+     *                                            subpath, and a run of one point is emitted as a
+     *                                            degenerate top-and-bottom pair. Defaults to
+     *                                            `() => true`, spelled out in place of the dead
+     *                                            predicate it replaces (see below), so it accepts every
+     *                                            point whatever its value: this is the only
+     *                                            missing-value guard available, and it has to test both
+     *                                            bounds by hand because it replaces the default rather
+     *                                            than composing with it.
+     * @property {function} [key]                 The key function for the data join, called with a
+     *                                            layer and its index. The value it returns should be
+     *                                            unique among layers. Defaults to the index - which,
+     *                                            because the layers are reversed first, counts from the
+     *                                            end of the array that was passed in, so dropping the
+     *                                            *last* layer of the input reuses the first path node
+     *                                            and rebinds it to a different layer, where
+     *                                            stackedArea's default key drops the last node instead.
+     *                                            Setting it preserves object constancy across renders,
+     *                                            which matters when a chart switches between the
+     *                                            stacked and the separated view.
+     * @property {function} [valuesAccessor]      Pulls the points to draw out of one layer's datum.
+     *                                            Defaults to the identity, which treats the layer
+     *                                            object as the array of points itself. Set it when the
+     *                                            layer objects are wrappers such as
+     *                                            { name: "Name", values: [ ... ] }. It is consulted for
+     *                                            the geometry and defined only: fill, stroke,
+     *                                            strokeWidth and key still see the layer object, which
+     *                                            is what lets the colour be read off the layer's name.
+     * @property {boolean} transition             Whether to transition the layers when their values
+     *                                            change. Defaults to true, and animates nothing (see
+     *                                            below).
+     *
+     * Note: a constant dimension is coerced with unary + once, before the data join, exactly as d3's own
+     * constant() would - so a numeric string works, while a value that has no numeric form, such as
+     * "abc" or {}, becomes NaN once and every point of every layer is drawn from it, which d3 emits as
+     * an invalid path rather than an error. Only a value whose coercion itself throws, such as a Symbol
+     * or a BigInt, raises - and it raises before the join rather than once per point.
+     *
+     * Note: the layers are reversed before the data join, so the first layer of the array that was
+     * passed in is the last path in the DOM and paints over the others. The line has carried an
+     * unanswered "//sszsch why reverse?" comment since 2017, and nothing - not the header this replaces,
+     * not docs/area-chart-stacked/README.md, not stackedAreaMultiplesLayout, which lays the bands out -
+     * says why. stackedArea does not reverse, so the same datum comes out of the two components in
+     * opposite order, and the toggle in docs/area-chart-stacked/sa-two.js moves every path on the
+     * switch. The reversal also renumbers the layers, so the index handed to the style accessors, to
+     * key and to valuesAccessor is the position in the reversed array: an index-keyed palette is
+     * applied back to front here and front to back in stackedArea. The array itself is copied rather
+     * than reversed in place, so a caller holding on to it - as sa-two.js does, rendering both views
+     * from one datum - sees it unchanged. .join() orders the merged selection, so the paint order
+     * follows the reversed data on every render, even when the nodes are reused.
+     *
+     * Note: transition animates nothing. The transition is created on its own statement and its return
+     * value is dropped, so every attribute is written to the plain selection instead. It did animate
+     * until 47f58578 ("perf: change .enter() to .join() API", Oct 2024), which dropped the `paths =`
+     * the transition used to be assigned back to. As far as output goes the property is inert - the two
+     * settings are indistinguishable in the DOM, before and after the 300ms the transition would have
+     * taken - but it is not harmless: the transition is still scheduled, and a d3 transition interrupts
+     * any unnamed transition already running on the same node when it starts, so a render freezes
+     * another component's animation on a shared or adopted path mid-flight. bar carries the same
+     * discarded-transition shape, though it writes its attributes before creating the transition, so its
+     * elements are never blank. One visible consequence is that the switch into the separated view snaps
+     * while the switch back, drawn by stackedArea, eases - the chart animates in one direction only, and
+     * it is that switch the key property exists for. The one upside is that a freshly rendered chart is
+     * complete on the same tick, with nothing to disable in order to measure it synchronously, where
+     * stackedArea leaves an empty path element until the first animation frame.
+     *
+     * Note: the dimension accessors and defined are called by d3.area with a single point, that point's
+     * index within the layer, and the array of points the layer is drawn from. fill, stroke,
+     * strokeWidth and valuesAccessor are called by the selection with the datum for a whole layer, that
+     * layer's index, and d3's group of path nodes, with the node itself as `this`. The style-related
+     * accessors therefore receive the layer object rather than a point, the inverse of what the
+     * dimensions receive - the same asymmetry documented on line.
+     * key sees a layer and its index too, but its third argument depends on which half of the keyed
+     * join is running: the array of incoming layers, or the group of nodes already in the DOM. That node
+     * group is in the reversed order the previous render left it in, so the two halves of the join agree
+     * only because the reversal is applied on every render.
+     *
+     * Note: the default defined predicate never rejects anything. It reproduces the one it replaced,
+     * which read `function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }` and
+     * so returned a function rather than calling either composed accessor, and a function is truthy,
+     * which is all d3 tests. A NaN therefore reaches the d attribute verbatim, the browser stops
+     * rendering at the invalid command, and the whole band disappears rather than only the segment the
+     * missing value belongs to. undefined goes the same way, since d3.area applies unary + to it, and
+     * null is not caught by an isNaN guard at all: it coerces to 0 and is plotted as data, pinning that
+     * point to the top of the chart. Nothing is reported in any of these cases. stackedArea behaves
+     * identically; line guards both of its dimensions by hand and works.
+     * docs/area-chart-stacked/README.md describes the default of both components as "y0 and y1 are not
+     * NaN", a guard that has never run, and the header this replaces did not mention defined at all.
+     *
+     * Note: forgetting valuesAccessor for a wrapper layer produces an empty chart rather than an error,
+     * because d3.area runs its datum through Array.from and that yields [] for a plain object. An
+     * accessor that returns nothing instead throws out of d3.area, which names neither the component
+     * nor the property.
+     *
+     * Note: the data join matches on the generic .sszvis-path class, which pie, stackedArea and
+     * stackedPyramid also use. A path another component left in the same group is bound to a layer and
+     * repainted as an area rather than being left alone, and since every attribute here is written
+     * unconditionally - an unset fill or stroke is written as null, which d3 reads as a removal - the
+     * foreign path loses the colours it came with. Harmless while each component owns its own
+     * selectGroup, which is how every example is written. The same collision corrupts pie's own
+     * geometry when it is read from the other side.
+     *
+     * Note: nothing constrains the geometry, and nothing reports its own absence. A layer with no points
+     * yields a path element with no d attribute, a single point yields a closed shape that encloses no
+     * area and, with no default stroke, draws nothing at all, and a band whose y1 lies below y0 simply
+     * winds the other way. With no props set at all the render still reports success - one correctly
+     * classed path per layer, with neither fill nor stroke written and every coordinate NaN - so the DOM
+     * looks healthy for a chart that is entirely empty. Binding a datum that is not iterable throws
+     * "data is not iterable" out of the reversal, before the join. See
+     * test/component/stackedAreaMultiples.test.ts.
      *
      * @return {sszvis.component}
      */
+    /**
+     * d3 takes either a constant or a value function, but not a union of the two, so a
+     * dimension is narrowed once before it reaches the generator. Only the constant branch
+     * needs wrapping, and it is wrapped exactly as d3's own constant(+value) was: the value is
+     * coerced once, here, rather than once per point inside the attr callback. An unset
+     * dimension therefore still resolves to NaN, as does one with no numeric form, and only a
+     * value whose coercion itself throws - a Symbol, a BigInt - raises, before the data join
+     * rather than after it.
+     */
+    const dimension = value => {
+      if (typeof value === "function") return value;
+      // An unset dimension is spelled out because TypeScript will not coerce undefined, and
+      // +undefined is NaN.
+      const constant = value === undefined ? Number.NaN : +value;
+      return () => constant;
+    };
+    /**
+     * As above, for the style properties. An unset property becomes a function returning null,
+     * which d3 removes the attribute for - the same thing it does when handed undefined
+     * directly.
+     */
+    const styleValue = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
     function stackedAreaMultiples () {
-      return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+      return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-        //sszsch why reverse?
-        data = [...data].reverse();
-        const defaultDefined = function () {
-          return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
+        // Layouts
+        // Reversed for no stated reason - the line has carried an unanswered "//sszsch why
+        // reverse?" comment since 2017 - which puts the first layer of the input last in the
+        // DOM and mirrors the index every layer accessor is given. Taken on a copy, so the
+        // array the caller passed in is left alone. See
+        // test/component/stackedAreaMultiples.test.ts.
+        const layers = [...data].reverse();
+        // The default predicate accepts every point, whatever its value. It reproduces the
+        // one it replaced, which read
+        //   function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }
+        // and so returned a function rather than calling either of them - and a function is
+        // truthy, which is all d3 tests. The missing-value guard this was meant to be has
+        // therefore never run.
+        const defined = props.defined === undefined ? () => true : typeof props.defined === "function" ? props.defined : () => Boolean(props.defined);
+        const areaGen = d3.area().defined(defined).x(dimension(props.x)).y0(dimension(props.y0));
+        // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
+        // why an unset y1 collapses every band onto its own baseline. Its typings admit only
+        // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
+        // two identically.
+        if (props.y1 == null) {
+          areaGen.y1(null);
+        } else {
+          areaGen.y1(dimension(props.y1));
+        }
+        // Rendering
+        // Declared with `function` so that `this` and the node group are still forwarded to
+        // valuesAccessor, as they were when this was built with fn.compose.
+        const pathData = function (datum, index, group) {
+          return areaGen(props.valuesAccessor.call(this, datum, index, group));
         };
-        const areaGen = d3.area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
-        const paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
+        const fill = styleValue(props.fill);
+        // No default, where stackedArea falls back to a #ffffff hairline.
+        const stroke = styleValue(props.stroke);
+        const strokeWidth = styleValue(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+        const paths = selection.selectAll("path.sszvis-path").data(layers, props.key).join("path").classed("sszvis-path", true);
+        // The transition is created and its return value dropped, so it carries no tweens and
+        // every attribute below is written to the plain selection: nothing animates, while the
+        // schedule still interrupts whatever else was animating these nodes.
         if (props.transition) {
           paths.transition(defaultTransition());
         }
-        paths.attr("d", compose(areaGen, props.valuesAccessor)).attr("fill", props.fill).attr("stroke", props.stroke).attr("stroke-width", props.strokeWidth === undefined ? 1 : props.strokeWidth);
+        paths.attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
       });
     }
 
