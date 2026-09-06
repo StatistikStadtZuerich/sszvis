@@ -259,6 +259,8 @@ describe("viewport/resize", () => {
       const { on } = viewport;
       const cb = vi.fn();
       registered.push(["resize", cb]);
+      // @ts-expect-error - the ported types spell the requirement out: `on` declares a
+      // `this` of the viewport object, so a destructured call is rejected at compile time.
       expect(on("resize", cb)).toBeUndefined();
       viewport.trigger("resize");
       expect(cb).toHaveBeenCalledTimes(1);

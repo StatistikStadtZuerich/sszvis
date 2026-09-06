@@ -31,48 +31,58 @@
 import { select } from "d3";
 import throttle from "nano-throttle";
 
+/** A listener registered through `viewport.on`. Resize listeners are called with no
+ * arguments; `trigger` forwards whatever the caller passes, so any function is accepted. */
+export type ViewportListener = (...args: never[]) => void;
+
+/** The event emitter returned by this module. There is exactly one, page-wide. */
+export interface Viewport {
+  on(this: Viewport, name: string, cb: ViewportListener): Viewport;
+  off(this: Viewport, name: string, cb: ViewportListener): Viewport;
+  trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport;
+}
+
 // This rather strange set of functions is designed to support the API:
 // sszvis.viewport.on('resize', callback);
 // While still enabling the user to register multiple callbacks for the 'resize'
 // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
 // object would not allow.
-const callbacks = {
+const callbacks: Record<string, ViewportListener[]> = {
   resize: [],
 };
 
 if (globalThis.window !== undefined) {
-  select(globalThis).on(
+  select(globalThis.window).on(
     "resize",
     throttle(() => {
-      trigger("resize");
+      viewport.trigger("resize");
     }, 500)
   );
 }
 
-const on = function (name, cb) {
+function on(this: Viewport, name: string, cb: ViewportListener): Viewport {
   if (!callbacks[name]) {
     callbacks[name] = [];
   }
   callbacks[name] = [...callbacks[name].filter((fn) => fn !== cb), cb];
   return this;
-};
+}
 
-const off = function (name, cb) {
+function off(this: Viewport, name: string, cb: ViewportListener): Viewport {
   if (!callbacks[name]) {
     return this;
   }
   callbacks[name] = callbacks[name].filter((fn) => fn !== cb);
   return this;
-};
+}
 
-const trigger = function (name) {
-  const evtArgs = Array.prototype.slice.call(arguments, 1);
+function trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport {
   if (callbacks[name]) {
     for (const fn of callbacks[name]) {
-      fn.apply(null, evtArgs);
+      Reflect.apply(fn, null, evtArgs);
     }
   }
   return this;
-};
+}
 
-export const viewport = { on, off, trigger };
+export const viewport: Viewport = { on, off, trigger };
