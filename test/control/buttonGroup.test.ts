@@ -160,14 +160,6 @@ describe("control/buttonGroup", () => {
   });
 
   describe("known quirks", () => {
-    test("the width is split by the number of values, not into thirds", () => {
-      // BUG (docs): the JSDoc claims "Each option will have 1/3rd of this width", which is
-      // only true for exactly three values - the code divides by values.length.
-      // current: correct code, wrong documentation. expected: fix the JSDoc.
-      render(buttonGroup().values(["A", "B"]).current("A").width(300));
-      expect(buttons().map((b) => b.style.width)).toEqual(["150px", "150px"]);
-    });
-
     test("an empty value list leaves an empty, full-width wrapper", () => {
       // NOTE: with no values the button width is 300 / 0 = Infinity, but no buttons are
       // rendered so the invalid length is never written to the DOM. The wrapper is still

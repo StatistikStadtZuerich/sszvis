@@ -31,6 +31,9 @@
  * Note: each button gets exactly `width / values.length` pixels, written out unrounded. Labels are
  * never measured or trimmed, so a label wider than its button simply overflows - keep labels short.
  *
+ * Note: selectedness is computed per button with no notion of uniqueness, so a value repeated in
+ * `values` renders twice and both copies are highlighted when they equal `current`.
+ *
  * Note: the buttons are plain divs with a click handler. They carry no role, tabindex or pressed
  * state, so the control cannot be operated by keyboard.
  *
