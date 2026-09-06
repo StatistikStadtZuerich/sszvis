@@ -50,8 +50,9 @@ import {
   dispatch,
   pointer,
   type ScaleBand,
-  type ScaleLinear,
+  type ScaleContinuousNumeric,
   type ScalePoint,
+  type ScaleTime,
   select,
 } from "d3";
 import { type Component, component } from "../d3-component";
@@ -60,7 +61,8 @@ import { range } from "../scale";
 
 // Type definitions for move behavior component
 type MoveScale<T = number | string> =
-  | ScaleLinear<number, number>
+  | ScaleContinuousNumeric<number, number>
+  | (T extends Date ? ScaleTime<number, number> : never)
   | ScaleBand<T extends string ? T : string>
   | ScalePoint<T extends string ? T : string>;
 

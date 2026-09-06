@@ -1,6 +1,6 @@
-import { select as d3Select, scaleLinear, scaleTime } from "d3";
+import { select as d3Select, scaleLinear, scaleLog, scaleTime } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import slider from "../../src/control/slider.js";
+import slider, { type SliderComponent } from "../../src/control/slider.js";
 import "../../src/d3-selectgroup.js";
 
 describe("control/slider", () => {
@@ -25,9 +25,9 @@ describe("control/slider", () => {
   const scale = () => scaleLinear().domain([0, 10]).range([0, 300]);
 
   /** Renders a control into a fresh group and hands back that group's element. */
-  const render = (control: unknown) => {
+  const render = (control: SliderComponent) => {
     const group = d3Select(svg).append("g");
-    group.call(control as never);
+    group.call(control);
     return group.node() as SVGGElement;
   };
 
@@ -156,6 +156,22 @@ describe("control/slider", () => {
     expect(line.getAttribute("y2")).toBe("26");
   });
 
+  test("should accept any continuous numeric scale, not just a linear one", () => {
+    // The slider only ever calls domain/range/copy on its scale, and the move behaviour
+    // inverts through it, so d3's other continuous numeric scales work here too. Typed as
+    // ScaleContinuousNumeric rather than ScaleLinear so the types do not narrow that.
+    const node = render(
+      slider()
+        .scale(scaleLog().domain([1, 1000]).range([0, 300]))
+        .value(10)
+        .majorTicks([1, 1000])
+    );
+    // 10 sits at a third of the way along a log scale from 1 to 1000, inset by the handle
+    const x = handle(node)?.getAttribute("transform");
+    expect(x).toMatch(/^translate\(/);
+    expect(Number(x?.match(/translate\(([\d.]+)/)?.[1])).toBeCloseTo(101.8, 0);
+  });
+
   describe("handle label", () => {
     test("should show the current value by default", () => {
       const node = render(basic());
@@ -163,7 +179,7 @@ describe("control/slider", () => {
     });
 
     test("should use a label function when one is given", () => {
-      const node = render(basic().label((d: number) => `Year ${d}`));
+      const node = render(basic().label((d) => `Year ${String(d)}`));
       expect(handleLabel(node)?.textContent).toBe("Year 5");
     });
 
@@ -218,7 +234,7 @@ describe("control/slider", () => {
   });
 
   test("should format tick labels with tickLabels", () => {
-    const node = render(basic().tickLabels((d: number) => `${d}%`));
+    const node = render(basic().tickLabels((d) => `${String(d)}%`));
     expect(tickLabels(node).filter(Boolean)).toEqual(["0%", "5%", "10%"]);
   });
 
@@ -274,9 +290,9 @@ describe("control/slider", () => {
       // join the label like the handle box and grip line.
       const control = basic();
       const group = d3Select(svg).append("g");
-      group.call(control as never);
-      group.call(control as never);
-      group.call(control as never);
+      group.call(control);
+      group.call(control);
+      group.call(control);
       const node = group.node() as SVGGElement;
       expect(node.querySelectorAll("g.sszvis-control-slider__handle").length).toBe(1);
       expect(node.querySelectorAll("text.sszvis-control-slider--label").length).toBe(3);
@@ -290,8 +306,8 @@ describe("control/slider", () => {
       // ever touches elements that already existed, so a re-render with a new value
       // updates the first label and leaves the accumulated ones blank.
       const group = d3Select(svg).append("g");
-      group.call(basic().value(0) as never);
-      group.call(basic().value(10) as never);
+      group.call(basic().value(0));
+      group.call(basic().value(10));
       const node = group.node() as SVGGElement;
       const labels = [...node.querySelectorAll("text.sszvis-control-slider--label")];
       expect(labels.map((t) => t.textContent)).toEqual(["10", ""]);
@@ -367,7 +383,7 @@ describe("control/slider", () => {
       // current: partial DOM plus a TypeError from fn.stringEqual. expected: fail before
       // rendering, or treat a missing value as "no handle".
       const node = d3Select(svg).append("g");
-      expect(() => node.call(slider().scale(scale()) as never)).toThrow(TypeError);
+      expect(() => node.call(slider().scale(scale()))).toThrow(TypeError);
       const el = node.node() as SVGGElement;
       expect(el.querySelector("g.sszvis-control-slider__backgroundgroup")).toBeTruthy();
       expect(el.querySelector("g.sszvis-control-slider__handle")).toBeTruthy();
