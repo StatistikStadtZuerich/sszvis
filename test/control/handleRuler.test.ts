@@ -1,6 +1,6 @@
 import { select as d3Select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import handleRuler from "../../src/control/handleRuler.js";
+import handleRuler, { type HandleRulerComponent } from "../../src/control/handleRuler.js";
 import "../../src/d3-selectgroup.js";
 
 type Datum = { x: number; y: number; label: string };
@@ -29,14 +29,14 @@ describe("control/handleRuler", () => {
   });
 
   /** Binds data to a fresh group and renders the ruler into it. */
-  const render = (control: unknown, bound: Datum[] = data) => {
+  const render = (control: HandleRulerComponent<Datum>, bound: Datum[] = data) => {
     const group = d3Select(svg).append("g").datum(bound);
-    group.call(control as never);
+    group.call(control);
     return group.node() as SVGGElement;
   };
 
   const ruler = () =>
-    handleRuler()
+    handleRuler<Datum>()
       // x is given as a constant: an accessor function would leave the rule and handle
       // at NaN, because those elements are not bound to the data. See "known quirks".
       .x(40)
@@ -108,6 +108,33 @@ describe("control/handleRuler", () => {
     expect(dots(node).map((d) => d.getAttribute("r"))).toEqual(["3.5", "3.5"]);
   });
 
+  test("should forward d3's index and node group, and its element `this`, to the y accessor", () => {
+    // `crispY` is composed with fn.compose, which forwards the whole (d, i, nodes) argument
+    // list and the element-bound `this` that d3 supplies. An arrow function that takes only
+    // the datum computes the same coordinates for every accessor in this repo, so nothing
+    // else in this suite would notice the difference - hence this test.
+    const calls: Array<{ datum: Datum; index: number; nodeCount: number; self: unknown }> = [];
+    const node = render(
+      ruler().y(function (this: unknown, d: Datum, ...rest: unknown[]) {
+        calls.push({
+          datum: d,
+          index: rest[0] as number,
+          nodeCount: (rest[1] as ArrayLike<unknown>)?.length,
+          self: this,
+        });
+        return d.y;
+      } as never)
+    );
+
+    const dotElements = dots(node);
+    const fromDots = calls.filter((call) => dotElements.includes(call.self as SVGCircleElement));
+    expect(fromDots.map((call) => call.index)).toEqual([0, 1]);
+    expect(fromDots.map((call) => call.nodeCount)).toEqual([2, 2]);
+    // `this` is the element being positioned, not the enclosing lexical scope
+    expect(fromDots.map((call) => call.self)).toEqual(dotElements);
+    expect(fromDots.map((call) => call.datum.y)).toEqual([60, 120]);
+  });
+
   test("should fill the dots with the configured color", () => {
     const node = render(ruler().color("#0f0"));
     expect(dots(node).map((d) => d.getAttribute("fill"))).toEqual(["#0f0", "#0f0"]);
@@ -119,13 +146,13 @@ describe("control/handleRuler", () => {
   });
 
   test("should accept constants for x and y", () => {
-    const node = render(handleRuler().x(80).y(50).top(20).bottom(200));
+    const node = render(handleRuler<Datum>().x(80).y(50).top(20).bottom(200));
     expect(rule(node)?.getAttribute("x1")).toBe("80.5");
     expect(dots(node).map((d) => d.getAttribute("cy"))).toEqual(["50.5", "50.5"]);
   });
 
   test("should default the label to an empty string when none is given", () => {
-    const node = render(handleRuler().x(40).y(60).top(20).bottom(200));
+    const node = render(handleRuler<Datum>().x(40).y(60).top(20).bottom(200));
     expect(labels(node).map((l) => l.innerHTML)).toEqual(["", ""]);
   });
 
@@ -182,9 +209,9 @@ describe("control/handleRuler", () => {
       // them only into the group's enter selection.
       const control = ruler();
       const group = d3Select(svg).append("g").datum(data);
-      group.call(control as never);
-      group.call(control as never);
-      group.call(control as never);
+      group.call(control);
+      group.call(control);
+      group.call(control);
       const node = group.node() as SVGGElement;
       expect(node.querySelectorAll("g.sszvis-handleRuler__group").length).toBe(1);
       expect(node.querySelectorAll("line.sszvis-ruler__rule").length).toBe(3);
@@ -213,9 +240,9 @@ describe("control/handleRuler", () => {
       // Pins the boundary of the duplication bug above: the joined selections behave.
       const control = ruler();
       const group = d3Select(svg).append("g").datum(data);
-      group.call(control as never);
+      group.call(control);
       group.datum([data[0]]);
-      group.call(control as never);
+      group.call(control);
       const node = group.node() as SVGGElement;
       expect(node.querySelectorAll("circle.sszvis-ruler__dot").length).toBe(1);
       expect(node.querySelectorAll("text.sszvis-ruler__label").length).toBe(1);
@@ -231,7 +258,8 @@ describe("control/handleRuler", () => {
       // current: only a constant `x` works. expected: either document `x` as a number,
       // or bind the ruler group to the value the accessor should be applied to.
       const node = render(
-        handleRuler()
+        handleRuler<Datum>()
+          // @ts-expect-error - the setter now demands an accessor that also handles the group's numeric placeholder datum, which is the type-level half of this fix; the runtime still renders NaN.
           .x((d: Datum) => d.x)
           .y((d: Datum) => d.y)
           .top(20)
@@ -285,7 +313,7 @@ describe("control/handleRuler", () => {
       // out writes NaN into the geometry and the ruler silently disappears. No sszvis
       // component validates its required props, so this is house style rather than a
       // defect specific to this control - but the failure is silent and invisible.
-      const node = render(handleRuler().x(40).y(60));
+      const node = render(handleRuler<Datum>().x(40).y(60));
       expect(rule(node)?.getAttribute("y1")).toBe("NaN");
       expect(handle(node)?.getAttribute("y")).toBe("NaN");
     });
@@ -295,7 +323,7 @@ describe("control/handleRuler", () => {
       // gives them. d3 removes the attribute for an undefined value rather than writing
       // "undefined". src/annotation/ruler.ts defaults the same property to "black", so
       // the two rulers behave differently when it is left out.
-      const node = render(handleRuler().x(40).y(60).top(20).bottom(200));
+      const node = render(handleRuler<Datum>().x(40).y(60).top(20).bottom(200));
       expect(dots(node)[0]?.getAttribute("fill")).toBeNull();
     });
 
