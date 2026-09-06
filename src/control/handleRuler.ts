@@ -28,7 +28,15 @@
  * Note: labels are written with `.html()`, as elsewhere in the library, because sszvis.modularText
  * produces markup. Escaping untrusted label data is the caller's responsibility. Unlike
  * sszvis.annotation.ruler, this control neither de-overlaps labels nor defaults `color`, and its
- * labels are joined on the component's own selection rather than on the ruler group.
+ * labels are joined on the component's own selection rather than on the ruler group - so hiding or
+ * moving that group leaves the labels behind.
+ *
+ * Note: the rule stops 4px above `bottom`, but the label's vertical nudge is decided against the
+ * unadjusted `bottom`. A label falling in that 4px band is offset as if it were still on the ruler.
+ *
+ * Note: a label whose y is above `top` is nudged down by `2 * y` rather than by a constant, so it
+ * lands well below its dot - by up to twice the distance to the top of the chart. The same
+ * expression appears in sszvis.annotation.ruler.
  *
  * Note: `top` and `bottom` have no defaults; leaving them out writes NaN into the geometry and the
  * ruler silently disappears.
