@@ -58,12 +58,27 @@ export type PointProjection = (point: GeoPoint) => [number, number] | null;
  * A function for creating d3 projection functions, customized for the dimensions of the map you need.
  * Because this projection generator involves calculating the boundary of the features that will be
  * projected, the result of these calculations is cached internally. Hence the featureBoundsCacheKey.
- * You don't need to worry about this - mostly it's the map module components which use this function.
+ *
+ * Note: the cache key is width, height and featureBoundsCacheKey only. Reusing a key for a
+ * different feature collection returns the projection fitted to the first collection, which places
+ * the second collection outside the destination box.
+ *
+ * Note: featureBoundsCacheKey is optional, and every call that omits it shares the single key
+ * "<width>,<height>,undefined". Two different maps rendered at the same size collide silently.
+ *
+ * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
+ * distinct width/height/key triple for the lifetime of the page - a chart that reprojects on resize
+ * accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
+ * release them.
+ *
+ * See test/map/mapUtils.test.ts.
  *
  * @param  {Number} width                           The width of the projection destination space.
  * @param  {Number} height                          The height of the projection destination space.
  * @param  {Object} featureCollection               The feature collection that will be projected by the returned function. Needed to calculated a good size.
- * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
+ * @param  {String} [featureBoundsCacheKey]         The cache key for the expensive bounds calculation.
+ *                                                  Must identify the feature collection: the collection
+ *                                                  itself is not part of the key.
  * @return {Function}                               The projection function.
  */
 export const swissMapProjection = memoize(
@@ -83,6 +98,12 @@ export const swissMapProjection = memoize(
  * This is a special d3.geoPath generator function tailored for rendering maps of
  * Switzerland. The values are chosen specifically to optimize path generation for
  * Swiss map regions and is not necessarily optimal for displaying other areas of the globe.
+ *
+ * Note: the projection is the memoized one from swissMapProjection, shared with every other caller
+ * holding the same width, height and cache key, along with that function's cache-key collision
+ * behaviour. The path generator itself is new on every call.
+ *
+ * See test/map/mapUtils.test.ts.
  *
  * @param  {number} width                     The width of the available map space
  * @param  {number} height                    The height of the available map space
@@ -111,6 +132,14 @@ export function swissMapPath(
  * The earth's radius is not constant, so this function uses an approximation for calculating the degree angle of
  * a distance in meters.
  *
+ * Note: the x and y spans of the projected square are averaged, so an anisotropic projection yields
+ * the mean of the two axes rather than either one.
+ *
+ * Note: both spans are taken as absolute values, so a negative meterDistance returns the same
+ * positive size as its positive counterpart rather than raising.
+ *
+ * See test/map/mapUtils.test.ts.
+ *
  * @param {function} projection     You need to provide a projection function for calculating pixel values from decimal degree
  *                                  coordinates. This function should accept values as [lon, lat] array pairs (like d3's projection functions).
  * @param {array} centerPoint       You need to provide a center point. This point is used as the center of a hypothetical square
@@ -118,6 +147,7 @@ export function swissMapPath(
  *                                  because the pixel size of a given degree distance will be different if that square is located
  *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
  * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
+ * @throws {TypeError}              If the projection clips away either corner of the measured square.
  */
 export function pixelsFromGeoDistance(
   projection: PointProjection,
@@ -168,9 +198,30 @@ export interface MergedGeoDatum<Datum> {
  * Merges a dataset with a geojson object by matching elements in the dataset to elements in the geojson.
  * it expects a keyname to be given, which is the key in each data object which has the id of the geojson
  * element to which that data object should be matched. Expects an array of data objects, and a geojson object
- * which has a features array. Each feature is mapped to one data object.
+ * which has a features array. Each feature is mapped to one data object, or to undefined where no
+ * data object matched.
  *
- * @param  {Array} dataset           The array of input data to match
+ * Note: matching goes through a plain object literal, so ids are stringified - a numeric data key
+ * matches a string feature id - and a feature whose id names an Object.prototype member
+ * ("constructor", "toString", ...) is handed the inherited property as its datum even though no
+ * such datum was supplied.
+ *
+ * Note: a datum keyed "__proto__" replaces the lookup object's prototype instead of creating an
+ * entry. That datum still reads back correctly, but every unmatched feature afterwards is handed a
+ * field of it rather than undefined. Do not feed untrusted ids to this function.
+ *
+ * Note: several data sharing a key are not reported; the last one wins.
+ *
+ * Note: a falsy keyName, the empty string included, falls back to GEO_KEY_DEFAULT rather than being
+ * used as given.
+ *
+ * Note: dataset is guarded but geoJson is not, so a missing map throws where missing data returns
+ * an entry per feature with no datum.
+ *
+ * See test/map/mapUtils.test.ts.
+ *
+ * @param  {Array} [dataset]         The array of input data to match. Anything that is not an array is
+ *                                   treated as no data at all.
  * @param  {Object} geoJson          The geojson object. This function will attempt to match each geojson feature to a data object
  * @param  {String} keyName          The name of the property on each data object which will be matched with each geojson id.
  * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
@@ -231,6 +282,16 @@ export type MapFeature = ExtendedFeature<GeoGeometryObjects | null, MapFeaturePr
  * using the topojson command line tool's -e option (see the Makefile rule for the zurich statistical
  * quarters map for an example of this use).
  *
+ * Note: the cache is written onto the feature's own properties object, so this function mutates its
+ * argument, and the cache is never invalidated - changing `center` after the first call has no
+ * effect for the lifetime of the feature object.
+ *
+ * Note: the `center` string is split on "," and mapped through parseFloat with no validation. A
+ * value that does not parse becomes NaN coordinates, and a wrong number of components becomes a
+ * wrongly sized array; both reach the projection silently.
+ *
+ * See test/map/mapUtils.test.ts.
+ *
  * @param  {Object} geoJson                 The geoJson object for which you want the center.
  * @return {number[]}                       The geographical coordinates (in the form [lon, lat]) of the centroid
  *                                          (or user-specified center) of the object. Typed as number[] rather
@@ -262,8 +323,13 @@ export function getGeoJsonCenter(geoJson: MapFeature): number[] {
  * A little "magic" function for automatically calculating map stroke sizes based on
  * the width of the container they're in. Used for responsive designs.
  *
+ * Note: the clamp does not rescue NaN - Math.max(0.8, NaN) is NaN - so an unmeasured container
+ * width produces a NaN stroke width that reaches the DOM.
+ *
+ * See test/map/mapUtils.test.ts.
+ *
  * @param  {number} width    The width of the container holding the map.
- * @return {number}          The stroke width that the map elements should have.
+ * @return {number}          The stroke width that the map elements should have, clamped to [0.8, 1.1].
  */
 export function widthAdaptiveMapPathStroke(width: number): number {
   return Math.min(Math.max(0.8, width / 400), 1.1);
