@@ -287,7 +287,10 @@ describe("map utils", () => {
     // BUG: the dataset argument is carefully guarded with Array.isArray, but geoJson is not
     // guarded at all - the asymmetry means a missing map throws where missing data does not.
     test("throws for a missing geojson, unlike a missing dataset", () => {
-      expect(() => prepareMergedGeoData([{ id: "a" }], undefined, "id")).toThrow();
+      expect(() =>
+        // @ts-expect-error - deliberately exercising the unguarded geoJson path
+        prepareMergedGeoData([{ id: "a" }], undefined, "id")
+      ).toThrow();
     });
 
     test("returns an empty array for a geojson with no features", () => {

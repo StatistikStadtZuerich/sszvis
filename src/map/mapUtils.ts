@@ -4,7 +4,17 @@
  * @module sszvis/map/utils
  */
 
-import { geoCentroid, geoMercator, geoPath } from "d3";
+import {
+  type ExtendedFeature,
+  type ExtendedFeatureCollection,
+  type ExtendedGeometryCollection,
+  type GeoGeometryObjects,
+  type GeoPath,
+  type GeoProjection,
+  geoCentroid,
+  geoMercator,
+  geoPath,
+} from "d3";
 import { memoize } from "../fn.js";
 
 export const STADT_KREISE_KEY = "zurichStadtKreise";
@@ -13,6 +23,34 @@ export const STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
 export const WAHL_KREISE_KEY = "zurichWahlKreise";
 export const AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
 export const SWITZERLAND_KEY = "switzerland";
+
+/** The id of one of the maps shipped with sszvis. */
+export type MapId =
+  | typeof STADT_KREISE_KEY
+  | typeof STATISTISCHE_QUARTIERE_KEY
+  | typeof STATISTISCHE_ZONEN_KEY
+  | typeof WAHL_KREISE_KEY
+  | typeof AGGLOMERATION_2012_KEY
+  | typeof SWITZERLAND_KEY;
+
+/**
+ * Anything d3-geo is able to measure the bounds of, and therefore anything these utilities can
+ * fit a projection to.
+ */
+export type MapGeoObject =
+  | ExtendedFeature
+  | ExtendedFeatureCollection
+  | ExtendedGeometryCollection
+  | GeoGeometryObjects;
+
+/** A geographical coordinate pair, in the [longitude, latitude] order d3 projections expect. */
+export type GeoPoint = [number, number];
+
+/**
+ * A projection as these utilities consume it: called with a [lon, lat] pair, returning pixel
+ * coordinates, or null where the point is clipped away.
+ */
+export type PointProjection = (point: GeoPoint) => [number, number] | null;
 
 /**
  * swissMapProjection
@@ -29,7 +67,13 @@ export const SWITZERLAND_KEY = "switzerland";
  * @return {Function}                               The projection function.
  */
 export const swissMapProjection = memoize(
-  (width, height, featureCollection) => geoMercator().fitSize([width, height], featureCollection),
+  (
+    width: number,
+    height: number,
+    featureCollection: MapGeoObject,
+    // Part of the signature only so that the memoize resolver below can read it.
+    _featureBoundsCacheKey?: string
+  ): GeoProjection => geoMercator().fitSize([width, height], featureCollection),
   // Memoize resolver
   (width, height, _, featureBoundsCacheKey) =>
     "" + width + "," + height + "," + featureBoundsCacheKey
@@ -51,11 +95,16 @@ export const swissMapProjection = memoize(
  *                                            and returns an svg path string which represents that geojson, projected using
  *                                            a map projection optimal for Swiss areas.
  */
-export const swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
+export function swissMapPath(
+  width: number,
+  height: number,
+  featureCollection: MapGeoObject,
+  featureBoundsCacheKey?: string
+): GeoPath {
   return geoPath().projection(
     swissMapProjection(width, height, featureCollection, featureBoundsCacheKey)
   );
-};
+}
 
 /**
  * Use this function to calcualate the length in pixels of a distance in meters across the surface of the earth
@@ -70,7 +119,11 @@ export const swissMapPath = function (width, height, featureCollection, featureB
  *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
  * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
  */
-export const pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
+export function pixelsFromGeoDistance(
+  projection: PointProjection,
+  centerPoint: GeoPoint,
+  meterDistance: number
+): number {
   // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
   // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
   const APPROX_EARTH_RADIUS = 6_367_475;
@@ -79,22 +132,35 @@ export const pixelsFromGeoDistance = function (projection, centerPoint, meterDis
   const degrees = (meterDistance / APPROX_EARTH_CIRCUMFERENCE) * 360;
   // Construct a square, centered at centerPoint, with sides that span that number of degrees
   const halfDegrees = degrees / 2;
-  const bounds = [
+  const bounds: GeoPoint[] = [
     [centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees],
     [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees],
   ];
 
-  // Project those bounds to pixel coordinates using the provided map projection
-  const projBounds = bounds.map(projection);
+  // Project those bounds to pixel coordinates using the provided map projection.
+  // The projection is wrapped rather than passed to map() point-free, so it is called with the
+  // point alone and never with map()'s index and array arguments.
+  const [lowerBound, upperBound] = bounds.map((point) => projection(point));
+  if (lowerBound == null || upperBound == null) {
+    throw new TypeError(
+      "pixelsFromGeoDistance: the projection clipped away the bounds of the measured square"
+    );
+  }
   // Depending on the rotation of the map, the sides of the box are not always positive quantities
   // For example, on a north-is-up map, the pixel y-scale is inverted, so higher latitude degree
   // values are lower pixel y-values. On a south-is-up map, the opposite is true.
-  const projXDist = Math.abs(projBounds[1][0] - projBounds[0][0]);
-  const projYDist = Math.abs(projBounds[1][1] - projBounds[0][1]);
+  const projXDist = Math.abs(upperBound[0] - lowerBound[0]);
+  const projYDist = Math.abs(upperBound[1] - lowerBound[1]);
   return (projXDist + projYDist) / 2;
-};
+}
 
 export const GEO_KEY_DEFAULT = "geoId";
+
+/** A feature paired with the datum that was matched to it, or undefined if nothing matched. */
+export interface MergedGeoDatum<Datum> {
+  geoJson: ExtendedFeature;
+  datum: Datum | undefined;
+}
 
 /**
  * prepareMergedData
@@ -110,13 +176,18 @@ export const GEO_KEY_DEFAULT = "geoId";
  * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
-export const prepareMergedGeoData = function (dataset, geoJson, keyName) {
-  keyName || (keyName = GEO_KEY_DEFAULT);
+export function prepareMergedGeoData<Datum extends Record<string, unknown>>(
+  dataset: readonly Datum[] | null | undefined,
+  geoJson: ExtendedFeatureCollection,
+  keyName?: string
+): MergedGeoDatum<Datum>[] {
+  // Any falsy key name, the empty string included, falls back to the default.
+  const key = keyName || GEO_KEY_DEFAULT;
 
   // group the input data by map entity id
-  const groupedInputData = Array.isArray(dataset)
-    ? dataset.reduce((m, v) => {
-        m[v[keyName]] = v;
+  const groupedInputData: Record<string, Datum> = Array.isArray(dataset)
+    ? dataset.reduce<Record<string, Datum>>((m, v) => {
+        m[toLookupKey(v[key])] = v;
         return m;
       }, {})
     : {};
@@ -124,9 +195,30 @@ export const prepareMergedGeoData = function (dataset, geoJson, keyName) {
   // merge the map features and the input data into new objects that include both
   return geoJson.features.map((feature) => ({
     geoJson: feature,
-    datum: groupedInputData[feature.id],
+    datum: groupedInputData[toLookupKey(feature.id)],
   }));
-};
+}
+
+/**
+ * Stringifies a key the way a property access would. Symbols are described rather than converted,
+ * since String() throws on them - like the property access this replaces, such a key simply never
+ * matches a feature id.
+ */
+function toLookupKey(value: unknown): string {
+  return typeof value === "symbol" ? value.toString() : String(value);
+}
+
+/** The properties these utilities read from and write back to a map feature. */
+export interface MapFeatureProperties {
+  /** An authored centre, as the string "longitude,latitude". */
+  center?: string;
+  /** Where the computed centre is memoized, on the feature itself. */
+  cachedCenter?: number[];
+  [key: string]: unknown;
+}
+
+/** A map feature whose properties this module is allowed to read and cache onto. */
+export type MapFeature = ExtendedFeature<GeoGeometryObjects | null, MapFeatureProperties | null>;
 
 /**
  * getGeoJsonCenter
@@ -140,19 +232,29 @@ export const prepareMergedGeoData = function (dataset, geoJson, keyName) {
  * quarters map for an example of this use).
  *
  * @param  {Object} geoJson                 The geoJson object for which you want the center.
- * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
- *                                          (or user-specified center) of the object.
+ * @return {number[]}                       The geographical coordinates (in the form [lon, lat]) of the centroid
+ *                                          (or user-specified center) of the object. Typed as number[] rather
+ *                                          than a [lon, lat] tuple because a malformed `center` property is
+ *                                          parsed without validation and can yield a shorter or longer array.
+ * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
+ *                                          but has never been supported here, since the cache is written to
+ *                                          the properties object.
  */
-export const getGeoJsonCenter = function (geoJson) {
-  if (!geoJson.properties.cachedCenter) {
-    const setCenter = geoJson.properties.center;
-    geoJson.properties.cachedCenter = setCenter
+export function getGeoJsonCenter(geoJson: MapFeature): number[] {
+  const properties = geoJson.properties;
+  if (properties == null) {
+    throw new TypeError("getGeoJsonCenter: the feature has no properties object to cache onto");
+  }
+
+  if (!properties.cachedCenter) {
+    const setCenter = properties.center;
+    properties.cachedCenter = setCenter
       ? setCenter.split(",").map(Number.parseFloat)
       : geoCentroid(geoJson);
   }
 
-  return geoJson.properties.cachedCenter;
-};
+  return properties.cachedCenter;
+}
 
 /**
  * widthAdaptiveMapPathStroke
@@ -163,6 +265,6 @@ export const getGeoJsonCenter = function (geoJson) {
  * @param  {number} width    The width of the container holding the map.
  * @return {number}          The stroke width that the map elements should have.
  */
-export const widthAdaptiveMapPathStroke = function (width) {
+export function widthAdaptiveMapPathStroke(width: number): number {
   return Math.min(Math.max(0.8, width / 400), 1.1);
-};
+}
