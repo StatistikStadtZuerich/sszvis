@@ -280,17 +280,16 @@ describe("app", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: the docs promise that "during the render phase, state is immutable and an
-    // error will be thrown if it is modified accidentally" (src/app.js:15-16), but the
-    // module calls immer's setAutoFreeze(false) at import time (src/app.js:6), so the
-    // finished state is never frozen. The mutation also persists: `state` is a
-    // module-level binding that the next action drafts from, so render can corrupt it.
+    // BUG: the module calls immer's setAutoFreeze(false) at import time (src/app.ts:7),
+    // so the finished state is never frozen and the immutability the module originally
+    // promised does not hold. The mutation also persists: the next action drafts from the
+    // same object (src/app.ts:153), so render can corrupt application state.
     // got:  a mutation inside render silently succeeds and survives into the next action
     // want: mutating the state passed to render throws
     test("state passed to render is mutable, despite the documented guarantee", async () => {
       let mutated: unknown;
       const done = new Promise<void>((resolve) => {
-        app({
+        app<{ count: number }>({
           init: async (state) => {
             state.count = 0;
           },
@@ -306,8 +305,8 @@ describe("app", () => {
     });
 
     // BUG: when init rejects, the catch handler calls invariant(false, error)
-    // (src/app.js:94), which throws before the fallback on the next line can run
-    // (src/app.js:95). The fallback is therefore dead code, and the throw escapes as an
+    // (src/app.ts:175), which throws before the fallback on the next line can run
+    // (src/app.ts:176). The fallback is therefore dead code, and the throw escapes as an
     // unhandled promise rejection, so nothing observable reports the failure.
     // got:  no fallback image, an unhandled rejection
     // want: the fallback image is rendered and the failure is reported
@@ -330,10 +329,10 @@ describe("app", () => {
       restore();
     });
 
-    // BUG: an effect runs inside scheduleUpdate (src/app.js:75), which the init promise
-    // chain calls (src/app.js:90), so an error thrown by the effect - for instance by
+    // BUG: an effect runs inside scheduleUpdate (src/app.ts:147), which the init promise
+    // chain calls (src/app.ts:169), so an error thrown by the effect - for instance by
     // dispatching an action that was never defined - lands in the catch meant for init
-    // failures (src/app.js:93). It is re-wrapped there, giving a double-prefixed message
+    // failures (src/app.ts:172). It is re-wrapped there, giving a double-prefixed message
     // with no indication that init itself succeeded, and that second throw escapes as an
     // unhandled rejection instead of reaching the fallback. The render scheduled just
     // before the effect ran still happens, so the app is left half-alive.
@@ -365,8 +364,8 @@ describe("app", () => {
 
     // NOTE: app() returns undefined and never unregisters its resize listener, so
     // every app created on a page keeps re-rendering for the lifetime of the
-    // document (src/app.js:91). Each app installs its own scheduleUpdate closure, so
-    // viewport's de-duplication by identity (src/viewport/resize.js:56) does not help.
+    // document (src/app.ts:170). Each app installs its own scheduleUpdate closure, so
+    // viewport's de-duplication by identity (src/viewport/resize.ts:106) does not help.
     test("keeps rendering after the app is no longer needed", async () => {
       const renderA = vi.fn();
       const renderB = vi.fn();
@@ -379,9 +378,45 @@ describe("app", () => {
       expect(renderB).toHaveBeenCalledTimes(2);
     });
 
-    // NOTE: the JSDoc types actions as `(s: Draft, p?: Props) => Effect | void`, a
-    // single props argument, but the dispatcher collects all of its arguments into an
-    // array and spreads them (src/app.js:60-65, 81). Dispatching with no arguments is
+    // BUG: scheduleUpdate only clears renderScheduled after render returns (src/app.ts:144),
+    // so the guard at src/app.ts:140 is still closed for a dispatch made from inside render.
+    // The action runs and the state changes, but no frame is queued for it, and the stale
+    // state stays on screen until an unrelated trigger - here a resize - flushes it.
+    // got:  a dispatch from render updates the state invisibly
+    // want: the state a render dispatches is rendered
+    test("swallows the render for an action dispatched from inside render", async () => {
+      const seen: number[] = [];
+      let dispatched = false;
+      app<{ count: number }>({
+        init: async (state) => {
+          state.count = 0;
+        },
+        actions: {
+          bump: (state) => {
+            state.count += 1;
+          },
+        },
+        render: (state, actions) => {
+          seen.push(state.count);
+          if (!dispatched) {
+            dispatched = true;
+            actions.bump();
+          }
+        },
+      });
+      await nextFrame();
+      await nextFrame();
+      // The count is 1 by now, but only the render of 0 ever happened.
+      expect(seen).toEqual([0]);
+
+      viewport.trigger("resize");
+      await nextFrame();
+      expect(seen).toEqual([0, 1]);
+    });
+
+    // NOTE: the original JSDoc typed actions as `(s: Draft, p?: Props) => Effect | void`,
+    // a single props argument, but the dispatcher collects all of its arguments into an
+    // array and spreads them (src/app.ts:130-137, 159). Dispatching with no arguments is
     // what makes the documented `p` undefined; there is no props object.
     test("an action called without arguments receives only the draft", async () => {
       const action = vi.fn();

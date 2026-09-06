@@ -66,8 +66,11 @@ export interface AppProps<State, Actions extends Record<string, Action<State>>> 
  * a structured approach, this allows us to optimize the render loop and clarifies
  * the relationship between state and actions.
  *
- * Within an app, state can only be modified through actions. During the render phase,
- * state is immutable and an error will be thrown if it is modified accidentally.
+ * Within an app, state is meant to be modified only through actions. Note that this is a
+ * convention, not a guarantee: immer's auto-freezing is turned off in this module because
+ * d3 mutates state in many places, so the state handed to render is *not* frozen. Mutating
+ * it silently succeeds and the change survives into the next action's draft — treat the
+ * state in render as read-only.
  *
  * Conceptually, an app works like this:
  *
@@ -76,10 +79,32 @@ export interface AppProps<State, Actions extends Record<string, Action<State>>> 
  *     state ⭢ render
  *      ⮤ action ⮠
  *
+ * Rendering is batched into a single requestAnimationFrame, so several dispatches within
+ * one frame result in exactly one render. A resize reported by the viewport module also
+ * triggers a re-render. Nothing is rendered until the promise returned by `init` resolves;
+ * `init` must return a promise. An effect returned by `init` or by an action is called with
+ * `dispatch`, which takes an action name and an array of props.
+ *
+ * `app()` returns nothing and never removes its resize listener, so an app lives for the
+ * lifetime of the page and cannot be torn down.
+ *
+ * Error handling: a rejecting `init`, and an error thrown by an effect returned *by init*,
+ * both land in the same catch, where they are re-wrapped with the "[sszvis.app]" prefix and
+ * re-thrown. That throw escapes as an unhandled promise rejection, and as a consequence the
+ * `fallback` option is never rendered. An effect returned by an *action* runs outside that
+ * chain, so its error throws synchronously at the dispatcher's call site instead - a second,
+ * inconsistent path.
+ *
  * @module sszvis/app
  */
 export const app = <
   State extends object,
+  // Defaulted rather than left to inference because `State` cannot be inferred from
+  // `init`, so callers write `app<State>({ ... })` - a partial type-argument list, which
+  // switches inference off for this parameter. The cost is that when `State` is given
+  // explicitly the dispatchers are keyed by arbitrary strings, so `actions.missing()`
+  // type-checks and fails at runtime; the alternative is a worse trade, since narrowing
+  // the default makes every inline action's `state` implicitly `any`.
   Actions extends Record<string, Action<State>> = Record<string, Action<State>>,
 >({
   init,
