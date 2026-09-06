@@ -79,6 +79,11 @@ describe("control/buttonGroup", () => {
   });
 
   test("should compare the current value strictly", () => {
+    // A numeric `current` against string values: `===` selects nothing, whereas `==` would
+    // match "2". Comparing "2" with "2" would pass either way and so pins nothing.
+    render(buttonGroup().values(["1", "2"]).current(2));
+    expect(buttons().map((b) => b.classList.contains("selected"))).toEqual([false, false]);
+    // the same value as a string does select, so the values themselves are reachable
     render(buttonGroup().values(["1", "2"]).current("2"));
     expect(buttons().map((b) => b.classList.contains("selected"))).toEqual([false, true]);
   });
@@ -202,7 +207,7 @@ describe("control/buttonGroup", () => {
       // the raw value while trimming labels, so it throws on a long non-string value.
       // The two controls are advertised as interchangeable but do not accept the same
       // value types.
-      render(buttonGroup().values([1, 2, 3]).current(2));
+      render(buttonGroup<number>().values([1, 2, 3]).current(2));
       expect(buttons().map((b) => b.textContent)).toEqual(["1", "2", "3"]);
       expect(buttons().map((b) => b.classList.contains("selected"))).toEqual([false, true, false]);
     });
