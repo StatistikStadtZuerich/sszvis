@@ -199,6 +199,30 @@ describe("map/renderer/mesh", () => {
     });
   });
 
+  describe("required properties", () => {
+    test("throws naming geoJson when it is missing", () => {
+      const layer = group("mesh-no-geojson");
+      expect(() => layer.call(mapRendererMesh().mapPath(mapPathOf()))).toThrow(
+        /map\/renderer\/mesh: geoJson is required/
+      );
+    });
+
+    test("throws naming mapPath when it is missing", () => {
+      const layer = group("mesh-no-mappath");
+      expect(() => layer.call(mapRendererMesh().geoJson(mesh()))).toThrow(
+        /map\/renderer\/mesh: mapPath is required/
+      );
+    });
+
+    // The guard runs before the join, so a missing property leaves no misleading element behind
+    // rather than a classed, styled path with no geometry.
+    test("appends no path when a required property is missing", () => {
+      const layer = group("mesh-no-element");
+      expect(() => layer.call(mapRendererMesh().mapPath(mapPathOf()))).toThrow();
+      expect(borders(layer.node() as SVGGElement)).toHaveLength(0);
+    });
+  });
+
   describe("known quirks", () => {
     // NOTE: strokeWidth is a real property with a default, and choropleth delegates it publicly,
     // but src/maps/choropleth.js does not list it among its own @property lines - so a caller
@@ -207,27 +231,6 @@ describe("map/renderer/mesh", () => {
     test("exposes strokeWidth, which the documentation does not mention", () => {
       expect(mapRendererMesh().strokeWidth()).toBe(1.25);
       expect(mapRendererMesh().borderColor()).toBe("white");
-    });
-
-    // BUG: neither required property is validated, and neither omission is reported. The join is
-    // `[props.geoJson]`, so exactly one datum is always bound - undefined included - and
-    // geoPath(undefined) returns null, which d3 turns into a removed attribute. The result is a
-    // classed, styled path with no geometry: an invisible element, no error, and nothing to
-    // distinguish "no borders to draw" from "the caller forgot the data".
-    test("renders a styled but empty path when geoJson is missing", () => {
-      const layer = group("mesh-no-geojson");
-      const node = layer.call(mapRendererMesh().mapPath(mapPathOf())).node() as SVGGElement;
-      expect(borders(node)).toHaveLength(1);
-      expect(borders(node)[0].hasAttribute("d")).toBe(false);
-      expect(borders(node)[0].style.stroke).toBe("white");
-    });
-
-    // The same root defect as above, by a different d3 mechanism: an attribute set to undefined
-    // is removed without anything being called.
-    test("renders a styled but empty path when mapPath is missing", () => {
-      const node = group().call(mapRendererMesh().geoJson(mesh())).node() as SVGGElement;
-      expect(borders(node)).toHaveLength(1);
-      expect(borders(node)[0].hasAttribute("d")).toBe(false);
     });
 
     // BUG: the component sets neither fill nor pointer-events, so both come from sszvis.css. A
