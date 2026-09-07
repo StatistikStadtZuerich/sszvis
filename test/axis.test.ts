@@ -1,4 +1,4 @@
-import { scaleLinear, scaleTime, select } from "d3";
+import { scaleBand, scaleLinear, scaleTime, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { axisX, axisY } from "../src/axis.js";
 import { createSvgLayer } from "../src/createSvgLayer.js";
@@ -291,6 +291,54 @@ describe("axis", () => {
         .select(".sszvis-axis");
       expect(axisGroup.node()).not.toBeNull();
       expect(axisGroup.selectAll("g.tick").nodes().length).toBeGreaterThan(0);
+    });
+
+    test("should produce one tick value for a single-element ordinal domain", () => {
+      const xAxis = axisX
+        .ordinal()
+        .scale(scaleBand().domain(["2020"]).range([0, 100]))
+        .ticks(1);
+      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+        .selectGroup("xAxis")
+        .call(xAxis)
+        .select(".sszvis-axis");
+      expect(axisGroup.selectAll("g.tick").nodes()).toHaveLength(1);
+    });
+
+    test("should keep both the first and last value of a multi-element ordinal domain", () => {
+      const xAxis = axisX
+        .ordinal()
+        .scale(scaleBand().domain(["2020", "2021", "2022", "2023"]).range([0, 400]))
+        .ticks(2);
+      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+        .selectGroup("xAxis")
+        .call(xAxis)
+        .select(".sszvis-axis");
+      const labels = axisGroup
+        .selectAll("g.tick text")
+        .nodes()
+        .map((n) => (n as SVGTextElement).textContent);
+      expect(labels[0]).toBe("2020");
+      expect(labels.at(-1)).toBe("2023");
+    });
+
+    test("should skip a last domain value that is genuinely undefined", () => {
+      // NOTE: a domain hole is not expressible through scaleBand's own types, but it is
+      // exactly the case the undefined guard in setOrdinalTicks was written for.
+      const domain = ["2020", "2021", undefined] as unknown as string[];
+      const xAxis = axisX
+        .ordinal()
+        .scale(scaleBand().domain(domain).range([0, 300]))
+        .ticks(2);
+      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+        .selectGroup("xAxis")
+        .call(xAxis)
+        .select(".sszvis-axis");
+      const labels = axisGroup
+        .selectAll("g.tick text")
+        .nodes()
+        .map((n) => (n as SVGTextElement).textContent);
+      expect(labels).not.toContain("undefined");
     });
 
     test("should render axisX.pyramid() variant", () => {
