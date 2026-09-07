@@ -51,6 +51,15 @@ describe("component/bar", () => {
   const anchors = (node: Element) =>
     [...node.querySelectorAll("[data-tooltip-anchor]")].map((a) => a.getAttribute("transform"));
 
+  /** The names of the tweens d3 scheduled on a node, e.g. ["attr.x"]. */
+  const tweenNames = (node: Element) => {
+    const schedules = (node as Element & { __transition?: Record<string, unknown> }).__transition;
+    if (!schedules) return null;
+    return Object.values(schedules)
+      .filter((s): s is { tween: { name: string }[] } => typeof s === "object" && s !== null)
+      .flatMap((s) => s.tween.map((t) => t.name));
+  };
+
   describe("rendering", () => {
     test("should render one classed rect per datum", () => {
       const node = render(barOf(), testData);
@@ -118,7 +127,9 @@ describe("component/bar", () => {
     });
 
     test("should update the geometry when the data changes", () => {
-      const component = barOf();
+      // transition is off so that the updated geometry is readable on this tick; the
+      // transitioning case is covered in the transition block.
+      const component = barOf().transition(false);
       const g = group("update");
       g.datum(testData).call(component as never);
       g.datum([{ x: 99, y: 88, w: 77, h: 66 }]).call(component as never);
@@ -178,30 +189,23 @@ describe("component/bar", () => {
       expect(attrs(node, "height")).toEqual(["0"]);
     });
 
-    describe("known quirks", () => {
-      test("lets null through, which drops the attribute entirely", () => {
-        // NOTE: the guard's coercion is documented on handleMissingVal in bar.ts.
-        // Number(null) is 0, so null passes through and d3 removes the attribute - the rect
-        // silently falls back to the SVG default instead of the intended 0.
-        expect(xOf(null)).toBeNull();
-      });
+    test("should replace null with 0", () => {
+      // The guard used to let null through, and d3 removes the attribute for it - so the
+      // rect silently fell back to the SVG default instead of the intended 0.
+      expect(xOf(null)).toBe("0");
+    });
 
-      test("lets a numeric string through unconverted", () => {
-        // NOTE: harmless, since SVG parses it, but the guard does not normalise the type.
-        expect(xOf("50")).toBe("50");
-      });
+    test("should replace Infinity with 0", () => {
+      // A scale over a zero-width domain produces Infinity, and "Infinity" is not a valid
+      // SVG coordinate. dot guards this identically.
+      expect(xOf(Number.POSITIVE_INFINITY)).toBe("0");
+      expect(xOf(Number.NEGATIVE_INFINITY)).toBe("0");
+    });
 
-      test("lets Infinity through, producing an invalid attribute value", () => {
-        // NOTE: "Infinity" is not a valid SVG coordinate, so the browser ignores it. A
-        // scale over a zero-width domain can produce this, and it fails silently.
-        expect(xOf(Number.POSITIVE_INFINITY)).toBe("Infinity");
-      });
-
-      test("lets the empty string and booleans through", () => {
-        // NOTE: Number("") and Number(true) are both numeric, so neither is caught.
-        expect(xOf("")).toBe("");
-        expect(xOf(true)).toBe("true");
-      });
+    test("should normalise values that do coerce to their number", () => {
+      expect(xOf("50")).toBe("50");
+      expect(xOf("")).toBe("0");
+      expect(xOf(true)).toBe("1");
     });
   });
 
@@ -266,6 +270,46 @@ describe("component/bar", () => {
       expect(anchors(node)).toEqual(["translate(25,40)"]);
     });
 
+    test("should pass the index to the accessors read for the default anchor", () => {
+      const node = render(
+        bar()
+          .x((_d: Datum, i: number) => i * 100)
+          .y((_d: Datum, i: number) => i * 10)
+          .width(20)
+          .height(10),
+        testData
+      );
+      expect(attrs(node, "x")).toEqual(["0", "100"]);
+      // x + width / 2, y - with the index reaching the accessors, as it does for the rects
+      expect(anchors(node)).toEqual(["translate(10,0)", "translate(110,10)"]);
+    });
+
+    test("should pass the index to the accessors read for the centred anchor", () => {
+      const node = render(
+        bar()
+          .x((_d: Datum, i: number) => i * 100)
+          .y((_d: Datum, i: number) => i * 10)
+          .width(20)
+          .height(10)
+          .centerTooltip(true),
+        testData
+      );
+      expect(anchors(node)).toEqual(["translate(10,5)", "translate(110,15)"]);
+    });
+
+    test("should pass the index to the accessors read for a fractional anchor", () => {
+      const node = render(
+        bar()
+          .x((_d: Datum, i: number) => i * 100)
+          .y((_d: Datum, i: number) => i * 10)
+          .width(20)
+          .height(10)
+          .tooltipAnchor([1, 1]),
+        testData
+      );
+      expect(anchors(node)).toEqual(["translate(20,10)", "translate(120,20)"]);
+    });
+
     test("should position anchors from the missing-value-guarded geometry", () => {
       const node = render(
         bar()
@@ -314,56 +358,82 @@ describe("component/bar", () => {
       expect(withState.__transition).not.toBeUndefined();
     });
 
-    describe("known quirks", () => {
-      test("the transition property never animates anything", () => {
-        // BUG: `bars.transition(defaultTransition())` is created and thrown away, then the
-        // same four attributes are re-applied to the plain selection on the next line. So
-        // the transition schedules no tweens and the geometry always jumps. The property
-        // defaults to true, so every bar chart pays for an empty transition and no chart
-        // has ever animated its bars.
-        // current: geometry updates synchronously. expected: it eases over 300ms.
-        const component = barOf().transition(true);
-        const g = group("no-animation");
-        g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(component as never);
-        g.datum([{ x: 500, y: 400, w: 20, h: 30 }]).call(component as never);
-        const node = g.node() as SVGGElement;
-        // A live transition would still show the old values on this tick.
-        expect(attrs(node, "x")).toEqual(["500"]);
-        expect(attrs(node, "y")).toEqual(["400"]);
-        expect(attrs(node, "width")).toEqual(["20"]);
-        expect(attrs(node, "height")).toEqual(["30"]);
-      });
+    test("should give entering bars their geometry before the transition starts", () => {
+      // The entering elements are positioned on the join, so a fresh render is correct
+      // synchronously - nothing waits for the first animation frame.
+      const node = render(barOf().transition(true), testData);
+      expect(attrs(node, "x")).toEqual(["10", "60"]);
+      expect(attrs(node, "y")).toEqual(["20", "25"]);
+      expect(attrs(node, "width")).toEqual(["30", "30"]);
+      expect(attrs(node, "height")).toEqual(["40", "50"]);
+    });
 
-      test("applies the geometry attributes twice, so the first application is dead", () => {
-        // BUG: the same root cause as the inert transition above. x/y/width/height are set
-        // on the join, then set again after the discarded transition. Swapping x with y in
-        // the first block, or deleting the second line entirely, produces byte-identical
-        // output - verified by mutation testing, where all three variants were equivalent
-        // mutants that no test can distinguish.
-        // The fix for the transition removes the redundancy too: apply the geometry once,
-        // to `bars.transition(...)` when transitioning and to `bars` otherwise.
-        // This test can only assert the observable result: one consistent geometry.
-        const node = render(barOf(), [testData[0]]);
-        expect(attrs(node, "x")).toEqual(["10"]);
-        expect(attrs(node, "y")).toEqual(["20"]);
-        expect(attrs(node, "width")).toEqual(["30"]);
-        expect(attrs(node, "height")).toEqual(["40"]);
-      });
+    test("should animate the geometry between renders when enabled", async () => {
+      const component = barOf().transition(true);
+      const g = group("animated");
+      g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(component as never);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "x")).toEqual(["0"]);
 
-      test("still schedules an empty transition on every bar when enabled", () => {
-        // NOTE: documented alongside the transition property in bar.ts - the discarded
-        // transition still attaches d3 state to each node.
-        const node = render(barOf().transition(true), [testData[0]]);
-        const withState = bars(node)[0] as SVGRectElement & { __transition?: unknown };
-        expect(withState.__transition).not.toBeUndefined();
+      g.datum([{ x: 500, y: 400, w: 20, h: 30 }]).call(component as never);
+      // The update tweens from its previous value, so it still holds it on this tick.
+      expect(attrs(node, "x")).toEqual(["0"]);
+      expect(attrs(node, "y")).toEqual(["0"]);
+      expect(attrs(node, "width")).toEqual(["10"]);
+      expect(attrs(node, "height")).toEqual(["10"]);
 
-        const plain = bars(
-          render(barOf().transition(false), [testData[0]])
-        )[0] as SVGRectElement & {
-          __transition?: unknown;
-        };
-        expect(plain.__transition).toBeUndefined();
-      });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      expect(attrs(node, "x")).toEqual(["500"]);
+      expect(attrs(node, "y")).toEqual(["400"]);
+      expect(attrs(node, "width")).toEqual(["20"]);
+      expect(attrs(node, "height")).toEqual(["30"]);
+    });
+
+    test("should update the geometry synchronously when disabled", () => {
+      const component = barOf().transition(false);
+      const g = group("no-transition");
+      g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(component as never);
+      g.datum([{ x: 500, y: 400, w: 20, h: 30 }]).call(component as never);
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "x")).toEqual(["500"]);
+      expect(attrs(node, "height")).toEqual(["30"]);
+    });
+
+    test("should schedule one tween per geometry attribute and no more", () => {
+      // The transition used to be created and discarded, which attached d3 state to every
+      // bar without ever scheduling a tween. There is now exactly one tween per geometry
+      // attribute, and none at all when the property is off.
+      const node = render(barOf().fill("#f00").stroke("#00f").transition(true), [testData[0]]);
+      expect(tweenNames(bars(node)[0])).toEqual(["attr.x", "attr.y", "attr.width", "attr.height"]);
+
+      const plain = render(barOf().transition(false), [testData[0]]);
+      expect(tweenNames(bars(plain)[0])).toBeNull();
+    });
+
+    test("should not transition fill or stroke, so a colour change jumps", () => {
+      // Decided rather than inherited: the colour scales these charts use are categorical,
+      // and interpolating between two category colours reads as a third category. So the
+      // colours are applied to the selection and never appear among the tweens.
+      const component = barOf();
+      const g = group("colour-jump");
+      g.datum([testData[0]]).call(component.fill("#f00") as never);
+      g.datum([testData[0]]).call(component.fill("#0f0") as never);
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "fill")).toEqual(["#0f0"]);
+      expect(tweenNames(bars(node)[0])).not.toContain("attr.fill");
+    });
+
+    test("should apply the geometry exactly once per selection", () => {
+      // The geometry used to be written on the join and again after the discarded
+      // transition, which made the first write dead code: swapping x with y in the first
+      // block produced byte-identical output. Now the entering elements are written once
+      // and the merged selection - or its transition - once, and the two agree.
+      const node = render(barOf().transition(false), [testData[0]]);
+      expect(attrs(node, "x")).toEqual(["10"]);
+      expect(attrs(node, "y")).toEqual(["20"]);
+      expect(attrs(node, "width")).toEqual(["30"]);
+      expect(attrs(node, "height")).toEqual(["40"]);
     });
   });
 });
