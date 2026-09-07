@@ -17,27 +17,22 @@
  *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
  *                                                      Use "horizontal" to reset to a horizontal slant.
  * @property {number|Date} value             The current value of the slider. Should be set whenever slider interaction causes the state to change.
+ *                                            Required: rendering without it throws before any element is created. Values outside the
+ *                                            scale's domain are clamped to it.
  * @property {string, function} label         A string or function for the handle label. The datum associated with it is the current slider value.
  * @property {function} onchange              A callback function called whenever user interaction attempts to change the slider value.
  *                                            Note that this component will not change its own state. The callback function must affect some state change
  *                                            in order for this component's display to be updated.
  *
- * Note: the handle is positioned with a copy of the scale whose range is inset by half the handle
- * width at each end, so that the handle stays inside the track, but the interaction layer inverts
- * through the original scale. The two disagree by up to 5.5px, so a drag never quite reaches either
- * end of the domain. Because that inset copy is built from the sorted extent of the range, a
- * descending range is silently mirrored.
+ * Note: the handle, the track fill, the axis and the interaction layer all work through one copy
+ * of the scale whose range is inset by half the handle width at each end, so that the handle stays
+ * inside the track and pointing at the pixel where a value's handle is drawn reports that value.
+ * That copy is clamped, so a `value` outside the domain pins the handle to the end of the track
+ * rather than drawing it past the end. The inset is applied to each end of the configured range in
+ * turn, so a descending range keeps its direction.
  *
- * Note: ticks are drawn in the order they are configured - all major ticks, then all minor ticks -
- * and the first and last major label are anchored inwards by their position in that list rather
- * than by their position on the track, so unsorted major ticks anchor the wrong labels. A lone
- * major tick is anchored "start" rather than "middle".
- *
- * Note: the handle label element is appended on every render rather than joined, so a slider that
- * re-renders accumulates label elements; only the first is ever updated.
- *
- * Note: `value` is not clamped to the domain, and it has no default - a slider rendered before its
- * state exists throws part-way through, leaving a half-built control behind.
+ * Note: ticks are drawn in track order, not in the order they were configured, so the outermost
+ * major labels are anchored inwards whatever order `majorTicks` is given in.
  *
  * Note: the move behaviour's y-scale is given a range but no domain, so the second argument passed
  * to `onchange` is a meaningless fraction and should be ignored.

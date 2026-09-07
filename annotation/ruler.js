@@ -35,6 +35,10 @@ import translateString from '../svgUtils/translateString.js';
  *
  * @return {sszvis.component}
  */
+/** Horizontal distance between a dot and its label. */
+const LABEL_OFFSET = 10;
+/** Vertical nudge that drops a label's baseline clear of its dot. */
+const LABEL_BASELINE_NUDGE = 5;
 const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
   const selection = select(this);
   const props = selection.props();
@@ -51,8 +55,11 @@ const annotationRuler = () => component().prop("top").prop("bottom").prop("x", f
   const textSelection = selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
     const x = crispX(d);
     const y = crispY(d);
-    const dx = props.flip(d) ? -10 : 10;
-    const dy = y < props.top ? 2 * y : y > props.bottom ? 0 : 5;
+    const dx = props.flip(d) ? -LABEL_OFFSET : LABEL_OFFSET;
+    // A constant nudge, whether the dot sits on the ruler or above its top; only a
+    // dot below `bottom` needs none. The same expression lives in
+    // src/control/handleRuler.ts and the two must not drift.
+    const dy = y > props.bottom ? 0 : LABEL_BASELINE_NUDGE;
     return translateString(x + dx, y + dy);
   }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(d => props.label(d));
   if (props.reduceOverlap) {

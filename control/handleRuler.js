@@ -22,14 +22,10 @@ import translateString from '../svgUtils/translateString.js';
  * @property {string, function} color       A string or color for the fill color of the ruler dots.
  * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
  *
- * Note: the rule, the handle and the grip mark live in a group whose datum is the constant 0, so
- * an `x` accessor function is called with 0 rather than with a data value and those three elements
- * end up at NaN. In practice `x` has to be a number here, even though the dots and labels - which
- * are bound to the data - do work with an accessor.
- *
- * Note: the three static elements are appended on every render instead of being joined, so a
- * component that re-renders accumulates a rule, a handle and a grip mark each time, with the newest
- * copies painted over the dots.
+ * Note: there is one rule, one handle and one grip mark however many data points are bound, so
+ * they are positioned from a single datum - the first one. An `x` accessor is called with that
+ * datum; for data whose `x` values differ, the ruler follows the first. With no data bound there is
+ * no first datum, so an `x` accessor is called with `undefined` - pass a number in that case.
  *
  * Note: labels are written with `.html()`, as elsewhere in the library, because sszvis.modularText
  * produces markup. Escaping untrusted label data is the caller's responsibility. Unlike
@@ -39,10 +35,6 @@ import translateString from '../svgUtils/translateString.js';
  *
  * Note: the rule stops 4px above `bottom`, but the label's vertical nudge is decided against the
  * unadjusted `bottom`. A label falling in that 4px band is offset as if it were still on the ruler.
- *
- * Note: a label whose y is above `top` is nudged down by `2 * y` rather than by a constant, so it
- * lands well below its dot - by up to twice the distance to the top of the chart. The same
- * expression appears in sszvis.annotation.ruler.
  *
  * Note: `top` and `bottom` have no defaults; leaving them out writes NaN into the geometry and the
  * ruler silently disappears.
@@ -61,6 +53,8 @@ const HANDLE_MARK_BOTTOM = 0.85;
 const DOT_RADIUS = 3.5;
 /** Horizontal distance between a dot and its label. */
 const LABEL_OFFSET = 10;
+/** Vertical nudge that drops a label's baseline clear of its dot. */
+const LABEL_BASELINE_NUDGE = 5;
 function handleRuler() {
   return component().prop("x", functor).prop("y", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).render(function (data) {
     var _props$color;
@@ -76,13 +70,18 @@ function handleRuler() {
     const crispY = compose(halfPixel, props.y);
     const bottom = props.bottom - RULE_BOTTOM_INSET;
     const handleTop = props.top - HANDLE_HEIGHT;
-    const group = selection.selectAll(".sszvis-handleRuler__group").data([0]).join("g").classed("sszvis-handleRuler__group", true);
-    group.append("line").classed("sszvis-ruler__rule", true);
-    group.append("rect").classed("sszvis-handleRuler__handle", true);
-    group.append("line").classed("sszvis-handleRuler__handle-mark", true);
-    group.selectAll(".sszvis-ruler__rule").attr("x1", crispX).attr("y1", halfPixel(props.top)).attr("x2", crispX).attr("y2", halfPixel(bottom));
-    group.selectAll(".sszvis-handleRuler__handle").attr("x", d => crispX(d) - HANDLE_WIDTH / 2).attr("y", halfPixel(handleTop)).attr("width", HANDLE_WIDTH).attr("height", HANDLE_HEIGHT).attr("rx", 2).attr("ry", 2);
-    group.selectAll(".sszvis-handleRuler__handle-mark").attr("x1", crispX).attr("y1", halfPixel(handleTop + HANDLE_HEIGHT * HANDLE_MARK_TOP)).attr("x2", crispX).attr("y2", halfPixel(handleTop + HANDLE_HEIGHT * HANDLE_MARK_BOTTOM));
+    // There is a single rule, handle and grip mark whatever the data, so the group they
+    // live in is bound to one datum - the first - and `props.x` is read from that. The
+    // dots and labels below are joined on the whole data array as usual. The array holds
+    // one slot even for empty data, so the ruler still renders (from a constant `x`).
+    const rulerDatum = [data[0]];
+    const group = selection.selectAll(".sszvis-handleRuler__group").data(rulerDatum).join("g").classed("sszvis-handleRuler__group", true);
+    // The static parts are joined rather than appended so that a re-render - the normal
+    // case for an interactive ruler - neither duplicates them nor moves them in front of
+    // the dots, which are joined further down and must stay on top.
+    group.selectAll(".sszvis-ruler__rule").data(d => [d]).join("line").classed("sszvis-ruler__rule", true).attr("x1", crispX).attr("y1", halfPixel(props.top)).attr("x2", crispX).attr("y2", halfPixel(bottom));
+    group.selectAll(".sszvis-handleRuler__handle").data(d => [d]).join("rect").classed("sszvis-handleRuler__handle", true).attr("x", d => crispX(d) - HANDLE_WIDTH / 2).attr("y", halfPixel(handleTop)).attr("width", HANDLE_WIDTH).attr("height", HANDLE_HEIGHT).attr("rx", 2).attr("ry", 2);
+    group.selectAll(".sszvis-handleRuler__handle-mark").data(d => [d]).join("line").classed("sszvis-handleRuler__handle-mark", true).attr("x1", crispX).attr("y1", halfPixel(handleTop + HANDLE_HEIGHT * HANDLE_MARK_TOP)).attr("x2", crispX).attr("y2", halfPixel(handleTop + HANDLE_HEIGHT * HANDLE_MARK_BOTTOM));
     const dots = group.selectAll(".sszvis-ruler__dot").data(data).join("circle").classed("sszvis-ruler__dot", true);
     dots.attr("cx", crispX).attr("cy", crispY).attr("r", DOT_RADIUS)
     // `?? null` only to satisfy d3's attr signature: it treats null and undefined
@@ -95,7 +94,10 @@ function handleRuler() {
       const x = crispX(d);
       const y = crispY(d);
       const dx = props.flip(d) ? -LABEL_OFFSET : LABEL_OFFSET;
-      const dy = y < props.top ? 2 * y : y > props.bottom ? 0 : 5;
+      // A constant nudge, whether the dot sits on the ruler or above its top; only a
+      // dot below `bottom` needs none. The same expression lives in
+      // src/annotation/ruler.ts and the two must not drift.
+      const dy = y > props.bottom ? 0 : LABEL_BASELINE_NUDGE;
       return translateString(x + dx, y + dy);
     }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
   });

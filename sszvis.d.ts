@@ -3945,14 +3945,10 @@ declare function buttonGroup<T extends string | number = string | number>(): But
  * @property {string, function} color       A string or color for the fill color of the ruler dots.
  * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
  *
- * Note: the rule, the handle and the grip mark live in a group whose datum is the constant 0, so
- * an `x` accessor function is called with 0 rather than with a data value and those three elements
- * end up at NaN. In practice `x` has to be a number here, even though the dots and labels - which
- * are bound to the data - do work with an accessor.
- *
- * Note: the three static elements are appended on every render instead of being joined, so a
- * component that re-renders accumulates a rule, a handle and a grip mark each time, with the newest
- * copies painted over the dots.
+ * Note: there is one rule, one handle and one grip mark however many data points are bound, so
+ * they are positioned from a single datum - the first one. An `x` accessor is called with that
+ * datum; for data whose `x` values differ, the ruler follows the first. With no data bound there is
+ * no first datum, so an `x` accessor is called with `undefined` - pass a number in that case.
  *
  * Note: labels are written with `.html()`, as elsewhere in the library, because sszvis.modularText
  * produces markup. Escaping untrusted label data is the caller's responsibility. Unlike
@@ -3963,10 +3959,6 @@ declare function buttonGroup<T extends string | number = string | number>(): But
  * Note: the rule stops 4px above `bottom`, but the label's vertical nudge is decided against the
  * unadjusted `bottom`. A label falling in that 4px band is offset as if it were still on the ruler.
  *
- * Note: a label whose y is above `top` is nudged down by `2 * y` rather than by a constant, so it
- * lands well below its dot - by up to twice the distance to the top of the chart. The same
- * expression appears in sszvis.annotation.ruler.
- *
  * Note: `top` and `bottom` have no defaults; leaving them out writes NaN into the geometry and the
  * ruler silently disappears.
  *
@@ -3976,8 +3968,8 @@ declare function buttonGroup<T extends string | number = string | number>(): But
  */
 
 interface HandleRulerComponent<T = unknown> extends ComponentBuilder<HandleRulerComponent<T>> {
-    x(): (d: T | number) => NumberValue;
-    x(accessor: NumberAccessor$1<T | number>): HandleRulerComponent<T>;
+    x(): (d: T) => NumberValue;
+    x(accessor: NumberAccessor$1<T>): HandleRulerComponent<T>;
     y(): (d: T) => NumberValue;
     y(accessor: NumberAccessor$1<T>): HandleRulerComponent<T>;
     top(): number;
@@ -4077,27 +4069,22 @@ declare function selectMenu<T extends string = string>(): SelectComponent<T>;
  *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
  *                                                      Use "horizontal" to reset to a horizontal slant.
  * @property {number|Date} value             The current value of the slider. Should be set whenever slider interaction causes the state to change.
+ *                                            Required: rendering without it throws before any element is created. Values outside the
+ *                                            scale's domain are clamped to it.
  * @property {string, function} label         A string or function for the handle label. The datum associated with it is the current slider value.
  * @property {function} onchange              A callback function called whenever user interaction attempts to change the slider value.
  *                                            Note that this component will not change its own state. The callback function must affect some state change
  *                                            in order for this component's display to be updated.
  *
- * Note: the handle is positioned with a copy of the scale whose range is inset by half the handle
- * width at each end, so that the handle stays inside the track, but the interaction layer inverts
- * through the original scale. The two disagree by up to 5.5px, so a drag never quite reaches either
- * end of the domain. Because that inset copy is built from the sorted extent of the range, a
- * descending range is silently mirrored.
+ * Note: the handle, the track fill, the axis and the interaction layer all work through one copy
+ * of the scale whose range is inset by half the handle width at each end, so that the handle stays
+ * inside the track and pointing at the pixel where a value's handle is drawn reports that value.
+ * That copy is clamped, so a `value` outside the domain pins the handle to the end of the track
+ * rather than drawing it past the end. The inset is applied to each end of the configured range in
+ * turn, so a descending range keeps its direction.
  *
- * Note: ticks are drawn in the order they are configured - all major ticks, then all minor ticks -
- * and the first and last major label are anchored inwards by their position in that list rather
- * than by their position on the track, so unsorted major ticks anchor the wrong labels. A lone
- * major tick is anchored "start" rather than "middle".
- *
- * Note: the handle label element is appended on every render rather than joined, so a slider that
- * re-renders accumulates label elements; only the first is ever updated.
- *
- * Note: `value` is not clamped to the domain, and it has no default - a slider rendered before its
- * state exists throws part-way through, leaving a half-built control behind.
+ * Note: ticks are drawn in track order, not in the order they were configured, so the outermost
+ * major labels are anchored inwards whatever order `majorTicks` is given in.
  *
  * Note: the move behaviour's y-scale is given a range but no domain, so the second argument passed
  * to `onchange` is a meaningless fraction and should be ignored.

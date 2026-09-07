@@ -16,14 +16,10 @@
  * @property {string, function} color       A string or color for the fill color of the ruler dots.
  * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
  *
- * Note: the rule, the handle and the grip mark live in a group whose datum is the constant 0, so
- * an `x` accessor function is called with 0 rather than with a data value and those three elements
- * end up at NaN. In practice `x` has to be a number here, even though the dots and labels - which
- * are bound to the data - do work with an accessor.
- *
- * Note: the three static elements are appended on every render instead of being joined, so a
- * component that re-renders accumulates a rule, a handle and a grip mark each time, with the newest
- * copies painted over the dots.
+ * Note: there is one rule, one handle and one grip mark however many data points are bound, so
+ * they are positioned from a single datum - the first one. An `x` accessor is called with that
+ * datum; for data whose `x` values differ, the ruler follows the first. With no data bound there is
+ * no first datum, so an `x` accessor is called with `undefined` - pass a number in that case.
  *
  * Note: labels are written with `.html()`, as elsewhere in the library, because sszvis.modularText
  * produces markup. Escaping untrusted label data is the caller's responsibility. Unlike
@@ -33,10 +29,6 @@
  *
  * Note: the rule stops 4px above `bottom`, but the label's vertical nudge is decided against the
  * unadjusted `bottom`. A label falling in that 4px band is offset as if it were still on the ruler.
- *
- * Note: a label whose y is above `top` is nudged down by `2 * y` rather than by a constant, so it
- * lands well below its dot - by up to twice the distance to the top of the chart. The same
- * expression appears in sszvis.annotation.ruler.
  *
  * Note: `top` and `bottom` have no defaults; leaving them out writes NaN into the geometry and the
  * ruler silently disappears.
@@ -49,8 +41,8 @@ import { type NumberValue } from "d3";
 import { type ComponentBuilder } from "../d3-component.js";
 import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types.js";
 export interface HandleRulerComponent<T = unknown> extends ComponentBuilder<HandleRulerComponent<T>> {
-    x(): (d: T | number) => NumberValue;
-    x(accessor: NumberAccessor<T | number>): HandleRulerComponent<T>;
+    x(): (d: T) => NumberValue;
+    x(accessor: NumberAccessor<T>): HandleRulerComponent<T>;
     y(): (d: T) => NumberValue;
     y(accessor: NumberAccessor<T>): HandleRulerComponent<T>;
     top(): number;
