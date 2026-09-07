@@ -80,9 +80,8 @@ describe("maps/choropleth", () => {
     container = document.createElement("div");
     container.id = "chart-container";
     document.body.appendChild(container);
-    // swissMapProjection memoizes on width, height and cache key alone, and choropleth always
-    // passes the same hardcoded key, so every test would otherwise inherit the projection the
-    // first one fitted. See the cache-key quirk below.
+    // Cleared so that the keys the tests fit their own expectations under - choropleth itself
+    // passes none - cannot leak between tests.
     swissMapProjection.cache.clear();
   });
 
@@ -101,10 +100,7 @@ describe("maps/choropleth", () => {
     features: [square("a"), square("b", 2), square("c", 4)],
   });
 
-  /**
-   * A distinct size per render, so the projection cache key - which choropleth hardcodes - differs
-   * between renders that are meant to be independent.
-   */
+  /** A distinct size per render, so no two renders are compared at the same dimensions. */
   const nextSize = () => 100 + ++size;
 
   type Choropleth<T extends object> = ReturnType<typeof choropleth<T>>;
@@ -213,6 +209,49 @@ describe("maps/choropleth", () => {
       const node = render(fullData);
       const paths = [...node.querySelectorAll("path")];
       expect(paths.indexOf(areas(node)[0])).toBeLessThan(paths.indexOf(borders(node)[0]));
+    });
+  });
+
+  describe("the projection", () => {
+    test("projects two different maps rendered at the same size independently", () => {
+      const near: FeatureCollection<Polygon> = {
+        type: "FeatureCollection",
+        features: [square("a")],
+      };
+      const far: FeatureCollection<Polygon> = {
+        type: "FeatureCollection",
+        features: [square("a", 40)],
+      };
+      const first = render(fullData, (c) => c.withLake(false), {
+        collection: near,
+        size: 200,
+        key: "cache-first",
+      });
+      const second = render(fullData, (c) => c.withLake(false), {
+        collection: far,
+        size: 200,
+        key: "cache-second",
+      });
+      // Each map is fitted to the features it was given, so each fills its own destination box.
+      expect(areas(first)).toHaveLength(1);
+      expect(attrs(first, "d")).toEqual([
+        swissMapPath(200, 200, near, "near-alone")(near.features[0]),
+      ]);
+      expect(attrs(second, "d")).toEqual([
+        swissMapPath(200, 200, far, "far-alone")(far.features[0]),
+      ]);
+      const coordinates = (attrs(second, "d")[0] as string)
+        .split(/[ML,Z]/)
+        .filter(Boolean)
+        .map(Number);
+      expect(coordinates.every((v) => v >= 0 && v <= 200)).toBe(true);
+    });
+
+    // The component passes no cache key at all, so swissMapProjection's bounds cache is bypassed
+    // and nothing of a choropleth's is retained between renders.
+    test("leaves no entry in the projection bounds cache", () => {
+      render(fullData, (c) => c, { size: 210 });
+      expect(swissMapProjection.cache.size).toBe(0);
     });
   });
 
@@ -591,55 +630,6 @@ describe("maps/choropleth", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: the projection cache key is the literal string "zurichStadtfeatures", the same for
-    // every choropleth on the page and for every map type. swissMapProjection keys its memo on
-    // width, height and that string alone, so two maps of *different* areas rendered at the same
-    // size share the projection fitted to whichever rendered first. Here the second map's features
-    // sit far outside the first's bounds and are projected outside the destination box.
-    test("shares one projection between two different maps rendered at the same size", () => {
-      const near: FeatureCollection<Polygon> = {
-        type: "FeatureCollection",
-        features: [square("a")],
-      };
-      const far: FeatureCollection<Polygon> = {
-        type: "FeatureCollection",
-        features: [square("a", 40)],
-      };
-      const first = render(fullData, (c) => c.withLake(false), {
-        collection: near,
-        size: 200,
-        key: "cache-first",
-      });
-      const second = render(fullData, (c) => c.withLake(false), {
-        collection: far,
-        size: 200,
-        key: "cache-second",
-      });
-      // Only one cache entry between them, under the key choropleth hardcodes.
-      expect(swissMapProjection.cache.size).toBe(1);
-      expect(swissMapProjection.cache.has("200,200,zurichStadtfeatures")).toBe(true);
-      expect(areas(first)).toHaveLength(1);
-      // Fitted on its own, the far square would fill the destination box exactly as the near one
-      // does; instead it is drawn by the near square's projection, which puts it far outside.
-      const fitted = swissMapPath(200, 200, far, "far-on-its-own");
-      expect(attrs(second, "d")).not.toEqual([fitted(far.features[0])]);
-      const reused = swissMapPath(200, 200, near, "near-on-its-own");
-      expect(attrs(second, "d")).toEqual([reused(far.features[0])]);
-      const coordinates = (attrs(second, "d")[0] as string)
-        .split(/[ML,Z]/)
-        .filter(Boolean)
-        .map(Number);
-      expect(coordinates.some((v) => v < 0 || v > 200)).toBe(true);
-    });
-
-    // NOTE: the cache key is also wrong on its own terms - "zurichStadtfeatures" is not one of the
-    // map ids in src/map/mapUtils.ts, so it reads as a leftover rather than an identifier of what
-    // is being fitted.
-    test("keys the projection cache on a string that names no map", () => {
-      render(fullData, (c) => c, { size: 210 });
-      expect([...swissMapProjection.cache.keys()]).toEqual(["210,210,zurichStadtfeatures"]);
-    });
-
     // BUG: width and height have no defaults and are not validated. fitSize([undefined, undefined])
     // produces a projection whose scale is NaN, so every area is drawn with a path of NaN
     // coordinates - which the browser drops, leaving a blank map - rather than the component
