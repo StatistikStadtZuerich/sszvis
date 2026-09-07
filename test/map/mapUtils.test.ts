@@ -1,5 +1,6 @@
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { describe, expect, test } from "vitest";
+import type { PointProjection } from "../../src/map/mapUtils.js";
 import {
   AGGLOMERATION_2012_KEY,
   GEO_KEY_DEFAULT,
@@ -165,6 +166,25 @@ describe("map utils", () => {
       expect(pixelsFromGeoDistance(stretched, [0, 0], 100_000)).toBeCloseTo(plain * 5.5, 10);
     });
 
+    // NOTE: a projection that clips a corner away returns null. The JavaScript indexed that null
+    // and produced a bare "Cannot read properties of null"; this raises a descriptive TypeError
+    // from the same point instead, which is the one deliberate error-message change in the port.
+    test("throws a descriptive TypeError when the projection clips the measured square away", () => {
+      const clipping: PointProjection = () => null;
+      expect(() => pixelsFromGeoDistance(clipping, [0, 0], 100_000)).toThrow(
+        new TypeError(
+          "pixelsFromGeoDistance: the projection clipped away the bounds of the measured square"
+        )
+      );
+    });
+
+    // NOTE: only the far corner clips here, so the guard has to cover either bound, not just the
+    // first one read.
+    test("throws when only one of the two corners is clipped away", () => {
+      const clipsUpper: PointProjection = ([lon, lat]) => (lon > 0 ? null : [lon, lat]);
+      expect(() => pixelsFromGeoDistance(clipsUpper, [0, 0], 100_000)).toThrow(TypeError);
+    });
+
     test("takes the absolute span, so a flipped axis still yields a positive size", () => {
       const flipped = ([lon, lat]: [number, number]): [number, number] => [lon, -lat];
       const plain = pixelsFromGeoDistance(identity, [0, 0], 100_000);
@@ -252,6 +272,26 @@ describe("map utils", () => {
 
     test("ignores data whose key matches no feature", () => {
       const merged = prepareMergedGeoData([{ id: "nope", value: 1 }], geoJson, "id");
+      expect(merged.every((d) => d.datum === undefined)).toBe(true);
+    });
+
+    // NOTE: grouping goes through a property access, so a symbol data key stays a symbol property.
+    // A GeoJSON id is only ever a string or a number, so such a datum can never be matched - in
+    // particular not by a feature id that spells out the symbol's description.
+    test("never matches a datum keyed by a symbol", () => {
+      const marker = Symbol("a");
+      const merged = prepareMergedGeoData(
+        [{ id: marker, value: 1 }],
+        collection(square("a"), square("Symbol(a)")),
+        "id"
+      );
+      expect(merged.every((d) => d.datum === undefined)).toBe(true);
+    });
+
+    // NOTE: two symbols with the same description are distinct property keys, so neither can stand
+    // in for the other.
+    test("keeps two symbols with the same description distinct", () => {
+      const merged = prepareMergedGeoData([{ id: Symbol("a"), value: 1 }], geoJson, "id");
       expect(merged.every((d) => d.datum === undefined)).toBe(true);
     });
 
@@ -367,12 +407,16 @@ describe("map utils", () => {
       expect(getGeoJsonCenter(long)).toEqual([1, 2, 3]);
     });
 
-    // BUG: `properties: null` is spec-legal GeoJSON, but `geoJson.properties.cachedCenter` is
-    // dereferenced unguarded, so a valid feature crashes the render.
-    test("throws for a feature with null properties", () => {
+    // BUG: `properties: null` is spec-legal GeoJSON, but the centre has nowhere to be cached, so a
+    // valid feature crashes the render. The JavaScript dereferenced it unguarded and produced a
+    // bare "Cannot read properties of null (reading 'cachedCenter')"; the port raises the same
+    // class with a message that names the cause.
+    test("throws a descriptive TypeError for a feature with null properties", () => {
       const feature = square("a");
       feature.properties = null;
-      expect(() => getGeoJsonCenter(feature)).toThrow();
+      expect(() => getGeoJsonCenter(feature)).toThrow(
+        new TypeError("getGeoJsonCenter: the feature has no properties object to cache onto")
+      );
     });
   });
 
