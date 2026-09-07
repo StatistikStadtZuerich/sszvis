@@ -63,14 +63,12 @@ export type PointProjection = (point: GeoPoint) => [number, number] | null;
  *
  * Note: the cache key is width, height and featureBoundsCacheKey only. Reusing a key for a
  * different feature collection returns the projection fitted to the first collection, which places
- * the second collection outside the destination box.
- *
- * Note: featureBoundsCacheKey is optional, and every call that omits it shares the single key
- * "<width>,<height>,undefined". Two different maps rendered at the same size collide silently.
+ * the second collection outside the destination box. Omitting the key is therefore safe rather than
+ * shared: with no key the cache is bypassed and the collection is always fitted afresh.
  *
  * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
- * distinct width/height/key triple for the lifetime of the page - a chart that reprojects on resize
- * accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
+ * distinct width/height/key triple for the lifetime of the page - a keyed chart that reprojects on
+ * resize accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
  * release them.
  *
  * See test/map/mapUtils.test.ts.
@@ -80,20 +78,38 @@ export type PointProjection = (point: GeoPoint) => [number, number] | null;
  * @param  {Object} featureCollection               The feature collection that will be projected by the returned function. Needed to calculated a good size.
  * @param  {String} [featureBoundsCacheKey]         The cache key for the expensive bounds calculation.
  *                                                  Must identify the feature collection: the collection
- *                                                  itself is not part of the key.
+ *                                                  itself is not part of the key. Omit it to skip the
+ *                                                  cache entirely.
  * @return {Function}                               The projection function.
  */
-export const swissMapProjection = memoize(
+const memoizedSwissMapProjection = memoize(
   (
     width: number,
     height: number,
     featureCollection: MapGeoObject,
     // Part of the signature only so that the memoize resolver below can read it.
-    _featureBoundsCacheKey?: string
+    _featureBoundsCacheKey: string
   ): GeoProjection => geoMercator().fitSize([width, height], featureCollection),
   // Memoize resolver
   (width, height, _, featureBoundsCacheKey) => `${width},${height},${featureBoundsCacheKey}`
 );
+
+export function swissMapProjection(
+  width: number,
+  height: number,
+  featureCollection: MapGeoObject,
+  featureBoundsCacheKey?: string
+): GeoProjection {
+  // Without a key there is nothing that identifies the collection, so caching would hand a second
+  // map the first map's fit. An uncached fitSize is always correct.
+  if (featureBoundsCacheKey === undefined) {
+    return geoMercator().fitSize([width, height], featureCollection);
+  }
+  return memoizedSwissMapProjection(width, height, featureCollection, featureBoundsCacheKey);
+}
+
+/** The bounds cache backing keyed calls. Clearing it is the only way to release its entries. */
+swissMapProjection.cache = memoizedSwissMapProjection.cache;
 
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
