@@ -56,6 +56,26 @@
     Arial,
     sans-serif
   );
+  --stzh-font-bold: var(
+    --stzh-font-family-bold,
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+}
+
+/**
+ * Bold runs inside SVG text.
+ *
+ * sszvis.modularTextSVG().bold() emits `<tspan style="font-weight:bold">`. The design system's
+ * --stzh-font-family-regular is a Roman-only web font, so the browser finds every glyph in it,
+ * never falls through to the Helvetica fallbacks (font fallback is per glyph, not per weight),
+ * and has no bold face to use - the text stays visually regular however the weight is set.
+ * Bold runs therefore need the design system's bold family, not just a heavier weight.
+ */
+.sszvis-svg-layer tspan[style*="font-weight:bold"] {
+  font-family: var(--stzh-font-bold);
 }
 
 /**
