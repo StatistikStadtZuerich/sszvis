@@ -59,11 +59,8 @@
  * alike. join() has already removed the departing circles synchronously, so a bubble leaving the
  * data disappears instantly rather than shrinking away, whatever `transition` says.
  *
- * Note: the join is keyed on geoJson.id, which GeoJSON does not require. Features that have one keep
- * their circles across a data change; features without one all key to "undefined", so on every
- * re-render the first node matches and every node past it is exited and replaced by a fresh enter
- * node - the count stays right, but all but one circle is destroyed and recreated each time, losing
- * any transition in flight.
+ * Note: the join is keyed on geoJson.id, falling back to the feature's position in the merged data
+ * for a feature without one, so a keyless collection keeps its circles across renders too.
  *
  * Note: the radius accessor is called for every circle twice over - once for the attribute and once
  * for the transition - and again for each comparison the size sort makes, so it runs several times
@@ -147,14 +144,14 @@ export interface MapRendererBubbleComponent<T = unknown>
 }
 
 /**
- * The join key, as d3 receives it: the feature id, or the string "undefined" for a feature without
- * one - which is why keyless features all collide. d3 appends "" to whatever this returns, so a
- * plain d.geoJson.id would already be stringified; String() only makes the "undefined" fallback
- * explicit for the type. The one divergence is a symbol id, on which d3's `+ ""` would have thrown
- * and String() does not - GeoJSON does not allow one, and no test covers it.
+ * The join key: the feature id, which GeoJSON does not require. A feature without one falls back to
+ * its position in the merged data, so a keyless collection still keeps each circle across renders
+ * instead of collapsing every feature onto the key "undefined". The "#" prefix keeps the fallback
+ * from colliding with a real numeric id. d3 appends "" to whatever this returns, so an id is
+ * stringified either way; String() only makes that explicit for the type.
  */
-function keyOf<T>(d: MergedGeoDatum<T>): string {
-  return String(d.geoJson.id);
+function keyOf<T>(d: MergedGeoDatum<T>, index: number): string {
+  return d.geoJson.id == null ? `#${index}` : String(d.geoJson.id);
 }
 
 /** Reads the datum off a merged entry, as the JavaScript's module-level accessor did. */
@@ -227,8 +224,6 @@ export default function <T = unknown>(): MapRendererBubbleComponent<T> {
       const anchoredCircles = selection
         .selectGroup("anchoredCircles")
         .selectAll<SVGCircleElement, MergedGeoDatum<T>>(".sszvis-anchored-circle")
-        // The key is the feature id, stringified by d3 - which is how every feature without one
-        // collides on "undefined". See the module note.
         .data(props.mergedData, keyOf)
         .join("circle")
         .attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering")
