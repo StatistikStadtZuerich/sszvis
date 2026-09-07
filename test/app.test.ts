@@ -455,30 +455,8 @@ describe("app", () => {
     });
   });
 
-  describe("known quirks", () => {
-    // NOTE: app() returns undefined and never unregisters its resize listener, so
-    // every app created on a page keeps re-rendering for the lifetime of the
-    // document (src/app.ts:170). Each app installs its own scheduleUpdate closure, so
-    // viewport's de-duplication by identity (src/viewport/resize.ts:106) does not help.
-    test("keeps rendering after the app is no longer needed", async () => {
-      const renderA = vi.fn();
-      const renderB = vi.fn();
-      app({ init: async () => {}, render: renderA });
-      app({ init: async () => {}, render: renderB });
-      await nextFrame();
-      viewport.trigger("resize");
-      await nextFrame();
-      expect(renderA).toHaveBeenCalledTimes(2);
-      expect(renderB).toHaveBeenCalledTimes(2);
-    });
-
-    // BUG: scheduleUpdate only clears renderScheduled after render returns (src/app.ts:144),
-    // so the guard at src/app.ts:140 is still closed for a dispatch made from inside render.
-    // The action runs and the state changes, but no frame is queued for it, and the stale
-    // state stays on screen until an unrelated trigger - here a resize - flushes it.
-    // got:  a dispatch from render updates the state invisibly
-    // want: the state a render dispatches is rendered
-    test("swallows the render for an action dispatched from inside render", async () => {
+  describe("dispatching from render", () => {
+    test("renders the state the dispatch produced", async () => {
       const seen: number[] = [];
       let dispatched = false;
       app<{ count: number }>({
@@ -500,12 +478,73 @@ describe("app", () => {
       });
       await nextFrame();
       await nextFrame();
-      // The count is 1 by now, but only the render of 0 ever happened.
-      expect(seen).toEqual([0]);
+      expect(seen).toEqual([0, 1]);
+    });
 
+    test("terminates when render dispatches unconditionally", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const seen: number[] = [];
+      app<{ count: number }>({
+        init: async (state) => {
+          state.count = 0;
+        },
+        actions: {
+          bump: (state) => {
+            state.count += 1;
+          },
+        },
+        render: (state, actions) => {
+          seen.push(state.count);
+          actions.bump();
+        },
+      });
+      for (let index = 0; index < 20; index++) await nextFrame();
+
+      // The initial render plus the capped run of cascaded ones, and no more.
+      expect(seen).toHaveLength(11);
+      expect(warn.mock.calls.flat().join()).toContain(
+        '[sszvis.app] Stopped after 10 renders scheduled from inside "render".'
+      );
+    });
+
+    test("does not count a dispatch made outside render towards the cascade", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const render = vi.fn();
+      app<{ count: number }>({
+        init: async (state) => {
+          state.count = 0;
+        },
+        actions: {
+          bump: (state) => {
+            state.count += 1;
+          },
+        },
+        render,
+      });
+      await nextFrame();
+      for (let index = 0; index < 15; index++) {
+        render.mock.lastCall?.[1].bump();
+        await nextFrame();
+      }
+      expect(render).toHaveBeenCalledTimes(16);
+    });
+  });
+
+  describe("known quirks", () => {
+    // NOTE: app() returns undefined and never unregisters its resize listener, so
+    // every app created on a page keeps re-rendering for the lifetime of the
+    // document (src/app.ts:170). Each app installs its own scheduleUpdate closure, so
+    // viewport's de-duplication by identity (src/viewport/resize.ts:106) does not help.
+    test("keeps rendering after the app is no longer needed", async () => {
+      const renderA = vi.fn();
+      const renderB = vi.fn();
+      app({ init: async () => {}, render: renderA });
+      app({ init: async () => {}, render: renderB });
+      await nextFrame();
       viewport.trigger("resize");
       await nextFrame();
-      expect(seen).toEqual([0, 1]);
+      expect(renderA).toHaveBeenCalledTimes(2);
+      expect(renderB).toHaveBeenCalledTimes(2);
     });
 
     // NOTE: the original JSDoc typed actions as `(s: Draft, p?: Props) => Effect | void`,
