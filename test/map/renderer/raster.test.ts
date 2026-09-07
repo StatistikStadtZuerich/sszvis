@@ -205,7 +205,7 @@ describe("map/renderer/raster", () => {
             .position((d: Cell) => [d.x, d.y])
             .fill("#ff0000")
         )
-      ).toThrow(new RegExp(`${name} is required`));
+      ).toThrow(new RegExp(`the ${name} property is required`));
       // Nothing is drawn, so no stale canvas is left behind either.
       expect(canvasOf(target.node() as HTMLElement)).toBeNull();
     });
@@ -226,12 +226,12 @@ describe("map/renderer/raster", () => {
     ])("reports a missing %s, naming the component and the property", (name, raster) => {
       const target = layer();
       expect(() => target.datum([cell(1, 1)]).call(raster())).toThrow(
-        new RegExp(`\\[map/renderer/raster\\] ${name} is required`)
+        new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`)
       );
       // The same report for an empty dataset, which used to hide the misconfiguration entirely,
       // and no canvas left behind either way.
       expect(() => layer().datum([]).call(raster())).toThrow(
-        new RegExp(`\\[map/renderer/raster\\] ${name} is required`)
+        new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`)
       );
       expect(canvasOf(target.node() as HTMLElement)).toBeNull();
     });
@@ -247,7 +247,7 @@ describe("map/renderer/raster", () => {
               .position((d: Cell) => [d.x, d.y])
               .fill("#ff0000")
           )
-      ).toThrow(/width is required/);
+      ).toThrow(/the width property is required/);
     });
 
     // A fractional dimension is rounded up, so the raster covers the layers it aligns with rather
