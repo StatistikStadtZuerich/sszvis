@@ -140,14 +140,9 @@ describe("svgUtils/crisp", () => {
       expect(dy).toBeCloseTo(0.1, 10);
     });
 
-    test("throws when the transform string contains no translate instruction", () => {
-      // BUG: the regex match result is dereferenced as m[2] without a null check, so any
-      // transform lacking a translate throws instead of reporting "no shift". The sole
-      // caller, axis.ts, passes `this.getAttribute("transform") || ""` — that fallback
-      // leads straight into this throw whenever a tick group has no transform.
-      // current: TypeError. expected: [0, 0].
-      expect(() => transformTranslateSubpixelShift("rotate(45)")).toThrow(TypeError);
-      expect(() => transformTranslateSubpixelShift("")).toThrow(TypeError);
+    test("should return a zero shift when the transform contains no translate", () => {
+      expect(transformTranslateSubpixelShift("rotate(45)")).toEqual([0, 0]);
+      expect(transformTranslateSubpixelShift("")).toEqual([0, 0]);
     });
   });
 
