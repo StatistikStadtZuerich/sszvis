@@ -36,11 +36,10 @@
  * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are all
  * required in practice, and each fails differently when left out.
  *
- * Note: the over, out and click handlers registered through .on() are called with undefined rather
- * than with the map entity's datum. The listeners are written for d3 v3, where a listener received
- * the datum first; since d3 v6 it receives the event first, so what they read as `d.datum` is a
- * property of a PointerEvent. The dispatch itself works, unlike the geojson renderer's, so a
- * handler does fire - it just learns nothing about which entity was hovered.
+ * Note: the over, out and click handlers registered through .on() are called with the hovered map
+ * entity's datum - undefined for a feature that matched no data. The circles carry
+ * pointer-events: none (see below), so these handlers are only reachable by dispatching an event
+ * on a circle directly; a real pointer reaches the base layer underneath instead.
  *
  * Note: on() forwards straight to a d3 dispatch, so it inherits its semantics: it returns the
  * component for chaining and the handler when called with a name alone, an unknown event name
@@ -102,8 +101,11 @@ type BubbleValue<T, R> = R | ((datum: T) => R);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredBubbleValue<T, R> = (datum?: T) => R;
 
-/** A handler as this component's own event API delivers it - which is to say, with undefined. */
-type BubbleEventHandler = (datum: undefined) => void;
+/**
+ * A handler as this component's own event API delivers it: with the hovered entity's datum, which
+ * is undefined for a feature that matched no data.
+ */
+type BubbleEventHandler<T = unknown> = (datum: T | undefined) => void;
 
 type BubbleProps<T> = {
   mergedData: MergedGeoDatum<T>[];
@@ -133,11 +135,11 @@ export interface MapRendererBubbleComponent<T = unknown>
   transition(enabled: boolean): MapRendererBubbleComponent<T>;
   /**
    * Registers a handler for "over", "out" or "click", returning the component so it can be
-   * chained; called with an event name alone it returns that handler. Note that a handler is
-   * called with undefined rather than with the hovered entity's datum; see the module note.
+   * chained; called with an event name alone it returns that handler. A handler is called with
+   * the hovered entity's datum, which is undefined for a feature that matched no data.
    */
-  on(eventName: string, handler: BubbleEventHandler | null): MapRendererBubbleComponent<T>;
-  on(eventName: string): BubbleEventHandler | undefined;
+  on(eventName: string, handler: BubbleEventHandler<T> | null): MapRendererBubbleComponent<T>;
+  on(eventName: string): BubbleEventHandler<T> | undefined;
 }
 
 /**
@@ -197,16 +199,6 @@ function keyOf<T>(d: MergedGeoDatum<T>): string {
 
 /** Reads the datum off a merged entry, as the JavaScript's module-level accessor did. */
 const datumAcc = fn.prop("datum");
-
-/**
- * What the mouse listeners actually read. They were written for d3 v3, where a listener was called
- * with the datum; since d3 v6 the first argument is the event, so `datum` here is a property of a
- * PointerEvent and is always undefined. Transcribed rather than corrected so the port does not
- * change behaviour - the fix is to take the datum from d3's second argument.
- */
-function legacyDatum(event: Event & { datum?: undefined }): undefined {
-  return event.datum;
-}
 
 /**
  * Reads the anchor position for a feature, as the JavaScript did: through mapPath.projection(),
@@ -295,14 +287,16 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
               ? exit.transition(defaultTransition()).attr("r", 0).remove()
               : exit.remove()
         )
-        .on("mouseover", function (e: Event & { datum?: undefined }) {
-          event.call("over", this, legacyDatum(e));
+        // d3 calls a listener with the event first and the bound datum second; the datum here is
+        // the merged entry, so the handler is handed the map entity's own datum off it.
+        .on("mouseover", function (_event: Event, d: MergedGeoDatum<T>) {
+          event.call("over", this, d.datum);
         })
-        .on("mouseout", function (e: Event & { datum?: undefined }) {
-          event.call("out", this, legacyDatum(e));
+        .on("mouseout", function (_event: Event, d: MergedGeoDatum<T>) {
+          event.call("out", this, d.datum);
         })
-        .on("click", function (e: Event & { datum?: undefined }) {
-          event.call("click", this, legacyDatum(e));
+        .on("click", function (_event: Event, d: MergedGeoDatum<T>) {
+          event.call("click", this, d.datum);
         })
         .attr("transform", (d) => {
           const position = anchorPosition(props.mapPath, d.geoJson);

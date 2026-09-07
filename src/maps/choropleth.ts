@@ -60,8 +60,8 @@
  * @function on(String, function)                     This component has an event handler interface for binding events to the map entities.
  *                                                    The available events are 'over', 'out', and 'click'. These are triggered on map
  *                                                    elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
- *                                                    A handler is called with undefined rather than with the entity's
- *                                                    datum; see the note below.
+ *                                                    A handler is called with the datum of the entity the event happened
+ *                                                    on; see the note below.
  *
  * Note: the projection cache key is the literal string "zurichStadtfeatures" for every choropleth
  * on the page, whatever it is a map of - and it names no map id in src/map/mapUtils.ts.
@@ -89,6 +89,11 @@
  * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
  * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
  * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
+ *
+ * Note: a handler receives the datum bound to the event target it fired on - the base layer's
+ * areas carry a merged entry, so the handler gets the entity's own datum, undefined where the
+ * entity matched no data. An event target an anchored shape contributed carries no merged entry,
+ * so a handler bound through this component is called with undefined for it.
  *
  * Note: the event dispatch is created once per choropleth() call and closed over, while the four
  * renderers keep their props on the element they rendered into. So one instance can draw into two
@@ -184,10 +189,11 @@ type MeshStyleValue<R extends string | number> =
   | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
 
 /**
- * A handler as this component's event API delivers it - which is to say, with undefined. See the
- * note on legacyDatum below.
+ * A handler as this component's event API delivers it: with the datum of the map entity the event
+ * happened on, which is undefined for an entity that matched no data - and for an event target an
+ * anchored shape contributed, which carries no merged entry of its own.
  */
-export type ChoroplethEventHandler = (datum: undefined) => void;
+export type ChoroplethEventHandler<T = object> = (datum: T | undefined) => void;
 
 /**
  * The props as the render reads them. features is typed as present because a render only succeeds
@@ -261,22 +267,23 @@ export interface ChoroplethComponent<T extends object = object>
   lakePathColor(value: GeoStyleValue<string>): ChoroplethComponent<T>;
   /**
    * Registers a handler for "over", "out" or "click", returning the component so it can be
-   * chained; called with an event name alone it returns that handler. Note that a handler is
-   * called with undefined rather than with the map entity's datum; see the module note.
+   * chained; called with an event name alone it returns that handler. A handler is called with
+   * the datum of the entity the event happened on; see the module note.
    */
-  on(eventName: string, handler: ChoroplethEventHandler | null): ChoroplethComponent<T>;
-  on(eventName: string): ChoroplethEventHandler | undefined;
+  on(eventName: string, handler: ChoroplethEventHandler<T> | null): ChoroplethComponent<T>;
+  on(eventName: string): ChoroplethEventHandler<T> | undefined;
 }
 
 /**
- * What the mouse listeners actually read. They were written for d3 v3, where a listener was called
- * with the datum; since d3 v6 the first argument is the event, so `datum` here is a property of a
- * PointerEvent and is always undefined. Transcribed rather than corrected so the port does not
- * change behaviour - the fix is to take the datum from d3's second argument. The same defect as
- * the bubble renderer's own handlers.
+ * The entity datum behind an event target, read off the value d3 has bound to it. The base
+ * renderer binds a merged entry to every area, so the entity's own datum is its `datum` property -
+ * undefined where nothing matched. An event target contributed by an anchored shape may carry
+ * anything, including an inherited datum, so only a merged entry is unwrapped; anything else is
+ * reported as undefined rather than passed on as if it were a datum.
  */
-function legacyDatum(event: Event & { datum?: undefined }): undefined {
-  return event.datum;
+function entityDatum<T extends object>(bound: unknown): T | undefined {
+  if (typeof bound !== "object" || bound === null || !("datum" in bound)) return undefined;
+  return (bound as { datum?: T }).datum;
 }
 
 export default function <T extends object = object>(): ChoroplethComponent<T> {
@@ -362,14 +369,15 @@ export default function <T extends object = object>(): ChoroplethComponent<T> {
 
       selection
         .selectAll<Element, unknown>("[data-event-target]")
-        .on("mouseover", function (e: Event & { datum?: undefined }) {
-          event.call("over", this, legacyDatum(e));
+        // d3 calls a listener with the event first and the bound datum second.
+        .on("mouseover", function (_event: Event, d: unknown) {
+          event.call("over", this, entityDatum<T>(d));
         })
-        .on("mouseout", function (e: Event & { datum?: undefined }) {
-          event.call("out", this, legacyDatum(e));
+        .on("mouseout", function (_event: Event, d: unknown) {
+          event.call("out", this, entityDatum<T>(d));
         })
-        .on("click", function (e: Event & { datum?: undefined }) {
-          event.call("click", this, legacyDatum(e));
+        .on("click", function (_event: Event, d: unknown) {
+          event.call("click", this, entityDatum<T>(d));
         });
     });
 
