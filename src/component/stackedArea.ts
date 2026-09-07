@@ -136,6 +136,7 @@
 
 import { area as d3Area, select, type ValueFn } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 
 /**
@@ -232,11 +233,6 @@ const dimension = <P>(value: AreaValue<P> | undefined): PointAccessor<P, number>
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-const styleValue = <L, R extends string | number>(
-  value: StyleValue<L, R> | null | undefined
-): ValueFn<SVGPathElement, L, R | null> =>
-  typeof value === "function" ? value : () => value ?? null;
-
 export default function <P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L> {
   return component()
     .prop("x")
@@ -284,11 +280,13 @@ export default function <P = unknown, L extends Iterable<P> = P[]>(): StackedAre
       // Rendering
 
       const pathData: ValueFn<SVGPathElement, L, string | null> = (datum) => areaGen(datum);
-      const fill = styleValue(props.fill);
+      const fill = fn.valueFn(props.fill ?? null);
       // The white hairline separating two touching layers. Applied with a truthiness check
       // rather than an undefined one, so a null or empty stroke is replaced by it too.
-      const stroke = styleValue(props.stroke || "#ffffff");
-      const strokeWidth = styleValue(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+      const stroke = fn.valueFn((props.stroke || "#ffffff") ?? null);
+      const strokeWidth = fn.valueFn(
+        props.strokeWidth === undefined ? 1 : (props.strokeWidth ?? null)
+      );
 
       const paths = selection
         .selectAll<SVGPathElement, L>("path.sszvis-path")

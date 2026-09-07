@@ -95,6 +95,7 @@
 import type { BaseType, ValueFn } from "d3";
 import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
+import * as fn from "../../fn.js";
 import type { GeoPoint, PointProjection } from "../mapUtils.js";
 
 /**
@@ -143,16 +144,6 @@ function coordinate(projected: [number, number] | null, axis: 0 | 1): number {
   return projected[axis];
 }
 
-/**
- * Normalises a value prop into the single accessor shape d3's overloads can resolve. An accessor is
- * passed through untouched, so it keeps receiving d3's arguments and node context; a constant
- * becomes a function returning it, which d3 applies identically - both paths end in the same
- * assignment. The same idiom as src/map/renderer/mesh.ts.
- */
-function toValue<R extends string | number>(value: ImageValue<R>): ValueFn<BaseType, number, R> {
-  return typeof value === "function" ? value : () => value;
-}
-
 export default function (): MapRendererImageComponent {
   return component()
     .prop("projection")
@@ -180,11 +171,11 @@ export default function (): MapRendererImageComponent {
       const bottomRight = props.projection(props.geoBounds[1]);
 
       image
-        .attr("src", toValue(props.src))
+        .attr("src", fn.valueFn(props.src))
         .style("left", `${Math.round(coordinate(topLeft, 0))}px`)
         .style("top", `${Math.round(coordinate(topLeft, 1))}px`)
         .style("width", `${Math.round(coordinate(bottomRight, 0) - coordinate(topLeft, 0))}px`)
         .style("height", `${Math.round(coordinate(bottomRight, 1) - coordinate(topLeft, 1))}px`)
-        .style("opacity", toValue(props.opacity));
+        .style("opacity", fn.valueFn(props.opacity));
     });
 }

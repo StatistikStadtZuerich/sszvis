@@ -299,11 +299,6 @@ const dimension = <P>(value: AreaValue<P> | undefined): PointAccessor<P, number>
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-const styleValue = <L, R extends string | number>(
-  value: StyleValue<L, R> | null | undefined
-): ValueFn<SVGPathElement, L, R | null> =>
-  typeof value === "function" ? value : () => value ?? null;
-
 export default function <P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L> {
   return component()
     .prop("x")
@@ -364,10 +359,12 @@ export default function <P = unknown, L = P[]>(): StackedAreaMultiplesComponent<
       const pathData: ValueFn<SVGPathElement, L, string | null> = function (datum, index, group) {
         return areaGen(props.valuesAccessor.call(this, datum, index, group));
       };
-      const fill = styleValue(props.fill);
+      const fill = fn.valueFn(props.fill ?? null);
       // No default, where stackedArea falls back to a #ffffff hairline.
-      const stroke = styleValue(props.stroke);
-      const strokeWidth = styleValue(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+      const stroke = fn.valueFn(props.stroke ?? null);
+      const strokeWidth = fn.valueFn(
+        props.strokeWidth === undefined ? 1 : (props.strokeWidth ?? null)
+      );
 
       const paths = selection
         .selectAll<SVGPathElement, L>("path.sszvis-path")

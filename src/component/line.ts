@@ -129,11 +129,6 @@ export interface LineComponent<P = unknown, L = unknown>
  * function returning null, which d3 removes the style for - the same thing it does when
  * handed undefined directly.
  */
-const styleValue = <L, R extends string | number>(
-  value: StyleValue<L, R> | undefined
-): ValueFn<SVGPathElement, L, R | null> =>
-  typeof value === "function" ? value : () => value ?? null;
-
 /**
  * Whether a value counts as missing, and so breaks the line at that point.
  *
@@ -191,8 +186,8 @@ export default function <P = unknown, L = unknown>(): LineComponent<P, L> {
       const pathData: ValueFn<SVGPathElement, L, string | null> = function (datum, index) {
         return line(props.valuesAccessor.call(this, datum, index));
       };
-      const stroke = styleValue(props.stroke);
-      const strokeWidth = styleValue(props.strokeWidth);
+      const stroke = fn.valueFn(props.stroke ?? null);
+      const strokeWidth = fn.valueFn(props.strokeWidth ?? null);
 
       const path = selection
         .selectAll<SVGPathElement, L>(".sszvis-line")

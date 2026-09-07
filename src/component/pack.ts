@@ -33,6 +33,7 @@ import { getAccessibleTextColor } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
+import { HIERARCHY_FALLBACK_COLOR, inheritedColorKey, nodeColor } from "../layout/hierarchy.js";
 import { defaultTransition } from "../transition.js";
 import type { StringAccessor } from "../types.js";
 
@@ -163,43 +164,14 @@ export default function <T = unknown>(): PackComponent<T> {
             return "white";
           }
 
-          // Leaf nodes - use rootKey for consistent color mapping
-          if ("rootKey" in d.data && d.data.rootKey) {
-            return props.colorScale(d.data.rootKey);
-          }
-          // Fallback: find top-level category by traversing ancestors
-          const ancestors = d.ancestors();
-          const topLevelCategory = ancestors.find(
-            (_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root"
-          );
-          if (topLevelCategory && "key" in topLevelCategory.data) {
-            return props.colorScale(topLevelCategory.data.key);
-          } else if ("key" in d.data) {
-            return props.colorScale(d.data.key);
-          }
-          return "#cccccc"; // Default fill if no key found
+          return nodeColor(d, props.colorScale);
         })
         .attr("stroke", (d: PackLayout<T>) => {
-          // Branch nodes (categories) get color stroke, leaf nodes get white stroke
-          // Leaf nodes - use rootKey for consistent color mapping
-          if ("rootKey" in d.data && d.data.rootKey) {
-            return props.colorScale(d.data.rootKey);
-          }
-          // Fallback: find top-level category by traversing ancestors
-          const ancestors = d.ancestors();
-          const topLevelCategory = ancestors.find(
-            (_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root"
-          );
-          if (topLevelCategory && "key" in topLevelCategory.data) {
-            return props.colorScale(topLevelCategory.data.key);
-          } else if (d.children) {
-            if ("key" in d.data) {
-              return props.colorScale(d.data.key);
-            }
-            return "#cccccc"; // Default stroke color for branches
-          } else {
-            return props.circleStroke;
-          }
+          // Branches carry the category colour; leaves fall back to the configured stroke.
+          const inherited = inheritedColorKey(d);
+          if (inherited !== undefined) return props.colorScale(inherited);
+          if (!d.children) return props.circleStroke;
+          return "key" in d.data ? props.colorScale(d.data.key) : HIERARCHY_FALLBACK_COLOR;
         })
         .attr("stroke-width", (d: PackLayout<T>) => {
           // Branch nodes get thicker stroke to make them more visible
@@ -228,21 +200,7 @@ export default function <T = unknown>(): PackComponent<T> {
         const labelYAcc = (d: PackLayout<T>) => d.y + fontSize / 3;
         const labelFillAcc = (d: PackLayout<T>) => {
           const bgColor = () => {
-            // Use rootKey for consistent color mapping (same as fill logic)
-            if ("rootKey" in d.data && d.data.rootKey) {
-              return props.colorScale(d.data.rootKey);
-            }
-            // Fallback: find top-level category
-            const ancestors = d.ancestors();
-            const topLevelCategory = ancestors.find(
-              (_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root"
-            );
-            if (topLevelCategory && "key" in topLevelCategory.data) {
-              return props.colorScale(topLevelCategory.data.key);
-            } else if ("key" in d.data) {
-              return props.colorScale(d.data.key);
-            }
-            return "#cccccc"; // Default fill if no key found
+            return nodeColor(d, props.colorScale);
           };
           return getAccessibleTextColor(bgColor());
         };

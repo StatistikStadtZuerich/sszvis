@@ -97,7 +97,7 @@ import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 import { slowTransition } from "../../transition.js";
-import { GEO_KEY_DEFAULT } from "../mapUtils.js";
+import { GEO_KEY_DEFAULT, toLookupKey } from "../mapUtils.js";
 
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
 type GeoJsonValue<T, R> = R | ((datum: T) => R);
@@ -186,10 +186,6 @@ function readFeatureKey(properties: GeoJsonProperties, key: string): unknown {
  * symbols with the same description remain distinct and can never be matched by a string id.
  * Everything else stringifies, which is how a missing key becomes the string "undefined".
  */
-function toLookupKey(value: unknown): string | symbol {
-  return typeof value === "symbol" ? value : String(value);
-}
-
 /**
  * Reproduces what this component's event handlers have always done. The JavaScript called
  * `event.over(datum)`, but d3's dispatch provides only on, call, apply and copy - there has never

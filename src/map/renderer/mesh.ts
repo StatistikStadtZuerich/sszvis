@@ -53,6 +53,7 @@
 import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
 import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
+import * as fn from "../../fn.js";
 
 /**
  * A path generator, as this component uses one. A d3.geoPath satisfies this shape, and so does a
@@ -98,19 +99,6 @@ export interface MapRendererMeshComponent extends ComponentBuilder<MapRendererMe
   strokeWidth(value: MeshValue<number>): MapRendererMeshComponent;
 }
 
-/**
- * Normalises a style prop into the single accessor shape d3's overloads can resolve. An accessor
- * is passed through untouched, so it keeps receiving d3's arguments and node context; a constant
- * becomes a function returning it, which d3 applies identically - the constant and function paths
- * both end in the same setProperty call. Follows the idiom of src/component/dot.ts, minus its
- * nullish fallback: both props here have defaults, so a constant is never nullish.
- */
-function toStyleValue<R extends string | number>(
-  value: MeshValue<R>
-): ValueFn<BaseType, GeoPermissibleObjects, R | null> {
-  return typeof value === "function" ? value : () => value;
-}
-
 export default function (): MapRendererMeshComponent {
   return component()
     .prop("geoJson")
@@ -132,7 +120,7 @@ export default function (): MapRendererMeshComponent {
 
       meshLine
         .attr("d", props.mapPath)
-        .style("stroke", toStyleValue(props.borderColor))
-        .style("stroke-width", toStyleValue(props.strokeWidth));
+        .style("stroke", fn.valueFn(props.borderColor))
+        .style("stroke-width", fn.valueFn(props.strokeWidth));
     });
 }

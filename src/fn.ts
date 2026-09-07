@@ -4,7 +4,7 @@
  * @module sszvis/fn
  */
 
-import { selection } from "d3";
+import { type BaseType, selection, type ValueFn } from "d3";
 import type { AnySelection } from "./types.js";
 
 /**
@@ -466,6 +466,17 @@ export const stringEqual = (a: { toString(): string }, b: { toString(): string }
  */
 export const functor = <T>(v: T | (() => T)): (() => T) =>
   typeof v === "function" ? (v as () => T) : (): T => v;
+
+/**
+ * fn.valueFn
+ *
+ * Wraps a constant in an accessor and leaves an existing accessor alone. Unlike fn.functor
+ * the result takes d3's (datum, index, group) arguments and can be handed straight to
+ * .attr() or .style(). Pass `value ?? null` where an unset prop should resolve to null
+ * rather than undefined, so d3 removes the attribute instead of writing "undefined".
+ */
+export const valueFn = <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>): ValueFn<E, D, R> =>
+  typeof value === "function" ? (value as ValueFn<E, D, R>) : () => value;
 
 /**
  * fn.memoize
