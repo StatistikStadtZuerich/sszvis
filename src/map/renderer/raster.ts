@@ -273,7 +273,7 @@ function dimension(value: number | undefined, name: string): number {
   return value;
 }
 
-export default function <T = unknown>(): MapRendererRasterComponent<T> {
+export default function mapRendererRaster<T = unknown>(): MapRendererRasterComponent<T> {
   return component<MapRendererRasterComponent<T>>()
     .prop("debug")
     .debug(false)
