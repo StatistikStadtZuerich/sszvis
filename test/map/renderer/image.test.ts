@@ -122,6 +122,27 @@ describe("map/renderer/image", () => {
       expect(seen).toEqual([GEO_BOUNDS[0], GEO_BOUNDS[1]]);
     });
 
+    test("layers a second image renderer alongside the first", () => {
+      const target = layer("two-images");
+      target.call(mapRendererImage().projection(projectionOf()).src(SRC).geoBounds(GEO_BOUNDS));
+      const first = image(target.node() as HTMLElement);
+      target.call(
+        mapRendererImage()
+          .projection(projectionOf())
+          .src("data:image/gif;base64,OTHER")
+          .geoBounds(GEO_BOUNDS)
+          .opacity(0.5)
+      );
+      const node = target.node() as HTMLElement;
+      const images = [...node.querySelectorAll<HTMLImageElement>("img.sszvis-map__image")];
+      expect(images).toHaveLength(2);
+      expect(images[0]).toBe(first);
+      expect(images[0].getAttribute("src")).toBe(SRC);
+      expect(images[0].style.opacity).toBe("1");
+      expect(images[1].getAttribute("src")).toBe("data:image/gif;base64,OTHER");
+      expect(images[1].style.opacity).toBe("0.5");
+    });
+
     test("reuses the same img element across renders", () => {
       const target = layer("image-reuse");
       const renderWith = () =>
@@ -240,28 +261,6 @@ describe("map/renderer/image", () => {
       expect(image(node)?.style.top).toBe("");
       expect(image(node)?.style.left).toBe("");
       expect(image(node)?.style.height).toBe("");
-    });
-
-    // BUG: the join binds [0] rather than the src, so one image per container is the documented
-    // limit - and the selector is unscoped, so a second image renderer in the same layer replaces
-    // the first one's src and position instead of adding its own. The same defect as the mesh,
-    // highlight and lake overlay renderers.
-    test("a second image renderer in one layer replaces the first", () => {
-      const target = layer("two-images");
-      target.call(mapRendererImage().projection(projectionOf()).src(SRC).geoBounds(GEO_BOUNDS));
-      const first = image(target.node() as HTMLElement);
-      target.call(
-        mapRendererImage()
-          .projection(projectionOf())
-          .src("data:image/gif;base64,OTHER")
-          .geoBounds(GEO_BOUNDS)
-          .opacity(0.5)
-      );
-      const node = target.node() as HTMLElement;
-      expect(node.querySelectorAll("img.sszvis-map__image")).toHaveLength(1);
-      expect(image(node)).toBe(first);
-      expect(image(node)?.getAttribute("src")).toBe("data:image/gif;base64,OTHER");
-      expect(image(node)?.style.opacity).toBe("0.5");
     });
 
     // NOTE: nothing ties this component to an HTML layer. Called on an SVG selection it appends an
