@@ -100,16 +100,17 @@ const DEFAULT_STROKE_WIDTH = 1.25;
  * outcome of an accessor written against a datum, the way every other map renderer's colour
  * accessor is written, so the default stands instead.
  */
-const withDefault = <R extends string | number>(
+function withDefault<R extends string | number>(
   value: MeshValue<R>,
   fallback: R
-): ValueFn<BaseType, GeoPermissibleObjects, R> =>
-  function (this: BaseType, datum, index, groups) {
+): ValueFn<BaseType, GeoPermissibleObjects, R> {
+  return function (this: BaseType, datum, index, groups) {
     const resolved = fn
       .valueFn<BaseType, GeoPermissibleObjects, R | null | undefined>(value)
       .call(this, datum, index, groups);
     return resolved ?? fallback;
   };
+}
 
 /**
  * The props as they arrive at render time. geoJson and mapPath are required by the component's
@@ -138,7 +139,7 @@ export interface MapRendererMeshComponent extends ComponentBuilder<MapRendererMe
   strokeWidth(value: MeshValue<number>): MapRendererMeshComponent;
 }
 
-export default function (): MapRendererMeshComponent {
+export default function mapRendererMesh(): MapRendererMeshComponent {
   return component<MapRendererMeshComponent>()
     .prop("geoJson")
     .prop("mapPath")
