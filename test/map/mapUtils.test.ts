@@ -482,11 +482,10 @@ describe("map utils", () => {
       expect(widthAdaptiveMapPathStroke(-500)).toBe(0.8);
     });
 
-    // BUG: the clamp does not rescue NaN - Math.max(0.8, NaN) is NaN - so an unmeasured container
-    // sends a NaN stroke width straight into the DOM, despite the function otherwise guaranteeing
-    // a result in [0.8, 1.1].
-    test("returns NaN for a NaN width instead of clamping", () => {
-      expect(widthAdaptiveMapPathStroke(Number.NaN)).toBeNaN();
+    test("clamps a non-finite width to the minimum", () => {
+      expect(widthAdaptiveMapPathStroke(Number.NaN)).toBe(0.8);
+      expect(widthAdaptiveMapPathStroke(Number.POSITIVE_INFINITY)).toBe(0.8);
+      expect(widthAdaptiveMapPathStroke(Number.NEGATIVE_INFINITY)).toBe(0.8);
     });
   });
 });
