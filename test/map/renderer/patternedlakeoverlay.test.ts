@@ -79,6 +79,9 @@ describe("map/renderer/patternedlakeoverlay", () => {
   const lakeBorder = (node: Element) =>
     node.querySelector<SVGPathElement>("path.sszvis-map__lakepath");
   const defs = (node: Element, selector: string) => [...node.querySelectorAll(selector)];
+  /** The id a definition was actually given: the ids are scoped per overlay, not fixed. */
+  const idOf = (node: Element, selector: string) =>
+    node.querySelector(selector)?.getAttribute("id");
 
   /** Renders the overlay, returning the group node it drew into. */
   const render = (
@@ -121,14 +124,15 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     test("fills the lake shape with the lake pattern", () => {
       const node = render();
-      expect(lakeShape(node)?.getAttribute("fill")).toBe("url(#lake-pattern)");
+      expect(lakeShape(node)?.getAttribute("fill")).toBe(`url(#${idOf(node, "defs > pattern")})`);
     });
 
     test("defines the lake pattern in a defs element inside the layer", () => {
       const node = render();
-      expect(defs(node, "defs > pattern#lake-pattern")).toHaveLength(1);
+      expect(defs(node, "defs > pattern")).toHaveLength(1);
       // The pattern helper fills it in; the tile is a white rect plus hatch lines.
-      expect(defs(node, "pattern#lake-pattern > rect")).toHaveLength(1);
+      expect(defs(node, "defs > pattern > rect")).toHaveLength(1);
+      expect(defs(node, "defs > pattern > line")).toHaveLength(2);
     });
 
     // NOTE: the defs element is created inside the map group rather than at the svg root, and
@@ -153,11 +157,11 @@ describe("map/renderer/patternedlakeoverlay", () => {
           )
           .node() as SVGGElement;
       const first = lakeShape(renderWith());
-      const firstPattern = defs(renderWith(), "pattern#lake-pattern")[0];
+      const firstPattern = defs(renderWith(), "defs > pattern")[0];
       const node = renderWith();
       expect(lakeShape(node)).toBe(first);
-      expect(defs(node, "pattern#lake-pattern")).toHaveLength(1);
-      expect(defs(node, "pattern#lake-pattern")[0]).toBe(firstPattern);
+      expect(defs(node, "defs > pattern")).toHaveLength(1);
+      expect(defs(node, "defs > pattern")[0]).toBe(firstPattern);
     });
 
     test("adds no tooltip anchors and no event targets", () => {
@@ -171,15 +175,15 @@ describe("map/renderer/patternedlakeoverlay", () => {
     test("defaults to true, masking the lake with the fade gradient", () => {
       expect(mapRendererPatternedLakeOverlay().fadeOut()).toBe(true);
       const node = render();
-      expect(defs(node, "defs > linearGradient#lake-fade-gradient")).toHaveLength(1);
-      expect(defs(node, "defs > mask#lake-fade-mask")).toHaveLength(1);
-      expect(lakeShape(node)?.getAttribute("mask")).toBe("url(#lake-fade-mask)");
+      expect(defs(node, "defs > linearGradient")).toHaveLength(1);
+      expect(defs(node, "defs > mask")).toHaveLength(1);
+      expect(lakeShape(node)?.getAttribute("mask")).toBe(`url(#${idOf(node, "defs > mask")})`);
     });
 
     test("emits neither the gradient nor the mask when disabled", () => {
       const node = render((c) => c.fadeOut(false));
-      expect(defs(node, "linearGradient#lake-fade-gradient")).toHaveLength(0);
-      expect(defs(node, "mask#lake-fade-mask")).toHaveLength(0);
+      expect(defs(node, "defs > linearGradient")).toHaveLength(0);
+      expect(defs(node, "defs > mask")).toHaveLength(0);
       expect(lakeShape(node)?.hasAttribute("mask")).toBe(false);
     });
 
@@ -198,8 +202,8 @@ describe("map/renderer/patternedlakeoverlay", () => {
       renderWith(true);
       const node = renderWith(false);
       expect(lakeShape(node)?.hasAttribute("mask")).toBe(false);
-      expect(defs(node, "mask#lake-fade-mask")).toHaveLength(0);
-      expect(defs(node, "linearGradient#lake-fade-gradient")).toHaveLength(0);
+      expect(defs(node, "defs > mask")).toHaveLength(0);
+      expect(defs(node, "defs > linearGradient")).toHaveLength(0);
     });
 
     test("re-applies the fade when it is turned back on", () => {
@@ -217,22 +221,18 @@ describe("map/renderer/patternedlakeoverlay", () => {
       renderWith(true);
       renderWith(false);
       const node = renderWith(true);
-      expect(defs(node, "mask#lake-fade-mask > rect")).toHaveLength(1);
-      expect(defs(node, "linearGradient#lake-fade-gradient > stop")).toHaveLength(2);
-      expect(lakeShape(node)?.getAttribute("mask")).toBe("url(#lake-fade-mask)");
+      expect(defs(node, "defs > mask > rect")).toHaveLength(1);
+      expect(defs(node, "defs > linearGradient > stop")).toHaveLength(2);
+      expect(lakeShape(node)?.getAttribute("mask")).toBe(`url(#${idOf(node, "defs > mask")})`);
     });
 
-    // NOTE: the mask references the gradient by id, and the gradient helper sets that id a second
-    // time on the element ensureDefsElement already identified - a harmless redundancy, pinned
-    // because it is the only place two code paths write the same id.
-    test("wires the mask to the gradient by id", () => {
+    // The mask fills itself with the fade gradient, and both helpers hard-code the old fixed
+    // gradient id - so the component must point the mask at whatever id the gradient was given.
+    test("wires the mask to the gradient by the id the gradient was given", () => {
       const node = render();
-      expect(defs(node, "mask#lake-fade-mask > rect")[0]?.getAttribute("fill")).toBe(
-        "url(#lake-fade-gradient)"
-      );
-      expect(defs(node, "linearGradient#lake-fade-gradient")[0]?.getAttribute("id")).toBe(
-        "lake-fade-gradient"
-      );
+      const gradientId = idOf(node, "defs > linearGradient");
+      expect(gradientId).toBeTruthy();
+      expect(defs(node, "defs > mask > rect")[0]?.getAttribute("fill")).toBe(`url(#${gradientId})`);
     });
   });
 
@@ -308,6 +308,47 @@ describe("map/renderer/patternedlakeoverlay", () => {
     });
   });
 
+  describe("scoping", () => {
+    test("gives every layer on the page its own definition ids", () => {
+      const one = render(undefined, "lake-page-one");
+      const two = render(undefined, "lake-page-two");
+      const ids = (node: Element) => [
+        idOf(node, "defs > pattern"),
+        idOf(node, "defs > linearGradient"),
+        idOf(node, "defs > mask"),
+      ];
+      expect(ids(one).every((id) => typeof id === "string" && id.length > 0)).toBe(true);
+      expect(ids(one)).not.toEqual(ids(two));
+      expect(new Set([...ids(one), ...ids(two)]).size).toBe(6);
+    });
+
+    test("points each layer's lake at its own pattern and mask", () => {
+      const one = render(undefined, "lake-refs-one");
+      const two = render(undefined, "lake-refs-two");
+      for (const node of [one, two]) {
+        expect(lakeShape(node)?.getAttribute("fill")).toBe(`url(#${idOf(node, "defs > pattern")})`);
+        expect(lakeShape(node)?.getAttribute("mask")).toBe(`url(#${idOf(node, "defs > mask")})`);
+      }
+    });
+
+    test("reuses one scope per group, so a re-render does not add definitions", () => {
+      const layer = group("lake-scope-stable");
+      const renderWith = () =>
+        layer
+          .call(
+            mapRendererPatternedLakeOverlay()
+              .mapPath(mapPathOf())
+              .lakeFeature(lake())
+              .lakeBounds(bounds())
+          )
+          .node() as SVGGElement;
+      const firstId = idOf(renderWith(), "defs > pattern");
+      const node = renderWith();
+      expect(defs(node, "defs > pattern")).toHaveLength(1);
+      expect(idOf(node, "defs > pattern")).toBe(firstId);
+    });
+  });
+
   describe("known quirks", () => {
     // The pattern helpers append their contents rather than joining them, so the component only
     // calls them on a definition that is still empty - otherwise a map re-rendering on resize would
@@ -326,22 +367,10 @@ describe("map/renderer/patternedlakeoverlay", () => {
       renderWith();
       renderWith();
       const node = renderWith();
-      expect(defs(node, "pattern#lake-pattern > rect")).toHaveLength(1);
-      expect(defs(node, "pattern#lake-pattern > line")).toHaveLength(2);
-      expect(defs(node, "linearGradient#lake-fade-gradient > stop")).toHaveLength(2);
-      expect(defs(node, "mask#lake-fade-mask > rect")).toHaveLength(1);
-    });
-
-    // BUG: all three definitions use fixed ids, so two maps on one page define #lake-pattern,
-    // #lake-fade-gradient and #lake-fade-mask twice, and every url(#...) reference in the
-    // document resolves to whichever comes first. The same defect as the base and geojson
-    // renderers' "missing-pattern".
-    test("emits the same fixed ids for every layer on the page", () => {
-      render(undefined, "lake-page-one");
-      render(undefined, "lake-page-two");
-      expect(document.querySelectorAll("pattern#lake-pattern")).toHaveLength(2);
-      expect(document.querySelectorAll("linearGradient#lake-fade-gradient")).toHaveLength(2);
-      expect(document.querySelectorAll("mask#lake-fade-mask")).toHaveLength(2);
+      expect(defs(node, "defs > pattern > rect")).toHaveLength(1);
+      expect(defs(node, "defs > pattern > line")).toHaveLength(2);
+      expect(defs(node, "defs > linearGradient > stop")).toHaveLength(2);
+      expect(defs(node, "defs > mask > rect")).toHaveLength(1);
     });
 
     // BUG: neither geoJson property is validated, and neither omission is reported. The join is
@@ -353,7 +382,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
         .call(mapRendererPatternedLakeOverlay().mapPath(mapPathOf()))
         .node() as SVGGElement;
       expect(lakeShape(node)?.hasAttribute("d")).toBe(false);
-      expect(lakeShape(node)?.getAttribute("fill")).toBe("url(#lake-pattern)");
+      expect(lakeShape(node)?.getAttribute("fill")).toBe(`url(#${idOf(node, "defs > pattern")})`);
       expect(lakeBorder(node)?.hasAttribute("d")).toBe(false);
     });
 
