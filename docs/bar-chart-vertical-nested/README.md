@@ -61,6 +61,10 @@ A y-scale. After the stack is computed, the y-scale is used to position each sta
 
 Specify a function or a string to fill the stack rectangles. If a function is provided, it will be called with the data element and should return a color. If a string is provided, all stack rectangles will be filled with that color.
 
+#### `nestedStackedBarsVertical.stroke(stroke)`
+
+Specify a function or a string for the stroke that separates touching stack rectangles. Defaults to white. Pass `"none"` for stacks with no visible separator; a falsy value is coerced back to white. If a function is provided, it is called with the slice and its index and should return a color.
+
 #### `nestedStackedBarsVertical.tooltip(tooltip)`
 
 A function which returns the content for the tooltip. The function is called with the data element and should return a string.
