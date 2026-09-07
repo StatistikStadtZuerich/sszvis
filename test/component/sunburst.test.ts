@@ -482,7 +482,7 @@ describe("component/sunburst", () => {
       test(`should throw naming ${name} when it was never set`, () => {
         const g = group(`missing-${name}`);
         expect(() => g.datum(hierarchyOf()).call(missing(name) as never)).toThrow(
-          `sszvis.component.sunburst: the "${name}" property is required`
+          `[sunburst] the ${name} property is required`
         );
       });
 

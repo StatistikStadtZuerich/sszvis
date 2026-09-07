@@ -241,7 +241,7 @@ export default function <T = unknown>(): SunburstComponent<T> {
       // into NaN and renders an empty chart.
       for (const required of ["radiusScale", "centerRadius", "fill"] as const) {
         if (props[required] === undefined) {
-          throw new Error(`sszvis.component.sunburst: the "${required}" property is required`);
+          throw new Error(`[sunburst] the ${required} property is required`);
         }
       }
 
