@@ -49,6 +49,7 @@
 
 import {
   type AxisDomain,
+  ascending,
   type ScaleContinuousNumeric,
   type ScaleTime,
   scaleLinear,
@@ -177,6 +178,13 @@ export default function slider(): SliderComponent {
           .join("g")
           .classed("sszvis-control-slider__backgroundgroup", true);
 
+        // Sorted by position along the track, so that the outer-label anchoring below can
+        // read the leftmost and rightmost labels off the ends of the selection.
+        const tickValues: AxisDomain[] = fn.set([...props.majorTicks, ...props.minorTicks]);
+        tickValues.sort((a, b) =>
+          ascending(alteredScale(a as SliderValue), alteredScale(b as SliderValue))
+        );
+
         // create the axis
         const axis = axisX()
           .scale(alteredScale)
@@ -185,7 +193,7 @@ export default function slider(): SliderComponent {
           .hideBorderTickThreshold(0)
           .tickSize(MAJOR_TICK_SIZE)
           .tickPadding(6)
-          .tickValues(fn.set([...props.majorTicks, ...props.minorTicks]))
+          .tickValues(tickValues)
           .tickFormat((d) => (contains(d, props.majorTicks) ? props.tickLabels(d) : ""));
 
         const axisSelection = bg
@@ -207,10 +215,13 @@ export default function slider(): SliderComponent {
           .filter((d) => contains(d, props.majorTicks));
 
         if (!props.slant || props.slant === "horizontal") {
+          // The selection is in track order, so the first and last entries are the labels
+          // at the ends of the track. A lone label needs no inward nudge.
           const numTicks = majorAxisText.size();
-          majorAxisText.style("text-anchor", (_d, i) =>
-            i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle"
-          );
+          majorAxisText.style("text-anchor", (_d, i) => {
+            if (numTicks === 1) return "middle";
+            return i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle";
+          });
         }
 
         if (props.slant === "vertical") {
