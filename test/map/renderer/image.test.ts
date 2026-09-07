@@ -69,15 +69,40 @@ describe("map/renderer/image", () => {
       expect(image(node)?.style.top).toBe(`${Math.round(topLeft[1])}px`);
     });
 
-    test("sizes the image from the distance between the projected corners", () => {
+    test("sizes the image from the distance between the rounded corners", () => {
       const projection = projectionOf();
       const node = layer()
         .call(mapRendererImage().projection(projection).src(SRC).geoBounds(GEO_BOUNDS))
         .node() as HTMLElement;
       const topLeft = projection(GEO_BOUNDS[0]) as [number, number];
       const bottomRight = projection(GEO_BOUNDS[1]) as [number, number];
-      expect(image(node)?.style.width).toBe(`${Math.round(bottomRight[0] - topLeft[0])}px`);
-      expect(image(node)?.style.height).toBe(`${Math.round(bottomRight[1] - topLeft[1])}px`);
+      expect(image(node)?.style.width).toBe(
+        `${Math.round(bottomRight[0]) - Math.round(topLeft[0])}px`
+      );
+      expect(image(node)?.style.height).toBe(
+        `${Math.round(bottomRight[1]) - Math.round(topLeft[1])}px`
+      );
+    });
+
+    test("lands the right and bottom edges on the projected south-east corner", () => {
+      // Corners chosen so that rounding each one goes a different way: x from 10.6 to 20.4.
+      const projection = (point: [number, number]) =>
+        point[0] === 0 ? ([10.6, 10.6] as [number, number]) : ([20.4, 20.4] as [number, number]);
+      const node = layer()
+        .call(
+          mapRendererImage()
+            .projection(projection)
+            .src(SRC)
+            .geoBounds([
+              [0, 0],
+              [1, 1],
+            ])
+        )
+        .node() as HTMLElement;
+      expect(image(node)?.style.left).toBe("11px");
+      // The right edge lands at 11 + 9 = 20px, the rounded projected corner.
+      expect(image(node)?.style.width).toBe("9px");
+      expect(image(node)?.style.height).toBe("9px");
     });
 
     test("positions the image itself, without relying on the stylesheet", () => {
@@ -132,30 +157,6 @@ describe("map/renderer/image", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: the width is the rounded difference of the unrounded corners, while left is the rounded
-    // north-west corner - so left + width does not necessarily equal the rounded south-east
-    // corner. The image's right and bottom edges can sit a pixel off the map layers it is meant
-    // to align with. Rounding each corner first, then subtracting, would keep them consistent.
-    test("can place the right edge a pixel off the projected south-east corner", () => {
-      // Corners chosen so that both roundings go different ways: x from 10.6 to 20.4.
-      const projection = (point: [number, number]) =>
-        point[0] === 0 ? ([10.6, 10.6] as [number, number]) : ([20.4, 20.4] as [number, number]);
-      const node = layer()
-        .call(
-          mapRendererImage()
-            .projection(projection)
-            .src(SRC)
-            .geoBounds([
-              [0, 0],
-              [1, 1],
-            ])
-        )
-        .node() as HTMLElement;
-      expect(image(node)?.style.left).toBe("11px");
-      // The right edge lands at 11 + 10 = 21px, though the projected corner rounds to 20px.
-      expect(image(node)?.style.width).toBe("10px"); // Math.round(20.4 - 10.6) = 10
-    });
-
     // BUG: neither geoBounds nor projection is validated. A missing geoBounds throws a bare
     // TypeError from indexing undefined, and a missing projection throws from calling it - both
     // before any attribute is written, so the failure names neither property.
