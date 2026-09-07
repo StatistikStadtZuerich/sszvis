@@ -156,7 +156,6 @@ describe("map/renderer/patternedlakeoverlay", () => {
       const firstPattern = defs(renderWith(), "pattern#lake-pattern")[0];
       const node = renderWith();
       expect(lakeShape(node)).toBe(first);
-      // The elements are reused, but not their contents - see the growth bug below.
       expect(defs(node, "pattern#lake-pattern")).toHaveLength(1);
       expect(defs(node, "pattern#lake-pattern")[0]).toBe(firstPattern);
     });
@@ -237,12 +236,10 @@ describe("map/renderer/patternedlakeoverlay", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: every render calls the pattern helpers again on the same defs element, and each helper
-    // appends its contents unconditionally rather than joining them - so the tile gains another
-    // rect and another two lines, the gradient another two stops, and the mask another rect on
-    // every redraw. A map that re-renders on resize or on a control change grows these definitions
-    // without bound. base.ts and geojson.ts call their own pattern helper the same way.
-    test("appends the pattern, gradient and mask contents again on every render", () => {
+    // The pattern helpers append their contents rather than joining them, so the component only
+    // calls them on a definition that is still empty - otherwise a map re-rendering on resize would
+    // grow its defs subtree without bound.
+    test("leaves the pattern, gradient and mask contents untouched on re-render", () => {
       const layer = group("lake-defs-growth");
       const renderWith = () =>
         layer
@@ -254,11 +251,12 @@ describe("map/renderer/patternedlakeoverlay", () => {
           )
           .node() as SVGGElement;
       renderWith();
+      renderWith();
       const node = renderWith();
-      expect(defs(node, "pattern#lake-pattern > rect")).toHaveLength(2);
-      expect(defs(node, "pattern#lake-pattern > line")).toHaveLength(4);
-      expect(defs(node, "linearGradient#lake-fade-gradient > stop")).toHaveLength(4);
-      expect(defs(node, "mask#lake-fade-mask > rect")).toHaveLength(2);
+      expect(defs(node, "pattern#lake-pattern > rect")).toHaveLength(1);
+      expect(defs(node, "pattern#lake-pattern > line")).toHaveLength(2);
+      expect(defs(node, "linearGradient#lake-fade-gradient > stop")).toHaveLength(2);
+      expect(defs(node, "mask#lake-fade-mask > rect")).toHaveLength(1);
     });
 
     // BUG: the colour is applied only when the property is truthy, so there is no way to clear a

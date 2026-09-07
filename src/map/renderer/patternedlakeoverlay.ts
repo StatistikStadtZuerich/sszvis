@@ -25,13 +25,11 @@
  *                                      default branch is the one no in-repo chart takes. Turning it off does not undo
  *                                      an existing fade; see the note below.
  *
- * Note: every render calls the pattern helpers again on the same defs elements - the fade pair only
- * while fadeOut is on - and each helper appends its contents unconditionally rather than joining
- * them, so the tile gains another rect and another two lines, the fade gradient another two stops,
- * and the mask another rect on every redraw. A map that re-renders on resize or on a control change
- * grows these definitions without bound. The elements themselves are reused - ensureDefsElement
- * joins, and both path joins are unkeyed - so it is only their contents that accumulate. The base
- * and geojson renderers call their own pattern helper the same way.
+ * Note: the pattern helpers in src/patterns.ts append their contents rather than joining them, so
+ * this component may only call them on a definition that is still empty; otherwise the tile would
+ * gain another rect and two lines, the gradient another two stops and the mask another rect on every
+ * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
+ * geojson renderers' "missing-pattern" too.
  *
  * Note: disabling fadeOut after a render with it enabled leaves both the mask attribute on the
  * lake shape and the gradient and mask definitions in the defs, because the disabled branch only
@@ -91,7 +89,7 @@
  * @return {sszvis.component}
  */
 
-import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
+import type { BaseType, GeoPermissibleObjects, Selection, ValueFn } from "d3";
 import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
@@ -143,7 +141,26 @@ export interface MapRendererPatternedLakeOverlayComponent
   fadeOut(value: boolean): MapRendererPatternedLakeOverlayComponent;
 }
 
-export default function (): MapRendererPatternedLakeOverlayComponent {
+/**
+ * Calls one of the pattern helpers, but only on a definition that is still empty. The helpers append
+ * their contents rather than joining them, so calling them on every render would grow the definition
+ * without bound. The id is rewritten afterwards because mapLakeFadeGradient writes its own fixed one.
+ */
+function defineOnce<E extends SVGElement>(
+  definition: Selection<E, number, SVGDefsElement, number>,
+  elementId: string,
+  define: (selection: Selection<E, number, SVGDefsElement, number>) => void
+): Selection<E, number, SVGDefsElement, number> {
+  definition
+    .filter(function (this: E) {
+      return this.childElementCount === 0;
+    })
+    .call(define)
+    .attr("id", elementId);
+  return definition;
+}
+
+export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedLakeOverlayComponent {
   return component<MapRendererPatternedLakeOverlayComponent>()
     .prop("mapPath")
     .prop("lakeFeature")
@@ -156,16 +173,26 @@ export default function (): MapRendererPatternedLakeOverlayComponent {
       const props = selection.props<LakeOverlayProps>();
 
       // the lake texture
-      ensureDefsElement(selection, "pattern", "lake-pattern").call(mapLakePattern);
+      defineOnce(
+        ensureDefsElement(selection, "pattern", "lake-pattern"),
+        "lake-pattern",
+        mapLakePattern
+      );
 
       if (props.fadeOut) {
         // the fade gradient
-        ensureDefsElement(selection, "linearGradient", "lake-fade-gradient").call(
+        defineOnce(
+          ensureDefsElement(selection, "linearGradient", "lake-fade-gradient"),
+          "lake-fade-gradient",
           mapLakeFadeGradient
         );
 
         // the mask, which uses the fade gradient
-        ensureDefsElement(selection, "mask", "lake-fade-mask").call(mapLakeGradientMask);
+        defineOnce(
+          ensureDefsElement(selection, "mask", "lake-fade-mask"),
+          "lake-fade-mask",
+          mapLakeGradientMask
+        );
       }
 
       // generate the Lake Zurich path
