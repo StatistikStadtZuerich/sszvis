@@ -12,35 +12,37 @@
  *                                            used to translate every wedge to (radius, radius); since the arc
  *                                            then extends another radius in every direction, the pie occupies a
  *                                            box of 2 * radius by 2 * radius.
- *                                            The inner radius is hardcoded to 4px and cannot be configured. If the
- *                                            property is left unset the wedges receive an unparseable transform and
- *                                            the tooltip anchors are positioned at NaN, with no warning.
+ *                                            The inner radius is hardcoded to 4px and cannot be configured.
+ *                                            Rendering without it throws.
  * @property {string, function} fill          a fill color for wedges in the pie. Ideally a function which takes a
  *                                            data value. If unset, the attribute is omitted and the wedges fall back
  *                                            to the SVG default, black.
  * @property {string, function} stroke        the stroke color for wedges in the pie (default "#FFFFFF", which
- *                                            separates touching wedges). A falsy value passed as the property, such
- *                                            as "" or null, is replaced by that default; a falsy value returned from
- *                                            an accessor is not.
+ *                                            separates touching wedges). The default applies only when the property
+ *                                            was never set: a falsy value, such as "" or null, is passed through, and
+ *                                            behaves the same whether it is given as a constant or returned from an
+ *                                            accessor.
  * @property {number, function} angle         Required. Specifies the angle of the wedges in radians. Theoretically
  *                                            this could be a constant, but that would make for a very strange pie.
  *                                            Ideally, this is a function which takes a data value and returns the
- *                                            angle in radians. Angles are summed as given and never clamped, and if
- *                                            the property is left unset the render throws a TypeError.
+ *                                            angle in radians. Angles are summed as given and never clamped, so a
+ *                                            total beyond a full turn overshoots and a negative angle draws its wedge
+ *                                            backwards. A value that is not finite is reported with console.warn and
+ *                                            treated as zero, so one bad datum costs at most its own wedge.
+ *                                            Rendering without the property throws.
+ * @property {boolean} transition             Whether to animate between renders (default true). The wedge angles, the
+ *                                            transform, the fill and the stroke all ease over the default 300ms. With
+ *                                            transition(false) every attribute is written on the render tick instead,
+ *                                            which is what a chart serialised synchronously - a snapshot, an SVG
+ *                                            export - or one rendered in a hidden tab wants, since d3-timer runs on
+ *                                            requestAnimationFrame.
  *
- * Note: the wedge geometry is written only by the arc tween, so no `d` attribute exists until
- * the first animation frame, and there is no transition property to opt out of - a chart
- * serialised on the render tick comes out empty. Nothing else animates: transform, fill and
- * stroke are applied to the transition from the values already on the DOM. The tooltip anchors
- * are positioned from the pre-transition angles and are never repositioned when the transition
- * ends, so after an update they describe the previous layout.
- *
- * Note: the component keeps no state of its own. It writes a0/a1 (the angles currently on
- * screen) and _a0/_a1 (the destination angles of the running transition) onto every datum it
- * renders, which is what lets a transition continue from the current geometry. Consequently
- * the data must be mutable - frozen data throws - two entries sharing one object collapse into
- * a single wedge, and a single NaN angle poisons the running total and every wedge after it.
- * See test/component/pie.test.ts.
+ * Note: the component keeps its transition state - the angles currently on screen - in a
+ * WeakMap keyed by the wedge element, so it never writes to the caller's data. Frozen data,
+ * two entries sharing one datum object, and data carrying fields of its own all render
+ * correctly. The wedges carry their own `sszvis-pie-path` class alongside the generic
+ * `sszvis-path` one, and the component matches only the former, so a foreign path left in the
+ * same group by another component is left alone.
  *
  * @return {sszvis.component}
  */
@@ -51,24 +53,14 @@ import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 
-/**
- * The angle bookkeeping the component keeps on each datum: a0/a1 are the angles currently
- * on screen, _a0/_a1 the destination angles of the running transition. All four are
- * optional because the caller's data does not carry them until the first render, and
- * a0/a1 can be replaced by a foreign value again by the index-based angle handover below.
- */
-export interface PieAngles {
-  a0?: number | null | undefined;
-  a1?: number | null | undefined;
-  _a0?: number;
-  _a1?: number;
+/** The angles of one wedge, in radians, as d3's arc generator wants them. */
+interface WedgeAngles {
+  a0: number;
+  a1: number;
 }
 
-/** A datum of the caller's own shape, once the component has annotated it. */
-export type PieDatum<T = PieAngles> = T & PieAngles;
-
 /** The angle property is wrapped by fn.functor on set, so it is always a function here. */
-export type AngleAccessor<T = PieAngles> = (d: PieDatum<T>) => number;
+export type AngleAccessor<T = unknown> = (d: T) => number;
 
 /**
  * fill and stroke accept a constant or an accessor and are not normalised on set. An
@@ -76,22 +68,23 @@ export type AngleAccessor<T = PieAngles> = (d: PieDatum<T>) => number;
  * reads both, so one nullish-aware alias describes what the setters accept and what the
  * getters return.
  */
-export type ColorAccessor<T = PieAngles> = (d: PieDatum<T>, i: number) => string | null | undefined;
-export type ColorValue<T = PieAngles> = string | ColorAccessor<T>;
+export type ColorAccessor<T = unknown> = (d: T, i: number) => string | null | undefined;
+export type ColorValue<T = unknown> = string | null | undefined | ColorAccessor<T>;
 
 type PieProps<T> = {
   radius: number;
   fill?: ColorValue<T>;
   stroke?: ColorValue<T>;
   angle: AngleAccessor<T>;
+  transition: boolean;
 };
 
 /**
  * The getters return whatever was last set, which is undefined for radius and angle until
- * the caller sets them - both are required, and rendering without them fails, so both
+ * the caller sets them - both are required, and rendering without them throws, so both
  * getters report the undefined the props actually hold.
  */
-export interface PieComponent<T = PieAngles> extends ComponentBuilder<PieComponent<T>> {
+export interface PieComponent<T = unknown> extends ComponentBuilder<PieComponent<T>> {
   radius(): number | undefined;
   radius(radius: number): PieComponent<T>;
   fill(): ColorValue<T> | undefined;
@@ -100,6 +93,16 @@ export interface PieComponent<T = PieAngles> extends ComponentBuilder<PieCompone
   stroke<U = T>(stroke: ColorValue<U>): PieComponent<T>;
   angle(): AngleAccessor<T> | undefined;
   angle<U = T>(angle: number | AngleAccessor<U>): PieComponent<T>;
+  transition(): boolean;
+  transition(enabled: boolean): PieComponent<T>;
+}
+
+/** Reports a required property the caller left unset, naming it. */
+function required<V>(value: V | undefined, name: string): V {
+  if (value === undefined) {
+    throw new Error(`[pie] the ${name} property is required`);
+  }
+  return value;
 }
 
 /**
@@ -107,18 +110,26 @@ export interface PieComponent<T = PieAngles> extends ComponentBuilder<PieCompone
  * constant are equivalent to d3, and so are an unset property and one returning null:
  * either way d3 removes the attribute.
  */
-function toColorAccessor<T>(
-  value: ColorValue<T> | undefined
-): (d: PieDatum<T>, i: number) => string | null {
+function toColorAccessor<T>(value: ColorValue<T> | undefined): (d: T, i: number) => string | null {
   // An accessor is handed to d3 untouched. Its result is narrowed from
   // `string | null | undefined` to `string | null` only because d3's own attr typings omit
   // undefined; d3 removes the attribute for either one, so the two are interchangeable here.
   return typeof value === "function"
-    ? (value as (d: PieDatum<T>, i: number) => string | null)
+    ? (value as (d: T, i: number) => string | null)
     : () => value ?? null;
 }
 
-export default function <T = PieAngles>(): PieComponent<T> {
+// The angles currently on screen, per wedge element. d3 cannot interpolate an arc path
+// directly, so a transition needs the previous angles as well as the destination ones -
+// keying them to the element keeps them out of the caller's data. The map lives at module
+// scope, keyed on the element rather than on the factory: the shipped examples build a
+// fresh pie() inside every render (docs/pie-charts/basic.js), so a per-instance map would
+// find no state for the paths already on screen and tween destination to destination.
+// Keying on the element still scopes the state to the group being rendered into, and the
+// entry is collected with the element.
+const onScreen = new WeakMap<Element, WedgeAngles>();
+
+export default function pie<T = unknown>(): PieComponent<T> {
   // The chain is built on the component rather than returned from it: .prop() and .render()
   // are declared to return the generic Component type, since the accessors they install
   // only exist at runtime, so the typed instance has to come from the factory itself.
@@ -129,85 +140,123 @@ export default function <T = PieAngles>(): PieComponent<T> {
     .prop("fill")
     .prop("stroke")
     .prop("angle", fn.functor)
-    .render(function (this: Element, data: PieDatum<T>[]) {
-      const selection = select(this);
+    .prop("transition")
+    .transition(true)
+    .render(function (this: Element, data: T[]) {
+      const selection = select<Element, T[]>(this);
       const props = selection.props<PieProps<T>>();
 
-      const stroke = props.stroke || "#FFFFFF";
+      // Both required properties are checked before a single element is created, so a
+      // misconfigured pie leaves no half-rendered wedges or stray tooltip anchors behind.
+      const radius = required(props.radius, "radius");
+      const angleOf = required(props.angle, "angle");
+      // The default applies only when the property was never set, so that a falsy stroke
+      // reaches the DOM whether it was passed as a constant or returned from an accessor.
+      const stroke = props.stroke === undefined ? "#FFFFFF" : props.stroke;
+      const fillAccessor = toColorAccessor(props.fill);
+      const strokeAccessor = toColorAccessor(stroke);
+      const transform = `translate(${radius},${radius})`;
 
+      // The destination layout, held alongside the data rather than written onto it.
+      const layout: WedgeAngles[] = [];
       let angle = 0;
       for (const value of data) {
-        // In order for an angle transition to work correctly in d3, the transition must be done in data space.
-        // The computed arc path itself cannot be interpolated without error.
-        // see http://bl.ocks.org/mbostock/5100636 for a straightforward example.
-        // However, due to the structure of sszvis and the way d3 data joining works, this poses a bit of a challenge,
-        // since old and new data values could be on different objects, and they need to be merged.
-        // In the code that follows, value._a0 and value._a1 are the destination angles for the transition.
-        // value.a0 and value.a1 are the current values in the transition (either the initial value, some intermediate value, or the final angle value).
-        value._a0 = angle;
-        // These a0 and a1 values may be overwritten later if there is already data bound at this data index. (see the .each function further down).
-        // `== null` and Number.isNaN(Number(...)) reproduce the original `== undefined ||
-        // isNaN(...)` checks exactly: both catch null, undefined and NaN.
-        if (value.a0 == null || Number.isNaN(Number(value.a0))) value.a0 = angle;
-        angle += props.angle(value);
-        value._a1 = angle;
-        // data values which don't already have angles set start out at the complete value.
-        if (value.a1 == null || Number.isNaN(Number(value.a1))) value.a1 = angle;
+        const a0 = angle;
+        const step = Number(angleOf(value));
+        if (Number.isFinite(step)) {
+          angle += step;
+        } else {
+          // A scale over a domain containing undefined, an empty group, or a division by a
+          // zero total all land here. Skipping the step keeps the running total usable, so
+          // the wedges after this one are unaffected.
+          console.warn(`[pie] the angle accessor returned ${step}; drawing a zero-width wedge`);
+        }
+        layout.push({ a0, a1: angle });
       }
 
-      // Every angle read below goes through Number(), which is the coercion d3 used to
-      // apply on its own when these values were passed to it untyped: undefined becomes
-      // NaN and null becomes 0. Both are reachable, since the handover further down can
-      // put a foreign value back on a0/a1 after the loop has normalised it.
-      const arcGen = arc<PieDatum<T>>()
+      const arcGen = arc<WedgeAngles>()
         .innerRadius(4)
-        .outerRadius(props.radius)
-        .startAngle((d) => Number(d.a0))
-        .endAngle((d) => Number(d.a1));
+        .outerRadius(radius)
+        .startAngle((d) => d.a0)
+        .endAngle((d) => d.a1);
 
+      // arc only returns null when it renders into a canvas context, which this one never does.
+      const arcPath = (angles: WedgeAngles) => arcGen(angles) ?? "";
+
+      // Matching on the component's own class rather than the generic .sszvis-path one, which
+      // stackedArea, stackedAreaMultiples and stackedPyramid also use, keeps a foreign path in
+      // the same group out of the join.
       const segments = selection
-        .selectAll<SVGPathElement, PieDatum<T>>(".sszvis-path")
-        .each((d, i) => {
-          // This matches the data values iteratively in the same way d3 will when it does the data join.
-          // This is kind of a hack, but it's the only way to get any existing angle values from the already-bound data
-          if (data[i]) {
-            data[i].a0 = d.a0;
-            data[i].a1 = d.a1;
-          }
-        })
+        .selectAll<SVGPathElement, T>("path.sszvis-pie-path")
         .data(data)
-        .join("path")
-        .classed("sszvis-path", true)
-        .attr("transform", `translate(${props.radius},${props.radius})`)
-        .attr("fill", toColorAccessor(props.fill))
-        .attr("stroke", toColorAccessor(stroke));
+        .join((enter) =>
+          // transform, fill and stroke are written here and then only on the transition, so
+          // that they have an old value to animate away from on every later render.
+          enter
+            .append("path")
+            .attr("class", "sszvis-path sszvis-pie-path")
+            .attr("transform", transform)
+            .attr("fill", fillAccessor)
+            .attr("stroke", strokeAccessor)
+        );
 
-      segments
-        .transition(defaultTransition())
-        .attr("transform", `translate(${props.radius},${props.radius})`)
-        .attrTween("d", (d) => {
-          const angle0Interp = interpolate(Number(d.a0), Number(d._a0));
-          const angle1Interp = interpolate(Number(d.a1), Number(d._a1));
-          return (t) => {
-            d.a0 = angle0Interp(t);
-            d.a1 = angle1Interp(t);
-            // arc only returns null when it renders into a canvas context, which this one
-            // never does.
-            return arcGen(d) ?? "";
-          };
-        })
-        .attr("fill", toColorAccessor(props.fill))
-        .attr("stroke", toColorAccessor(stroke));
-
-      const ta = tooltipAnchor<PieDatum<T>>().position((d): [number, number] => {
-        const a0 = Number(d.a0);
-        const a1 = Number(d.a1);
-        // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
-        // makes the same correction to svg.arc() angles :o
-        const a = a0 + Math.abs(a1 - a0) / 2 - Math.PI / 2;
-        const r = (props.radius * 2) / 3;
-        return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
+      // Geometry is applied on the render tick, from the angles already on screen - the
+      // destination ones for a wedge that has just entered - so the DOM is never in a
+      // geometry-less state and nothing jumps before the transition takes over.
+      segments.attr("d", function (_d, i) {
+        const start = onScreen.get(this) ?? layout[i];
+        onScreen.set(this, start);
+        return arcPath(start);
       });
+
+      if (props.transition) {
+        segments
+          .transition(defaultTransition())
+          .attr("transform", transform)
+          .attr("fill", fillAccessor)
+          .attr("stroke", strokeAccessor)
+          .attrTween("d", function (_d, i) {
+            const from = onScreen.get(this) ?? layout[i];
+            const to = layout[i];
+            const a0 = interpolate(from.a0, to.a0);
+            const a1 = interpolate(from.a1, to.a1);
+            return (t) => {
+              const current = { a0: a0(t), a1: a1(t) };
+              // Recording every frame lets a render that interrupts this transition pick the
+              // angles up mid-flight.
+              onScreen.set(this, current);
+              return arcPath(current);
+            };
+          });
+      } else {
+        // A render that turns transitions off has to stop whatever the last one started:
+        // the attrTween below writes both the path and onScreen on every frame, so an
+        // uninterrupted transition would overwrite these attributes after they are set.
+        segments.interrupt();
+        segments
+          .attr("transform", transform)
+          .attr("fill", fillAccessor)
+          .attr("stroke", strokeAccessor)
+          .attr("d", function (_d, i) {
+            onScreen.set(this, layout[i]);
+            return arcPath(layout[i]);
+          });
+      }
+
+      const ta = tooltipAnchor<T>().position(
+        // The anchors are placed from the destination angles, so they describe the layout the
+        // wedges are heading for rather than the one they are leaving. d3 passes the index to
+        // every attr callback, which is how the anchor component invokes this; its own prop
+        // type just declares the datum, hence the assertion.
+        ((_d: T, i: number): [number, number] => {
+          const { a0, a1 } = layout[i] ?? { a0: 0, a1: 0 };
+          // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
+          // makes the same correction to svg.arc() angles :o
+          const a = a0 + Math.abs(a1 - a0) / 2 - Math.PI / 2;
+          const r = (radius * 2) / 3;
+          return [radius + Math.cos(a) * r, radius + Math.sin(a) * r];
+        }) as (d: T) => [number, number]
+      );
 
       selection.datum(data).call(ta);
     });
