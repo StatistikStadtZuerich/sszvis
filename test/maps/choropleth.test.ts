@@ -1,0 +1,767 @@
+import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { component } from "../../src/d3-component.js";
+import "../../src/d3-selectgroup.js";
+import { swissMapPath, swissMapProjection } from "../../src/map/mapUtils.js";
+import choropleth from "../../src/maps/choropleth.js";
+
+type Datum = { geoId: string; value: number | null };
+
+/**
+ * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
+ * counter-clockwise would describe the whole globe minus the square.
+ */
+const square = (id: string, offset = 0): Feature<Polygon> => ({
+  type: "Feature",
+  id,
+  properties: {},
+  geometry: {
+    type: "Polygon",
+    coordinates: [
+      [
+        [offset, offset],
+        [offset, offset + 1],
+        [offset + 1, offset + 1],
+        [offset + 1, offset],
+        [offset, offset],
+      ],
+    ],
+  },
+});
+
+/** The one polyline carrying every entity border, which is the shape the mesh renderer wants. */
+const mesh = (): Feature<MultiLineString> => ({
+  type: "Feature",
+  properties: {},
+  geometry: {
+    type: "MultiLineString",
+    coordinates: [
+      [
+        [0, 0],
+        [0, 1],
+      ],
+      [
+        [2, 2],
+        [2, 3],
+      ],
+    ],
+  },
+});
+
+/** The lake outline, and the entity borders that run over it. */
+const lakeFeature = (): Feature<Polygon> => square("lake", 1);
+const lakeBorders = (): Feature<MultiLineString> => ({
+  type: "Feature",
+  properties: {},
+  geometry: {
+    type: "MultiLineString",
+    coordinates: [
+      [
+        [1, 1],
+        [1, 2],
+      ],
+    ],
+  },
+});
+
+const fullData: Datum[] = [
+  { geoId: "a", value: 1 },
+  { geoId: "b", value: 2 },
+  { geoId: "c", value: 3 },
+];
+
+describe("maps/choropleth", () => {
+  let container: HTMLDivElement;
+  let layerKey = 0;
+  let size = 0;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    container.id = "chart-container";
+    document.body.appendChild(container);
+    // swissMapProjection memoizes on width, height and cache key alone, and choropleth always
+    // passes the same hardcoded key, so every test would otherwise inherit the projection the
+    // first one fitted. See the cache-key quirk below.
+    swissMapProjection.cache.clear();
+  });
+
+  afterEach(() => {
+    container?.parentNode?.removeChild(container);
+  });
+
+  const layer = (key?: string) =>
+    createSvgLayer("#chart-container", undefined, {
+      key: key ?? `choropleth-${++layerKey}`,
+    });
+
+  /** A fresh geojson each time, since getGeoJsonCenter caches a centre onto every feature. */
+  const geoJson = (): FeatureCollection<Polygon> => ({
+    type: "FeatureCollection",
+    features: [square("a"), square("b", 2), square("c", 4)],
+  });
+
+  /**
+   * A distinct size per render, so the projection cache key - which choropleth hardcodes - differs
+   * between renders that are meant to be independent.
+   */
+  const nextSize = () => 100 + ++size;
+
+  type Configure = (c: ReturnType<typeof choropleth>) => ReturnType<typeof choropleth>;
+
+  /** Renders a choropleth over `data`, returning the layer group it drew into. */
+  const render = (
+    data: Datum[],
+    configure: Configure = (c) => c,
+    options: { key?: string; collection?: FeatureCollection<Polygon>; size?: number } = {}
+  ) => {
+    const collection = options.collection ?? geoJson();
+    const side = options.size ?? nextSize();
+    const map = configure(
+      choropleth()
+        .features(collection)
+        .borders(mesh())
+        .lakeFeatures(lakeFeature())
+        .lakeBorders(lakeBorders())
+        .width(side)
+        .height(side)
+    );
+    return layer(options.key).datum(data).call(map).node() as SVGGElement;
+  };
+
+  const areas = (node: Element) => [
+    ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__area"),
+  ];
+  const attrs = (node: Element, attr: string) => areas(node).map((a) => a.getAttribute(attr));
+  const borders = (node: Element) => [
+    ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__border"),
+  ];
+  const lake = (node: Element) => [
+    ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__lakezurich"),
+  ];
+  const lakePaths = (node: Element) => [
+    ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__lakepath"),
+  ];
+  const highlights = (node: Element) => [
+    ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__highlight"),
+  ];
+
+  /**
+   * The distinct data an accessor was called with, in the order they first appeared. The base
+   * renderer calls its fill accessor twice for every area - once for the attribute and once for
+   * the transition that follows it - so the raw call log has each datum in it twice.
+   */
+  const distinct = (seen: unknown[]) => {
+    const out: unknown[] = [];
+    for (const value of seen) if (!out.some((v) => Object.is(v, value))) out.push(value);
+    return out;
+  };
+
+  describe("rendering", () => {
+    test("renders one area per map feature", () => {
+      const node = render(fullData);
+      expect(areas(node)).toHaveLength(3);
+    });
+
+    test("renders an area for a feature with no data too", () => {
+      const node = render([{ geoId: "a", value: 1 }]);
+      expect(areas(node)).toHaveLength(3);
+    });
+
+    test("renders the border mesh as a single path", () => {
+      const node = render(fullData);
+      expect(borders(node)).toHaveLength(1);
+      expect(borders(node)[0].getAttribute("d")).toMatch(/^M/);
+    });
+
+    test("projects the areas with a path fitted to the features at the given size", () => {
+      const collection = geoJson();
+      const node = render(fullData, (c) => c, { collection, size: 300 });
+      // Fitted here under a key of our own, so this is an independent projection rather than a
+      // read-back of the one the component cached under its hardcoded key.
+      const expected = swissMapPath(300, 300, collection, "fitted-independently");
+      expect(attrs(node, "d")).toEqual(collection.features.map((f) => expected(f)));
+    });
+
+    test("marks every area as an event target", () => {
+      const node = render(fullData);
+      expect(attrs(node, "data-event-target")).toEqual(["", "", ""]);
+    });
+
+    test("draws the base areas before the borders, so the borders paint on top", () => {
+      const node = render(fullData);
+      const paths = [...node.querySelectorAll("path")];
+      expect(paths.indexOf(areas(node)[0])).toBeLessThan(paths.indexOf(borders(node)[0]));
+    });
+  });
+
+  describe("data matching", () => {
+    test("matches data to features on geoId by default", () => {
+      const seen: unknown[] = [];
+      render(fullData, (c) =>
+        c.fill((d: Datum) => {
+          seen.push(d);
+          return "#ff0000";
+        })
+      );
+      expect(distinct(seen)).toEqual(fullData);
+    });
+
+    test("matches on a custom keyName", () => {
+      const collection = geoJson();
+      const seen: unknown[] = [];
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .width(120)
+        .height(120)
+        .keyName("kreis")
+        .withLake(false)
+        .fill((d?: { kreis: string }) => {
+          seen.push(d);
+          return "#ff0000";
+        });
+      layer()
+        .datum([{ kreis: "a" }, { kreis: "b" }, { kreis: "c" }])
+        .call(map);
+      expect(distinct(seen)).toEqual([{ kreis: "a" }, { kreis: "b" }, { kreis: "c" }]);
+    });
+
+    // NOTE: prepareMergedGeoData treats anything that is not an array as no data at all, so a
+    // layer rendered before its data arrives draws the map with every datum undefined instead of
+    // throwing.
+    test("renders the whole map with no data at all", () => {
+      const collection = geoJson();
+      const seen: unknown[] = [];
+      const node = layer()
+        .call(
+          choropleth()
+            .features(collection)
+            .borders(mesh())
+            .width(130)
+            .height(130)
+            .withLake(false)
+            .fill((d?: Datum) => {
+              seen.push(d);
+              return "#ff0000";
+            })
+        )
+        .node() as SVGGElement;
+      expect(areas(node)).toHaveLength(3);
+      expect(distinct(seen)).toEqual([undefined]);
+    });
+
+    test("hands the fill accessor undefined for a feature with no datum", () => {
+      const seen: unknown[] = [];
+      render([{ geoId: "a", value: 1 }], (c) =>
+        c.fill((d?: Datum) => {
+          seen.push(d);
+          return "#ff0000";
+        })
+      );
+      expect(distinct(seen)).toEqual([{ geoId: "a", value: 1 }, undefined]);
+    });
+  });
+
+  describe("the lake overlay", () => {
+    test("renders the lake and its border path by default", () => {
+      const node = render(fullData);
+      expect(lake(node)).toHaveLength(1);
+      expect(lakePaths(node)).toHaveLength(1);
+    });
+
+    test("omits the lake entirely when withLake is false", () => {
+      const node = render(fullData, (c) => c.withLake(false));
+      expect(lake(node)).toHaveLength(0);
+      expect(lakePaths(node)).toHaveLength(0);
+    });
+
+    // choropleth passes lakeFadeOut, defaulting to false, over the lake renderer's own default of
+    // true - so the fade mask and its gradient are not created unless the caller asks for them.
+    test("does not fade the lake out by default", () => {
+      const node = render(fullData);
+      expect(lake(node)[0].getAttribute("mask")).toBeNull();
+      const root = node.ownerSVGElement as SVGSVGElement;
+      expect(root.querySelectorAll("#lake-fade-gradient")).toHaveLength(0);
+    });
+
+    test("fades the lake out when lakeFadeOut is set", () => {
+      const node = render(fullData, (c) => c.lakeFadeOut(true));
+      expect(lake(node)[0].getAttribute("mask")).toBe("url(#lake-fade-mask)");
+    });
+
+    test("delegates lakePathColor to the lake renderer", () => {
+      const node = render(fullData, (c) => c.lakePathColor("#00ff00"));
+      expect(lakePaths(node)[0].style.stroke).toBe("rgb(0, 255, 0)");
+    });
+  });
+
+  describe("highlight", () => {
+    test("renders no highlight path by default", () => {
+      const node = render(fullData);
+      expect(highlights(node)).toHaveLength(0);
+    });
+
+    test("renders a highlight path per highlighted datum", () => {
+      const node = render(fullData, (c) => c.highlight([fullData[1]]));
+      expect(highlights(node)).toHaveLength(1);
+    });
+
+    test("delegates the highlight stroke and its width", () => {
+      const node = render(fullData, (c) =>
+        c.highlight([fullData[1]]).highlightStroke("#ff0000").highlightStrokeWidth(5)
+      );
+      expect(highlights(node)[0].style.stroke).toBe("rgb(255, 0, 0)");
+      expect(highlights(node)[0].style.strokeWidth).toBe("5");
+    });
+
+    test("matches the highlight data with the map's keyName", () => {
+      const collection = geoJson();
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .width(140)
+        .height(140)
+        .withLake(false)
+        .keyName("kreis")
+        .highlight([{ kreis: "b" }]);
+      const node = layer().call(map).node() as SVGGElement;
+      expect(highlights(node)).toHaveLength(1);
+      expect(highlights(node)[0].getAttribute("d")).toMatch(/^M/);
+    });
+
+    test("draws the highlight after the lake, so it is not covered by the lake texture", () => {
+      const node = render(fullData, (c) => c.highlight([fullData[1]]));
+      const paths = [...node.querySelectorAll("path")];
+      expect(paths.indexOf(highlights(node)[0])).toBeGreaterThan(paths.indexOf(lake(node)[0]));
+    });
+  });
+
+  describe("delegated base and mesh properties", () => {
+    test("delegates fill to the base renderer", () => {
+      const node = render(fullData, (c) => c.fill("#ff0000").transitionColor(false));
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
+    });
+
+    test("delegates defined to the base renderer", () => {
+      const node = render(fullData, (c) =>
+        c
+          .fill("#ff0000")
+          .transitionColor(false)
+          .defined((d: Datum) => d.value !== 2)
+      );
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
+    });
+
+    test("delegates borderColor and strokeWidth to the mesh renderer", () => {
+      const node = render(fullData, (c) => c.borderColor("#0000ff").strokeWidth(3));
+      expect(borders(node)[0].style.stroke).toBe("rgb(0, 0, 255)");
+      expect(borders(node)[0].style.strokeWidth).toBe("3");
+    });
+
+    test("reads a delegated property back from its renderer", () => {
+      const map = choropleth().borderColor("#0000ff");
+      expect(map.borderColor()).toBe("#0000ff");
+      expect(map.strokeWidth()).toBe(1.25);
+      expect(map.highlightStroke()("anything")).toBe("white");
+    });
+
+    test("returns the component from a delegated setter, so it can be chained", () => {
+      const map = choropleth();
+      expect(map.fill("#ff0000")).toBe(map);
+      expect(map.withLake(false)).toBe(map);
+    });
+
+    test("defaults keyName to geoId and withLake to true", () => {
+      const map = choropleth();
+      expect(map.keyName()).toBe("geoId");
+      expect(map.withLake()).toBe(true);
+      expect(map.lakeFadeOut()).toBe(false);
+    });
+  });
+
+  describe("anchoredShape", () => {
+    /** A stand-in for anchoredCircles: records what choropleth hands it, and draws one marker. */
+    const recordingShape = () => {
+      const calls: { mergedData: unknown; mapPath: unknown }[] = [];
+      const shape = component()
+        .prop("mergedData")
+        .prop("mapPath")
+        .render(function (this: Element) {
+          const props = (this as Element & { __props__: Record<string, unknown> }).__props__;
+          calls.push({ mergedData: props.mergedData, mapPath: props.mapPath });
+          this.appendChild(
+            document.createElementNS("http://www.w3.org/2000/svg", "circle")
+          ).classList.add("anchored-marker");
+        });
+      return { shape, calls };
+    };
+
+    test("renders the anchored shape and hands it the merged data and the map path", () => {
+      const { shape, calls } = recordingShape();
+      const node = render(fullData, (c) => c.anchoredShape(shape));
+      expect(node.querySelectorAll("circle.anchored-marker")).toHaveLength(1);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].mergedData).toHaveLength(3);
+      expect(typeof calls[0].mapPath).toBe("function");
+      expect((calls[0].mergedData as { datum: Datum | undefined }[]).map((d) => d.datum)).toEqual(
+        fullData
+      );
+    });
+
+    test("renders nothing extra when no anchored shape is set", () => {
+      const node = render(fullData);
+      expect(node.querySelectorAll("circle.anchored-marker")).toHaveLength(0);
+    });
+
+    test("hands the anchored shape the same merged data the base layer drew", () => {
+      const { shape, calls } = recordingShape();
+      render([{ geoId: "a", value: 1 }], (c) => c.anchoredShape(shape));
+      expect((calls[0].mergedData as { datum: Datum | undefined }[]).map((d) => d.datum)).toEqual([
+        { geoId: "a", value: 1 },
+        undefined,
+        undefined,
+      ]);
+    });
+  });
+
+  describe("events", () => {
+    const dispatchOn = (node: Element, type: string) =>
+      node.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+
+    // BUG: the mouse listeners are written for d3 v3, where a listener was called with the datum
+    // first. Since d3 v6 it is called with the event first, so `d` here is a PointerEvent and
+    // `d.datum` is undefined - every over, out and click handler is told which event happened but
+    // not which map entity it happened on. The same defect as the bubble renderer's own handlers,
+    // and it is what breaks the tooltips in the three examples that bind handlers at all:
+    // docs/map-standard/cml-quartier-years.js, docs/map-extended/quartiere-neubau.js and
+    // docs/map-extended/topolayer-statquart-neubau.js.
+    test("delivers undefined to an over handler instead of the hovered entity's datum", () => {
+      const seen: unknown[] = [];
+      const node = render(fullData, (c) => c.on("over", (d: unknown) => seen.push(d)));
+      dispatchOn(areas(node)[0], "mouseover");
+      expect(seen).toEqual([undefined]);
+    });
+
+    test("delivers undefined to out and click handlers too", () => {
+      const seen: unknown[] = [];
+      const node = render(fullData, (c) =>
+        c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d))
+      );
+      dispatchOn(areas(node)[0], "mouseout");
+      dispatchOn(areas(node)[0], "click");
+      expect(seen).toEqual([undefined, undefined]);
+    });
+
+    test("fires the handler once per event target hovered", () => {
+      let overs = 0;
+      const node = render(fullData, (c) => c.on("over", () => overs++));
+      for (const area of areas(node)) dispatchOn(area, "mouseover");
+      expect(overs).toBe(3);
+    });
+
+    test("returns the component from on() when registering, and the handler when reading", () => {
+      const map = choropleth();
+      const handler = () => undefined;
+      expect(map.on("over", handler)).toBe(map);
+      expect(map.on("over")).toBe(handler);
+    });
+
+    test("throws for an unknown event name, as d3's dispatch does", () => {
+      expect(() => choropleth().on("hover", () => undefined)).toThrow();
+    });
+
+    test("binds an anchored shape's own event targets, since it renders before the binding", () => {
+      const marked = component()
+        .prop("mergedData")
+        .prop("mapPath")
+        .render(function (this: Element) {
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("data-event-target", "");
+          circle.classList.add("shape-target");
+          this.appendChild(circle);
+        });
+      const seen: unknown[] = [];
+      const node = render(fullData, (c) =>
+        c.anchoredShape(marked).on("click", (d: unknown) => seen.push(d))
+      );
+      dispatchOn(node.querySelector("circle.shape-target") as Element, "click");
+      expect(seen).toEqual([undefined]);
+    });
+  });
+
+  describe("known quirks", () => {
+    // BUG: the projection cache key is the literal string "zurichStadtfeatures", the same for
+    // every choropleth on the page and for every map type. swissMapProjection keys its memo on
+    // width, height and that string alone, so two maps of *different* areas rendered at the same
+    // size share the projection fitted to whichever rendered first. Here the second map's features
+    // sit far outside the first's bounds and are projected outside the destination box.
+    test("shares one projection between two different maps rendered at the same size", () => {
+      const near: FeatureCollection<Polygon> = {
+        type: "FeatureCollection",
+        features: [square("a")],
+      };
+      const far: FeatureCollection<Polygon> = {
+        type: "FeatureCollection",
+        features: [square("a", 40)],
+      };
+      const first = render(fullData, (c) => c.withLake(false), {
+        collection: near,
+        size: 200,
+        key: "cache-first",
+      });
+      const second = render(fullData, (c) => c.withLake(false), {
+        collection: far,
+        size: 200,
+        key: "cache-second",
+      });
+      // Only one cache entry between them, under the key choropleth hardcodes.
+      expect(swissMapProjection.cache.size).toBe(1);
+      expect(swissMapProjection.cache.has("200,200,zurichStadtfeatures")).toBe(true);
+      expect(areas(first)).toHaveLength(1);
+      // Fitted on its own, the far square would fill the destination box exactly as the near one
+      // does; instead it is drawn by the near square's projection, which puts it far outside.
+      const fitted = swissMapPath(200, 200, far, "far-on-its-own");
+      expect(attrs(second, "d")).not.toEqual([fitted(far.features[0])]);
+      const reused = swissMapPath(200, 200, near, "near-on-its-own");
+      expect(attrs(second, "d")).toEqual([reused(far.features[0])]);
+      const coordinates = (attrs(second, "d")[0] as string)
+        .split(/[ML,Z]/)
+        .filter(Boolean)
+        .map(Number);
+      expect(coordinates.some((v) => v < 0 || v > 200)).toBe(true);
+    });
+
+    // NOTE: the cache key is also wrong on its own terms - "zurichStadtfeatures" is not one of the
+    // map ids in src/map/mapUtils.ts, so it reads as a leftover rather than an identifier of what
+    // is being fitted.
+    test("keys the projection cache on a string that names no map", () => {
+      render(fullData, (c) => c, { size: 210 });
+      expect([...swissMapProjection.cache.keys()]).toEqual(["210,210,zurichStadtfeatures"]);
+    });
+
+    // BUG: width and height have no defaults and are not validated. fitSize([undefined, undefined])
+    // produces a projection whose scale is NaN, so every area is drawn with a path of NaN
+    // coordinates - which the browser drops, leaving a blank map - rather than the component
+    // reporting that it was not given a size.
+    test("draws NaN paths when width and height are left out", () => {
+      const collection = geoJson();
+      const map = choropleth().features(collection).borders(mesh()).withLake(false);
+      const node = layer().call(map).node() as SVGGElement;
+      expect(areas(node)).toHaveLength(3);
+      for (const d of attrs(node, "d")) expect(d).toContain("NaN");
+    });
+
+    // features is required and unguarded: prepareMergedGeoData reads geoJson.features.
+    test("throws when features are missing", () => {
+      expect(() => layer().call(choropleth().width(100).height(100))).toThrow();
+    });
+
+    // NOTE: borders is not required, and a missing mesh renders as a path with no `d` rather than
+    // as no path at all, so the border layer is silently empty.
+    test("renders an empty border path when borders are missing", () => {
+      const collection = geoJson();
+      const node = layer()
+        .call(choropleth().features(collection).width(160).height(160).withLake(false))
+        .node() as SVGGElement;
+      expect(borders(node)).toHaveLength(1);
+      expect(borders(node)[0].getAttribute("d")).toBeNull();
+    });
+
+    // NOTE: withLake defaults to true, so a map with no lake data still gets the lake renderer,
+    // which emits the pattern definition and two empty paths. Every non-Zurich map - switzerland
+    // included - has to remember .withLake(false) or it carries them.
+    test("renders empty lake paths when withLake is on but no lake data is given", () => {
+      const collection = geoJson();
+      const node = layer()
+        .call(choropleth().features(collection).borders(mesh()).width(170).height(170))
+        .node() as SVGGElement;
+      expect(lake(node)[0].getAttribute("d")).toBeNull();
+      expect(lakePaths(node)[0].getAttribute("d")).toBeNull();
+      const root = node.ownerSVGElement as SVGSVGElement;
+      expect(root.querySelectorAll("#lake-pattern")).toHaveLength(1);
+    });
+
+    // BUG: turning the lake off after it has been drawn does not remove it. The render only skips
+    // calling the lake renderer, and nothing ever removes what a previous render left behind, so
+    // the lake, its border path and the pattern definition stay in the DOM. The
+    // statistische-zonen example notes .withLake(false) as the way to reveal the lake zones
+    // underneath; toggling it at runtime leaves the texture over them.
+    test("leaves a previously rendered lake in place when withLake is turned off", () => {
+      const collection = geoJson();
+      const target = layer("lake-toggle");
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .lakeFeatures(lakeFeature())
+        .lakeBorders(lakeBorders())
+        .width(180)
+        .height(180);
+      target.call(map.withLake(true));
+      const node = target.call(map.withLake(false)).node() as SVGGElement;
+      expect(lake(node)).toHaveLength(1);
+      expect(lakePaths(node)).toHaveLength(1);
+    });
+
+    // BUG: the same for the anchored shape. Clearing anchoredShape only stops the component being
+    // called; the circles it drew are still there.
+    test("leaves a previously rendered anchored shape in place when it is cleared", () => {
+      const collection = geoJson();
+      const target = layer("shape-toggle");
+      const shape = component()
+        .prop("mergedData")
+        .prop("mapPath")
+        .render(function (this: Element) {
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.classList.add("anchored-marker");
+          this.appendChild(circle);
+        });
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .withLake(false)
+        .width(190)
+        .height(190);
+      target.call(map.anchoredShape(shape));
+      const node = target.call(map.anchoredShape(null)).node() as SVGGElement;
+      expect(node.querySelectorAll("circle.anchored-marker")).toHaveLength(1);
+    });
+
+    // NOTE: the handlers are bound with selectAll("[data-event-target]"), which is scoped to the
+    // rendered group but is otherwise indiscriminate: any descendant carrying the attribute is
+    // bound, and the previous render's listeners are replaced rather than added to.
+    test("rebinds the handlers on every render rather than accumulating them", () => {
+      const collection = geoJson();
+      const target = layer("rebind");
+      let first = 0;
+      let second = 0;
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .withLake(false)
+        .width(220)
+        .height(220);
+      target.call(map.on("click", () => first++));
+      const node = target.call(map.on("click", () => second++)).node() as SVGGElement;
+      areas(node)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(first).toBe(0);
+      expect(second).toBe(1);
+    });
+
+    // NOTE: the JSDoc documents width, height, keyName, highlight, highlightStroke, defined, fill,
+    // borderColor, withLake, anchoredShape and transitionColor, but the component also carries
+    // features, borders, lakeFeatures, lakeBorders, lakeFadeOut, strokeWidth, highlightStrokeWidth
+    // and lakePathColor. features is the one property with no default whose absence throws;
+    // width and height have none either, but degrade to NaN paths. This test pins the full
+    // surface so the JSDoc can be checked against it.
+    test("exposes every documented and undocumented property", () => {
+      const map = choropleth();
+      for (const prop of [
+        "width",
+        "height",
+        "keyName",
+        "withLake",
+        "anchoredShape",
+        "features",
+        "borders",
+        "lakeFeatures",
+        "lakeBorders",
+        "lakeFadeOut",
+        "defined",
+        "fill",
+        "transitionColor",
+        "borderColor",
+        "strokeWidth",
+        "highlight",
+        "highlightStroke",
+        "highlightStrokeWidth",
+        "lakePathColor",
+        "on",
+      ]) {
+        expect(typeof map[prop]).toBe("function");
+      }
+    });
+
+    // NOTE: the lake renderer's own fadeOut property is not delegated - choropleth exposes it as
+    // lakeFadeOut instead - so there is no `fadeOut` accessor on the map component.
+    test("does not expose the lake renderer's fadeOut under its own name", () => {
+      expect(choropleth().fadeOut).toBeUndefined();
+    });
+
+    // NOTE: the four renderers keep no state of their own - their props live on the element they
+    // rendered into - so one component instance can draw into two layers. The event dispatch is
+    // the exception: it is created once per choropleth() call and closed over, so both layers
+    // share one set of handlers, which is what the rebinding test above shows.
+    test("draws two layers from one component instance, but shares their handlers", () => {
+      const collection = geoJson();
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .withLake(false)
+        .width(230)
+        .height(230)
+        .transitionColor(false)
+        .fill((d?: Datum) => (d ? "#ff0000" : "#0000ff"));
+      let clicks = 0;
+      const one = layer("two-layers-one")
+        .datum(fullData)
+        .call(map.on("click", () => clicks++))
+        .node() as SVGGElement;
+      const two = layer("two-layers-two")
+        .datum([{ geoId: "a", value: 1 }])
+        .call(map)
+        .node() as SVGGElement;
+      // Each layer reflects its own data.
+      expect(attrs(one, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
+      expect(attrs(two, "fill")).toEqual(["#ff0000", "#0000ff", "#0000ff"]);
+      // But both layers' areas are bound to the one dispatch.
+      areas(one)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      areas(two)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(clicks).toBe(2);
+    });
+
+    // BUG: the same leftover as withLake, reached through lakeFadeOut alone: the mask stays on the
+    // lake path once a render has applied it, because the lake renderer only ever adds the
+    // attribute. Turning the fade back off leaves the lake faded. See the lake renderer's own
+    // report of this, filed as issue #224.
+    test("leaves the lake faded after lakeFadeOut is turned back off", () => {
+      const collection = geoJson();
+      const target = layer("fade-toggle");
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .lakeFeatures(lakeFeature())
+        .lakeBorders(lakeBorders())
+        .width(240)
+        .height(240);
+      target.call(map.lakeFadeOut(true));
+      const node = target.call(map.lakeFadeOut(false)).node() as SVGGElement;
+      expect(lake(node)[0].getAttribute("mask")).toBe("url(#lake-fade-mask)");
+    });
+
+    // NOTE: the highlight is the one layer that is cleared when its input goes away - the
+    // highlight renderer removes its paths for an empty highlight array - which is what makes the
+    // lake and anchored-shape leftovers above read as oversights rather than as house style.
+    test("clears the highlight when it is emptied, unlike the lake and the anchored shape", () => {
+      const collection = geoJson();
+      const target = layer("highlight-toggle");
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .withLake(false)
+        .width(250)
+        .height(250);
+      target.datum(fullData).call(map.highlight([fullData[1]]));
+      const node = target.datum(fullData).call(map.highlight([])).node() as SVGGElement;
+      expect(highlights(node)).toHaveLength(0);
+    });
+
+    // The tooltip anchors the base renderer adds are, with the events broken, the only working way
+    // to attach a tooltip to a choropleth entity - so they are worth pinning here as well as in
+    // the base renderer's own tests.
+    test("carries one tooltip anchor per feature", () => {
+      const node = render(fullData);
+      expect(node.querySelectorAll("[data-tooltip-anchor]")).toHaveLength(3);
+    });
+  });
+});
