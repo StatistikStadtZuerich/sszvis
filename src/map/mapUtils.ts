@@ -206,6 +206,9 @@ export interface MergedGeoDatum<Datum> {
  * matches a string feature id, but only data that was actually passed in can ever be matched -
  * ids such as "constructor" or "__proto__" are ordinary keys here.
  *
+ * Note: a datum whose key property is missing is not filed under any entry, and a feature with no
+ * id is not looked up, so the two never meet under a shared "undefined" key.
+ *
  * Note: a symbol data key stays a symbol property, so it can never be matched by a feature id,
  * which GeoJSON allows only as a string or a number. Two symbols with the same description stay
  * distinct for the same reason.
@@ -239,14 +242,17 @@ export function prepareMergedGeoData<Datum extends object>(
   const groupedInputData = new Map<string | symbol, Datum>();
   if (Array.isArray(dataset)) {
     for (const datum of dataset) {
-      groupedInputData.set(toLookupKey(Reflect.get(datum, key)), datum);
+      const value = Reflect.get(datum, key);
+      // A datum with no key is filed under no entry at all, rather than under "undefined".
+      if (value === undefined) continue;
+      groupedInputData.set(toLookupKey(value), datum);
     }
   }
 
   // merge the map features and the input data into new objects that include both
   return geoJson.features.map((feature) => ({
     geoJson: feature,
-    datum: groupedInputData.get(toLookupKey(feature.id)),
+    datum: feature.id === undefined ? undefined : groupedInputData.get(toLookupKey(feature.id)),
   }));
 }
 
