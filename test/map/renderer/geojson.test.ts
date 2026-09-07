@@ -62,6 +62,10 @@ describe("map/renderer/geojson", () => {
   const elements = (node: Element) => [...node.querySelectorAll("path.sszvis-map__geojsonelement")];
   const attrs = (node: Element, attr: string) => elements(node).map((e) => e.getAttribute(attr));
   const anchors = (node: Element) => [...node.querySelectorAll("[data-tooltip-anchor]")];
+  /** The id the layer generated for its own missing-value pattern. */
+  const missingId = (node: Element) => node.querySelector("defs > pattern")?.getAttribute("id");
+  /** That pattern as a fill reference, which is what the elements carry. */
+  const missingFill = (node: Element) => `url(#${missingId(node)})`;
 
   const fullData: Datum[] = [
     { geoId: "a", value: 1 },
@@ -115,7 +119,8 @@ describe("map/renderer/geojson", () => {
     test("adds the missing value pattern to the layer's defs", () => {
       const node = render(fullData);
       const root = node.ownerSVGElement as SVGSVGElement;
-      expect(root.querySelectorAll("defs #missing-pattern")).toHaveLength(1);
+      expect(root.querySelectorAll("defs > pattern")).toHaveLength(1);
+      expect(root.querySelectorAll(`#${missingId(node)}`)).toHaveLength(1);
     });
   });
 
@@ -136,19 +141,15 @@ describe("map/renderer/geojson", () => {
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.fill("#ff0000").transitionColor(false)
       );
-      expect(attrs(node, "fill")).toEqual([
-        "#ff0000",
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
-      ]);
+      expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), missingFill(node)]);
     });
 
     test("draws an all-missing overlay for an empty dataset", () => {
       const node = render([], (c) => c.fill("#ff0000").transitionColor(false));
       expect(attrs(node, "fill")).toEqual([
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
+        missingFill(node),
+        missingFill(node),
+        missingFill(node),
       ]);
     });
 
@@ -167,9 +168,9 @@ describe("map/renderer/geojson", () => {
         c.transitionColor(false).dataKeyName("missing").fill("#ff0000")
       );
       expect(attrs(node, "fill")).toEqual([
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
+        missingFill(node),
+        missingFill(node),
+        missingFill(node),
       ]);
     });
 
@@ -186,7 +187,7 @@ describe("map/renderer/geojson", () => {
             .transitionColor(false)
         )
         .node() as SVGGElement;
-      expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
+      expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), "#ff0000"]);
     });
 
     test("matches data to features by the configured key names", () => {
@@ -209,7 +210,7 @@ describe("map/renderer/geojson", () => {
             .transitionColor(false)
         )
         .node() as SVGGElement;
-      expect(attrs(node, "fill")).toEqual(["url(#missing-pattern)", "#ff0000", "#ff0000"]);
+      expect(attrs(node, "fill")).toEqual([missingFill(node), "#ff0000", "#ff0000"]);
     });
 
     test("defaults the key names to geoId and id", () => {
@@ -235,7 +236,7 @@ describe("map/renderer/geojson", () => {
             .transitionColor(false)
         )
         .node() as SVGGElement;
-      expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
+      expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), "#ff0000"]);
     });
 
     // The anchor's `properties || (properties = {})` guard is reachable now that a feature with
@@ -271,9 +272,9 @@ describe("map/renderer/geojson", () => {
         )
         .node() as SVGGElement;
       expect(attrs(node, "fill")).toEqual([
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
+        missingFill(node),
+        missingFill(node),
+        missingFill(node),
       ]);
     });
 
@@ -297,7 +298,7 @@ describe("map/renderer/geojson", () => {
         )
         .node() as SVGGElement;
       expect(seen).not.toContain("function");
-      expect(attrs(node, "fill")[1]).toBe("url(#missing-pattern)");
+      expect(attrs(node, "fill")[1]).toBe(missingFill(node));
     });
 
     // The listeners are bound to this component's own elements, so a base layer's areas in the
@@ -330,10 +331,9 @@ describe("map/renderer/geojson", () => {
       ).toThrow(TypeError);
     });
 
-    // NOTE: the stale-class fill repaint is dead here for the same reasons as in the base
-    // renderer - it reads the previous render's classes, and every node it could touch is
-    // repainted anyway. See test/map/renderer/base.test.ts.
-    test("repaints nothing observable through the stale-class selector", () => {
+    // The unconditional fill application covers an element whose defined-ness changed, so the
+    // dead stale-class repaint that used to sit here was removed rather than replaced.
+    test("repaints an element that was undefined on the previous render", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("stale-fill");
@@ -377,7 +377,7 @@ describe("map/renderer/geojson", () => {
   describe("fill and stroke", () => {
     test("defaults the fill to black", () => {
       const node = render(partialData, (c) => c.transitionColor(false));
-      expect(attrs(node, "fill")).toEqual(["black", "black", "url(#missing-pattern)"]);
+      expect(attrs(node, "fill")).toEqual(["black", "black", missingFill(node)]);
     });
 
     test("uses the missing pattern where the defined predicate fails", () => {
@@ -387,18 +387,14 @@ describe("map/renderer/geojson", () => {
           .transitionColor(false)
           .defined((d: Datum) => d.value !== 2)
       );
-      expect(attrs(node, "fill")).toEqual([
-        "#ff0000",
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
-      ]);
+      expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), missingFill(node)]);
     });
 
     // Unlike the base renderer, the fill here consults fn.defined as well as props.defined, so a
     // feature with no datum does get the missing-value pattern rather than the ordinary fill.
     test("uses the missing pattern for a feature with no datum", () => {
       const node = render(partialData, (c) => c.fill("#ff0000").transitionColor(false));
-      expect(attrs(node, "fill")[2]).toBe("url(#missing-pattern)");
+      expect(attrs(node, "fill")[2]).toBe(missingFill(node));
     });
 
     // NOTE: defined goes through fn.functor, so a constant false textures the whole overlay.
@@ -407,9 +403,9 @@ describe("map/renderer/geojson", () => {
         c.fill("#ff0000").transitionColor(false).defined(false)
       );
       expect(attrs(node, "fill")).toEqual([
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
+        missingFill(node),
+        missingFill(node),
+        missingFill(node),
       ]);
     });
 
@@ -539,13 +535,15 @@ describe("map/renderer/geojson", () => {
       ).toBeUndefined();
     });
 
-    // BUG: as in the base renderer, the fill is written to the plain selection first and then
-    // transitioned to the same value, so the colour tween interpolates a colour onto itself and
-    // nothing ever animates. The transition also keeps d3's defaults - 250ms, easeCubicInOut -
-    // because `.call(slowTransition)` discards the transition slowTransition builds.
-    test("writes the final fill immediately and schedules d3's default transition", () => {
+    // The fill is applied exactly once, through the transition, so the tween has the previous
+    // colour to start from rather than the value it is about to write.
+    //
+    // NOTE: the transition still keeps d3's defaults - 250ms, easeCubicInOut - because
+    // `.call(slowTransition)` discards the transition slowTransition builds. That is the one
+    // fill-transition quirk this renderer still shares with the base renderer.
+    test("leaves the final fill out of the DOM and schedules d3's default transition", () => {
       const node = render(fullData, (c) => c.fill("#ff0000"));
-      expect(attrs(node, "fill").slice(1)).toEqual(["#ff0000", "#ff0000"]);
+      expect(attrs(node, "fill")).toEqual([null, null, null]);
       const schedules = (elements(node)[0] as Element & { __transition?: Record<string, unknown> })
         .__transition;
       const scheduled = Object.values(schedules ?? {}).filter(
@@ -554,6 +552,103 @@ describe("map/renderer/geojson", () => {
       );
       expect(scheduled[0].duration).toBe(250);
       expect(scheduled[0].ease.name).toBe("cubicInOut");
+    });
+
+    // d3 has no interpolator for a paint-server reference, so a colour-to-texture tween would
+    // interpolate the numbers embedded in the two strings and spend its run pointing at patterns
+    // that do not exist - "url(#missing-pattern255)" - painting nothing at all. Such a change is
+    // applied synchronously instead.
+    test("applies a change to the missing texture synchronously, without a tween", async () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("geojson-defined-to-missing");
+      const renderWith = (definedValue: boolean, transition: boolean) =>
+        layer
+          .datum(fullData)
+          .call(
+            mapRendererGeoJson()
+              .geoJson(collection)
+              .mapPath(mapPath)
+              .transitionColor(transition)
+              .defined(definedValue)
+              .fill("#ff0000")
+          )
+          .node() as SVGGElement;
+
+      renderWith(true, false);
+      const node = renderWith(false, true);
+      const textured = missingFill(node);
+      expect(attrs(node, "fill")).toEqual([textured, textured, textured]);
+
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      expect(attrs(node, "fill")).toEqual([textured, textured, textured]);
+    });
+
+    // The reverse direction is the same: leaving the texture cannot be interpolated either.
+    test("applies a change away from the missing texture synchronously", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("geojson-missing-to-defined");
+      const renderWith = (definedValue: boolean, transition: boolean) =>
+        layer
+          .datum(fullData)
+          .call(
+            mapRendererGeoJson()
+              .geoJson(collection)
+              .mapPath(mapPath)
+              .transitionColor(transition)
+              .defined(definedValue)
+              .fill("#00ff00")
+          )
+          .node() as SVGGElement;
+
+      renderWith(false, false);
+      const node = renderWith(true, true);
+      expect(attrs(node, "fill")).toEqual(["#00ff00", "#00ff00", "#00ff00"]);
+    });
+  });
+
+  describe("missing value pattern", () => {
+    // Ids are document-global, so each layer defines its pattern under an id of its own and
+    // references that id in the fill rather than a fixed one.
+    test("gives every overlay on the page its own missing-pattern id", () => {
+      const one = render(fullData, (c) => c, "geojson-layer-one");
+      const two = render(fullData, (c) => c, "geojson-layer-two");
+      const ids = [one, two].map(missingId);
+      expect(new Set(ids).size).toBe(2);
+      for (const id of ids) {
+        expect(document.querySelectorAll(`#${id}`)).toHaveLength(1);
+      }
+    });
+
+    test("keeps a layer's pattern id across re-renders", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("geojson-pattern-id-reuse");
+      const renderWith = () =>
+        layer
+          .datum(fullData)
+          .call(mapRendererGeoJson().geoJson(collection).mapPath(mapPath))
+          .node() as SVGGElement;
+
+      const first = missingId(renderWith());
+      expect(missingId(renderWith())).toBe(first);
+      expect(document.querySelectorAll("defs > pattern")).toHaveLength(1);
+    });
+
+    // The base renderer names its pattern from the same counter, so an overlay drawn over a base
+    // layer references its own definition rather than whichever came first in the document.
+    test("does not collide with a base layer's pattern id", async () => {
+      const mapRendererBase = (await import("../../../src/map/renderer/base.js")).default;
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const merged = collection.features.map((f) => ({ geoJson: f, datum: undefined }));
+
+      const baseNode = group("collide-base")
+        .call(mapRendererBase().mergedData(merged).mapPath(mapPath))
+        .node() as SVGGElement;
+      const overlayNode = render(fullData, (c) => c, "collide-overlay");
+      expect(missingId(baseNode)).not.toBe(missingId(overlayNode));
     });
   });
 

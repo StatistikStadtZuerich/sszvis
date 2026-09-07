@@ -29,9 +29,13 @@
  *                                          returning a number, called with the datum as the fill and stroke
  *                                          accessors are. Default 1.25. Undefined entities are not asked for a
  *                                          stroke width; they carry no stroke-width attribute.
- * @property {Boolean} transitionColor      Whether to schedule a transition on the fill color of the geojson entities.
- *                                          Default true. The transition does not currently animate anything; see the
- *                                          note below.
+ * @property {Boolean} transitionColor      Whether to transition the fill color of the geojson entities. Default true.
+ *                                          With it set the fill is only applied through the transition, so a color change
+ *                                          fades from the previous color; with it unset the fill is written synchronously.
+ *                                          An entering entity has no previous color, so it takes the final color at the
+ *                                          first tick. Only a color-to-color change is transitioned; an entity entering or
+ *                                          leaving the missing value texture takes its fill synchronously either way,
+ *                                          since a paint-server reference cannot be interpolated.
  *
  * Note: lookup keys are stringified, so a numeric and a string id that print the same collide. A
  * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
@@ -46,19 +50,15 @@
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
  * attribute or asking for no stroke.
  *
- * Note: this renderer still carries four quirks that the base renderer has since been fixed of.
- * The fill is written onto the plain selection during the data join and then transitioned to the
- * same value, so the colour tween interpolates a colour onto itself and nothing animates. The
- * stale-class fill repaint is dead: it reads the classes left by the previous render. The missing
- * value pattern is emitted per layer under the fixed id "missing-pattern", so two map layers on
- * one page define that id twice and every url(#missing-pattern) reference in the document resolves
- * to whichever comes first. And the fill and the --undefined class use different notions of a
- * missing value, so a feature with no datum is classed --undefined but painted the ordinary fill.
- * See src/map/renderer/base.ts for how each was resolved there.
+ * Note: the missing value pattern is written into a defs element inside each layer, under an id of
+ * that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
+ * element so re-renders reuse it. The id is not part of the public API; do not select on it.
  *
- * Note: one quirk the base renderer still shares - the slowTransition call is a no-op that leaves
- * d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut. The data join is
- * likewise an index join with no key function in both.
+ * Note: two quirks remain, shared with the base renderer. The slowTransition call is a no-op that
+ * leaves d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut, and the
+ * data join has no key function, so it is an index join: reordering the features repaints the
+ * existing nodes in place instead of moving them.
+ *
  * See test/map/renderer/geojson.test.ts.
  *
  * @return {sszvis.component}
@@ -80,7 +80,7 @@ import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 import { slowTransition } from "../../transition.js";
-import { GEO_KEY_DEFAULT, toLookupKey } from "../mapUtils.js";
+import { GEO_KEY_DEFAULT, isPaintServer, missingPatternId, toLookupKey } from "../mapUtils.js";
 
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
 type GeoJsonValue<T, R> = R | ((datum: T) => R);
@@ -182,8 +182,9 @@ export default function mapRendererGeoJson<
       const selection = select(this);
       const props = selection.props<GeoJsonProps>();
 
-      // render the missing value pattern
-      ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
+      // render the missing value pattern, under an id of this layer's own
+      const patternId = missingPatternId(selection);
+      ensureDefsElement(selection, "pattern", patternId).call(mapMissingValuePattern);
 
       // getDataKeyName will be called on data values. It should return a map entity id.
       // getMapKeyName will be called on the 'properties' of each map feature. It should
@@ -214,7 +215,7 @@ export default function mapRendererGeoJson<
       function getMapFill(d: MergedFeature): string {
         return fn.defined(d.datum) && props.defined(d.datum)
           ? props.fill(d.datum)
-          : "url(#missing-pattern)";
+          : `url(#${patternId})`;
       }
 
       function getMapStroke(d: MergedFeature): string {
@@ -232,12 +233,7 @@ export default function mapRendererGeoJson<
         .data(mergedData)
         .join("path")
         .classed("sszvis-map__geojsonelement", true)
-        .attr("data-event-target", "")
-        .attr("fill", getMapFill);
-
-      selection
-        .selectAll<Element, MergedFeature>(".sszvis-map__geojsonelement--undefined")
-        .attr("fill", getMapFill);
+        .attr("data-event-target", "");
 
       geoElements
         .classed(
@@ -246,8 +242,19 @@ export default function mapRendererGeoJson<
         )
         .attr("d", (d) => props.mapPath(d.geoJson));
 
+      // The fill is applied exactly once, so the transition has the previous color to interpolate
+      // from, and only a color-to-color change is tweened - a paint-server reference cannot be
+      // interpolated. Both rules are the base renderer's; see src/map/renderer/base.ts.
       if (props.transitionColor) {
-        geoElements.transition().call(slowTransition).attr("fill", getMapFill);
+        const tweenable = function (this: SVGPathElement, d: MergedFeature): boolean {
+          return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
+        };
+        geoElements.filter(tweenable).transition().call(slowTransition).attr("fill", getMapFill);
+        geoElements
+          .filter(function (this: SVGPathElement, d: MergedFeature) {
+            return !tweenable.call(this, d);
+          })
+          .attr("fill", getMapFill);
       } else {
         geoElements.attr("fill", getMapFill);
       }
