@@ -18,15 +18,20 @@
  * @property {Number} height         The height of the canvas. Required and unvalidated, like the width.
  * @property {Function} position     A function which takes a datum and returns a position for the corresponding
  *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
- *                                   index, no array - unlike a d3 accessor.
+ *                                   index, no array - unlike a d3 accessor, though the render callback itself
+ *                                   does receive d3's (data, index, group). A null result throws and a
+ *                                   non-finite one is silently dropped; see the notes below.
  * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2. A
  *                                   fractional side antialiases; see the notes below.
- * @property {Function} fill         The fill function. Takes a datum and should return a fill color for the datum's pixel.
+ *                                   sszvis.pixelsFromGeoDistance is the intended source for this value, and it
+ *                                   returns a float.
+ * @property {String, Function} fill The fill function. Takes a datum and should return a fill color for the datum's pixel.
  *                                   Wrapped in fn.functor, so a constant colour is accepted too. It has no
  *                                   default, and an invalid colour is not reported; see the notes below.
  *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
  *                                   CanvasPattern at runtime, which this contract deliberately excludes.
- * @property {Number} opacity        The opacity of the canvas. Defaults to 1. It is a style on the canvas, so it
+ * @property {Number} opacity        The opacity of the canvas. Default 1; use a lower value to reveal the
+ *                                   layers underneath. It is a style on the canvas, so it
  *                                   fades the whole layer rather than the individual cells, and 0 still draws
  *                                   every one of them.
  *
@@ -37,19 +42,27 @@
  *
  * Note: a fractional width or height is truncated to a whole-pixel bitmap. Every docs caller passes
  * bounds.innerWidth, which is routinely fractional, so a raster layer is typically up to a pixel
- * narrower and shorter than the SVG layers it has to line up with.
+ * narrower and shorter than the SVG layers it has to line up with. The attribute itself keeps the
+ * fractional value, so the markup reads 20.5 while the bitmap is 20.
  *
  * Note: the visible clearing between renders comes from writing the width attribute, which resets
- * the bitmap per spec, rather than from the clearRect call. When width and height are missing the
- * attributes are removed, the canvas falls back to its intrinsic 300x150, clearRect is called with
- * NaN and silently does nothing - so nothing clears at all and each render's cells pile up on the
- * previous ones. A change of dimensions resizes the existing canvas rather than replacing it.
+ * the bitmap per spec; the clearRect call is redundant while the dimensions are set, and a no-op
+ * when they are missing. When width and height are missing the attributes are removed, the canvas
+ * falls back to its intrinsic 300x150, clearRect is called with NaN and silently does nothing - so
+ * nothing clears at all and each render's cells pile up on the previous ones. The same canvas
+ * element is reused across renders, with width, height and opacity reapplied each time, and a
+ * change of dimensions resizes that canvas rather than replacing it - which is what makes the
+ * bitmap reset double as the clear.
  *
  * Note: fillStyle is stateful, and an invalid colour is ignored by the canvas API rather than
  * reported - so a cell whose fill does not parse is drawn in whatever colour was last set. That is
  * the previous cell's colour, which makes a broken colour scale look like a working one, or, in
  * debug mode, the debug red at 20% alpha, which reads as data. Debug mode is therefore not purely
  * additive.
+ *
+ * Note: no docs example can turn debug on - rastermap-gradient guards its debug(DEBUG) call with
+ * `if (DEBUG)` on a hardcoded false, and the other three rastermaps never touch the property - so
+ * the feature is exercised only by the tests.
  *
  * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
  * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
@@ -60,15 +73,16 @@
  *
  * Note: a non-finite position is dropped by the canvas API rather than reported, so a datum the
  * projection could not place leaves a hole in the raster with no indication; a null position throws
- * instead - the JavaScript threw from indexing that null, and the port re-throws a TypeError
- * carrying the same message from the same point in the loop. A zero cellSide draws nothing at all, and a negative one is
+ * a TypeError instead, from the same point in the loop the JavaScript's index threw from. A zero cellSide draws nothing at all, and a negative one is
  * indistinguishable from its positive counterpart, since the half-side offset and the width negate
  * each other. A fractional cellSide puts the cell edges on half pixels, so they antialias rather
  * than tiling exactly - and pixelsFromGeoDistance returns a float.
  *
  * Note: the component writes no position, so the canvas is only positioned because sszvis.css sets
  * position: absolute on the class - the same dependency as the image renderer, along with
- * display: block and pointer-events: none. The positions themselves are written unshifted, and
+ * display: block, pointer-events: none and user-select: none. The opacity, by contrast, is written
+ * as an inline style; nothing in sszvis.css sets it, so nothing is overridden - but a consumer
+ * cannot restyle it from their own stylesheet either. The positions themselves are written unshifted, and
  * createHtmlLayer offsets the layer by the bounds padding, so cell positions are layer-relative and
  * the padding is applied exactly once.
  *
@@ -79,11 +93,17 @@
  *
  * Note: nothing ties this component to an HTML layer. Called on an SVG selection the join creates an
  * SVG-namespaced canvas, which has no getContext, so it throws - where the image renderer silently
- * appends an unrenderable img instead. The port checks for that method rather than for an
- * HTMLCanvasElement, so a canvas belonging to another realm still draws.
+ * appends an unrenderable img instead.
+ *
+ * Note: the canvas carries no role, no aria-label and no fallback content, and the component offers
+ * no property for one, so a raster data layer is invisible to screen readers - the same gap as the
+ * image renderer's unlabelled img, and unlike the SVG layers there is no per-element markup a
+ * consumer could annotate instead.
  *
  * Note: no transition is scheduled - a canvas cannot be transitioned by d3 anyway - so the raster
- * repaints in full on every render, one fillStyle write and one fillRect per datum.
+ * repaints in full on every render, one fillStyle write and one fillRect per datum. Unlike the base
+ * and geojson renderers this component keeps no caches, emits no missing-value pattern, and adds no
+ * tooltip anchors or event targets, so none of that family of quirks applies here.
  * See test/map/renderer/raster.test.ts.
  *
  * @return {sszvis.component}
