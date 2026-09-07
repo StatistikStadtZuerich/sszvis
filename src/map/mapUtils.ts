@@ -359,8 +359,8 @@ function parseCenter(center: string | undefined, featureId: unknown): GeoPoint |
  * A little "magic" function for automatically calculating map stroke sizes based on
  * the width of the container they're in. Used for responsive designs.
  *
- * Note: the clamp does not rescue NaN - Math.max(0.8, NaN) is NaN - so an unmeasured container
- * width produces a NaN stroke width that reaches the DOM.
+ * Note: a width that is not a finite number - an unmeasured container - yields the 0.8 minimum
+ * rather than NaN, so the result is always within the documented range.
  *
  * See test/map/mapUtils.test.ts.
  *
@@ -368,6 +368,8 @@ function parseCenter(center: string | undefined, featureId: unknown): GeoPoint |
  * @return {number}          The stroke width that the map elements should have, clamped to [0.8, 1.1].
  */
 export function widthAdaptiveMapPathStroke(width: number): number {
+  // Math.max(0.8, NaN) is NaN, so the clamp alone cannot rescue an unmeasured width.
+  if (!Number.isFinite(width)) return 0.8;
   return Math.min(Math.max(0.8, width / 400), 1.1);
 }
 
