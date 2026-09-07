@@ -9583,7 +9583,7 @@
       // }
     };
 
-    /*
+    /**
      * A collection of utilities used by the map modules
      *
      * @module sszvis/map/utils
@@ -9600,21 +9600,44 @@
      * A function for creating d3 projection functions, customized for the dimensions of the map you need.
      * Because this projection generator involves calculating the boundary of the features that will be
      * projected, the result of these calculations is cached internally. Hence the featureBoundsCacheKey.
-     * You don't need to worry about this - mostly it's the map module components which use this function.
+     *
+     * Note: the cache key is width, height and featureBoundsCacheKey only. Reusing a key for a
+     * different feature collection returns the projection fitted to the first collection, which places
+     * the second collection outside the destination box.
+     *
+     * Note: featureBoundsCacheKey is optional, and every call that omits it shares the single key
+     * "<width>,<height>,undefined". Two different maps rendered at the same size collide silently.
+     *
+     * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
+     * distinct width/height/key triple for the lifetime of the page - a chart that reprojects on resize
+     * accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
+     * release them.
+     *
+     * See test/map/mapUtils.test.ts.
      *
      * @param  {Number} width                           The width of the projection destination space.
      * @param  {Number} height                          The height of the projection destination space.
      * @param  {Object} featureCollection               The feature collection that will be projected by the returned function. Needed to calculated a good size.
-     * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
+     * @param  {String} [featureBoundsCacheKey]         The cache key for the expensive bounds calculation.
+     *                                                  Must identify the feature collection: the collection
+     *                                                  itself is not part of the key.
      * @return {Function}                               The projection function.
      */
-    const swissMapProjection = memoize((width, height, featureCollection) => d3.geoMercator().fitSize([width, height], featureCollection),
+    const swissMapProjection = memoize((width, height, featureCollection,
+    // Part of the signature only so that the memoize resolver below can read it.
+    _featureBoundsCacheKey) => d3.geoMercator().fitSize([width, height], featureCollection),
     // Memoize resolver
     (width, height, _, featureBoundsCacheKey) => "" + width + "," + height + "," + featureBoundsCacheKey);
     /**
      * This is a special d3.geoPath generator function tailored for rendering maps of
      * Switzerland. The values are chosen specifically to optimize path generation for
      * Swiss map regions and is not necessarily optimal for displaying other areas of the globe.
+     *
+     * Note: the projection is the memoized one from swissMapProjection, shared with every other caller
+     * holding the same width, height and cache key, along with that function's cache-key collision
+     * behaviour. The path generator itself is new on every call.
+     *
+     * See test/map/mapUtils.test.ts.
      *
      * @param  {number} width                     The width of the available map space
      * @param  {number} height                    The height of the available map space
@@ -9627,13 +9650,21 @@
      *                                            and returns an svg path string which represents that geojson, projected using
      *                                            a map projection optimal for Swiss areas.
      */
-    const swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
+    function swissMapPath(width, height, featureCollection, featureBoundsCacheKey) {
       return d3.geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
-    };
+    }
     /**
      * Use this function to calcualate the length in pixels of a distance in meters across the surface of the earth
      * The earth's radius is not constant, so this function uses an approximation for calculating the degree angle of
      * a distance in meters.
+     *
+     * Note: the x and y spans of the projected square are averaged, so an anisotropic projection yields
+     * the mean of the two axes rather than either one.
+     *
+     * Note: both spans are taken as absolute values, so a negative meterDistance returns the same
+     * positive size as its positive counterpart rather than raising.
+     *
+     * See test/map/mapUtils.test.ts.
      *
      * @param {function} projection     You need to provide a projection function for calculating pixel values from decimal degree
      *                                  coordinates. This function should accept values as [lon, lat] array pairs (like d3's projection functions).
@@ -9642,8 +9673,9 @@
      *                                  because the pixel size of a given degree distance will be different if that square is located
      *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
      * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
+     * @throws {TypeError}              If the projection clips away either corner of the measured square.
      */
-    const pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
+    function pixelsFromGeoDistance(projection, centerPoint, meterDistance) {
       // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
       // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
       const APPROX_EARTH_RADIUS = 6367475;
@@ -9653,15 +9685,20 @@
       // Construct a square, centered at centerPoint, with sides that span that number of degrees
       const halfDegrees = degrees / 2;
       const bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]];
-      // Project those bounds to pixel coordinates using the provided map projection
-      const projBounds = bounds.map(projection);
+      // Project those bounds to pixel coordinates using the provided map projection.
+      // The projection is wrapped rather than passed to map() point-free, so it is called with the
+      // point alone and never with map()'s index and array arguments.
+      const [lowerBound, upperBound] = bounds.map(point => projection(point));
+      if (lowerBound == null || upperBound == null) {
+        throw new TypeError("pixelsFromGeoDistance: the projection clipped away the bounds of the measured square");
+      }
       // Depending on the rotation of the map, the sides of the box are not always positive quantities
       // For example, on a north-is-up map, the pixel y-scale is inverted, so higher latitude degree
       // values are lower pixel y-values. On a south-is-up map, the opposite is true.
-      const projXDist = Math.abs(projBounds[1][0] - projBounds[0][0]);
-      const projYDist = Math.abs(projBounds[1][1] - projBounds[0][1]);
+      const projXDist = Math.abs(upperBound[0] - lowerBound[0]);
+      const projYDist = Math.abs(upperBound[1] - lowerBound[1]);
       return (projXDist + projYDist) / 2;
-    };
+    }
     const GEO_KEY_DEFAULT = "geoId";
     /**
      * prepareMergedData
@@ -9669,27 +9706,62 @@
      * Merges a dataset with a geojson object by matching elements in the dataset to elements in the geojson.
      * it expects a keyname to be given, which is the key in each data object which has the id of the geojson
      * element to which that data object should be matched. Expects an array of data objects, and a geojson object
-     * which has a features array. Each feature is mapped to one data object.
+     * which has a features array. Each feature is mapped to one data object, or to undefined where no
+     * data object matched.
      *
-     * @param  {Array} dataset           The array of input data to match
+     * Note: matching goes through a plain object literal, so ids are stringified - a numeric data key
+     * matches a string feature id - and a feature whose id names an Object.prototype member
+     * ("constructor", "toString", ...) is handed the inherited property as its datum even though no
+     * such datum was supplied.
+     *
+     * Note: a datum keyed "__proto__" replaces the lookup object's prototype instead of creating an
+     * entry. That datum still reads back correctly, but every unmatched feature afterwards is handed a
+     * field of it rather than undefined. Do not feed untrusted ids to this function.
+     *
+     * Note: a symbol data key stays a symbol property, so it can never be matched by a feature id,
+     * which GeoJSON allows only as a string or a number. Two symbols with the same description stay
+     * distinct for the same reason.
+     *
+     * Note: several data sharing a key are not reported; the last one wins.
+     *
+     * Note: a falsy keyName, the empty string included, falls back to GEO_KEY_DEFAULT rather than being
+     * used as given.
+     *
+     * Note: dataset is guarded but geoJson is not, so a missing map throws where missing data returns
+     * an entry per feature with no datum.
+     *
+     * See test/map/mapUtils.test.ts.
+     *
+     * @param  {Array} [dataset]         The array of input data to match. Anything that is not an array is
+     *                                   treated as no data at all.
      * @param  {Object} geoJson          The geojson object. This function will attempt to match each geojson feature to a data object
      * @param  {String} keyName          The name of the property on each data object which will be matched with each geojson id.
      * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
      *                                   geoJson property which is the feature, and a datum property which is the matched datum.
      */
-    const prepareMergedGeoData = function (dataset, geoJson, keyName) {
-      keyName || (keyName = GEO_KEY_DEFAULT);
+    function prepareMergedGeoData(dataset, geoJson, keyName) {
+      // Any falsy key name, the empty string included, falls back to the default.
+      const key = keyName || GEO_KEY_DEFAULT;
       // group the input data by map entity id
       const groupedInputData = Array.isArray(dataset) ? dataset.reduce((m, v) => {
-        m[v[keyName]] = v;
+        m[toLookupKey$2(Reflect.get(v, key))] = v;
         return m;
       }, {}) : {};
       // merge the map features and the input data into new objects that include both
       return geoJson.features.map(feature => ({
         geoJson: feature,
-        datum: groupedInputData[feature.id]
+        datum: groupedInputData[toLookupKey$2(feature.id)]
       }));
-    };
+    }
+    /**
+     * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
+     * symbols with the same description remain distinct and can never be matched by a string or numeric
+     * feature id. Everything else stringifies, which is how a missing key becomes the string
+     * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
+     */
+    function toLookupKey$2(value) {
+      return typeof value === "symbol" ? value : String(value);
+    }
     /**
      * getGeoJsonCenter
      *
@@ -9701,49 +9773,118 @@
      * using the topojson command line tool's -e option (see the Makefile rule for the zurich statistical
      * quarters map for an example of this use).
      *
+     * Note: the cache is written onto the feature's own properties object, so this function mutates its
+     * argument, and the cache is never invalidated - changing `center` after the first call has no
+     * effect for the lifetime of the feature object.
+     *
+     * Note: the `center` string is split on "," and mapped through parseFloat with no validation. A
+     * value that does not parse becomes NaN coordinates, and a wrong number of components becomes a
+     * wrongly sized array; both reach the projection silently.
+     *
+     * See test/map/mapUtils.test.ts.
+     *
      * @param  {Object} geoJson                 The geoJson object for which you want the center.
-     * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
-     *                                          (or user-specified center) of the object.
+     * @return {number[]}                       The geographical coordinates (in the form [lon, lat]) of the centroid
+     *                                          (or user-specified center) of the object. Typed as number[] rather
+     *                                          than a [lon, lat] tuple because a malformed `center` property is
+     *                                          parsed without validation and can yield a shorter or longer array.
+     * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
+     *                                          but has never been supported here, since the cache is written to
+     *                                          the properties object.
      */
-    const getGeoJsonCenter = function (geoJson) {
-      if (!geoJson.properties.cachedCenter) {
-        const setCenter = geoJson.properties.center;
-        geoJson.properties.cachedCenter = setCenter ? setCenter.split(",").map(Number.parseFloat) : d3.geoCentroid(geoJson);
+    function getGeoJsonCenter(geoJson) {
+      const properties = geoJson.properties;
+      if (properties == null) {
+        throw new TypeError("getGeoJsonCenter: the feature has no properties object to cache onto");
       }
-      return geoJson.properties.cachedCenter;
-    };
+      if (!properties.cachedCenter) {
+        const setCenter = properties.center;
+        properties.cachedCenter = setCenter ? setCenter.split(",").map(Number.parseFloat) : d3.geoCentroid(geoJson);
+      }
+      return properties.cachedCenter;
+    }
     /**
      * widthAdaptiveMapPathStroke
      *
      * A little "magic" function for automatically calculating map stroke sizes based on
      * the width of the container they're in. Used for responsive designs.
      *
+     * Note: the clamp does not rescue NaN - Math.max(0.8, NaN) is NaN - so an unmeasured container
+     * width produces a NaN stroke width that reaches the DOM.
+     *
+     * See test/map/mapUtils.test.ts.
+     *
      * @param  {number} width    The width of the container holding the map.
-     * @return {number}          The stroke width that the map elements should have.
+     * @return {number}          The stroke width that the map elements should have, clamped to [0.8, 1.1].
      */
-    const widthAdaptiveMapPathStroke = function (width) {
+    function widthAdaptiveMapPathStroke(width) {
       return Math.min(Math.max(0.8, width / 400), 1.1);
-    };
+    }
 
     /**
      * base renderer component
      *
      * @module sszvis/map/renderer/base
      *
+     * @template T The type of the data values merged onto the map features
+     *
      * A component used internally for rendering the base layer of maps.
      * These map entities have a color fill, which is possibly a pattern that represents
      * missing values. They are also event targets. If your map has nothing else, it should have a
      * base layer.
      *
-     * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
-     * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+     * @property {GeoJson} geoJson                        Declared for compatibility but never read: the render takes every
+     *                                                    shape from the geoJson property of each merged datum. Setting it
+     *                                                    has no effect, and omitting it renders the map in full.
+     * @property {d3.geo.path} mapPath                    A path generator used to create the path data string for each merged
+     *                                                    shape. It must be a real d3.geoPath with a projection set, since the
+     *                                                    tooltip anchors are positioned by calling mapPath.projection(); see
+     *                                                    the note below.
      * @property {Object} mergedData                      This should be an array of merged data objects. Each object should have a datum property (the datum for
      *                                                    the map entity) and a geoJson property (the geoJson shape for the map entity). This component renders the
      *                                                    geoJson data and uses the datum to get properties of the shape, like fill color and tooltip data.
-     * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
-     *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
+     * @property {Boolean, Function} defined              A predicate used to determine whether a datum has a defined value. Map
+     *                                                    entities that fail it display the missing value texture. It is wrapped
+     *                                                    in fn.functor and defaults to the constant true, so a constant false
+     *                                                    textures the whole map and the default never rejects anything; see the
+     *                                                    note below on features with no datum.
      * @property {String, Function} fill                  A string or function for the fill of the map entities
-     * @property {Boolean} transitionColor                Whether or not to transition the fill color of the map entities. (default: true)
+     * @property {Boolean} transitionColor                Whether to schedule a transition on the fill color of the map entities.
+     *                                                    (default: true) The transition does not currently animate anything; see
+     *                                                    the note below.
+     *
+     * Note: the fill is written to the plain selection during the data join and the transition then
+     * re-applies the same value, so the color tween interpolates a color onto itself and the final
+     * color is already in the DOM before the transition starts. transitionColor changes whether a
+     * tween is scheduled, not whether anything animates.
+     *
+     * Note: the scheduled transition keeps d3's defaults of 250ms and easeCubicInOut rather than the
+     * intended 500ms easePolyOut. `.transition().call(slowTransition)` returns the original
+     * transition, while slowTransition ignores its argument and builds a fresh detached transition
+     * that is discarded.
+     *
+     * Note: the fill and the --undefined class use different notions of a missing value. The fill
+     * consults props.defined alone, which defaults to a constant true, while the class also consults
+     * fn.defined(d.datum). A feature with no datum is therefore classed --undefined but painted with
+     * the ordinary fill, and the fill accessor is called with undefined for it.
+     *
+     * Note: the missing value pattern is written into a defs element inside each map layer with the
+     * fixed id "missing-pattern". Two map layers on one page emit two definitions of that id, and
+     * every url(#missing-pattern) reference in the document resolves to whichever comes first.
+     *
+     * Note: rendering mutates the geojson it is handed. Anchor positions go through getGeoJsonCenter,
+     * which caches a center onto every feature's properties. A malformed `center` property parses to
+     * NaN coordinates and the anchor is emitted with a transform of translate(NaN,NaN) rather than
+     * being skipped, so a typo in an authored map file silently detaches that entity's tooltip.
+     *
+     * Note: a mapPath that is a bare path function renders all of the areas and then throws a
+     * TypeError from the anchor positions, which read mapPath.projection(). An empty mergedData never
+     * reaches that read, so the failure depends on the data.
+     *
+     * Note: the data join has no key function, so it is an index join. Reordering mergedData repaints
+     * the existing nodes in place instead of moving them. The --entering class is added and removed
+     * within the same chain, so it is never observable from outside a render and offers no enter-only
+     * styling hook. See test/map/renderer/base.test.ts.
      *
      * @return {sszvis.component}
      */
@@ -9769,7 +9910,29 @@
           mapAreas.attr("fill", getMapFill);
         }
         // the tooltip anchor generator
-        const ta = tooltipAnchor().position(d => props.mapPath.projection()(getGeoJsonCenter(d.geoJson)));
+        const ta = tooltipAnchor().position(d => {
+          // Read inside the callback, as the JavaScript did: a mapPath without a projection is only
+          // an error once there is an anchor to place, so an empty mergedData still renders.
+          // d3's own typings expect the projection type as a type argument here. The runtime guard
+          // below still covers a GeoPath whose projection was never set, and a mapPath that is a
+          // bare path function with no projection method at all - which the JSDoc's {d3.geo.path}
+          // contract permits but this component has never supported.
+          const projection = props.mapPath.projection();
+          if (typeof projection !== "function") {
+            throw new TypeError("map/renderer/base: mapPath must be a d3.geoPath with a projection, since the tooltip anchors are positioned with it");
+          }
+          // The centre is handed over whole rather than narrowed to a pair. getGeoJsonCenter returns
+          // number[] because an unvalidated `center` property can parse to any length, and the
+          // JavaScript passed whatever it produced straight to the projection; truncating here would
+          // change what a non-d3 projection function that reads past index 1 receives.
+          const point = projection(getGeoJsonCenter(d.geoJson));
+          // Only a hand-written projection can return null here: d3's own projections clip in the
+          // stream, not in the point call, and return a pair - of NaN, for a malformed centre. A null
+          // is passed on rather than replaced, as the JavaScript did: tooltipAnchor spreads it into
+          // translateString and renders transform="translate(undefined,undefined)". Substituting a
+          // NaN pair here would put a different attribute value in the DOM for the same input.
+          return point;
+        });
         const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
         // attach tooltip anchors
         tooltipGroup.call(ta);
@@ -9777,42 +9940,177 @@
     }
 
     /**
-     * @module sszvis/map/anchoredCircles
+     * bubble renderer component
+     *
+     * @module sszvis/map/renderer/bubble
+     *
+     * @template T The type of the data values merged onto the map features
      *
      * Creates circles which are anchored to the positions of map elements. Used in the "bubble chart".
      * You will usually want to pass this component, configured, as the .anchoredShape property of a base
      * map component.
      *
-     * @property {Object} mergedData                    Used internally by the base map component which renders this. Is a merged dataset used to render the shapes
-     * @property {Function} mapPath                     Used internally by the base map component which renders this. Is a path generation function which provides projections.
+     * @property {Array<Object>} mergedData             An array of merged data objects, each with a datum property (the datum
+     *                                                  for the map entity) and a geoJson property (its shape). Produced by
+     *                                                  the base map component which renders this. Required and unvalidated:
+     *                                                  omitting it reaches d3's keyed join as undefined, which throws. Every
+     *                                                  feature is present, including those with no matching datum, whose
+     *                                                  datum is undefined.
+     * @property {d3.geo.path} mapPath                  A path generator supplying the projection, passed in by the base map
+     *                                                  component which renders this. Required: omitting it throws, and it
+     *                                                  must be a real d3.geoPath with a projection set, since the anchor
+     *                                                  positions call mapPath.projection(); see the note below.
      * @property {Number, Function} radius              The radius of the circles. Can be a function which accepts a datum and returns a radius value.
-     * @property {Color, Function} fill                 The fill color of the circles. Can be a function
-     * @property {Color, Function} strokeColor          The stroke color of the circles. Can be a function
-     * @property {Boolean} transition                   Whether or not to transition the sizes of the circles when data changes. Default true
+     *                                                  It has no default and is called unguarded, so omitting it throws -
+     *                                                  and so does an accessor that reads through a datum without checking,
+     *                                                  since a feature with no data is still given a circle.
+     * @property {String, Function} fill                The fill color of the circles. Can be a function. No default, and
+     *                                                  called unguarded, so omitting it throws too.
+     * @property {String, Function} strokeColor         The stroke color of the circles. Can be a function. Default #ffffff.
+     * @property {Number, Function} strokeWidth         The stroke width of the circles. Can be a function. Default 1.
+     *                                                  Documented nowhere else: docs/map-signature/README.md omits it.
+     * @property {Boolean} transition                   Whether or not to transition the sizes of the circles when data
+     *                                                  changes. Default true - but it never actually animates a radius, and
+     *                                                  never affects a departing circle; see the notes below.
+     *
+     * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are all
+     * required in practice, and each fails differently when left out.
+     *
+     * Note: the over, out and click handlers registered through .on() are called with undefined rather
+     * than with the map entity's datum. The listeners are written for d3 v3, where a listener received
+     * the datum first; since d3 v6 it receives the event first, so what they read as `d.datum` is a
+     * property of a PointerEvent. The dispatch itself works, unlike the geojson renderer's, so a
+     * handler does fire - it just learns nothing about which entity was hovered.
+     *
+     * Note: on() forwards straight to a d3 dispatch, so it inherits its semantics: it returns the
+     * component for chaining and the handler when called with a name alone, an unknown event name
+     * throws, a namespaced name such as "over.tooltip" is accepted, and null removes a handler.
+     *
+     * Note: the circles are drawn into a group appended after the base layer's areas, so they paint on
+     * top - and they carry neither a data-event-target attribute nor a pointer-events override. As
+     * choropleth binds its own handlers to [data-event-target] after calling the anchored shape, the
+     * circles are never bound, so a pointer over a bubble reaches neither the base layer's handler nor,
+     * usefully, the bubble's own.
+     *
+     * Note: the circles are sorted by radius descending, so the largest paint first and smaller ones sit
+     * on top of them. That is a DOM reordering, so the rendered order does not follow mergedData.
+     *
+     * Note: the exit selection is read off the merged selection that join() returned, where it does not
+     * exist - so both exit branches are dead code, the shrink-to-zero transition and the plain remove
+     * alike. join() has already removed the departing circles synchronously, so a bubble leaving the
+     * data disappears instantly rather than shrinking away, whatever `transition` says.
+     *
+     * Note: the join is keyed on geoJson.id, which GeoJSON does not require. Features that have one keep
+     * their circles across a data change; features without one all key to "undefined", so on every
+     * re-render the first node matches and every node past it is exited and replaced by a fresh enter
+     * node - the count stays right, but all but one circle is destroyed and recreated each time, losing
+     * any transition in flight.
+     *
+     * Note: the radius accessor is called for every circle twice over - once for the attribute and once
+     * for the transition - and again for each comparison the size sort makes, so it runs several times
+     * more often than there are data.
+     *
+     * Note: the class is written with attr rather than classed, so it is replaced wholesale on every
+     * render and any class a consumer added to a circle is destroyed.
+     *
+     * Note: nothing in sszvis.css styles .sszvis-anchored-circle, so the fill, stroke and stroke width
+     * come entirely from the inline styles this component writes - and a consumer cannot restyle them
+     * from their own stylesheet, since an inline style beats any author rule short of !important.
+     *
+     * Note: this renderer shares four quirks with the base renderer, documented at length in
+     * src/map/renderer/base.ts: the radius transition interpolates a value onto itself, so nothing
+     * animates on enter or on update; the --entering modifier is added and removed within the same
+     * render, so it is never observable and offers no enter-only styling hook; the anchor positions go
+     * through getGeoJsonCenter, which caches a centre onto every feature's properties and never
+     * invalidates it, so moving a feature's geometry leaves its bubble behind; and mapPath must be a
+     * real d3.geoPath, since the positions read mapPath.projection(). Unlike base, though, the
+     * transition itself is the intended one - defaultTransition() is passed as `t` to .transition(t)
+     * rather than through the no-op `.transition().call(slowTransition)` pattern - so its 300ms and
+     * easePolyOut survive.
+     *
+     * Note: this component adds no tooltip anchors of its own; a bubble map's tooltips are anchored by
+     * the base renderer underneath it.
+     * See test/map/renderer/bubble.test.ts.
      *
      * @return {sszvis.component}
      */
+    /**
+     * The join key, as d3 receives it: the feature id, or the string "undefined" for a feature without
+     * one - which is why keyless features all collide. d3 appends "" to whatever this returns, so a
+     * plain d.geoJson.id would already be stringified; String() only makes the "undefined" fallback
+     * explicit for the type. The one divergence is a symbol id, on which d3's `+ ""` would have thrown
+     * and String() does not - GeoJSON does not allow one, and no test covers it.
+     */
+    function keyOf(d) {
+      return String(d.geoJson.id);
+    }
+    /** Reads the datum off a merged entry, as the JavaScript's module-level accessor did. */
     const datumAcc = prop("datum");
+    /**
+     * What the mouse listeners actually read. They were written for d3 v3, where a listener was called
+     * with the datum; since d3 v6 the first argument is the event, so `datum` here is a property of a
+     * PointerEvent and is always undefined. Transcribed rather than corrected so the port does not
+     * change behaviour - the fix is to take the datum from d3's second argument.
+     */
+    function legacyDatum(event) {
+      return event.datum;
+    }
+    /**
+     * Reads the anchor position for a feature, as the JavaScript did: through mapPath.projection(),
+     * which is why a bare path function throws here rather than being reported. The projection's own
+     * result is indexed unguarded too, so a clipped point throws from that index.
+     */
+    function anchorPosition(mapPath, geoJson) {
+      // The type argument is unchecked, as in base.ts: GeoPath types projection() as a union that
+      // includes shapes with no call signature, and only the caller knows which one was set.
+      const projection = mapPath.projection();
+      if (projection === null || typeof projection !== "function") {
+        // Reachable only for a real d3.geoPath whose projection was never set, where the JavaScript
+        // threw "projection is not a function" from the call below. A bare path function throws one
+        // line above instead, from reading .projection, as it did in the JavaScript. Not covered by
+        // the suite: the message is reconstructed rather than observed.
+        throw new TypeError("projection is not a function");
+      }
+      // The centre is handed over whole rather than narrowed to a pair, as the JavaScript did: an
+      // unvalidated `center` property can parse to any length, and truncating here would change what a
+      // non-d3 projection function that reads past index 1 receives. Follows base.ts.
+      const projected = projection(getGeoJsonCenter(geoJson));
+      if (projected === null) {
+        // The JavaScript indexed this result directly, so a projection that cannot place the point
+        // threw from that index; the message is V8's for it.
+        throw new TypeError("Cannot read properties of null (reading '0')");
+      }
+      return projected;
+    }
     function bubble () {
       const event = d3.dispatch("over", "out", "click");
       const anchoredCirclesComponent = component().prop("mergedData").prop("mapPath").prop("radius", functor).prop("fill", functor).prop("strokeColor", functor).strokeColor("#ffffff").prop("strokeWidth", functor).strokeWidth(1).prop("transition").transition(true).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
+        // Composed rather than written as an arrow: fn.compose invokes each stage with .call(this),
+        // so a radius accessor written as a function receives d3's circle node as `this`, exactly as
+        // the JavaScript did. An arrow here would call it with `this === undefined`.
         const radiusAcc = compose(props.radius, datumAcc);
-        const anchoredCircles = selection.selectGroup("anchoredCircles").selectAll(".sszvis-anchored-circle").data(props.mergedData, d => d.geoJson.id).join("circle").attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering").attr("r", radiusAcc).on("mouseover", function (d) {
-          event.call("over", this, d.datum);
-        }).on("mouseout", function (d) {
-          event.call("out", this, d.datum);
-        }).on("click", function (d) {
-          event.call("click", this, d.datum);
+        const anchoredCircles = selection.selectGroup("anchoredCircles").selectAll(".sszvis-anchored-circle")
+        // The key is the feature id, stringified by d3 - which is how every feature without one
+        // collides on "undefined". See the module note.
+        .data(props.mergedData, keyOf).join("circle").attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering").attr("r", radiusAcc).on("mouseover", function (e) {
+          event.call("over", this, legacyDatum(e));
+        }).on("mouseout", function (e) {
+          event.call("out", this, legacyDatum(e));
+        }).on("click", function (e) {
+          event.call("click", this, legacyDatum(e));
         }).attr("transform", d => {
-          const position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
+          const position = anchorPosition(props.mapPath, d.geoJson);
           return translateString(position[0], position[1]);
         }).style("fill", d => props.fill(d.datum)).style("stroke", d => props.strokeColor(d.datum)).style("stroke-width", d => props.strokeWidth(d.datum)).sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
         // Remove the --entering modifier from the updating circles
         anchoredCircles.classed("sszvis-anchored-circle--entering", false);
         if (props.transition) {
           const t = defaultTransition();
+          // Note: join() has already removed the exiting nodes and returns the merged selection, so
+          // this exit selection is empty and the shrink-away transition never runs. Kept as the
+          // JavaScript had it; see the module note.
           anchoredCircles.exit().transition(t).attr("r", 0).remove();
           anchoredCircles.transition(t).attr("r", radiusAcc);
         } else {
@@ -9820,8 +10118,16 @@
           anchoredCircles.attr("r", radiusAcc);
         }
       });
+      // The argument tuple is typed as geojson.ts and src/behavior/panning.ts type their own on():
+      // d3's dispatch.on derives its callback type from a *literal* event name, so a plain string
+      // collapses the callback to never. Narrowing to "over" | "out" | "click" would type the callback
+      // properly but would also reject the namespaced typenames d3 accepts at runtime, such as
+      // "over.tooltip".
       anchoredCirclesComponent.on = function () {
-        const value = event.on.apply(event, arguments);
+        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+        const value = event.on.apply(event, args);
         return value === event ? anchoredCirclesComponent : value;
       };
       return anchoredCirclesComponent;
@@ -9832,6 +10138,8 @@
      *
      * @module sszvis/map/renderer/geojson
      *
+     * @template T The type of the data values merged onto the geojson features
+     *
      * A component used for rendering overlays of geojson above map layers.
      * It can be used to render any arbitrary GeoJson.
      *
@@ -9839,16 +10147,105 @@
      *                                          with geographic entities. Default 'geoId'.
      * @property {string} geoJsonKeyName        The keyname in the geoJson which will be used to match map entities
      *                                          with data entities. Default 'id'.
-     * @property {GeoJson} geoJson              The GeoJson object which should be rendered. Needs to have a 'features' property.
+     * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
+     *                                          without a 'features' property throws a TypeError. Rendering mutates it; see
+     *                                          the note below on the cached centroid.
      * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
-     * @property {Function, Boolean} defined    A function which, when given a data value, returns whether or not data in that value is defined.
+     * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
+     *                                          that fail it, and entities with no datum at all, display the missing value
+     *                                          texture. It is wrapped in fn.functor and defaults to the constant true, so a
+     *                                          constant false textures the whole overlay and the default never rejects
+     *                                          anything.
      * @property {Function, String} fill        A function that returns a string, or a string, for the fill color of the GeoJson entities. Default black.
-     * @property {String} stroke                The stroke color of the entities. Can be a string or a function returning a string. Default black.
-     * @property {Number} strokeWidth           The thickness of the strokes of the shapes. Can be a number or a function returning a number. Default 1.25.
-     * @property {Boolean} transitionColor      Whether or not to transition the fill color of the geojson when it changes. Default true.
+     * @property {String, Function} stroke      The stroke color of the entities. Can be a string or a function returning a
+     *                                          string, called with the datum. Default black. Undefined entities are not
+     *                                          asked for a stroke at all; see the note below.
+     * @property {Number, Function} strokeWidth The thickness of the strokes of the shapes. A number, or a function
+     *                                          returning a number - but see the note below: unlike fill and stroke, a
+     *                                          strokeWidth accessor is handed the merged { geoJson, datum } wrapper
+     *                                          rather than the datum. Default 1.25.
+     * @property {Boolean} transitionColor      Whether to schedule a transition on the fill color of the geojson entities.
+     *                                          Default true. The transition does not currently animate anything; see the
+     *                                          note below.
+     *
+     * Note: the data are grouped with a reduce that has no initial value, so the first datum becomes
+     * the lookup table rather than an entry in it. That datum's feature never receives its data and
+     * always renders as missing, the remaining data are written as properties onto the caller's first
+     * array element, a single-datum dataset matches nothing at all, and an empty dataset throws.
+     *
+     * Note: the on("over"|"out"|"click") API has never delivered anything. The listeners call
+     * event.over(datum) and friends, but d3's dispatch exposes only on, call, apply and copy, so each
+     * listener throws a TypeError before any registered handler runs. Both maps in docs/map-extended
+     * register these handlers and receive nothing.
+     *
+     * Note: a strokeWidth accessor is called with the merged { geoJson, datum } wrapper, not with the
+     * datum, unlike the fill and stroke accessors. An accessor written against the datum reads
+     * undefined and d3 removes the attribute entirely.
+     *
+     * Note: the key lookup reads a feature's properties without a guard, so a feature with the
+     * spec-legal `properties: null`, or with no properties at all, crashes the merge with a bare
+     * TypeError. That also makes the anchor's own `properties || (properties = {})` guard unreachable.
+     *
+     * Note: lookup keys are stringified, so a missing key on either side becomes the string
+     * "undefined" and one keyless datum becomes the datum for every keyless feature. A symbol key stays
+     * a symbol and can never be matched by a string id. The lookup table is a plain object, so a
+     * feature keyed after an Object.prototype member - "valueOf", say - is handed the inherited
+     * function as its datum, which fn.defined accepts and passes to the fill accessor.
+     *
+     * Note: the mouse listeners are bound layer-wide via the [data-event-target] attribute rather than
+     * scoped to this component's own class. An overlay drawn into a group that already holds a base
+     * layer rebinds that layer's areas to this component's handlers and merged data.
+     *
+     * Note: rendering caches a sphericalCentroid onto every feature's properties and never invalidates
+     * it, so moving a feature's geometry leaves its anchor behind. Unlike the base renderer it ignores
+     * an authored `center` property and caches under a different key, so the two renderers disagree
+     * about where the same entity's tooltip belongs.
+     *
+     * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
+     * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
+     * attribute or asking for no stroke.
+     *
+     * Note: this renderer shares four quirks with the base renderer, documented at length in
+     * src/map/renderer/base.ts: the fill transition interpolates a colour onto itself, the
+     * slowTransition call is a no-op that leaves d3's 250ms easeCubicInOut defaults in place of the
+     * intended 500ms easePolyOut, the stale-class fill repaint is dead, and the data join is an index
+     * join with no key function. The missing value pattern is likewise emitted per layer under the
+     * fixed id "missing-pattern", so two map layers on one page define that id twice.
+     * See test/map/renderer/geojson.test.ts.
      *
      * @return {sszvis.component}
      */
+    /**
+     * Reads a key off a feature's properties. The JavaScript used fn.prop, which indexes without a
+     * guard, so a feature with spec-legal `properties: null` crashed the merge. The message matches
+     * what that read produced.
+     */
+    function readFeatureKey(properties, key) {
+      if (properties === null || properties === undefined) {
+        throw new TypeError("Cannot read properties of ".concat(properties, " (reading '").concat(key, "')"));
+      }
+      return properties[key];
+    }
+    /**
+     * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
+     * symbols with the same description remain distinct and can never be matched by a string id.
+     * Everything else stringifies, which is how a missing key becomes the string "undefined".
+     */
+    function toLookupKey$1(value) {
+      return typeof value === "symbol" ? value : String(value);
+    }
+    /**
+     * Reproduces what this component's event handlers have always done. The JavaScript called
+     * `event.over(datum)`, but d3's dispatch provides only on, call, apply and copy - there has never
+     * been a per-type method - so the call threw before any registered handler was reached. That is
+     * why .on("over"|"out"|"click") has never delivered anything. The throw is unconditional because
+     * the call could never succeed; the message is the one V8 produced for the original expression.
+     * Transcribed rather than corrected so the port does not change behaviour - the fix is to use
+     * event.apply(type, this, args), as src/behavior/panning.ts already does.
+     */
+    function emitLegacy(type) {
+      throw new TypeError("event.".concat(type, " is not a function"));
+    }
     function geojson () {
       const event = d3.dispatch("over", "out", "click");
       const geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
@@ -9861,14 +10258,21 @@
         // return a map entity id. Data values are matched with corresponding map features using
         // these entity ids.
         const getDataKeyName = prop(props.dataKeyName);
-        const getMapKeyName = prop(props.geoJsonKeyName);
-        const groupedInputData = data.reduce((m, v) => {
-          m[getDataKeyName(v)] = v;
-          return m;
-        });
+        // The JavaScript grouped the data with `data.reduce((m, v) => { m[key(v)] = v; return m; })`
+        // and no initial value, so the first datum became the accumulator: it is never an entry of
+        // its own table, the rest of the data are written onto it, and an empty array throws.
+        // Written as an explicit loop here so the table has a type; the behaviour is unchanged.
+        if (data.length === 0) {
+          throw new TypeError("Reduce of empty array with no initial value");
+        }
+        const [firstDatum, ...remainingData] = data;
+        const groupedInputData = firstDatum;
+        for (const datum of remainingData) {
+          groupedInputData[toLookupKey$1(getDataKeyName(datum))] = datum;
+        }
         const mergedData = props.geoJson.features.map(feature => ({
           geoJson: feature,
-          datum: groupedInputData[getMapKeyName(feature.properties)]
+          datum: groupedInputData[toLookupKey$1(readFeatureKey(feature.properties, props.geoJsonKeyName))]
         }));
         function getMapFill(d) {
           return defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
@@ -9885,28 +10289,45 @@
           geoElements.attr("fill", getMapFill);
         }
         geoElements.attr("stroke", getMapStroke).attr("stroke-width", props.strokeWidth);
-        selection.selectAll("[data-event-target]").on("mouseover", d => {
-          event.over(d.datum);
-        }).on("mouseout", d => {
-          event.out(d.datum);
-        }).on("click", d => {
-          event.click(d.datum);
+        // The JavaScript read `.datum` off each listener's first parameter. d3 v6 and later call a
+        // listener with (event, datum), so that read was always of the DOM event and always
+        // undefined; the emit below throws before the value is used either way.
+        selection.selectAll("[data-event-target]").on("mouseover", () => {
+          emitLegacy("over");
+        }).on("mouseout", () => {
+          emitLegacy("out");
+        }).on("click", () => {
+          emitLegacy("click");
         });
         // the tooltip anchor generator
         const ta = tooltipAnchor().position(d => {
-          d.geoJson.properties || (d.geoJson.properties = {});
-          let sphericalCentroid = d.geoJson.properties.sphericalCentroid;
+          const properties = d.geoJson.properties || (d.geoJson.properties = {});
+          let sphericalCentroid = properties.sphericalCentroid;
           if (!sphericalCentroid) {
-            d.geoJson.properties.sphericalCentroid = sphericalCentroid = d3.geoCentroid(d.geoJson);
+            properties.sphericalCentroid = sphericalCentroid = d3.geoCentroid(d.geoJson);
           }
-          return props.mapPath.projection()(sphericalCentroid);
+          // d3's own typings expect the projection type as a type argument here.
+          const point = props.mapPath.projection()(sphericalCentroid);
+          // Only a hand-written projection can return null: d3's projections clip in the stream,
+          // not in the point call, and return a pair - of NaN, for a degenerate centroid. A null is
+          // passed on rather than replaced, as the JavaScript did: tooltipAnchor spreads it into
+          // translateString and renders transform="translate(undefined,undefined)". Substituting a
+          // NaN pair here would put a different attribute value in the DOM for the same input.
+          return point;
         });
         const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
         // attach tooltip anchors
         tooltipGroup.call(ta);
       });
+      // The argument tuple is typed as src/behavior/panning.ts types its own on(): d3's dispatch.on
+      // derives its callback type from a *literal* event name, so a plain string collapses the
+      // callback to never. Narrowing to "over" | "out" | "click" would type the callback properly but
+      // would also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
       geojsonComponent.on = function () {
-        const value = event.on.apply(event, arguments);
+        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+        const value = event.on.apply(event, args);
         return value === event ? geojsonComponent : value;
       };
       return geojsonComponent;
@@ -9917,18 +10338,123 @@
      *
      * @module sszvis/map/renderer/highlight
      *
+     * @template T The type of the data values in the highlight array
+     *
      * A component used internally for rendering the highlight layer of maps.
      * The highlight layer accepts an array of data values to highlight, and renders
-     * The map entities associated with those data values using a special stroke.
+     * The map entities associated with those data values using a special stroke. It is the per-entity
+     * counterpart to the mesh renderer, which draws every border as one path with one shared style.
      *
-     * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
-     * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+     * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer. It must be a
+     *                                                    feature collection: `features` is read unguarded, so a bare Feature
+     *                                                    throws. Required only when the highlight array is non-empty, and
+     *                                                    never validated, which is why the getter reports it as possibly
+     *                                                    undefined.
+     * @property {d3.geo.path} mapPath                    A path-generator used to create the path data string for each matched
+     *                                                    feature. A d3.geoPath or a bare generator function is accepted; it is
+     *                                                    called with the matched feature, or with undefined where nothing
+     *                                                    matched, for which a d3.geoPath returns null.
      * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
-     * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities are highlighted.
-     * @property {String, Function} highlightStroke       A function for the stroke of the highlighted entities
+     *                                                    A falsy keyName is used as given, unlike prepareMergedGeoData, which
+     *                                                    falls back to the default - so an empty keyName reads datum[""],
+     *                                                    which is undefined, and matches a keyless feature rather than the
+     *                                                    intended entity.
+     * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities
+     *                                                    are highlighted. Falsy entries are dropped. Default [].
+     * @property {String, Function} highlightStroke       A colour, or an accessor called with the highlighted datum only.
+     *                                                    Default white. Returning null removes the inline style, leaving SVG's
+     *                                                    initial stroke of 'none' - an invisible highlight, with no error.
+     * @property {Number, Function} highlightStrokeWidth  A width, or an accessor called with the highlighted datum only.
+     *                                                    Default 2. Returning null removes the inline style, leaving SVG's
+     *                                                    initial width of 1.
+     *
+     * Note: an entity id that matches no feature is not reported. The lookup yields undefined, the
+     * path generator returns null for it, and d3 removes the attribute - leaving a classed, styled
+     * path with no geometry. A caller highlighting a stale or misspelled id sees nothing happen and
+     * cannot tell that from the entity being off-screen.
+     *
+     * Note: the feature lookup keys on feature.id, which GeoJSON does not require, and goes through a
+     * plain object literal. So ids are stringified on both sides - a numeric feature id is matched by
+     * either a numeric or a string data key, which is load-bearing because SSZ geodata uses numeric
+     * ids - every feature without an id collapses onto the key "undefined" and the last of them wins,
+     * where a datum with no key finds it because the datum side stringifies the same way, and an id
+     * naming an Object.prototype member ("valueOf", "toString", ...) is "found" even though no such
+     * feature exists, failing exactly like an unmatched id. A symbol stays a symbol key, so it can
+     * never be matched by a string id.
+     *
+     * Note: neither geoJson nor mapPath is validated, and once there is something to highlight both
+     * are required. A missing geoJson throws while the lookup table is built, before the join runs, so
+     * nothing is appended; a missing mapPath throws from inside the "d" callback, after the join has
+     * appended the element, so it leaves a classed path behind - with no geometry, and no inline stroke
+     * styles either, since the throw happens in the "d" callback before either .style() call is
+     * reached. The empty
+     * highlight case returns early before either is touched, and is the one configuration that
+     * tolerates having neither.
+     *
+     * Note: highlight is tested as `.length === 0`, so a non-array without a length - a single datum
+     * passed by mistake - skips the early return and then throws a bare TypeError from .reduce. A
+     * string has a length, so "" clears the layer while any other string throws. An array of only falsy entries is the second,
+     * distinct way to clear the layer: it merges to nothing and the exit selection removes the paths,
+     * but unlike the early return it still reads geoJson, to build the lookup table. mapPath is not
+     * read: the join has no elements, so d3 never invokes the "d" callback.
+     *
+     * Note: nothing deduplicates the highlight array, so highlighting one entity twice draws two
+     * stacked paths - harmless while the stroke is opaque, visible with a translucent one.
+     *
+     * Note: both style properties are wrapped in fn.functor and called by the component itself rather
+     * than handed to d3, unlike the mesh renderer's. An accessor therefore receives exactly one
+     * argument, the datum, with no index and no node group - and, because the call is written as a
+     * method access on props, an accessor expecting d3's node as `this` gets the component's internal
+     * props object instead. An accessor returning null removes the style, so a null colour leaves the
+     * highlight with SVG's initial stroke of `none` - invisible, with no error - and a null width
+     * leaves it at the initial width of 1.
+     *
+     * Note: both properties are written as inline styles rather than attributes. Nothing in sszvis.css
+     * sets stroke or stroke-width for .sszvis-map__highlight, so nothing is being overridden - but a
+     * consumer cannot restyle a highlight from their own stylesheet either, since an inline style
+     * beats any author rule short of !important.
+     *
+     * Note: the component sets neither fill nor pointer-events; both come from sszvis.css. Rendered
+     * without that stylesheet, a highlight is a filled black shape covering the entity, and it
+     * swallows the base layer's hover and click events - which matters more here than for the mesh,
+     * since a highlight is normally driven by exactly that hover.
+     *
+     * Note: the border selector is unscoped and the join unkeyed, so a second highlight layer rendered
+     * into the same group rebinds the first one's paths instead of drawing its own. One highlight layer
+     * per group; choropleth uses exactly one, so the collision is latent, but the renderer is exported
+     * publicly. Being an index join, it also re-purposes surviving elements by position rather than by
+     * entity when the highlight array shrinks; the rendered result is still right, because "d" and both
+     * styles are reapplied on every render rather than only on enter.
+     *
+     * Note: the empty-highlight branch used to return a decorative `true`. Nothing consumed it -
+     * d3's selection.each ignores the render callback's return value - so the port returns nothing.
+     *
+     * Note: no transition is scheduled, so a highlight appears and disappears instantly. Unlike the
+     * base and geojson renderers this component keeps no caches, emits no missing-value pattern, and
+     * adds no tooltip anchors or event targets, so none of that family of quirks applies here.
+     * See test/map/renderer/highlight.test.ts.
      *
      * @return {sszvis.component}
      */
+    /**
+     * Reads the entity id off a datum. Reflect.get is a property access, so it walks the prototype
+     * chain and reads a falsy keyName as given, exactly as the JavaScript's datum[keyName] did. Only
+     * truthy data reach this, and Object() boxes a primitive one rather than rejecting it, which is
+     * what datum[keyName] did for a datum that is not an object.
+     */
+    function readEntityKey(datum, keyName) {
+      return Reflect.get(toObject(datum), keyName);
+    }
+    /** Object as a boxing function, named so the boxing is explicit rather than an implicit any. */
+    const toObject = Object;
+    /**
+     * Normalises a lookup key the way a property access does: a symbol stays a symbol key, everything
+     * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
+     * with the geojson renderer's own lookup.
+     */
+    function toLookupKey(value) {
+      return typeof value === "symbol" ? value : String(value);
+    }
     function mapRendererHighlight () {
       return component().prop("keyName").keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
       .prop("geoJson").prop("mapPath").prop("highlight").highlight([]) // an array of data values to highlight
@@ -9939,17 +10465,19 @@
         const highlightBorders = selection.selectAll(".sszvis-map__highlight");
         if (props.highlight.length === 0) {
           highlightBorders.remove();
-          return true; // no highlight, no worry
+          // The JavaScript returned a decorative `true` here ("no highlight, no worry"); d3's
+          // selection.each ignores whatever the render callback returns, so nothing consumed it.
+          return;
         }
         const groupedMapData = props.geoJson.features.reduce((m, feature) => {
-          m[feature.id] = feature;
+          m[toLookupKey(feature.id)] = feature;
           return m;
         }, {});
         // merge the highlight data
         const mergedHighlight = props.highlight.reduce((m, v) => {
           if (v) {
             m.push({
-              geoJson: groupedMapData[v[props.keyName]],
+              geoJson: groupedMapData[toLookupKey(readEntityKey(v, props.keyName))],
               datum: v
             });
           }
@@ -9970,8 +10498,12 @@
      *
      * @property {Function} projection      The map projection function used to position the image in pixels. Uses the upper left
      *                                      and lower right corners of the image as geographical place markers to align with other map layers.
-     * @property {String} src               The source of the image you want to use. This should be ither a URL for an image hosted on the same
+     *                                      It is called once per corner, with that corner's coordinates. A result it cannot
+     *                                      place is not handled; see the notes below.
+     * @property {String, Function} src      The source of the image you want to use. This should be either a URL for an image hosted on the same
      *                                      server that hosts the page, or a base64-encoded dataURL. For example, the zurich topolayer map module.
+     *                                      A missing src is not reported: d3 removes an attribute set to undefined, so the
+     *                                      image renders fully positioned with no src at all.
      * @property {Array} geoBounds          This should be a 2D array containing the upper-left (north-west) and lower-right (south-east)
      *                                      coordinates of the corresponding corners of the image. The structure expected is:
      *
@@ -9982,19 +10514,109 @@
      *                                      Note: it is possible that even with precise corner coordinates, some mismatch may still occur. This
      *                                      will happen if the image itself is generated using a different type of map projection than the one used by the
      *                                      projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
-     * @property {Number} opacity           The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
+     *                                      The two corners are subtracted in the order given, so passing the south-east
+     *                                      corner first yields negative widths and heights, which the CSS parser drops -
+     *                                      leaving the image positioned but unsized, with no error.
+     * @property {Number, Function} opacity  The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
+     *                                      Default 1. An invalid value is dropped by the CSS parser rather than reported,
+     *                                      leaving the image fully opaque; 0 renders nothing at all, which is
+     *                                      indistinguishable from a src that failed to load.
+     *
+     * Note: this component renders an HTML img element, so it belongs in a createHtmlLayer. Nothing
+     * enforces that: called on an SVG selection it appends an SVG-namespaced img, which no browser
+     * renders, without complaining.
+     *
+     * Note: the img carries no alt attribute and no role, and the component offers no property for
+     * one, so a topographic layer is announced by screen readers as an unlabelled image. All six docs
+     * examples ship this.
+     *
+     * Note: the component writes left and top but never position, so both are inert unless sszvis.css
+     * is loaded - it is the stylesheet that sets position: absolute, along with display: block and
+     * pointer-events: none. Without it the image sits in the document flow at the computed pixel size,
+     * unoffset and clickable.
+     *
+     * Note: the projected coordinates are written unshifted, and createHtmlLayer positions the layer
+     * itself by the bounds padding - so the image's offset is relative to the layer and the padding is
+     * applied exactly once. That is what keeps the image aligned with the svg layer.
+     *
+     * Note: the width is the rounded difference of the unrounded corners, while left is the rounded
+     * north-west corner, so left + width does not necessarily equal the rounded south-east corner. The
+     * image's right and bottom edges can sit a pixel off the map layers they are meant to align with.
+     *
+     * Note: neither geoBounds nor projection is validated. A missing geoBounds throws a bare TypeError
+     * from indexing undefined, and a missing projection throws from calling it - both before any
+     * attribute is written, though the img element has already been appended by then, so a throw
+     * leaves a classed, empty img in the layer. A missing src is not reported at all: d3 removes an
+     * attribute set to undefined, so the image renders fully positioned and sized with no src.
+     *
+     * Note: a projection that answers null for a point it cannot place throws a bare TypeError rather
+     * than being reported, and it does so late: the src has been written and both corners have already
+     * been projected by the time the coordinates are read, so the failure leaves an img with its src
+     * but no position. The JavaScript threw from indexing that null; the port re-throws a TypeError
+     * carrying the same message from the same point in the chain. A projection that answers a
+     * non-finite coordinate instead produces the string "Infinitypx", which the CSS parser drops,
+     * leaving the image unpositioned. Neither is reachable with a d3 projection called this way:
+     * clipAngle and clipExtent apply to streams, not to a direct call.
+     *
+     * Note: a Mercator pole, which is reachable, fails a third way again - log(tan(pi/2)) is merely a
+     * very large float, so a geoBounds latitude of 90 positions and sizes the image tens of thousands
+     * of pixels off rather than failing.
+     *
+     * Note: neither src nor opacity is wrapped in fn.functor, unlike the colour properties of the base,
+     * geojson and highlight renderers - but both are handed straight to d3, which evaluates a function against the bound
+     * datum. So an accessor happens to work, called with the join's placeholder 0.
+     *
+     * Note: the join binds [0] rather than the src, so one image per container is the documented
+     * limit - and the selector is unscoped, so a second image renderer in the same layer replaces the
+     * first one's src and position instead of adding its own. The same defect as the mesh, highlight
+     * and lake overlay renderers.
+     *
+     * Note: no transition is scheduled, so the image jumps to its new position on a resize rather than
+     * animating. Unlike the base and geojson renderers this component keeps no caches, emits no
+     * missing-value pattern, and adds no tooltip anchors or event targets, so none of that family of
+     * quirks applies here. The same img element is reused across renders, with every attribute and
+     * style reapplied each time.
+     * See test/map/renderer/image.test.ts.
      *
      * @return {sszvis.component}
      */
+    /**
+     * Reads one axis of a projected corner. The JavaScript indexed the projection's result directly, so
+     * a null result threw from that index; this reproduces the same failure at the same point in the
+     * chain, with the message V8 produced for it. Note the strict null check: a projection returning
+     * undefined falls through to the index on the next line, which throws the genuine "Cannot read
+     * properties of undefined" TypeError, again as the JavaScript did.
+     */
+    function coordinate$1(projected, axis) {
+      if (projected === null) {
+        throw new TypeError("Cannot read properties of null (reading '".concat(axis, "')"));
+      }
+      return projected[axis];
+    }
+    /**
+     * Normalises a value prop into the single accessor shape d3's overloads can resolve. An accessor is
+     * passed through untouched, so it keeps receiving d3's arguments and node context; a constant
+     * becomes a function returning it, which d3 applies identically - both paths end in the same
+     * assignment. The same idiom as src/map/renderer/mesh.ts.
+     */
+    function toValue(value) {
+      return typeof value === "function" ? value : () => value;
+    }
     function image () {
       return component().prop("projection").prop("src").prop("geoBounds").prop("opacity").opacity(1).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
         const image = selection.selectAll(".sszvis-map__image").data([0]) // At the moment, 1 image per container
         .join("img").classed("sszvis-map__image", true);
+        // Both corners are projected before anything is written, and the coordinates are read only
+        // as each style is applied, so the two failure modes land in different places - exactly as
+        // the JavaScript did. A projection that *throws* does so here, before .attr("src", ...) is
+        // reached, leaving the image element joined but with no src at all. A projection that
+        // *returns null* gets this far, so the src is written and only the first coordinate read
+        // fails. See test/map/renderer/image.test.ts.
         const topLeft = props.projection(props.geoBounds[0]);
         const bottomRight = props.projection(props.geoBounds[1]);
-        image.attr("src", props.src).style("left", Math.round(topLeft[0]) + "px").style("top", Math.round(topLeft[1]) + "px").style("width", Math.round(bottomRight[0] - topLeft[0]) + "px").style("height", Math.round(bottomRight[1] - topLeft[1]) + "px").style("opacity", props.opacity);
+        image.attr("src", toValue(props.src)).style("left", Math.round(coordinate$1(topLeft, 0)) + "px").style("top", Math.round(coordinate$1(topLeft, 1)) + "px").style("width", Math.round(coordinate$1(bottomRight, 0) - coordinate$1(topLeft, 0)) + "px").style("height", Math.round(coordinate$1(bottomRight, 1) - coordinate$1(topLeft, 1)) + "px").style("opacity", toValue(props.opacity));
       });
     }
 
@@ -10012,9 +10634,53 @@
      * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
      * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
      * @property {string, function} borderColor           The color of the border path stroke. Default is white
+     * @property {number, function} strokeWidth           The width of the border path stroke. Default is 1.25.
+     *                                                    An invalid value is dropped by the CSS parser rather than
+     *                                                    reported, leaving SVG's initial width of 1.
+     *
+     * Note: neither geoJson nor mapPath is validated. Omitting either leaves a classed, styled path
+     * with no geometry - invisible, silent, and indistinguishable from having no borders to draw. A
+     * missing geoJson reaches the path generator as undefined, which returns null; a missing mapPath
+     * has d3 remove the attribute without calling anything.
+     *
+     * Note: borderColor and strokeWidth are not wrapped in fn.functor, unlike the colour properties of
+     * the base, geojson and highlight renderers. An accessor is handed straight to d3 and called with
+     * the mesh object and d3's index, not with a per-entity datum - there is only one path, so there is
+     * no such datum. An accessor written against a datum therefore resolves to undefined, and d3
+     * removes the style, leaving the borders invisible with no error. The lake overlay's lakePathColor
+     * has the same shape.
+     *
+     * Note: both properties are written as inline styles rather than attributes. Nothing in sszvis.css
+     * sets stroke or stroke-width for .sszvis-map__border, so nothing is being overridden - but a
+     * consumer cannot restyle a mesh border from their own stylesheet either, since an inline style
+     * beats any author rule short of !important.
+     *
+     * Note: the component sets neither fill nor pointer-events; both come from sszvis.css. Rendered
+     * without that stylesheet, the mesh is a filled black shape covering the map, and it swallows the
+     * base layer's hover and click events rather than letting them through.
+     *
+     * Note: the border selector is unscoped and the join unkeyed, so a second mesh rendered into the
+     * same group rebinds and restyles the first one's path instead of drawing its own. One mesh per
+     * layer.
+     *
+     * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
+     * caches, emits no missing-value pattern, and adds no tooltip anchors or event targets - so none
+     * of that family of quirks applies here. The path data is reapplied on every render rather than
+     * only on enter, so a geoJson mutated in place still repaints.
+     * See test/map/renderer/mesh.test.ts.
      *
      * @return {sszvis.component}
      */
+    /**
+     * Normalises a style prop into the single accessor shape d3's overloads can resolve. An accessor
+     * is passed through untouched, so it keeps receiving d3's arguments and node context; a constant
+     * becomes a function returning it, which d3 applies identically - the constant and function paths
+     * both end in the same setProperty call. Follows the idiom of src/component/dot.ts, minus its
+     * nullish fallback: both props here have defaults, so a constant is never nullish.
+     */
+    function toStyleValue$1(value) {
+      return typeof value === "function" ? value : () => value;
+    }
     function mapRendererMesh () {
       return component().prop("geoJson").prop("mapPath").prop("borderColor").borderColor("white") // A function or string for the color of all borders. Note: all borders have the same color
       .prop("strokeWidth").strokeWidth(1.25).render(function () {
@@ -10022,7 +10688,7 @@
         const props = selection.props();
         // add the map borders. These are rendered as one single path element
         const meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]).join("path").classed("sszvis-map__border", true);
-        meshLine.attr("d", props.mapPath).style("stroke", props.borderColor).style("stroke-width", props.strokeWidth);
+        meshLine.attr("d", props.mapPath).style("stroke", toStyleValue$1(props.borderColor)).style("stroke-width", toStyleValue$1(props.strokeWidth));
       });
     }
 
@@ -10035,13 +10701,99 @@
      * lie above Lake Zurich.
      *
      * @property {d3.geo.path} mapPath      A path-generator function used to create the path data string of the provided GeoJson.
+     *                                      It is handed straight to d3 as the attribute callback, so it is called with the
+     *                                      geoJson, d3's index and the group; a d3.geoPath returns null for an undefined
+     *                                      feature. Never validated; see the note below.
      * @property {GeoJson} lakeFeature      A GeoJson object which provides data for the outline shape of Lake Zurich. This shape will
      *                                      be filled with a special texture fill and masked with an alpha gradient fade.
+     *                                      Never validated, which is why the getter reports it as possibly undefined; see
+     *                                      the note below.
      * @property {GeoJson} lakeBounds       A GeoJson object which provides data for the shape of map entity borders which lie over the
      *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
+     *                                      Never validated, like lakeFeature.
+     * @property {String, Function} lakePathColor  The stroke colour of those borders. No default: the stylesheet's grey
+     *                                      dotted stroke stands unless this is set, and it is applied only when truthy; see
+     *                                      the note below. Not wrapped in fn.functor.
+     * @property {Boolean} fadeOut          Whether to fade the lake out towards the bottom of the shape with a gradient mask.
+     *                                      Default true - but choropleth defaults its own lakeFadeOut to false, so the
+     *                                      default branch is the one no in-repo chart takes. Turning it off does not undo
+     *                                      an existing fade; see the note below.
+     *
+     * Note: every render calls the pattern helpers again on the same defs elements - the fade pair only
+     * while fadeOut is on - and each helper appends its contents unconditionally rather than joining
+     * them, so the tile gains another rect and another two lines, the fade gradient another two stops,
+     * and the mask another rect on every redraw. A map that re-renders on resize or on a control change
+     * grows these definitions without bound. The elements themselves are reused - ensureDefsElement
+     * joins, and both path joins are unkeyed - so it is only their contents that accumulate. The base
+     * and geojson renderers call their own pattern helper the same way.
+     *
+     * Note: disabling fadeOut after a render with it enabled leaves both the mask attribute on the
+     * lake shape and the gradient and mask definitions in the defs, because the disabled branch only
+     * skips writing them. choropleth re-applies fadeOut on every render, so a chart that toggles its
+     * lakeFadeOut stays faded after the toggle.
+     *
+     * Note: the mask fades the lake by filling itself with url(#lake-fade-gradient), so the two
+     * definitions are only useful together. The gradient helper writes that id a second time onto the
+     * element ensureDefsElement had already identified - a harmless redundancy, and the only place two
+     * code paths write the same id.
+     *
+     * Note: all three definitions use fixed ids - "lake-pattern", "lake-fade-gradient" and
+     * "lake-fade-mask" - so two maps on one page define each of them twice, and every url(#...)
+     * reference in the document resolves to whichever comes first. The same defect as the base and
+     * geojson renderers' "missing-pattern".
+     *
+     * Note: the defs element is created inside the map group rather than at the svg root, and
+     * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
+     * defs with the base renderer's missing value pattern when both draw into the same group.
+     *
+     * Note: neither geoJson property is validated. Omitting either leaves a classed, pattern-filled
+     * path with no geometry - invisible, silent, and indistinguishable from having no lake to draw. A
+     * missing property reaches the path generator as undefined, which returns null; a missing mapPath
+     * has d3 remove the attribute without calling anything. The same root defect as the mesh renderer.
+     *
+     * Note: lakePathColor is not wrapped in fn.functor, unlike the colour properties of the base,
+     * geojson and highlight renderers. An accessor is handed straight to d3 and called with the
+     * lakeBounds object and d3's index, not with a per-border datum - there is only one path, so there
+     * is no such datum. It is written as an inline style, which does override the stylesheet's stroke
+     * for .sszvis-map__lakepath - and cannot be overridden back from a consumer's stylesheet, since an
+     * inline style beats any author rule short of !important. The mesh's borderColor has the same
+     * shape - though where a dropped mesh style leaves the borders invisible, a dropped style here
+     * falls back to the stylesheet's grey dotted stroke, so the mistake is even quieter.
+     *
+     * Note: the colour is applied only when the property is truthy, because it has no default and the
+     * guard is what leaves the stylesheet's stroke alone. So a falsy colour is silently ignored rather
+     * than reported, and there is no way to clear a colour already set: re-rendering with "" leaves the
+     * previous stroke in place, since the guard only skips writing a new one.
+     *
+     * Note: the component sets no pointer-events on either path and no fill on the border path, so
+     * both come from sszvis.css. Rendered without that stylesheet the border path is a filled black
+     * shape covering the lake - SVG's initial fill is black - and both paths swallow the base layer's
+     * hover and click events.
+     *
+     * Note: both selectors are unscoped and both joins unkeyed, so a second overlay rendered into the
+     * same group rebinds and restyles the first one's paths instead of drawing its own. One overlay per
+     * layer; choropleth uses exactly one, so the collision is latent, but the renderer is exported
+     * publicly.
+     *
+     * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
+     * caches, and does not mutate the geoJson it is handed, so the whole centroid-caching family of
+     * quirks does not apply. It emits patterns, but not their missing-value one, and adds no tooltip
+     * anchors and no event targets. The path data is reapplied on every render rather than only on
+     * enter, so a geoJson mutated in place still repaints.
+     * See test/map/renderer/patternedlakeoverlay.test.ts.
      *
      * @return {sszvis.component}
      */
+    /**
+     * Normalises the colour prop into the single accessor shape d3's overloads can resolve. An accessor
+     * is passed through untouched, so it keeps receiving d3's arguments and node context; a constant
+     * becomes a function returning it, which d3 applies identically - both paths end in the same
+     * setProperty call. The same idiom as src/map/renderer/mesh.ts, minus its nullish fallback: this
+     * prop has no default, and the caller only reaches here once it is truthy.
+     */
+    function toStyleValue(value) {
+      return typeof value === "function" ? value : () => value;
+    }
     function mapRendererPatternedLakeOverlay () {
       return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").fadeOut(true).render(function () {
         const selection = d3.select(this);
@@ -10064,7 +10816,7 @@
         // This path is rendered as a dotted line over the lake shape
         const lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr("d", props.mapPath);
         if (props.lakePathColor) {
-          lakePath.style("stroke", props.lakePathColor);
+          lakePath.style("stroke", toStyleValue(props.lakePathColor));
         }
       });
     }
@@ -10074,29 +10826,153 @@
      *
      * @module  sszvis/map/renderer/raster
      *
+     * @template T The type of the data values bound to the raster cells
+     *
      * Used for rendering a raster layer within a map (can also be used in other contexts, but the map usage
      * is the most straightforward). Requires a width and a height for the raster layer, a function which
      * returns raster positions, and one which returns fill colors.
      *
+     * Unlike the other map renderers this one draws into a canvas inside an HTML layer, and it takes its
+     * data from the layer's datum rather than from a property.
+     *
      * @property {Boolean} debug         Whether to activate debug mode, which shows a red square over the whole
-     *                                   canvas, for testing alignment with other map layers.
-     * @property {Number} width          The width of the canvas
-     * @property {Number} height         The height of the canvas
+     *                                   canvas, for testing alignment with other map layers. Default false. See
+     *                                   the note below: it is not purely additive.
+     * @property {Number} width          The width of the canvas. Required, and unvalidated; a fractional value is
+     *                                   truncated to whole pixels. See the notes below.
+     * @property {Number} height         The height of the canvas. Required and unvalidated, like the width.
      * @property {Function} position     A function which takes a datum and returns a position for the corresponding
-     *                                   raster square, returned as [x, y] pairs.
-     * @property {Number} cellSide       The length (in pixels) of one side of each raster cell
-     * @property {Function} fill         The fill function. Takes a datum and should return a fill color for the datum's pixel.
-     * @property {Number} opacity        The opacity of the canvas. Defaults to 1
+     *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
+     *                                   index, no array - unlike a d3 accessor, though the render callback itself
+     *                                   does receive d3's (data, index, group). A null result throws and a
+     *                                   non-finite one is silently dropped; see the notes below.
+     * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2. A
+     *                                   fractional side antialiases; see the notes below.
+     *                                   sszvis.pixelsFromGeoDistance is the intended source for this value, and it
+     *                                   returns a float.
+     * @property {String, Function} fill The fill function. Takes a datum and should return a fill color for the datum's pixel.
+     *                                   Wrapped in fn.functor, so a constant colour is accepted too. It has no
+     *                                   default, and an invalid colour is not reported; see the notes below.
+     *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
+     *                                   CanvasPattern at runtime, which this contract deliberately excludes.
+     * @property {Number} opacity        The opacity of the canvas. Default 1; use a lower value to reveal the
+     *                                   layers underneath. It is a style on the canvas, so it
+     *                                   fades the whole layer rather than the individual cells, and 0 still draws
+     *                                   every one of them.
+     *
+     * Note: the bitmap is sized in CSS pixels - the width and height attributes are the layer dimensions,
+     * with no devicePixelRatio factor and no compensating style width - so on a display with a device
+     * pixel ratio above 1 the bitmap is stretched across more device pixels than it has, and the cells
+     * come out soft while the SVG layers over them stay sharp.
+     *
+     * Note: a fractional width or height is truncated to a whole-pixel bitmap. Every docs caller passes
+     * bounds.innerWidth, which is routinely fractional, so a raster layer is typically up to a pixel
+     * narrower and shorter than the SVG layers it has to line up with. The attribute itself keeps the
+     * fractional value, so the markup reads 20.5 while the bitmap is 20.
+     *
+     * Note: the visible clearing between renders comes from writing the width attribute, which resets
+     * the bitmap per spec; the clearRect call is redundant while the dimensions are set, and a no-op
+     * when they are missing. When width and height are missing the attributes are removed, the canvas
+     * falls back to its intrinsic 300x150, clearRect is called with NaN and silently does nothing - so
+     * nothing clears at all and each render's cells pile up on the previous ones. The same canvas
+     * element is reused across renders, with width, height and opacity reapplied each time, and a
+     * change of dimensions resizes that canvas rather than replacing it - which is what makes the
+     * bitmap reset double as the clear.
+     *
+     * Note: fillStyle is stateful, and an invalid colour is ignored by the canvas API rather than
+     * reported - so a cell whose fill does not parse is drawn in whatever colour was last set. That is
+     * the previous cell's colour, which makes a broken colour scale look like a working one, or, in
+     * debug mode, the debug red at 20% alpha, which reads as data. Debug mode is therefore not purely
+     * additive.
+     *
+     * Note: no docs example can turn debug on - rastermap-gradient guards its debug(DEBUG) call with
+     * `if (DEBUG)` on a hardcoded false, and the other three rastermaps never touch the property - so
+     * the feature is exercised only by the tests.
+     *
+     * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
+     * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
+     * nothing. Neither position nor fill is validated either, and each throws a bare TypeError from
+     * being called, naming neither property - but only for non-empty data, so an empty dataset hides
+     * the misconfiguration entirely. The canvas has already been created by the time any of these
+     * throw.
+     *
+     * Note: a non-finite position is dropped by the canvas API rather than reported, so a datum the
+     * projection could not place leaves a hole in the raster with no indication; a null position throws
+     * a TypeError instead, from the same point in the loop the JavaScript's index threw from. A zero cellSide draws nothing at all, and a negative one is
+     * indistinguishable from its positive counterpart, since the half-side offset and the width negate
+     * each other. A fractional cellSide puts the cell edges on half pixels, so they antialias rather
+     * than tiling exactly - and pixelsFromGeoDistance returns a float.
+     *
+     * Note: the component writes no position, so the canvas is only positioned because sszvis.css sets
+     * position: absolute on the class - the same dependency as the image renderer, along with
+     * display: block, pointer-events: none and user-select: none. The opacity, by contrast, is written
+     * as an inline style; nothing in sszvis.css sets it, so nothing is overridden - but a consumer
+     * cannot restyle it from their own stylesheet either. The positions themselves are written unshifted, and
+     * createHtmlLayer offsets the layer by the bounds padding, so cell positions are layer-relative and
+     * the padding is applied exactly once.
+     *
+     * Note: the selector is unscoped and the join binds a placeholder, so a second raster renderer in
+     * the same layer redraws the first one's canvas instead of adding its own. The same defect as the
+     * mesh, highlight, lake overlay and image renderers. The canvas is appended to the layer, so it
+     * stacks over whatever the layer already holds, which is what rastermap-bins relies on.
+     *
+     * Note: nothing ties this component to an HTML layer. Called on an SVG selection the join creates an
+     * SVG-namespaced canvas, which has no getContext, so it throws - where the image renderer silently
+     * appends an unrenderable img instead.
+     *
+     * Note: the canvas carries no role, no aria-label and no fallback content, and the component offers
+     * no property for one, so a raster data layer is invisible to screen readers - the same gap as the
+     * image renderer's unlabelled img, and unlike the SVG layers there is no per-element markup a
+     * consumer could annotate instead.
+     *
+     * Note: no transition is scheduled - a canvas cannot be transitioned by d3 anyway - so the raster
+     * repaints in full on every render, one fillStyle write and one fillRect per datum. Unlike the base
+     * and geojson renderers this component keeps no caches, emits no missing-value pattern, and adds no
+     * tooltip anchors or event targets, so none of that family of quirks applies here.
+     * See test/map/renderer/raster.test.ts.
      *
      * @return {sszvis.component}
      */
+    /**
+     * Reads one axis of a position. The JavaScript indexed the accessor's result directly, so a null
+     * result threw from that index; this reproduces the same failure with the message V8 produced for
+     * it. Note the strict null check: an accessor returning undefined falls through to the index on the
+     * next line, which throws the genuine "Cannot read properties of undefined" TypeError, again as the
+     * JavaScript did. A non-finite coordinate passes through untouched, since fillRect is what drops
+     * it.
+     */
+    function coordinate(position, axis) {
+      if (position === null) {
+        throw new TypeError("Cannot read properties of null (reading '".concat(axis, "')"));
+      }
+      return position[axis];
+    }
+    /**
+     * Reads the drawing context, throwing as the JavaScript did when there is none. That happens when
+     * the join created an SVG-namespaced canvas, which has no getContext at all - the message is the
+     * one that call produced. The check is for the method rather than `instanceof HTMLCanvasElement`,
+     * which would also reject a canvas belonging to another realm - an iframe's document - where the
+     * JavaScript drew quite happily.
+     */
+    function context2d(node) {
+      if (node === null || !("getContext" in node) || typeof node.getContext !== "function") {
+        throw new TypeError("canvas.node(...).getContext is not a function");
+      }
+      const ctx = node.getContext("2d");
+      if (ctx === null) {
+        // A 2d context is only refused when one of another kind was already taken on this element,
+        // which cannot happen here; the JavaScript would have thrown on the next line instead.
+        throw new TypeError("Cannot read properties of null (reading 'clearRect')");
+      }
+      return ctx;
+    }
     function raster () {
       return component().prop("debug").debug(false).prop("width").prop("height").prop("position").prop("cellSide").cellSide(2).prop("fill", functor).prop("opacity").opacity(1).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
         const canvas = selection.selectAll(".sszvis-map__rasterimage").data([0]).join("canvas").classed("sszvis-map__rasterimage", true);
         canvas.attr("width", props.width).attr("height", props.height).style("opacity", props.opacity);
-        const ctx = canvas.node().getContext("2d");
+        const ctx = context2d(canvas.node());
         ctx.clearRect(0, 0, props.width, props.height);
         if (props.debug) {
           // Displays a rectangle that fills the canvas.
@@ -10108,7 +10984,7 @@
         for (const datum of data) {
           const position = props.position(datum);
           ctx.fillStyle = props.fill(datum);
-          ctx.fillRect(position[0] - halfSide, position[1] - halfSide, props.cellSide, props.cellSide);
+          ctx.fillRect(coordinate(position, 0) - halfSide, coordinate(position, 1) - halfSide, props.cellSide, props.cellSide);
         }
       });
     }
