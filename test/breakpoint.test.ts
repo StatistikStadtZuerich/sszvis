@@ -3,7 +3,10 @@ import { responsiveProps } from "../src/responsiveProps.js";
 
 describe("queryProps", () => {
   const queryProps = responsiveProps()
-    .breakpoints([{ name: "small", width: 10 } as any, { name: "medium", width: 20 } as any])
+    .breakpoints([
+      { name: "small", width: 10 },
+      { name: "medium", width: 20 },
+    ])
     .prop("example", {
       small: "A",
       medium: "B",

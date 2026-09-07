@@ -13,14 +13,17 @@ describe("patterns", () => {
   let svg: SVGSVGElement,
     defs: SVGDefsElement,
     pattern: SVGPatternElement,
-    gradient: SVGGradientElement,
+    gradient: SVGLinearGradientElement,
     mask: SVGMaskElement;
 
   beforeEach(() => {
     svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     pattern = document.createElementNS("http://www.w3.org/2000/svg", "pattern");
-    gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+    gradient = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "linearGradient"
+    ) as SVGLinearGradientElement;
     mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
     svg.append(defs);
     defs.append(pattern);
@@ -116,7 +119,7 @@ describe("patterns", () => {
 
   describe("mapLakeFadeGradient", () => {
     test("should set correct gradient attributes", () => {
-      mapLakeFadeGradient(select(gradient as any));
+      mapLakeFadeGradient(select(gradient));
       expect(gradient.getAttribute("x1")).toBe("0");
       expect(gradient.getAttribute("y1")).toBe("0");
       expect(gradient.getAttribute("x2")).toBe("0.55");
@@ -125,7 +128,7 @@ describe("patterns", () => {
     });
 
     test("should append gradient stops", () => {
-      mapLakeFadeGradient(select(gradient as any));
+      mapLakeFadeGradient(select(gradient));
       const stops = gradient.querySelectorAll("stop");
       expect(stops.length).toBe(2);
       for (const stop of stops) {

@@ -56,9 +56,9 @@
       "suspicious": {
         "noDoubleEquals": "error",
         "noEvolvingTypes": "error",
-        // Ratcheting down per directory; kept at "info" so it does not fail the
-        // --error-on-warnings gate while the count comes down. See TYPESCRIPT.md.
-        "noExplicitAny": "info",
+        // The only sanctioned `any` is the $IntentionalAny alias in types.ts, which carries
+        // the single ignore comment for this rule. See TYPESCRIPT.md.
+        "noExplicitAny": "error",
         "noArrayIndexKey": "warn",
         "noDebugger": "error",
         "noConfusingVoidType": "off",

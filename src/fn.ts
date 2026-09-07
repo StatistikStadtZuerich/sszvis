@@ -5,7 +5,7 @@
  */
 
 import { type BaseType, selection, type ValueFn } from "d3";
-import type { AnySelection } from "./types.js";
+import type { $IntentionalAny, AnySelection } from "./types.js";
 
 /**
  * fn.identity
@@ -71,9 +71,13 @@ export const arity = <F extends (...args: never[]) => unknown>(
  *
  * Note: all composed functions but the last should be of arity 1.
  */
-export const compose = (...fns: ((...args: any[]) => any)[]): ((...args: any[]) => any) => {
+// The chain's intermediate types depend on how many functions were passed and cannot be
+// related to one another without a fixed-arity overload per length.
+export const compose = (
+  ...fns: ((...args: $IntentionalAny[]) => $IntentionalAny)[]
+): ((...args: $IntentionalAny[]) => $IntentionalAny) => {
   const start = fns.length - 1;
-  return function (this: any, ...args: any[]) {
+  return function (this: unknown, ...args: $IntentionalAny[]) {
     let i = start;
     let result = Reflect.apply(fns[i], this, args);
     while (i--) result = fns[i].call(this, result);
@@ -109,12 +113,12 @@ export const defined = <T>(val: T): val is NonNullable<T> =>
  */
 export const derivedSet = <T>(
   arr: T[],
-  acc?: (value: T, index: number, array: T[]) => any
+  acc?: (value: T, index: number, array: T[]) => unknown
 ): T[] => {
   const accessor = acc || identity;
-  const seen: any[] = [];
+  const seen: unknown[] = [];
   const result: T[] = [];
-  let sValue: T, cValue: any;
+  let sValue: T, cValue: unknown;
   for (let i = 0, l = arr.length; i < l; ++i) {
     sValue = arr[i];
     cValue = accessor(sValue, i, arr);
@@ -263,7 +267,9 @@ export const hashableSet = <T, U extends string | number>(
  *
  * Determines if the passed value is a function
  */
-export const isFunction = (val: unknown): val is (...args: any[]) => any =>
+// The guard has to widen to a callable the caller can actually invoke; narrowing the
+// parameters to `never[]` would make every call site an error.
+export const isFunction = (val: unknown): val is (...args: $IntentionalAny[]) => $IntentionalAny =>
   typeof val === "function";
 
 /**
@@ -303,8 +309,8 @@ export const last = <T>(arr: T[]): T | undefined => arr[arr.length - 1];
  * which calls f on its arguments and returns the
  * boolean opposite of f's return value.
  */
-export const not = <T extends any[]>(f: (...args: T) => any): ((...args: T) => boolean) =>
-  function (this: any, ...args: T): boolean {
+export const not = <T extends unknown[]>(f: (...args: T) => unknown): ((...args: T) => boolean) =>
+  function (this: unknown, ...args: T): boolean {
     return !Reflect.apply(f, this, args);
   };
 
@@ -317,8 +323,10 @@ export const not = <T extends any[]>(f: (...args: T) => any): ((...args: T) => b
  * does not contain the property.)
  */
 export const prop =
-  <K extends string | number | symbol>(key: K): (<T extends Record<K, any>>(object: T) => T[K]) =>
-  <T extends Record<K, any>>(object: T): T[K] =>
+  <K extends string | number | symbol>(
+    key: K
+  ): (<T extends Record<K, unknown>>(object: T) => T[K]) =>
+  <T extends Record<K, unknown>>(object: T): T[K] =>
     object[key];
 
 /**
@@ -335,8 +343,8 @@ export const propOr =
   <K extends string | number | symbol, D>(
     key: K,
     defaultVal?: D
-  ): (<T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D) =>
-  <T extends Partial<Record<K, any>>>(object: T | undefined): T[K] | D => {
+  ): (<T extends Partial<Record<K, unknown>>>(object: T | undefined) => T[K] | D) =>
+  <T extends Partial<Record<K, unknown>>>(object: T | undefined): T[K] | D => {
     const value = object === undefined ? undefined : object[key];
     return value === undefined ? (defaultVal as D) : value;
   };
@@ -419,7 +427,7 @@ export const valueFn = <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>): 
  * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
  * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
  */
-export const memoize = <TFunc extends (...args: any[]) => any>(
+export const memoize = <TFunc extends (...args: never[]) => unknown>(
   func: TFunc,
   resolver?: (...args: Parameters<TFunc>) => string | number
 ): TFunc & { cache: Map<string | number, ReturnType<TFunc>> } => {
@@ -440,7 +448,7 @@ export const memoize = <TFunc extends (...args: any[]) => any>(
     if (cache.has(key)) {
       return cache.get(key) as ReturnType<TFunc>;
     }
-    const result = func(...args);
+    const result = func(...args) as ReturnType<TFunc>;
     memoized.cache = cache.set(key, result) || cache;
     return result;
   }) as TFunc & { cache: Map<string | number, ReturnType<TFunc>> };

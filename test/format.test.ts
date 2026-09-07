@@ -58,12 +58,12 @@ describe("formatPreciseNumber", () => {
 
 function testMatrix(
   label: string,
-  format: (input: any) => string,
+  format: (input: never) => string,
   matrix: [number | null | undefined, string][]
 ) {
   describe(label, () => {
     test.each(matrix)('%s -> "%s"', (input, output) => {
-      expect(format(input)).toBe(output);
+      expect(format(input as never)).toBe(output);
     });
   });
 }

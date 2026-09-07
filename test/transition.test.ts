@@ -4,7 +4,7 @@ import { defaultTransition, fastTransition, slowTransition } from "../src/transi
 
 describe("transition", () => {
   let container: HTMLDivElement;
-  let testElement: HTMLDivElement & { __transition?: any };
+  let testElement: HTMLDivElement & { __transition?: unknown };
 
   beforeEach(() => {
     // Create a fresh test container for each test
