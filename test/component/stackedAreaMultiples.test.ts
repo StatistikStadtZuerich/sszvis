@@ -1,5 +1,5 @@
 import { select, stack } from "d3";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import stackedArea from "../../src/component/stackedArea.js";
 import stackedAreaMultiples from "../../src/component/stackedAreaMultiples.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
@@ -330,12 +330,19 @@ describe("component/stackedAreaMultiples", () => {
         };
       render(stackedAreaMultiples().x(record("x")).y0(record("y0")).y1(record("y1")), oneLayer);
       // All three go through the same loop in d3.area, once per point - the baseline
-      // is drawn back from cached values rather than by asking again.
+      // is drawn back from cached values rather than by asking again. y0 and y1 are asked
+      // twice per point, because the default missing-value guard reads both bounds before
+      // the generator does; an explicit defined predicate replaces that second reading.
+      expect(seen.x.length).toBe(2);
+      expect(seen.y0.length).toBe(4);
+      expect(seen.y1.length).toBe(4);
       for (const name of ["x", "y0", "y1"]) {
-        expect(seen[name].map((args) => args.length)).toEqual([3, 3]);
-        expect(seen[name].map((args) => args[0])).toEqual(oneLayer[0]);
-        expect(seen[name].map((args) => args[1])).toEqual([0, 1]);
-        expect(seen[name].map((args) => args[2])).toEqual([oneLayer[0], oneLayer[0]]);
+        expect(seen[name].map((args) => args.length)).toEqual(seen[name].map(() => 3));
+        expect(new Set(seen[name].map((args) => args[1]))).toEqual(new Set([0, 1]));
+        for (const args of seen[name]) {
+          expect(oneLayer[0]).toContain(args[0]);
+          expect(args[2]).toEqual(oneLayer[0]);
+        }
       }
     });
 
@@ -660,77 +667,82 @@ describe("component/stackedAreaMultiples", () => {
       expect(ds(node)).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
     });
 
-    describe("known quirks", () => {
-      test("the default predicate never rejects anything, so NaN reaches the path", () => {
-        // BUG: the default is built as
-        //   function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }
-        // which returns a *function* rather than calling either of them, and && between two
-        // functions yields the second one. d3 only tests the return value for truthiness,
-        // so the guard is dead: every point is considered defined, whatever its value. The
-        // intent was `d => !isNaN(y0(d)) && !isNaN(y1(d))`. src/component/line.ts guards both
-        // of its dimensions by hand, with fn.isMissingVal, and works. stackedArea behaves
-        // identically, though its port spells the dead predicate out as `() => true` and
-        // documents it; docs/area-chart-stacked/README.md still describes the default of both
-        // components as "y0 and y1 are not NaN".
-        // current: NaN is written into the d attribute verbatim. expected: the point is
-        // skipped and the area breaks, as it does when defined is set explicitly above.
-        const node = render(areaOf(), withGap);
-        expect(ds(node)).toEqual(["M0,10L10,NaNL20,30L20,60L10,50L0,40Z"]);
-      });
-
-      test("a NaN in the path truncates the rendered shape without any error", () => {
-        // BUG: the visible consequence of the dead guard. The browser stops rendering at the
-        // invalid command, so only the leading moveto survives and the multiple disappears
-        // entirely - one missing value costs the whole band, not just the segment it belongs
-        // to. Compare the explicit-predicate case above, where the healthy tail survives as
-        // its own subpath.
-        const node = render(areaOf(), withGap);
-        expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBe(0);
-        expect((paths(node)[0] as SVGPathElement).getBBox().width).toBe(0);
-        const intact = render(areaOf(), oneLayer);
-        expect((paths(intact)[0] as SVGPathElement).getTotalLength()).toBeGreaterThan(0);
-      });
-
-      test("undefined and null values are not caught either", () => {
-        // NOTE: only the undefined case belongs to the dead guard - isNaN(undefined) is
-        // true, so the intended default would have caught it, and instead d3.area applies
-        // unary + and turns it into NaN. null is not caught by an isNaN guard at all, since
-        // isNaN(null) is false: it coerces to 0 and is plotted as data, pinning that point
-        // to the top of the chart. Neither is reported.
-        const undef = render(areaOf(), [
-          [
-            { x: 0, y0: 40, y1: 10 },
-            { x: 10, y0: 50, y1: undefined as unknown as number },
-          ],
-        ]);
-        expect(ds(undef)).toEqual(["M0,10L10,NaNL10,50L0,40Z"]);
-
-        const nulls = render(areaOf(), [
-          [
-            { x: 0, y0: 40, y1: 10 },
-            { x: 10, y0: 50, y1: null as unknown as number },
-          ],
-        ]);
-        expect(ds(nulls)).toEqual(["M0,10L10,0L10,50L0,40Z"]);
-      });
-
-      test("setting defined is the only way to get a missing-value guard at all", () => {
-        // NOTE: the JSDoc header omits the property, and the README describes a default guard
-        // that never runs, so the one thing that makes the difference between a broken path and
-        // a broken band is documented as unnecessary. It also has to guard both bounds by hand,
-        // since defined replaces the dead default rather than composing with it.
-        const node = render(
-          areaOf().defined((d: Point) => !Number.isNaN(d.y0) && !Number.isNaN(d.y1)),
-          [
+    test("should skip a point whose bounds are missing, breaking the band", () => {
+      // The default guard tests both vertical bounds. Each surviving run becomes its own
+      // subpath, exactly as it does when defined is set explicitly above.
+      expect(ds(render(areaOf(), withGap))).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
+      expect(
+        ds(
+          render(areaOf(), [
             [
               { x: 0, y0: 40, y1: 10 },
               { x: 10, y0: Number.NaN, y1: 20 },
               { x: 20, y0: 60, y1: 30 },
             ],
-          ]
-        );
-        expect(ds(node)).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
-      });
+          ])
+        )
+      ).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
+    });
+
+    test("should warn once per render, however many points are missing", () => {
+      // A gap is transient and recoverable - the band simply breaks around it - so the
+      // caller is told about the chart, not about each point. The guard runs twice per
+      // point (once for each bound), which is why a per-point warning would be noisy.
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(areaOf(), [
+        [
+          { x: 0, y0: 40, y1: 10 },
+          { x: 10, y0: Number.NaN, y1: Number.NaN },
+          { x: 20, y0: Number.NaN, y1: 30 },
+          { x: 30, y0: 60, y1: 30 },
+        ],
+      ]);
+      expect(warn).toHaveBeenCalledTimes(1);
+      warn.mockRestore();
+    });
+
+    test("should keep the surviving points renderable", () => {
+      // The consequence for the browser: where a NaN in the d attribute used to truncate the
+      // whole band at the invalid command, the healthy runs are drawn.
+      const node = render(areaOf(), withGap);
+      expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBeGreaterThan(0);
+    });
+
+    test("should treat undefined and null as missing too", () => {
+      // A plain isNaN guard would catch undefined and let null through - isNaN(null) is
+      // false, so it coerces to 0 and is plotted, pinning the point to the top of the chart.
+      // A null measurement is missing data, so both are skipped here, as in stackedArea.
+      const undef = render(areaOf(), [
+        [
+          { x: 0, y0: 40, y1: 10 },
+          { x: 10, y0: 50, y1: undefined as unknown as number },
+        ],
+      ]);
+      expect(ds(undef)).toEqual(["M0,10L0,40Z"]);
+
+      const nulls = render(areaOf(), [
+        [
+          { x: 0, y0: 40, y1: 10 },
+          { x: 10, y0: 50, y1: null as unknown as number },
+        ],
+      ]);
+      expect(ds(nulls)).toEqual(["M0,10L0,40Z"]);
+    });
+
+    test("should replace the default guard when defined is set", () => {
+      // defined replaces the default rather than composing with it, so a predicate that only
+      // looks at y1 lets a missing y0 back into the path.
+      const node = render(
+        areaOf().defined((d: Point) => !Number.isNaN(d.y1)),
+        [
+          [
+            { x: 0, y0: 40, y1: 10 },
+            { x: 10, y0: Number.NaN, y1: 20 },
+            { x: 20, y0: 60, y1: 30 },
+          ],
+        ]
+      );
+      expect(ds(node)).toEqual(["M0,10L10,20L20,30L20,60L10,NaNL0,40Z"]);
     });
   });
 
@@ -823,7 +835,9 @@ describe("component/stackedAreaMultiples", () => {
             .y1((d: Point) => d.y1),
           oneLayer
         );
-        expect(ds(node)).toEqual(["M0,10L10,20L10,NaNL0,NaNZ"]);
+        // The default missing-value guard now rejects every point, since y0 is NaN for all
+        // of them, so nothing is drawn at all. Still silent. #114 covers the report.
+        expect(ds(node)).toEqual([null]);
       });
 
       test("omitting y1 collapses every area onto its own baseline", () => {
@@ -848,10 +862,9 @@ describe("component/stackedAreaMultiples", () => {
         expect(paths(node).length).toBe(2);
         expect(attrs(node, "fill")).toEqual([null, null]);
         expect(attrs(node, "stroke")).toEqual([null, null]);
-        expect(ds(node)).toEqual([
-          "MNaN,NaNLNaN,NaNLNaN,NaNLNaN,NaNZ",
-          "MNaN,NaNLNaN,NaNLNaN,NaNLNaN,NaNZ",
-        ]);
+        // The geometry is empty rather than NaN now that the missing-value guard runs, but
+        // the paths are still there and still say the render succeeded. #114 covers that.
+        expect(ds(node)).toEqual([null, null]);
       });
     });
   });

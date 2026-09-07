@@ -63,11 +63,14 @@
  *                                            whether a point is drawn; a constant is coerced to a
  *                                            boolean. Each surviving run of points becomes its own
  *                                            subpath, and a run of one point is emitted as a
- *                                            degenerate top-and-bottom pair. The default accepts
- *                                            every point whatever its value (see below), so this is
- *                                            the only missing-value guard available, and it has to
- *                                            test both bounds by hand because it replaces the
- *                                            default rather than composing with it.
+ *                                            degenerate top-and-bottom pair. Defaults to a
+ *                                            missing-value guard over both vertical bounds: a point
+ *                                            whose y0 or y1 is null, undefined or has no numeric
+ *                                            form is skipped and the area breaks around it, and the
+ *                                            first such point in a render is logged as a warning.
+ *                                            Setting it replaces that guard rather than composing
+ *                                            with it, so an explicit predicate must test both
+ *                                            bounds itself.
  * @property {function} [key]                 The key function for the data join, called with a
  *                                            layer and its index. The value it returns should be
  *                                            unique among layers. Defaults to the
@@ -87,15 +90,14 @@
  * key sees a layer and its index too, but its third argument depends on which half of the keyed
  * join is running: the array of incoming layers, or the group of nodes already in the DOM.
  *
- * Note: the default defined predicate never rejects anything. It reproduces the one it replaced,
- * which read `function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }` and
- * so returned a function rather than calling either composed accessor, and a function is truthy,
- * which is all d3 tests. A NaN therefore reaches the d attribute verbatim, the browser stops
- * rendering at the invalid command, and the whole layer disappears rather than only the segment the
- * missing value belongs to. undefined goes the same way, since d3.area applies unary + to it, and
- * null is not caught by an isNaN guard at all: it coerces to 0 and is plotted as data, pinning that
- * point to the top of the chart. Nothing is reported in any of these cases. line writes its
- * two-dimension guard by hand for this reason.
+ * Note: the default defined predicate guards both vertical bounds by hand, as line does. The
+ * expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
+ * fn.compose(...y1); }` and so returned a function rather than calling either composed accessor -
+ * and a function is truthy, which is all d3 tests - so a NaN reached the d attribute verbatim, the
+ * browser stopped rendering at the invalid command, and the whole layer disappeared rather than
+ * only the segment the missing value belonged to. The guard treats null and undefined as missing
+ * too, which a plain isNaN test would not: isNaN(null) is false, so a null would coerce to 0 and be
+ * plotted at the top of the chart. line, by contrast, still lets null through.
  *
  * Note: with transition enabled the selection is replaced by the transition before any attribute is
  * written, so d, fill, stroke and stroke-width are all deferred and the class is the only thing
@@ -137,6 +139,7 @@
 import { area as d3Area, select, type ValueFn } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
 
 /**
@@ -229,11 +232,26 @@ const dimension = <P>(value: AreaValue<P> | undefined): PointAccessor<P, number>
 };
 
 /**
+ * Whether a bound counts as missing, and so breaks the area at that point.
+ *
+ * A value is missing when it is null-ish or when it has no numeric form. The null-ish half
+ * goes beyond the isNaN guard this default was always meant to be - isNaN(null) is false,
+ * so a null would coerce to 0 and be plotted at the top of the chart - and beyond
+ * src/component/line.ts, whose guard is documented as letting null through. A null
+ * measurement is missing data, not a zero, and there is no way to say "plot this at zero"
+ * with null that saying 0 does not say better.
+ */
+const isMissingVal = (value: unknown): boolean => value == null || Number.isNaN(Number(value));
+
+/**
  * As above, for the style properties. An unset property becomes a function returning null,
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-export default function <P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L> {
+export default function stackedArea<
+  P = unknown,
+  L extends Iterable<P> = P[],
+>(): StackedAreaComponent<P, L> {
   return component<StackedAreaComponent<P, L>>()
     .prop("x")
     .prop("y0")
@@ -252,29 +270,46 @@ export default function <P = unknown, L extends Iterable<P> = P[]>(): StackedAre
 
       // Layouts
 
-      // The default predicate accepts every point, whatever its value. It reproduces the
-      // one it replaced, which read
-      //   function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }
-      // and so returned a function rather than calling either of them - and a function is
-      // truthy, which is all d3 tests. The missing-value guard this was meant to be has
-      // therefore never run. See test/component/stackedArea.test.ts.
+      const y0 = dimension(props.y0);
+      const y1Given = props.y1 == null ? undefined : dimension(props.y1);
+
+      // The default guards both vertical bounds, the way src/component/line.ts guards both
+      // of its dimensions by hand. It is deliberately not composed: the expression this
+      // replaces - `fn.compose(fn.not(isNaN), props.y0) && fn.compose(..., props.y1)` -
+      // returned a function rather than calling either of them, and a function is truthy,
+      // so the guard never ran. A dropped point is reported once per render, because a gap
+      // in the data is transient and recoverable: the area simply breaks around it.
+      let reported = false;
+      const guardMissing: PointAccessor<P, boolean> = (datum, index, points) => {
+        const missing =
+          isMissingVal(y0(datum, index, points)) ||
+          (y1Given !== undefined && isMissingVal(y1Given(datum, index, points)));
+        if (missing && !reported) {
+          reported = true;
+          logger.warn(
+            "sszvis.stackedArea - a point has a missing y0 or y1 value and was skipped; the area breaks around it."
+          );
+        }
+        return !missing;
+      };
+
       const defined: PointAccessor<P, boolean> =
         props.defined === undefined
-          ? () => true
+          ? guardMissing
           : typeof props.defined === "function"
             ? props.defined
             : () => Boolean(props.defined);
 
-      const areaGen = d3Area<P>().defined(defined).x(dimension(props.x)).y0(dimension(props.y0));
+      const areaGen = d3Area<P>().defined(defined).x(dimension(props.x)).y0(y0);
 
       // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
       // why an unset y1 collapses every layer onto its own baseline. Its typings admit only
       // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
       // two identically.
-      if (props.y1 == null) {
+      if (y1Given === undefined) {
         areaGen.y1(null);
       } else {
-        areaGen.y1(dimension(props.y1));
+        areaGen.y1(y1Given);
       }
 
       // Rendering

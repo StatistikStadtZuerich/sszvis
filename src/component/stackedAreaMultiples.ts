@@ -71,13 +71,14 @@
  *                                            whether a point is drawn; a constant is coerced to a
  *                                            boolean. Each surviving run of points becomes its own
  *                                            subpath, and a run of one point is emitted as a
- *                                            degenerate top-and-bottom pair. Defaults to
- *                                            `() => true`, spelled out in place of the dead
- *                                            predicate it replaces (see below), so it accepts every
- *                                            point whatever its value: this is the only
- *                                            missing-value guard available, and it has to test both
- *                                            bounds by hand because it replaces the default rather
- *                                            than composing with it.
+ *                                            degenerate top-and-bottom pair. Defaults to a
+ *                                            missing-value guard over both vertical bounds: a point
+ *                                            whose y0 or y1 is null, undefined or has no numeric
+ *                                            form is skipped and the band breaks around it, and the
+ *                                            first such point in a render is logged as a warning.
+ *                                            Setting it replaces that guard rather than composing
+ *                                            with it, so an explicit predicate must test both
+ *                                            bounds itself.
  * @property {function} [key]                 The key function for the data join, called with a
  *                                            layer and its index. The value it returns should be
  *                                            unique among layers. Defaults to the index - which,
@@ -146,17 +147,14 @@
  * group is in the reversed order the previous render left it in, so the two halves of the join agree
  * only because the reversal is applied on every render.
  *
- * Note: the default defined predicate never rejects anything. It reproduces the one it replaced,
- * which read `function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }` and
- * so returned a function rather than calling either composed accessor, and a function is truthy,
- * which is all d3 tests. A NaN therefore reaches the d attribute verbatim, the browser stops
- * rendering at the invalid command, and the whole band disappears rather than only the segment the
- * missing value belongs to. undefined goes the same way, since d3.area applies unary + to it, and
- * null is not caught by an isNaN guard at all: it coerces to 0 and is plotted as data, pinning that
- * point to the top of the chart. Nothing is reported in any of these cases. stackedArea behaves
- * identically; line guards both of its dimensions by hand and works.
- * docs/area-chart-stacked/README.md describes the default of both components as "y0 and y1 are not
- * NaN", a guard that has never run, and the header this replaces did not mention defined at all.
+ * Note: the default defined predicate guards both vertical bounds by hand, as stackedArea and line
+ * do. The expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
+ * fn.compose(...y1); }` and so returned a function rather than calling either composed accessor -
+ * and a function is truthy, which is all d3 tests - so a NaN reached the d attribute verbatim, the
+ * browser stopped rendering at the invalid command, and the whole band disappeared rather than only
+ * the segment the missing value belonged to. The guard treats null and undefined as missing too,
+ * which a plain isNaN test would not: isNaN(null) is false, so a null would coerce to 0 and be
+ * plotted at the top of the chart. line, by contrast, still lets null through.
  *
  * Note: forgetting valuesAccessor for a wrapper layer produces an empty chart rather than an error,
  * because d3.area runs its datum through Array.from and that yields [] for a plain object. An
@@ -186,6 +184,7 @@
 import { area as d3Area, select, type ValueFn } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
 
 /**
@@ -295,11 +294,25 @@ const dimension = <P>(value: AreaValue<P> | undefined): PointAccessor<P, number>
 };
 
 /**
+ * Whether a bound counts as missing, and so breaks the band at that point.
+ *
+ * A value is missing when it is null-ish or when it has no numeric form. The null-ish half
+ * goes beyond the isNaN guard this default was always meant to be - isNaN(null) is false,
+ * so a null would coerce to 0 and be plotted at the top of the chart - and beyond
+ * src/component/line.ts, whose guard is documented as letting null through. A null
+ * measurement is missing data, not a zero. Matches src/component/stackedArea.ts.
+ */
+const isMissingVal = (value: unknown): boolean => value == null || Number.isNaN(Number(value));
+
+/**
  * As above, for the style properties. An unset property becomes a function returning null,
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-export default function <P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L> {
+export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAreaMultiplesComponent<
+  P,
+  L
+> {
   return (
     component<StackedAreaMultiplesComponent<P, L>>()
       .prop("x")
@@ -331,29 +344,46 @@ export default function <P = unknown, L = P[]>(): StackedAreaMultiplesComponent<
         // test/component/stackedAreaMultiples.test.ts.
         const layers = [...data].reverse();
 
-        // The default predicate accepts every point, whatever its value. It reproduces the
-        // one it replaced, which read
-        //   function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }
-        // and so returned a function rather than calling either of them - and a function is
-        // truthy, which is all d3 tests. The missing-value guard this was meant to be has
-        // therefore never run.
+        const y0 = dimension(props.y0);
+        const y1Given = props.y1 == null ? undefined : dimension(props.y1);
+
+        // The default guards both vertical bounds, the way src/component/line.ts guards both
+        // of its dimensions by hand. It is deliberately not composed: the expression this
+        // replaces - `fn.compose(fn.not(isNaN), props.y0) && fn.compose(..., props.y1)` -
+        // returned a function rather than calling either of them, and a function is truthy,
+        // so the guard never ran. A dropped point is reported once per render, because a gap
+        // in the data is transient and recoverable: the band simply breaks around it.
+        let reported = false;
+        const guardMissing: PointAccessor<P, boolean> = (datum, index, points) => {
+          const missing =
+            isMissingVal(y0(datum, index, points)) ||
+            (y1Given !== undefined && isMissingVal(y1Given(datum, index, points)));
+          if (missing && !reported) {
+            reported = true;
+            logger.warn(
+              "sszvis.stackedAreaMultiples - a point has a missing y0 or y1 value and was skipped; the band breaks around it."
+            );
+          }
+          return !missing;
+        };
+
         const defined: PointAccessor<P, boolean> =
           props.defined === undefined
-            ? () => true
+            ? guardMissing
             : typeof props.defined === "function"
               ? props.defined
               : () => Boolean(props.defined);
 
-        const areaGen = d3Area<P>().defined(defined).x(dimension(props.x)).y0(dimension(props.y0));
+        const areaGen = d3Area<P>().defined(defined).x(dimension(props.x)).y0(y0);
 
         // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
         // why an unset y1 collapses every band onto its own baseline. Its typings admit only
         // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
         // two identically.
-        if (props.y1 == null) {
+        if (y1Given === undefined) {
           areaGen.y1(null);
         } else {
-          areaGen.y1(dimension(props.y1));
+          areaGen.y1(y1Given);
         }
 
         // Rendering
