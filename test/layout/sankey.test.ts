@@ -1,5 +1,4 @@
 import { describe, expect, test, vi } from "vitest";
-import type { SankeyLink } from "../../src/component/sankey.js";
 import { computeLayout, prepareData } from "../../src/layout/sankey.js";
 
 type Row = { from: string; to: string; value: number };
@@ -24,10 +23,6 @@ const prepare = (data: Row[] = LINKS, columns: string[][] = COLUMNS) =>
     .apply(data);
 
 const byId = <N extends { id: string }>(nodes: N[], id: string) => nodes.find((n) => n.id === id);
-
-/** The links of a prepared dataset, with the nulls invalid rows leave behind filtered out. */
-const validLinks = (links: (SankeyLink | null)[]): SankeyLink[] =>
-  links.filter((l): l is SankeyLink => l !== null);
 
 describe("layout/sankey", () => {
   describe("prepareData", () => {
@@ -83,7 +78,7 @@ describe("layout/sankey", () => {
     });
 
     test("sorts the links by descending value so small ones paint last", () => {
-      const links = validLinks(prepare().links);
+      const links = prepare().links;
       expect(links.map((l) => l.value)).toEqual([10, 5, 3]);
     });
 
@@ -94,7 +89,7 @@ describe("layout/sankey", () => {
     });
 
     test("stacks the links within each node, ordered by the node they attach to", () => {
-      const links = validLinks(prepare().links);
+      const links = prepare().links;
       const ac = links.find((l) => l.src.id === "a" && l.tgt.id === "c");
       const ad = links.find((l) => l.src.id === "a" && l.tgt.id === "d");
       const bc = links.find((l) => l.src.id === "b" && l.tgt.id === "c");
@@ -107,8 +102,30 @@ describe("layout/sankey", () => {
     });
 
     test("gives every link a unique id", () => {
-      const links = validLinks(prepare().links);
+      const links = prepare().links;
       expect(new Set(links.map((l) => l.id)).size).toBe(links.length);
+    });
+
+    test("warns about a link to an unknown id and drops it", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { links } = prepare([{ from: "a", to: "nowhere", value: 1 }], COLUMNS);
+      expect(links).toEqual([]);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    test("drops several invalid links without crashing the value sort", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const prepared = prepare(
+        [
+          { from: "a", to: "nowhere", value: 1 },
+          { from: "b", to: "nowhere", value: 2 },
+          { from: "a", to: "c", value: 3 },
+        ],
+        COLUMNS
+      );
+      expect(prepared.links.map((l) => l.value)).toEqual([3]);
+      warn.mockRestore();
     });
 
     test("coerces the link value to a number", () => {
@@ -180,42 +197,12 @@ describe("layout/sankey", () => {
   });
 
   describe("known quirks", () => {
-    test("a link to an unknown id becomes a null entry in the links array", () => {
-      // BUG: an unmatched source or target is warned about and the link is replaced by null,
-      // but the null stays in the returned array. Any consumer iterating the links hits it.
-      // got: links [null]
-      // want: the invalid link dropped from the array.
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      const { links } = prepare([{ from: "a", to: "nowhere", value: 1 }], COLUMNS);
-      expect(links).toEqual([null]);
-      warn.mockRestore();
-    });
-
-    test("two invalid links crash the value sort", () => {
-      // BUG: the same nulls are then sorted by a comparator that reads `.value` off them, so
-      // two or more invalid links throw a TypeError from inside prepareData. One invalid
-      // link is survivable only because a one-element array is never compared.
-      // got: TypeError: Cannot read properties of null
-      // want: the invalid links dropped before the sort.
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      expect(() =>
-        prepare(
-          [
-            { from: "a", to: "nowhere", value: 1 },
-            { from: "b", to: "nowhere", value: 2 },
-          ],
-          COLUMNS
-        )
-      ).toThrow(TypeError);
-      warn.mockRestore();
-    });
-
     test("link ids are handed out from a module-level counter", () => {
       // BUG: undocumented. The counter is shared by every prepareData instance in the page and never
       // resets, so link ids are unique but not stable between renders. Anything keying a
       // d3 join on a link id therefore sees a completely new set of keys on every update.
-      const first = validLinks(prepare().links).map((l) => l.id);
-      const second = validLinks(prepare().links).map((l) => l.id);
+      const first = prepare().links.map((l) => l.id);
+      const second = prepare().links.map((l) => l.id);
       expect(Math.min(...second)).toBeGreaterThan(Math.max(...first));
     });
 
@@ -295,20 +282,20 @@ describe("layout/sankey", () => {
       expect(partial.valueRange).toEqual(computeLayout([2, 2], [18, 18], 400, 600).valueRange);
     });
 
-    test("the default accessors turn a row of objects into a null link", () => {
+    test("the default accessors drop every row of objects", () => {
       // BUG: source, target and value all default to fn.identity, so without accessors the
       // raw row is looked up as a node id. For the object rows this layout is built around
-      // that never matches, and every link is warned about and nulled; a second row then
-      // crashes the sort. (Identity does work for a dataset of bare id strings, which is the
+      // that never matches, and every link is warned about and dropped. (Identity does work
+      // for a dataset of bare id strings, which is the
       // only reason this default is not immediately fatal.)
-      // got: a silent all-null link list (or a TypeError once a second link exists)
+      // got: a silently empty link list
       // want: the three required accessors validated up front.
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const bare = prepareData().idLists(COLUMNS);
       expect(
         (bare as unknown as { apply: (d: Row[]) => { links: unknown[] } }).apply([LINKS[0] as Row])
           .links
-      ).toEqual([null]);
+      ).toEqual([]);
       warn.mockRestore();
     });
 
@@ -336,7 +323,7 @@ describe("layout/sankey", () => {
         COLUMNS
       );
       const nodes = prepared.nodes;
-      const links = validLinks(prepared.links);
+      const links = prepared.links;
       expect(byId(nodes, "a")?.value).toBe(0);
       expect(links.find((l) => l.tgt.id === "c")?.value).toBe(-5);
       // a is a zero-height node, yet its two links are stacked at 0 and 2 and the stack

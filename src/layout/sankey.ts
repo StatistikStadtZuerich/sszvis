@@ -8,9 +8,8 @@
  * - prepareData's source/target/value accessors default to fn.identity, which only matches when
  *   the rows are themselves the id strings; for the object rows this layout is built around, no
  *   link ever matches a node id.
- * - a link with an unknown source or target id becomes a null entry left in the returned links
- *   array. Any such null throws a TypeError from the value sort as soon as a second link exists,
- *   valid or not; a sole invalid row survives only because sort skips a one-element array.
+ * - a link with an unknown source or target id is warned about and dropped, so the returned
+ *   links array holds only links.
  * - link ids come from a module-level counter shared across every builder instance, so they
  *   are unique but not stable between renders.
  * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
@@ -33,11 +32,11 @@ type PreparedNode = SankeyNode & {
   linksTo: SankeyLink[];
 };
 
-/** What prepareData returns. Links can contain nulls; see the module's behaviour notes. */
+/** What prepareData returns. */
 export type SankeyPreparedData = {
   nodes: PreparedNode[];
-  /** One entry per input row. An invalid row leaves a null behind - see the behaviour notes. */
-  links: (SankeyLink | null)[];
+  /** One entry per valid input row; rows with an unknown source or target are dropped. */
+  links: SankeyLink[];
   columnTotals: number[];
   columnLengths: number[];
 };
@@ -110,10 +109,8 @@ const newLinkId = (() => {
  * Behaviour notes:
  * - source/target/value default to fn.identity, which only matches when a row is itself the id
  *   string; omitting them makes every link invalid for the usual object rows.
- * - a link whose source or target id is not in idLists is warned about and replaced by null, and
- *   the null stays in the returned links array. Any null throws a TypeError from the value sort
- *   once a second link exists, valid or not; a sole invalid row survives only because sort skips
- *   a one-element array.
+ * - a link whose source or target id is not in idLists is warned about and dropped from the
+ *   returned links array.
  * - link ids come from a module-level counter shared by every builder instance, so they are
  *   unique but not stable across renders.
  * - a duplicate id warns and keeps only the last column.
@@ -134,16 +131,6 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
 
   // Helper functions
   const valueAcc = fn.prop("value");
-  /**
-   * Reads a link's value. The links array can hold nulls for rows whose source or target was
-   * not found, and reading through one throws, exactly as the original property accessor did.
-   */
-  const linkValue = (link: SankeyLink | null): number => {
-    if (link === null) {
-      throw new TypeError("Cannot read properties of null (reading 'value')");
-    }
-    return link.value;
-  };
   const byAscendingValue = (a: { value: number }, b: { value: number }) =>
     ascending(valueAcc(a), valueAcc(b));
   const byDescendingValue = (a: { value: number }, b: { value: number }) =>
@@ -181,7 +168,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
       new Map<unknown, PreparedNode>()
     );
 
-    const listOfLinks = inputData.map((datum) => {
+    const listOfLinks = inputData.flatMap<SankeyLink>((datum) => {
       const srcId = mGetSource(datum);
       const tgtId = mGetTarget(datum);
       const value = Number(mGetValue(datum)) || 0; // Cast this to number
@@ -191,12 +178,12 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
 
       if (!srcNode) {
         logger.warn("Found invalid source column id:", srcId);
-        return null;
+        return [];
       }
 
       if (!tgtNode) {
         logger.warn("Found invalid target column id:", tgtId);
-        return null;
+        return [];
       }
 
       const item: SankeyLink = {
@@ -211,7 +198,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
       srcNode.linksFrom.push(item);
       tgtNode.linksTo.push(item);
 
-      return item;
+      return [item];
     });
 
     // Extract the column nodes from the index
@@ -243,7 +230,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
     // Sort the links in descending order of value. This means smaller links will render
     // on top of larger links.
     // (note, this sorts all links for all columns in the same array)
-    listOfLinks.sort((a, b) => descending(linkValue(a), linkValue(b)));
+    listOfLinks.sort(byDescendingValue);
 
     // Assign the valueOffset and nodeIndex properties
     // Here, columnData[0] is an array adding up value totals
