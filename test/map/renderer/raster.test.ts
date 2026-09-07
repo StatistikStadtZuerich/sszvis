@@ -30,8 +30,18 @@ describe("map/renderer/raster", () => {
   const canvasOf = (node: Element) =>
     node.querySelector<HTMLCanvasElement>("canvas.sszvis-map__rasterimage");
 
-  /** The RGBA of one device pixel, as the canvas actually holds it. */
-  const pixelAt = (node: Element, x: number, y: number): [number, number, number, number] => {
+  /**
+   * The device pixels per CSS pixel this runner draws at. Every assertion below is written in terms
+   * of it rather than assuming 1, so the suite says the same thing on a retina display as in CI.
+   */
+  const dpr = () => window.devicePixelRatio || 1;
+
+  /** The RGBA of the device pixel the canvas holds for a CSS-pixel coordinate. */
+  const pixelAt = (node: Element, x: number, y: number): [number, number, number, number] =>
+    devicePixelAt(node, Math.floor(x * dpr()), Math.floor(y * dpr()));
+
+  /** The RGBA of one device pixel, addressed in the bitmap's own coordinates. */
+  const devicePixelAt = (node: Element, x: number, y: number): [number, number, number, number] => {
     const context = canvasOf(node)?.getContext("2d");
     if (!context) throw new Error("no canvas context");
     const { data } = context.getImageData(x, y, 1, 1);
@@ -60,8 +70,25 @@ describe("map/renderer/raster", () => {
     test("renders one classed canvas at the given width and height", () => {
       const node = render([cell(10, 10)]);
       expect(node.querySelectorAll("canvas.sszvis-map__rasterimage")).toHaveLength(1);
-      expect(canvasOf(node)?.getAttribute("width")).toBe("20");
-      expect(canvasOf(node)?.getAttribute("height")).toBe("20");
+      expect(canvasOf(node)?.style.width).toBe("20px");
+      expect(canvasOf(node)?.style.height).toBe("20px");
+    });
+
+    test("sizes the bitmap in device pixels and pins the CSS size to the layer", () => {
+      const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
+      expect(canvas.width).toBe(Math.round(20 * dpr()));
+      expect(canvas.height).toBe(Math.round(20 * dpr()));
+      expect(canvas.style.width).toBe("20px");
+      expect(canvas.style.height).toBe("20px");
+    });
+
+    test("scales the drawing context so positions stay in CSS pixels", () => {
+      const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
+      const transform = canvas.getContext("2d")?.getTransform();
+      expect(transform?.a).toBe(dpr());
+      expect(transform?.d).toBe(dpr());
+      // The scale factor is the ratio between the bitmap and the CSS box, whatever the ratio is.
+      expect(canvas.width / Number.parseFloat(canvas.style.width)).toBeCloseTo(dpr(), 5);
     });
 
     test("fills one cell per datum, in the fill colour", () => {
@@ -173,13 +200,11 @@ describe("map/renderer/raster", () => {
     ])("reports a missing %s rather than sizing the canvas by default", (name, raster) => {
       const target = layer();
       expect(() =>
-        target
-          .datum([cell(10, 10)])
-          .call(
-            raster()
-              .position((d: Cell) => [d.x, d.y])
-              .fill("#ff0000")
-          )
+        target.datum([cell(10, 10)]).call(
+          raster()
+            .position((d: Cell) => [d.x, d.y])
+            .fill("#ff0000")
+        )
       ).toThrow(new RegExp(`${name} is required`));
       // Nothing is drawn, so no stale canvas is left behind either.
       expect(canvasOf(target.node() as HTMLElement)).toBeNull();
@@ -213,9 +238,10 @@ describe("map/renderer/raster", () => {
         )
         .node() as HTMLElement;
       const canvas = canvasOf(node) as HTMLCanvasElement;
-      expect(canvas.getAttribute("width")).toBe("21");
-      expect(canvas.width).toBe(21);
-      expect(canvas.height).toBe(21);
+      expect(canvas.style.width).toBe("21px");
+      expect(canvas.style.height).toBe("21px");
+      expect(canvas.width).toBe(Math.round(21 * dpr()));
+      expect(canvas.height).toBe(Math.round(21 * dpr()));
     });
 
     test("reuses the same canvas element across renders", () => {
@@ -239,6 +265,44 @@ describe("map/renderer/raster", () => {
       const node = render([]);
       expect(canvasOf(node)).not.toBeNull();
       expect(pixelAt(node, 10, 10)).toEqual([0, 0, 0, 0]);
+    });
+  });
+
+  // The runner draws at a ratio of 1, so the scaling is also exercised against a stubbed 2x
+  // display - the only way to see the doubled bitmap and the halved device-pixel coordinates
+  // deterministically, whatever screen the suite happens to run on.
+  describe("on a stubbed 2x display", () => {
+    const own = Object.getOwnPropertyDescriptor(window, "devicePixelRatio");
+
+    beforeEach(() => {
+      Object.defineProperty(window, "devicePixelRatio", { value: 2, configurable: true });
+    });
+
+    afterEach(() => {
+      if (own) Object.defineProperty(window, "devicePixelRatio", own);
+    });
+
+    test("doubles the bitmap while keeping the CSS size at the layer size", () => {
+      const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
+      expect(canvas.width).toBe(40);
+      expect(canvas.height).toBe(40);
+      expect(canvas.style.width).toBe("20px");
+      expect(canvas.getContext("2d")?.getTransform().a).toBe(2);
+    });
+
+    test("draws a cell at twice its CSS position, at twice the size", () => {
+      const node = render([cell(10, 10)], (c) => c.cellSide(4));
+      // The 4 CSS pixel cell at (10, 10) covers 16..23 device pixels on both axes.
+      expect(devicePixelAt(node, 16, 16)).toEqual([255, 0, 0, 255]);
+      expect(devicePixelAt(node, 23, 23)).toEqual([255, 0, 0, 255]);
+      expect(devicePixelAt(node, 15, 16)).toEqual([0, 0, 0, 0]);
+      expect(devicePixelAt(node, 24, 24)).toEqual([0, 0, 0, 0]);
+    });
+
+    test("covers the whole doubled bitmap in debug mode", () => {
+      const node = render([], (c) => c.debug(true));
+      expect(devicePixelAt(node, 0, 0)).toEqual([255, 0, 0, 51]);
+      expect(devicePixelAt(node, 39, 39)).toEqual([255, 0, 0, 51]);
     });
   });
 
@@ -271,17 +335,6 @@ describe("map/renderer/raster", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: the bitmap is sized in CSS pixels - the width and height attributes are the layer
-    // dimensions, with no devicePixelRatio factor and no compensating style width - so on a
-    // display with a device pixel ratio above 1 the bitmap is stretched across more device pixels
-    // than it has. The cells come out soft while the SVG layers over them stay sharp. The usual
-    // fix is a bitmap of width * dpr with the CSS size pinned to width.
-    test("sizes the bitmap in CSS pixels, ignoring devicePixelRatio", () => {
-      const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
-      expect(canvas.width).toBe(20);
-      expect(canvas.style.width).toBe("");
-    });
-
     // BUG: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum -
     // so a layer the caller forgot to hand data to throws "data is not iterable" rather than
     // rendering nothing. The canvas has already been created by then, so the layer is left with an
@@ -445,18 +498,23 @@ describe("map/renderer/raster", () => {
       const first = canvasOf(renderWith(20));
       const node = renderWith(40);
       expect(canvasOf(node)).toBe(first);
-      expect(canvasOf(node)?.width).toBe(40);
+      expect(canvasOf(node)?.style.width).toBe("40px");
+      expect(canvasOf(node)?.width).toBe(Math.round(40 * dpr()));
     });
 
-    // NOTE: a fractional cellSide puts the cell edges on half pixels, so they antialias to partial
-    // alpha rather than being snapped. pixelsFromGeoDistance returns a float, so every real raster
-    // map has softly composited cell seams - which is also why neighbouring cells do not tile
-    // exactly.
-    test("antialiases the edges of an odd cellSide", () => {
-      const node = render([cell(10, 10)], (c) => c.cellSide(3));
-      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
-      expect(pixelAt(node, 8, 10)[3]).toBeGreaterThan(0);
-      expect(pixelAt(node, 8, 10)[3]).toBeLessThan(255);
+    // NOTE: a cell edge that falls between device pixels antialiases to partial alpha rather than
+    // being snapped. pixelsFromGeoDistance returns a float, so every real raster map has softly
+    // composited cell seams - which is also why neighbouring cells do not tile exactly. The cell
+    // side is expressed in device pixels here so the edge lands on a half pixel whatever the
+    // runner's devicePixelRatio is.
+    test("antialiases a cell edge that falls between device pixels", () => {
+      const node = render([cell(10, 10)], (c) => c.cellSide(3 / dpr()));
+      const centre = Math.round(10 * dpr());
+      // The cell covers centre-1.5 .. centre+1.5 device pixels, so its edges are half pixels.
+      expect(devicePixelAt(node, centre, centre)).toEqual([255, 0, 0, 255]);
+      const edge = devicePixelAt(node, centre - 2, centre);
+      expect(edge[3]).toBeGreaterThan(0);
+      expect(edge[3]).toBeLessThan(255);
     });
 
     // NOTE: position and fill are called with the datum only - no index, no array - unlike a d3
@@ -542,7 +600,7 @@ describe("map/renderer/raster", () => {
       expect(canvas).not.toBeInstanceOf(HTMLCanvasElement);
       const context = canvas?.getContext("2d");
       if (!context) throw new Error("no canvas context");
-      const { data } = context.getImageData(10, 10, 1, 1);
+      const { data } = context.getImageData(Math.floor(10 * dpr()), Math.floor(10 * dpr()), 1, 1);
       expect([data[0], data[1], data[2], data[3]]).toEqual([255, 0, 0, 255]);
     });
 
