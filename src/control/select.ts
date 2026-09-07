@@ -140,9 +140,12 @@ export default function selectMenu<T extends string = string>(): SelectComponent
  * Shortens a label until it fits within maxWidth, measured by writing it into the
  * (invisible) metrics element and reading back its rendered width.
  *
+ * The value is coerced with `String()` first, matching the coercion `.text()` would apply
+ * anyway. Shortening stops as soon as the candidate no longer gets shorter, so a maxWidth
+ * that not even "…" fits into costs a handful of measurements rather than MAX_RECURSION.
+ *
  * Note: each step replaces the last two characters with a single ellipsis, so the first
- * step removes one character more than strictly necessary. The recursion also has no
- * fixed point check - a maxWidth that not even "…" fits into runs the full MAX_RECURSION.
+ * step removes one character more than strictly necessary.
  * See test/control/select.test.ts.
  */
 function truncateToWidth(
@@ -154,7 +157,14 @@ function truncateToWidth(
   const fitText = (str: string, i: number): string => {
     metricsEl.text(str);
     const textWidth = Math.ceil((metricsEl.node() as Element).clientWidth);
-    return i < MAX_RECURSION && textWidth > maxWidth ? fitText(`${str.slice(0, -2)}…`, i + 1) : str;
+    if (i >= MAX_RECURSION || textWidth <= maxWidth) return str;
+    const shorter = `${str.slice(0, -2)}…`;
+    // "…" is a fixed point of the shortening step; without this guard a negative
+    // measuring budget burns the full MAX_RECURSION in forced synchronous layouts.
+    // Compared by text rather than by length: a one-character label such as "A" is the
+    // same length as the "…" it shortens to, and a length test returned the overflowing
+    // original instead of taking the first step.
+    return shorter === str ? str : fitText(shorter, i + 1);
   };
-  return fitText(originalString, 0);
+  return fitText(String(originalString), 0);
 }

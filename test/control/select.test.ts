@@ -162,6 +162,56 @@ describe("control/select", () => {
       ).length;
       expect(wide).toBeGreaterThan(narrow);
     });
+
+    test("should stop measuring as soon as the candidate stops shrinking", () => {
+      // "…" is a fixed point of the shortening step, so a negative measuring budget
+      // (width below the 40px allowance) must bail out instead of running MAX_RECURSION.
+      const clientWidth = vi.spyOn(Element.prototype, "clientWidth", "get");
+      render(selectMenu().values(["Hello"]).current("Hello").width(20));
+      expect(options()[0]?.textContent).toBe("…");
+      expect(clientWidth.mock.calls.length).toBeLessThan(20);
+    });
+
+    test("should truncate a one-character label that still overflows", () => {
+      // "A" and the "…" it shortens to are both one character long, so a length-based
+      // fixed-point test never took the first step and returned the overflowing original.
+      render(selectMenu().values(["A"]).current("A").width(20));
+      expect(options()[0]?.textContent).toBe("…");
+    });
+
+    test("should keep layout reads proportional to the option count, not to MAX_RECURSION", () => {
+      const values = ["one", "two", "three", "four", "five", "six", "seven", "eight"];
+      const clientWidth = vi.spyOn(Element.prototype, "clientWidth", "get");
+      render(selectMenu().values(values).current("one").width(20));
+      expect(options().map((o) => o.textContent)).toEqual(values.map(() => "…"));
+      // A handful of reads per option, nowhere near 1000 * values.length.
+      expect(clientWidth.mock.calls.length).toBeLessThan(values.length * 20);
+    });
+
+    test("should coerce a non-string value before trimming it", () => {
+      render(
+        selectMenu()
+          // @ts-expect-error - the ported types constrain values to strings; this pins
+          // the runtime coercion that protects JS consumers and the built bundle.
+          .values([123_456_789_012_345])
+          .current("")
+          .width(60)
+      );
+      const text = options()[0]?.textContent ?? "";
+      expect(text.endsWith("…")).toBe(true);
+      expect("123456789012345".startsWith(text.slice(0, -1))).toBe(true);
+    });
+
+    test("should coerce a non-string value that does not need trimming", () => {
+      render(
+        selectMenu()
+          // @ts-expect-error - as above: coercion must happen on the non-truncating path too.
+          .values([42])
+          .current("")
+          .width(300)
+      );
+      expect(options()[0]?.textContent).toBe("42");
+    });
   });
 
   test("should re-render in place rather than appending duplicates", () => {
