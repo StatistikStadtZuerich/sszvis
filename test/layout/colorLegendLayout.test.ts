@@ -80,7 +80,16 @@ describe("colorLegendLayout", () => {
 
       test("legendWidth is the column count times the widest label", () => {
         expect(colorLegendDimensions(SIX, 2000).legendWidth).toBe(maxLabelWidth(SIX) * 2);
-        expect(colorLegendDimensions(FOUR, 2000).legendWidth).toBe(maxLabelWidth(FOUR));
+        // a stacked single column is as wide as its widest label
+        expect(colorLegendDimensions(FOUR, totalLabelWidth(FOUR) - 1).legendWidth).toBe(
+          maxLabelWidth(FOUR)
+        );
+      });
+
+      test("legendWidth is the width of the whole line for a floated legend", () => {
+        const dims = colorLegendDimensions(FOUR, 2000);
+        expect(dims.horizontalFloat).toBe(true);
+        expect(dims.legendWidth).toBe(totalLabelWidth(FOUR));
       });
 
       test("every label is padded by 40px", () => {
@@ -263,18 +272,6 @@ describe("colorLegendLayout", () => {
       const dims = colorLegendDimensions(EIGHT, 100_000);
       expect(dims.columns).toBe(2);
       expect(dims.rows).toBe(4);
-    });
-
-    test("legendWidth ignores the horizontal layout it describes", () => {
-      // BUG: for a floated single-column legend the labels are laid out on one line, but
-      // legendWidth still reports the width of the widest label alone. A caller sizing the
-      // chart from legendWidth under-reserves the space the legend actually occupies.
-      // got: legendWidth === widest label
-      // want: the width of the floated line.
-      const dims = colorLegendDimensions(FOUR, 2000);
-      expect(dims.horizontalFloat).toBe(true);
-      expect(dims.legendWidth).toBe(maxLabelWidth(FOUR));
-      expect(dims.legendWidth).toBeLessThan(totalLabelWidth(FOUR));
     });
   });
 });
