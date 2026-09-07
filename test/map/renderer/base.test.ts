@@ -1,0 +1,469 @@
+import { geoCentroid, geoPath } from "d3";
+import type { Feature, FeatureCollection, Polygon } from "geojson";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { createSvgLayer } from "../../../src/createSvgLayer.js";
+import "../../../src/d3-selectgroup.js";
+import { prepareMergedGeoData, swissMapPath } from "../../../src/map/mapUtils.js";
+import mapRendererBase from "../../../src/map/renderer/base.js";
+
+type Datum = { geoId: string; value: number | null };
+
+/**
+ * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
+ * counter-clockwise would describe the whole globe minus the square.
+ */
+const square = (id: string, offset = 0): Feature<Polygon> => ({
+  type: "Feature",
+  id,
+  properties: {},
+  geometry: {
+    type: "Polygon",
+    coordinates: [
+      [
+        [offset, offset],
+        [offset, offset + 1],
+        [offset + 1, offset + 1],
+        [offset + 1, offset],
+        [offset, offset],
+      ],
+    ],
+  },
+});
+
+describe("map/renderer/base", () => {
+  let container: HTMLDivElement;
+  let layerKey = 0;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    container.id = "chart-container";
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    container?.parentNode?.removeChild(container);
+  });
+
+  const group = (key?: string) =>
+    createSvgLayer("#chart-container", undefined, {
+      key: key ?? `base-${++layerKey}`,
+    }).selectGroup("map");
+
+  /** A fresh geojson each time, since getGeoJsonCenter caches onto the features. */
+  const geoJson = (): FeatureCollection<Polygon> => ({
+    type: "FeatureCollection",
+    features: [square("a"), square("b", 2), square("c", 4)],
+  });
+
+  let pathKey = 0;
+  /** A path generator fitted to the collection, with a cache key unique to each call. */
+  const mapPathOf = (collection: FeatureCollection<Polygon>) =>
+    swissMapPath(100, 100, collection, `base-path-${++pathKey}`);
+
+  const areas = (node: Element) => [...node.querySelectorAll("path.sszvis-map__area")];
+  const attrs = (node: Element, attr: string) => areas(node).map((a) => a.getAttribute(attr));
+  const anchors = (node: Element) => [...node.querySelectorAll("[data-tooltip-anchor]")];
+
+  /** The names of the tweens d3 scheduled on a node, e.g. ["attr.fill"]. */
+  const tweenNames = (node: Element) => {
+    const schedules = (node as Element & { __transition?: Record<string, unknown> }).__transition;
+    if (!schedules) return null;
+    return Object.values(schedules)
+      .filter((s): s is { tween: { name: string }[] } => typeof s === "object" && s !== null)
+      .flatMap((s) => s.tween.map((t) => t.name));
+  };
+
+  /** Renders the base layer over `data`, returning the group node it drew into. */
+  const render = (
+    data: Datum[],
+    configure: (c: ReturnType<typeof mapRendererBase>) => ReturnType<typeof mapRendererBase> = (
+      c
+    ) => c,
+    key?: string
+  ) => {
+    const collection = geoJson();
+    const merged = prepareMergedGeoData(data, collection);
+    const component = configure(
+      mapRendererBase().mergedData(merged).geoJson(collection).mapPath(mapPathOf(collection))
+    );
+    return group(key).call(component).node() as SVGGElement;
+  };
+
+  const fullData: Datum[] = [
+    { geoId: "a", value: 1 },
+    { geoId: "b", value: 2 },
+    { geoId: "c", value: 3 },
+  ];
+
+  describe("rendering", () => {
+    test("renders one classed path per merged datum", () => {
+      const node = render(fullData);
+      expect(areas(node)).toHaveLength(3);
+      for (const area of areas(node)) expect(area.tagName).toBe("path");
+    });
+
+    test("renders a path for every feature, including those with no data", () => {
+      const node = render([{ geoId: "a", value: 1 }]);
+      expect(areas(node)).toHaveLength(3);
+    });
+
+    test("takes the path data from the mapPath generator", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const node = group()
+        .call(
+          mapRendererBase()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .geoJson(collection)
+            .mapPath(mapPath)
+        )
+        .node() as SVGGElement;
+      expect(attrs(node, "d")).toEqual(collection.features.map((f) => mapPath(f)));
+    });
+
+    test("marks every area as an event target", () => {
+      const node = render(fullData);
+      expect(attrs(node, "data-event-target")).toEqual(["", "", ""]);
+    });
+
+    test("adds the missing value pattern to the layer's defs once", () => {
+      const node = render(fullData);
+      const root = node.ownerSVGElement as SVGSVGElement;
+      expect(root.querySelectorAll("defs #missing-pattern")).toHaveLength(1);
+    });
+
+    // NOTE: the entering class is added and removed in the same chain, so it is never observable
+    // from outside a render - there is no enter-only styling hook despite the class existing.
+    test("never leaves the entering class on an area", () => {
+      const node = render(fullData);
+      expect(node.querySelectorAll(".sszvis-map__area--entering")).toHaveLength(0);
+    });
+  });
+
+  describe("fill", () => {
+    test("defaults to black", () => {
+      const node = render(fullData);
+      expect(attrs(node, "fill")).toEqual(["black", "black", "black"]);
+    });
+
+    test("takes the fill from the accessor, called with the datum", () => {
+      const seen: unknown[] = [];
+      const node = render(fullData, (c) =>
+        c.fill((d: Datum) => {
+          seen.push(d);
+          return `rgb(${d.value}, 0, 0)`;
+        })
+      );
+      expect(attrs(node, "fill")).toEqual(["rgb(1, 0, 0)", "rgb(2, 0, 0)", "rgb(3, 0, 0)"]);
+      expect(seen).toContainEqual({ geoId: "a", value: 1 });
+    });
+
+    test("accepts a constant fill", () => {
+      const node = render(fullData, (c) => c.fill("#ff0000"));
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
+    });
+
+    test("uses the missing value pattern where the defined predicate fails", () => {
+      const node = render(fullData, (c) => c.fill("#ff0000").defined((d: Datum) => d.value !== 2));
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
+    });
+
+    // NOTE: `defined` defaults to the constant true, so a feature with no data at all is passed to
+    // the fill accessor as undefined rather than being treated as missing.
+    test("calls the fill accessor with undefined for a feature with no data", () => {
+      const seen: unknown[] = [];
+      const node = render([{ geoId: "a", value: 1 }], (c) =>
+        c.fill((d?: Datum) => {
+          seen.push(d);
+          return d ? "#00ff00" : "#0000ff";
+        })
+      );
+      expect(seen).toContain(undefined);
+      expect(attrs(node, "fill")).toEqual(["#00ff00", "#0000ff", "#0000ff"]);
+    });
+  });
+
+  describe("the undefined class", () => {
+    test("marks areas whose datum is missing", () => {
+      const node = render([{ geoId: "a", value: 1 }]);
+      expect(areas(node).map((a) => a.classList.contains("sszvis-map__area--undefined"))).toEqual([
+        false,
+        true,
+        true,
+      ]);
+    });
+
+    test("marks areas that fail the defined predicate", () => {
+      const node = render(fullData, (c) => c.defined((d: Datum) => d.value !== 2));
+      expect(areas(node).map((a) => a.classList.contains("sszvis-map__area--undefined"))).toEqual([
+        false,
+        true,
+        false,
+      ]);
+    });
+
+    test("clears the class when the datum arrives on a later render", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("undefined-clearing");
+      const renderWith = (data: Datum[]) =>
+        layer
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(data, collection))
+              .geoJson(collection)
+              .mapPath(mapPath)
+          )
+          .node() as SVGGElement;
+
+      renderWith([{ geoId: "a", value: 1 }]);
+      const node = renderWith(fullData);
+      expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
+    });
+  });
+
+  describe("transitionColor", () => {
+    test("schedules a fill transition by default", () => {
+      const node = render(fullData);
+      expect(tweenNames(areas(node)[0])).toContain("attr.fill");
+    });
+
+    test("applies the fill without a transition when disabled", () => {
+      const node = render(fullData, (c) => c.transitionColor(false).fill("#ff0000"));
+      expect(tweenNames(areas(node)[0])).toBeNull();
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
+    });
+
+    // BUG: the fill is written onto the plain selection first and then transitioned to the very
+    // same value, so the tween interpolates a colour onto itself. The final colour is already in
+    // the DOM before the transition starts, which means the colour transition never animates
+    // anything - on enter or on update - and transitionColor is decorative.
+    test("writes the final fill immediately, so the transition interpolates a colour onto itself", () => {
+      const node = render(fullData, (c) => c.fill("#ff0000"));
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
+      expect(tweenNames(areas(node)[0])).toContain("attr.fill");
+    });
+
+    // BUG: `.transition().call(slowTransition)` does not apply the slow transition. d3's
+    // transition.call(f) invokes f(transition) and returns the original, but slowTransition
+    // ignores its argument and builds a fresh detached transition, which is discarded. The
+    // scheduled transition therefore keeps d3's defaults - 250ms and easeCubicInOut - rather than
+    // the intended 500ms easePolyOut. src/transition.ts documents this exact `.call(...)` idiom
+    // as the way to apply the attributes, so the idiom itself is the bug.
+    test("schedules d3's default duration and easing, not the slow transition's", () => {
+      const node = render(fullData);
+      const schedules = (areas(node)[0] as Element & { __transition?: Record<string, unknown> })
+        .__transition;
+      const scheduled = Object.values(schedules ?? {}).filter(
+        (v): v is { duration: number; ease: (t: number) => number } =>
+          typeof v === "object" && v !== null && "duration" in v
+      );
+      expect(scheduled).toHaveLength(1);
+      expect(scheduled[0].duration).toBe(250);
+      expect(scheduled[0].ease.name).toBe("cubicInOut");
+    });
+  });
+
+  describe("known quirks", () => {
+    // BUG: the line `selection.selectAll(".sszvis-map__area--undefined").attr("fill", getMapFill)`
+    // is dead. It reads the undefined class *before* this render updates it, so it repaints last
+    // render's undefined set - and every area it could touch is repainted anyway by the join
+    // above and the fill below. Deleting the line fails none of these tests (verified by
+    // mutation), so it is pure overhead plus a misleading read of stale state.
+    test("paints a newly defined area correctly despite the stale-class repaint", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("stale-fill");
+      const renderWith = (data: Datum[], fill: string) =>
+        layer
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(data, collection))
+              .geoJson(collection)
+              .mapPath(mapPath)
+              .transitionColor(false)
+              .fill(fill)
+          )
+          .node() as SVGGElement;
+
+      renderWith([{ geoId: "a", value: 1 }], "#ff0000");
+      const node = renderWith(fullData, "#00ff00");
+      expect(attrs(node, "fill")).toEqual(["#00ff00", "#00ff00", "#00ff00"]);
+    });
+
+    // BUG: the two notions of "undefined" disagree. The fill uses props.defined alone, which
+    // defaults to a constant true and so never rejects a missing datum, while the class uses
+    // fn.defined(d.datum) as well. A feature with no data is therefore classed --undefined but
+    // painted with the ordinary fill instead of the missing-value pattern.
+    test("classes a no-datum feature undefined while still painting it the ordinary fill", () => {
+      const node = render([{ geoId: "a", value: 1 }], (c) => c.fill("#ff0000"));
+      const [, second] = areas(node);
+      expect(second.classList.contains("sszvis-map__area--undefined")).toBe(true);
+      expect(second.getAttribute("fill")).toBe("#ff0000");
+    });
+
+    // NOTE: `defined` goes through fn.functor, so a constant false paints every area with the
+    // missing-value pattern regardless of the data.
+    test("paints every area with the pattern for a constant false defined", () => {
+      const node = render(fullData, (c) => c.defined(false).fill("#ff0000"));
+      expect(attrs(node, "fill")).toEqual([
+        "url(#missing-pattern)",
+        "url(#missing-pattern)",
+        "url(#missing-pattern)",
+      ]);
+    });
+
+    // BUG: an unparseable `center` property (see the getGeoJsonCenter validation issue) reaches
+    // the anchor as NaN coordinates, the projection maps those to [null, null], and the transform
+    // is built from them unguarded, giving a transform of "translate(NaN,NaN)" rather than the
+    // anchor being skipped. A typo in an authored map file silently detaches that entity's
+    // tooltip instead of reporting anything.
+    test("emits a NaN transform for an anchor whose center property is malformed", () => {
+      const collection = geoJson();
+      collection.features[1].properties = { center: "not,coordinates" };
+      const node = group()
+        .call(
+          mapRendererBase()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .geoJson(collection)
+            .mapPath(mapPathOf(collection))
+        )
+        .node() as SVGGElement;
+      expect(anchors(node).map((a) => a.getAttribute("transform"))).toContain("translate(NaN,NaN)");
+    });
+
+    // BUG: the missing-value pattern is written into a defs element inside each map layer's own
+    // group, with a fixed id. Two map layers on one page emit two #missing-pattern definitions,
+    // and every url(#missing-pattern) reference in the document resolves to whichever comes first.
+    test("emits a duplicate missing-pattern id for every map layer on the page", () => {
+      render(fullData, (c) => c, "layer-one");
+      render(fullData, (c) => c, "layer-two");
+      expect(document.querySelectorAll("#missing-pattern").length).toBeGreaterThan(1);
+    });
+
+    // NOTE: the data join has no key function, so it is an index join - reordering mergedData
+    // repaints the existing nodes in place rather than moving them.
+    test("repaints existing nodes in place when the merged data is reordered", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("reorder");
+      const renderWith = (features: typeof collection.features) =>
+        layer
+          .call(
+            mapRendererBase()
+              .mergedData(
+                features.map((f) => ({ geoJson: f, datum: { geoId: String(f.id), value: 1 } }))
+              )
+              .geoJson(collection)
+              .mapPath(mapPath)
+              .transitionColor(false)
+          )
+          .node() as SVGGElement;
+
+      const node = renderWith(collection.features);
+      const before = areas(node);
+      const firstD = before[0].getAttribute("d");
+      const reordered = renderWith([...collection.features].reverse());
+      expect(areas(reordered)[0]).toBe(before[0]);
+      expect(areas(reordered)[0].getAttribute("d")).not.toBe(firstD);
+    });
+
+    test("requires mergedData: rendering without it throws", () => {
+      const collection = geoJson();
+      expect(() =>
+        group()
+          .call(mapRendererBase().geoJson(collection).mapPath(mapPathOf(collection)))
+          .node()
+      ).toThrow();
+    });
+
+    test("requires mapPath: rendering without it throws", () => {
+      const collection = geoJson();
+      expect(() =>
+        group()
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .geoJson(collection)
+          )
+          .node()
+      ).toThrow();
+    });
+
+    // The anchor position calls props.mapPath.projection(), so a bare path-generating function -
+    // which is all the documented `{d3.geo.path}` type requires - renders the areas and then
+    // throws on the anchors.
+    test("throws for a mapPath that is a plain function without a projection", () => {
+      const collection = geoJson();
+      expect(() =>
+        group()
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .geoJson(collection)
+              .mapPath(() => "M0,0Z")
+          )
+          .node()
+      ).toThrow();
+    });
+
+    // geoJson is declared as a property and documented as the layer's shapes, but the render only
+    // ever reads mergedData - the property is dead weight on this component.
+    test("ignores the geoJson property entirely", () => {
+      const collection = geoJson();
+      const node = group()
+        .call(
+          mapRendererBase()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .mapPath(mapPathOf(collection))
+        )
+        .node() as SVGGElement;
+      expect(areas(node)).toHaveLength(3);
+    });
+  });
+
+  describe("tooltip anchors", () => {
+    test("renders one anchor per merged datum", () => {
+      const node = render(fullData);
+      expect(anchors(node)).toHaveLength(3);
+    });
+
+    test("positions each anchor at the projected centre of its feature", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const node = group()
+        .call(
+          mapRendererBase()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .geoJson(collection)
+            .mapPath(mapPath)
+        )
+        .node() as SVGGElement;
+      const projection = mapPath.projection();
+      // Computed independently of the component, which writes its own cachedCenter.
+      const expected = geoJson().features.map((f) => {
+        const [x, y] = projection(geoCentroid(f)) as [number, number];
+        return `translate(${x},${y})`;
+      });
+      expect(anchors(node).map((a) => a.getAttribute("transform"))).toEqual(expected);
+    });
+
+    // NOTE: positioning goes through getGeoJsonCenter, which caches onto the feature - rendering a
+    // map mutates the geojson it was handed.
+    test("caches a centre onto every feature it renders", () => {
+      const collection = geoJson();
+      expect(collection.features[0].properties?.cachedCenter).toBeUndefined();
+      group()
+        .call(
+          mapRendererBase()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .geoJson(collection)
+            .mapPath(mapPathOf(collection))
+        )
+        .node();
+      for (const feature of collection.features) {
+        expect(feature.properties?.cachedCenter).toBeDefined();
+      }
+    });
+  });
+});
