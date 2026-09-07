@@ -45,7 +45,7 @@ describe("legend/linearColorScale", () => {
     const s = scale();
     const node = render(legendColorLinear().scale(s).segments(8));
     // segments(8) asks scale.ticks(7), which yields 6 values on [0, 100]
-    expect(node.querySelectorAll("rect.sszvis-legend__mark").length).toBe(s.ticks(7).length + 1);
+    expect(node.querySelectorAll("rect.sszvis-legend__mark").length).toBe(s.ticks(7).length);
   });
 
   test("should default segments to 8", () => {
@@ -55,9 +55,7 @@ describe("legend/linearColorScale", () => {
     expect(withDefault.querySelectorAll("rect.sszvis-legend__mark").length).toBe(
       withExplicit.querySelectorAll("rect.sszvis-legend__mark").length
     );
-    expect(withDefault.querySelectorAll("rect.sszvis-legend__mark").length).toBe(
-      s.ticks(7).length + 1
-    );
+    expect(withDefault.querySelectorAll("rect.sszvis-legend__mark").length).toBe(s.ticks(7).length);
   });
 
   test("should divide the width evenly between the segments", () => {
@@ -165,56 +163,40 @@ describe("legend/linearColorScale", () => {
     expect(node.querySelectorAll("rect").length).toBe(0);
   });
 
+  test("should not mutate the caller's displayValues, nor drift across renders", () => {
+    const shared = [0, 50];
+    const legend = legendColorLinear().scale(scale()).displayValues(shared);
+    const group = layer("linear-mutation");
+    group.call(legend);
+    expect(shared).toEqual([0, 50]);
+    const node = group.node() as SVGGElement;
+    expect(node.querySelectorAll("rect.sszvis-legend__mark").length).toBe(3);
+    group.call(legend);
+    expect(shared).toEqual([0, 50]);
+    expect(node.querySelectorAll("rect.sszvis-legend__mark").length).toBe(3);
+  });
+
+  test("should not duplicate the last segment when the values already reach the maximum", () => {
+    const s = scale();
+    const node = render(legendColorLinear().scale(s).segments(8));
+    const fills = attrs(node, "rect.sszvis-legend__mark", "fill");
+    expect(fills.length).toBe(s.ticks(7).length);
+    // no two adjacent segments share a fill
+    for (let i = 1; i < fills.length; i++) expect(fills[i]).not.toBe(fills[i - 1]);
+  });
+
+  test("should still extend the ramp when the values stop short of the maximum", () => {
+    const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
+    expect(attrs(node, "rect.sszvis-legend__mark", "fill").length).toBe(3);
+  });
+
   describe("known quirks", () => {
-    test("mutates the caller's displayValues array, growing it on every render", () => {
-      // BUG: `values = props.displayValues` aliases the caller's array and then
-      // `values.push(fn.last(domain))` mutates it. The prop object is cloned per render
-      // but the array reference is shared, so each re-render appends another maximum and
-      // adds another segment. A chart that re-renders on interaction drifts visibly.
-      // current: [0, 50] becomes [0, 50, 100] then [0, 50, 100, 100].
-      // expected: displayValues is left untouched; segment count stays stable.
-      const shared = [0, 50];
-      const legend = legendColorLinear().scale(scale()).displayValues(shared);
-      const group = layer("linear-mutation");
-      group.call(legend);
-      expect(shared).toEqual([0, 50, 100]);
-      group.call(legend);
-      expect(shared).toEqual([0, 50, 100, 100]);
-      expect(
-        (group.node() as SVGGElement).querySelectorAll("rect.sszvis-legend__mark").length
-      ).toBe(4);
-    });
-
-    test("appends the domain maximum unconditionally, duplicating the last segment", () => {
-      // BUG: the domain maximum is appended even when the values already end there -
-      // which is the default path, since scale.ticks() includes the upper bound. The
-      // result is two adjacent segments of the same colour, so the final colour renders
-      // double width and the ramp misrepresents the scale.
-      // current: ticks [0..100] plus an extra 100. expected: no duplicate.
-      const s = scale();
-      const node = render(legendColorLinear().scale(s).segments(8));
-      const fills = attrs(node, "rect.sszvis-legend__mark", "fill");
-      expect(fills.at(-1)).toBe(fills.at(-2));
-      expect(fills.length).toBe(s.ticks(7).length + 1);
-    });
-
     test("misspells the end-cap class as ssvis-legend--mark", () => {
       // BUG: the end caps are classed "ssvis-legend--mark" - missing the "z", and using
-      // "--" where every sibling uses "__". No such class exists in sszvis.css, so the
-      // caps cannot be styled alongside the rest of the legend. They still render only
-      // because the fill is set as an attribute. Renaming is a CSS-API change.
-      // current: "ssvis-legend--mark". expected: "sszvis-legend__mark".
+      // "--" where every sibling uses "__". See issue #65.
       const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
       expect(node.querySelectorAll("circle.ssvis-legend--mark").length).toBe(2);
       expect(node.querySelectorAll("circle.sszvis-legend__mark").length).toBe(0);
-    });
-
-    test("the divide-by-zero guard on segment width is unreachable", () => {
-      // NOTE: `values.length > 0 ? width / values.length : 0` can never take the zero
-      // branch, because a value is always appended before it runs. Dead code rather than
-      // a defect; worth removing during the port.
-      const node = render(legendColorLinear().scale(scale()).displayValues([]));
-      expect(node.querySelectorAll("rect.sszvis-legend__mark").length).toBeGreaterThan(0);
     });
   });
 });
