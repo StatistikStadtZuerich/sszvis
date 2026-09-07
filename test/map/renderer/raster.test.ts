@@ -306,6 +306,52 @@ describe("map/renderer/raster", () => {
     });
   });
 
+  describe("accessibility", () => {
+    test("marks the canvas decorative when no description is given, which is the default", () => {
+      expect(mapRendererRaster().alt()).toBe("");
+      const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
+      expect(canvas.getAttribute("aria-hidden")).toBe("true");
+      expect(canvas.hasAttribute("role")).toBe(false);
+      expect(canvas.hasAttribute("aria-label")).toBe(false);
+    });
+
+    test("carries a caller-supplied accessible name and fallback content", () => {
+      const canvas = canvasOf(
+        render([cell(10, 10)], (c) => c.alt("Population density per hectare"))
+      ) as HTMLCanvasElement;
+      expect(canvas.getAttribute("role")).toBe("img");
+      expect(canvas.getAttribute("aria-label")).toBe("Population density per hectare");
+      expect(canvas.textContent).toBe("Population density per hectare");
+      expect(canvas.hasAttribute("aria-hidden")).toBe(false);
+    });
+
+    test("drops the name again when a later render has none", () => {
+      const target = layer("raster-alt");
+      const renderWith = (alt: string) =>
+        target
+          .datum([cell(10, 10)])
+          .call(
+            mapRendererRaster()
+              .width(20)
+              .height(20)
+              .position((d: Cell) => [d.x, d.y])
+              .fill("#ff0000")
+              .alt(alt)
+          )
+          .node() as HTMLElement;
+      renderWith("Described");
+      const canvas = canvasOf(renderWith("")) as HTMLCanvasElement;
+      expect(canvas.hasAttribute("aria-label")).toBe(false);
+      expect(canvas.getAttribute("aria-hidden")).toBe("true");
+      expect(canvas.textContent).toBe("");
+    });
+
+    test("still draws its cells when it is described", () => {
+      const node = render([cell(10, 10)], (c) => c.alt("A raster").cellSide(4));
+      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
+    });
+  });
+
   describe("opacity and debug", () => {
     test("defaults to fully opaque", () => {
       expect(mapRendererRaster().opacity()).toBe(1);
