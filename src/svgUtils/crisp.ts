@@ -48,9 +48,11 @@ export const halfPixel = (pos: number): number => Math.floor(pos) + 0.5;
  *
  * Scope: only the first translate instruction of a string is processed, and a
  * translate is expected to carry one or two components. Other instructions
- * (rotate, scale, …) are passed through untouched.
+ * (rotate, scale, …) are passed through untouched. A translate carrying more
+ * than two components is not valid SVG; every component is floored and
+ * re-emitted, which is undefined-input behaviour rather than a guarantee.
  *
- * Known defects are pinned in test/svgUtils/crisp.test.ts.
+ * Negative coordinates and coordinates padded with spaces are handled.
  *
  * @param  {string} transformStr A valid SVG transform string
  * @return {string}              An SVG transform string with rounded values
@@ -58,12 +60,10 @@ export const halfPixel = (pos: number): number => Math.floor(pos) + 0.5;
 export const roundTransformString = (transformStr: string): string => {
   const roundNumber = fn.compose(Math.floor, Number);
   return transformStr.replace(
-    /(translate\()\s*([\d ,.]+)\s*(\))/i,
+    /(translate\()\s*([\d ,.-]+?)\s*(\))/i,
     (_: string, left: string, vecStr: string, right: string) => {
       const roundVec = vecStr
-        .replace(",", " ")
-        .replace(/\s+/, " ")
-        .split(" ")
+        .split(/[\s,]+/)
         .map(roundNumber)
         .join(",");
       return `${left}${roundVec}${right}`;

@@ -61,6 +61,16 @@ describe("svgUtils/crisp", () => {
       expect(roundTransformString("translate(12,4)")).toBe("translate(12,4)");
     });
 
+    test("should round negative translate coordinates", () => {
+      expect(roundTransformString("translate(-12.3,-4.9)")).toBe("translate(-13,-5)");
+      expect(roundTransformString("translate(12.3,-4.9)")).toBe("translate(12,-5)");
+    });
+
+    test("should handle coordinates padded with spaces", () => {
+      expect(roundTransformString("translate( 12.3 , 4.9 )")).toBe("translate(12,4)");
+      expect(roundTransformString("translate(  12.3   4.9  )")).toBe("translate(12,4)");
+    });
+
     // Characterization tests: these pin down defects in the current implementation so a
     // behaviour-preserving port stays verifiable. Each carries a defect marker naming the
     // cause and the behaviour that would be correct instead.
@@ -73,15 +83,6 @@ describe("svgUtils/crisp", () => {
         expect(roundTransformString("translate(4.99,4.99)")).toBe("translate(4,4)");
       });
 
-      test("leaves negative translate coordinates untouched", () => {
-        // BUG: the match character class /[\d ,.]+/ omits "-", so the instruction does not
-        // match at all and the string is returned verbatim. transformTranslateSubpixelShift
-        // uses /[\d ,.-]+/ for the same job, so the two functions disagree on negatives.
-        // current: "translate(-12.3,-4.9)". expected: "translate(-13,-5)".
-        expect(roundTransformString("translate(-12.3,-4.9)")).toBe("translate(-12.3,-4.9)");
-        expect(roundTransformString("translate(12.3,-4.9)")).toBe("translate(12.3,-4.9)");
-      });
-
       test("rounds only the first translate instruction of a transform string", () => {
         // NOTE: documented scope, not a defect. The match regex has no /g flag, so only the
         // first translate instruction is processed. Crisping a single translate is all this
@@ -91,20 +92,10 @@ describe("svgUtils/crisp", () => {
         );
       });
 
-      test("emits a spurious third component when the coordinates are padded with spaces", () => {
-        // BUG: .replace(",", " ") and .replace(/\s+/, " ") both lack /g, so only the first
-        // comma and the first whitespace run collapse. The surviving spaces split into an
-        // extra empty component, which Number() turns into a third coordinate.
-        // current: "translate(12,4,0)". expected: "translate(12,4)".
-        expect(roundTransformString("translate( 12.3 , 4.9 )")).toBe("translate(12,4,0)");
-      });
-
-      test("emits NaN for a translate with more than two components", () => {
+      test("floors every component of a translate with more than two components", () => {
         // NOTE: a three-component translate is not valid SVG, so this is undefined-input
-        // behaviour rather than a defect in its own right. It shares a root cause with the
-        // padded-spaces defect above (non-global replace) and will resolve when that is
-        // fixed; pinned so the change is visible when it happens.
-        expect(roundTransformString("translate(1.5,2.5,3.5)")).toBe("translate(1,NaN)");
+        // behaviour rather than a guarantee. Pinned so a future change is visible.
+        expect(roundTransformString("translate(1.5,2.5,3.5)")).toBe("translate(1,2,3)");
       });
     });
   });
