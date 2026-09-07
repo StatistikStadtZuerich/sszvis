@@ -16,14 +16,10 @@
  * @property {string, function} color       A string or color for the fill color of the ruler dots.
  * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
  *
- * Note: the rule, the handle and the grip mark live in a group whose datum is the constant 0, so
- * an `x` accessor function is called with 0 rather than with a data value and those three elements
- * end up at NaN. In practice `x` has to be a number here, even though the dots and labels - which
- * are bound to the data - do work with an accessor.
- *
- * Note: the three static elements are appended on every render instead of being joined, so a
- * component that re-renders accumulates a rule, a handle and a grip mark each time, with the newest
- * copies painted over the dots.
+ * Note: there is one rule, one handle and one grip mark however many data points are bound, so
+ * they are positioned from a single datum - the first one. An `x` accessor is called with that
+ * datum; for data whose `x` values differ, the ruler follows the first. With no data bound there is
+ * no first datum, so an `x` accessor is called with `undefined` - pass a number in that case.
  *
  * Note: labels are written with `.html()`, as elsewhere in the library, because sszvis.modularText
  * produces markup. Escaping untrusted label data is the caller's responsibility. Unlike
@@ -70,11 +66,10 @@ type CrispAccessor<D> = (this: unknown, d: D, ...rest: unknown[]) => number;
 
 interface HandleRulerProps<T> {
   /**
-   * Called with a data value for the dots and labels, but with the ruler group's
-   * placeholder datum (the number 0) for the rule, the handle and the grip mark - hence
-   * the union. See the note in the module docs.
+   * Called with a data value. The rule, the handle and the grip mark are bound to the
+   * first datum, so an accessor positions them from that one. See the module docs.
    */
-  x: (d: T | number) => NumberValue;
+  x: (d: T) => NumberValue;
   y: (d: T) => NumberValue;
   top: number;
   bottom: number;
@@ -86,8 +81,8 @@ interface HandleRulerProps<T> {
 
 export interface HandleRulerComponent<T = unknown>
   extends ComponentBuilder<HandleRulerComponent<T>> {
-  x(): (d: T | number) => NumberValue;
-  x(accessor: NumberAccessor<T | number>): HandleRulerComponent<T>;
+  x(): (d: T) => NumberValue;
+  x(accessor: NumberAccessor<T>): HandleRulerComponent<T>;
   y(): (d: T) => NumberValue;
   y(accessor: NumberAccessor<T>): HandleRulerComponent<T>;
   top(): number;
@@ -123,33 +118,42 @@ export default function handleRuler<T = unknown>(): HandleRulerComponent<T> {
       // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
       // Composed with fn.compose rather than written as arrow functions so that d3's full
       // (d, i, nodes) argument list and its element-bound `this` still reach the accessor.
-      const crispX = fn.compose(halfPixel, props.x) as CrispAccessor<T | number>;
+      const crispX = fn.compose(halfPixel, props.x) as CrispAccessor<T>;
       const crispY = fn.compose(halfPixel, props.y) as CrispAccessor<T>;
 
       const bottom = props.bottom - RULE_BOTTOM_INSET;
       const handleTop = props.top - HANDLE_HEIGHT;
 
+      // There is a single rule, handle and grip mark whatever the data, so the group they
+      // live in is bound to one datum - the first - and `props.x` is read from that. The
+      // dots and labels below are joined on the whole data array as usual. The array holds
+      // one slot even for empty data, so the ruler still renders (from a constant `x`).
+      const rulerDatum = [data[0]] as T[];
+
       const group = selection
-        .selectAll<SVGGElement, number>(".sszvis-handleRuler__group")
-        .data([0])
+        .selectAll<SVGGElement, T>(".sszvis-handleRuler__group")
+        .data(rulerDatum)
         .join("g")
         .classed("sszvis-handleRuler__group", true);
 
-      group.append("line").classed("sszvis-ruler__rule", true);
-
-      group.append("rect").classed("sszvis-handleRuler__handle", true);
-
-      group.append("line").classed("sszvis-handleRuler__handle-mark", true);
-
+      // The static parts are joined rather than appended so that a re-render - the normal
+      // case for an interactive ruler - neither duplicates them nor moves them in front of
+      // the dots, which are joined further down and must stay on top.
       group
-        .selectAll<SVGLineElement, number>(".sszvis-ruler__rule")
+        .selectAll<SVGLineElement, T>(".sszvis-ruler__rule")
+        .data((d) => [d])
+        .join("line")
+        .classed("sszvis-ruler__rule", true)
         .attr("x1", crispX)
         .attr("y1", halfPixel(props.top))
         .attr("x2", crispX)
         .attr("y2", halfPixel(bottom));
 
       group
-        .selectAll<SVGRectElement, number>(".sszvis-handleRuler__handle")
+        .selectAll<SVGRectElement, T>(".sszvis-handleRuler__handle")
+        .data((d) => [d])
+        .join("rect")
+        .classed("sszvis-handleRuler__handle", true)
         .attr("x", (d) => crispX(d) - HANDLE_WIDTH / 2)
         .attr("y", halfPixel(handleTop))
         .attr("width", HANDLE_WIDTH)
@@ -158,7 +162,10 @@ export default function handleRuler<T = unknown>(): HandleRulerComponent<T> {
         .attr("ry", 2);
 
       group
-        .selectAll<SVGLineElement, number>(".sszvis-handleRuler__handle-mark")
+        .selectAll<SVGLineElement, T>(".sszvis-handleRuler__handle-mark")
+        .data((d) => [d])
+        .join("line")
+        .classed("sszvis-handleRuler__handle-mark", true)
         .attr("x1", crispX)
         .attr("y1", halfPixel(handleTop + HANDLE_HEIGHT * HANDLE_MARK_TOP))
         .attr("x2", crispX)
