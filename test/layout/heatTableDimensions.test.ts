@@ -112,6 +112,23 @@ describe("heatTableDimensions", () => {
     });
   });
 
+  describe("no room for a box", () => {
+    const EMPTY = { side: 0, paddedSide: 0, padRatio: 0, width: 0, height: 0, centeredOffset: 0 };
+
+    test("too many columns leave no room for a box", () => {
+      // the side used to go negative, taking padRatio above the [0, 1) a band scale accepts
+      expect(dimensionsHeatTable(100, 2, 100, 5)).toEqual(EMPTY);
+    });
+
+    test("chart padding that eats the container leaves no room for a box", () => {
+      expect(dimensionsHeatTable(100, 2, 10, 5, { left: 50, right: 50 })).toEqual(EMPTY);
+    });
+
+    test("a padding wider than a column leaves no room at any column count", () => {
+      expect(dimensionsHeatTable(30, 40, 2, 2)).toEqual(EMPTY);
+    });
+  });
+
   describe("known quirks", () => {
     test("mutates the chartPadding object it is given", () => {
       // BUG: the defaults are written back onto the caller's object instead of onto a copy,
@@ -130,36 +147,6 @@ describe("heatTableDimensions", () => {
       // thing to pass; the layout should not need write access to it.
       const frozen = Object.freeze({ left: 20 });
       expect(() => dimensionsHeatTable(800, 2, 10, 5, frozen)).toThrow(TypeError);
-    });
-
-    test("too many columns produce a negative side and a padRatio above 1", () => {
-      // BUG: the box side is only capped from above. When the padding alone exceeds the
-      // available width the side goes negative, and padRatio - documented as a band scale
-      // argument, so valid only in [0, 1) - goes above 1.
-      // got: side -0.98, padRatio 1.96
-      // want: the side clamped at 0, or an explicit error.
-      const dim = dimensionsHeatTable(100, 2, 100, 5);
-      expect(dim.side).toBeLessThan(0);
-      expect(dim.padRatio).toBeGreaterThan(1);
-    });
-
-    test("chart padding alone can starve the table into a negative side", () => {
-      // BUG: same unclamped side as the too-many-columns case, but reached through a
-      // realistic input - horizontal chart padding that eats the whole container.
-      // got: side -1.8, padRatio 5.5
-      // want: the side clamped at 0.
-      const dim = dimensionsHeatTable(100, 2, 10, 5, { left: 50, right: 50 });
-      expect(dim.side).toBeLessThan(0);
-      // the width collapses to a floating-point crumb rather than to exactly 0
-      expect(dim.width).toBeCloseTo(0, 12);
-      expect(dim.centeredOffset).toBeCloseTo(0, 12);
-    });
-
-    test("a padding wider than a column makes the boxes negative at any column count", () => {
-      // BUG: the same defect at a much smaller scale - two columns and a 40px gap in a
-      // 30px space is enough.
-      const dim = dimensionsHeatTable(30, 40, 2, 2);
-      expect(dim.side).toBeLessThan(0);
     });
 
     test("a zero-valued padding side is indistinguishable from a missing one", () => {

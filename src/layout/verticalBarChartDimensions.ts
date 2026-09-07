@@ -26,10 +26,7 @@
  * - Padding is then clamped to [2, 100] WITHOUT recomputing the bar width, so the bar group
  *   can overflow or underflow the given width (outerRatio can go negative).
  * - padRatio/outerRatio are derived from the clamped barWidth/padding, not from the 0.7/0.3 target.
- * - numBars === 1 has zero padding spaces, so its padWidth is a phantom that is never drawn but
- *   still feeds padRatio. When the single bar would be wider than the 48px cap, the padding
- *   recompute additionally divides by zero and the resulting Infinity is masked by the 100px
- *   clamp; a narrower single bar skips that branch and keeps its finite target padding.
+ * - numBars === 1 has zero padding spaces, so it reports no padding at all.
  * - A zero width or a zero bar count is a chart with nothing to draw, and every dimension
  *   comes back 0 (totalWidth still reports the width that was asked for).
  * - A negative width, or a negative or fractional bar count, throws.
@@ -81,10 +78,16 @@ export default function dimensionsVerticalBarChart(
   if (barWidth > MAX_BAR_WIDTH) {
     barWidth = MAX_BAR_WIDTH;
     // recompute the padding value where necessary
-    padding = (width - barWidth * numBars) / numPads;
+    padding = numPads === 0 ? 0 : (width - barWidth * numBars) / numPads;
   }
-  if (padding < MIN_PADDING) padding = MIN_PADDING;
-  if (padding > MAX_PADDING) padding = MAX_PADDING;
+  if (numPads === 0) {
+    // a single bar draws no gaps, so any padding reported here is a phantom that would
+    // still feed padRatio
+    padding = 0;
+  } else {
+    if (padding < MIN_PADDING) padding = MIN_PADDING;
+    if (padding > MAX_PADDING) padding = MAX_PADDING;
+  }
 
   // compute other information
   const padRatio = 1 - barWidth / (barWidth + padding),

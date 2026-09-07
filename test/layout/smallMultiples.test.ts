@@ -250,6 +250,15 @@ describe("layout/smallMultiples", () => {
       expect(multiples(selection.node() as SVGGElement)).toHaveLength(0);
     });
 
+    test("rejects more data than the declared grid has room for", () => {
+      // eight groups in a 3 x 2 grid used to spill into a third row below the declared height
+      expect(() => render(grid(), groups(8))).toThrow(/2 x 3/);
+    });
+
+    test("fills the grid exactly to its last cell", () => {
+      expect(multiples(render(grid(), groups(6)))).toHaveLength(6);
+    });
+
     test("defaults the paddings to zero", () => {
       const layout = layoutSmallMultiples<Group>().width(300).height(200).cols(3).rows(2);
       const node = render(layout, groups(6));
@@ -291,16 +300,6 @@ describe("layout/smallMultiples", () => {
         });
       render(layout, groups(2));
       expect(seen[0]).toMatchObject({ name: "group-0", gx: 0, gw: 100, cx: 50 });
-    });
-
-    test("more data than grid cells overflows the grid instead of erroring", () => {
-      // BUG: the layout takes rows and cols as given and lays out one group per datum. Eight
-      // groups in a 3 x 2 grid produce a third row that falls outside the declared height.
-      // got: two extra groups at y = 220, below a 210px-high grid
-      // want: a warning, or the grid sized from the data.
-      const node = render(grid(), groups(8));
-      expect(multiples(node)).toHaveLength(8);
-      expect(transformOf(multiples(node)[6] as Element)).toBe("translate(0,220)");
     });
 
     test("a datum without a values property binds undefined to the chart group", () => {

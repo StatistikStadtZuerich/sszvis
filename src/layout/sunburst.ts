@@ -12,6 +12,7 @@
  */
 
 import { type HierarchyNode, type HierarchyRectangularNode, max, min, partition } from "d3";
+import * as logger from "../logger.js";
 import { type NodeDatum, prepareHierarchyData } from "./hierarchy.js";
 import { requireCount, requireSize } from "./validate.js";
 
@@ -98,12 +99,14 @@ const MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  *
  * Behaviour notes:
- * - centerRadius is always chartWidth / 6.
+ * - centerRadius is chartWidth / 6, shrunk when the rings would not otherwise fit.
  * - ringWidth is the remaining radius divided by numLayers, clamped to [10, 60].
- * - Because the clamp does not feed back into centerRadius, a deep hierarchy in a narrow
- *   chart overflows (centerRadius + ringWidth * numLayers can exceed chartWidth / 2, which
- *   is exactly the outer radius the sunburst component draws, per docs/sunburst/basic.js),
- *   and a shallow one leaves empty space.
+ * - The 10px floor is reconciled with the centre: a deep hierarchy in a narrow chart gives
+ *   its rings the room by shrinking centerRadius, so that
+ *   centerRadius + ringWidth * numLayers stays within chartWidth / 2 - the outer radius the
+ *   sunburst component draws, per docs/sunburst/basic.js. A hierarchy so deep that even a
+ *   centre of nothing cannot hold it warns and overflows. The 60px cap is not compensated
+ *   for in the other direction: a shallow hierarchy simply leaves empty space.
  * - A zero chartWidth or a hierarchy with no layers is a chart with nothing to draw, and
  *   every dimension comes back 0.
  * - A negative chartWidth, or a negative or fractional layer count, throws.
@@ -117,8 +120,19 @@ export const computeLayout = (numLayers: number, chartWidth: number): SunburstLa
 
   // Diameter of the center circle is one-third the width
   const halfWidth = chartWidth / 2;
-  const centerRadius = halfWidth / 3;
-  const ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
+  const targetCenterRadius = halfWidth / 3;
+  const ringWidth = Math.max(
+    MIN_RW,
+    Math.min(MAX_RW, (halfWidth - targetCenterRadius) / numLayers)
+  );
+  // Once the ring width is floored, the rings may need more room than the target centre
+  // leaves them. Give it to them, down to a centre of nothing.
+  const centerRadius = Math.max(0, Math.min(targetCenterRadius, halfWidth - ringWidth * numLayers));
+  if (ringWidth * numLayers > halfWidth) {
+    logger.warn(
+      `sunburstLayout: ${numLayers} rings of the minimum ${MIN_RW}px do not fit a chart ${chartWidth}px wide, and will be drawn outside it`
+    );
+  }
 
   return {
     centerRadius,

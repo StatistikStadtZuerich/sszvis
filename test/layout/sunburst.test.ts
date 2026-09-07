@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
 import {
   computeLayout,
@@ -130,6 +130,29 @@ describe("layout/sunburst", () => {
     });
   });
 
+  describe("fitting the rings to the chart", () => {
+    test("shrinks the centre when the floored rings need the room", () => {
+      // 12 rings would each be 8.33px wide, so the 10px floor takes 20px off the centre
+      const layout = computeLayout(12, 300);
+      expect(layout.ringWidth).toBe(MIN_SUNBURST_RING_WIDTH);
+      expect(layout.centerRadius).toBe(30);
+      expect(layout.centerRadius + layout.ringWidth * layout.numLayers).toBe(300 / 2);
+    });
+
+    test("leaves the centre alone when the rings already fit", () => {
+      const layout = computeLayout(4, 600);
+      expect(layout.centerRadius).toBe(100);
+    });
+
+    test("warns when even a centre of nothing cannot hold the rings", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const layout = computeLayout(40, 300);
+      expect(layout.centerRadius).toBe(0);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+  });
+
   describe("degenerate inputs", () => {
     test("a hierarchy with no layers has no rings", () => {
       expect(computeLayout(0, 600)).toEqual({ centerRadius: 0, numLayers: 0, ringWidth: 0 });
@@ -154,18 +177,6 @@ describe("layout/sunburst", () => {
   });
 
   describe("known quirks", () => {
-    test("the rings can overflow the chart once they hit the 10px floor", () => {
-      // BUG: centerRadius is always a sixth of the width, and the ring width is floored at
-      // 10px without re-checking that the rings still fit. A deep hierarchy in a narrow
-      // chart therefore draws outside its own bounds.
-      // got: outer radius 450 in a chart whose half-width is 150
-      // want: the centre radius or the layer count reduced so the chart fits.
-      const layout = computeLayout(40, 300);
-      const outerRadius = layout.centerRadius + layout.ringWidth * layout.numLayers;
-      expect(layout.ringWidth).toBe(MIN_SUNBURST_RING_WIDTH);
-      expect(outerRadius).toBeGreaterThan(300 / 2);
-    });
-
     test("the rings can also fall short of the chart once they hit the 60px cap", () => {
       // NOTE: the mirror image of the floor, and harmless - a shallow hierarchy in a wide
       // chart simply leaves empty space outside the outermost ring.

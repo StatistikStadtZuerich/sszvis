@@ -190,6 +190,22 @@ describe("layout/sankey", () => {
       expect(single.columnRange).toEqual([0, 0]);
     });
 
+    test("columns of one node draw no gaps, so they report no padding", () => {
+      const one = computeLayout([1, 1], [18, 18], 400, 600);
+      expect(one.nodePadding).toBe(0);
+      expect(one.valueRange[1]).toBe(400);
+    });
+
+    test("a one-node column is left out of the padding minimum", () => {
+      // it has no gap of its own, so it must not charge one to the columns that do
+      const mixed = computeLayout([1, 2], [18, 18], 400, 600);
+      const alone = computeLayout([2, 2], [18, 18], 400, 600);
+      expect(mixed.nodePadding).toBe(alone.nodePadding);
+      expect(mixed.valueRange).toEqual(alone.valueRange);
+      // and a column that computes a smaller padding still wins it
+      expect(computeLayout([1, 20], [18, 18], 400, 600).nodePadding).toBe(12);
+    });
+
     test("a single node in a column still spreads the columns normally", () => {
       const oneNode = computeLayout([1, 1], [18, 18], 400, 600);
       expect(oneNode.columnRange).toEqual([0, 600 - 20]);
@@ -300,27 +316,6 @@ describe("layout/sankey", () => {
         .value((d: Row) => d.value)
         .idLists(COLUMNS);
       expect(() => (builder.apply as (a: unknown, b: unknown) => unknown)(null, [LINKS])).toThrow();
-    });
-
-    test("a column of one node reports a padding it has no gap for", () => {
-      // NOTE: harmless, though it reads alarmingly. A single-node column divides the padding
-      // budget by zero gaps, giving Infinity, which the 50px cap turns into a normal-looking
-      // 50px padding candidate. It cannot distort anything: 50 is the maximum the clamp
-      // allows, so this candidate never wins the minimum unless every other column is at 50
-      // already. The column keeps all its pixels either way, since (colLength - 1) is 0.
-      const one = computeLayout([1, 1], [18, 18], 400, 600);
-      expect(one.nodePadding).toBe(50);
-      expect(one.valueRange[1]).toBe(400);
-
-      // adding a one-node column beside a two-node one changes nothing about the two-node
-      // column: it loses 50px to the gap it actually draws, exactly as it would alone
-      const mixed = computeLayout([1, 2], [18, 18], 400, 600);
-      const alone = computeLayout([2, 2], [18, 18], 400, 600);
-      expect(mixed.nodePadding).toBe(alone.nodePadding);
-      expect(mixed.valueRange).toEqual(alone.valueRange);
-
-      // and a column that would compute a smaller padding still wins it
-      expect(computeLayout([1, 20], [18, 18], 400, 600).nodePadding).toBe(12);
     });
 
     test("the default accessors drop every row of objects", () => {
