@@ -71,7 +71,7 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * One group of the grid. `values` carries the data for the chart drawn inside the group;
  * the layout writes its geometry back onto the same object.
@@ -91,7 +91,7 @@ export type SmallMultipleGroup<V = unknown> = {
     /** vertical centre of the group, in the group's own frame */
     cy?: number;
 };
-export interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGroup> extends Component {
+export interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGroup> extends ComponentBuilder<SmallMultiplesComponent<G>> {
     /**
      * The six geometry properties have no defaults, so their getters report undefined until the
      * corresponding setter has been called. Reading one before then is what produces the NaN

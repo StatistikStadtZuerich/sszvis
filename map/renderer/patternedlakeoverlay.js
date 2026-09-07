@@ -1,5 +1,6 @@
 import { select } from 'd3';
 import { component } from '../../d3-component.js';
+import { valueFn } from '../../fn.js';
 import { mapLakePattern, mapLakeFadeGradient, mapLakeGradientMask } from '../../patterns.js';
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 
@@ -95,16 +96,6 @@ import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
  *
  * @return {sszvis.component}
  */
-/**
- * Normalises the colour prop into the single accessor shape d3's overloads can resolve. An accessor
- * is passed through untouched, so it keeps receiving d3's arguments and node context; a constant
- * becomes a function returning it, which d3 applies identically - both paths end in the same
- * setProperty call. The same idiom as src/map/renderer/mesh.ts, minus its nullish fallback: this
- * prop has no default, and the caller only reaches here once it is truthy.
- */
-function toStyleValue(value) {
-  return typeof value === "function" ? value : () => value;
-}
 function mapRendererPatternedLakeOverlay () {
   return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").fadeOut(true).render(function () {
     const selection = select(this);
@@ -127,7 +118,7 @@ function mapRendererPatternedLakeOverlay () {
     // This path is rendered as a dotted line over the lake shape
     const lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr("d", props.mapPath);
     if (props.lakePathColor) {
-      lakePath.style("stroke", toStyleValue(props.lakePathColor));
+      lakePath.style("stroke", valueFn(props.lakePathColor));
     }
   });
 }

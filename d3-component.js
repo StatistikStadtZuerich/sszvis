@@ -37,11 +37,13 @@ function component() {
    */
   function sszvisComponent(selection) {
     if (selectionRenderer) {
-      selection.props = () => clone(props);
+      // Attach the props reader d3's Selection prototype is augmented with below.
+      Reflect.set(selection, "props", () => clone(props));
       selectionRenderer.apply(selection, slice(arguments));
     }
     selection.each(function () {
-      this.__props__ = clone(props);
+      // Stash the props on the node itself, where selection.props() reads them back.
+      Reflect.set(this, "__props__", clone(props));
       renderer.apply(this, slice(arguments));
     });
   }
@@ -55,7 +57,9 @@ function component() {
    */
   sszvisComponent.prop = function (prop) {
     let setter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : identity;
-    sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
+    // The accessor is created from a runtime prop name, so it cannot be assigned through
+    // a statically known key.
+    Reflect.set(sszvisComponent, prop, accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent));
     return sszvisComponent;
   };
   /**
@@ -66,13 +70,16 @@ function component() {
    * @return {sszvis.component}
    */
   sszvisComponent.delegate = (prop, delegate) => {
-    sszvisComponent[prop] = function () {
+    // Same as in prop(): a runtime prop name on both the component and the delegate.
+    const delegated = function () {
+      const target = Reflect.get(delegate, prop);
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
       }
-      const result = delegate[prop].apply(delegate, slice(args));
+      const result = target.apply(delegate, slice(args));
       return args.length === 0 ? result : sszvisComponent;
     };
+    Reflect.set(sszvisComponent, prop, delegated);
     return sszvisComponent;
   };
   /**
@@ -120,10 +127,11 @@ selection.prototype.props = function () {
   // getting props.
   if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
   if (this.size() !== 1) throw new Error("only one group is supported");
-  if (this._groups[0].length !== 1) throw new Error("only one node is supported");
-  const group = this._groups[0];
-  const node = group[0];
-  return node.__props__ || {};
+  // _groups is d3's internal selection storage and is not part of its public types.
+  const node = this.node();
+  if (!node) throw new Error("only one node is supported");
+  // The props were stashed on the node itself by the component that rendered it.
+  return Reflect.get(node, "__props__") || {};
 };
 /**
  * Creates an accessor function that either gets or sets a value, depending
@@ -136,6 +144,8 @@ selection.prototype.props = function () {
  */
 function accessor(props, prop) {
   let setter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : identity;
+  // Getter when called with no arguments, setter otherwise - the two return different
+  // things, and the prop's own declaration in the component interface states which.
   return function () {
     for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
       args[_key2] = arguments[_key2];

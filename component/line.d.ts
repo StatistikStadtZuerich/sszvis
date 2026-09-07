@@ -68,7 +68,7 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * Dimension accessors are handed to d3.line, which calls them with a single point, that
  * point's index within the line, and the array of points the line is drawn from.
@@ -83,7 +83,7 @@ type LineAccessor<L, R> = (datum: L, index: number) => R;
 type StyleValue<L, R> = R | LineAccessor<L, R>;
 /** Pulls the array of points to draw out of one line's datum. */
 type ValuesAccessor<L, P> = (datum: L, index: number) => P[];
-export interface LineComponent<P = unknown, L = unknown> extends Component {
+export interface LineComponent<P = unknown, L = unknown> extends ComponentBuilder<LineComponent<P, L>> {
     x(): number | PointAccessor<P, number> | undefined;
     x<Q = P>(value: number | PointAccessor<Q, number>): LineComponent<P, L>;
     y(): PointAccessor<P, number> | undefined;

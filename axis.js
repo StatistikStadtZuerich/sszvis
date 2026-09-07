@@ -351,7 +351,8 @@ function axis() {
         let textContour = g.select(".sszvis-axis__label-contour");
         if (textContour.empty() && textNode && "cloneNode" in textNode) {
           textContour = select(textNode.cloneNode(true)).classed("sszvis-axis__label-contour", true);
-          this.insertBefore(textContour.node(), textNode);
+          const contourNode = textContour.node();
+          if (contourNode) this.insertBefore(contourNode, textNode);
         }
         if (textNode && "textContent" in textNode) {
           textContour.text(textNode.textContent || "");
@@ -371,12 +372,14 @@ const setOrdinalTicks = function (count) {
     if (domain[i] !== undefined) values.push(domain[i]);
   }
   // include the last value
-  if (domain[domain.length - 1] !== "undefined") values.push(domain[domain.length - 1]);
+  if (domain[domain.length - 1] !== undefined) values.push(domain[domain.length - 1]);
   this.tickValues(values);
   return count;
 };
 const axisX = () => axis().yOffset(2) //gap between chart and x-axis
-.ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
+.ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6)
+// The x-axis is numeric; arity(1, ...) drops the index d3 passes as a second argument.
+.tickFormat(arity(1, formatNumber));
 axisX.time = () => axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
 axisX.ordinal = () => axisX()
 // extend this class a little with a custom implementation of 'ticks'

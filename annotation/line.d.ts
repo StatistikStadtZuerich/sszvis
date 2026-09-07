@@ -23,10 +23,10 @@
  * @returns {sszvis.component} a linear data area component (reference line)
  */
 import { type AxisScale, type NumberValue } from "d3";
-import { type Component } from "../d3-component";
-import type { NumberAccessor, StringAccessor } from "../types";
+import { type ComponentBuilder } from "../d3-component.js";
+import type { NumberAccessor, StringAccessor } from "../types.js";
 type Datum<T = unknown> = T;
-interface LineComponent<T = unknown> extends Component {
+interface LineComponent<T = unknown> extends ComponentBuilder<LineComponent<T>> {
     x1(accessor?: NumberAccessor<Datum<T>>): LineComponent<T>;
     x2(accessor?: NumberAccessor<Datum<T>>): LineComponent<T>;
     y1(accessor?: NumberAccessor<Datum<T>>): LineComponent<T>;

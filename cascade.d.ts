@@ -73,11 +73,19 @@
 export type KeyAccessor<T, K = string | number> = (datum: T) => K;
 export type KeySorter<K = string | number> = (a: K, b: K) => number;
 export type ValueSorter<T> = (a: T, b: T) => number;
+/**
+ * The shape a cascade builds: arrayBy nests an array, objectBy an object, and the innermost
+ * level holds the grouped data. Which of the three a given level is only becomes known from
+ * the chain the caller built, so `apply` asks for the expected result type.
+ */
+export type CascadeResult<T> = T[] | CascadeResult<T>[] | {
+    [key: string]: CascadeResult<T>;
+};
 export interface CascadeInstance<T> {
-    apply(data: T[]): any;
+    apply<R = CascadeResult<T>>(data: T[]): R;
     objectBy<K extends string | number>(accessor: KeyAccessor<T, K>): CascadeInstance<T>;
-    arrayBy<K extends string | number>(accessor: KeyAccessor<T, K>, sorter?: KeySorter<K>): CascadeInstance<T>;
+    arrayBy<K extends string | number>(accessor: KeyAccessor<T, K>, sorter?: KeySorter<string>): CascadeInstance<T>;
     sort(sorter: ValueSorter<T>): CascadeInstance<T>;
 }
-export declare function cascade<T = any>(): CascadeInstance<T>;
+export declare function cascade<T = unknown>(): CascadeInstance<T>;
 //# sourceMappingURL=cascade.d.ts.map

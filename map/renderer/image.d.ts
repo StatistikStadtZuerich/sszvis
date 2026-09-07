@@ -92,14 +92,14 @@
  * @return {sszvis.component}
  */
 import type { BaseType, ValueFn } from "d3";
-import { type Component } from "../../d3-component.js";
+import { type ComponentBuilder } from "../../d3-component.js";
 import type { GeoPoint, PointProjection } from "../mapUtils.js";
 /**
  * A constant or an accessor. Neither src nor opacity is wrapped in fn.functor, so a function is
  * handed straight to d3 and evaluated against the join's placeholder datum, 0.
  */
 type ImageValue<R extends string | number> = R | ValueFn<BaseType, number, R>;
-export interface MapRendererImageComponent extends Component {
+export interface MapRendererImageComponent extends ComponentBuilder<MapRendererImageComponent> {
     projection(): PointProjection | undefined;
     projection(value: PointProjection): MapRendererImageComponent;
     src(): ImageValue<string> | undefined;

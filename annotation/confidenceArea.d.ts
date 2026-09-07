@@ -21,12 +21,12 @@
  *
  * @returns {sszvis.component} a confidence area component
  */
-import { type Component } from "../d3-component";
-import type { NumberAccessor } from "../types";
+import { type ComponentBuilder } from "../d3-component.js";
+import type { NumberAccessor } from "../types.js";
 type Datum<T = unknown> = T;
 /** The data-join key. d3 hands it the datum and its index. */
 type KeyAccessor<T> = (d: Datum<T>, i: number) => string | number;
-interface ConfidenceAreaComponent<T = unknown> extends Component {
+interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<ConfidenceAreaComponent<T>> {
     x(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
     y0(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
     y1(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;

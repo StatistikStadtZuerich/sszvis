@@ -36,9 +36,9 @@
  *
  * @return {d3.component}
  */
-import { type Component } from "../d3-component";
+import { type ComponentBuilder } from "../d3-component.js";
 type PanEventHandler = (event: Event, ...args: unknown[]) => void;
-interface PanningComponent extends Component {
+interface PanningComponent extends ComponentBuilder<PanningComponent> {
     elementSelector(): string;
     elementSelector(selector: string): PanningComponent;
     on(eventName: "start", handler: PanEventHandler): PanningComponent;

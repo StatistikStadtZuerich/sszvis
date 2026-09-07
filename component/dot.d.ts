@@ -66,7 +66,7 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * An accessor as d3 calls it, with the datum and its index. Declaring fewer parameters is
  * fine, so `(d) => d.x` and `(_d, i) => i * 10` are both assignable.
@@ -93,7 +93,7 @@ type DotValue<T, R> = R | ValueAccessor<T, R>;
 type RawValue<T, R> = DotValue<T, R | null | undefined>;
 /** The getter counterpart of RawValue: the constant or the accessor that was set. */
 type StoredRawValue<T, R> = R | null | undefined | StoredAccessor<T, R | null | undefined>;
-export interface DotComponent<T = unknown> extends Component {
+export interface DotComponent<T = unknown> extends ComponentBuilder<DotComponent<T>> {
     x(): StoredAccessor<T, number>;
     x<U = T>(value: DotValue<U, number>): DotComponent<T>;
     y(): StoredAccessor<T, number>;

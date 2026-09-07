@@ -154,7 +154,7 @@
  *
  * @return {sszvis.component}
  */
-import { type Component, type PropertySetter, type RenderCallback } from "../d3-component.js";
+import { type ComponentBuilder, type PropertySetter, type RenderCallback } from "../d3-component.js";
 /**
  * One entity in the diagram, drawn as a bar, as sszvis.layout.sankey.prepareData produces
  * it. Everything up to valueOffset is what the component reads.
@@ -276,7 +276,7 @@ type ColumnLabelOffsetValue = number | ((columnLength: number, index: number) =>
  * re-declare them to survive its own construction chain. Without this the chain widens to
  * `any` at the first default and nothing in it is checked.
  */
-interface SankeyBuilder extends Component {
+interface SankeyBuilder extends ComponentBuilder<SankeyBuilder> {
     prop<V>(prop: string, setter?: PropertySetter<V>): SankeyComponent;
     render(callback: RenderCallback): SankeyComponent;
 }

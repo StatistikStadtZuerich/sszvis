@@ -20,10 +20,10 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component";
-import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types";
+import { type ComponentBuilder } from "../d3-component.js";
+import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types.js";
 type Datum<T = unknown> = T;
-interface RangeRulerComponent<T = unknown> extends Component {
+interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerComponent<T>> {
     x(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;
     y0(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;
     y1(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;

@@ -1,6 +1,6 @@
 import { select, area } from 'd3';
 import { component } from '../d3-component.js';
-import { identity } from '../fn.js';
+import { identity, valueFn } from '../fn.js';
 import { defaultTransition } from '../transition.js';
 
 /**
@@ -208,9 +208,13 @@ const dimension = value => {
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-const styleValue = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
 function stackedAreaMultiples () {
-  return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+  return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
+  // The default layer type L is P[], so the values ARE the layer and identity is correct.
+  // A caller who sets a different L must supply a matching accessor; the constraint
+  // cannot express "identity is valid only for the default instantiation".
+  .valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+    var _props$fill, _props$stroke;
     const selection = select(this);
     const props = selection.props();
     // Layouts
@@ -243,10 +247,10 @@ function stackedAreaMultiples () {
     const pathData = function (datum, index, group) {
       return areaGen(props.valuesAccessor.call(this, datum, index, group));
     };
-    const fill = styleValue(props.fill);
+    const fill = valueFn((_props$fill = props.fill) !== null && _props$fill !== void 0 ? _props$fill : null);
     // No default, where stackedArea falls back to a #ffffff hairline.
-    const stroke = styleValue(props.stroke);
-    const strokeWidth = styleValue(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+    const stroke = valueFn((_props$stroke = props.stroke) !== null && _props$stroke !== void 0 ? _props$stroke : null);
+    const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
     const paths = selection.selectAll("path.sszvis-path").data(layers, props.key).join("path").classed("sszvis-path", true);
     // The transition is created and its return value dropped, so it carries no tweens and
     // every attribute below is written to the plain selection: nothing animates, while the

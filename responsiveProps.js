@@ -1,4 +1,4 @@
-import { breakpointDefaultSpec, breakpointCreateSpec, breakpointMatch, breakpointFindByName } from './breakpoint.js';
+import { breakpointDefaultSpec, breakpointMatch, breakpointCreateSpec, breakpointFindByName } from './breakpoint.js';
 import { isObject, find, defined } from './fn.js';
 import { warn } from './logger.js';
 
@@ -178,19 +178,21 @@ function responsiveProps() {
    *   { name: 'large', width: 700 }
    * ])
    */
-  _responsiveProps.breakpoints = function () {
+  const breakpoints = function () {
     if (arguments.length === 0) {
       return breakpointSpec;
     }
-    const bps = arguments.length <= 0 ? undefined : arguments[0];
-    breakpointSpec = breakpointCreateSpec(bps);
+    breakpointSpec = breakpointCreateSpec(arguments.length <= 0 ? undefined : arguments[0]);
     return _responsiveProps;
   };
+  _responsiveProps.breakpoints = breakpoints;
   return _responsiveProps;
 }
 // Helpers
 function isBounds(arg1) {
-  return defined(arg1) && defined(arg1.width) && defined(arg1.screenWidth) && defined(arg1.screenHeight);
+  if (!defined(arg1) || typeof arg1 !== "object") return false;
+  const candidate = arg1;
+  return defined(candidate.width) && defined(candidate.screenWidth) && defined(candidate.screenHeight);
 }
 /**
  * functorizeValues
@@ -201,11 +203,7 @@ function functorizeValues(obj) {
   const result = {};
   Object.keys(obj).forEach(key => {
     const value = obj[key];
-    if (typeof value === "function") {
-      result[key] = value;
-    } else {
-      result[key] = () => value;
-    }
+    result[key] = typeof value === "function" ? value : () => value;
   });
   return result;
 }

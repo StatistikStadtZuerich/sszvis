@@ -18,7 +18,7 @@
  *                                              defaults to using the first and last tick values.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /** The subset of a d3 scale this legend relies on. */
 interface LinearColorScale {
     (value: number): string;
@@ -26,7 +26,7 @@ interface LinearColorScale {
     ticks?(count?: number): number[];
 }
 type LabelFormatter = (value: unknown, index: number) => string | number;
-export interface LinearColorScaleComponent extends Component {
+export interface LinearColorScaleComponent extends ComponentBuilder<LinearColorScaleComponent> {
     scale(): LinearColorScale;
     scale(scale: LinearColorScale): LinearColorScaleComponent;
     displayValues(): number[];

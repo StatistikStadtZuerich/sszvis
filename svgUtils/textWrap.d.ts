@@ -19,6 +19,6 @@
  * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
-import type { AnySelection } from "../types.js";
-export default function textWrap(selection: AnySelection, width: number, paddingRightLeft?: number, paddingTopBottom?: number): number[];
+import type { BaseType, Selection } from "d3";
+export default function textWrap<D, P extends BaseType, PD>(selection: Selection<SVGTextElement, D, P, PD>, width: number, paddingRightLeft?: number, paddingTopBottom?: number): number[];
 //# sourceMappingURL=textWrap.d.ts.map

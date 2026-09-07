@@ -48,19 +48,29 @@
  *
  * @method responsiveProps.prop
  */
+import type { PartialBreakpoint } from "./breakpoint.js";
 import type { Breakpoint, Measurement } from "./types.js";
-export interface ResponsivePropValue<T = any> {
+export interface ResponsivePropValue<T = unknown> {
     [breakpointName: string]: T | ((width: number) => T);
     _: T | ((width: number) => T);
 }
+/**
+ * What `prop()` stores. Every value has been through functorizeValues by then, so unlike
+ * ResponsivePropValue - which describes what a caller may pass - each entry is a function.
+ */
+type FunctorizedPropValue = {
+    [breakpointName: string]: (width: number) => unknown;
+};
 export interface ResponsivePropsConfig {
-    [propName: string]: ResponsivePropValue;
+    [propName: string]: FunctorizedPropValue;
 }
 export interface ResponsivePropsInstance {
-    (measurements: Measurement): Record<string, any>;
+    (measurements: Measurement): Record<string, unknown>;
     prop<T>(propName: string, propSpec: ResponsivePropValue<T>): ResponsivePropsInstance;
     breakpoints(): Breakpoint[];
-    breakpoints(bps: Breakpoint[]): ResponsivePropsInstance;
+    /** Takes partial definitions - breakpointCreateSpec parses each into a full Breakpoint. */
+    breakpoints(bps: PartialBreakpoint[]): ResponsivePropsInstance;
 }
 export declare function responsiveProps(): ResponsivePropsInstance;
+export {};
 //# sourceMappingURL=responsiveProps.d.ts.map

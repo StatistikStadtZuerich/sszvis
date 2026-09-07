@@ -1,6 +1,5 @@
-import { select } from 'd3';
 import { bounds } from './bounds.js';
-import { isSelection } from './fn.js';
+import { withRootSelection } from './fn.js';
 
 /**
  * Factory that returns an SVG element appended to the given target selector,
@@ -32,11 +31,13 @@ function createSvgLayer(selector, bounds$1) {
   const elementDataKey = "data-sszvis-svg-".concat(key);
   const title = metadata.title || "";
   const description = metadata.description || "";
-  const root = isSelection(selector) ? selector : select(selector);
-  const svg = root.selectAll("svg[".concat(elementDataKey, "]")).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", "".concat(title, " \u2013 ").concat(description)).attr("height", height).attr("width", width);
-  svg.selectAll("title").data([0]).join("title").text(title);
-  svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
-  return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(".concat(padding.left, ",").concat(padding.top, ")"));
+  const render = root => {
+    const svg = root.selectAll("svg[".concat(elementDataKey, "]")).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", "".concat(title, " \u2013 ").concat(description)).attr("height", height).attr("width", width);
+    svg.selectAll("title").data([0]).join("title").text(title);
+    svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
+    return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(".concat(padding.left, ",").concat(padding.top, ")"));
+  };
+  return withRootSelection(selector, render);
 }
 
 export { createSvgLayer };

@@ -27,7 +27,7 @@
  * @return {sszvis.component}
  */
 import { type HierarchyCircularNode, type HierarchyNode } from "d3";
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import type { StringAccessor } from "../types.js";
 export type PackLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
@@ -40,7 +40,7 @@ export type PackLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
     height: number;
 };
 export type PackClickHandler<T = unknown> = (event: MouseEvent, node: PackLayout<T>) => void;
-interface PackComponent<T = unknown> extends Component {
+interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> {
     colorScale(): (key: string) => string;
     colorScale(scale: (key: string) => string): PackComponent<T>;
     transition(): boolean;

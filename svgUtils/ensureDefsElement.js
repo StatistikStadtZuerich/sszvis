@@ -7,12 +7,24 @@
  *
  * @module sszvis/svgUtils/ensureDefsElement
  *
- * @param {d3.selection} selection
- * @param {string}       type       Element to create
- * @param {string}       elementId  The ID to assign to the created element
+ * @param selection  The selection to ensure the defs element within
+ * @param type       Element to create, as an SVG tag name
+ * @param elementId  The ID to assign to the created element
+ *
+ * The element type is derived from the tag name, so callers get a precisely typed selection
+ * without naming it twice:
+ *
+ *     ensureDefsElement(sel, "pattern", id)  // Selection<SVGPatternElement, ...>
+ *
+ * The selection parameters are generic because d3's Selection is invariant in its element
+ * parameters - no single non-generic type accepts every selection.
  */
 function ensureDefsElement(selection, type, elementId) {
-  return ensureDefsSelection(selection).selectAll("".concat(type, "#").concat(elementId)).data([0]).join(type).attr("id", elementId);
+  return ensureDefsSelection(selection).selectAll("".concat(type, "#").concat(elementId)).data([0])
+  // join() reports the union of the elements it entered and those selectAll found.
+  // Naming the entered element here makes both sides the same tag, so the union
+  // collapses on its own and no assertion is needed.
+  .join(type).attr("id", elementId);
 }
 /* Helper functions
 ----------------------------------------------- */

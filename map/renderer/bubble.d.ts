@@ -94,7 +94,7 @@
  * @return {sszvis.component}
  */
 import type { GeoPath } from "d3";
-import { type Component } from "../../d3-component.js";
+import { type ComponentBuilder } from "../../d3-component.js";
 import { type MergedGeoDatum } from "../mapUtils.js";
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
 type BubbleValue<T, R> = R | ((datum: T) => R);
@@ -102,7 +102,7 @@ type BubbleValue<T, R> = R | ((datum: T) => R);
 type StoredBubbleValue<T, R> = (datum?: T) => R;
 /** A handler as this component's own event API delivers it - which is to say, with undefined. */
 type BubbleEventHandler = (datum: undefined) => void;
-export interface MapRendererBubbleComponent<T = unknown> extends Component {
+export interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilder<MapRendererBubbleComponent<T>> {
     mergedData(): MergedGeoDatum<T>[] | undefined;
     mergedData(value: MergedGeoDatum<T>[]): MapRendererBubbleComponent<T>;
     mapPath(): GeoPath | undefined;

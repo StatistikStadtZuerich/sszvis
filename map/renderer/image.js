@@ -1,5 +1,6 @@
 import { select } from 'd3';
 import { component } from '../../d3-component.js';
+import { valueFn } from '../../fn.js';
 
 /**
  * image render component
@@ -107,15 +108,6 @@ function coordinate(projected, axis) {
   }
   return projected[axis];
 }
-/**
- * Normalises a value prop into the single accessor shape d3's overloads can resolve. An accessor is
- * passed through untouched, so it keeps receiving d3's arguments and node context; a constant
- * becomes a function returning it, which d3 applies identically - both paths end in the same
- * assignment. The same idiom as src/map/renderer/mesh.ts.
- */
-function toValue(value) {
-  return typeof value === "function" ? value : () => value;
-}
 function image () {
   return component().prop("projection").prop("src").prop("geoBounds").prop("opacity").opacity(1).render(function () {
     const selection = select(this);
@@ -130,7 +122,7 @@ function image () {
     // fails. See test/map/renderer/image.test.ts.
     const topLeft = props.projection(props.geoBounds[0]);
     const bottomRight = props.projection(props.geoBounds[1]);
-    image.attr("src", toValue(props.src)).style("left", Math.round(coordinate(topLeft, 0)) + "px").style("top", Math.round(coordinate(topLeft, 1)) + "px").style("width", Math.round(coordinate(bottomRight, 0) - coordinate(topLeft, 0)) + "px").style("height", Math.round(coordinate(bottomRight, 1) - coordinate(topLeft, 1)) + "px").style("opacity", toValue(props.opacity));
+    image.attr("src", valueFn(props.src)).style("left", "".concat(Math.round(coordinate(topLeft, 0)), "px")).style("top", "".concat(Math.round(coordinate(topLeft, 1)), "px")).style("width", "".concat(Math.round(coordinate(bottomRight, 0) - coordinate(topLeft, 0)), "px")).style("height", "".concat(Math.round(coordinate(bottomRight, 1) - coordinate(topLeft, 1)), "px")).style("opacity", valueFn(props.opacity));
   });
 }
 

@@ -102,7 +102,7 @@
  * @return {sszvis.component}
  */
 import type { ExtendedFeatureCollection, GeoPath } from "d3";
-import { type Component } from "../../d3-component.js";
+import { type ComponentBuilder } from "../../d3-component.js";
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
 type HighlightValue<T, R> = R | ((datum: T) => R);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
@@ -116,7 +116,7 @@ type StoredHighlightValue<T, R> = (datum: T) => R;
  * setter accepts either shape and HighlightProps states how the component actually calls it.
  */
 export type HighlightPath = (feature: unknown) => string | null;
-export interface MapRendererHighlightComponent<T = unknown> extends Component {
+export interface MapRendererHighlightComponent<T = unknown> extends ComponentBuilder<MapRendererHighlightComponent<T>> {
     keyName(): string;
     keyName(value: string): MapRendererHighlightComponent<T>;
     geoJson(): ExtendedFeatureCollection | undefined;
@@ -130,6 +130,11 @@ export interface MapRendererHighlightComponent<T = unknown> extends Component {
     highlightStrokeWidth(): StoredHighlightValue<T, number | null>;
     highlightStrokeWidth<U = T>(value: HighlightValue<U, number | null>): MapRendererHighlightComponent<T>;
 }
+/**
+ * Normalises a lookup key the way a property access does: a symbol stays a symbol key, everything
+ * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
+ * with the geojson renderer's own lookup.
+ */
 export default function <T = unknown>(): MapRendererHighlightComponent<T>;
 export {};
 //# sourceMappingURL=highlight.d.ts.map

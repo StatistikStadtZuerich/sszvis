@@ -242,7 +242,7 @@
  * @return {sszvis.component}
  */
 import { type SeriesPoint } from "d3";
-import { type Component, type PropertySetter, type RenderCallback, type SelectionRenderCallback } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * One slice of a stack: the [y0, y1] point d3.stack produced, with `data` narrowed from the
  * whole cascade row to the single row the slice was computed from, and tagged with the
@@ -320,19 +320,6 @@ type PyramidValue<A, R> = R | ((value: A, index: number) => R);
  * own fill this one is called with the datum alone.
  */
 type FillValue<U> = string | undefined | ((datum: U) => string | undefined);
-/**
- * `component()` hands back whatever interface it is asked for, but the three builder methods
- * it inherits are declared as returning the plain Component, so a component interface has to
- * re-declare them to survive its own construction chain. Without this the chain's type
- * degrades to `any` at the first undeclared setter - `.barFill("#000")` resolves through
- * Component's index signature - and the interface below is then never checked against the
- * component that is actually built.
- */
-interface ComponentBuilder<C extends Component> extends Component {
-    prop<V>(prop: string, setter?: PropertySetter<V>): C;
-    render(callback: RenderCallback): C;
-    renderSelection(callback: SelectionRenderCallback): C;
-}
 /**
  * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.

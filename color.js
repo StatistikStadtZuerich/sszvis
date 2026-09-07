@@ -147,7 +147,9 @@ function interpolatedDivergentColorScale(scale) {
   const nativeDomain = scale.domain;
   if (!scale.range()) return scale;
   const length = scale.range().length;
-  scale.domain = function (dom) {
+  // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+  // Reflect.set writes it without having to restate the scale's type.
+  const replaceDomain = function (dom) {
     if (!dom) return nativeDomain.call(this, []);
     const xDomain = [];
     for (let i = 0; i < length; i++) {
@@ -155,6 +157,7 @@ function interpolatedDivergentColorScale(scale) {
     }
     return nativeDomain.call(this, xDomain);
   };
+  Reflect.set(scale, "domain", replaceDomain);
   return scale;
 }
 function decorateLinearScale(scale) {
@@ -169,7 +172,9 @@ function decorateLinearScale(scale) {
 }
 function interpolatedColorScale(scale) {
   const nativeDomain = scale.domain;
-  scale.domain = function (dom) {
+  // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+  // Reflect.set writes it without having to restate the scale's type.
+  const replaceDomain = function (dom) {
     if (arguments.length === 1 && dom && dom.length === 2) {
       const threeDomain = [dom[0], mean(dom) || 0, dom[1]];
       return nativeDomain.call(this, threeDomain);
@@ -177,6 +182,7 @@ function interpolatedColorScale(scale) {
       return Reflect.apply(nativeDomain, this, arguments);
     }
   };
+  Reflect.set(scale, "domain", replaceDomain);
   return scale;
 }
 /* Helper functions

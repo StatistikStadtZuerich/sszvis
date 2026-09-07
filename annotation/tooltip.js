@@ -53,7 +53,9 @@ function tooltip () {
   const renderer = tooltipRenderer();
   return component().delegate("header", renderer).delegate("body", renderer).delegate("orientation", renderer).delegate("dx", renderer).delegate("dy", renderer).delegate("opacity", renderer).prop("renderInto").prop("visible", functor).visible(false).renderSelection(selection => {
     const props = selection.props();
-    const intoBCR = props.renderInto.node().getBoundingClientRect();
+    const intoNode = props.renderInto.node();
+    if (!intoNode) throw new Error("[annotation/tooltip] renderInto is an empty selection");
+    const intoBCR = intoNode.getBoundingClientRect();
     const tooltipData = [];
     selection.each(function (d) {
       if (props.visible(d)) {
@@ -236,7 +238,7 @@ function tooltipBackgroundGenerator(a, b, orientation, radius) {
  * Detect whether the current browser supports SVG filters
  */
 function supportsSVGFilters() {
-  return window["SVGFEColorMatrixElement"] !== undefined && SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE === 2;
+  return window.SVGFEColorMatrixElement !== undefined && SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE === 2;
 }
 
 export { tooltip as default };

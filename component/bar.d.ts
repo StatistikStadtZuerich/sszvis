@@ -49,7 +49,7 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * Every visual property is wrapped by fn.functor on set, so it is always stored as a
  * function by the time the renderer reads it. The result stays `unknown` because the
@@ -69,7 +69,7 @@ type ColorAccessor<T> = (datum?: T, index?: number) => string | null;
  * fewer parameters is fine.
  */
 type BarValue<T, R> = R | ((datum: T, index: number) => R);
-export interface BarComponent<T = unknown> extends Component {
+export interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent<T>> {
     x(): ValueAccessor<T>;
     x<U = T>(value: BarValue<U, number>): BarComponent<T>;
     y(): ValueAccessor<T>;

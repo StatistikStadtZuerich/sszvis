@@ -45,7 +45,7 @@
  * @return {sszvis.component}
  */
 import { type ScaleBand, type ScaleContinuousNumeric, type ScalePoint, type ScaleTime } from "d3";
-import { type Component } from "../d3-component";
+import { type ComponentBuilder } from "../d3-component.js";
 type MoveScale<T = number | string> = ScaleContinuousNumeric<number, number> | (T extends Date ? ScaleTime<number, number> : never) | ScaleBand<T extends string ? T : string> | ScalePoint<T extends string ? T : string>;
 type Padding = {
     top: number;
@@ -55,7 +55,7 @@ type Padding = {
 };
 type Domain = number | string;
 type EventHandler = (event: Event, x: number | string | null, y: number | string | null) => void;
-export interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Component {
+export interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBuilder<MoveComponent<XDomain, YDomain>> {
     debug(): boolean;
     debug(value: boolean): MoveComponent<XDomain, YDomain>;
     xScale(): MoveScale<XDomain>;

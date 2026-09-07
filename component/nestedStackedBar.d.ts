@@ -58,7 +58,7 @@
  */
 import { type ScaleBand } from "d3";
 import { type SlantDirection } from "../axis.js";
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 import type { AnySelection } from "../types.js";
 /**
  * One slice of a stack: the [y0, y1] pair produced by d3.stack, extended with the
@@ -80,7 +80,7 @@ export type NestedStack<T, X extends string | number = string> = StackedBarSerie
  * Setters take `<U = T>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
  */
-export interface NestedStackedBarsVerticalComponent<T = unknown, X extends string | number = string> extends Component {
+export interface NestedStackedBarsVerticalComponent<T = unknown, X extends string | number = string> extends ComponentBuilder<NestedStackedBarsVerticalComponent<T, X>> {
     offset(): (datum: NestedStack<T, X>) => number | undefined;
     offset<U = NestedStack<T, X>>(accessor: (datum: U) => number | undefined): this;
     xScale(): ScaleBand<X>;

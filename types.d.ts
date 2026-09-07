@@ -3,19 +3,48 @@
  *
  * @module sszvis/types
  */
-import type { NumberValue, Selection } from "d3";
+import type { BaseType, NumberValue, Selection } from "d3";
+/**
+ * The one sanctioned `any` in this codebase. Use it where a type genuinely cannot be
+ * expressed - d3 internals, variadic combinators, the untyped component core - and always
+ * with a comment saying which. Everywhere else, prefer `unknown` and narrow.
+ *
+ * Named with a `$` so it is obvious at a glance and greppable: `rg '\$IntentionalAny'`
+ * lists every remaining escape hatch.
+ */
+export type $IntentionalAny = any;
 /**
  * Generic type for SVG element selections with sensible defaults
  */
 export type SVGElementSelection<T extends SVGElement> = Selection<T, unknown, null, undefined>;
 /**
- * Generic selection type with default parameters
+ * A selection of `E` holding `D`, whose parent parameters are left unstated.
+ *
+ * Returned by the layer factories: the layer may have been derived from the caller's own
+ * selection or from one selected from a string or a node, so its parent is not one fixed
+ * type. The element and datum - all a caller uses - stay precise.
  */
-export type AnySelection<T = any> = Selection<any, T, any, any>;
+export type LayerSelection<E extends BaseType, D> = Selection<E, D, BaseType, unknown>;
+/**
+ * A selection whose element and parent types are unstated, holding `T`.
+ *
+ * Suitable as a variable or return type. It is NOT suitable as a parameter type for
+ * "accepts any selection": d3's Selection is invariant in all four of its type parameters,
+ * so a concrete selection does not assign to this one. A function accepting any selection
+ * has to be generic over d3's parameters instead - see textWrap or ensureDefsElement.
+ */
+export type AnySelection<T = unknown> = Selection<BaseType, T, BaseType, unknown>;
 /**
  * Type for elements that can be selected - CSS selector string or d3 selection
  */
-export type SelectableElement = string | AnySelection;
+/**
+ * What the layer factories and app() accept as a target: a CSS selector, or a selection.
+ *
+ * The selection parameters are part of the signature rather than fixed here, because d3's
+ * Selection is invariant in all four - a non-generic union member would only accept
+ * selections that happen to match it exactly.
+ */
+export type SelectableElement<G extends BaseType = BaseType, D = unknown, P extends BaseType = BaseType, PD = unknown> = string | Selection<G, D, P, PD>;
 /**
  * Common selection type for general DOM elements
  */
@@ -40,7 +69,8 @@ export interface Measurement {
     width: number;
     screenHeight: number;
     screenWidth?: number;
-    bounds?: any;
+    /** A bounds object, when the measurement came from one. Shape varies by caller. */
+    bounds?: $IntentionalAny;
 }
 /**
  * A breakpoint definition with name and measurement constraints

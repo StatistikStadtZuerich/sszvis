@@ -83,8 +83,8 @@ export declare const computeLayout: (numLayers: number, chartWidth: number) => S
  * - An empty array gives [undefined, undefined], which produces a NaN radius when used as
  *   a scale domain.
  */
-export declare const getRadiusExtent: (formattedData: Array<{
-    y0?: number;
-    y1?: number;
-}>) => [number | undefined, number | undefined];
+export declare const getRadiusExtent: (formattedData: {
+    y0?: number | undefined;
+    y1?: number | undefined;
+}[]) => [number | undefined, number | undefined];
 //# sourceMappingURL=sunburst.d.ts.map

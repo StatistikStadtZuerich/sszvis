@@ -3,7 +3,8 @@
  *
  * @module sszvis/fn
  */
-import type { AnySelection } from "./types";
+import { type BaseType, type Selection, type ValueFn } from "d3";
+import type { $IntentionalAny, AnySelection } from "./types.js";
 /**
  * fn.identity
  *
@@ -30,7 +31,7 @@ export declare const isSelection: (val: unknown) => val is AnySelection;
  * accepts exactly `n` parameters. Any extraneous parameters will not be
  * passed to the supplied function.
  */
-export declare const arity: (n: number, fn: (...args: any[]) => any) => ((...args: any[]) => any);
+export declare const arity: <A extends unknown[], R>(n: number, fn: (...args: A) => R) => ((...args: unknown[]) => R);
 /**
  * fn.compose
  *
@@ -44,7 +45,7 @@ export declare const arity: (n: number, fn: (...args: any[]) => any) => ((...arg
  *
  * Note: all composed functions but the last should be of arity 1.
  */
-export declare const compose: (...fns: ((...args: any[]) => any)[]) => ((...args: any[]) => any);
+export declare const compose: (...fns: ((...args: $IntentionalAny[]) => $IntentionalAny)[]) => ((...args: $IntentionalAny[]) => $IntentionalAny);
 /**
  * fn.contains
  *
@@ -68,7 +69,7 @@ export declare const defined: <T>(val: T) => val is NonNullable<T>;
  * in the other set functions, the set of derived properties is returned, whereas this function
  * returns a set of objects from the input array.
  */
-export declare const derivedSet: <T>(arr: T[], acc?: (value: T, index: number, array: T[]) => any) => T[];
+export declare const derivedSet: <T>(arr: T[], acc?: (value: T, index: number, array: T[]) => unknown) => T[];
 /**
  * fn.every
  *
@@ -145,7 +146,7 @@ export declare const hashableSet: <T, U extends string | number>(arr: T[], acc?:
  *
  * Determines if the passed value is a function
  */
-export declare const isFunction: (val: unknown) => val is (...args: any[]) => any;
+export declare const isFunction: (val: unknown) => val is (...args: $IntentionalAny[]) => $IntentionalAny;
 /**
  * fn.isNull
  *
@@ -178,7 +179,7 @@ export declare const last: <T>(arr: T[]) => T | undefined;
  * which calls f on its arguments and returns the
  * boolean opposite of f's return value.
  */
-export declare const not: <T extends any[]>(f: (...args: T) => any) => ((...args: T) => boolean);
+export declare const not: <T extends unknown[]>(f: (...args: T) => unknown) => ((...args: T) => boolean);
 /**
  * fn.prop
  *
@@ -187,7 +188,7 @@ export declare const not: <T extends any[]>(f: (...args: T) => any) => ((...args
  * it returns that object's value for the named property. (or undefined, if the object
  * does not contain the property.)
  */
-export declare const prop: <K extends string | number | symbol>(key: K) => (<T extends Record<K, any>>(object: T) => T[K]);
+export declare const prop: <K extends string | number | symbol>(key: K) => (<T extends Record<K, unknown>>(object: T) => T[K]);
 /**
  * fn.propOr
  *
@@ -198,7 +199,7 @@ export declare const prop: <K extends string | number | symbol>(key: K) => (<T e
  * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
  * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
  */
-export declare const propOr: <K extends string | number | symbol, D>(key: K, defaultVal?: D) => (<T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D);
+export declare const propOr: <K extends string | number | symbol, D>(key: K, defaultVal?: D) => (<T extends Partial<Record<K, unknown>>>(object: T | undefined) => T[K] | D);
 /**
  * fn.set
  *
@@ -238,12 +239,36 @@ export declare const stringEqual: (a: {
  */
 export declare const functor: <T>(v: T | (() => T)) => (() => T);
 /**
+ * Applies `render` to whichever selection `selector` denotes.
+ *
+ * Each branch keeps its own concrete selection type rather than being widened into a shared
+ * variable first: d3's select() has one overload for a selector string and another for a
+ * node, and Selection is invariant in all four of its type parameters, so no single type -
+ * and no union - holds all three cases. `render` is generic, so each branch infers.
+ */
+export declare function withRootSelection<R, SG extends BaseType, SD, SP extends BaseType, SPD>(selector: string | Element | Selection<SG, SD, SP, SPD>, render: <G extends BaseType, D, P extends BaseType, PD>(root: Selection<G, D, P, PD>) => R): R;
+/**
+ * fn.valueFn
+ *
+ * Wraps a constant in an accessor and leaves an existing accessor alone. Unlike fn.functor
+ * the result takes d3's (datum, index, group) arguments and can be handed straight to
+ * .attr() or .style(). An unset prop resolves to undefined, which d3 treats the same as
+ * null - it removes the attribute either way - so `value ?? null` at a call site is about
+ * the declared return type, not about what d3 renders.
+ */
+export declare const valueFn: <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>) => ValueFn<E, D, R>;
+/**
  * fn.memoize
  *
- * Adapted from lodash's memoize() but using d3.map() as cache
+ * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
  * See https://lodash.com/docs/4.17.4#memoize
+ *
+ * Differs from lodash deliberately: lodash keys on the first argument and silently returns
+ * that entry for any later arguments, so memoizing a function of several arguments without
+ * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
+ * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
  */
-export declare const memoize: <TFunc extends (...args: any[]) => any>(func: TFunc, resolver?: (...args: Parameters<TFunc>) => string | number) => TFunc & {
-    cache: Map<string | number, ReturnType<TFunc>>;
+export declare const memoize: <TFunc extends (...args: never[]) => unknown>(func: TFunc, resolver?: (...args: Parameters<TFunc>) => string | number) => TFunc & {
+    cache: Map<unknown, ReturnType<TFunc>>;
 };
 //# sourceMappingURL=fn.d.ts.map

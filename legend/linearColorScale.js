@@ -24,7 +24,11 @@ import { error } from '../logger.js';
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
  */
 function linearColorScale () {
-  return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat").labelFormat(identity).render(function () {
+  return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat")
+  // fn.identity is the documented "no formatting" default. It returns its argument, so it
+  // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
+  // at render time, which its own types do not model.
+  .labelFormat(identity).render(function () {
     const selection = select(this);
     const props = selection.props();
     if (!props.scale) {

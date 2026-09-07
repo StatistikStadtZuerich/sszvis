@@ -5,7 +5,7 @@ import { functor, prop, defined } from '../../fn.js';
 import { mapMissingValuePattern } from '../../patterns.js';
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { slowTransition } from '../../transition.js';
-import { GEO_KEY_DEFAULT } from '../mapUtils.js';
+import { GEO_KEY_DEFAULT, toLookupKey } from '../mapUtils.js';
 
 /**
  * geojson renderer component
@@ -105,9 +105,6 @@ function readFeatureKey(properties, key) {
  * symbols with the same description remain distinct and can never be matched by a string id.
  * Everything else stringifies, which is how a missing key becomes the string "undefined".
  */
-function toLookupKey(value) {
-  return typeof value === "symbol" ? value : String(value);
-}
 /**
  * Reproduces what this component's event handlers have always done. The JavaScript called
  * `event.over(datum)`, but d3's dispatch provides only on, call, apply and copy - there has never
@@ -175,10 +172,12 @@ function geojson () {
     });
     // the tooltip anchor generator
     const ta = tooltipAnchor().position(d => {
-      const properties = d.geoJson.properties || (d.geoJson.properties = {});
+      if (!d.geoJson.properties) d.geoJson.properties = {};
+      const properties = d.geoJson.properties;
       let sphericalCentroid = properties.sphericalCentroid;
       if (!sphericalCentroid) {
-        properties.sphericalCentroid = sphericalCentroid = geoCentroid(d.geoJson);
+        sphericalCentroid = geoCentroid(d.geoJson);
+        properties.sphericalCentroid = sphericalCentroid;
       }
       // d3's own typings expect the projection type as a type argument here.
       const point = props.mapPath.projection()(sphericalCentroid);

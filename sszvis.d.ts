@@ -1,7 +1,41 @@
-import { Selection, NumberValue, BaseType, HierarchyNode, AxisScale, AxisDomain, ScaleContinuousNumeric, ScaleTime, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, ScaleLinear, HSLColor, HierarchyCircularNode, ValueFn, SeriesPoint, HierarchyRectangularNode, FormatLocaleDefinition, TimeLocaleDefinition, ExtendedFeature, ExtendedFeatureCollection, ExtendedGeometryCollection, GeoGeometryObjects, GeoProjection, GeoPath, GeoPermissibleObjects } from 'd3';
+import { BaseType, Selection, NumberValue, HierarchyNode, AxisScale, AxisDomain, ScaleContinuousNumeric, ScaleTime, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, ScaleLinear, HSLColor, HierarchyCircularNode, ValueFn, SeriesPoint, HierarchyRectangularNode, FormatLocaleDefinition, TimeLocaleDefinition, ExtendedFeature, ExtendedFeatureCollection, ExtendedGeometryCollection, GeoGeometryObjects, GeoProjection, GeoPath, GeoPermissibleObjects } from 'd3';
 import { Draft } from 'immer';
 import * as d3_transition from 'd3-transition';
 import * as d3_selection from 'd3-selection';
+
+/**
+ * d3.selection plugin to simplify creating idempotent divs that are not
+ * recreated when rendered again.
+ *
+ * @see https://github.com/mbostock/d3/wiki/Selections
+ *
+ * @param {String} key - the name of the group
+ * @return {d3.selection}
+ */
+declare module "d3" {
+    interface Selection<GElement, Datum, PElement, PDatum> {
+        /** The div's parent is the element this selection holds. */
+        selectDiv(key: string): Selection<HTMLDivElement, Datum, GElement, Datum>;
+    }
+}
+//# sourceMappingURL=d3-selectdiv.d.ts.map
+
+/**
+ * d3.selection plugin to simplify creating idempotent groups that are not
+ * recreated when rendered again.
+ *
+ * @see https://github.com/mbostock/d3/wiki/Selections
+ *
+ * @param  {String} key The name of the group
+ * @return {d3.selection}
+ */
+declare module "d3" {
+    interface Selection<GElement, Datum, PElement, PDatum> {
+        /** The group is a <g> whose parent is the element this selection holds. */
+        selectGroup(key: string): Selection<SVGGElement, Datum, GElement, Datum>;
+    }
+}
+//# sourceMappingURL=d3-selectgroup.d.ts.map
 
 /**
  * Common TypeScript types used across sszvis modules
@@ -10,29 +44,42 @@ import * as d3_selection from 'd3-selection';
  */
 
 /**
- * Generic type for SVG element selections with sensible defaults
+ * The one sanctioned `any` in this codebase. Use it where a type genuinely cannot be
+ * expressed - d3 internals, variadic combinators, the untyped component core - and always
+ * with a comment saying which. Everywhere else, prefer `unknown` and narrow.
+ *
+ * Named with a `$` so it is obvious at a glance and greppable: `rg '\$IntentionalAny'`
+ * lists every remaining escape hatch.
  */
-type SVGElementSelection<T extends SVGElement> = Selection<T, unknown, null, undefined>;
+type $IntentionalAny = any;
 /**
- * Generic selection type with default parameters
+ * A selection of `E` holding `D`, whose parent parameters are left unstated.
+ *
+ * Returned by the layer factories: the layer may have been derived from the caller's own
+ * selection or from one selected from a string or a node, so its parent is not one fixed
+ * type. The element and datum - all a caller uses - stay precise.
  */
-type AnySelection<T = any> = Selection<any, T, any, any>;
+type LayerSelection<E extends BaseType, D> = Selection<E, D, BaseType, unknown>;
+/**
+ * A selection whose element and parent types are unstated, holding `T`.
+ *
+ * Suitable as a variable or return type. It is NOT suitable as a parameter type for
+ * "accepts any selection": d3's Selection is invariant in all four of its type parameters,
+ * so a concrete selection does not assign to this one. A function accepting any selection
+ * has to be generic over d3's parameters instead - see textWrap or ensureDefsElement.
+ */
+type AnySelection<T = unknown> = Selection<BaseType, T, BaseType, unknown>;
 /**
  * Type for elements that can be selected - CSS selector string or d3 selection
  */
-type SelectableElement = string | AnySelection;
 /**
- * Type for SVG pattern selections
+ * What the layer factories and app() accept as a target: a CSS selector, or a selection.
+ *
+ * The selection parameters are part of the signature rather than fixed here, because d3's
+ * Selection is invariant in all four - a non-generic union member would only accept
+ * selections that happen to match it exactly.
  */
-type PatternSelection = SVGElementSelection<SVGPatternElement>;
-/**
- * Type for SVG linear gradient selections
- */
-type LinearGradientSelection = SVGElementSelection<SVGLinearGradientElement>;
-/**
- * Type for SVG mask selections
- */
-type MaskSelection = SVGElementSelection<SVGMaskElement>;
+type SelectableElement<G extends BaseType = BaseType, D = unknown, P extends BaseType = BaseType, PD = unknown> = string | Selection<G, D, P, PD>;
 /**
  * A measurement object with width and screen height
  * This is the unified measurement interface used across sszvis
@@ -41,7 +88,8 @@ interface Measurement {
     width: number;
     screenHeight: number;
     screenWidth?: number;
-    bounds?: any;
+    /** A bounds object, when the measurement came from one. Shape varies by caller. */
+    bounds?: $IntentionalAny;
 }
 /**
  * A breakpoint definition with name and measurement constraints
@@ -71,53 +119,50 @@ type StringAccessor<T = unknown> = Accessor$1<T, string>;
 type BooleanAccessor<T = unknown> = Accessor$1<T, boolean>;
 
 /**
- * d3.selection plugin to simplify creating idempotent divs that are not
- * recreated when rendered again.
- *
- * @see https://github.com/mbostock/d3/wiki/Selections
- *
- * @param {String} key - the name of the group
- * @return {d3.selection}
+ * The props bag a component accumulates through `.prop()`. Its keys are only known at
+ * runtime, from the calls the factory made, so the values cannot be typed here - each
+ * component's own interface is what states them.
  */
-declare module "d3" {
-    interface Selection<GElement, Datum, PElement, PDatum> {
-        selectDiv(key: string): AnySelection;
-    }
-}
-//# sourceMappingURL=d3-selectdiv.d.ts.map
-
-/**
- * d3.selection plugin to simplify creating idempotent groups that are not
- * recreated when rendered again.
- *
- * @see https://github.com/mbostock/d3/wiki/Selections
- *
- * @param  {String} key The name of the group
- * @return {d3.selection}
- */
-declare module "d3" {
-    interface Selection<GElement, Datum, PElement, PDatum> {
-        selectGroup(key: string): AnySelection;
-    }
-}
-//# sourceMappingURL=d3-selectgroup.d.ts.map
-
 interface ComponentProps {
-    [key: string]: any;
+    [key: string]: $IntentionalAny;
 }
-type RenderCallback = (this: any, ...args: any[]) => void;
-type SelectionRenderCallback = (this: any, ...args: any[]) => void;
-type PropertySetter<T = any> = (...args: any[]) => T;
-interface PropertyDelegate {
-    [key: string]: (...args: any[]) => any;
-}
-interface Component {
-    <GElement extends BaseType, Datum, PElement extends BaseType, PDatum>(selection: Selection<GElement, Datum, PElement, PDatum>): void;
-    prop<T>(prop: string, setter?: PropertySetter<T>): Component;
-    delegate(prop: string, delegate: PropertyDelegate): Component;
-    renderSelection(callback: SelectionRenderCallback): Component;
-    render(callback: RenderCallback): Component;
-    [key: string]: any;
+/**
+ * Render callbacks are invoked by d3 with `this` bound to the node or selection being
+ * rendered, and receive whatever arguments d3 passes at that point. Components narrow both
+ * at their own declaration site, e.g. `function (this: SVGGElement, data: Datum[])`.
+ */
+type RenderCallback = (this: $IntentionalAny, ...args: $IntentionalAny[]) => void;
+type SelectionRenderCallback = (this: $IntentionalAny, ...args: $IntentionalAny[]) => void;
+/** A prop setter receives whatever the component's own interface declares for that prop. */
+type PropertySetter<T = $IntentionalAny> = (...args: $IntentionalAny[]) => T;
+/**
+ * A delegate is any object exposing the delegated prop as a getter/setter method. Component
+ * interfaces declare their props individually rather than through an index signature, so this
+ * is deliberately structural rather than an indexed type.
+ */
+type PropertyDelegate = object;
+/** Anything built by `component()` is callable by a d3 selection. */
+type ComponentCallable = <GElement extends BaseType, Datum, PElement extends BaseType, PDatum>(selection: Selection<GElement, Datum, PElement, PDatum>) => void;
+/**
+ * The builder half of a component, parameterised by the interface being built.
+ *
+ * `component()` hands back whatever interface it is asked for, but the accessors declared
+ * by `.prop()` only exist once the component is built. Declaring the four builder methods
+ * as returning `C` is what keeps a construction chain typed as the component under
+ * construction: without it the chain degrades to the first undeclared setter and the
+ * declared interface is never checked against what was actually built.
+ *
+ * Every component interface should extend `ComponentBuilder<Self>`.
+ *
+ * `prop` and `delegate` take `keyof C`, so installing an accessor the interface does not
+ * declare - a typo, or a prop someone forgot to add - is a compile error rather than a
+ * member that silently resolves through the escape hatch.
+ */
+interface ComponentBuilder<C> extends ComponentCallable {
+    prop<T>(prop: keyof C & string, setter?: PropertySetter<T>): C;
+    delegate(prop: keyof C & string, delegate: PropertyDelegate): C;
+    renderSelection(callback: SelectionRenderCallback): C;
+    render(callback: RenderCallback): C;
 }
 declare module "d3" {
     interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
@@ -214,10 +259,10 @@ interface BreadcrumbItem<T = unknown> {
  * Component interface with method chaining support.
  * Each method returns the component for chaining (setter) or the value (getter).
  */
-interface BreadcrumbComponent<T = unknown> extends Component {
+interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbComponent<T>> {
     /** Set the container to render breadcrumbs into */
-    renderInto(): AnySelection;
-    renderInto(selection: AnySelection): BreadcrumbComponent<T>;
+    renderInto(): LayerSelection<Element, unknown>;
+    renderInto<G extends Element, D, P extends BaseType, PD>(selection: Selection<G, D, P, PD>): BreadcrumbComponent<T>;
     /** Set the array of breadcrumb items */
     items(): BreadcrumbItem<T>[];
     items(items: BreadcrumbItem<T>[]): BreadcrumbComponent<T>;
@@ -270,7 +315,7 @@ declare function export_default$G<T = unknown>(): BreadcrumbComponent<T>;
  */
 
 type Datum$9<T = unknown> = T;
-interface CircleComponent<T = unknown> extends Component {
+interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<T>> {
     x(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     y(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     r(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
@@ -307,7 +352,7 @@ declare function export_default$F<T = unknown>(): CircleComponent<T>;
 type Datum$8<T = unknown> = T;
 /** The data-join key. d3 hands it the datum and its index. */
 type KeyAccessor$3<T> = (d: Datum$8<T>, i: number) => string | number;
-interface ConfidenceAreaComponent<T = unknown> extends Component {
+interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<ConfidenceAreaComponent<T>> {
     x(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
     y0(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
@@ -347,7 +392,7 @@ declare function export_default$E<T = unknown>(): ConfidenceAreaComponent<T>;
 type Datum$7<T = unknown> = T & {
     __sszvisGroupedBarConfidenceIndex__?: number;
 };
-interface ConfidenceBarComponent<T = unknown> extends Component {
+interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<ConfidenceBarComponent<T>> {
     x(accessor?: (d: Datum$7<T>) => NumberValue): ConfidenceBarComponent<T>;
     y(accessor?: (d: Datum$7<T>) => NumberValue): ConfidenceBarComponent<T>;
     confidenceLow(accessor?: (d: Datum$7<T>) => NumberValue): ConfidenceBarComponent<T>;
@@ -412,7 +457,7 @@ declare function export_default$C<T = unknown>(defaultVal: TooltipOrientation, b
  */
 
 type Datum$6<T = unknown> = T;
-interface LineComponent$1<T = unknown> extends Component {
+interface LineComponent$1<T = unknown> extends ComponentBuilder<LineComponent$1<T>> {
     x1(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     x2(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     y1(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
@@ -444,7 +489,7 @@ declare function export_default$B<T = unknown>(): LineComponent$1<T>;
  */
 
 type Datum$5<T = unknown> = T;
-interface RangeFlagComponent<T = unknown> extends Component {
+interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComponent<T>> {
     x(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
@@ -475,7 +520,7 @@ declare function export_default$A<T = unknown>(): RangeFlagComponent<T>;
  */
 
 type Datum$4<T = unknown> = T;
-interface RangeRulerComponent<T = unknown> extends Component {
+interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerComponent<T>> {
     x(accessor?: NumberAccessor$1<Datum$4<T>>): RangeRulerComponent<T>;
     y0(accessor?: NumberAccessor$1<Datum$4<T>>): RangeRulerComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$4<T>>): RangeRulerComponent<T>;
@@ -511,7 +556,7 @@ declare function export_default$z<T = unknown>(): RangeRulerComponent<T>;
  */
 
 type Datum$3<T = unknown> = T;
-interface RectangleComponent<T = unknown> extends Component {
+interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComponent<T>> {
     x(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     y(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     width(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
@@ -555,7 +600,7 @@ declare function export_default$y<T = unknown>(): RectangleComponent<T>;
  */
 
 type Datum$2<T = unknown> = T;
-interface RulerComponent<T = unknown> extends Component {
+interface RulerComponent<T = unknown> extends ComponentBuilder<RulerComponent<T>> {
     top(value?: number): RulerComponent<T>;
     bottom(value?: number): RulerComponent<T>;
     x(accessor?: NumberAccessor$1<Datum$2<T>>): RulerComponent<T>;
@@ -615,8 +660,8 @@ interface TooltipData<T = unknown> {
     x: number;
     y: number;
 }
-interface TooltipComponent<T = unknown> extends Component {
-    renderInto(selection?: AnySelection): TooltipComponent<T>;
+interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponent<T>> {
+    renderInto<G extends Element, D, P extends BaseType, PD>(selection?: Selection<G, D, P, PD>): TooltipComponent<T>;
     visible(accessor?: Accessor$1<Datum$1<T>, boolean>): TooltipComponent<T>;
     header(accessor?: StringAccessor<Datum$1<T>>): TooltipComponent<T>;
     body(accessor?: StringAccessor<Datum$1<T>> | ((d: Datum$1<T>) => string[][])): TooltipComponent<T>;
@@ -671,7 +716,7 @@ declare function export_default$x<T = unknown>(): TooltipComponent<T>;
  */
 
 type Datum<T = unknown> = T;
-interface TooltipAnchorComponent<T = unknown> extends Component {
+interface TooltipAnchorComponent<T = unknown> extends ComponentBuilder<TooltipAnchorComponent<T>> {
     position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
     debug(value?: boolean): TooltipAnchorComponent<T>;
 }
@@ -873,8 +918,11 @@ declare const aspectRatioAuto: (measurement: Measurement) => number;
 type AxisOrientation = "top" | "bottom" | "left" | "right";
 type SlantDirection = "horizontal" | "vertical" | "diagonal";
 type TextAnchor = "start" | "middle" | "end";
-interface AxisComponent extends Component {
-    scale(scale?: AxisScale<NumberValue>): AxisComponent;
+interface AxisComponent extends ComponentBuilder<AxisComponent> {
+    scale(): AxisScale<AxisDomain>;
+    scale<D extends AxisDomain>(scale: AxisScale<D>): AxisComponent;
+    /** The scale the divergent-axis variant swaps in, stashed on the component itself. */
+    _scale?: AxisScale<AxisDomain> | undefined;
     orient(orientation?: AxisOrientation): AxisComponent;
     ticks(ticks?: number | number[]): AxisComponent;
     tickValues(values?: AxisDomain[]): AxisComponent;
@@ -904,13 +952,13 @@ interface AxisComponent extends Component {
 declare const axisX: {
     (): AxisComponent;
     time(): AxisComponent;
-    ordinal(): any;
-    pyramid(): any;
+    ordinal(): AxisComponent;
+    pyramid(): AxisComponent;
 };
 declare const axisY: {
     (): AxisComponent;
     time(): AxisComponent;
-    ordinal(): any;
+    ordinal(): AxisComponent;
 };
 
 /**
@@ -969,7 +1017,7 @@ type Padding$1 = {
 };
 type Domain = number | string;
 type EventHandler = (event: Event, x: number | string | null, y: number | string | null) => void;
-interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Component {
+interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBuilder<MoveComponent<XDomain, YDomain>> {
     debug(): boolean;
     debug(value: boolean): MoveComponent<XDomain, YDomain>;
     xScale(): MoveScale<XDomain>;
@@ -1032,7 +1080,7 @@ declare function export_default$v<XDomain = number | string, YDomain = number | 
  */
 
 type PanEventHandler = (event: Event, ...args: unknown[]) => void;
-interface PanningComponent extends Component {
+interface PanningComponent extends ComponentBuilder<PanningComponent> {
     elementSelector(): string;
     elementSelector(selector: string): PanningComponent;
     on(eventName: "start", handler: PanEventHandler): PanningComponent;
@@ -1089,7 +1137,7 @@ type VoronoiBounds = [number, number, number, number];
 type Accessor<T, R> = (datum: T) => R;
 type NumberAccessor<T = unknown> = Accessor<T, number>;
 type VoronoiEventHandler<T = unknown> = (event: Event, datum?: T) => void;
-interface VoronoiComponent<T = unknown> extends Component {
+interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponent<T>> {
     x(): NumberAccessor<T>;
     x(accessor: NumberAccessor<T>): VoronoiComponent<T>;
     y(): NumberAccessor<T>;
@@ -1373,13 +1421,21 @@ declare const breakpointLap: (measurement: Partial<Measurement>) => boolean;
 type KeyAccessor$2<T, K = string | number> = (datum: T) => K;
 type KeySorter<K = string | number> = (a: K, b: K) => number;
 type ValueSorter<T> = (a: T, b: T) => number;
+/**
+ * The shape a cascade builds: arrayBy nests an array, objectBy an object, and the innermost
+ * level holds the grouped data. Which of the three a given level is only becomes known from
+ * the chain the caller built, so `apply` asks for the expected result type.
+ */
+type CascadeResult<T> = T[] | CascadeResult<T>[] | {
+    [key: string]: CascadeResult<T>;
+};
 interface CascadeInstance<T> {
-    apply(data: T[]): any;
+    apply<R = CascadeResult<T>>(data: T[]): R;
     objectBy<K extends string | number>(accessor: KeyAccessor$2<T, K>): CascadeInstance<T>;
-    arrayBy<K extends string | number>(accessor: KeyAccessor$2<T, K>, sorter?: KeySorter<K>): CascadeInstance<T>;
+    arrayBy<K extends string | number>(accessor: KeyAccessor$2<T, K>, sorter?: KeySorter<string>): CascadeInstance<T>;
     sort(sorter: ValueSorter<T>): CascadeInstance<T>;
 }
-declare function cascade<T = any>(): CascadeInstance<T>;
+declare function cascade<T = unknown>(): CascadeInstance<T>;
 
 /**
  * Color scales
@@ -1560,7 +1616,7 @@ type ColorAccessor$2<T> = (datum?: T, index?: number) => string | null;
  * fewer parameters is fine.
  */
 type BarValue<T, R> = R | ((datum: T, index: number) => R);
-interface BarComponent<T = unknown> extends Component {
+interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent<T>> {
     x(): ValueAccessor$2<T>;
     x<U = T>(value: BarValue<U, number>): BarComponent<T>;
     y(): ValueAccessor$2<T>;
@@ -1677,7 +1733,7 @@ type DotValue<T, R> = R | ValueAccessor$1<T, R>;
 type RawValue<T, R> = DotValue<T, R | null | undefined>;
 /** The getter counterpart of RawValue: the constant or the accessor that was set. */
 type StoredRawValue<T, R> = R | null | undefined | StoredAccessor$2<T, R | null | undefined>;
-interface DotComponent<T = unknown> extends Component {
+interface DotComponent<T = unknown> extends ComponentBuilder<DotComponent<T>> {
     x(): StoredAccessor$2<T, number>;
     x<U = T>(value: DotValue<U, number>): DotComponent<T>;
     y(): StoredAccessor$2<T, number>;
@@ -1750,7 +1806,7 @@ declare function export_default$r<T = unknown>(): DotComponent<T>;
  * @return {sszvis.component}
  */
 
-interface GroupedBarsComponent<T = unknown> extends Component {
+interface GroupedBarsComponent<T = unknown> extends ComponentBuilder<GroupedBarsComponent<T>> {
     groupScale(): (datum: T) => number;
     groupScale<U = T>(scale: (datum: U) => number | undefined): GroupedBarsComponent<T>;
     groupSize(): number;
@@ -1870,7 +1926,7 @@ type LineAccessor<L, R> = (datum: L, index: number) => R;
 type StyleValue$2<L, R> = R | LineAccessor<L, R>;
 /** Pulls the array of points to draw out of one line's datum. */
 type ValuesAccessor$1<L, P> = (datum: L, index: number) => P[];
-interface LineComponent<P = unknown, L = unknown> extends Component {
+interface LineComponent<P = unknown, L = unknown> extends ComponentBuilder<LineComponent<P, L>> {
     x(): number | PointAccessor$2<P, number> | undefined;
     x<Q = P>(value: number | PointAccessor$2<Q, number>): LineComponent<P, L>;
     y(): PointAccessor$2<P, number> | undefined;
@@ -1969,7 +2025,7 @@ type NestedStack<T, X extends string | number = string> = StackedBarSeries$1<T, 
  * Setters take `<U = T>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
  */
-interface NestedStackedBarsVerticalComponent<T = unknown, X extends string | number = string> extends Component {
+interface NestedStackedBarsVerticalComponent<T = unknown, X extends string | number = string> extends ComponentBuilder<NestedStackedBarsVerticalComponent<T, X>> {
     offset(): (datum: NestedStack<T, X>) => number | undefined;
     offset<U = NestedStack<T, X>>(accessor: (datum: U) => number | undefined): this;
     xScale(): ScaleBand<X>;
@@ -2028,7 +2084,7 @@ type PackLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
     height: number;
 };
 type PackClickHandler<T = unknown> = (event: MouseEvent, node: PackLayout<T>) => void;
-interface PackComponent<T = unknown> extends Component {
+interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> {
     colorScale(): (key: string) => string;
     colorScale(scale: (key: string) => string): PackComponent<T>;
     transition(): boolean;
@@ -2113,8 +2169,8 @@ declare function export_default$p<T = unknown>(): PackComponent<T>;
  * a0/a1 can be replaced by a foreign value again by the index-based angle handover below.
  */
 interface PieAngles {
-    a0?: number | null;
-    a1?: number | null;
+    a0?: number | null | undefined;
+    a1?: number | null | undefined;
     _a0?: number;
     _a1?: number;
 }
@@ -2135,7 +2191,7 @@ type ColorValue<T = PieAngles> = string | ColorAccessor$1<T>;
  * the caller sets them - both are required, and rendering without them fails, so both
  * getters report the undefined the props actually hold.
  */
-interface PieComponent<T = PieAngles> extends Component {
+interface PieComponent<T = PieAngles> extends ComponentBuilder<PieComponent<T>> {
     radius(): number | undefined;
     radius(radius: number): PieComponent<T>;
     fill(): ColorValue<T> | undefined;
@@ -2276,7 +2332,7 @@ type StoredAccessor$1<D, R> = (datum?: D, index?: number) => R;
  * dimensions, since fn.functor normalises both.
  */
 type PyramidValue$1<D, R> = R | ValueAccessor<D, R>;
-interface PyramidComponent<T = unknown, D = unknown> extends Component {
+interface PyramidComponent<T = unknown, D = unknown> extends ComponentBuilder<PyramidComponent<T, D>> {
     barHeight(): StoredAccessor$1<D, number>;
     barHeight<V = D>(value: PyramidValue$1<V, number>): PyramidComponent<T, D>;
     barWidth(): StoredAccessor$1<D, number>;
@@ -2555,7 +2611,7 @@ type ColumnLabelOffsetValue = number | ((columnLength: number, index: number) =>
  * re-declare them to survive its own construction chain. Without this the chain widens to
  * `any` at the first default and nothing in it is checked.
  */
-interface SankeyBuilder extends Component {
+interface SankeyBuilder extends ComponentBuilder<SankeyBuilder> {
     prop<V>(prop: string, setter?: PropertySetter<V>): SankeyComponent;
     render(callback: RenderCallback): SankeyComponent;
 }
@@ -2766,7 +2822,7 @@ type KeyAccessor$1<L, R> = (this: Element, datum: L, index: number, group: Array
 type AreaValue$1<P> = number | PointAccessor$1<P, number>;
 /** Either a constant or an accessor, over one whole layer. */
 type StyleValue$1<L, R> = R | LayerAccessor$1<L, R>;
-interface StackedAreaComponent<P = unknown, L extends Iterable<P> = P[]> extends Component {
+interface StackedAreaComponent<P = unknown, L extends Iterable<P> = P[]> extends ComponentBuilder<StackedAreaComponent<P, L>> {
     x(): AreaValue$1<P> | undefined;
     x<Q = P>(value: AreaValue$1<Q>): StackedAreaComponent<P, L>;
     y0(): AreaValue$1<P> | undefined;
@@ -2786,6 +2842,11 @@ interface StackedAreaComponent<P = unknown, L extends Iterable<P> = P[]> extends
     transition(): boolean;
     transition(enabled: boolean): StackedAreaComponent<P, L>;
 }
+/**
+ * As above, for the style properties. An unset property becomes a function returning null,
+ * which d3 removes the attribute for - the same thing it does when handed undefined
+ * directly.
+ */
 declare function export_default$l<P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L>;
 
 /**
@@ -3003,7 +3064,7 @@ type KeyAccessor<L, R> = (this: Element, datum: L, index: number, group: ArrayLi
 type AreaValue<P> = number | PointAccessor<P, number>;
 /** Either a constant or an accessor, over one whole layer. */
 type StyleValue<L, R> = R | LayerAccessor<L, R>;
-interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends Component {
+interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends ComponentBuilder<StackedAreaMultiplesComponent<P, L>> {
     x(): AreaValue<P> | undefined;
     x<Q = P>(value: AreaValue<Q>): StackedAreaMultiplesComponent<P, L>;
     y0(): AreaValue<P> | undefined;
@@ -3025,6 +3086,11 @@ interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends Component 
     transition(): boolean;
     transition(enabled: boolean): StackedAreaMultiplesComponent<P, L>;
 }
+/**
+ * As above, for the style properties. An unset property becomes a function returning null,
+ * which d3 removes the attribute for - the same thing it does when handed undefined
+ * directly.
+ */
 declare function export_default$k<P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L>;
 
 /**
@@ -3184,19 +3250,10 @@ type FillValue$1<T, X extends string | number> = SliceValue<StackedBarSlice<T, X
  */
 type StrokeValue$1<T, X extends string | number> = string | null | undefined | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
 /**
- * `component()` hands back whatever interface it is asked for, but the two builder methods
- * it inherits are declared as returning the plain Component, so a component interface has
- * to re-declare them to survive its own construction chain.
- */
-interface StackedBarBuilder<C extends Component> extends Component {
-    prop<V>(prop: string, setter?: PropertySetter<V>): C;
-    render(callback: RenderCallback): C;
-}
-/**
  * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
  */
-interface StackedBarVerticalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarVerticalComponent<T, X>> {
+interface StackedBarVerticalComponent<T = unknown, X extends string | number = string> extends ComponentBuilder<StackedBarVerticalComponent<T, X>> {
     xScale(): StackScale<X>;
     xScale<V = X>(scale: (value: V) => number | undefined): StackedBarVerticalComponent<T, X>;
     width(): StoredDimension<T, X>;
@@ -3210,7 +3267,7 @@ interface StackedBarVerticalComponent<T = unknown, X extends string | number = s
     stroke(): StrokeValue$1<T, X>;
     stroke<U = StackedBarSlice<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarVerticalComponent<T, X>;
 }
-interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarHorizontalComponent<T, X>> {
+interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string> extends ComponentBuilder<StackedBarHorizontalComponent<T, X>> {
     xScale(): ValueScale;
     xScale(scale: ValueScale): StackedBarHorizontalComponent<T, X>;
     width(): StoredDimension<T, X>;
@@ -3549,19 +3606,6 @@ type PyramidValue<A, R> = R | ((value: A, index: number) => R);
  */
 type FillValue<U> = string | undefined | ((datum: U) => string | undefined);
 /**
- * `component()` hands back whatever interface it is asked for, but the three builder methods
- * it inherits are declared as returning the plain Component, so a component interface has to
- * re-declare them to survive its own construction chain. Without this the chain's type
- * degrades to `any` at the first undeclared setter - `.barFill("#000")` resolves through
- * Component's index signature - and the interface below is then never checked against the
- * component that is actually built.
- */
-interface ComponentBuilder<C extends Component> extends Component {
-    prop<V>(prop: string, setter?: PropertySetter<V>): C;
-    render(callback: RenderCallback): C;
-    renderSelection(callback: SelectionRenderCallback): C;
-}
-/**
  * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
  */
@@ -3737,7 +3781,7 @@ type StrokeValue<T = unknown> = string | StrokeAccessor<T>;
  * defaults and are all required for a render to succeed, so their getters report the
  * undefined the props actually hold.
  */
-interface SunburstComponent<T = unknown> extends Component {
+interface SunburstComponent<T = unknown> extends ComponentBuilder<SunburstComponent<T>> {
     angleScale(): SunburstScale;
     angleScale(scale: SunburstScale): SunburstComponent<T>;
     radiusScale(): SunburstScale | undefined;
@@ -3789,7 +3833,7 @@ type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
 };
 type TreemapClickHandler<T = unknown> = (event: MouseEvent, node: TreemapLayout<T>) => void;
 type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
-interface TreemapComponent<T = unknown> extends Component {
+interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponent<T>> {
     colorScale(): (key: string) => string;
     colorScale(scale: (key: string) => string): TreemapComponent<T>;
     transition(): boolean;
@@ -3866,7 +3910,7 @@ declare function export_default$i<T = unknown>(): TreemapComponent<T>;
  * optionSelectable controls, which are documented as interchangeable.
  */
 type ButtonGroupChangeHandler<T> = (event: Event, value: T) => void;
-interface ButtonGroupComponent<T extends string | number = string | number> extends Component {
+interface ButtonGroupComponent<T extends string | number = string | number> extends ComponentBuilder<ButtonGroupComponent<T>> {
     values(): T[];
     values(values: T[]): ButtonGroupComponent<T>;
     current(): T;
@@ -3926,7 +3970,7 @@ declare function buttonGroup<T extends string | number = string | number>(): But
  * @returns {sszvis.component}
  */
 
-interface HandleRulerComponent<T = unknown> extends Component {
+interface HandleRulerComponent<T = unknown> extends ComponentBuilder<HandleRulerComponent<T>> {
     x(): (d: T | number) => NumberValue;
     x(accessor: NumberAccessor$1<T | number>): HandleRulerComponent<T>;
     y(): (d: T) => NumberValue;
@@ -3995,7 +4039,7 @@ declare function handleRuler<T = unknown>(): HandleRulerComponent<T>;
  */
 
 type SelectChangeHandler<T> = (event: Event, value: T) => void;
-interface SelectComponent<T extends string = string> extends Component {
+interface SelectComponent<T extends string = string> extends ComponentBuilder<SelectComponent<T>> {
     values(): T[];
     values(values: T[]): SelectComponent<T>;
     current(): T;
@@ -4065,7 +4109,7 @@ type SliderValue = number | Date;
  * Widening `x` here does not fix the underlying move handler type, which is #222.
  */
 type SliderChangeHandler = (event: Event, x: number | string | Date | null, y: number | string | null) => void;
-interface SliderComponent extends Component {
+interface SliderComponent extends ComponentBuilder<SliderComponent> {
     scale(): SliderScale;
     scale(scale: SliderScale): SliderComponent;
     value(): SliderValue;
@@ -4131,7 +4175,7 @@ declare function slider(): SliderComponent;
 interface LayerMetadata {
     key?: string;
 }
-declare function createHtmlLayer(selector: SelectableElement | HTMLElement, bounds?: BoundsResult, metadata?: LayerMetadata): AnySelection;
+declare function createHtmlLayer<G extends BaseType = BaseType, D = unknown, P extends BaseType = BaseType, PD = unknown>(selector: SelectableElement<G, D, P, PD> | HTMLElement, bounds?: BoundsResult, metadata?: LayerMetadata): LayerSelection<HTMLDivElement, number>;
 
 /**
  * Factory that returns an SVG element appended to the given target selector,
@@ -4158,7 +4202,7 @@ interface SvgLayerMetadata {
     title?: string;
     description?: string;
 }
-declare function createSvgLayer(selector: SelectableElement | HTMLElement, bounds?: BoundsResult, metadata?: SvgLayerMetadata): AnySelection;
+declare function createSvgLayer<G extends BaseType = BaseType, D = unknown, P extends BaseType = BaseType, PD = unknown>(selector: SelectableElement<G, D, P, PD> | HTMLElement, bounds?: BoundsResult, metadata?: SvgLayerMetadata): LayerSelection<SVGGElement, number>;
 
 /**
  * Fallback handling
@@ -4214,7 +4258,7 @@ declare const isSelection: (val: unknown) => val is AnySelection;
  * accepts exactly `n` parameters. Any extraneous parameters will not be
  * passed to the supplied function.
  */
-declare const arity: (n: number, fn: (...args: any[]) => any) => ((...args: any[]) => any);
+declare const arity: <A extends unknown[], R>(n: number, fn: (...args: A) => R) => ((...args: unknown[]) => R);
 /**
  * fn.compose
  *
@@ -4228,7 +4272,7 @@ declare const arity: (n: number, fn: (...args: any[]) => any) => ((...args: any[
  *
  * Note: all composed functions but the last should be of arity 1.
  */
-declare const compose: (...fns: ((...args: any[]) => any)[]) => ((...args: any[]) => any);
+declare const compose: (...fns: ((...args: $IntentionalAny[]) => $IntentionalAny)[]) => ((...args: $IntentionalAny[]) => $IntentionalAny);
 /**
  * fn.contains
  *
@@ -4252,7 +4296,7 @@ declare const defined: <T>(val: T) => val is NonNullable<T>;
  * in the other set functions, the set of derived properties is returned, whereas this function
  * returns a set of objects from the input array.
  */
-declare const derivedSet: <T>(arr: T[], acc?: (value: T, index: number, array: T[]) => any) => T[];
+declare const derivedSet: <T>(arr: T[], acc?: (value: T, index: number, array: T[]) => unknown) => T[];
 /**
  * fn.every
  *
@@ -4329,7 +4373,7 @@ declare const hashableSet: <T, U extends string | number>(arr: T[], acc?: (eleme
  *
  * Determines if the passed value is a function
  */
-declare const isFunction: (val: unknown) => val is (...args: any[]) => any;
+declare const isFunction: (val: unknown) => val is (...args: $IntentionalAny[]) => $IntentionalAny;
 /**
  * fn.isNull
  *
@@ -4362,7 +4406,7 @@ declare const last: <T>(arr: T[]) => T | undefined;
  * which calls f on its arguments and returns the
  * boolean opposite of f's return value.
  */
-declare const not: <T extends any[]>(f: (...args: T) => any) => ((...args: T) => boolean);
+declare const not: <T extends unknown[]>(f: (...args: T) => unknown) => ((...args: T) => boolean);
 /**
  * fn.prop
  *
@@ -4371,7 +4415,7 @@ declare const not: <T extends any[]>(f: (...args: T) => any) => ((...args: T) =>
  * it returns that object's value for the named property. (or undefined, if the object
  * does not contain the property.)
  */
-declare const prop: <K extends string | number | symbol>(key: K) => (<T extends Record<K, any>>(object: T) => T[K]);
+declare const prop: <K extends string | number | symbol>(key: K) => (<T extends Record<K, unknown>>(object: T) => T[K]);
 /**
  * fn.propOr
  *
@@ -4382,7 +4426,7 @@ declare const prop: <K extends string | number | symbol>(key: K) => (<T extends 
  * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
  * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
  */
-declare const propOr: <K extends string | number | symbol, D>(key: K, defaultVal?: D) => (<T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D);
+declare const propOr: <K extends string | number | symbol, D>(key: K, defaultVal?: D) => (<T extends Partial<Record<K, unknown>>>(object: T | undefined) => T[K] | D);
 /**
  * fn.set
  *
@@ -4422,13 +4466,37 @@ declare const stringEqual: (a: {
  */
 declare const functor: <T>(v: T | (() => T)) => (() => T);
 /**
+ * Applies `render` to whichever selection `selector` denotes.
+ *
+ * Each branch keeps its own concrete selection type rather than being widened into a shared
+ * variable first: d3's select() has one overload for a selector string and another for a
+ * node, and Selection is invariant in all four of its type parameters, so no single type -
+ * and no union - holds all three cases. `render` is generic, so each branch infers.
+ */
+declare function withRootSelection<R, SG extends BaseType, SD, SP extends BaseType, SPD>(selector: string | Element | Selection<SG, SD, SP, SPD>, render: <G extends BaseType, D, P extends BaseType, PD>(root: Selection<G, D, P, PD>) => R): R;
+/**
+ * fn.valueFn
+ *
+ * Wraps a constant in an accessor and leaves an existing accessor alone. Unlike fn.functor
+ * the result takes d3's (datum, index, group) arguments and can be handed straight to
+ * .attr() or .style(). An unset prop resolves to undefined, which d3 treats the same as
+ * null - it removes the attribute either way - so `value ?? null` at a call site is about
+ * the declared return type, not about what d3 renders.
+ */
+declare const valueFn: <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>) => ValueFn<E, D, R>;
+/**
  * fn.memoize
  *
- * Adapted from lodash's memoize() but using d3.map() as cache
+ * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
  * See https://lodash.com/docs/4.17.4#memoize
+ *
+ * Differs from lodash deliberately: lodash keys on the first argument and silently returns
+ * that entry for any later arguments, so memoizing a function of several arguments without
+ * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
+ * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
  */
-declare const memoize: <TFunc extends (...args: any[]) => any>(func: TFunc, resolver?: (...args: Parameters<TFunc>) => string | number) => TFunc & {
-    cache: Map<string | number, ReturnType<TFunc>>;
+declare const memoize: <TFunc extends (...args: never[]) => unknown>(func: TFunc, resolver?: (...args: Parameters<TFunc>) => string | number) => TFunc & {
+    cache: Map<unknown, ReturnType<TFunc>>;
 };
 
 /**
@@ -4447,7 +4515,7 @@ declare const formatAxisTimeFormat: (d: Date) => string;
 /**
  * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
  */
-declare const formatMonth: (...args: any[]) => any;
+declare const formatMonth: (...args: $IntentionalAny[]) => $IntentionalAny;
 /**
  * A year formatter for date objects. Gives the date's year.
  */
@@ -4600,7 +4668,7 @@ interface OrdinalColorScale<T> {
     domain(): T[];
 }
 type LegendOrientation = "horizontal" | "vertical";
-interface OrdinalColorScaleComponent<T = string> extends Component {
+interface OrdinalColorScaleComponent<T = string> extends ComponentBuilder<OrdinalColorScaleComponent<T>> {
     scale(): OrdinalColorScale<T>;
     scale(scale: OrdinalColorScale<T>): OrdinalColorScaleComponent<T>;
     rowHeight(): number;
@@ -4637,7 +4705,7 @@ declare function legendColorOrdinal<T = string>(): OrdinalColorScaleComponent<T>
 /**
  * Type for elements that can be measured - selector string, DOM element, or d3 selection
  */
-type MeasurableElement = string | Element | Selection<any, any, any, any>;
+type MeasurableElement<G extends BaseType = BaseType, D = unknown, P extends BaseType = BaseType, PD = unknown> = string | Element | Selection<G, D, P, PD>;
 /**
  * measureDimensions
  *
@@ -4654,7 +4722,7 @@ type MeasurableElement = string | Element | Selection<any, any, any, any>;
  *                      screenWidth: {number} The innerWidth of the screen
  *                      screenHeight: {number} The innerHeight of the screen
  */
-declare const measureDimensions: (arg: MeasurableElement) => DimensionMeasurement;
+declare const measureDimensions: <G extends BaseType = BaseType, D = unknown, P extends BaseType = BaseType, PD = unknown>(arg: MeasurableElement<G, D, P, PD>) => DimensionMeasurement;
 /**
  * measureText
  *
@@ -5160,7 +5228,7 @@ type SmallMultipleGroup<V = unknown> = {
     /** vertical centre of the group, in the group's own frame */
     cy?: number;
 };
-interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGroup> extends Component {
+interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGroup> extends ComponentBuilder<SmallMultiplesComponent<G>> {
     /**
      * The six geometry properties have no defaults, so their getters report undefined until the
      * corresponding setter has been called. Reading one before then is what produces the NaN
@@ -5295,10 +5363,10 @@ declare const computeLayout: (numLayers: number, chartWidth: number) => Sunburst
  * - An empty array gives [undefined, undefined], which produces a NaN radius when used as
  *   a scale domain.
  */
-declare const getRadiusExtent: (formattedData: Array<{
-    y0?: number;
-    y1?: number;
-}>) => [number | undefined, number | undefined];
+declare const getRadiusExtent: (formattedData: {
+    y0?: number | undefined;
+    y1?: number | undefined;
+}[]) => [number | undefined, number | undefined];
 
 /**
  * Vertical Bar Chart Dimensions
@@ -5378,7 +5446,7 @@ declare function export_default$c(width: number, numBars: number): VerticalBarCh
 /** The subset of a d3 scale this legend relies on. */
 type BinnedColorScale = (value: number) => string;
 type BinLabelFormatter = (value: number) => string | number;
-interface BinnedColorScaleComponent extends Component {
+interface BinnedColorScaleComponent extends ComponentBuilder<BinnedColorScaleComponent> {
     scale(): BinnedColorScale;
     scale(scale: BinnedColorScale): BinnedColorScaleComponent;
     displayValues(): number[];
@@ -5420,7 +5488,7 @@ interface LinearColorScale {
     ticks?(count?: number): number[];
 }
 type LabelFormatter = (value: unknown, index: number) => string | number;
-interface LinearColorScaleComponent extends Component {
+interface LinearColorScaleComponent extends ComponentBuilder<LinearColorScaleComponent> {
     scale(): LinearColorScale;
     scale(scale: LinearColorScale): LinearColorScaleComponent;
     displayValues(): number[];
@@ -5472,7 +5540,7 @@ interface RadiusScale {
 }
 /** Formats a tick label. The default is fn.identity, which passes the value through. */
 type TickFormatter = (value: NumberValue, index: number) => string | number;
-interface RadiusLegendComponent extends Component {
+interface RadiusLegendComponent extends ComponentBuilder<RadiusLegendComponent> {
     scale(): RadiusScale;
     scale(scale: RadiusScale): RadiusLegendComponent;
     tickFormat(): TickFormatter;
@@ -5558,7 +5626,7 @@ type PointProjection = (point: GeoPoint) => [number, number] | null;
  * @return {Function}                               The projection function.
  */
 declare const swissMapProjection: ((width: number, height: number, featureCollection: MapGeoObject, _featureBoundsCacheKey?: string) => GeoProjection) & {
-    cache: Map<string | number, GeoProjection>;
+    cache: Map<unknown, GeoProjection>;
 };
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
@@ -5652,6 +5720,17 @@ interface MergedGeoDatum<Datum> {
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
 declare function prepareMergedGeoData<Datum extends object>(dataset: readonly Datum[] | null | undefined, geoJson: ExtendedFeatureCollection, keyName?: string): MergedGeoDatum<Datum>[];
+/**
+ * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
+ * symbols with the same description remain distinct and can never be matched by a string or numeric
+ * feature id. Everything else stringifies, which is how a missing key becomes the string
+ * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
+ */
+/**
+ * The key a feature id or datum value is looked up under. Symbols pass through; everything
+ * else is stringified, so numeric and string ids that print the same collide deliberately.
+ */
+declare function toLookupKey(value: unknown): string | symbol;
 /** The properties these utilities read from and write back to a map feature. */
 interface MapFeatureProperties {
     /** An authored centre, as the string "longitude,latitude". */
@@ -5785,7 +5864,7 @@ declare function widthAdaptiveMapPathStroke(width: number): number;
 type MapValue<T, R> = R | ((datum: T | undefined) => R);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredMapValue<T, R> = (datum?: T) => R;
-interface MapRendererBaseComponent<T = unknown> extends Component {
+interface MapRendererBaseComponent<T = unknown> extends ComponentBuilder<MapRendererBaseComponent<T>> {
     mergedData(): MergedGeoDatum<T>[];
     mergedData(data: MergedGeoDatum<T>[]): MapRendererBaseComponent<T>;
     /** @deprecated Declared and documented, but the render only ever reads mergedData. */
@@ -5905,7 +5984,7 @@ type BubbleValue<T, R> = R | ((datum: T) => R);
 type StoredBubbleValue<T, R> = (datum?: T) => R;
 /** A handler as this component's own event API delivers it - which is to say, with undefined. */
 type BubbleEventHandler = (datum: undefined) => void;
-interface MapRendererBubbleComponent<T = unknown> extends Component {
+interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilder<MapRendererBubbleComponent<T>> {
     mergedData(): MergedGeoDatum<T>[] | undefined;
     mergedData(value: MergedGeoDatum<T>[]): MapRendererBubbleComponent<T>;
     mapPath(): GeoPath | undefined;
@@ -6031,7 +6110,7 @@ interface MergedFeature {
 }
 /** A handler as this component's own event API delivers it. */
 type GeoJsonEventHandler = (datum: unknown) => void;
-interface MapRendererGeoJsonComponent<T = unknown> extends Component {
+interface MapRendererGeoJsonComponent<T = unknown> extends ComponentBuilder<MapRendererGeoJsonComponent<T>> {
     dataKeyName(): string;
     dataKeyName(value: string): MapRendererGeoJsonComponent<T>;
     geoJsonKeyName(): string;
@@ -6176,7 +6255,7 @@ type StoredHighlightValue<T, R> = (datum: T) => R;
  * setter accepts either shape and HighlightProps states how the component actually calls it.
  */
 type HighlightPath = (feature: unknown) => string | null;
-interface MapRendererHighlightComponent<T = unknown> extends Component {
+interface MapRendererHighlightComponent<T = unknown> extends ComponentBuilder<MapRendererHighlightComponent<T>> {
     keyName(): string;
     keyName(value: string): MapRendererHighlightComponent<T>;
     geoJson(): ExtendedFeatureCollection | undefined;
@@ -6190,6 +6269,11 @@ interface MapRendererHighlightComponent<T = unknown> extends Component {
     highlightStrokeWidth(): StoredHighlightValue<T, number | null>;
     highlightStrokeWidth<U = T>(value: HighlightValue$1<U, number | null>): MapRendererHighlightComponent<T>;
 }
+/**
+ * Normalises a lookup key the way a property access does: a symbol stays a symbol key, everything
+ * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
+ * with the geojson renderer's own lookup.
+ */
 declare function export_default$5<T = unknown>(): MapRendererHighlightComponent<T>;
 
 /**
@@ -6291,7 +6375,7 @@ declare function export_default$5<T = unknown>(): MapRendererHighlightComponent<
  * handed straight to d3 and evaluated against the join's placeholder datum, 0.
  */
 type ImageValue<R extends string | number> = R | ValueFn<BaseType, number, R>;
-interface MapRendererImageComponent extends Component {
+interface MapRendererImageComponent extends ComponentBuilder<MapRendererImageComponent> {
     projection(): PointProjection | undefined;
     projection(value: PointProjection): MapRendererImageComponent;
     src(): ImageValue<string> | undefined;
@@ -6370,7 +6454,7 @@ type MeshPath = ValueFn<BaseType, GeoPermissibleObjects, string | null>;
  * do not say so.
  */
 type MeshValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null>;
-interface MapRendererMeshComponent extends Component {
+interface MapRendererMeshComponent extends ComponentBuilder<MapRendererMeshComponent> {
     geoJson(): GeoPermissibleObjects | undefined;
     geoJson(value: GeoPermissibleObjects): MapRendererMeshComponent;
     mapPath(): MeshPath | undefined;
@@ -6488,7 +6572,7 @@ type LakePath = ValueFn<BaseType, GeoPermissibleObjects, string | null>;
  * path, so there is no such datum.
  */
 type LakePathColor = string | ValueFn<BaseType, GeoPermissibleObjects, string | null>;
-interface MapRendererPatternedLakeOverlayComponent extends Component {
+interface MapRendererPatternedLakeOverlayComponent extends ComponentBuilder<MapRendererPatternedLakeOverlayComponent> {
     mapPath(): LakePath | undefined;
     mapPath(value: LakePath): MapRendererPatternedLakeOverlayComponent;
     lakeFeature(): GeoPermissibleObjects | undefined;
@@ -6624,7 +6708,7 @@ type Position = [number, number];
 type RasterFill<T> = string | ((datum: T) => string);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredRasterFill<T> = (datum: T) => string;
-interface MapRendererRasterComponent<T = unknown> extends Component {
+interface MapRendererRasterComponent<T = unknown> extends ComponentBuilder<MapRendererRasterComponent<T>> {
     debug(): boolean;
     debug(value: boolean): MapRendererRasterComponent<T>;
     width(): number | undefined;
@@ -6742,7 +6826,7 @@ declare function export_default$1<T = unknown>(): MapRendererRasterComponent<T>;
  * mapRendererBubble satisfies this, which is the documented use, and so does any other component
  * that carries the pair.
  */
-interface AnchoredShape<T> extends Component {
+interface AnchoredShape<T> extends ComponentBuilder<AnchoredShape<T>> {
     mergedData(value: MergedGeoDatum<T>[]): AnchoredShape<T>;
     mapPath(value: GeoPath): AnchoredShape<T>;
 }
@@ -6767,7 +6851,7 @@ type ChoroplethEventHandler = (datum: undefined) => void;
  * are spelled out here rather than inherited because a delegate returns this component for
  * chaining, not the renderer.
  */
-interface ChoroplethComponent<T extends object = object> extends Component {
+interface ChoroplethComponent<T extends object = object> extends ComponentBuilder<ChoroplethComponent<T>> {
     width(): number | undefined;
     width(value: number): ChoroplethComponent<T>;
     height(): number | undefined;
@@ -6857,32 +6941,32 @@ declare const parseNumber: (d: string) => number;
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements
  */
-declare const heatTableMissingValuePattern: (selection: PatternSelection) => void;
+declare const heatTableMissingValuePattern: <D, P extends BaseType, PD>(selection: Selection<SVGPatternElement, D, P, PD>) => void;
 /**
  * The pattern for the map areas which are missing values
  * @param selection A d3 selection of SVG pattern elements
  */
-declare const mapMissingValuePattern: (selection: PatternSelection) => void;
+declare const mapMissingValuePattern: <D, P extends BaseType, PD>(selection: Selection<SVGPatternElement, D, P, PD>) => void;
 /**
  * The pattern for Lake Zurich in the map component
  * @param selection A d3 selection of SVG pattern elements
  */
-declare const mapLakePattern: (selection: PatternSelection) => void;
+declare const mapLakePattern: <D, P extends BaseType, PD>(selection: Selection<SVGPatternElement, D, P, PD>) => void;
 /**
  * The gradient used by the alpha fade pattern in the Lake Zurich shape
  * @param selection A d3 selection of SVG linear gradient elements
  */
-declare const mapLakeFadeGradient: (selection: LinearGradientSelection) => void;
+declare const mapLakeFadeGradient: <D, P extends BaseType, PD>(selection: Selection<SVGLinearGradientElement, D, P, PD>) => void;
 /**
  * The gradient alpha fade mask for the Lake Zurich shape
  * @param selection A d3 selection of SVG mask elements
  */
-declare const mapLakeGradientMask: (selection: MaskSelection) => void;
+declare const mapLakeGradientMask: <D, P extends BaseType, PD>(selection: Selection<SVGMaskElement, D, P, PD>) => void;
 /**
  * The pattern for the data area texture
  * @param selection A d3 selection of SVG pattern elements
  */
-declare const dataAreaPattern: (selection: PatternSelection) => void;
+declare const dataAreaPattern: <D, P extends BaseType, PD>(selection: Selection<SVGPatternElement, D, P, PD>) => void;
 
 /**
  * ResponsiveProps module
@@ -6935,18 +7019,26 @@ declare const dataAreaPattern: (selection: PatternSelection) => void;
  * @method responsiveProps.prop
  */
 
-interface ResponsivePropValue<T = any> {
+interface ResponsivePropValue<T = unknown> {
     [breakpointName: string]: T | ((width: number) => T);
     _: T | ((width: number) => T);
 }
+/**
+ * What `prop()` stores. Every value has been through functorizeValues by then, so unlike
+ * ResponsivePropValue - which describes what a caller may pass - each entry is a function.
+ */
+type FunctorizedPropValue = {
+    [breakpointName: string]: (width: number) => unknown;
+};
 interface ResponsivePropsConfig {
-    [propName: string]: ResponsivePropValue;
+    [propName: string]: FunctorizedPropValue;
 }
 interface ResponsivePropsInstance {
-    (measurements: Measurement): Record<string, any>;
+    (measurements: Measurement): Record<string, unknown>;
     prop<T>(propName: string, propSpec: ResponsivePropValue<T>): ResponsivePropsInstance;
     breakpoints(): Breakpoint[];
-    breakpoints(bps: Breakpoint[]): ResponsivePropsInstance;
+    /** Takes partial definitions - breakpointCreateSpec parses each into a full Breakpoint. */
+    breakpoints(bps: PartialBreakpoint[]): ResponsivePropsInstance;
 }
 declare function responsiveProps(): ResponsivePropsInstance;
 
@@ -6956,7 +7048,7 @@ declare function responsiveProps(): ResponsivePropsInstance;
  * @module sszvis/scale
  */
 interface Scale {
-    range(): any[];
+    range(): number[];
     rangeExtent?(): [number, number];
 }
 /**
@@ -7056,12 +7148,20 @@ declare const transformTranslateSubpixelShift: (transformStr: string) => [number
  *
  * @module sszvis/svgUtils/ensureDefsElement
  *
- * @param {d3.selection} selection
- * @param {string}       type       Element to create
- * @param {string}       elementId  The ID to assign to the created element
+ * @param selection  The selection to ensure the defs element within
+ * @param type       Element to create, as an SVG tag name
+ * @param elementId  The ID to assign to the created element
+ *
+ * The element type is derived from the tag name, so callers get a precisely typed selection
+ * without naming it twice:
+ *
+ *     ensureDefsElement(sel, "pattern", id)  // Selection<SVGPatternElement, ...>
+ *
+ * The selection parameters are generic because d3's Selection is invariant in its element
+ * parameters - no single non-generic type accepts every selection.
  */
 
-declare function ensureDefsElement(selection: AnySelection, type: string, elementId: string): AnySelection;
+declare function ensureDefsElement<K extends keyof SVGElementTagNameMap, G extends BaseType, D, P extends BaseType, PD>(selection: Selection<G, D, P, PD>, type: K, elementId: string): Selection<SVGElementTagNameMap[K], number, SVGDefsElement, number>;
 
 /**
  * ModularText component
@@ -7144,7 +7244,7 @@ declare const modularTextSVG: () => ModularTextBuilder;
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
 
-declare function textWrap(selection: AnySelection, width: number, paddingRightLeft?: number, paddingTopBottom?: number): number[];
+declare function textWrap<D, P extends BaseType, PD>(selection: Selection<SVGTextElement, D, P, PD>, width: number, paddingRightLeft?: number, paddingTopBottom?: number): number[];
 
 /**
  * translateString
@@ -7257,5 +7357,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$F as annotationCircle, export_default$E as annotationConfidenceArea, export_default$D as annotationConfidenceBar, export_default$B as annotationLine, export_default$A as annotationRangeFlag, export_default$z as annotationRangeRuler, export_default$y as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$s as bar, bounds, export_default$G as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$h as dimensionsHeatTable, export_default$g as dimensionsHorizontalBarChart, export_default$c as dimensionsVerticalBarChart, export_default$r as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$C as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, export_default$f as layoutPopulationPyramid, export_default$e as layoutSmallMultiples, export_default$d as layoutStackedAreaMultiples, export_default$b as legendColorBinned, export_default$a as legendColorLinear, legendColorOrdinal, export_default$9 as legendRadius, export_default$q as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$8 as mapRendererBase, export_default$7 as mapRendererBubble, export_default$6 as mapRendererGeoJson, export_default$5 as mapRendererHighlight, export_default$4 as mapRendererImage, export_default$3 as mapRendererMesh, export_default$2 as mapRendererPatternedLakeOverlay, export_default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$v as move, muchDarker, nestedStackedBarsVertical, not, export_default$p as pack, export_default$u as panning, parseDate, parseNumber, parseYear, export_default$o as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$n as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$m as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, export_default$l as stackedArea, export_default$k as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$j as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$x as tooltip, export_default$w as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$i as treemap, viewport, export_default$t as voronoi, widthAdaptiveMapPathStroke, withAlpha };
-export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter, Viewport, ViewportListener };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$F as annotationCircle, export_default$E as annotationConfidenceArea, export_default$D as annotationConfidenceBar, export_default$B as annotationLine, export_default$A as annotationRangeFlag, export_default$z as annotationRangeRuler, export_default$y as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$s as bar, bounds, export_default$G as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$h as dimensionsHeatTable, export_default$g as dimensionsHorizontalBarChart, export_default$c as dimensionsVerticalBarChart, export_default$r as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$C as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, export_default$f as layoutPopulationPyramid, export_default$e as layoutSmallMultiples, export_default$d as layoutStackedAreaMultiples, export_default$b as legendColorBinned, export_default$a as legendColorLinear, legendColorOrdinal, export_default$9 as legendRadius, export_default$q as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$8 as mapRendererBase, export_default$7 as mapRendererBubble, export_default$6 as mapRendererGeoJson, export_default$5 as mapRendererHighlight, export_default$4 as mapRendererImage, export_default$3 as mapRendererMesh, export_default$2 as mapRendererPatternedLakeOverlay, export_default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$v as move, muchDarker, nestedStackedBarsVertical, not, export_default$p as pack, export_default$u as panning, parseDate, parseNumber, parseYear, export_default$o as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$n as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$m as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, export_default$l as stackedArea, export_default$k as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$j as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$x as tooltip, export_default$w as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$i as treemap, valueFn, viewport, export_default$t as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter, Viewport, ViewportListener };

@@ -23,11 +23,11 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /** The subset of a d3 scale this legend relies on. */
 type BinnedColorScale = (value: number) => string;
 type BinLabelFormatter = (value: number) => string | number;
-export interface BinnedColorScaleComponent extends Component {
+export interface BinnedColorScaleComponent extends ComponentBuilder<BinnedColorScaleComponent> {
     scale(): BinnedColorScale;
     scale(scale: BinnedColorScale): BinnedColorScaleComponent;
     displayValues(): number[];

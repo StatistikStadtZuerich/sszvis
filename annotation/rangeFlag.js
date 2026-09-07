@@ -35,6 +35,8 @@ function rangeFlag () {
   });
 }
 function makeFlagDot(classed, cx, cy) {
+  // The selection is the one being joined into circles, so its datum is the component's and
+  // its parent parameters are whatever the caller's selection had.
   return dot => {
     dot.join("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true).attr("r", 3.5).attr("cx", cx).attr("cy", cy);
   };

@@ -21,7 +21,10 @@ import { select } from 'd3';
  * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
-function textWrap(selection, width, paddingRightLeft, paddingTopBottom) {
+function textWrap(
+// Wrapping reads and rewrites the <text> nodes themselves, so the element parameter is
+// fixed; the rest stay generic so any text selection can be passed.
+selection, width, paddingRightLeft, paddingTopBottom) {
   const padRightLeft = paddingRightLeft || 5; //Default padding (5px)
   const padTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
   const maxWidth = width; //I store the tooltip max width

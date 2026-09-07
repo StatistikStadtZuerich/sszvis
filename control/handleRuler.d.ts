@@ -46,9 +46,9 @@
  * @returns {sszvis.component}
  */
 import { type NumberValue } from "d3";
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types.js";
-export interface HandleRulerComponent<T = unknown> extends Component {
+export interface HandleRulerComponent<T = unknown> extends ComponentBuilder<HandleRulerComponent<T>> {
     x(): (d: T | number) => NumberValue;
     x(accessor: NumberAccessor<T | number>): HandleRulerComponent<T>;
     y(): (d: T) => NumberValue;

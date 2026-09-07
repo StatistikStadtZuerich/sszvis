@@ -1,6 +1,6 @@
-import { type ExtendedOrdinalScale } from "../color";
-import { type LegendOrientation, type OrdinalColorScaleComponent } from "../legend/ordinalColorScale";
-import { type MeasurableElement } from "../measure";
+import { type ExtendedOrdinalScale } from "../color.js";
+import { type LegendOrientation, type OrdinalColorScaleComponent } from "../legend/ordinalColorScale.js";
+import { type MeasurableElement } from "../measure.js";
 export type ColorLegendLayoutOptions = {
     legendLabels: string[];
     axisLabels?: string[];

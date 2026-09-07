@@ -1,5 +1,6 @@
 import { select, area } from 'd3';
 import { component } from '../d3-component.js';
+import { valueFn } from '../fn.js';
 import { defaultTransition } from '../transition.js';
 
 /**
@@ -157,9 +158,9 @@ const dimension = value => {
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-const styleValue = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
 function stackedArea () {
   return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("transition").transition(true).render(function (data) {
+    var _props$fill;
     const selection = select(this);
     const props = selection.props();
     // Layouts
@@ -182,11 +183,11 @@ function stackedArea () {
     }
     // Rendering
     const pathData = datum => areaGen(datum);
-    const fill = styleValue(props.fill);
+    const fill = valueFn((_props$fill = props.fill) !== null && _props$fill !== void 0 ? _props$fill : null);
     // The white hairline separating two touching layers. Applied with a truthiness check
     // rather than an undefined one, so a null or empty stroke is replaced by it too.
-    const stroke = styleValue(props.stroke || "#ffffff");
-    const strokeWidth = styleValue(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+    const stroke = valueFn(props.stroke || "#ffffff");
+    const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
     const paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
     // Every visual property is applied to the transition when there is one, so the two
     // branches are spelled out rather than sharing a variable - a d3 transition and a d3

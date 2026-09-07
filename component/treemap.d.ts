@@ -24,7 +24,7 @@
  * @return {sszvis.component}
  */
 import { type HierarchyNode } from "d3";
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import type { StringAccessor } from "../types.js";
 export type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
@@ -39,7 +39,7 @@ export type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
 };
 export type TreemapClickHandler<T = unknown> = (event: MouseEvent, node: TreemapLayout<T>) => void;
 type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
-interface TreemapComponent<T = unknown> extends Component {
+interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponent<T>> {
     colorScale(): (key: string) => string;
     colorScale(scale: (key: string) => string): TreemapComponent<T>;
     transition(): boolean;

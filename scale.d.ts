@@ -4,7 +4,7 @@
  * @module sszvis/scale
  */
 interface Scale {
-    range(): any[];
+    range(): number[];
     rangeExtent?(): [number, number];
 }
 /**

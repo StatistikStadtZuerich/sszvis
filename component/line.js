@@ -1,6 +1,6 @@
 import { select, line as line$1 } from 'd3';
 import { component } from '../d3-component.js';
-import { identity } from '../fn.js';
+import { identity, valueFn } from '../fn.js';
 import { defaultTransition } from '../transition.js';
 
 /**
@@ -79,7 +79,6 @@ import { defaultTransition } from '../transition.js';
  * function returning null, which d3 removes the style for - the same thing it does when
  * handed undefined directly.
  */
-const styleValue = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
 /**
  * Whether a value counts as missing, and so breaks the line at that point.
  *
@@ -95,7 +94,12 @@ const styleValue = value => typeof value === "function" ? value : () => value !=
  */
 const isMissingVal = value => Number.isNaN(Number(value));
 function line () {
-  return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+  return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
+  // The default layer type L is P[], so the values ARE the layer and identity is correct.
+  // A caller who sets a different L must supply a matching accessor; the constraint
+  // cannot express "identity is valid only for the default instantiation".
+  .valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+    var _props$stroke, _props$strokeWidth;
     const selection = select(this);
     const props = selection.props();
     // Layouts
@@ -114,8 +118,8 @@ function line () {
     const pathData = function (datum, index) {
       return line(props.valuesAccessor.call(this, datum, index));
     };
-    const stroke = styleValue(props.stroke);
-    const strokeWidth = styleValue(props.strokeWidth);
+    const stroke = valueFn((_props$stroke = props.stroke) !== null && _props$stroke !== void 0 ? _props$stroke : null);
+    const strokeWidth = valueFn((_props$strokeWidth = props.strokeWidth) !== null && _props$strokeWidth !== void 0 ? _props$strokeWidth : null);
     const path = selection.selectAll(".sszvis-line").data(data, props.key).join("path").classed("sszvis-line", true).style("stroke", stroke);
     path.order();
     // The visual properties are applied to the transition when there is one, so the two

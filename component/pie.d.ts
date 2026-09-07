@@ -44,7 +44,7 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * The angle bookkeeping the component keeps on each datum: a0/a1 are the angles currently
  * on screen, _a0/_a1 the destination angles of the running transition. All four are
@@ -52,8 +52,8 @@ import { type Component } from "../d3-component.js";
  * a0/a1 can be replaced by a foreign value again by the index-based angle handover below.
  */
 export interface PieAngles {
-    a0?: number | null;
-    a1?: number | null;
+    a0?: number | null | undefined;
+    a1?: number | null | undefined;
     _a0?: number;
     _a1?: number;
 }
@@ -74,7 +74,7 @@ export type ColorValue<T = PieAngles> = string | ColorAccessor<T>;
  * the caller sets them - both are required, and rendering without them fails, so both
  * getters report the undefined the props actually hold.
  */
-export interface PieComponent<T = PieAngles> extends Component {
+export interface PieComponent<T = PieAngles> extends ComponentBuilder<PieComponent<T>> {
     radius(): number | undefined;
     radius(radius: number): PieComponent<T>;
     fill(): ColorValue<T> | undefined;

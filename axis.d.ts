@@ -52,13 +52,16 @@
  *
  * @return {sszvis.component}
  */
-import { type AxisDomain, type AxisScale, type NumberValue } from "d3";
-import { type Component } from "./d3-component.js";
+import { type AxisDomain, type AxisScale } from "d3";
+import type { ComponentBuilder } from "./d3-component.js";
 type AxisOrientation = "top" | "bottom" | "left" | "right";
 export type SlantDirection = "horizontal" | "vertical" | "diagonal";
 type TextAnchor = "start" | "middle" | "end";
-interface AxisComponent extends Component {
-    scale(scale?: AxisScale<NumberValue>): AxisComponent;
+interface AxisComponent extends ComponentBuilder<AxisComponent> {
+    scale(): AxisScale<AxisDomain>;
+    scale<D extends AxisDomain>(scale: AxisScale<D>): AxisComponent;
+    /** The scale the divergent-axis variant swaps in, stashed on the component itself. */
+    _scale?: AxisScale<AxisDomain> | undefined;
     orient(orientation?: AxisOrientation): AxisComponent;
     ticks(ticks?: number | number[]): AxisComponent;
     tickValues(values?: AxisDomain[]): AxisComponent;
@@ -88,13 +91,13 @@ interface AxisComponent extends Component {
 export declare const axisX: {
     (): AxisComponent;
     time(): AxisComponent;
-    ordinal(): any;
-    pyramid(): any;
+    ordinal(): AxisComponent;
+    pyramid(): AxisComponent;
 };
 export declare const axisY: {
     (): AxisComponent;
     time(): AxisComponent;
-    ordinal(): any;
+    ordinal(): AxisComponent;
 };
 export {};
 //# sourceMappingURL=axis.d.ts.map

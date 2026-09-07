@@ -89,6 +89,37 @@ function unwrapNested(roll) {
     }
   });
 }
+/** The fill used when a node carries no key the colour scale can be looked up with. */
+const HIERARCHY_FALLBACK_COLOR = "#cccccc";
+/**
+ * The colour key a hierarchy node inherits: its own rootKey when the layout wrote one,
+ * otherwise the key of its top-level ancestor (the child of the root). Leaves and branches
+ * of one category therefore share a colour even when only the root was tagged.
+ *
+ * Returns undefined when neither is available; callers decide whether to fall back to the
+ * node's own key.
+ */
+function inheritedColorKey(node) {
+  if ("rootKey" in node.data && node.data.rootKey) return node.data.rootKey;
+  const ancestors = node.ancestors();
+  const topLevel = ancestors.find((_, i) => {
+    var _ancestors;
+    return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
+  });
+  if (topLevel && "key" in topLevel.data) return topLevel.data.key;
+  return undefined;
+}
+/** `inheritedColorKey`, falling back to the node's own key. */
+function colorKeyOf(node) {
+  const inherited = inheritedColorKey(node);
+  if (inherited !== undefined) return inherited;
+  return "key" in node.data ? node.data.key : undefined;
+}
+/** The fill a hierarchy node is drawn with, or the grey fallback when it has no key. */
+function nodeColor(node, colorScale) {
+  const key = colorKeyOf(node);
+  return key === undefined ? HIERARCHY_FALLBACK_COLOR : colorScale(key);
+}
 
-export { prepareHierarchyData, unwrapNested };
+export { HIERARCHY_FALLBACK_COLOR, colorKeyOf, inheritedColorKey, nodeColor, prepareHierarchyData, unwrapNested };
 //# sourceMappingURL=hierarchy.js.map

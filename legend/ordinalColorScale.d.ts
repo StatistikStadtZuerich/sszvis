@@ -90,7 +90,7 @@
  * |fooBarBaz        |      <--- not enough space for padding + fooBaz
  * |fooBaz    barFoo |
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 export declare const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
 /**
  * The subset of a d3 scale this legend relies on, over its domain type T. The return value
@@ -103,7 +103,7 @@ interface OrdinalColorScale<T> {
     domain(): T[];
 }
 export type LegendOrientation = "horizontal" | "vertical";
-export interface OrdinalColorScaleComponent<T = string> extends Component {
+export interface OrdinalColorScaleComponent<T = string> extends ComponentBuilder<OrdinalColorScaleComponent<T>> {
     scale(): OrdinalColorScale<T>;
     scale(scale: OrdinalColorScale<T>): OrdinalColorScaleComponent<T>;
     rowHeight(): number;

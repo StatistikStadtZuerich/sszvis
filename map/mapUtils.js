@@ -45,7 +45,7 @@ const swissMapProjection = memoize((width, height, featureCollection,
 // Part of the signature only so that the memoize resolver below can read it.
 _featureBoundsCacheKey) => geoMercator().fitSize([width, height], featureCollection),
 // Memoize resolver
-(width, height, _, featureBoundsCacheKey) => "" + width + "," + height + "," + featureBoundsCacheKey);
+(width, height, _, featureBoundsCacheKey) => "".concat(width, ",").concat(height, ",").concat(featureBoundsCacheKey));
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
  * Switzerland. The values are chosen specifically to optimize path generation for
@@ -177,6 +177,10 @@ function prepareMergedGeoData(dataset, geoJson, keyName) {
  * feature id. Everything else stringifies, which is how a missing key becomes the string
  * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
  */
+/**
+ * The key a feature id or datum value is looked up under. Symbols pass through; everything
+ * else is stringified, so numeric and string ids that print the same collide deliberately.
+ */
 function toLookupKey(value) {
   return typeof value === "symbol" ? value : String(value);
 }
@@ -239,5 +243,5 @@ function widthAdaptiveMapPathStroke(width) {
   return Math.min(Math.max(0.8, width / 400), 1.1);
 }
 
-export { AGGLOMERATION_2012_KEY, GEO_KEY_DEFAULT, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, getGeoJsonCenter, pixelsFromGeoDistance, prepareMergedGeoData, swissMapPath, swissMapProjection, widthAdaptiveMapPathStroke };
+export { AGGLOMERATION_2012_KEY, GEO_KEY_DEFAULT, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, getGeoJsonCenter, pixelsFromGeoDistance, prepareMergedGeoData, swissMapPath, swissMapProjection, toLookupKey, widthAdaptiveMapPathStroke };
 //# sourceMappingURL=mapUtils.js.map

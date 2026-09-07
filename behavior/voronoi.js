@@ -63,9 +63,7 @@ function voronoi () {
       if (!parent) return;
       const cbox = parent.getBoundingClientRect();
       const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
-      if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
-        if (this) event.apply("over", this, [e, data[datumIdx]]);
-      }
+      if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])]) && this) event.apply("over", this, [e, data[datumIdx]]);
     }).on("mousemove", function (e) {
       const parent = this.parentNode;
       if (!parent) return;
@@ -91,18 +89,13 @@ function voronoi () {
       if (eventNearPoint(firstTouch$1, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
         e.preventDefault();
         if (this) event.apply("over", this, [e, data[datumIdx]]);
-        // Attach these handlers only if the initial touch is within the max distance from the voronoi center
-        // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
-        // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
-        // when users are performing touches that cause scrolling, we want to avoid firing the events.
-        const elementContext = this;
         const pan = () => {
           const touchEvent = firstTouch(e);
           if (!touchEvent) return;
           const element = elementFromEvent(touchEvent);
           const panDatum = datumFromPannableElement(element);
           if (panDatum === null) {
-            if (elementContext) event.apply("out", elementContext, [e]);
+            if (this) event.apply("out", this, [e]);
           } else {
             const panParent = element === null || element === void 0 ? void 0 : element.parentNode;
             if (!panParent) return;
@@ -115,15 +108,15 @@ function voronoi () {
               if (e.cancelable) {
                 e.preventDefault();
               }
-              if (elementContext) event.apply("over", elementContext, [e, panDatum.data]);
+              if (this) event.apply("over", this, [e, panDatum.data]);
             } else {
-              if (elementContext) event.apply("out", elementContext, [e]);
+              if (this) event.apply("out", this, [e]);
             }
           }
         };
         const end = () => {
-          if (elementContext) event.apply("out", elementContext, [e]);
-          select(elementContext).on("touchmove", null).on("touchend", null);
+          if (this) event.apply("out", this, [e]);
+          select(this).on("touchmove", null).on("touchend", null);
         };
         select(this).on("touchmove", pan).on("touchend", end);
       }

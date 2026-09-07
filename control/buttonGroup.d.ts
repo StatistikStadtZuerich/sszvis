@@ -44,13 +44,13 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * Typed as `Event` rather than `MouseEvent` so that a handler is assignable to both
  * optionSelectable controls, which are documented as interchangeable.
  */
 export type ButtonGroupChangeHandler<T> = (event: Event, value: T) => void;
-export interface ButtonGroupComponent<T extends string | number = string | number> extends Component {
+export interface ButtonGroupComponent<T extends string | number = string | number> extends ComponentBuilder<ButtonGroupComponent<T>> {
     values(): T[];
     values(values: T[]): ButtonGroupComponent<T>;
     current(): T;

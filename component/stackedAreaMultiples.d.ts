@@ -183,7 +183,7 @@
  * @return {sszvis.component}
  */
 import { type ValueFn } from "d3";
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * The dimension accessors are handed to d3.area, which calls them with a single point, that
  * point's index within the layer, and the array of points the layer is drawn from.
@@ -214,7 +214,7 @@ type KeyAccessor<L, R> = (this: Element, datum: L, index: number, group: ArrayLi
 type AreaValue<P> = number | PointAccessor<P, number>;
 /** Either a constant or an accessor, over one whole layer. */
 type StyleValue<L, R> = R | LayerAccessor<L, R>;
-export interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends Component {
+export interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends ComponentBuilder<StackedAreaMultiplesComponent<P, L>> {
     x(): AreaValue<P> | undefined;
     x<Q = P>(value: AreaValue<Q>): StackedAreaMultiplesComponent<P, L>;
     y0(): AreaValue<P> | undefined;
@@ -236,6 +236,11 @@ export interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends Com
     transition(): boolean;
     transition(enabled: boolean): StackedAreaMultiplesComponent<P, L>;
 }
+/**
+ * As above, for the style properties. An unset property becomes a function returning null,
+ * which d3 removes the attribute for - the same thing it does when handed undefined
+ * directly.
+ */
 export default function <P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L>;
 export {};
 //# sourceMappingURL=stackedAreaMultiples.d.ts.map

@@ -17,12 +17,13 @@
  *
  * @returns {d3.selection}
  */
+import type { BaseType } from "d3";
 import type { BoundsResult } from "./bounds.js";
-import type { AnySelection, SelectableElement } from "./types.js";
+import type { LayerSelection, SelectableElement } from "./types.js";
 export interface SvgLayerMetadata {
     key?: string;
     title?: string;
     description?: string;
 }
-export declare function createSvgLayer(selector: SelectableElement | HTMLElement, bounds?: BoundsResult, metadata?: SvgLayerMetadata): AnySelection;
+export declare function createSvgLayer<G extends BaseType = BaseType, D = unknown, P extends BaseType = BaseType, PD = unknown>(selector: SelectableElement<G, D, P, PD> | HTMLElement, bounds?: BoundsResult, metadata?: SvgLayerMetadata): LayerSelection<SVGGElement, number>;
 //# sourceMappingURL=createSvgLayer.d.ts.map

@@ -23,20 +23,29 @@ import { isString, isSelection } from './fn.js';
  *                      screenHeight: {number} The innerHeight of the screen
  */
 const measureDimensions = arg => {
-  let node;
-  if (isString(arg)) {
-    node = select(arg).node();
-  } else if (isSelection(arg)) {
-    node = arg.node();
-  } else {
-    node = arg;
-  }
+  const node = measurableNode(arg);
   return {
     width: node ? node.getBoundingClientRect().width : undefined,
     screenWidth: window.innerWidth,
     screenHeight: window.innerHeight
   };
 };
+/**
+ * The element a MeasurableElement refers to, or null when there is nothing to measure.
+ *
+ * Takes `unknown` rather than the generic parameter type: the three cases are told apart at
+ * runtime, and callers do pass null - the width is reported as undefined for it, which
+ * test/measure.test.ts pins.
+ */
+function measurableNode(arg) {
+  if (isString(arg)) return select(arg).node();
+  if (isSelection(arg)) {
+    // A selection's node may be any BaseType, but only an Element can be measured.
+    const selected = arg.node();
+    return selected instanceof Element ? selected : null;
+  }
+  return arg instanceof Element ? arg : null;
+}
 /**
  * measureText
  *
@@ -54,7 +63,8 @@ const measureDimensions = arg => {
  **/
 const measureText = (() => {
   const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d"); // Non-null assertion since canvas 2d context is always available
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("[measureText] Could not acquire a 2d canvas context");
   const cache = {};
   return (fontSize, fontFace, text) => {
     const key = [fontSize, fontFace, text].join("-");

@@ -24,7 +24,7 @@
  * @returns {sszvis.component}
  */
 import { type NumberValue } from "d3";
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /** The subset of a d3 scale this legend relies on. */
 interface RadiusScale {
     (value: NumberValue): number;
@@ -35,7 +35,7 @@ interface RadiusScale {
 }
 /** Formats a tick label. The default is fn.identity, which passes the value through. */
 type TickFormatter = (value: NumberValue, index: number) => string | number;
-export interface RadiusLegendComponent extends Component {
+export interface RadiusLegendComponent extends ComponentBuilder<RadiusLegendComponent> {
     scale(): RadiusScale;
     scale(scale: RadiusScale): RadiusLegendComponent;
     tickFormat(): TickFormatter;

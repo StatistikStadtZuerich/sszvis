@@ -40,12 +40,12 @@
  *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
  *
  */
-import { type Component } from "../d3-component";
+import { type ComponentBuilder } from "../d3-component.js";
 export type VoronoiBounds = [number, number, number, number];
 type Accessor<T, R> = (datum: T) => R;
 type NumberAccessor<T = unknown> = Accessor<T, number>;
 type VoronoiEventHandler<T = unknown> = (event: Event, datum?: T) => void;
-interface VoronoiComponent<T = unknown> extends Component {
+interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponent<T>> {
     x(): NumberAccessor<T>;
     x(accessor: NumberAccessor<T>): VoronoiComponent<T>;
     y(): NumberAccessor<T>;

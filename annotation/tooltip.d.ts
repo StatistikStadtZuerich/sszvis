@@ -37,16 +37,17 @@
  * @return {sszvis.component}
  *
  */
-import { type Component } from "../d3-component";
-import type { Accessor, AnySelection, NumberAccessor, StringAccessor } from "../types";
+import { type BaseType, type Selection } from "d3";
+import { type ComponentBuilder } from "../d3-component.js";
+import type { Accessor, NumberAccessor, StringAccessor } from "../types.js";
 type Datum<T = unknown> = T;
 interface TooltipData<T = unknown> {
     datum: Datum<T>;
     x: number;
     y: number;
 }
-interface TooltipComponent<T = unknown> extends Component {
-    renderInto(selection?: AnySelection): TooltipComponent<T>;
+interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponent<T>> {
+    renderInto<G extends Element, D, P extends BaseType, PD>(selection?: Selection<G, D, P, PD>): TooltipComponent<T>;
     visible(accessor?: Accessor<Datum<T>, boolean>): TooltipComponent<T>;
     header(accessor?: StringAccessor<Datum<T>>): TooltipComponent<T>;
     body(accessor?: StringAccessor<Datum<T>> | ((d: Datum<T>) => string[][])): TooltipComponent<T>;

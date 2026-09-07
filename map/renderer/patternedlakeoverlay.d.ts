@@ -91,7 +91,7 @@
  * @return {sszvis.component}
  */
 import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
-import { type Component } from "../../d3-component.js";
+import { type ComponentBuilder } from "../../d3-component.js";
 /**
  * A path generator, as this component uses one. A d3.geoPath satisfies this shape, and so does a
  * bare generator function, which is all the runtime requires. It is handed straight to d3 as the
@@ -105,7 +105,7 @@ type LakePath = ValueFn<BaseType, GeoPermissibleObjects, string | null>;
  * path, so there is no such datum.
  */
 type LakePathColor = string | ValueFn<BaseType, GeoPermissibleObjects, string | null>;
-export interface MapRendererPatternedLakeOverlayComponent extends Component {
+export interface MapRendererPatternedLakeOverlayComponent extends ComponentBuilder<MapRendererPatternedLakeOverlayComponent> {
     mapPath(): LakePath | undefined;
     mapPath(value: LakePath): MapRendererPatternedLakeOverlayComponent;
     lakeFeature(): GeoPermissibleObjects | undefined;

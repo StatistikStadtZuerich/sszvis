@@ -66,7 +66,7 @@
  * @return {sszvis.component}
  */
 import type { ExtendedFeatureCollection, GeoPath } from "d3";
-import { type Component } from "../../d3-component.js";
+import { type ComponentBuilder } from "../../d3-component.js";
 import { type MergedGeoDatum } from "../mapUtils.js";
 /**
  * A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. The
@@ -76,7 +76,7 @@ import { type MergedGeoDatum } from "../mapUtils.js";
 type MapValue<T, R> = R | ((datum: T | undefined) => R);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredMapValue<T, R> = (datum?: T) => R;
-export interface MapRendererBaseComponent<T = unknown> extends Component {
+export interface MapRendererBaseComponent<T = unknown> extends ComponentBuilder<MapRendererBaseComponent<T>> {
     mergedData(): MergedGeoDatum<T>[];
     mergedData(data: MergedGeoDatum<T>[]): MapRendererBaseComponent<T>;
     /** @deprecated Declared and documented, but the render only ever reads mergedData. */

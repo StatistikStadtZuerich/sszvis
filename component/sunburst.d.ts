@@ -106,7 +106,7 @@
  * @return {sszvis.component}
  */
 import { type HierarchyNode, type HierarchyRectangularNode } from "d3";
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 /**
  * A node of the hierarchy, positioned by d3's partition layout. The component adds _x0 and _x1
@@ -150,7 +150,7 @@ export type StrokeValue<T = unknown> = string | StrokeAccessor<T>;
  * defaults and are all required for a render to succeed, so their getters report the
  * undefined the props actually hold.
  */
-export interface SunburstComponent<T = unknown> extends Component {
+export interface SunburstComponent<T = unknown> extends ComponentBuilder<SunburstComponent<T>> {
     angleScale(): SunburstScale;
     angleScale(scale: SunburstScale): SunburstComponent<T>;
     radiusScale(): SunburstScale | undefined;

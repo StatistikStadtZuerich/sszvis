@@ -31,7 +31,11 @@ import translateString from '../svgUtils/translateString.js';
  * @returns {sszvis.component}
  */
 function radius () {
-  return component().prop("scale").prop("tickFormat").tickFormat(identity).prop("tickValues").render(function () {
+  return component().prop("scale").prop("tickFormat")
+  // fn.identity is the documented "no formatting" default. It returns its argument, so it
+  // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
+  // at render time, which its own types do not model.
+  .tickFormat(identity).prop("tickValues").render(function () {
     const selection = select(this);
     const props = selection.props();
     const tickValues = props.tickValues || defaultTickValues(props.scale);

@@ -14,7 +14,7 @@ export declare const formatAxisTimeFormat: (d: Date) => string;
 /**
  * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
  */
-export declare const formatMonth: (...args: any[]) => any;
+export declare const formatMonth: (...args: import("./types.js").$IntentionalAny[]) => import("./types.js").$IntentionalAny;
 /**
  * A year formatter for date objects. Gives the date's year.
  */

@@ -3,6 +3,7 @@ import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { getAccessibleTextColor } from '../color.js';
 import { component } from '../d3-component.js';
 import { functor } from '../fn.js';
+import { nodeColor } from '../layout/hierarchy.js';
 import { defaultTransition } from '../transition.js';
 
 /**
@@ -64,20 +65,7 @@ function treemap () {
     // Filter out very small rectangles and show only leaf nodes
     const visibleData = treemapData.filter(d => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5).filter(d => !d.children);
     const rectangles = selection.selectAll(".sszvis-treemap-rect").data(visibleData).join("rect").classed("sszvis-treemap-rect", true).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0).attr("fill", d => {
-      if ("rootKey" in d.data && d.data.rootKey) {
-        return props.colorScale(d.data.rootKey);
-      }
-      const ancestors = d.ancestors();
-      const topLevelCategory = ancestors.find((_, i) => {
-        var _ancestors;
-        return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
-      });
-      if (topLevelCategory && "key" in topLevelCategory.data) {
-        return props.colorScale(topLevelCategory.data.key);
-      } else if ("key" in d.data) {
-        return props.colorScale(d.data.key);
-      }
-      return "#cccccc"; // Default fill if no key found
+      return nodeColor(d, props.colorScale);
     }).attr("stroke", "#ffffff").attr("stroke-width", 1).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => {
       var _props$onClick;
       return (_props$onClick = props.onClick) === null || _props$onClick === void 0 ? void 0 : _props$onClick.call(props, event, d);
@@ -129,23 +117,7 @@ function treemap () {
       const labelXAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").x;
       const labelYAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").y;
       const labelFillAcc = d => {
-        const bgColor = () => {
-          if ("rootKey" in d.data && d.data.rootKey) {
-            return props.colorScale(d.data.rootKey);
-          }
-          const ancestors = d.ancestors();
-          const topLevelCategory = ancestors.find((_, i) => {
-            var _ancestors2;
-            return i < ancestors.length - 1 && ((_ancestors2 = ancestors[i + 1]) === null || _ancestors2 === void 0 ? void 0 : _ancestors2.data._tag) === "root";
-          });
-          if (topLevelCategory && "key" in topLevelCategory.data) {
-            return props.colorScale(topLevelCategory.data.key);
-          } else if ("key" in d.data) {
-            return props.colorScale(d.data.key);
-          }
-          return "#cccccc"; // Default fill if no key found
-        };
-        return getAccessibleTextColor(bgColor());
+        return getAccessibleTextColor(nodeColor(d, props.colorScale));
       };
       // Filter data for labels - only show labels on leaf nodes that are large enough
       const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < (d.x1 - d.x0) / 7); // Rough estimate of fitting text

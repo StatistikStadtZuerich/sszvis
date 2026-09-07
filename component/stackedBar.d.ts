@@ -101,7 +101,7 @@
  * @return {sszvis.component}
  */
 import { type SeriesPoint } from "d3";
-import { type Component, type PropertySetter, type RenderCallback } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * One slice of a stack: the [y0, y1] point d3.stack produces, with `data` narrowed from the
  * whole cascade row to the single datum the slice was computed from, and tagged with the
@@ -156,19 +156,10 @@ type FillValue<T, X extends string | number> = SliceValue<StackedBarSlice<T, X>,
  */
 type StrokeValue<T, X extends string | number> = string | null | undefined | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
 /**
- * `component()` hands back whatever interface it is asked for, but the two builder methods
- * it inherits are declared as returning the plain Component, so a component interface has
- * to re-declare them to survive its own construction chain.
- */
-interface StackedBarBuilder<C extends Component> extends Component {
-    prop<V>(prop: string, setter?: PropertySetter<V>): C;
-    render(callback: RenderCallback): C;
-}
-/**
  * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
  */
-export interface StackedBarVerticalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarVerticalComponent<T, X>> {
+export interface StackedBarVerticalComponent<T = unknown, X extends string | number = string> extends ComponentBuilder<StackedBarVerticalComponent<T, X>> {
     xScale(): StackScale<X>;
     xScale<V = X>(scale: (value: V) => number | undefined): StackedBarVerticalComponent<T, X>;
     width(): StoredDimension<T, X>;
@@ -182,7 +173,7 @@ export interface StackedBarVerticalComponent<T = unknown, X extends string | num
     stroke(): StrokeValue<T, X>;
     stroke<U = StackedBarSlice<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarVerticalComponent<T, X>;
 }
-export interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string> extends StackedBarBuilder<StackedBarHorizontalComponent<T, X>> {
+export interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string> extends ComponentBuilder<StackedBarHorizontalComponent<T, X>> {
     xScale(): ValueScale;
     xScale(scale: ValueScale): StackedBarHorizontalComponent<T, X>;
     width(): StoredDimension<T, X>;

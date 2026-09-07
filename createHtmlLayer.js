@@ -1,6 +1,5 @@
-import { select } from 'd3';
 import { bounds } from './bounds.js';
-import { isSelection } from './fn.js';
+import { withRootSelection } from './fn.js';
 
 /**
  * Factory that returns an HTML element appended to the given target selector,
@@ -51,9 +50,11 @@ function createHtmlLayer(selector, bounds$1) {
   } = bounds$1 || bounds();
   const key = metadata.key || "default";
   const elementDataKey = "data-sszvis-html-".concat(key);
-  const root = isSelection(selector) ? selector : select(selector);
-  root.classed("sszvis-outer-container", true);
-  return root.selectAll("[data-sszvis-html-layer][".concat(elementDataKey, "]")).data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", "".concat(padding.left, "px")).style("top", "".concat(padding.top, "px"));
+  const render = root => {
+    root.classed("sszvis-outer-container", true);
+    return root.selectAll("[data-sszvis-html-layer][".concat(elementDataKey, "]")).data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", "".concat(padding.left, "px")).style("top", "".concat(padding.top, "px"));
+  };
+  return withRootSelection(selector, render);
 }
 
 export { createHtmlLayer };

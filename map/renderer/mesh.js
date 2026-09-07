@@ -1,5 +1,6 @@
 import { select } from 'd3';
 import { component } from '../../d3-component.js';
+import { valueFn } from '../../fn.js';
 
 /**
  * mesh renderer component
@@ -52,16 +53,6 @@ import { component } from '../../d3-component.js';
  *
  * @return {sszvis.component}
  */
-/**
- * Normalises a style prop into the single accessor shape d3's overloads can resolve. An accessor
- * is passed through untouched, so it keeps receiving d3's arguments and node context; a constant
- * becomes a function returning it, which d3 applies identically - the constant and function paths
- * both end in the same setProperty call. Follows the idiom of src/component/dot.ts, minus its
- * nullish fallback: both props here have defaults, so a constant is never nullish.
- */
-function toStyleValue(value) {
-  return typeof value === "function" ? value : () => value;
-}
 function mapRendererMesh () {
   return component().prop("geoJson").prop("mapPath").prop("borderColor").borderColor("white") // A function or string for the color of all borders. Note: all borders have the same color
   .prop("strokeWidth").strokeWidth(1.25).render(function () {
@@ -69,7 +60,7 @@ function mapRendererMesh () {
     const props = selection.props();
     // add the map borders. These are rendered as one single path element
     const meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]).join("path").classed("sszvis-map__border", true);
-    meshLine.attr("d", props.mapPath).style("stroke", toStyleValue(props.borderColor)).style("stroke-width", toStyleValue(props.strokeWidth));
+    meshLine.attr("d", props.mapPath).style("stroke", valueFn(props.borderColor)).style("stroke-width", valueFn(props.strokeWidth));
   });
 }
 

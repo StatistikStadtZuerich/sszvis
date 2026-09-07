@@ -44,7 +44,7 @@ export { default as slider } from './control/slider.js';
 export { createHtmlLayer } from './createHtmlLayer.js';
 export { createSvgLayer } from './createSvgLayer.js';
 export { fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported } from './fallback.js';
-export { arity, compose, contains, defined, derivedSet, every, filledArray, find, first, firstTouch, flatten, foldPattern, functor, hashableSet, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, memoize, not, prop, propOr, set, some, stringEqual } from './fn.js';
+export { arity, compose, contains, defined, derivedSet, every, filledArray, find, first, firstTouch, flatten, foldPattern, functor, hashableSet, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, memoize, not, prop, propOr, set, some, stringEqual, valueFn, withRootSelection } from './fn.js';
 export { formatAge, formatAxisTimeFormat, formatFractionPercent, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear } from './format.js';
 export { colorLegendDimensions, colorLegendLayout } from './layout/colorLegendLayout.js';
 export { default as dimensionsHeatTable } from './layout/heatTableDimensions.js';
@@ -62,7 +62,7 @@ export { DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, legendColorOrdinal } from './l
 export { default as legendRadius } from './legend/radius.js';
 export { loadError } from './loadError.js';
 export { formatLocale, timeLocale } from './locale.js';
-export { AGGLOMERATION_2012_KEY, GEO_KEY_DEFAULT, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, getGeoJsonCenter, pixelsFromGeoDistance, prepareMergedGeoData, swissMapPath, swissMapProjection, widthAdaptiveMapPathStroke } from './map/mapUtils.js';
+export { AGGLOMERATION_2012_KEY, GEO_KEY_DEFAULT, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, getGeoJsonCenter, pixelsFromGeoDistance, prepareMergedGeoData, swissMapPath, swissMapProjection, toLookupKey, widthAdaptiveMapPathStroke } from './map/mapUtils.js';
 export { default as mapRendererBase } from './map/renderer/base.js';
 export { default as mapRendererBubble } from './map/renderer/bubble.js';
 export { default as mapRendererGeoJson } from './map/renderer/geojson.js';

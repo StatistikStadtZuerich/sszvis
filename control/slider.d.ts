@@ -48,7 +48,7 @@
  */
 import { type AxisDomain, type ScaleContinuousNumeric, type ScaleTime } from "d3";
 import { type SlantDirection } from "../axis.js";
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 import type { StringAccessor } from "../types.js";
 /** The scales a slider can represent: a continuous numeric or time scale. */
 export type SliderScale = ScaleContinuousNumeric<number, number> | ScaleTime<number, number>;
@@ -59,7 +59,7 @@ export type SliderValue = number | Date;
  * Widening `x` here does not fix the underlying move handler type, which is #222.
  */
 export type SliderChangeHandler = (event: Event, x: number | string | Date | null, y: number | string | null) => void;
-export interface SliderComponent extends Component {
+export interface SliderComponent extends ComponentBuilder<SliderComponent> {
     scale(): SliderScale;
     scale(scale: SliderScale): SliderComponent;
     value(): SliderValue;

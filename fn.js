@@ -1,4 +1,4 @@
-import { selection } from 'd3';
+import { selection, select } from 'd3';
 
 /**
  * A collection of functional programming helper functions
@@ -32,78 +32,32 @@ const isSelection = val => val instanceof selection;
  * passed to the supplied function.
  */
 const arity = (n, fn) => {
-  switch (n) {
-    case 0:
-      {
-        return function () {
-          return fn.call(this);
-        };
-      }
-    case 1:
-      {
-        return function (a0) {
-          return fn.call(this, a0);
-        };
-      }
-    case 2:
-      {
-        return function (a0, a1) {
-          return fn.call(this, a0, a1);
-        };
-      }
-    case 3:
-      {
-        return function (a0, a1, a2) {
-          return fn.call(this, a0, a1, a2);
-        };
-      }
-    case 4:
-      {
-        return function (a0, a1, a2, a3) {
-          return fn.call(this, a0, a1, a2, a3);
-        };
-      }
-    case 5:
-      {
-        return function (a0, a1, a2, a3, a4) {
-          return fn.call(this, a0, a1, a2, a3, a4);
-        };
-      }
-    case 6:
-      {
-        return function (a0, a1, a2, a3, a4, a5) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5);
-        };
-      }
-    case 7:
-      {
-        return function (a0, a1, a2, a3, a4, a5, a6) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
-        };
-      }
-    case 8:
-      {
-        return function (a0, a1, a2, a3, a4, a5, a6, a7) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
-        };
-      }
-    case 9:
-      {
-        return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
-        };
-      }
-    case 10:
-      {
-        return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
-        };
-      }
-    default:
-      {
-        return fn;
-      }
-  }
+  // arity exists to call `fn` with an argument list its own signature does not describe:
+  // extra arguments are dropped and missing ones padded with undefined. No type can say
+  // "callable with a different number of arguments than it declares", so the widened
+  // callable is asserted once here and every use below goes through it.
+  const callWithAnyArgs = fn;
+  // NOTE: the original hand-unrolled a switch over 0..10 and returned the function
+  // untouched for anything else, so n > 10, negative and non-integer n do no limiting at
+  // all. That passthrough is preserved here, quirk and all.
+  if (!Number.isInteger(n) || n < 0 || n > 10) return callWithAnyArgs;
+  const limited = function () {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+    // Build exactly n slots, so the wrapped function sees arguments.length === n whether
+    // the caller passed too many or too few.
+    const slots = Array.from({
+      length: n
+    }, (_, i) => args[i]);
+    return callWithAnyArgs.apply(this, slots);
+  };
+  // The unrolled version gave each case real named parameters, so .length was n.
+  Object.defineProperty(limited, "length", {
+    value: n,
+    configurable: true
+  });
+  return limited;
 };
 /**
  * fn.compose
@@ -118,15 +72,17 @@ const arity = (n, fn) => {
  *
  * Note: all composed functions but the last should be of arity 1.
  */
+// The chain's intermediate types depend on how many functions were passed and cannot be
+// related to one another without a fixed-arity overload per length.
 const compose = function () {
-  for (var _len = arguments.length, fns = new Array(_len), _key = 0; _key < _len; _key++) {
-    fns[_key] = arguments[_key];
+  for (var _len2 = arguments.length, fns = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+    fns[_key2] = arguments[_key2];
   }
   const start = fns.length - 1;
   return function () {
     let i = start;
-    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      args[_key2] = arguments[_key2];
+    for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      args[_key3] = arguments[_key3];
     }
     let result = Reflect.apply(fns[i], this, args);
     while (i--) result = fns[i].call(this, result);
@@ -263,7 +219,7 @@ const foldPattern = (key, pattern) => {
   if (typeof result === "function") {
     return result();
   }
-  throw new Error("[foldPattern] No definition provided for key: " + key);
+  throw new Error("[foldPattern] No definition provided for key: ".concat(key));
 };
 /**
  * fn.hashableSet
@@ -278,13 +234,17 @@ const foldPattern = (key, pattern) => {
  */
 const hashableSet = (arr, acc) => {
   const accessor = acc || identity;
-  const seen = {};
+  // A Set, not a plain object: an object inherits Object.prototype, so values naming one
+  // of its members ("constructor", "toString", ...) read back as already seen and were
+  // dropped from the result. Keys stay stringified, which is what "hashable" means here
+  // and why 1 and "1" are still one key.
+  const seen = new Set();
   const result = [];
-  let value;
   for (let i = 0, l = arr.length; i < l; ++i) {
-    value = accessor(arr[i], i, arr);
-    if (!seen[value]) {
-      seen[value] = true;
+    const value = accessor(arr[i], i, arr);
+    const key = String(value);
+    if (!seen.has(key)) {
+      seen.add(key);
       result.push(value);
     }
   }
@@ -295,7 +255,9 @@ const hashableSet = (arr, acc) => {
  *
  * Determines if the passed value is a function
  */
-const isFunction = val => typeof val == "function";
+// The guard has to widen to a callable the caller can actually invoke; narrowing the
+// parameters to `never[]` would make every call site an error.
+const isFunction = val => typeof val === "function";
 /**
  * fn.isNull
  *
@@ -329,8 +291,8 @@ const last = arr => arr[arr.length - 1];
  * boolean opposite of f's return value.
  */
 const not = f => function () {
-  for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-    args[_key3] = arguments[_key3];
+  for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+    args[_key4] = arguments[_key4];
   }
   return !Reflect.apply(f, this, args);
 };
@@ -342,9 +304,7 @@ const not = f => function () {
  * it returns that object's value for the named property. (or undefined, if the object
  * does not contain the property.)
  */
-const prop = key => function (object) {
-  return object[key];
-};
+const prop = key => object => object[key];
 /**
  * fn.propOr
  *
@@ -355,7 +315,7 @@ const prop = key => function (object) {
  * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
  * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
  */
-const propOr = (key, defaultVal) => function (object) {
+const propOr = (key, defaultVal) => object => {
   const value = object === undefined ? undefined : object[key];
   return value === undefined ? defaultVal : value;
 };
@@ -373,10 +333,12 @@ const propOr = (key, defaultVal) => function (object) {
  */
 const set = (arr, acc) => {
   const accessor = acc || identity;
-  return arr.reduce((m, value, i) => {
+  const result = [];
+  for (const [i, value] of arr.entries()) {
     const computed = accessor(value, i, arr);
-    return m.includes(computed) ? m : [...m, computed];
-  }, []);
+    if (!result.includes(computed)) result.push(computed);
+  }
+  return result;
 };
 /**
  * fn.some
@@ -405,20 +367,52 @@ const stringEqual = (a, b) => a.toString() === b.toString();
  *
  * Same as fn.functor in d3v3
  */
-const functor = v => typeof v === "function" ? v : function () {
-  return v;
-};
+const functor = v => typeof v === "function" ? v : () => v;
+/**
+ * Applies `render` to whichever selection `selector` denotes.
+ *
+ * Each branch keeps its own concrete selection type rather than being widened into a shared
+ * variable first: d3's select() has one overload for a selector string and another for a
+ * node, and Selection is invariant in all four of its type parameters, so no single type -
+ * and no union - holds all three cases. `render` is generic, so each branch infers.
+ */
+function withRootSelection(selector, render) {
+  if (typeof selector === "string") return render(select(selector));
+  if (selector instanceof Element) return render(select(selector));
+  return render(selector);
+}
+/**
+ * fn.valueFn
+ *
+ * Wraps a constant in an accessor and leaves an existing accessor alone. Unlike fn.functor
+ * the result takes d3's (datum, index, group) arguments and can be handed straight to
+ * .attr() or .style(). An unset prop resolves to undefined, which d3 treats the same as
+ * null - it removes the attribute either way - so `value ?? null` at a call site is about
+ * the declared return type, not about what d3 renders.
+ */
+const valueFn = value => typeof value === "function" ? value : () => value;
 /**
  * fn.memoize
  *
- * Adapted from lodash's memoize() but using d3.map() as cache
+ * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
  * See https://lodash.com/docs/4.17.4#memoize
+ *
+ * Differs from lodash deliberately: lodash keys on the first argument and silently returns
+ * that entry for any later arguments, so memoizing a function of several arguments without
+ * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
+ * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
  */
-const memoize = (func, resolver) => {
+const memoize = (func, resolver
+// The cache key is whatever the resolver returned, or - with no resolver - the first
+// argument itself, which may be any value including an object compared by identity.
+) => {
   if (typeof func !== "function" || resolver != null && typeof resolver !== "function") {
     throw new TypeError("Expected a function");
   }
   const memoized = function () {
+    if (!resolver && arguments.length > 1) {
+      throw new TypeError("[fn.memoize] A function called with more than one argument needs a resolver: the " + "default cache key is the first argument alone, so differing later arguments would " + "return the first call's result.");
+    }
     const key = resolver ? resolver(...arguments) : arguments.length <= 0 ? undefined : arguments[0];
     const cache = memoized.cache;
     if (cache.has(key)) {
@@ -432,5 +426,5 @@ const memoize = (func, resolver) => {
   return memoized;
 };
 
-export { arity, compose, contains, defined, derivedSet, every, filledArray, find, first, firstTouch, flatten, foldPattern, functor, hashableSet, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, memoize, not, prop, propOr, set, some, stringEqual };
+export { arity, compose, contains, defined, derivedSet, every, filledArray, find, first, firstTouch, flatten, foldPattern, functor, hashableSet, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, memoize, not, prop, propOr, set, some, stringEqual, valueFn, withRootSelection };
 //# sourceMappingURL=fn.js.map

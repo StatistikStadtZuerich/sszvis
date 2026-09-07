@@ -124,7 +124,7 @@ function stackedBarData(order) {
   seriesAcc, valueAcc) => data => {
     const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
     // Collect all keys ()
-    const keys = rows.reduce((a, row) => set([...a, ...Object.keys(row)]), []);
+    const keys = set(rows.flatMap(row => Object.keys(row)));
     const stacks = stack().keys(keys)
     // Only the first datum of each cell is read, and the read is unguarded: a stack
     // that is missing one of the series keys throws here.

@@ -16,35 +16,35 @@
  * @method  dataAreaPattern                 The pattern for the data area texture.
  *
  */
-import type { LinearGradientSelection, MaskSelection, PatternSelection } from "./types";
+import type { BaseType, Selection } from "d3";
 /**
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements
  */
-export declare const heatTableMissingValuePattern: (selection: PatternSelection) => void;
+export declare const heatTableMissingValuePattern: <D, P extends BaseType, PD>(selection: Selection<SVGPatternElement, D, P, PD>) => void;
 /**
  * The pattern for the map areas which are missing values
  * @param selection A d3 selection of SVG pattern elements
  */
-export declare const mapMissingValuePattern: (selection: PatternSelection) => void;
+export declare const mapMissingValuePattern: <D, P extends BaseType, PD>(selection: Selection<SVGPatternElement, D, P, PD>) => void;
 /**
  * The pattern for Lake Zurich in the map component
  * @param selection A d3 selection of SVG pattern elements
  */
-export declare const mapLakePattern: (selection: PatternSelection) => void;
+export declare const mapLakePattern: <D, P extends BaseType, PD>(selection: Selection<SVGPatternElement, D, P, PD>) => void;
 /**
  * The gradient used by the alpha fade pattern in the Lake Zurich shape
  * @param selection A d3 selection of SVG linear gradient elements
  */
-export declare const mapLakeFadeGradient: (selection: LinearGradientSelection) => void;
+export declare const mapLakeFadeGradient: <D, P extends BaseType, PD>(selection: Selection<SVGLinearGradientElement, D, P, PD>) => void;
 /**
  * The gradient alpha fade mask for the Lake Zurich shape
  * @param selection A d3 selection of SVG mask elements
  */
-export declare const mapLakeGradientMask: (selection: MaskSelection) => void;
+export declare const mapLakeGradientMask: <D, P extends BaseType, PD>(selection: Selection<SVGMaskElement, D, P, PD>) => void;
 /**
  * The pattern for the data area texture
  * @param selection A d3 selection of SVG pattern elements
  */
-export declare const dataAreaPattern: (selection: PatternSelection) => void;
+export declare const dataAreaPattern: <D, P extends BaseType, PD>(selection: Selection<SVGPatternElement, D, P, PD>) => void;
 //# sourceMappingURL=patterns.d.ts.map

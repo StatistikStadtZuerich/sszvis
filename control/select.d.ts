@@ -47,9 +47,9 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 export type SelectChangeHandler<T> = (event: Event, value: T) => void;
-export interface SelectComponent<T extends string = string> extends Component {
+export interface SelectComponent<T extends string = string> extends ComponentBuilder<SelectComponent<T>> {
     values(): T[];
     values(values: T[]): SelectComponent<T>;
     current(): T;

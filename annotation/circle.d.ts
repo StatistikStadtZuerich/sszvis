@@ -18,10 +18,10 @@
  *
  * @returns {sszvis.component} a circular data area component
  */
-import { type Component } from "../d3-component";
-import type { NumberAccessor, StringAccessor } from "../types";
+import { type ComponentBuilder } from "../d3-component.js";
+import type { NumberAccessor, StringAccessor } from "../types.js";
 type Datum<T = unknown> = T;
-interface CircleComponent<T = unknown> extends Component {
+interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<T>> {
     x(accessor?: NumberAccessor<Datum<T>>): CircleComponent<T>;
     y(accessor?: NumberAccessor<Datum<T>>): CircleComponent<T>;
     r(accessor?: NumberAccessor<Datum<T>>): CircleComponent<T>;

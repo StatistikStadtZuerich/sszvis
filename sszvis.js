@@ -50,11 +50,13 @@
        */
       function sszvisComponent(selection) {
         if (selectionRenderer) {
-          selection.props = () => clone(props);
+          // Attach the props reader d3's Selection prototype is augmented with below.
+          Reflect.set(selection, "props", () => clone(props));
           selectionRenderer.apply(selection, slice(arguments));
         }
         selection.each(function () {
-          this.__props__ = clone(props);
+          // Stash the props on the node itself, where selection.props() reads them back.
+          Reflect.set(this, "__props__", clone(props));
           renderer.apply(this, slice(arguments));
         });
       }
@@ -68,7 +70,9 @@
        */
       sszvisComponent.prop = function (prop) {
         let setter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : identity$1;
-        sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
+        // The accessor is created from a runtime prop name, so it cannot be assigned through
+        // a statically known key.
+        Reflect.set(sszvisComponent, prop, accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent));
         return sszvisComponent;
       };
       /**
@@ -79,13 +83,16 @@
        * @return {sszvis.component}
        */
       sszvisComponent.delegate = (prop, delegate) => {
-        sszvisComponent[prop] = function () {
+        // Same as in prop(): a runtime prop name on both the component and the delegate.
+        const delegated = function () {
+          const target = Reflect.get(delegate, prop);
           for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
             args[_key] = arguments[_key];
           }
-          const result = delegate[prop].apply(delegate, slice(args));
+          const result = target.apply(delegate, slice(args));
           return args.length === 0 ? result : sszvisComponent;
         };
+        Reflect.set(sszvisComponent, prop, delegated);
         return sszvisComponent;
       };
       /**
@@ -133,10 +140,11 @@
       // getting props.
       if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
       if (this.size() !== 1) throw new Error("only one group is supported");
-      if (this._groups[0].length !== 1) throw new Error("only one node is supported");
-      const group = this._groups[0];
-      const node = group[0];
-      return node.__props__ || {};
+      // _groups is d3's internal selection storage and is not part of its public types.
+      const node = this.node();
+      if (!node) throw new Error("only one node is supported");
+      // The props were stashed on the node itself by the component that rendered it.
+      return Reflect.get(node, "__props__") || {};
     };
     /**
      * Creates an accessor function that either gets or sets a value, depending
@@ -149,6 +157,8 @@
      */
     function accessor(props, prop) {
       let setter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : identity$1;
+      // Getter when called with no arguments, setter otherwise - the two return different
+      // things, and the prop's own declaration in the component interface states which.
       return function () {
         for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
           args[_key2] = arguments[_key2];
@@ -204,78 +214,32 @@
      * passed to the supplied function.
      */
     const arity = (n, fn) => {
-      switch (n) {
-        case 0:
-          {
-            return function () {
-              return fn.call(this);
-            };
-          }
-        case 1:
-          {
-            return function (a0) {
-              return fn.call(this, a0);
-            };
-          }
-        case 2:
-          {
-            return function (a0, a1) {
-              return fn.call(this, a0, a1);
-            };
-          }
-        case 3:
-          {
-            return function (a0, a1, a2) {
-              return fn.call(this, a0, a1, a2);
-            };
-          }
-        case 4:
-          {
-            return function (a0, a1, a2, a3) {
-              return fn.call(this, a0, a1, a2, a3);
-            };
-          }
-        case 5:
-          {
-            return function (a0, a1, a2, a3, a4) {
-              return fn.call(this, a0, a1, a2, a3, a4);
-            };
-          }
-        case 6:
-          {
-            return function (a0, a1, a2, a3, a4, a5) {
-              return fn.call(this, a0, a1, a2, a3, a4, a5);
-            };
-          }
-        case 7:
-          {
-            return function (a0, a1, a2, a3, a4, a5, a6) {
-              return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
-            };
-          }
-        case 8:
-          {
-            return function (a0, a1, a2, a3, a4, a5, a6, a7) {
-              return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
-            };
-          }
-        case 9:
-          {
-            return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
-              return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
-            };
-          }
-        case 10:
-          {
-            return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
-              return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
-            };
-          }
-        default:
-          {
-            return fn;
-          }
-      }
+      // arity exists to call `fn` with an argument list its own signature does not describe:
+      // extra arguments are dropped and missing ones padded with undefined. No type can say
+      // "callable with a different number of arguments than it declares", so the widened
+      // callable is asserted once here and every use below goes through it.
+      const callWithAnyArgs = fn;
+      // NOTE: the original hand-unrolled a switch over 0..10 and returned the function
+      // untouched for anything else, so n > 10, negative and non-integer n do no limiting at
+      // all. That passthrough is preserved here, quirk and all.
+      if (!Number.isInteger(n) || n < 0 || n > 10) return callWithAnyArgs;
+      const limited = function () {
+        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+        // Build exactly n slots, so the wrapped function sees arguments.length === n whether
+        // the caller passed too many or too few.
+        const slots = Array.from({
+          length: n
+        }, (_, i) => args[i]);
+        return callWithAnyArgs.apply(this, slots);
+      };
+      // The unrolled version gave each case real named parameters, so .length was n.
+      Object.defineProperty(limited, "length", {
+        value: n,
+        configurable: true
+      });
+      return limited;
     };
     /**
      * fn.compose
@@ -290,15 +254,17 @@
      *
      * Note: all composed functions but the last should be of arity 1.
      */
+    // The chain's intermediate types depend on how many functions were passed and cannot be
+    // related to one another without a fixed-arity overload per length.
     const compose = function () {
-      for (var _len = arguments.length, fns = new Array(_len), _key = 0; _key < _len; _key++) {
-        fns[_key] = arguments[_key];
+      for (var _len2 = arguments.length, fns = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        fns[_key2] = arguments[_key2];
       }
       const start = fns.length - 1;
       return function () {
         let i = start;
-        for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          args[_key2] = arguments[_key2];
+        for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+          args[_key3] = arguments[_key3];
         }
         let result = Reflect.apply(fns[i], this, args);
         while (i--) result = fns[i].call(this, result);
@@ -435,7 +401,7 @@
       if (typeof result === "function") {
         return result();
       }
-      throw new Error("[foldPattern] No definition provided for key: " + key);
+      throw new Error("[foldPattern] No definition provided for key: ".concat(key));
     };
     /**
      * fn.hashableSet
@@ -450,13 +416,17 @@
      */
     const hashableSet = (arr, acc) => {
       const accessor = acc || identity;
-      const seen = {};
+      // A Set, not a plain object: an object inherits Object.prototype, so values naming one
+      // of its members ("constructor", "toString", ...) read back as already seen and were
+      // dropped from the result. Keys stay stringified, which is what "hashable" means here
+      // and why 1 and "1" are still one key.
+      const seen = new Set();
       const result = [];
-      let value;
       for (let i = 0, l = arr.length; i < l; ++i) {
-        value = accessor(arr[i], i, arr);
-        if (!seen[value]) {
-          seen[value] = true;
+        const value = accessor(arr[i], i, arr);
+        const key = String(value);
+        if (!seen.has(key)) {
+          seen.add(key);
           result.push(value);
         }
       }
@@ -467,7 +437,9 @@
      *
      * Determines if the passed value is a function
      */
-    const isFunction$1 = val => typeof val == "function";
+    // The guard has to widen to a callable the caller can actually invoke; narrowing the
+    // parameters to `never[]` would make every call site an error.
+    const isFunction$1 = val => typeof val === "function";
     /**
      * fn.isNull
      *
@@ -501,8 +473,8 @@
      * boolean opposite of f's return value.
      */
     const not = f => function () {
-      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        args[_key3] = arguments[_key3];
+      for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        args[_key4] = arguments[_key4];
       }
       return !Reflect.apply(f, this, args);
     };
@@ -514,9 +486,7 @@
      * it returns that object's value for the named property. (or undefined, if the object
      * does not contain the property.)
      */
-    const prop = key => function (object) {
-      return object[key];
-    };
+    const prop = key => object => object[key];
     /**
      * fn.propOr
      *
@@ -527,7 +497,7 @@
      * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
      * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
      */
-    const propOr = (key, defaultVal) => function (object) {
+    const propOr = (key, defaultVal) => object => {
       const value = object === undefined ? undefined : object[key];
       return value === undefined ? defaultVal : value;
     };
@@ -545,10 +515,12 @@
      */
     const set$1 = (arr, acc) => {
       const accessor = acc || identity;
-      return arr.reduce((m, value, i) => {
+      const result = [];
+      for (const [i, value] of arr.entries()) {
         const computed = accessor(value, i, arr);
-        return m.includes(computed) ? m : [...m, computed];
-      }, []);
+        if (!result.includes(computed)) result.push(computed);
+      }
+      return result;
     };
     /**
      * fn.some
@@ -577,20 +549,52 @@
      *
      * Same as fn.functor in d3v3
      */
-    const functor = v => typeof v === "function" ? v : function () {
-      return v;
-    };
+    const functor = v => typeof v === "function" ? v : () => v;
+    /**
+     * Applies `render` to whichever selection `selector` denotes.
+     *
+     * Each branch keeps its own concrete selection type rather than being widened into a shared
+     * variable first: d3's select() has one overload for a selector string and another for a
+     * node, and Selection is invariant in all four of its type parameters, so no single type -
+     * and no union - holds all three cases. `render` is generic, so each branch infers.
+     */
+    function withRootSelection(selector, render) {
+      if (typeof selector === "string") return render(d3.select(selector));
+      if (selector instanceof Element) return render(d3.select(selector));
+      return render(selector);
+    }
+    /**
+     * fn.valueFn
+     *
+     * Wraps a constant in an accessor and leaves an existing accessor alone. Unlike fn.functor
+     * the result takes d3's (datum, index, group) arguments and can be handed straight to
+     * .attr() or .style(). An unset prop resolves to undefined, which d3 treats the same as
+     * null - it removes the attribute either way - so `value ?? null` at a call site is about
+     * the declared return type, not about what d3 renders.
+     */
+    const valueFn = value => typeof value === "function" ? value : () => value;
     /**
      * fn.memoize
      *
-     * Adapted from lodash's memoize() but using d3.map() as cache
+     * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
      * See https://lodash.com/docs/4.17.4#memoize
+     *
+     * Differs from lodash deliberately: lodash keys on the first argument and silently returns
+     * that entry for any later arguments, so memoizing a function of several arguments without
+     * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
+     * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
      */
-    const memoize = (func, resolver) => {
+    const memoize = (func, resolver
+    // The cache key is whatever the resolver returned, or - with no resolver - the first
+    // argument itself, which may be any value including an object compared by identity.
+    ) => {
       if (typeof func !== "function" || resolver != null && typeof resolver !== "function") {
         throw new TypeError("Expected a function");
       }
       const memoized = function () {
+        if (!resolver && arguments.length > 1) {
+          throw new TypeError("[fn.memoize] A function called with more than one argument needs a resolver: the " + "default cache key is the first argument alone, so differing later arguments would " + "return the first call's result.");
+        }
         const key = resolver ? resolver(...arguments) : arguments.length <= 0 ? undefined : arguments[0];
         const cache = memoized.cache;
         if (cache.has(key)) {
@@ -785,12 +789,24 @@
      *
      * @module sszvis/svgUtils/ensureDefsElement
      *
-     * @param {d3.selection} selection
-     * @param {string}       type       Element to create
-     * @param {string}       elementId  The ID to assign to the created element
+     * @param selection  The selection to ensure the defs element within
+     * @param type       Element to create, as an SVG tag name
+     * @param elementId  The ID to assign to the created element
+     *
+     * The element type is derived from the tag name, so callers get a precisely typed selection
+     * without naming it twice:
+     *
+     *     ensureDefsElement(sel, "pattern", id)  // Selection<SVGPatternElement, ...>
+     *
+     * The selection parameters are generic because d3's Selection is invariant in its element
+     * parameters - no single non-generic type accepts every selection.
      */
     function ensureDefsElement(selection, type, elementId) {
-      return ensureDefsSelection(selection).selectAll("".concat(type, "#").concat(elementId)).data([0]).join(type).attr("id", elementId);
+      return ensureDefsSelection(selection).selectAll("".concat(type, "#").concat(elementId)).data([0])
+      // join() reports the union of the elements it entered and those selectAll found.
+      // Naming the entered element here makes both sides the same tag, so the union
+      // collapses on its own and no assertion is needed.
+      .join(type).attr("id", elementId);
     }
     /* Helper functions
     ----------------------------------------------- */
@@ -1285,6 +1301,8 @@
       });
     }
     function makeFlagDot(classed, cx, cy) {
+      // The selection is the one being joined into circles, so its datum is the component's and
+      // its parent parameters are whatever the caller's selection had.
       return dot => {
         dot.join("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true).attr("r", 3.5).attr("cx", cx).attr("cy", cy);
       };
@@ -1805,7 +1823,9 @@
       const renderer = tooltipRenderer();
       return component().delegate("header", renderer).delegate("body", renderer).delegate("orientation", renderer).delegate("dx", renderer).delegate("dy", renderer).delegate("opacity", renderer).prop("renderInto").prop("visible", functor).visible(false).renderSelection(selection => {
         const props = selection.props();
-        const intoBCR = props.renderInto.node().getBoundingClientRect();
+        const intoNode = props.renderInto.node();
+        if (!intoNode) throw new Error("[annotation/tooltip] renderInto is an empty selection");
+        const intoBCR = intoNode.getBoundingClientRect();
         const tooltipData = [];
         selection.each(function (d) {
           if (props.visible(d)) {
@@ -1988,7 +2008,7 @@
      * Detect whether the current browser supports SVG filters
      */
     function supportsSVGFilters() {
-      return window["SVGFEColorMatrixElement"] !== undefined && SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE === 2;
+      return window.SVGFEColorMatrixElement !== undefined && SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE === 2;
     }
 
     // src/utils/env.ts
@@ -3209,9 +3229,7 @@
      */
     function aspectRatio(x, y) {
       const ar = x / y;
-      return function (width) {
-        return width / ar;
-      };
+      return width => width / ar;
     }
     /**
      * aspectRatio4to3
@@ -3234,9 +3252,7 @@
      *   - desk
      */
     const AR12TO5_MAX_HEIGHT = 500;
-    const aspectRatio12to5 = function (width) {
-      return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
-    };
+    const aspectRatio12to5 = width => Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
     aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
     /**
      * aspectRatioSquare
@@ -3252,9 +3268,7 @@
      *   - desk
      */
     const SQUARE_MAX_HEIGHT = 420;
-    const aspectRatioSquare = function (width) {
-      return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
-    };
+    const aspectRatioSquare = width => Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
     aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
     /**
      * aspectRatioPortrait
@@ -3270,9 +3284,7 @@
      *   - desk
      */
     const PORTRAIT_MAX_HEIGHT = 600;
-    const aspectRatioPortrait = function (width) {
-      return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
-    };
+    const aspectRatioPortrait = width => Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
     aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
     /**
      * aspectRatioAuto
@@ -3296,7 +3308,7 @@
       // lap-sized devices
       _: aspectRatio12to5 // all other cases, including desk
     };
-    const aspectRatioAuto = function (measurement) {
+    const aspectRatioAuto = measurement => {
       const bp = breakpointFind(breakpointDefaultSpec(), measurement);
       const ar = defaultAspectRatios[(bp === null || bp === void 0 ? void 0 : bp.name) || "_"];
       return ar(measurement.width);
@@ -3419,7 +3431,10 @@
      * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
      * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
      */
-    function textWrap(selection, width, paddingRightLeft, paddingTopBottom) {
+    function textWrap(
+    // Wrapping reads and rewrites the <text> nodes themselves, so the element parameter is
+    // fixed; the rest stay generic so any text selection can be passed.
+    selection, width, paddingRightLeft, paddingTopBottom) {
       const padRightLeft = paddingRightLeft || 5; //Default padding (5px)
       const padTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
       const maxWidth = width; //I store the tooltip max width
@@ -3817,7 +3832,8 @@
             let textContour = g.select(".sszvis-axis__label-contour");
             if (textContour.empty() && textNode && "cloneNode" in textNode) {
               textContour = d3.select(textNode.cloneNode(true)).classed("sszvis-axis__label-contour", true);
-              this.insertBefore(textContour.node(), textNode);
+              const contourNode = textContour.node();
+              if (contourNode) this.insertBefore(contourNode, textNode);
             }
             if (textNode && "textContent" in textNode) {
               textContour.text(textNode.textContent || "");
@@ -3837,12 +3853,14 @@
         if (domain[i] !== undefined) values.push(domain[i]);
       }
       // include the last value
-      if (domain[domain.length - 1] !== "undefined") values.push(domain[domain.length - 1]);
+      if (domain[domain.length - 1] !== undefined) values.push(domain[domain.length - 1]);
       this.tickValues(values);
       return count;
     };
     const axisX = () => axis().yOffset(2) //gap between chart and x-axis
-    .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
+    .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6)
+    // The x-axis is numeric; arity(1, ...) drops the index d3 passes as a second argument.
+    .tickFormat(arity(1, formatNumber));
     axisX.time = () => axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
     axisX.ordinal = () => axisX()
     // extend this class a little with a custom implementation of 'ticks'
@@ -4027,7 +4045,10 @@
           };
           win.on("mouseup.sszvis-behavior-move", stopDragging);
           doc.on("mouseout.sszvis-behavior-move", () => {
-            const from = args[0].relatedTarget || args[0].toElement;
+            // toElement is a legacy, non-standard alias for relatedTarget and is not in
+            // the DOM types; read it reflectively rather than restating the event's type.
+            const legacyToElement = Reflect.get(args[0], "toElement");
+            const from = args[0].relatedTarget || (legacyToElement instanceof Element ? legacyToElement : null);
             if (!from || from.nodeName === "HTML") {
               stopDragging();
             }
@@ -4444,9 +4465,7 @@
           if (!parent) return;
           const cbox = parent.getBoundingClientRect();
           const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
-          if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
-            if (this) event.apply("over", this, [e, data[datumIdx]]);
-          }
+          if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])]) && this) event.apply("over", this, [e, data[datumIdx]]);
         }).on("mousemove", function (e) {
           const parent = this.parentNode;
           if (!parent) return;
@@ -4472,18 +4491,13 @@
           if (eventNearPoint(firstTouch$1, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
             e.preventDefault();
             if (this) event.apply("over", this, [e, data[datumIdx]]);
-            // Attach these handlers only if the initial touch is within the max distance from the voronoi center
-            // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
-            // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
-            // when users are performing touches that cause scrolling, we want to avoid firing the events.
-            const elementContext = this;
             const pan = () => {
               const touchEvent = firstTouch(e);
               if (!touchEvent) return;
               const element = elementFromEvent(touchEvent);
               const panDatum = datumFromPannableElement(element);
               if (panDatum === null) {
-                if (elementContext) event.apply("out", elementContext, [e]);
+                if (this) event.apply("out", this, [e]);
               } else {
                 const panParent = element === null || element === void 0 ? void 0 : element.parentNode;
                 if (!panParent) return;
@@ -4496,15 +4510,15 @@
                   if (e.cancelable) {
                     e.preventDefault();
                   }
-                  if (elementContext) event.apply("over", elementContext, [e, panDatum.data]);
+                  if (this) event.apply("over", this, [e, panDatum.data]);
                 } else {
-                  if (elementContext) event.apply("out", elementContext, [e]);
+                  if (this) event.apply("out", this, [e]);
                 }
               }
             };
             const end = () => {
-              if (elementContext) event.apply("out", elementContext, [e]);
-              d3.select(elementContext).on("touchmove", null).on("touchend", null);
+              if (this) event.apply("out", this, [e]);
+              d3.select(this).on("touchmove", null).on("touchend", null);
             };
             d3.select(this).on("touchmove", pan).on("touchend", end);
           }
@@ -4552,20 +4566,29 @@
      *                      screenHeight: {number} The innerHeight of the screen
      */
     const measureDimensions = arg => {
-      let node;
-      if (isString(arg)) {
-        node = d3.select(arg).node();
-      } else if (isSelection(arg)) {
-        node = arg.node();
-      } else {
-        node = arg;
-      }
+      const node = measurableNode(arg);
       return {
         width: node ? node.getBoundingClientRect().width : undefined,
         screenWidth: window.innerWidth,
         screenHeight: window.innerHeight
       };
     };
+    /**
+     * The element a MeasurableElement refers to, or null when there is nothing to measure.
+     *
+     * Takes `unknown` rather than the generic parameter type: the three cases are told apart at
+     * runtime, and callers do pass null - the width is reported as undefined for it, which
+     * test/measure.test.ts pins.
+     */
+    function measurableNode(arg) {
+      if (isString(arg)) return d3.select(arg).node();
+      if (isSelection(arg)) {
+        // A selection's node may be any BaseType, but only an Element can be measured.
+        const selected = arg.node();
+        return selected instanceof Element ? selected : null;
+      }
+      return arg instanceof Element ? arg : null;
+    }
     /**
      * measureText
      *
@@ -4583,7 +4606,8 @@
      **/
     const measureText = (() => {
       const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d"); // Non-null assertion since canvas 2d context is always available
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("[measureText] Could not acquire a 2d canvas context");
       const cache = {};
       return (fontSize, fontFace, text) => {
         const key = [fontSize, fontFace, text].join("-");
@@ -4816,6 +4840,8 @@
     function cascade() {
       const _cascade = {};
       const keys = [];
+      // Stored as a string sorter: the grouping stringifies its keys, so that is what a
+      // sorter is handed at runtime whatever K the caller declared.
       const sorts = [];
       let valuesSort;
       function make(data, depth) {
@@ -4824,24 +4850,27 @@
           return data;
         }
         const sorter = sorts[depth];
-        const key = keys[depth++];
+        const key = keys[depth];
+        const nextDepth = depth + 1;
         const grouped = groupBy(data, key.func);
         if (key.type === "obj") {
           const obj = {};
           groupEach(grouped, (value, k) => {
-            obj[k] = make(value, depth);
+            obj[k] = make(value, nextDepth);
           });
           return obj;
-        } else if (key.type === "arr") {
+        }
+        // key.type is "obj" | "arr", so the remaining case is "arr".
+        {
           const arr = [];
           if (sorter) {
             const groupKeys = Object.keys(grouped).sort(sorter);
             arrEach(groupKeys, k => {
-              arr.push(make(grouped[k], depth));
+              arr.push(make(grouped[k], nextDepth));
             });
           } else {
             groupEach(grouped, value => {
-              arr.push(make(value, depth));
+              arr.push(make(value, nextDepth));
             });
           }
           return arr;
@@ -5017,7 +5046,9 @@
       const nativeDomain = scale.domain;
       if (!scale.range()) return scale;
       const length = scale.range().length;
-      scale.domain = function (dom) {
+      // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+      // Reflect.set writes it without having to restate the scale's type.
+      const replaceDomain = function (dom) {
         if (!dom) return nativeDomain.call(this, []);
         const xDomain = [];
         for (let i = 0; i < length; i++) {
@@ -5025,6 +5056,7 @@
         }
         return nativeDomain.call(this, xDomain);
       };
+      Reflect.set(scale, "domain", replaceDomain);
       return scale;
     }
     function decorateLinearScale(scale) {
@@ -5039,7 +5071,9 @@
     }
     function interpolatedColorScale(scale) {
       const nativeDomain = scale.domain;
-      scale.domain = function (dom) {
+      // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+      // Reflect.set writes it without having to restate the scale's type.
+      const replaceDomain = function (dom) {
         if (arguments.length === 1 && dom && dom.length === 2) {
           const threeDomain = [dom[0], d3.mean(dom) || 0, dom[1]];
           return nativeDomain.call(this, threeDomain);
@@ -5047,6 +5081,7 @@
           return Reflect.apply(nativeDomain, this, arguments);
         }
       };
+      Reflect.set(scale, "domain", replaceDomain);
       return scale;
     }
     /* Helper functions
@@ -5538,7 +5573,6 @@
      * function returning null, which d3 removes the style for - the same thing it does when
      * handed undefined directly.
      */
-    const styleValue$2 = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
     /**
      * Whether a value counts as missing, and so breaks the line at that point.
      *
@@ -5554,7 +5588,12 @@
      */
     const isMissingVal = value => Number.isNaN(Number(value));
     function line () {
-      return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+      return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
+      // The default layer type L is P[], so the values ARE the layer and identity is correct.
+      // A caller who sets a different L must supply a matching accessor; the constraint
+      // cannot express "identity is valid only for the default instantiation".
+      .valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+        var _props$stroke, _props$strokeWidth;
         const selection = d3.select(this);
         const props = selection.props();
         // Layouts
@@ -5573,8 +5612,8 @@
         const pathData = function (datum, index) {
           return line(props.valuesAccessor.call(this, datum, index));
         };
-        const stroke = styleValue$2(props.stroke);
-        const strokeWidth = styleValue$2(props.strokeWidth);
+        const stroke = valueFn((_props$stroke = props.stroke) !== null && _props$stroke !== void 0 ? _props$stroke : null);
+        const strokeWidth = valueFn((_props$strokeWidth = props.strokeWidth) !== null && _props$strokeWidth !== void 0 ? _props$strokeWidth : null);
         const path = selection.selectAll(".sszvis-line").data(data, props.key).join("path").classed("sszvis-line", true).style("stroke", stroke);
         path.order();
         // The visual properties are applied to the transition when there is one, so the two
@@ -5708,7 +5747,7 @@
       seriesAcc, valueAcc) => data => {
         const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
         // Collect all keys ()
-        const keys = rows.reduce((a, row) => set$1([...a, ...Object.keys(row)]), []);
+        const keys = set$1(rows.flatMap(row => Object.keys(row)));
         const stacks = d3.stack().keys(keys)
         // Only the first datum of each cell is read, and the read is unguarded: a stack
         // that is missing one of the series keys throws here.
@@ -5850,6 +5889,126 @@
       bars.selectAll("[data-tooltip-anchor]").call(tooltip);
     });
 
+    function prepareHierarchyData(data, options) {
+      if (data !== undefined && options !== undefined) {
+        const layout = createHierarchyLayout();
+        options.layers.forEach(layer => {
+          layout.layer(layer);
+        });
+        layout.value(options.valueAccessor);
+        return layout.calculate(data);
+      }
+      // Otherwise, return the chained API
+      return createHierarchyLayout();
+    }
+    function createHierarchyLayout() {
+      const layers = [];
+      let valueAcc = identity;
+      let sortFn = (_a, _b) => 0;
+      const api = {
+        calculate: data => {
+          if (layers.length === 0) {
+            throw new Error("At least one layer must be specified before calculating hierarchy data");
+          }
+          const nested = unwrapNested(d3.rollup(data, first, ...layers));
+          const rootData = {
+            _tag: "root",
+            children: nested
+          };
+          return d3.hierarchy(rootData, d => {
+            return d._tag === "leaf" ? undefined : d.children;
+          }).sort(sortFn).sum(node => {
+            return node._tag === "leaf" ? valueAcc(node.data) : 0;
+          });
+        },
+        layer: keyFunc => {
+          layers.push(keyFunc);
+          return api;
+        },
+        value: accfn => {
+          valueAcc = accfn;
+          return api;
+        },
+        sort: sortFunc => {
+          sortFn = sortFunc;
+          return api;
+        }
+      };
+      return api;
+    } // Helper function to safely unwrap nested rollup data
+    /**
+     * Helper function to safely unwrap nested rollup data.
+     * Handles uneven tree structures where some branches terminate earlier than others.
+     * When a layer accessor returns null, the node will use its parent's key as a fallback
+     * to ensure labels remain functional.
+     *
+     * @param roll - The nested Map structure from d3.rollup()
+     * @param parentKey - The key of the parent node (used as fallback for null keys)
+     * @param rootKey - The top-level category key (used for color mapping)
+     * @returns Array of NodeDatum objects representing the hierarchy
+     */
+    function unwrapNested(roll) {
+      let parentKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      let rootKey = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+      const rollupMap = roll;
+      return Array.from(rollupMap, _ref => {
+        var _ref2;
+        let [key, values] = _ref;
+        // Use parent key as fallback when current key is null/undefined
+        const effectiveKey = (_ref2 = key !== null && key !== void 0 ? key : parentKey) !== null && _ref2 !== void 0 ? _ref2 : "";
+        // For root category, use the current key if we're at the first level (rootKey is null)
+        const effectiveRootKey = rootKey !== null && rootKey !== void 0 ? rootKey : effectiveKey;
+        if (values instanceof Map && values.size > 0) {
+          // Branch node - has children
+          return {
+            _tag: "branch",
+            key: effectiveKey,
+            rootKey: effectiveRootKey,
+            children: unwrapNested(values, effectiveKey, effectiveRootKey)
+          };
+        } else {
+          // Leaf node - has data
+          return {
+            _tag: "leaf",
+            key: effectiveKey,
+            rootKey: effectiveRootKey,
+            data: values
+          };
+        }
+      });
+    }
+    /** The fill used when a node carries no key the colour scale can be looked up with. */
+    const HIERARCHY_FALLBACK_COLOR = "#cccccc";
+    /**
+     * The colour key a hierarchy node inherits: its own rootKey when the layout wrote one,
+     * otherwise the key of its top-level ancestor (the child of the root). Leaves and branches
+     * of one category therefore share a colour even when only the root was tagged.
+     *
+     * Returns undefined when neither is available; callers decide whether to fall back to the
+     * node's own key.
+     */
+    function inheritedColorKey(node) {
+      if ("rootKey" in node.data && node.data.rootKey) return node.data.rootKey;
+      const ancestors = node.ancestors();
+      const topLevel = ancestors.find((_, i) => {
+        var _ancestors;
+        return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
+      });
+      if (topLevel && "key" in topLevel.data) return topLevel.data.key;
+      return undefined;
+    }
+    /** `inheritedColorKey`, falling back to the node's own key. */
+    function colorKeyOf(node) {
+      const inherited = inheritedColorKey(node);
+      if (inherited !== undefined) return inherited;
+      return "key" in node.data ? node.data.key : undefined;
+    }
+    /** The fill a hierarchy node is drawn with, or the grey fallback when it has no key. */
+    function nodeColor(node, colorScale) {
+      const key = colorKeyOf(node);
+      return key === undefined ? HIERARCHY_FALLBACK_COLOR : colorScale(key);
+    }
+
     /**
      * Pack component
      *
@@ -5916,44 +6075,13 @@
             // Branch nodes should have a light fill to be able to click them
             return "white";
           }
-          // Leaf nodes - use rootKey for consistent color mapping
-          if ("rootKey" in d.data && d.data.rootKey) {
-            return props.colorScale(d.data.rootKey);
-          }
-          // Fallback: find top-level category by traversing ancestors
-          const ancestors = d.ancestors();
-          const topLevelCategory = ancestors.find((_, i) => {
-            var _ancestors;
-            return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
-          });
-          if (topLevelCategory && "key" in topLevelCategory.data) {
-            return props.colorScale(topLevelCategory.data.key);
-          } else if ("key" in d.data) {
-            return props.colorScale(d.data.key);
-          }
-          return "#cccccc"; // Default fill if no key found
+          return nodeColor(d, props.colorScale);
         }).attr("stroke", d => {
-          // Branch nodes (categories) get color stroke, leaf nodes get white stroke
-          // Leaf nodes - use rootKey for consistent color mapping
-          if ("rootKey" in d.data && d.data.rootKey) {
-            return props.colorScale(d.data.rootKey);
-          }
-          // Fallback: find top-level category by traversing ancestors
-          const ancestors = d.ancestors();
-          const topLevelCategory = ancestors.find((_, i) => {
-            var _ancestors2;
-            return i < ancestors.length - 1 && ((_ancestors2 = ancestors[i + 1]) === null || _ancestors2 === void 0 ? void 0 : _ancestors2.data._tag) === "root";
-          });
-          if (topLevelCategory && "key" in topLevelCategory.data) {
-            return props.colorScale(topLevelCategory.data.key);
-          } else if (d.children) {
-            if ("key" in d.data) {
-              return props.colorScale(d.data.key);
-            }
-            return "#cccccc"; // Default stroke color for branches
-          } else {
-            return props.circleStroke;
-          }
+          // Branches carry the category colour; leaves fall back to the configured stroke.
+          const inherited = inheritedColorKey(d);
+          if (inherited !== undefined) return props.colorScale(inherited);
+          if (!d.children) return props.circleStroke;
+          return "key" in d.data ? props.colorScale(d.data.key) : HIERARCHY_FALLBACK_COLOR;
         }).attr("stroke-width", d => {
           // Branch nodes get thicker stroke to make them more visible
           return d.children ? 2 : props.circleStrokeWidth;
@@ -5973,25 +6101,7 @@
           const labelXAcc = d => d.x;
           const labelYAcc = d => d.y + fontSize / 3;
           const labelFillAcc = d => {
-            const bgColor = () => {
-              // Use rootKey for consistent color mapping (same as fill logic)
-              if ("rootKey" in d.data && d.data.rootKey) {
-                return props.colorScale(d.data.rootKey);
-              }
-              // Fallback: find top-level category
-              const ancestors = d.ancestors();
-              const topLevelCategory = ancestors.find((_, i) => {
-                var _ancestors3;
-                return i < ancestors.length - 1 && ((_ancestors3 = ancestors[i + 1]) === null || _ancestors3 === void 0 ? void 0 : _ancestors3.data._tag) === "root";
-              });
-              if (topLevelCategory && "key" in topLevelCategory.data) {
-                return props.colorScale(topLevelCategory.data.key);
-              } else if ("key" in d.data) {
-                return props.colorScale(d.data.key);
-              }
-              return "#cccccc"; // Default fill if no key found
-            };
-            return getAccessibleTextColor(bgColor());
+            return getAccessibleTextColor(nodeColor(d, props.colorScale));
           };
           // Filter data for labels - only show labels on leaf nodes that are large enough
           const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < d.r / 3);
@@ -6685,9 +6795,9 @@
      * which d3 removes the attribute for - the same thing it does when handed undefined
      * directly.
      */
-    const styleValue$1 = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
     function stackedArea () {
       return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("transition").transition(true).render(function (data) {
+        var _props$fill;
         const selection = d3.select(this);
         const props = selection.props();
         // Layouts
@@ -6710,11 +6820,11 @@
         }
         // Rendering
         const pathData = datum => areaGen(datum);
-        const fill = styleValue$1(props.fill);
+        const fill = valueFn((_props$fill = props.fill) !== null && _props$fill !== void 0 ? _props$fill : null);
         // The white hairline separating two touching layers. Applied with a truthiness check
         // rather than an undefined one, so a null or empty stroke is replaced by it too.
-        const stroke = styleValue$1(props.stroke || "#ffffff");
-        const strokeWidth = styleValue$1(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+        const stroke = valueFn(props.stroke || "#ffffff");
+        const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
         const paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
         // Every visual property is applied to the transition when there is one, so the two
         // branches are spelled out rather than sharing a variable - a d3 transition and a d3
@@ -6932,9 +7042,13 @@
      * which d3 removes the attribute for - the same thing it does when handed undefined
      * directly.
      */
-    const styleValue = value => typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
     function stackedAreaMultiples () {
-      return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+      return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
+      // The default layer type L is P[], so the values ARE the layer and identity is correct.
+      // A caller who sets a different L must supply a matching accessor; the constraint
+      // cannot express "identity is valid only for the default instantiation".
+      .valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+        var _props$fill, _props$stroke;
         const selection = d3.select(this);
         const props = selection.props();
         // Layouts
@@ -6967,10 +7081,10 @@
         const pathData = function (datum, index, group) {
           return areaGen(props.valuesAccessor.call(this, datum, index, group));
         };
-        const fill = styleValue(props.fill);
+        const fill = valueFn((_props$fill = props.fill) !== null && _props$fill !== void 0 ? _props$fill : null);
         // No default, where stackedArea falls back to a #ffffff hairline.
-        const stroke = styleValue(props.stroke);
-        const strokeWidth = styleValue(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+        const stroke = valueFn((_props$stroke = props.stroke) !== null && _props$stroke !== void 0 ? _props$stroke : null);
+        const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
         const paths = selection.selectAll("path.sszvis-path").data(layers, props.key).join("path").classed("sszvis-path", true);
         // The transition is created and its return value dropped, so it carries no tweens and
         // every attribute below is written to the plain selection: nothing animates, while the
@@ -7517,7 +7631,7 @@
             // The transition tweens from x0 and x1 to _x0 and _x1
           }
         }).data(data).join("path").attr("class", "sszvis-sunburst-arc");
-        arcs.attr("stroke", strokeAccessor(props.stroke)).attr("fill", fillColor);
+        arcs.attr("stroke", valueFn(props.stroke)).attr("fill", fillColor);
         arcs.transition(defaultTransition()).attrTween("d", d => {
           const x0Interp = d3.interpolate(d.x0, d._x0);
           const x1Interp = d3.interpolate(d.x1, d._x1);
@@ -7542,15 +7656,6 @@
         selection.call(arcTooltipAnchor);
       });
       return sunburstComponent;
-    }
-    /**
-     * Resolves the stroke property to the accessor d3 needs, since its attr overloads do not take
-     * the constant-or-accessor union. An accessor is returned as it stands rather than wrapped, so
-     * d3 still calls it with the element as its receiver and with the index and group arguments;
-     * a constant becomes an accessor returning it, which d3 reads the same way as the constant.
-     */
-    function strokeAccessor(value) {
-      return typeof value === "function" ? value : () => value;
     }
 
     /**
@@ -7612,20 +7717,7 @@
         // Filter out very small rectangles and show only leaf nodes
         const visibleData = treemapData.filter(d => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5).filter(d => !d.children);
         const rectangles = selection.selectAll(".sszvis-treemap-rect").data(visibleData).join("rect").classed("sszvis-treemap-rect", true).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0).attr("fill", d => {
-          if ("rootKey" in d.data && d.data.rootKey) {
-            return props.colorScale(d.data.rootKey);
-          }
-          const ancestors = d.ancestors();
-          const topLevelCategory = ancestors.find((_, i) => {
-            var _ancestors;
-            return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
-          });
-          if (topLevelCategory && "key" in topLevelCategory.data) {
-            return props.colorScale(topLevelCategory.data.key);
-          } else if ("key" in d.data) {
-            return props.colorScale(d.data.key);
-          }
-          return "#cccccc"; // Default fill if no key found
+          return nodeColor(d, props.colorScale);
         }).attr("stroke", "#ffffff").attr("stroke-width", 1).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => {
           var _props$onClick;
           return (_props$onClick = props.onClick) === null || _props$onClick === void 0 ? void 0 : _props$onClick.call(props, event, d);
@@ -7677,23 +7769,7 @@
           const labelXAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").x;
           const labelYAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").y;
           const labelFillAcc = d => {
-            const bgColor = () => {
-              if ("rootKey" in d.data && d.data.rootKey) {
-                return props.colorScale(d.data.rootKey);
-              }
-              const ancestors = d.ancestors();
-              const topLevelCategory = ancestors.find((_, i) => {
-                var _ancestors2;
-                return i < ancestors.length - 1 && ((_ancestors2 = ancestors[i + 1]) === null || _ancestors2 === void 0 ? void 0 : _ancestors2.data._tag) === "root";
-              });
-              if (topLevelCategory && "key" in topLevelCategory.data) {
-                return props.colorScale(topLevelCategory.data.key);
-              } else if ("key" in d.data) {
-                return props.colorScale(d.data.key);
-              }
-              return "#cccccc"; // Default fill if no key found
-            };
-            return getAccessibleTextColor(bgColor());
+            return getAccessibleTextColor(nodeColor(d, props.colorScale));
           };
           // Filter data for labels - only show labels on leaf nodes that are large enough
           const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < (d.x1 - d.x0) / 7); // Rough estimate of fitting text
@@ -8051,7 +8127,11 @@
       return a.includes(x);
     }
     function slider() {
-      return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).prop("slant").tickLabels(identity).prop("label", functor).label(identity).render(function () {
+      return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).prop("slant")
+      // fn.identity is the documented "no formatting" default. It returns its argument, so it
+      // cannot satisfy a formatter type that promises a string - d3 stringifies the value at
+      // render time, which its own types do not model.
+      .tickLabels(identity).prop("label", functor).label(identity).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
         const scaleDomain = props.scale.domain();
@@ -8150,9 +8230,11 @@
       } = bounds$1 || bounds();
       const key = metadata.key || "default";
       const elementDataKey = "data-sszvis-html-".concat(key);
-      const root = isSelection(selector) ? selector : d3.select(selector);
-      root.classed("sszvis-outer-container", true);
-      return root.selectAll("[data-sszvis-html-layer][".concat(elementDataKey, "]")).data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", "".concat(padding.left, "px")).style("top", "".concat(padding.top, "px"));
+      const render = root => {
+        root.classed("sszvis-outer-container", true);
+        return root.selectAll("[data-sszvis-html-layer][".concat(elementDataKey, "]")).data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", "".concat(padding.left, "px")).style("top", "".concat(padding.top, "px"));
+      };
+      return withRootSelection(selector, render);
     }
 
     /**
@@ -8185,11 +8267,13 @@
       const elementDataKey = "data-sszvis-svg-".concat(key);
       const title = metadata.title || "";
       const description = metadata.description || "";
-      const root = isSelection(selector) ? selector : d3.select(selector);
-      const svg = root.selectAll("svg[".concat(elementDataKey, "]")).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", "".concat(title, " \u2013 ").concat(description)).attr("height", height).attr("width", width);
-      svg.selectAll("title").data([0]).join("title").text(title);
-      svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
-      return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(".concat(padding.left, ",").concat(padding.top, ")"));
+      const render = root => {
+        const svg = root.selectAll("svg[".concat(elementDataKey, "]")).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", "".concat(title, " \u2013 ").concat(description)).attr("height", height).attr("width", width);
+        svg.selectAll("title").data([0]).join("title").text(title);
+        svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
+        return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(".concat(padding.left, ",").concat(padding.top, ")"));
+      };
+      return withRootSelection(selector, render);
     }
 
     /**
@@ -8521,95 +8605,6 @@
         height: tableHeight,
         centeredOffset: Math.max((availableChartWidth - tableWidth) / 2, 0)
       };
-    }
-
-    function prepareHierarchyData(data, options) {
-      if (data !== undefined && options !== undefined) {
-        const layout = createHierarchyLayout();
-        options.layers.forEach(layer => {
-          layout.layer(layer);
-        });
-        layout.value(options.valueAccessor);
-        return layout.calculate(data);
-      }
-      // Otherwise, return the chained API
-      return createHierarchyLayout();
-    }
-    function createHierarchyLayout() {
-      const layers = [];
-      let valueAcc = identity;
-      let sortFn = (_a, _b) => 0;
-      const api = {
-        calculate: data => {
-          if (layers.length === 0) {
-            throw new Error("At least one layer must be specified before calculating hierarchy data");
-          }
-          const nested = unwrapNested(d3.rollup(data, first, ...layers));
-          const rootData = {
-            _tag: "root",
-            children: nested
-          };
-          return d3.hierarchy(rootData, d => {
-            return d._tag === "leaf" ? undefined : d.children;
-          }).sort(sortFn).sum(node => {
-            return node._tag === "leaf" ? valueAcc(node.data) : 0;
-          });
-        },
-        layer: keyFunc => {
-          layers.push(keyFunc);
-          return api;
-        },
-        value: accfn => {
-          valueAcc = accfn;
-          return api;
-        },
-        sort: sortFunc => {
-          sortFn = sortFunc;
-          return api;
-        }
-      };
-      return api;
-    } // Helper function to safely unwrap nested rollup data
-    /**
-     * Helper function to safely unwrap nested rollup data.
-     * Handles uneven tree structures where some branches terminate earlier than others.
-     * When a layer accessor returns null, the node will use its parent's key as a fallback
-     * to ensure labels remain functional.
-     *
-     * @param roll - The nested Map structure from d3.rollup()
-     * @param parentKey - The key of the parent node (used as fallback for null keys)
-     * @param rootKey - The top-level category key (used for color mapping)
-     * @returns Array of NodeDatum objects representing the hierarchy
-     */
-    function unwrapNested(roll) {
-      let parentKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-      let rootKey = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-      const rollupMap = roll;
-      return Array.from(rollupMap, _ref => {
-        var _ref2;
-        let [key, values] = _ref;
-        // Use parent key as fallback when current key is null/undefined
-        const effectiveKey = (_ref2 = key !== null && key !== void 0 ? key : parentKey) !== null && _ref2 !== void 0 ? _ref2 : "";
-        // For root category, use the current key if we're at the first level (rootKey is null)
-        const effectiveRootKey = rootKey !== null && rootKey !== void 0 ? rootKey : effectiveKey;
-        if (values instanceof Map && values.size > 0) {
-          // Branch node - has children
-          return {
-            _tag: "branch",
-            key: effectiveKey,
-            rootKey: effectiveRootKey,
-            children: unwrapNested(values, effectiveKey, effectiveRootKey)
-          };
-        } else {
-          // Leaf node - has data
-          return {
-            _tag: "leaf",
-            key: effectiveKey,
-            rootKey: effectiveRootKey,
-            data: values
-          };
-        }
-      });
     }
 
     /**
@@ -9468,7 +9463,11 @@
      * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
      */
     function linearColorScale () {
-      return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat").labelFormat(identity).render(function () {
+      return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat")
+      // fn.identity is the documented "no formatting" default. It returns its argument, so it
+      // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
+      // at render time, which its own types do not model.
+      .labelFormat(identity).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
         if (!props.scale) {
@@ -9527,7 +9526,11 @@
      * @returns {sszvis.component}
      */
     function radius () {
-      return component().prop("scale").prop("tickFormat").tickFormat(identity).prop("tickValues").render(function () {
+      return component().prop("scale").prop("tickFormat")
+      // fn.identity is the documented "no formatting" default. It returns its argument, so it
+      // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
+      // at render time, which its own types do not model.
+      .tickFormat(identity).prop("tickValues").render(function () {
         const selection = d3.select(this);
         const props = selection.props();
         const tickValues = props.tickValues || defaultTickValues(props.scale);
@@ -9627,7 +9630,7 @@
     // Part of the signature only so that the memoize resolver below can read it.
     _featureBoundsCacheKey) => d3.geoMercator().fitSize([width, height], featureCollection),
     // Memoize resolver
-    (width, height, _, featureBoundsCacheKey) => "" + width + "," + height + "," + featureBoundsCacheKey);
+    (width, height, _, featureBoundsCacheKey) => "".concat(width, ",").concat(height, ",").concat(featureBoundsCacheKey));
     /**
      * This is a special d3.geoPath generator function tailored for rendering maps of
      * Switzerland. The values are chosen specifically to optimize path generation for
@@ -9744,13 +9747,13 @@
       const key = keyName || GEO_KEY_DEFAULT;
       // group the input data by map entity id
       const groupedInputData = Array.isArray(dataset) ? dataset.reduce((m, v) => {
-        m[toLookupKey$2(Reflect.get(v, key))] = v;
+        m[toLookupKey(Reflect.get(v, key))] = v;
         return m;
       }, {}) : {};
       // merge the map features and the input data into new objects that include both
       return geoJson.features.map(feature => ({
         geoJson: feature,
-        datum: groupedInputData[toLookupKey$2(feature.id)]
+        datum: groupedInputData[toLookupKey(feature.id)]
       }));
     }
     /**
@@ -9759,7 +9762,11 @@
      * feature id. Everything else stringifies, which is how a missing key becomes the string
      * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
      */
-    function toLookupKey$2(value) {
+    /**
+     * The key a feature id or datum value is looked up under. Symbols pass through; everything
+     * else is stringified, so numeric and string ids that print the same collide deliberately.
+     */
+    function toLookupKey(value) {
       return typeof value === "symbol" ? value : String(value);
     }
     /**
@@ -10231,9 +10238,6 @@
      * symbols with the same description remain distinct and can never be matched by a string id.
      * Everything else stringifies, which is how a missing key becomes the string "undefined".
      */
-    function toLookupKey$1(value) {
-      return typeof value === "symbol" ? value : String(value);
-    }
     /**
      * Reproduces what this component's event handlers have always done. The JavaScript called
      * `event.over(datum)`, but d3's dispatch provides only on, call, apply and copy - there has never
@@ -10268,11 +10272,11 @@
         const [firstDatum, ...remainingData] = data;
         const groupedInputData = firstDatum;
         for (const datum of remainingData) {
-          groupedInputData[toLookupKey$1(getDataKeyName(datum))] = datum;
+          groupedInputData[toLookupKey(getDataKeyName(datum))] = datum;
         }
         const mergedData = props.geoJson.features.map(feature => ({
           geoJson: feature,
-          datum: groupedInputData[toLookupKey$1(readFeatureKey(feature.properties, props.geoJsonKeyName))]
+          datum: groupedInputData[toLookupKey(readFeatureKey(feature.properties, props.geoJsonKeyName))]
         }));
         function getMapFill(d) {
           return defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
@@ -10301,10 +10305,12 @@
         });
         // the tooltip anchor generator
         const ta = tooltipAnchor().position(d => {
-          const properties = d.geoJson.properties || (d.geoJson.properties = {});
+          if (!d.geoJson.properties) d.geoJson.properties = {};
+          const properties = d.geoJson.properties;
           let sphericalCentroid = properties.sphericalCentroid;
           if (!sphericalCentroid) {
-            properties.sphericalCentroid = sphericalCentroid = d3.geoCentroid(d.geoJson);
+            sphericalCentroid = d3.geoCentroid(d.geoJson);
+            properties.sphericalCentroid = sphericalCentroid;
           }
           // d3's own typings expect the projection type as a type argument here.
           const point = props.mapPath.projection()(sphericalCentroid);
@@ -10452,9 +10458,6 @@
      * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
      * with the geojson renderer's own lookup.
      */
-    function toLookupKey(value) {
-      return typeof value === "symbol" ? value : String(value);
-    }
     function mapRendererHighlight () {
       return component().prop("keyName").keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
       .prop("geoJson").prop("mapPath").prop("highlight").highlight([]) // an array of data values to highlight
@@ -10593,15 +10596,6 @@
       }
       return projected[axis];
     }
-    /**
-     * Normalises a value prop into the single accessor shape d3's overloads can resolve. An accessor is
-     * passed through untouched, so it keeps receiving d3's arguments and node context; a constant
-     * becomes a function returning it, which d3 applies identically - both paths end in the same
-     * assignment. The same idiom as src/map/renderer/mesh.ts.
-     */
-    function toValue(value) {
-      return typeof value === "function" ? value : () => value;
-    }
     function image () {
       return component().prop("projection").prop("src").prop("geoBounds").prop("opacity").opacity(1).render(function () {
         const selection = d3.select(this);
@@ -10616,7 +10610,7 @@
         // fails. See test/map/renderer/image.test.ts.
         const topLeft = props.projection(props.geoBounds[0]);
         const bottomRight = props.projection(props.geoBounds[1]);
-        image.attr("src", toValue(props.src)).style("left", Math.round(coordinate$1(topLeft, 0)) + "px").style("top", Math.round(coordinate$1(topLeft, 1)) + "px").style("width", Math.round(coordinate$1(bottomRight, 0) - coordinate$1(topLeft, 0)) + "px").style("height", Math.round(coordinate$1(bottomRight, 1) - coordinate$1(topLeft, 1)) + "px").style("opacity", toValue(props.opacity));
+        image.attr("src", valueFn(props.src)).style("left", "".concat(Math.round(coordinate$1(topLeft, 0)), "px")).style("top", "".concat(Math.round(coordinate$1(topLeft, 1)), "px")).style("width", "".concat(Math.round(coordinate$1(bottomRight, 0) - coordinate$1(topLeft, 0)), "px")).style("height", "".concat(Math.round(coordinate$1(bottomRight, 1) - coordinate$1(topLeft, 1)), "px")).style("opacity", valueFn(props.opacity));
       });
     }
 
@@ -10671,16 +10665,6 @@
      *
      * @return {sszvis.component}
      */
-    /**
-     * Normalises a style prop into the single accessor shape d3's overloads can resolve. An accessor
-     * is passed through untouched, so it keeps receiving d3's arguments and node context; a constant
-     * becomes a function returning it, which d3 applies identically - the constant and function paths
-     * both end in the same setProperty call. Follows the idiom of src/component/dot.ts, minus its
-     * nullish fallback: both props here have defaults, so a constant is never nullish.
-     */
-    function toStyleValue$1(value) {
-      return typeof value === "function" ? value : () => value;
-    }
     function mapRendererMesh () {
       return component().prop("geoJson").prop("mapPath").prop("borderColor").borderColor("white") // A function or string for the color of all borders. Note: all borders have the same color
       .prop("strokeWidth").strokeWidth(1.25).render(function () {
@@ -10688,7 +10672,7 @@
         const props = selection.props();
         // add the map borders. These are rendered as one single path element
         const meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]).join("path").classed("sszvis-map__border", true);
-        meshLine.attr("d", props.mapPath).style("stroke", toStyleValue$1(props.borderColor)).style("stroke-width", toStyleValue$1(props.strokeWidth));
+        meshLine.attr("d", props.mapPath).style("stroke", valueFn(props.borderColor)).style("stroke-width", valueFn(props.strokeWidth));
       });
     }
 
@@ -10784,16 +10768,6 @@
      *
      * @return {sszvis.component}
      */
-    /**
-     * Normalises the colour prop into the single accessor shape d3's overloads can resolve. An accessor
-     * is passed through untouched, so it keeps receiving d3's arguments and node context; a constant
-     * becomes a function returning it, which d3 applies identically - both paths end in the same
-     * setProperty call. The same idiom as src/map/renderer/mesh.ts, minus its nullish fallback: this
-     * prop has no default, and the caller only reaches here once it is truthy.
-     */
-    function toStyleValue(value) {
-      return typeof value === "function" ? value : () => value;
-    }
     function mapRendererPatternedLakeOverlay () {
       return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").fadeOut(true).render(function () {
         const selection = d3.select(this);
@@ -10816,7 +10790,7 @@
         // This path is rendered as a dotted line over the lake shape
         const lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr("d", props.mapPath);
         if (props.lakePathColor) {
-          lakePath.style("stroke", toStyleValue(props.lakePathColor));
+          lakePath.style("stroke", valueFn(props.lakePathColor));
         }
       });
     }
@@ -11351,19 +11325,21 @@
        *   { name: 'large', width: 700 }
        * ])
        */
-      _responsiveProps.breakpoints = function () {
+      const breakpoints = function () {
         if (arguments.length === 0) {
           return breakpointSpec;
         }
-        const bps = arguments.length <= 0 ? undefined : arguments[0];
-        breakpointSpec = breakpointCreateSpec(bps);
+        breakpointSpec = breakpointCreateSpec(arguments.length <= 0 ? undefined : arguments[0]);
         return _responsiveProps;
       };
+      _responsiveProps.breakpoints = breakpoints;
       return _responsiveProps;
     }
     // Helpers
     function isBounds(arg1) {
-      return defined(arg1) && defined(arg1.width) && defined(arg1.screenWidth) && defined(arg1.screenHeight);
+      if (!defined(arg1) || typeof arg1 !== "object") return false;
+      const candidate = arg1;
+      return defined(candidate.width) && defined(candidate.screenWidth) && defined(candidate.screenHeight);
     }
     /**
      * functorizeValues
@@ -11374,11 +11350,7 @@
       const result = {};
       Object.keys(obj).forEach(key => {
         const value = obj[key];
-        if (typeof value === "function") {
-          result[key] = value;
-        } else {
-          result[key] = () => value;
-        }
+        result[key] = typeof value === "function" ? value : () => value;
       });
       return result;
     }
@@ -11703,15 +11675,18 @@
     exports.swissMapProjection = swissMapProjection;
     exports.textWrap = textWrap;
     exports.timeLocale = timeLocale;
+    exports.toLookupKey = toLookupKey;
     exports.tooltip = tooltip;
     exports.tooltipAnchor = tooltipAnchor;
     exports.transformTranslateSubpixelShift = transformTranslateSubpixelShift;
     exports.translateString = translateString;
     exports.treemap = treemap;
+    exports.valueFn = valueFn;
     exports.viewport = viewport;
     exports.voronoi = voronoi;
     exports.widthAdaptiveMapPathStroke = widthAdaptiveMapPathStroke;
     exports.withAlpha = withAlpha;
+    exports.withRootSelection = withRootSelection;
 
 }));
 //# sourceMappingURL=sszvis.js.map

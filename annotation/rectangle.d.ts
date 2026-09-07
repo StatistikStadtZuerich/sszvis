@@ -19,10 +19,10 @@
  *
  * @returns {sszvis.component} a rectangular data area component
  */
-import { type Component } from "../d3-component";
-import type { NumberAccessor, StringAccessor } from "../types";
+import { type ComponentBuilder } from "../d3-component.js";
+import type { NumberAccessor, StringAccessor } from "../types.js";
 type Datum<T = unknown> = T;
-interface RectangleComponent<T = unknown> extends Component {
+interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComponent<T>> {
     x(accessor?: NumberAccessor<Datum<T>>): RectangleComponent<T>;
     y(accessor?: NumberAccessor<Datum<T>>): RectangleComponent<T>;
     width(accessor?: NumberAccessor<Datum<T>>): RectangleComponent<T>;

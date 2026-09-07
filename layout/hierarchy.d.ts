@@ -63,4 +63,19 @@ export declare function prepareHierarchyData<T = unknown>(data: T[], options: {
  * @returns Array of NodeDatum objects representing the hierarchy
  */
 export declare function unwrapNested<T>(roll: Map<string, unknown> | unknown, parentKey?: string | null, rootKey?: string | null): NodeDatum<T>[];
+/** The fill used when a node carries no key the colour scale can be looked up with. */
+export declare const HIERARCHY_FALLBACK_COLOR = "#cccccc";
+/**
+ * The colour key a hierarchy node inherits: its own rootKey when the layout wrote one,
+ * otherwise the key of its top-level ancestor (the child of the root). Leaves and branches
+ * of one category therefore share a colour even when only the root was tagged.
+ *
+ * Returns undefined when neither is available; callers decide whether to fall back to the
+ * node's own key.
+ */
+export declare function inheritedColorKey<T>(node: HierarchyNode<NodeDatum<T>>): string | undefined;
+/** `inheritedColorKey`, falling back to the node's own key. */
+export declare function colorKeyOf<T>(node: HierarchyNode<NodeDatum<T>>): string | undefined;
+/** The fill a hierarchy node is drawn with, or the grey fallback when it has no key. */
+export declare function nodeColor<T>(node: HierarchyNode<NodeDatum<T>>, colorScale: (key: string) => string): string;
 //# sourceMappingURL=hierarchy.d.ts.map

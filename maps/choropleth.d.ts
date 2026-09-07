@@ -93,14 +93,14 @@
  * @return {sszvis.component}
  */
 import { type BaseType, type ExtendedFeatureCollection, type GeoPath, type GeoPermissibleObjects, type ValueFn } from "d3";
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 import { type MergedGeoDatum } from "../map/index.js";
 /**
  * What the render needs of an anchored shape: the two properties it configures before calling it.
  * mapRendererBubble satisfies this, which is the documented use, and so does any other component
  * that carries the pair.
  */
-export interface AnchoredShape<T> extends Component {
+export interface AnchoredShape<T> extends ComponentBuilder<AnchoredShape<T>> {
     mergedData(value: MergedGeoDatum<T>[]): AnchoredShape<T>;
     mapPath(value: GeoPath): AnchoredShape<T>;
 }
@@ -125,7 +125,7 @@ export type ChoroplethEventHandler = (datum: undefined) => void;
  * are spelled out here rather than inherited because a delegate returns this component for
  * chaining, not the renderer.
  */
-export interface ChoroplethComponent<T extends object = object> extends Component {
+export interface ChoroplethComponent<T extends object = object> extends ComponentBuilder<ChoroplethComponent<T>> {
     width(): number | undefined;
     width(value: number): ChoroplethComponent<T>;
     height(): number | undefined;

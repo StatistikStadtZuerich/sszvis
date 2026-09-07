@@ -72,7 +72,11 @@ function contains(x, a) {
   return a.includes(x);
 }
 function slider() {
-  return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).prop("slant").tickLabels(identity).prop("label", functor).label(identity).render(function () {
+  return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).prop("slant")
+  // fn.identity is the documented "no formatting" default. It returns its argument, so it
+  // cannot satisfy a formatter type that promises a string - d3 stringifies the value at
+  // render time, which its own types do not model.
+  .tickLabels(identity).prop("label", functor).label(identity).render(function () {
     const selection = select(this);
     const props = selection.props();
     const scaleDomain = props.scale.domain();

@@ -50,7 +50,7 @@
  * @return {sszvis.component}
  */
 import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
-import { type Component } from "../../d3-component.js";
+import { type ComponentBuilder } from "../../d3-component.js";
 /**
  * A path generator, as this component uses one. A d3.geoPath satisfies this shape, and so does a
  * bare generator function, which is all the runtime requires. It is handed straight to d3 as the
@@ -66,7 +66,7 @@ type MeshPath = ValueFn<BaseType, GeoPermissibleObjects, string | null>;
  * do not say so.
  */
 type MeshValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null>;
-export interface MapRendererMeshComponent extends Component {
+export interface MapRendererMeshComponent extends ComponentBuilder<MapRendererMeshComponent> {
     geoJson(): GeoPermissibleObjects | undefined;
     geoJson(value: GeoPermissibleObjects): MapRendererMeshComponent;
     mapPath(): MeshPath | undefined;

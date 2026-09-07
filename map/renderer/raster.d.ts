@@ -110,7 +110,7 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../../d3-component.js";
+import { type ComponentBuilder } from "../../d3-component.js";
 /** A pixel position, as the position accessor returns one. */
 type Position = [number, number];
 /**
@@ -120,7 +120,7 @@ type Position = [number, number];
 type RasterFill<T> = string | ((datum: T) => string);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredRasterFill<T> = (datum: T) => string;
-export interface MapRendererRasterComponent<T = unknown> extends Component {
+export interface MapRendererRasterComponent<T = unknown> extends ComponentBuilder<MapRendererRasterComponent<T>> {
     debug(): boolean;
     debug(value: boolean): MapRendererRasterComponent<T>;
     width(): number | undefined;

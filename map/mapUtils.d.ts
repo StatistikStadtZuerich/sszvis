@@ -54,7 +54,7 @@ export type PointProjection = (point: GeoPoint) => [number, number] | null;
  * @return {Function}                               The projection function.
  */
 export declare const swissMapProjection: ((width: number, height: number, featureCollection: MapGeoObject, _featureBoundsCacheKey?: string) => GeoProjection) & {
-    cache: Map<string | number, GeoProjection>;
+    cache: Map<unknown, GeoProjection>;
 };
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
@@ -148,6 +148,17 @@ export interface MergedGeoDatum<Datum> {
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
 export declare function prepareMergedGeoData<Datum extends object>(dataset: readonly Datum[] | null | undefined, geoJson: ExtendedFeatureCollection, keyName?: string): MergedGeoDatum<Datum>[];
+/**
+ * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
+ * symbols with the same description remain distinct and can never be matched by a string or numeric
+ * feature id. Everything else stringifies, which is how a missing key becomes the string
+ * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
+ */
+/**
+ * The key a feature id or datum value is looked up under. Symbols pass through; everything
+ * else is stringified, so numeric and string ids that print the same collide deliberately.
+ */
+export declare function toLookupKey(value: unknown): string | symbol;
 /** The properties these utilities read from and write back to a map feature. */
 export interface MapFeatureProperties {
     /** An authored centre, as the string "longitude,latitude". */

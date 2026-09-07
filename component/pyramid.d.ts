@@ -102,7 +102,7 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
+import { type ComponentBuilder } from "../d3-component.js";
 /**
  * The bar dimensions are wrapped by fn.functor on set, so they are always stored as
  * functions by the time the renderer reads them. The parameters are variadic because d3
@@ -127,7 +127,7 @@ type StoredAccessor<D, R> = (datum?: D, index?: number) => R;
  * dimensions, since fn.functor normalises both.
  */
 type PyramidValue<D, R> = R | ValueAccessor<D, R>;
-export interface PyramidComponent<T = unknown, D = unknown> extends Component {
+export interface PyramidComponent<T = unknown, D = unknown> extends ComponentBuilder<PyramidComponent<T, D>> {
     barHeight(): StoredAccessor<D, number>;
     barHeight<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
     barWidth(): StoredAccessor<D, number>;

@@ -15,10 +15,10 @@
  *
  * @returns {sszvis.component}
  */
-import { type Component } from "../d3-component";
-import type { NumberAccessor } from "../types";
+import { type ComponentBuilder } from "../d3-component.js";
+import type { NumberAccessor } from "../types.js";
 type Datum<T = unknown> = T;
-interface RangeFlagComponent<T = unknown> extends Component {
+interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComponent<T>> {
     x(accessor?: NumberAccessor<Datum<T>>): RangeFlagComponent<T>;
     y0(accessor?: NumberAccessor<Datum<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor<Datum<T>>): RangeFlagComponent<T>;

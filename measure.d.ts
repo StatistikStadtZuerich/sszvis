@@ -3,12 +3,12 @@
  *
  * @module sszvis/measure
  */
-import { type Selection } from "d3";
+import { type BaseType, type Selection } from "d3";
 import type { DimensionMeasurement } from "./types.js";
 /**
  * Type for elements that can be measured - selector string, DOM element, or d3 selection
  */
-export type MeasurableElement = string | Element | Selection<any, any, any, any>;
+export type MeasurableElement<G extends BaseType = BaseType, D = unknown, P extends BaseType = BaseType, PD = unknown> = string | Element | Selection<G, D, P, PD>;
 /**
  * measureDimensions
  *
@@ -25,7 +25,7 @@ export type MeasurableElement = string | Element | Selection<any, any, any, any>
  *                      screenWidth: {number} The innerWidth of the screen
  *                      screenHeight: {number} The innerHeight of the screen
  */
-export declare const measureDimensions: (arg: MeasurableElement) => DimensionMeasurement;
+export declare const measureDimensions: <G extends BaseType = BaseType, D = unknown, P extends BaseType = BaseType, PD = unknown>(arg: MeasurableElement<G, D, P, PD>) => DimensionMeasurement;
 /**
  * measureText
  *

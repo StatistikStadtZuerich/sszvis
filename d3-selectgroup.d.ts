@@ -1,4 +1,3 @@
-import type { AnySelection } from "./types.js";
 /**
  * d3.selection plugin to simplify creating idempotent groups that are not
  * recreated when rendered again.
@@ -10,7 +9,9 @@ import type { AnySelection } from "./types.js";
  */
 declare module "d3" {
     interface Selection<GElement, Datum, PElement, PDatum> {
-        selectGroup(key: string): AnySelection;
+        /** The group is a <g> whose parent is the element this selection holds. */
+        selectGroup(key: string): Selection<SVGGElement, Datum, GElement, Datum>;
     }
 }
+export {};
 //# sourceMappingURL=d3-selectgroup.d.ts.map

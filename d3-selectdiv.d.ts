@@ -1,4 +1,3 @@
-import type { AnySelection } from "./types.js";
 /**
  * d3.selection plugin to simplify creating idempotent divs that are not
  * recreated when rendered again.
@@ -10,7 +9,9 @@ import type { AnySelection } from "./types.js";
  */
 declare module "d3" {
     interface Selection<GElement, Datum, PElement, PDatum> {
-        selectDiv(key: string): AnySelection;
+        /** The div's parent is the element this selection holds. */
+        selectDiv(key: string): Selection<HTMLDivElement, Datum, GElement, Datum>;
     }
 }
+export {};
 //# sourceMappingURL=d3-selectdiv.d.ts.map

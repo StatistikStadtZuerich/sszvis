@@ -40,9 +40,9 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component";
+import { type ComponentBuilder } from "../d3-component.js";
 type Datum<T = unknown> = T;
-interface TooltipAnchorComponent<T = unknown> extends Component {
+interface TooltipAnchorComponent<T = unknown> extends ComponentBuilder<TooltipAnchorComponent<T>> {
     position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
     debug(value?: boolean): TooltipAnchorComponent<T>;
 }

@@ -1,7 +1,7 @@
 import { select } from 'd3';
 import { component } from '../../d3-component.js';
 import { functor } from '../../fn.js';
-import { GEO_KEY_DEFAULT } from '../mapUtils.js';
+import { GEO_KEY_DEFAULT, toLookupKey } from '../mapUtils.js';
 
 /**
  * highlight renderer component
@@ -122,9 +122,6 @@ const toObject = Object;
  * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
  * with the geojson renderer's own lookup.
  */
-function toLookupKey(value) {
-  return typeof value === "symbol" ? value : String(value);
-}
 function mapRendererHighlight () {
   return component().prop("keyName").keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
   .prop("geoJson").prop("mapPath").prop("highlight").highlight([]) // an array of data values to highlight

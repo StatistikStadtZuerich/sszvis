@@ -81,7 +81,7 @@
  * @return {sszvis.component}
  */
 import { type ExtendedFeature, type ExtendedFeatureCollection, type GeoPath } from "d3";
-import { type Component } from "../../d3-component.js";
+import { type ComponentBuilder } from "../../d3-component.js";
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
 type GeoJsonValue<T, R> = R | ((datum: T) => R);
 /**
@@ -100,7 +100,7 @@ interface MergedFeature {
 }
 /** A handler as this component's own event API delivers it. */
 type GeoJsonEventHandler = (datum: unknown) => void;
-export interface MapRendererGeoJsonComponent<T = unknown> extends Component {
+export interface MapRendererGeoJsonComponent<T = unknown> extends ComponentBuilder<MapRendererGeoJsonComponent<T>> {
     dataKeyName(): string;
     dataKeyName(value: string): MapRendererGeoJsonComponent<T>;
     geoJsonKeyName(): string;

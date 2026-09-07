@@ -98,6 +98,8 @@ function arrEach(arr, func) {
 function cascade() {
   const _cascade = {};
   const keys = [];
+  // Stored as a string sorter: the grouping stringifies its keys, so that is what a
+  // sorter is handed at runtime whatever K the caller declared.
   const sorts = [];
   let valuesSort;
   function make(data, depth) {
@@ -106,24 +108,27 @@ function cascade() {
       return data;
     }
     const sorter = sorts[depth];
-    const key = keys[depth++];
+    const key = keys[depth];
+    const nextDepth = depth + 1;
     const grouped = groupBy(data, key.func);
     if (key.type === "obj") {
       const obj = {};
       groupEach(grouped, (value, k) => {
-        obj[k] = make(value, depth);
+        obj[k] = make(value, nextDepth);
       });
       return obj;
-    } else if (key.type === "arr") {
+    }
+    // key.type is "obj" | "arr", so the remaining case is "arr".
+    {
       const arr = [];
       if (sorter) {
         const groupKeys = Object.keys(grouped).sort(sorter);
         arrEach(groupKeys, k => {
-          arr.push(make(grouped[k], depth));
+          arr.push(make(grouped[k], nextDepth));
         });
       } else {
         groupEach(grouped, value => {
-          arr.push(make(value, depth));
+          arr.push(make(value, nextDepth));
         });
       }
       return arr;

@@ -54,8 +54,8 @@
  *
  * @return {sszvis.component}
  */
-import { type Component } from "../d3-component.js";
-interface GroupedBarsComponent<T = unknown> extends Component {
+import { type ComponentBuilder } from "../d3-component.js";
+interface GroupedBarsComponent<T = unknown> extends ComponentBuilder<GroupedBarsComponent<T>> {
     groupScale(): (datum: T) => number;
     groupScale<U = T>(scale: (datum: U) => number | undefined): GroupedBarsComponent<T>;
     groupSize(): number;
