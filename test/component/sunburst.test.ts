@@ -367,6 +367,20 @@ describe("component/sunburst", () => {
       expect(attrs(node, "fill")[3]).toBe("rgb(0, 0, 255)");
     });
 
+    test("should accept a constant colour as well as an accessor", () => {
+      // fill is wrapped in fn.functor on set, the way every other colour property in the
+      // library is, so a constant and an accessor returning that constant agree.
+      const constant = render(sunburstOf(), hierarchyOf());
+      const accessor = render(
+        sunburst()
+          .fill("#808080")
+          .radiusScale((v: number) => v * 300)
+          .centerRadius(10),
+        hierarchyOf()
+      );
+      expect(attrs(accessor, "fill")).toEqual(attrs(constant, "fill"));
+    });
+
     test("should hand the node's key to the fill accessor, not the node", () => {
       const fill = vi.fn(() => "#808080");
       render(sunburstOf(fill), hierarchyOf([{ cat: "A", sub: "A1", value: 1 }]));
@@ -733,29 +747,9 @@ describe("component/sunburst", () => {
       expect(attrs(g.node() as SVGGElement, "fill")[0]).toBe("rgb(255, 0, 0)");
     });
 
-    test("requires fill to be a function, and throws on a constant colour", () => {
-      // BUG: fill is neither wrapped in fn.functor nor normalised in the renderer, so
-      // `.fill("#f00")` throws `props.fill is not a function` - and so does leaving it unset.
-      // stroke on the same component does take a constant, and so do pie's and dot's fills,
-      // which are unwrapped too but are normalised where they are used. treemap and pack
-      // share sunburst's shape for their colorScale, so all three reject a constant. The
-      // JSDoc does mark the difference - `{Function} fill` against `{Color, Function} stroke`
-      // - without saying that violating it throws.
-      // current: TypeError on any non-function fill. expected: one rule for colour
-      // properties, as pie and dot have.
-      const constant = group("constant-fill");
-      expect(() =>
-        constant.datum(hierarchyOf()).call(
-          sunburst()
-            // The port's types reject a constant outright, which is the whole protection a
-            // TypeScript caller gets; the cast is what a JavaScript caller does at runtime.
-            .fill("#f00" as unknown as (key: string) => string)
-            .radiusScale((v: number) => v)
-            .centerRadius(0) as never
-        )
-      ).toThrow(TypeError);
-      constant.selectAll("*").interrupt();
-
+    test("requires fill to be set at all", () => {
+      // BUG: fill is required and unchecked, so leaving it out throws `props.fill is not a
+      // function` from inside the render rather than naming the property.
       const unset = group("unset-fill");
       expect(() =>
         unset.datum(hierarchyOf()).call(
