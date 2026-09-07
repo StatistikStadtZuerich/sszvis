@@ -60,17 +60,25 @@ import * as logger from "./logger.js";
 import type { Breakpoint, Measurement } from "./types.js";
 
 // Type definitions
-export interface ResponsivePropValue<T = any> {
+export interface ResponsivePropValue<T = unknown> {
   [breakpointName: string]: T | ((width: number) => T);
   _: T | ((width: number) => T); // Default fallback required
 }
 
+/**
+ * What `prop()` stores. Every value has been through functorizeValues by then, so unlike
+ * ResponsivePropValue - which describes what a caller may pass - each entry is a function.
+ */
+type FunctorizedPropValue = {
+  [breakpointName: string]: (width: number) => unknown;
+};
+
 export interface ResponsivePropsConfig {
-  [propName: string]: ResponsivePropValue;
+  [propName: string]: FunctorizedPropValue;
 }
 
 export interface ResponsivePropsInstance {
-  (measurements: Measurement): Record<string, any>;
+  (measurements: Measurement): Record<string, unknown>;
   prop<T>(propName: string, propSpec: ResponsivePropValue<T>): ResponsivePropsInstance;
   breakpoints(): Breakpoint[];
   breakpoints(bps: Breakpoint[]): ResponsivePropsInstance;
@@ -92,7 +100,7 @@ export function responsiveProps(): ResponsivePropsInstance {
    * @returns {object} An object containing the configured properties and their values for the current
    *          breakpoint as defined by the parameter `arg1`
    */
-  function _responsiveProps(measurement: Measurement): Record<string, any> {
+  function _responsiveProps(measurement: Measurement): Record<string, unknown> {
     if (!fn.isObject(measurement) || !isBounds(measurement)) {
       logger.warn("Could not determine the current breakpoint, returning the default props");
       // We choose the _ option for all configured props as a default.
@@ -102,12 +110,12 @@ export function responsiveProps(): ResponsivePropsInstance {
           memo[key] = val;
           return memo;
         },
-        {} as Record<string, any>
+        {} as Record<string, unknown>
       );
     }
 
     // Create results object based on the current measurements and the configured breakpoints and properties
-    return Object.keys(propsConfig).reduce((memo: Record<string, any>, propKey: string) => {
+    return Object.keys(propsConfig).reduce((memo: Record<string, unknown>, propKey: string) => {
       const propSpec = propsConfig[propKey];
 
       // Finds out which breakpoints the provided measurements match up with
@@ -220,26 +228,27 @@ export function responsiveProps(): ResponsivePropsInstance {
    *   { name: 'large', width: 700 }
    * ])
    */
-  _responsiveProps.breakpoints = (...args: any[]): any => {
+  const breakpoints: ResponsivePropsInstance["breakpoints"] = ((...args: [] | [Breakpoint[]]) => {
     if (args.length === 0) {
       return breakpointSpec;
     }
-    const bps = args[0] as Breakpoint[];
-    breakpointSpec = breakpointCreateSpec(bps);
+    breakpointSpec = breakpointCreateSpec(args[0]);
     return _responsiveProps;
-  };
+  }) as ResponsivePropsInstance["breakpoints"];
+  _responsiveProps.breakpoints = breakpoints;
 
   return _responsiveProps;
 }
 
 // Helpers
 
-function isBounds(arg1: any): arg1 is Measurement & { bounds: any } {
+function isBounds(arg1: unknown): arg1 is Measurement & { bounds: unknown } {
+  if (!fn.defined(arg1) || typeof arg1 !== "object") return false;
+  const candidate = arg1 as Partial<Measurement>;
   return (
-    fn.defined(arg1) &&
-    fn.defined(arg1.width) &&
-    fn.defined(arg1.screenWidth) &&
-    fn.defined(arg1.screenHeight)
+    fn.defined(candidate.width) &&
+    fn.defined(candidate.screenWidth) &&
+    fn.defined(candidate.screenHeight)
   );
 }
 
@@ -248,22 +257,18 @@ function isBounds(arg1: any): arg1 is Measurement & { bounds: any } {
  * @prop    {object} obj Original key-value object
  * @returns {object} Same as input object but with all values transformed to width-accepting functions
  */
-function functorizeValues<T>(obj: ResponsivePropValue<T>): ResponsivePropValue<T> {
-  const result: ResponsivePropValue<T> = {} as ResponsivePropValue<T>;
+function functorizeValues<T>(obj: ResponsivePropValue<T>): FunctorizedPropValue {
+  const result: FunctorizedPropValue = {};
 
   Object.keys(obj).forEach((key: string) => {
     const value = obj[key];
-    if (typeof value === "function") {
-      result[key] = value;
-    } else {
-      result[key] = () => value;
-    }
+    result[key] = typeof value === "function" ? (value as (width: number) => unknown) : () => value;
   });
 
   return result;
 }
 
-function validatePropSpec(propSpec: ResponsivePropValue, breakpointSpec: Breakpoint[]): boolean {
+function validatePropSpec(propSpec: FunctorizedPropValue, breakpointSpec: Breakpoint[]): boolean {
   // Ensure that the propSpec contains a '_' value.
   // This is used as the default value when the test width
   // is larger than any breakpoint.

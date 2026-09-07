@@ -37,7 +37,7 @@ describe("component/nestedStackedBar", () => {
     );
     return cascade<Row>()
       .arrayBy((d: Row) => d.nested)
-      .apply(data)
+      .apply<Row[][]>(data)
       .map((group: Row[]) => {
         const stack = stackLayout(group) as unknown as NestedStack;
         stack.nest = group[0].nested;

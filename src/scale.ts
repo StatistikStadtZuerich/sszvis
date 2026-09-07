@@ -5,7 +5,7 @@
  */
 
 interface Scale {
-  range(): any[];
+  range(): number[];
   rangeExtent?(): [number, number];
 }
 
@@ -32,9 +32,9 @@ export const range = (scale: Scale): [number, number] => {
  * @param  {array} domain     an array, sorted in either ascending or descending order
  * @return {array}            the extent of the array, with the smaller term first.
  */
-function extent(domain: any[]): [number, number] {
+function extent(domain: number[]): [number, number] {
   // borrowed from d3 source - svg.axis
-  const start = domain[0];
-  const stop = domain[domain.length - 1];
+  const start = domain[0] as number;
+  const stop = domain[domain.length - 1] as number;
   return start < stop ? [start, stop] : [stop, start];
 }

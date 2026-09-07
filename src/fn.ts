@@ -37,100 +37,25 @@ export const isSelection = (val: unknown): val is AnySelection => val instanceof
  * accepts exactly `n` parameters. Any extraneous parameters will not be
  * passed to the supplied function.
  */
-export const arity = (n: number, fn: (...args: any[]) => any): ((...args: any[]) => any) => {
-  switch (n) {
-    case 0: {
-      return function (this: any) {
-        return fn.call(this);
-      };
-    }
-    case 1: {
-      return function (this: any, a0: any) {
-        return fn.call(this, a0);
-      };
-    }
-    case 2: {
-      return function (this: any, a0: any, a1: any) {
-        return fn.call(this, a0, a1);
-      };
-    }
-    case 3: {
-      return function (this: any, a0: any, a1: any, a2: any) {
-        return fn.call(this, a0, a1, a2);
-      };
-    }
-    case 4: {
-      return function (this: any, a0: any, a1: any, a2: any, a3: any) {
-        return fn.call(this, a0, a1, a2, a3);
-      };
-    }
-    case 5: {
-      return function (this: any, a0: any, a1: any, a2: any, a3: any, a4: any) {
-        return fn.call(this, a0, a1, a2, a3, a4);
-      };
-    }
-    case 6: {
-      return function (this: any, a0: any, a1: any, a2: any, a3: any, a4: any, a5: any) {
-        return fn.call(this, a0, a1, a2, a3, a4, a5);
-      };
-    }
-    case 7: {
-      return function (this: any, a0: any, a1: any, a2: any, a3: any, a4: any, a5: any, a6: any) {
-        return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
-      };
-    }
-    case 8: {
-      return function (
-        this: any,
-        a0: any,
-        a1: any,
-        a2: any,
-        a3: any,
-        a4: any,
-        a5: any,
-        a6: any,
-        a7: any
-      ) {
-        return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
-      };
-    }
-    case 9: {
-      return function (
-        this: any,
-        a0: any,
-        a1: any,
-        a2: any,
-        a3: any,
-        a4: any,
-        a5: any,
-        a6: any,
-        a7: any,
-        a8: any
-      ) {
-        return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
-      };
-    }
-    case 10: {
-      return function (
-        this: any,
-        a0: any,
-        a1: any,
-        a2: any,
-        a3: any,
-        a4: any,
-        a5: any,
-        a6: any,
-        a7: any,
-        a8: any,
-        a9: any
-      ) {
-        return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
-      };
-    }
-    default: {
-      return fn;
-    }
-  }
+export const arity = <F extends (...args: never[]) => unknown>(
+  n: number,
+  fn: F
+): ((...args: unknown[]) => ReturnType<F>) => {
+  // NOTE: the original hand-unrolled a switch over 0..10 and returned the function
+  // untouched for anything else, so n > 10, negative and non-integer n do no limiting at
+  // all. That passthrough is preserved here, quirk and all.
+  if (!Number.isInteger(n) || n < 0 || n > 10)
+    return fn as unknown as (...args: unknown[]) => ReturnType<F>;
+
+  const limited = function (this: unknown, ...args: unknown[]): ReturnType<F> {
+    // Build exactly n slots, so the wrapped function sees arguments.length === n whether
+    // the caller passed too many or too few.
+    const slots = Array.from({ length: n }, (_, i) => args[i]);
+    return (fn as unknown as (...a: unknown[]) => ReturnType<F>).apply(this, slots);
+  };
+  // The unrolled version gave each case real named parameters, so .length was n.
+  Object.defineProperty(limited, "length", { value: n, configurable: true });
+  return limited;
 };
 
 /**
@@ -472,8 +397,9 @@ export const functor = <T>(v: T | (() => T)): (() => T) =>
  *
  * Wraps a constant in an accessor and leaves an existing accessor alone. Unlike fn.functor
  * the result takes d3's (datum, index, group) arguments and can be handed straight to
- * .attr() or .style(). Pass `value ?? null` where an unset prop should resolve to null
- * rather than undefined, so d3 removes the attribute instead of writing "undefined".
+ * .attr() or .style(). An unset prop resolves to undefined, which d3 treats the same as
+ * null - it removes the attribute either way - so `value ?? null` at a call site is about
+ * the declared return type, not about what d3 renders.
  */
 export const valueFn = <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>): ValueFn<E, D, R> =>
   typeof value === "function" ? (value as ValueFn<E, D, R>) : () => value;

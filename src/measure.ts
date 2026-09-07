@@ -3,15 +3,15 @@
  *
  * @module sszvis/measure
  */
-import { type Selection, select } from "d3";
+import { select } from "d3";
 import { isSelection, isString } from "./fn.js";
 
-import type { DimensionMeasurement } from "./types.js";
+import type { AnySelection, DimensionMeasurement } from "./types.js";
 
 /**
  * Type for elements that can be measured - selector string, DOM element, or d3 selection
  */
-export type MeasurableElement = string | Element | Selection<any, any, any, any>;
+export type MeasurableElement = string | Element | AnySelection;
 
 /**
  * measureDimensions
