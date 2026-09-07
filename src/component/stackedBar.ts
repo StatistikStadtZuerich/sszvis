@@ -94,9 +94,8 @@
  * selector and no key function, so any pre-existing stack below the target group, at any depth,
  * is captured and re-bound, and surviving groups and rects are matched by index rather than by
  * series. The component also forwards neither bar's `transition` property nor its tooltip
- * anchor properties, so every render attaches a transition that is immediately discarded, and
- * the tooltip anchor is always at the top centre of a segment. See
- * test/component/stackedBar.test.ts.
+ * anchor properties, so a caller cannot turn the segment animation off, and the tooltip anchor
+ * is always at the top centre of a segment. See test/component/stackedBar.test.ts.
  *
  * @return {sszvis.component}
  */
