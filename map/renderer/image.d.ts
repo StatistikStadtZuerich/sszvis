@@ -9,12 +9,11 @@
  *
  * @property {Function} projection      The map projection function used to position the image in pixels. Uses the upper left
  *                                      and lower right corners of the image as geographical place markers to align with other map layers.
- *                                      It is called once per corner, with that corner's coordinates. A result it cannot
- *                                      place is not handled; see the notes below.
+ *                                      It is called once per corner, with that corner's coordinates. A corner it answers
+ *                                      null or undefined for is reported, naming the corner.
  * @property {String, Function} src      The source of the image you want to use. This should be either a URL for an image hosted on the same
  *                                      server that hosts the page, or a base64-encoded dataURL. For example, the zurich topolayer map module.
- *                                      A missing src is not reported: d3 removes an attribute set to undefined, so the
- *                                      image renders fully positioned with no src at all.
+ *                                      Required: a missing src is reported rather than rendering an image with none.
  * @property {Array} geoBounds          This should be a 2D array containing the upper-left (north-west) and lower-right (south-east)
  *                                      coordinates of the corresponding corners of the image. The structure expected is:
  *
@@ -25,62 +24,66 @@
  *                                      Note: it is possible that even with precise corner coordinates, some mismatch may still occur. This
  *                                      will happen if the image itself is generated using a different type of map projection than the one used by the
  *                                      projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
- *                                      The two corners are subtracted in the order given, so passing the south-east
- *                                      corner first yields negative widths and heights, which the CSS parser drops -
- *                                      leaving the image positioned but unsized, with no error.
+ *                                      Required, and the order matters: corners the wrong way round project to a
+ *                                      negative width or height, which is reported rather than silently dropped.
  * @property {Number, Function} opacity  The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
  *                                      Default 1. An invalid value is dropped by the CSS parser rather than reported,
  *                                      leaving the image fully opaque; 0 renders nothing at all, which is
  *                                      indistinguishable from a src that failed to load.
+ * @property {String, Function} alt      The alternative text describing the image. Defaults to the
+ *                                      empty string, which marks the layer decorative so that
+ *                                      screen readers skip it - the right default for a
+ *                                      topographic or raster backdrop whose data lives in the svg
+ *                                      layers above. Pass a description when the image itself
+ *                                      carries information.
  *
  * Note: this component renders an HTML img element, so it belongs in a createHtmlLayer. Nothing
  * enforces that: called on an SVG selection it appends an SVG-namespaced img, which no browser
  * renders, without complaining.
  *
- * Note: the img carries no alt attribute and no role, and the component offers no property for
- * one, so a topographic layer is announced by screen readers as an unlabelled image. All six docs
- * examples ship this.
- *
- * Note: the component writes left and top but never position, so both are inert unless sszvis.css
- * is loaded - it is the stylesheet that sets position: absolute, along with display: block and
- * pointer-events: none. Without it the image sits in the document flow at the computed pixel size,
- * unoffset and clickable.
+ * Note: the component writes position: absolute, display: block and pointer-events: none inline, so
+ * the offsets it computes are never inert and the image never swallows the hover and click events of
+ * the map layers beneath it. sszvis.css sets the same three declarations for the class, plus
+ * user-select: none, which is left to the stylesheet: it only affects text selection over a
+ * decorative image, not whether the renderer works. So the component no longer needs sszvis.css to
+ * position itself. Being inline styles they beat any author rule short of !important, so a consumer
+ * who wants the image in the document flow or clickable can no longer get there through their own
+ * stylesheet.
  *
  * Note: the projected coordinates are written unshifted, and createHtmlLayer positions the layer
  * itself by the bounds padding - so the image's offset is relative to the layer and the padding is
  * applied exactly once. That is what keeps the image aligned with the svg layer.
  *
- * Note: the width is the rounded difference of the unrounded corners, while left is the rounded
- * north-west corner, so left + width does not necessarily equal the rounded south-east corner. The
- * image's right and bottom edges can sit a pixel off the map layers they are meant to align with.
+ * Note: both corners are rounded before the size is taken as their difference, so left + width is
+ * the rounded south-east corner and the image's edges land on the same pixels as the map layers it
+ * is aligned with.
  *
- * Note: neither geoBounds nor projection is validated. A missing geoBounds throws a bare TypeError
- * from indexing undefined, and a missing projection throws from calling it - both before any
- * attribute is written, though the img element has already been appended by then, so a throw
- * leaves a classed, empty img in the layer. A missing src is not reported at all: d3 removes an
- * attribute set to undefined, so the image renders fully positioned and sized with no src.
+ * Note: projection, src and geoBounds are all required and are validated before any element is
+ * created, so each way of getting them wrong is reported with a message naming the property, and a
+ * misconfigured renderer leaves nothing half-built in the layer. Inverted geoBounds - the likely
+ * real-world mistake - are caught by comparing the projected corners before they are rounded, so
+ * an inversion smaller than one pixel is reported rather than collapsing to a zero-size image.
  *
- * Note: a projection that answers null for a point it cannot place throws a bare TypeError rather
- * than being reported, and it does so late: the src has been written and both corners have already
- * been projected by the time the coordinates are read, so the failure leaves an img with its src
- * but no position. The JavaScript threw from indexing that null; the port re-throws a TypeError
- * carrying the same message from the same point in the chain. A projection that answers a
- * non-finite coordinate instead produces the string "Infinitypx", which the CSS parser drops,
- * leaving the image unpositioned. Neither is reachable with a d3 projection called this way:
- * clipAngle and clipExtent apply to streams, not to a direct call.
+ * Note: a projection that answers a non-finite coordinate is still not reported; it produces the
+ * string "Infinitypx", which the CSS parser drops, leaving the image unpositioned. Not reachable
+ * with a d3 projection called this way: clipAngle and clipExtent apply to streams, not to a direct
+ * call.
  *
  * Note: a Mercator pole, which is reachable, fails a third way again - log(tan(pi/2)) is merely a
  * very large float, so a geoBounds latitude of 90 positions and sizes the image tens of thousands
- * of pixels off rather than failing.
+ * of pixels off rather than failing - the extent stays positive, so the geoBounds check does not
+ * catch it either.
  *
  * Note: neither src nor opacity is wrapped in fn.functor, unlike the colour properties of the base,
- * geojson and highlight renderers - but both are handed straight to d3, which evaluates a function against the bound
- * datum. So an accessor happens to work, called with the join's placeholder 0.
+ * geojson and highlight renderers - but an accessor works all the same, called with the join's
+ * placeholder datum 0. opacity is handed to d3, which evaluates it; src is resolved by the
+ * component itself, because the resolved value identifies the element.
  *
- * Note: the join binds [0] rather than the src, so one image per container is the documented
- * limit - and the selector is unscoped, so a second image renderer in the same layer replaces the
- * first one's src and position instead of adding its own. The same defect as the mesh, highlight
- * and lake overlay renderers.
+ * Note: the src identifies the image within its layer, so two renderers with different sources
+ * each own an element and stack, while re-rendering the same source reuses the element it drew
+ * before. The element carries the resolved source in a data-image-key attribute for that purpose:
+ * the same key convention as the mesh, raster and highlight renderers, except that this renderer
+ * derives its key from the src rather than taking one as a property.
  *
  * Note: no transition is scheduled, so the image jumps to its new position on a resize rather than
  * animating. Unlike the base and geojson renderers this component keeps no caches, emits no
@@ -95,8 +98,8 @@ import type { BaseType, ValueFn } from "d3";
 import { type ComponentBuilder } from "../../d3-component.js";
 import type { GeoPoint, PointProjection } from "../mapUtils.js";
 /**
- * A constant or an accessor. Neither src nor opacity is wrapped in fn.functor, so a function is
- * handed straight to d3 and evaluated against the join's placeholder datum, 0.
+ * A constant or an accessor. Neither src nor opacity is wrapped in fn.functor; an accessor is
+ * evaluated against the join's placeholder datum, 0.
  */
 type ImageValue<R extends string | number> = R | ValueFn<BaseType, number, R>;
 export interface MapRendererImageComponent extends ComponentBuilder<MapRendererImageComponent> {
@@ -108,7 +111,9 @@ export interface MapRendererImageComponent extends ComponentBuilder<MapRendererI
     geoBounds(value: [GeoPoint, GeoPoint]): MapRendererImageComponent;
     opacity(): ImageValue<number>;
     opacity(value: ImageValue<number>): MapRendererImageComponent;
+    alt(): ImageValue<string>;
+    alt(value: ImageValue<string>): MapRendererImageComponent;
 }
-export default function (): MapRendererImageComponent;
+export default function mapRendererImage(): MapRendererImageComponent;
 export {};
 //# sourceMappingURL=image.d.ts.map

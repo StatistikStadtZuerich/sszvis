@@ -38,6 +38,10 @@ The size (in pixels) of the side of each raster pixel. Raster pixels are all squ
 
 The opacity of the entire layer. The default is 1. Use a lower value to slightly reveal the layers underneath.
 
+#### `mapRendererRaster.alt(altText)`
+
+An accessible description of what the raster shows. The default is the empty string, which marks the canvas decorative so that screen readers skip it. Pass a description when the raster itself carries the data.
+
 ## sszvis.mapRendererGeoJson
 
 ### Data Structure
@@ -109,6 +113,10 @@ This is consistent with the way D3 handles similar geographic data. These coordi
 #### `mapRendererImage.opacity`
 
 The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
+
+#### `mapRendererImage.alt`
+
+The alternative text describing the image. The default is the empty string, which marks the layer decorative so that screen readers skip it - the right default for a topographic backdrop whose data lives in the svg layers above. Pass a description when the image itself carries information.
 
 ## Examples
 

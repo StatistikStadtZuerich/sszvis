@@ -26,9 +26,10 @@ import mapRendererPatternedLakeOverlay from '../map/renderer/patternedlakeoverla
  * @property {Number} height                          The height of the map. Used to create the map projection function.
  *                                                    No default, and fails the same way as width.
  * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
- *                                                    Required and unguarded: it is the one property whose absence throws.
- * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default; a
- *                                                    missing mesh renders as one path with no `d` rather than as no path.
+ *                                                    Required and unguarded: its absence throws, as borders' does.
+ * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default, and
+ *                                                    required in practice: the mesh renderer throws a TypeError naming
+ *                                                    its geoJson property if it is left out.
  * @property {Object} lakeFeatures                    The shape of the part of Lake Zurich that lies within the city.
  *                                                    No default; a missing shape renders as an empty path.
  * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default, and it
@@ -49,8 +50,13 @@ import mapRendererPatternedLakeOverlay from '../map/renderer/patternedlakeoverla
  *                                                    matched a datum: that draws geometry rather than values, keeps this
  *                                                    fill, and calls an accessor with undefined. See src/map/renderer/base.ts.
  * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
- *                                                    mesh, for the border color of the map entities. Default white.
- * @property {Number, Function} strokeWidth           The width of the entity borders. Default 1.25.
+ *                                                    mesh, for the border color of the map entities. Default white. An
+ *                                                    accessor that resolves to nothing keeps that default rather than
+ *                                                    clearing the stroke.
+ * @property {Number, Function} strokeWidth           The width of the border path stroke, delegated to the mesh
+ *                                                    renderer like borderColor. A number, or a function handed to d3
+ *                                                    and so called with the border mesh. Default 1.25, with the same
+ *                                                    resolves-to-nothing fallback as borderColor.
  * @property {String, Function} lakePathColor         The color of the entity borders which extend over the lake. No
  *                                                    default: left out, the paths take their stroke from the stylesheet.
  * @property {Boolean} withLake                       Whether or not to show the textured outline of the end of lake Zurich that is within the city. Default true
@@ -71,8 +77,9 @@ import mapRendererPatternedLakeOverlay from '../map/renderer/patternedlakeoverla
  * areas rendered at the same size share the projection fitted to whichever rendered first, and the
  * second is projected outside its destination box.
  *
- * Note: features is the one property whose absence throws, because prepareMergedGeoData reads
- * geoJson.features. width and height have no defaults either, but a missing size degrades silently:
+ * Note: features and borders are the two properties whose absence throws - features because
+ * prepareMergedGeoData reads geoJson.features, borders because the mesh renderer now validates its
+ * own geoJson. width and height have no defaults either, but a missing size degrades silently:
  * fitSize gets undefined, the scale is NaN, and every area carries a path of NaN coordinates that
  * the browser drops, leaving a blank map instead of an error.
  *
@@ -84,12 +91,12 @@ import mapRendererPatternedLakeOverlay from '../map/renderer/patternedlakeoverla
  *
  * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
  * renderer's own default of true, so the fade mask and its gradient are not created unless the
- * caller asks for them. A fade is not removable either: the renderer only ever adds the mask
- * attribute, so turning lakeFadeOut back off leaves the lake faded.
+ * caller asks for them. Toggling it is safe in both directions: turning lakeFadeOut back off
+ * removes the mask attribute and its two definitions again.
  *
  * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
- * emits the #lake-pattern definition and two empty paths. Every non-Zurich map - switzerland
- * included - has to set .withLake(false) or it carries them.
+ * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
+ * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
  *
  * Note: the event dispatch is created once per choropleth() call and closed over, while the four
  * renderers keep their props on the element they rendered into. So one instance can draw into two

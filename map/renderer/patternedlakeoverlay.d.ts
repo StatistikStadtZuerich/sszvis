@@ -18,35 +18,36 @@
  *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
  *                                      Never validated, like lakeFeature.
  * @property {String, Function} lakePathColor  The stroke colour of those borders. No default: the stylesheet's grey
- *                                      dotted stroke stands unless this is set, and it is applied only when truthy; see
- *                                      the note below. Not wrapped in fn.functor.
+ *                                      dotted stroke stands unless this is set. A falsy colour - "" - clears the
+ *                                      inline stroke again. Not wrapped in fn.functor.
  * @property {Boolean} fadeOut          Whether to fade the lake out towards the bottom of the shape with a gradient mask.
  *                                      Default true - but choropleth defaults its own lakeFadeOut to false, so the
- *                                      default branch is the one no in-repo chart takes. Turning it off does not undo
- *                                      an existing fade; see the note below.
+ *                                      default branch is the one no in-repo chart takes. Turning it off removes an
+ *                                      existing fade again.
+ * @property {String} key               Optional scope for this overlay's definitions and paths, so that two overlays
+ *                                      drawn into one group each own their elements. Defaults to one scope per group,
+ *                                      generated on first render and remembered on the group as
+ *                                      data-lake-key - so re-rendering, even with a freshly constructed
+ *                                      component, reuses the same elements, while a second map on the page gets its
+ *                                      own. A caller-supplied key must be unique within the document, must start
+ *                                      with a letter and may use only letters, digits, hyphens and underscores -
+ *                                      it is written into the definition ids, so a url(#...) reference has to be
+ *                                      able to name it. Anything else throws. The leading letter also keeps caller
+ *                                      keys apart from the generated scopes, which are bare decimals.
  *
- * Note: every render calls the pattern helpers again on the same defs elements - the fade pair only
- * while fadeOut is on - and each helper appends its contents unconditionally rather than joining
- * them, so the tile gains another rect and another two lines, the fade gradient another two stops,
- * and the mask another rect on every redraw. A map that re-renders on resize or on a control change
- * grows these definitions without bound. The elements themselves are reused - ensureDefsElement
- * joins, and both path joins are unkeyed - so it is only their contents that accumulate. The base
- * and geojson renderers call their own pattern helper the same way.
+ * Note: the definition ids are scoped - "lake-pattern-1", "lake-fade-gradient-1", "lake-fade-mask-1"
+ * and so on - so two maps on one page no longer define the same id twice. Consumers must not rely on
+ * the previously fixed ids.
  *
- * Note: disabling fadeOut after a render with it enabled leaves both the mask attribute on the
- * lake shape and the gradient and mask definitions in the defs, because the disabled branch only
- * skips writing them. choropleth re-applies fadeOut on every render, so a chart that toggles its
- * lakeFadeOut stays faded after the toggle.
+ * Note: the pattern helpers in src/patterns.ts append their contents rather than joining them, so
+ * this component may only call them on a definition that is still empty; otherwise the tile would
+ * gain another rect and two lines, the gradient another two stops and the mask another rect on every
+ * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
+ * geojson renderers' "missing-pattern" too.
  *
- * Note: the mask fades the lake by filling itself with url(#lake-fade-gradient), so the two
- * definitions are only useful together. The gradient helper writes that id a second time onto the
- * element ensureDefsElement had already identified - a harmless redundancy, and the only place two
- * code paths write the same id.
- *
- * Note: all three definitions use fixed ids - "lake-pattern", "lake-fade-gradient" and
- * "lake-fade-mask" - so two maps on one page define each of them twice, and every url(#...)
- * reference in the document resolves to whichever comes first. The same defect as the base and
- * geojson renderers' "missing-pattern".
+ * Note: the mask fades the lake by filling itself with the fade gradient, so the two definitions are
+ * only useful together. Both helpers hard-code the old fixed gradient id, so this component rewrites
+ * the gradient's id and the mask rect's fill after calling them.
  *
  * Note: the defs element is created inside the map group rather than at the svg root, and
  * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
@@ -66,20 +67,17 @@
  * shape - though where a dropped mesh style leaves the borders invisible, a dropped style here
  * falls back to the stylesheet's grey dotted stroke, so the mistake is even quieter.
  *
- * Note: the colour is applied only when the property is truthy, because it has no default and the
- * guard is what leaves the stylesheet's stroke alone. So a falsy colour is silently ignored rather
- * than reported, and there is no way to clear a colour already set: re-rendering with "" leaves the
- * previous stroke in place, since the guard only skips writing a new one.
+ * Note: the colour is written on every render, and only an unset property leaves the stylesheet's
+ * stroke alone. A falsy colour - "", or an accessor returning undefined - clears the inline stroke
+ * and hands the border back to the stylesheet.
  *
  * Note: the component sets no pointer-events on either path and no fill on the border path, so
  * both come from sszvis.css. Rendered without that stylesheet the border path is a filled black
  * shape covering the lake - SVG's initial fill is black - and both paths swallow the base layer's
  * hover and click events.
  *
- * Note: both selectors are unscoped and both joins unkeyed, so a second overlay rendered into the
- * same group rebinds and restyles the first one's paths instead of drawing its own. One overlay per
- * layer; choropleth uses exactly one, so the collision is latent, but the renderer is exported
- * publicly.
+ * Note: both path selectors are scoped by the overlay's key, so two overlays rendered into one group
+ * each draw their own pair of paths as long as they are given distinct keys.
  *
  * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
  * caches, and does not mutate the geoJson it is handed, so the whole centroid-caching family of
@@ -116,7 +114,9 @@ export interface MapRendererPatternedLakeOverlayComponent extends ComponentBuild
     lakePathColor(value: LakePathColor): MapRendererPatternedLakeOverlayComponent;
     fadeOut(): boolean;
     fadeOut(value: boolean): MapRendererPatternedLakeOverlayComponent;
+    key(): string | undefined;
+    key(value: string): MapRendererPatternedLakeOverlayComponent;
 }
-export default function (): MapRendererPatternedLakeOverlayComponent;
+export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedLakeOverlayComponent;
 export {};
 //# sourceMappingURL=patternedlakeoverlay.d.ts.map

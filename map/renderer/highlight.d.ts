@@ -17,13 +17,17 @@
  *                                                    undefined.
  * @property {d3.geo.path} mapPath                    A path-generator used to create the path data string for each matched
  *                                                    feature. A d3.geoPath or a bare generator function is accepted; it is
- *                                                    called with the matched feature, or with undefined where nothing
- *                                                    matched, for which a d3.geoPath returns null.
+ *                                                    called only with features that were actually matched.
+ * @property {String} key                             Identifies this highlight layer within the group it renders into,
+ *                                                    so several highlight layers can share one group. Default
+ *                                                    'highlight'. Two layers in one group need distinct keys; two
+ *                                                    renders of the same layer must share one, which is what makes the
+ *                                                    render idempotent. Named to match the mesh and raster renderers'
+ *                                                    key.
  * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
  *                                                    A falsy keyName is used as given, unlike prepareMergedGeoData, which
  *                                                    falls back to the default - so an empty keyName reads datum[""],
- *                                                    which is undefined, and matches a keyless feature rather than the
- *                                                    intended entity.
+ *                                                    which is undefined, and therefore matches nothing.
  * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities
  *                                                    are highlighted. Falsy entries are dropped. Default [].
  * @property {String, Function} highlightStroke       A colour, or an accessor called with the highlighted datum only.
@@ -33,19 +37,20 @@
  *                                                    Default 2. Returning null removes the inline style, leaving SVG's
  *                                                    initial width of 1.
  *
- * Note: an entity id that matches no feature is not reported. The lookup yields undefined, the
- * path generator returns null for it, and d3 removes the attribute - leaving a classed, styled
- * path with no geometry. A caller highlighting a stale or misspelled id sees nothing happen and
- * cannot tell that from the entity being off-screen.
+ * Note: an entity id that matches no feature is dropped from the join and reported through
+ * sszvis.logger.warn once per render, naming every unmatched id. It is a warning rather than a throw
+ * because a highlight normally tracks a transient hover or selection, and an id can legitimately
+ * go stale between two renders - crashing a chart mid-interaction would be worse than the missing
+ * highlight. Nothing is appended for an unmatched id, so the renderer no longer leaves a classed,
+ * fully styled path with no geometry behind.
  *
  * Note: the feature lookup keys on feature.id, which GeoJSON does not require, and goes through a
- * plain object literal. So ids are stringified on both sides - a numeric feature id is matched by
- * either a numeric or a string data key, which is load-bearing because SSZ geodata uses numeric
- * ids - every feature without an id collapses onto the key "undefined" and the last of them wins,
- * where a datum with no key finds it because the datum side stringifies the same way, and an id
- * naming an Object.prototype member ("valueOf", "toString", ...) is "found" even though no such
- * feature exists, failing exactly like an unmatched id. A symbol stays a symbol key, so it can
- * never be matched by a string id.
+ * Map. Ids are still stringified on both sides - a numeric feature id is matched by either a
+ * numeric or a string data key, which is load-bearing because SSZ geodata uses numeric ids - but
+ * only keys actually put into the Map can be found: a feature without an id is left out of the
+ * lookup, a datum with no entity id matches nothing, and an id naming an Object.prototype member
+ * ("valueOf", "toString", "__proto__", ...) is unmatched like any other absent id. A symbol stays a
+ * symbol key, so it can never be matched by a string id.
  *
  * Note: neither geoJson nor mapPath is validated, and once there is something to highlight both
  * are required. A missing geoJson throws while the lookup table is built, before the join runs, so
@@ -84,12 +89,14 @@
  * swallows the base layer's hover and click events - which matters more here than for the mesh,
  * since a highlight is normally driven by exactly that hover.
  *
- * Note: the border selector is unscoped and the join unkeyed, so a second highlight layer rendered
- * into the same group rebinds the first one's paths instead of drawing its own. One highlight layer
- * per group; choropleth uses exactly one, so the collision is latent, but the renderer is exported
- * publicly. Being an index join, it also re-purposes surviving elements by position rather than by
- * entity when the highlight array shrinks; the rendered result is still right, because "d" and both
- * styles are reapplied on every render rather than only on enter.
+ * Note: the paths are scoped by key and the join is keyed by map entity. Each layer selects
+ * only paths carrying its own data-highlight-key, so two highlight layers rendered into one group
+ * coexist as long as they are given different keys - sharing the default key still means
+ * sharing one set of paths, which is what makes an ordinary layer idempotent across renders even
+ * though consumers build a fresh component every time. The keyed join means an element stays with
+ * its entity when the array shrinks or is reordered, so per-entity transitions and enter/exit
+ * styling are now possible. One entity highlighted twice still draws two paths: the join key
+ * carries an occurrence counter.
  *
  * Note: the empty-highlight branch used to return a decorative `true`. Nothing consumed it -
  * d3's selection.each ignores the render callback's return value - so the port returns nothing.
@@ -108,17 +115,16 @@ type HighlightValue<T, R> = R | ((datum: T) => R);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredHighlightValue<T, R> = (datum: T) => R;
 /**
- * The path generator as this component calls it: with whatever the lookup returned. That is the
- * matched feature, or undefined where nothing matched - but because the lookup is a plain object
- * literal, an id naming an Object.prototype member yields the inherited value instead, so the
- * parameter is unknown rather than ExtendedFeature | undefined. See the module note. A d3.geoPath
- * satisfies this at runtime - it returns null for a non-feature - but not by its types, so the
+ * The path generator as this component calls it: with a matched feature only, since unmatched ids
+ * are dropped before the join. A d3.geoPath satisfies this at runtime but not by its types, so the
  * setter accepts either shape and HighlightProps states how the component actually calls it.
  */
 export type HighlightPath = (feature: unknown) => string | null;
 export interface MapRendererHighlightComponent<T = unknown> extends ComponentBuilder<MapRendererHighlightComponent<T>> {
     keyName(): string;
     keyName(value: string): MapRendererHighlightComponent<T>;
+    key(): string;
+    key(value: string): MapRendererHighlightComponent<T>;
     geoJson(): ExtendedFeatureCollection | undefined;
     geoJson(value: ExtendedFeatureCollection): MapRendererHighlightComponent<T>;
     mapPath(): GeoPath | HighlightPath | undefined;
@@ -130,11 +136,6 @@ export interface MapRendererHighlightComponent<T = unknown> extends ComponentBui
     highlightStrokeWidth(): StoredHighlightValue<T, number | null>;
     highlightStrokeWidth<U = T>(value: HighlightValue<U, number | null>): MapRendererHighlightComponent<T>;
 }
-/**
- * Normalises a lookup key the way a property access does: a symbol stays a symbol key, everything
- * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
- * with the geojson renderer's own lookup.
- */
-export default function <T = unknown>(): MapRendererHighlightComponent<T>;
+export default function mapRendererHighlight<T = unknown>(): MapRendererHighlightComponent<T>;
 export {};
 //# sourceMappingURL=highlight.d.ts.map

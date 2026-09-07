@@ -291,7 +291,7 @@ interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbCo
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$F<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$A<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -323,7 +323,7 @@ interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$E<T = unknown>(): CircleComponent<T>;
+declare function export_default$z<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -363,7 +363,7 @@ interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<Confiden
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$D<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function export_default$y<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -403,7 +403,7 @@ interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<Confidenc
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$C<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$x<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -429,7 +429,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$B<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$w<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -468,7 +468,7 @@ interface LineComponent$1<T = unknown> extends ComponentBuilder<LineComponent$1<
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent$1<T>;
 }
-declare function export_default$A<T = unknown>(): LineComponent$1<T>;
+declare function export_default$v<T = unknown>(): LineComponent$1<T>;
 
 /**
  * Range Flag annotation
@@ -494,7 +494,7 @@ interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComp
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$z<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$u<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -531,7 +531,7 @@ interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerCo
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$y<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$t<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -565,7 +565,7 @@ interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComp
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$x<T = unknown>(): RectangleComponent<T>;
+declare function export_default$s<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -670,7 +670,7 @@ interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponen
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$w<T = unknown>(): TooltipComponent<T>;
+declare function export_default$r<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -720,7 +720,7 @@ interface TooltipAnchorComponent<T = unknown> extends ComponentBuilder<TooltipAn
     position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
     debug(value?: boolean): TooltipAnchorComponent<T>;
 }
-declare function export_default$v<T = unknown>(): TooltipAnchorComponent<T>;
+declare function export_default$q<T = unknown>(): TooltipAnchorComponent<T>;
 
 /**
  * Dispatch runs an action immediately and queues a render for the next animation frame;
@@ -1038,7 +1038,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBui
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$u<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$p<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -1088,7 +1088,7 @@ interface PanningComponent extends ComponentBuilder<PanningComponent> {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$t(): PanningComponent;
+declare function export_default$o(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -1150,7 +1150,7 @@ interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponen
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default$s<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$n<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -1636,7 +1636,7 @@ interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent<T>> {
     transition(): boolean;
     transition(enabled: boolean): BarComponent<T>;
 }
-declare function export_default$r<T = unknown>(): BarComponent<T>;
+declare function export_default$m<T = unknown>(): BarComponent<T>;
 
 /**
  * Dot component
@@ -1747,7 +1747,7 @@ interface DotComponent<T = unknown> extends ComponentBuilder<DotComponent<T>> {
     transition(): boolean;
     transition(enabled: boolean): DotComponent<T>;
 }
-declare function export_default$q<T = unknown>(): DotComponent<T>;
+declare function export_default$l<T = unknown>(): DotComponent<T>;
 
 /**
  * Grouped Bars component
@@ -1944,7 +1944,7 @@ interface LineComponent<P = unknown, L = unknown> extends ComponentBuilder<LineC
     transition(): boolean;
     transition(enabled: boolean): LineComponent<P, L>;
 }
-declare function export_default$p<P = unknown, L = unknown>(): LineComponent<P, L>;
+declare function export_default$k<P = unknown, L = unknown>(): LineComponent<P, L>;
 
 /**
  * Nested Stacked Bars Vertical component
@@ -2113,7 +2113,7 @@ interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> 
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$o<T = unknown>(): PackComponent<T>;
+declare function export_default$j<T = unknown>(): PackComponent<T>;
 
 /**
  * Pie component
@@ -2201,7 +2201,7 @@ interface PieComponent<T = PieAngles> extends ComponentBuilder<PieComponent<T>> 
     angle(): AngleAccessor<T> | undefined;
     angle<U = T>(angle: number | AngleAccessor<U>): PieComponent<T>;
 }
-declare function export_default$n<T = PieAngles>(): PieComponent<T>;
+declare function export_default$i<T = PieAngles>(): PieComponent<T>;
 
 /**
  * Pyramid component
@@ -2352,7 +2352,7 @@ interface PyramidComponent<T = unknown, D = unknown> extends ComponentBuilder<Py
     rightRefAccessor(): SideAccessor$1<T, D> | undefined;
     rightRefAccessor<U = T, V = D>(accessor: SideAccessor$1<U, V>): PyramidComponent<T, D>;
 }
-declare function export_default$m<T = unknown, D = unknown>(): PyramidComponent<T, D>;
+declare function export_default$h<T = unknown, D = unknown>(): PyramidComponent<T, D>;
 
 /**
  * Sankey component
@@ -2659,7 +2659,7 @@ interface SankeyComponent extends SankeyBuilder {
     linkLabel(): LabelAccessor<SankeyLink> | undefined;
     linkLabel<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
 }
-declare function export_default$l(): SankeyComponent;
+declare function export_default$g(): SankeyComponent;
 
 /**
  * Stacked Area component
@@ -2847,7 +2847,7 @@ interface StackedAreaComponent<P = unknown, L extends Iterable<P> = P[]> extends
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-declare function export_default$k<P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L>;
+declare function export_default$f<P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L>;
 
 /**
  * Stacked Area Multiples component
@@ -3091,7 +3091,7 @@ interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends ComponentB
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-declare function export_default$j<P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L>;
+declare function export_default$e<P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L>;
 
 /**
  * Stacked Bar components
@@ -3793,7 +3793,7 @@ interface SunburstComponent<T = unknown> extends ComponentBuilder<SunburstCompon
     stroke(): StrokeValue<T>;
     stroke<U = T>(stroke: StrokeValue<U>): SunburstComponent<T>;
 }
-declare function export_default$i<T = unknown>(): SunburstComponent<T>;
+declare function export_default$d<T = unknown>(): SunburstComponent<T>;
 
 /**
  * Treemap component
@@ -3856,7 +3856,7 @@ interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponen
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$h<T = unknown>(): TreemapComponent<T>;
+declare function export_default$c<T = unknown>(): TreemapComponent<T>;
 
 /**
  * Button Group control
@@ -4881,7 +4881,7 @@ type HeatTableDimensions = {
     height: number;
     centeredOffset: number;
 };
-declare function export_default$g(spaceWidth: number, squarePadding: number, numX: number, numY: number, chartPadding?: HeatTableChartPadding): HeatTableDimensions;
+declare function export_default$b(spaceWidth: number, squarePadding: number, numX: number, numY: number, chartPadding?: HeatTableChartPadding): HeatTableDimensions;
 
 /**
  * Horizontal Bar Chart Dimensions
@@ -4927,7 +4927,7 @@ type HorizontalBarChartDimensions = {
     barGroupHeight: number;
     totalHeight: number;
 };
-declare function export_default$f(numBars: number): HorizontalBarChartDimensions;
+declare function export_default$a(numBars: number): HorizontalBarChartDimensions;
 
 /**
  * Population Pyramid Layout
@@ -4981,7 +4981,7 @@ type PopulationPyramidLayout = {
     maxBarLength: number;
     chartPadding: number;
 };
-declare function export_default$e(spaceWidth: number, numBars: number): PopulationPyramidLayout;
+declare function export_default$9(spaceWidth: number, numBars: number): PopulationPyramidLayout;
 
 /**
  * @module sszvis/layout/sankey
@@ -5257,7 +5257,7 @@ interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGr
     titleY(): number;
     titleY(y: number): SmallMultiplesComponent<G>;
 }
-declare function export_default$d<G extends SmallMultipleGroup = SmallMultipleGroup>(): SmallMultiplesComponent<G>;
+declare function export_default$8<G extends SmallMultipleGroup = SmallMultipleGroup>(): SmallMultiplesComponent<G>;
 
 /**
  * Stacked Area Multiples Layout
@@ -5304,7 +5304,7 @@ type StackedAreaMultiplesLayout = {
     bandHeight: number;
     padHeight: number;
 };
-declare function export_default$c(height: number, num: number, pct?: number): StackedAreaMultiplesLayout;
+declare function export_default$7(height: number, num: number, pct?: number): StackedAreaMultiplesLayout;
 
 /**
  * @module sszvis/layout/sunburst
@@ -5415,7 +5415,7 @@ type VerticalBarChartDimensions = {
     barGroupWidth: number;
     totalWidth: number;
 };
-declare function export_default$b(width: number, numBars: number): VerticalBarChartDimensions;
+declare function export_default$6(width: number, numBars: number): VerticalBarChartDimensions;
 
 /**
  * Binned Color Scale Legend
@@ -5458,7 +5458,7 @@ interface BinnedColorScaleComponent extends ComponentBuilder<BinnedColorScaleCom
     labelFormat(): BinLabelFormatter;
     labelFormat(format: BinLabelFormatter): BinnedColorScaleComponent;
 }
-declare function export_default$a(): BinnedColorScaleComponent;
+declare function export_default$5(): BinnedColorScaleComponent;
 
 /**
  * Linear Color Scale Legend
@@ -5502,7 +5502,7 @@ interface LinearColorScaleComponent extends ComponentBuilder<LinearColorScaleCom
     labelFormat(): LabelFormatter;
     labelFormat(format: LabelFormatter): LinearColorScaleComponent;
 }
-declare function export_default$9(): LinearColorScaleComponent;
+declare function export_default$4(): LinearColorScaleComponent;
 
 /**
  * Radius size legend
@@ -5548,7 +5548,7 @@ interface RadiusLegendComponent extends ComponentBuilder<RadiusLegendComponent> 
     tickValues(): NumberValue[] | undefined;
     tickValues(values: NumberValue[]): RadiusLegendComponent;
 }
-declare function export_default$8(): RadiusLegendComponent;
+declare function export_default$3(): RadiusLegendComponent;
 
 /**
  * Handle data load errors in a standardized way
@@ -5918,7 +5918,7 @@ interface MapRendererBaseComponent<T = unknown> extends ComponentBuilder<MapRend
     transitionColor(): boolean;
     transitionColor(enabled: boolean): MapRendererBaseComponent<T>;
 }
-declare function export_default$7<T = unknown>(): MapRendererBaseComponent<T>;
+declare function export_default$2<T = unknown>(): MapRendererBaseComponent<T>;
 
 /**
  * bubble renderer component
@@ -6045,7 +6045,7 @@ interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilder<MapRe
     on(eventName: string, handler: BubbleEventHandler | null): MapRendererBubbleComponent<T>;
     on(eventName: string): BubbleEventHandler | undefined;
 }
-declare function export_default$6<T = unknown>(): MapRendererBubbleComponent<T>;
+declare function export_default$1<T = unknown>(): MapRendererBubbleComponent<T>;
 
 /**
  * geojson renderer component
@@ -6166,13 +6166,17 @@ declare function mapRendererGeoJson<T extends Record<string, unknown> = Record<s
  *                                                    undefined.
  * @property {d3.geo.path} mapPath                    A path-generator used to create the path data string for each matched
  *                                                    feature. A d3.geoPath or a bare generator function is accepted; it is
- *                                                    called with the matched feature, or with undefined where nothing
- *                                                    matched, for which a d3.geoPath returns null.
+ *                                                    called only with features that were actually matched.
+ * @property {String} key                             Identifies this highlight layer within the group it renders into,
+ *                                                    so several highlight layers can share one group. Default
+ *                                                    'highlight'. Two layers in one group need distinct keys; two
+ *                                                    renders of the same layer must share one, which is what makes the
+ *                                                    render idempotent. Named to match the mesh and raster renderers'
+ *                                                    key.
  * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
  *                                                    A falsy keyName is used as given, unlike prepareMergedGeoData, which
  *                                                    falls back to the default - so an empty keyName reads datum[""],
- *                                                    which is undefined, and matches a keyless feature rather than the
- *                                                    intended entity.
+ *                                                    which is undefined, and therefore matches nothing.
  * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities
  *                                                    are highlighted. Falsy entries are dropped. Default [].
  * @property {String, Function} highlightStroke       A colour, or an accessor called with the highlighted datum only.
@@ -6182,19 +6186,20 @@ declare function mapRendererGeoJson<T extends Record<string, unknown> = Record<s
  *                                                    Default 2. Returning null removes the inline style, leaving SVG's
  *                                                    initial width of 1.
  *
- * Note: an entity id that matches no feature is not reported. The lookup yields undefined, the
- * path generator returns null for it, and d3 removes the attribute - leaving a classed, styled
- * path with no geometry. A caller highlighting a stale or misspelled id sees nothing happen and
- * cannot tell that from the entity being off-screen.
+ * Note: an entity id that matches no feature is dropped from the join and reported through
+ * sszvis.logger.warn once per render, naming every unmatched id. It is a warning rather than a throw
+ * because a highlight normally tracks a transient hover or selection, and an id can legitimately
+ * go stale between two renders - crashing a chart mid-interaction would be worse than the missing
+ * highlight. Nothing is appended for an unmatched id, so the renderer no longer leaves a classed,
+ * fully styled path with no geometry behind.
  *
  * Note: the feature lookup keys on feature.id, which GeoJSON does not require, and goes through a
- * plain object literal. So ids are stringified on both sides - a numeric feature id is matched by
- * either a numeric or a string data key, which is load-bearing because SSZ geodata uses numeric
- * ids - every feature without an id collapses onto the key "undefined" and the last of them wins,
- * where a datum with no key finds it because the datum side stringifies the same way, and an id
- * naming an Object.prototype member ("valueOf", "toString", ...) is "found" even though no such
- * feature exists, failing exactly like an unmatched id. A symbol stays a symbol key, so it can
- * never be matched by a string id.
+ * Map. Ids are still stringified on both sides - a numeric feature id is matched by either a
+ * numeric or a string data key, which is load-bearing because SSZ geodata uses numeric ids - but
+ * only keys actually put into the Map can be found: a feature without an id is left out of the
+ * lookup, a datum with no entity id matches nothing, and an id naming an Object.prototype member
+ * ("valueOf", "toString", "__proto__", ...) is unmatched like any other absent id. A symbol stays a
+ * symbol key, so it can never be matched by a string id.
  *
  * Note: neither geoJson nor mapPath is validated, and once there is something to highlight both
  * are required. A missing geoJson throws while the lookup table is built, before the join runs, so
@@ -6233,12 +6238,14 @@ declare function mapRendererGeoJson<T extends Record<string, unknown> = Record<s
  * swallows the base layer's hover and click events - which matters more here than for the mesh,
  * since a highlight is normally driven by exactly that hover.
  *
- * Note: the border selector is unscoped and the join unkeyed, so a second highlight layer rendered
- * into the same group rebinds the first one's paths instead of drawing its own. One highlight layer
- * per group; choropleth uses exactly one, so the collision is latent, but the renderer is exported
- * publicly. Being an index join, it also re-purposes surviving elements by position rather than by
- * entity when the highlight array shrinks; the rendered result is still right, because "d" and both
- * styles are reapplied on every render rather than only on enter.
+ * Note: the paths are scoped by key and the join is keyed by map entity. Each layer selects
+ * only paths carrying its own data-highlight-key, so two highlight layers rendered into one group
+ * coexist as long as they are given different keys - sharing the default key still means
+ * sharing one set of paths, which is what makes an ordinary layer idempotent across renders even
+ * though consumers build a fresh component every time. The keyed join means an element stays with
+ * its entity when the array shrinks or is reordered, so per-entity transitions and enter/exit
+ * styling are now possible. One entity highlighted twice still draws two paths: the join key
+ * carries an occurrence counter.
  *
  * Note: the empty-highlight branch used to return a decorative `true`. Nothing consumed it -
  * d3's selection.each ignores the render callback's return value - so the port returns nothing.
@@ -6256,17 +6263,16 @@ type HighlightValue$1<T, R> = R | ((datum: T) => R);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredHighlightValue<T, R> = (datum: T) => R;
 /**
- * The path generator as this component calls it: with whatever the lookup returned. That is the
- * matched feature, or undefined where nothing matched - but because the lookup is a plain object
- * literal, an id naming an Object.prototype member yields the inherited value instead, so the
- * parameter is unknown rather than ExtendedFeature | undefined. See the module note. A d3.geoPath
- * satisfies this at runtime - it returns null for a non-feature - but not by its types, so the
+ * The path generator as this component calls it: with a matched feature only, since unmatched ids
+ * are dropped before the join. A d3.geoPath satisfies this at runtime but not by its types, so the
  * setter accepts either shape and HighlightProps states how the component actually calls it.
  */
 type HighlightPath = (feature: unknown) => string | null;
 interface MapRendererHighlightComponent<T = unknown> extends ComponentBuilder<MapRendererHighlightComponent<T>> {
     keyName(): string;
     keyName(value: string): MapRendererHighlightComponent<T>;
+    key(): string;
+    key(value: string): MapRendererHighlightComponent<T>;
     geoJson(): ExtendedFeatureCollection | undefined;
     geoJson(value: ExtendedFeatureCollection): MapRendererHighlightComponent<T>;
     mapPath(): GeoPath | HighlightPath | undefined;
@@ -6278,12 +6284,7 @@ interface MapRendererHighlightComponent<T = unknown> extends ComponentBuilder<Ma
     highlightStrokeWidth(): StoredHighlightValue<T, number | null>;
     highlightStrokeWidth<U = T>(value: HighlightValue$1<U, number | null>): MapRendererHighlightComponent<T>;
 }
-/**
- * Normalises a lookup key the way a property access does: a symbol stays a symbol key, everything
- * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
- * with the geojson renderer's own lookup.
- */
-declare function export_default$5<T = unknown>(): MapRendererHighlightComponent<T>;
+declare function mapRendererHighlight<T = unknown>(): MapRendererHighlightComponent<T>;
 
 /**
  * image render component
@@ -6296,12 +6297,11 @@ declare function export_default$5<T = unknown>(): MapRendererHighlightComponent<
  *
  * @property {Function} projection      The map projection function used to position the image in pixels. Uses the upper left
  *                                      and lower right corners of the image as geographical place markers to align with other map layers.
- *                                      It is called once per corner, with that corner's coordinates. A result it cannot
- *                                      place is not handled; see the notes below.
+ *                                      It is called once per corner, with that corner's coordinates. A corner it answers
+ *                                      null or undefined for is reported, naming the corner.
  * @property {String, Function} src      The source of the image you want to use. This should be either a URL for an image hosted on the same
  *                                      server that hosts the page, or a base64-encoded dataURL. For example, the zurich topolayer map module.
- *                                      A missing src is not reported: d3 removes an attribute set to undefined, so the
- *                                      image renders fully positioned with no src at all.
+ *                                      Required: a missing src is reported rather than rendering an image with none.
  * @property {Array} geoBounds          This should be a 2D array containing the upper-left (north-west) and lower-right (south-east)
  *                                      coordinates of the corresponding corners of the image. The structure expected is:
  *
@@ -6312,62 +6312,66 @@ declare function export_default$5<T = unknown>(): MapRendererHighlightComponent<
  *                                      Note: it is possible that even with precise corner coordinates, some mismatch may still occur. This
  *                                      will happen if the image itself is generated using a different type of map projection than the one used by the
  *                                      projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
- *                                      The two corners are subtracted in the order given, so passing the south-east
- *                                      corner first yields negative widths and heights, which the CSS parser drops -
- *                                      leaving the image positioned but unsized, with no error.
+ *                                      Required, and the order matters: corners the wrong way round project to a
+ *                                      negative width or height, which is reported rather than silently dropped.
  * @property {Number, Function} opacity  The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
  *                                      Default 1. An invalid value is dropped by the CSS parser rather than reported,
  *                                      leaving the image fully opaque; 0 renders nothing at all, which is
  *                                      indistinguishable from a src that failed to load.
+ * @property {String, Function} alt      The alternative text describing the image. Defaults to the
+ *                                      empty string, which marks the layer decorative so that
+ *                                      screen readers skip it - the right default for a
+ *                                      topographic or raster backdrop whose data lives in the svg
+ *                                      layers above. Pass a description when the image itself
+ *                                      carries information.
  *
  * Note: this component renders an HTML img element, so it belongs in a createHtmlLayer. Nothing
  * enforces that: called on an SVG selection it appends an SVG-namespaced img, which no browser
  * renders, without complaining.
  *
- * Note: the img carries no alt attribute and no role, and the component offers no property for
- * one, so a topographic layer is announced by screen readers as an unlabelled image. All six docs
- * examples ship this.
- *
- * Note: the component writes left and top but never position, so both are inert unless sszvis.css
- * is loaded - it is the stylesheet that sets position: absolute, along with display: block and
- * pointer-events: none. Without it the image sits in the document flow at the computed pixel size,
- * unoffset and clickable.
+ * Note: the component writes position: absolute, display: block and pointer-events: none inline, so
+ * the offsets it computes are never inert and the image never swallows the hover and click events of
+ * the map layers beneath it. sszvis.css sets the same three declarations for the class, plus
+ * user-select: none, which is left to the stylesheet: it only affects text selection over a
+ * decorative image, not whether the renderer works. So the component no longer needs sszvis.css to
+ * position itself. Being inline styles they beat any author rule short of !important, so a consumer
+ * who wants the image in the document flow or clickable can no longer get there through their own
+ * stylesheet.
  *
  * Note: the projected coordinates are written unshifted, and createHtmlLayer positions the layer
  * itself by the bounds padding - so the image's offset is relative to the layer and the padding is
  * applied exactly once. That is what keeps the image aligned with the svg layer.
  *
- * Note: the width is the rounded difference of the unrounded corners, while left is the rounded
- * north-west corner, so left + width does not necessarily equal the rounded south-east corner. The
- * image's right and bottom edges can sit a pixel off the map layers they are meant to align with.
+ * Note: both corners are rounded before the size is taken as their difference, so left + width is
+ * the rounded south-east corner and the image's edges land on the same pixels as the map layers it
+ * is aligned with.
  *
- * Note: neither geoBounds nor projection is validated. A missing geoBounds throws a bare TypeError
- * from indexing undefined, and a missing projection throws from calling it - both before any
- * attribute is written, though the img element has already been appended by then, so a throw
- * leaves a classed, empty img in the layer. A missing src is not reported at all: d3 removes an
- * attribute set to undefined, so the image renders fully positioned and sized with no src.
+ * Note: projection, src and geoBounds are all required and are validated before any element is
+ * created, so each way of getting them wrong is reported with a message naming the property, and a
+ * misconfigured renderer leaves nothing half-built in the layer. Inverted geoBounds - the likely
+ * real-world mistake - are caught by comparing the projected corners before they are rounded, so
+ * an inversion smaller than one pixel is reported rather than collapsing to a zero-size image.
  *
- * Note: a projection that answers null for a point it cannot place throws a bare TypeError rather
- * than being reported, and it does so late: the src has been written and both corners have already
- * been projected by the time the coordinates are read, so the failure leaves an img with its src
- * but no position. The JavaScript threw from indexing that null; the port re-throws a TypeError
- * carrying the same message from the same point in the chain. A projection that answers a
- * non-finite coordinate instead produces the string "Infinitypx", which the CSS parser drops,
- * leaving the image unpositioned. Neither is reachable with a d3 projection called this way:
- * clipAngle and clipExtent apply to streams, not to a direct call.
+ * Note: a projection that answers a non-finite coordinate is still not reported; it produces the
+ * string "Infinitypx", which the CSS parser drops, leaving the image unpositioned. Not reachable
+ * with a d3 projection called this way: clipAngle and clipExtent apply to streams, not to a direct
+ * call.
  *
  * Note: a Mercator pole, which is reachable, fails a third way again - log(tan(pi/2)) is merely a
  * very large float, so a geoBounds latitude of 90 positions and sizes the image tens of thousands
- * of pixels off rather than failing.
+ * of pixels off rather than failing - the extent stays positive, so the geoBounds check does not
+ * catch it either.
  *
  * Note: neither src nor opacity is wrapped in fn.functor, unlike the colour properties of the base,
- * geojson and highlight renderers - but both are handed straight to d3, which evaluates a function against the bound
- * datum. So an accessor happens to work, called with the join's placeholder 0.
+ * geojson and highlight renderers - but an accessor works all the same, called with the join's
+ * placeholder datum 0. opacity is handed to d3, which evaluates it; src is resolved by the
+ * component itself, because the resolved value identifies the element.
  *
- * Note: the join binds [0] rather than the src, so one image per container is the documented
- * limit - and the selector is unscoped, so a second image renderer in the same layer replaces the
- * first one's src and position instead of adding its own. The same defect as the mesh, highlight
- * and lake overlay renderers.
+ * Note: the src identifies the image within its layer, so two renderers with different sources
+ * each own an element and stack, while re-rendering the same source reuses the element it drew
+ * before. The element carries the resolved source in a data-image-key attribute for that purpose:
+ * the same key convention as the mesh, raster and highlight renderers, except that this renderer
+ * derives its key from the src rather than taking one as a property.
  *
  * Note: no transition is scheduled, so the image jumps to its new position on a resize rather than
  * animating. Unlike the base and geojson renderers this component keeps no caches, emits no
@@ -6380,8 +6384,8 @@ declare function export_default$5<T = unknown>(): MapRendererHighlightComponent<
  */
 
 /**
- * A constant or an accessor. Neither src nor opacity is wrapped in fn.functor, so a function is
- * handed straight to d3 and evaluated against the join's placeholder datum, 0.
+ * A constant or an accessor. Neither src nor opacity is wrapped in fn.functor; an accessor is
+ * evaluated against the join's placeholder datum, 0.
  */
 type ImageValue<R extends string | number> = R | ValueFn<BaseType, number, R>;
 interface MapRendererImageComponent extends ComponentBuilder<MapRendererImageComponent> {
@@ -6393,8 +6397,10 @@ interface MapRendererImageComponent extends ComponentBuilder<MapRendererImageCom
     geoBounds(value: [GeoPoint, GeoPoint]): MapRendererImageComponent;
     opacity(): ImageValue<number>;
     opacity(value: ImageValue<number>): MapRendererImageComponent;
+    alt(): ImageValue<string>;
+    alt(value: ImageValue<string>): MapRendererImageComponent;
 }
-declare function export_default$4(): MapRendererImageComponent;
+declare function mapRendererImage(): MapRendererImageComponent;
 
 /**
  * mesh renderer component
@@ -6408,23 +6414,29 @@ declare function export_default$4(): MapRendererImageComponent;
  * line must have a single set of styles which all borders share. To highlight individual borders, use the highlight renderer.
  *
  * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
+ *                                                    Required: omitting it throws a TypeError, which is why the
+ *                                                    getter reports it as possibly undefined.
  * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+ *                                                    Required: omitting it throws a TypeError too.
+ * @property {string} key                             Identifies this mesh within its layer. Default "border". Two
+ *                                                    meshes in one group need distinct keys to coexist; two sharing a
+ *                                                    key share one path, the last render winning.
  * @property {string, function} borderColor           The color of the border path stroke. Default is white
  * @property {number, function} strokeWidth           The width of the border path stroke. Default is 1.25.
  *                                                    An invalid value is dropped by the CSS parser rather than
  *                                                    reported, leaving SVG's initial width of 1.
  *
- * Note: neither geoJson nor mapPath is validated. Omitting either leaves a classed, styled path
- * with no geometry - invisible, silent, and indistinguishable from having no borders to draw. A
- * missing geoJson reaches the path generator as undefined, which returns null; a missing mapPath
- * has d3 remove the attribute without calling anything.
+ * Note: both geoJson and mapPath are required, and omitting either throws a TypeError naming it.
+ * The guard runs before the join, so nothing is appended. This replaces the earlier behaviour, in
+ * which either omission left a classed, styled path with no geometry - invisible, silent, and
+ * indistinguishable from having had no borders to draw.
  *
- * Note: borderColor and strokeWidth are not wrapped in fn.functor, unlike the colour properties of
- * the base, geojson and highlight renderers. An accessor is handed straight to d3 and called with
- * the mesh object and d3's index, not with a per-entity datum - there is only one path, so there is
- * no such datum. An accessor written against a datum therefore resolves to undefined, and d3
- * removes the style, leaving the borders invisible with no error. The lake overlay's lakePathColor
- * has the same shape.
+ * Note: an accessor passed for borderColor or strokeWidth is called with the mesh object and d3's
+ * index, not with a per-entity datum - there is only one path, so there is no such datum. An
+ * accessor written against a datum, the way every other map renderer's colour accessor is written,
+ * therefore resolves to undefined. A null or undefined result is read as "keep the default" rather
+ * than passed to d3, which would have removed the style and left the borders invisible with no
+ * error. The lake overlay's lakePathColor still has the unguarded shape.
  *
  * Note: both properties are written as inline styles rather than attributes. Nothing in sszvis.css
  * sets stroke or stroke-width for .sszvis-map__border, so nothing is being overridden - but a
@@ -6435,9 +6447,11 @@ declare function export_default$4(): MapRendererImageComponent;
  * without that stylesheet, the mesh is a filled black shape covering the map, and it swallows the
  * base layer's hover and click events rather than letting them through.
  *
- * Note: the border selector is unscoped and the join unkeyed, so a second mesh rendered into the
- * same group rebinds and restyles the first one's path instead of drawing its own. One mesh per
- * layer.
+ * Note: the border path is scoped to the rendering group's own children and identified by the key
+ * property, so a mesh only ever rebinds the path it drew itself. Two meshes in one group therefore
+ * coexist as long as they have distinct keys - administrative boundaries and lake outlines, say.
+ * Two meshes sharing a key are still one path, which is what makes a re-render reuse its element,
+ * so the constraint is one mesh per key per layer rather than one mesh per layer.
  *
  * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
  * caches, emits no missing-value pattern, and adds no tooltip anchors or event targets - so none
@@ -6456,24 +6470,25 @@ declare function export_default$4(): MapRendererImageComponent;
  */
 type MeshPath = ValueFn<BaseType, GeoPermissibleObjects, string | null>;
 /**
- * A constant or an accessor. Neither of this component's style props is wrapped in fn.functor, so
- * an accessor is called by d3 with the mesh object itself rather than with a per-entity datum -
- * there is only one path, so there is no such datum. An accessor may resolve to null to leave the
- * style off, which is how d3 reads it; at runtime undefined does the same, though d3's own types
- * do not say so.
+ * A constant or an accessor. An accessor is called by d3 with the mesh object itself rather than
+ * with a per-entity datum - there is only one path, so there is no such datum. It may resolve to
+ * null or undefined, which is read as "keep the default" rather than as "remove the style", so a
+ * border cannot silently vanish.
  */
-type MeshValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null>;
+type MeshValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
 interface MapRendererMeshComponent extends ComponentBuilder<MapRendererMeshComponent> {
     geoJson(): GeoPermissibleObjects | undefined;
     geoJson(value: GeoPermissibleObjects): MapRendererMeshComponent;
     mapPath(): MeshPath | undefined;
     mapPath(value: MeshPath): MapRendererMeshComponent;
+    key(): string;
+    key(value: string): MapRendererMeshComponent;
     borderColor(): MeshValue<string>;
     borderColor(value: MeshValue<string>): MapRendererMeshComponent;
     strokeWidth(): MeshValue<number>;
     strokeWidth(value: MeshValue<number>): MapRendererMeshComponent;
 }
-declare function export_default$3(): MapRendererMeshComponent;
+declare function mapRendererMesh(): MapRendererMeshComponent;
 
 /**
  * patternedlakeoverlay component
@@ -6495,35 +6510,36 @@ declare function export_default$3(): MapRendererMeshComponent;
  *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
  *                                      Never validated, like lakeFeature.
  * @property {String, Function} lakePathColor  The stroke colour of those borders. No default: the stylesheet's grey
- *                                      dotted stroke stands unless this is set, and it is applied only when truthy; see
- *                                      the note below. Not wrapped in fn.functor.
+ *                                      dotted stroke stands unless this is set. A falsy colour - "" - clears the
+ *                                      inline stroke again. Not wrapped in fn.functor.
  * @property {Boolean} fadeOut          Whether to fade the lake out towards the bottom of the shape with a gradient mask.
  *                                      Default true - but choropleth defaults its own lakeFadeOut to false, so the
- *                                      default branch is the one no in-repo chart takes. Turning it off does not undo
- *                                      an existing fade; see the note below.
+ *                                      default branch is the one no in-repo chart takes. Turning it off removes an
+ *                                      existing fade again.
+ * @property {String} key               Optional scope for this overlay's definitions and paths, so that two overlays
+ *                                      drawn into one group each own their elements. Defaults to one scope per group,
+ *                                      generated on first render and remembered on the group as
+ *                                      data-lake-key - so re-rendering, even with a freshly constructed
+ *                                      component, reuses the same elements, while a second map on the page gets its
+ *                                      own. A caller-supplied key must be unique within the document, must start
+ *                                      with a letter and may use only letters, digits, hyphens and underscores -
+ *                                      it is written into the definition ids, so a url(#...) reference has to be
+ *                                      able to name it. Anything else throws. The leading letter also keeps caller
+ *                                      keys apart from the generated scopes, which are bare decimals.
  *
- * Note: every render calls the pattern helpers again on the same defs elements - the fade pair only
- * while fadeOut is on - and each helper appends its contents unconditionally rather than joining
- * them, so the tile gains another rect and another two lines, the fade gradient another two stops,
- * and the mask another rect on every redraw. A map that re-renders on resize or on a control change
- * grows these definitions without bound. The elements themselves are reused - ensureDefsElement
- * joins, and both path joins are unkeyed - so it is only their contents that accumulate. The base
- * and geojson renderers call their own pattern helper the same way.
+ * Note: the definition ids are scoped - "lake-pattern-1", "lake-fade-gradient-1", "lake-fade-mask-1"
+ * and so on - so two maps on one page no longer define the same id twice. Consumers must not rely on
+ * the previously fixed ids.
  *
- * Note: disabling fadeOut after a render with it enabled leaves both the mask attribute on the
- * lake shape and the gradient and mask definitions in the defs, because the disabled branch only
- * skips writing them. choropleth re-applies fadeOut on every render, so a chart that toggles its
- * lakeFadeOut stays faded after the toggle.
+ * Note: the pattern helpers in src/patterns.ts append their contents rather than joining them, so
+ * this component may only call them on a definition that is still empty; otherwise the tile would
+ * gain another rect and two lines, the gradient another two stops and the mask another rect on every
+ * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
+ * geojson renderers' "missing-pattern" too.
  *
- * Note: the mask fades the lake by filling itself with url(#lake-fade-gradient), so the two
- * definitions are only useful together. The gradient helper writes that id a second time onto the
- * element ensureDefsElement had already identified - a harmless redundancy, and the only place two
- * code paths write the same id.
- *
- * Note: all three definitions use fixed ids - "lake-pattern", "lake-fade-gradient" and
- * "lake-fade-mask" - so two maps on one page define each of them twice, and every url(#...)
- * reference in the document resolves to whichever comes first. The same defect as the base and
- * geojson renderers' "missing-pattern".
+ * Note: the mask fades the lake by filling itself with the fade gradient, so the two definitions are
+ * only useful together. Both helpers hard-code the old fixed gradient id, so this component rewrites
+ * the gradient's id and the mask rect's fill after calling them.
  *
  * Note: the defs element is created inside the map group rather than at the svg root, and
  * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
@@ -6543,20 +6559,17 @@ declare function export_default$3(): MapRendererMeshComponent;
  * shape - though where a dropped mesh style leaves the borders invisible, a dropped style here
  * falls back to the stylesheet's grey dotted stroke, so the mistake is even quieter.
  *
- * Note: the colour is applied only when the property is truthy, because it has no default and the
- * guard is what leaves the stylesheet's stroke alone. So a falsy colour is silently ignored rather
- * than reported, and there is no way to clear a colour already set: re-rendering with "" leaves the
- * previous stroke in place, since the guard only skips writing a new one.
+ * Note: the colour is written on every render, and only an unset property leaves the stylesheet's
+ * stroke alone. A falsy colour - "", or an accessor returning undefined - clears the inline stroke
+ * and hands the border back to the stylesheet.
  *
  * Note: the component sets no pointer-events on either path and no fill on the border path, so
  * both come from sszvis.css. Rendered without that stylesheet the border path is a filled black
  * shape covering the lake - SVG's initial fill is black - and both paths swallow the base layer's
  * hover and click events.
  *
- * Note: both selectors are unscoped and both joins unkeyed, so a second overlay rendered into the
- * same group rebinds and restyles the first one's paths instead of drawing its own. One overlay per
- * layer; choropleth uses exactly one, so the collision is latent, but the renderer is exported
- * publicly.
+ * Note: both path selectors are scoped by the overlay's key, so two overlays rendered into one group
+ * each draw their own pair of paths as long as they are given distinct keys.
  *
  * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
  * caches, and does not mutate the geoJson it is handed, so the whole centroid-caching family of
@@ -6592,8 +6605,10 @@ interface MapRendererPatternedLakeOverlayComponent extends ComponentBuilder<MapR
     lakePathColor(value: LakePathColor): MapRendererPatternedLakeOverlayComponent;
     fadeOut(): boolean;
     fadeOut(value: boolean): MapRendererPatternedLakeOverlayComponent;
+    key(): string | undefined;
+    key(value: string): MapRendererPatternedLakeOverlayComponent;
 }
-declare function export_default$2(): MapRendererPatternedLakeOverlayComponent;
+declare function mapRendererPatternedLakeOverlay(): MapRendererPatternedLakeOverlayComponent;
 
 /**
  * raster renderer component
@@ -6610,11 +6625,11 @@ declare function export_default$2(): MapRendererPatternedLakeOverlayComponent;
  * data from the layer's datum rather than from a property.
  *
  * @property {Boolean} debug         Whether to activate debug mode, which shows a red square over the whole
- *                                   canvas, for testing alignment with other map layers. Default false. See
- *                                   the note below: it is not purely additive.
- * @property {Number} width          The width of the canvas. Required, and unvalidated; a fractional value is
- *                                   truncated to whole pixels. See the notes below.
- * @property {Number} height         The height of the canvas. Required and unvalidated, like the width.
+ *                                   canvas, for testing alignment with other map layers. Default false.
+ * @property {Number} width          The width of the canvas, in CSS pixels. Required: a missing, non-finite
+ *                                   or negative width throws. A fractional value is rounded up to whole
+ *                                   pixels; see the notes below.
+ * @property {Number} height         The height of the canvas. Required and validated like the width.
  * @property {Function} position     A function which takes a datum and returns a position for the corresponding
  *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
  *                                   index, no array - unlike a d3 accessor, though the render callback itself
@@ -6626,38 +6641,49 @@ declare function export_default$2(): MapRendererPatternedLakeOverlayComponent;
  *                                   returns a float.
  * @property {String, Function} fill The fill function. Takes a datum and should return a fill color for the datum's pixel.
  *                                   Wrapped in fn.functor, so a constant colour is accepted too. It has no
- *                                   default, and an invalid colour is not reported; see the notes below.
+ *                                   default. A value the canvas cannot parse leaves the cell unpainted; see
+ *                                   the notes below.
  *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
  *                                   CanvasPattern at runtime, which this contract deliberately excludes.
+ * @property {String} key          Identifies this raster within its layer. Default "raster". Two rasters in
+ *                                   one layer need distinct keys to coexist; two sharing a key share one
+ *                                   canvas, and since each render clears it, the last one wins.
+ * @property {String} alt            An accessible description of what the raster shows. Default "", which
+ *                                   marks the canvas decorative so assistive technology skips it
+ *                                   deliberately. A non-empty value is written as an aria-label with
+ *                                   role="img", and as the canvas's fallback content. Named to match the
+ *                                   image renderer's alt, so the two non-SVG layers are labelled the same
+ *                                   way, though on a canvas it is not an HTML attribute.
  * @property {Number} opacity        The opacity of the canvas. Default 1; use a lower value to reveal the
  *                                   layers underneath. It is a style on the canvas, so it
  *                                   fades the whole layer rather than the individual cells, and 0 still draws
  *                                   every one of them.
  *
- * Note: the bitmap is sized in CSS pixels - the width and height attributes are the layer dimensions,
- * with no devicePixelRatio factor and no compensating style width - so on a display with a device
- * pixel ratio above 1 the bitmap is stretched across more device pixels than it has, and the cells
- * come out soft while the SVG layers over them stay sharp.
+ * Note: the bitmap is sized in device pixels - the width and height attributes are the layer
+ * dimensions multiplied by devicePixelRatio, with the CSS size pinned to the layer dimensions and
+ * the drawing context scaled to match - so the cells are as sharp as the SVG layers over them on a
+ * high-DPI display. Positions, cell sides and the debug rectangle are all in CSS pixels, as before;
+ * the scale factor costs one fill of ratio-squared as many device pixels per cell.
  *
- * Note: a fractional width or height is truncated to a whole-pixel bitmap. Every docs caller passes
- * bounds.innerWidth, which is routinely fractional, so a raster layer is typically up to a pixel
- * narrower and shorter than the SVG layers it has to line up with. The attribute itself keeps the
- * fractional value, so the markup reads 20.5 while the bitmap is 20.
+ * Note: a fractional width or height is rounded up, since the bitmap is a whole number of pixels.
+ * Every docs caller passes bounds.innerWidth, which is routinely fractional, so a raster layer
+ * would otherwise be up to a pixel narrower and shorter than the SVG layers it has to line up with,
+ * leaving a hairline gap at the right and bottom edges that shifts as the chart is resized. Rounding
+ * up covers those edges instead, at the cost of up to a pixel of overhang.
  *
  * Note: the visible clearing between renders comes from writing the width attribute, which resets
- * the bitmap per spec; the clearRect call is redundant while the dimensions are set, and a no-op
- * when they are missing. When width and height are missing the attributes are removed, the canvas
- * falls back to its intrinsic 300x150, clearRect is called with NaN and silently does nothing - so
- * nothing clears at all and each render's cells pile up on the previous ones. The same canvas
- * element is reused across renders, with width, height and opacity reapplied each time, and a
- * change of dimensions resizes that canvas rather than replacing it - which is what makes the
+ * the bitmap per spec; the clearRect call is belt and braces. Both dimensions are validated before
+ * anything is drawn, so a missing one is reported instead of leaving the canvas at its intrinsic
+ * 300x150 with a NaN clearRect that never cleared and each render's cells piling up. The same
+ * canvas element is reused across renders, with the dimensions and opacity reapplied each time, and
+ * a change of dimensions resizes that canvas rather than replacing it - which is what makes the
  * bitmap reset double as the clear.
  *
- * Note: fillStyle is stateful, and an invalid colour is ignored by the canvas API rather than
- * reported - so a cell whose fill does not parse is drawn in whatever colour was last set. That is
- * the previous cell's colour, which makes a broken colour scale look like a working one, or, in
- * debug mode, the debug red at 20% alpha, which reads as data. Debug mode is therefore not purely
- * additive.
+ * Note: fillStyle is stateful and the canvas API ignores a value it cannot parse, so a cell whose
+ * fill does not parse would otherwise be drawn in whatever colour was last set - the previous
+ * cell's colour, or the debug red. Each fill is therefore probed before it is used and a cell whose
+ * fill does not parse is left unpainted, so a broken colour scale shows as holes in the raster
+ * rather than as plausible data. Debug mode stays purely additive as a result.
  *
  * Note: no docs example can turn debug on - rastermap-gradient guards its debug(DEBUG) call with
  * `if (DEBUG)` on a hardcoded false, and the other three rastermaps never touch the property - so
@@ -6665,7 +6691,7 @@ declare function export_default$2(): MapRendererPatternedLakeOverlayComponent;
  *
  * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
  * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
- * nothing. Neither position nor fill is validated either, and each throws a bare TypeError from
+ * nothing. Neither position nor fill is validated, and each throws a bare TypeError from
  * being called, naming neither property - but only for non-empty data, so an empty dataset hides
  * the misconfiguration entirely. The canvas has already been created by the time any of these
  * throw.
@@ -6680,24 +6706,28 @@ declare function export_default$2(): MapRendererPatternedLakeOverlayComponent;
  * Note: the component writes no position, so the canvas is only positioned because sszvis.css sets
  * position: absolute on the class - the same dependency as the image renderer, along with
  * display: block, pointer-events: none and user-select: none. The opacity, by contrast, is written
- * as an inline style; nothing in sszvis.css sets it, so nothing is overridden - but a consumer
+ * as an inline style, as are the CSS width and height that pin the scaled bitmap to the layer size;
+ * nothing in sszvis.css sets any of them, so nothing is overridden - but a consumer
  * cannot restyle it from their own stylesheet either. The positions themselves are written unshifted, and
  * createHtmlLayer offsets the layer by the bounds padding, so cell positions are layer-relative and
  * the padding is applied exactly once.
  *
- * Note: the selector is unscoped and the join binds a placeholder, so a second raster renderer in
- * the same layer redraws the first one's canvas instead of adding its own. The same defect as the
- * mesh, highlight, lake overlay and image renderers. The canvas is appended to the layer, so it
- * stacks over whatever the layer already holds, which is what rastermap-bins relies on.
+ * Note: the canvas is scoped to the layer's own children and identified by the key prop, so two
+ * rasters can coexist in one layer as long as their keys differ - the same convention as the mesh
+ * renderer's key. Two rasters sharing a key share one canvas, which is what makes a re-render reuse
+ * its element, so the constraint is one raster per key per layer rather than one per layer. The
+ * canvas is appended to the layer, so it stacks over whatever the layer already holds, which is
+ * what rastermap-bins relies on.
  *
  * Note: nothing ties this component to an HTML layer. Called on an SVG selection the join creates an
  * SVG-namespaced canvas, which has no getContext, so it throws - where the image renderer silently
  * appends an unrenderable img instead.
  *
- * Note: the canvas carries no role, no aria-label and no fallback content, and the component offers
- * no property for one, so a raster data layer is invisible to screen readers - the same gap as the
- * image renderer's unlabelled img, and unlike the SVG layers there is no per-element markup a
- * consumer could annotate instead.
+ * Note: the canvas is labelled through the alt property. In the four docs rasters the raster IS the
+ * data - the SVG layers over it are borders and annotations - so a description belongs on it; where
+ * a raster really is decoration, the empty default hides it from assistive technology on purpose
+ * rather than by accident. A canvas has no per-element markup a consumer could annotate instead,
+ * which is why the property has to exist here.
  *
  * Note: no transition is scheduled - a canvas cannot be transitioned by d3 anyway - so the raster
  * repaints in full on every render, one fillStyle write and one fillRect per datum. Unlike the base
@@ -6730,10 +6760,14 @@ interface MapRendererRasterComponent<T = unknown> extends ComponentBuilder<MapRe
     cellSide(value: number): MapRendererRasterComponent<T>;
     fill(): StoredRasterFill<T> | undefined;
     fill<U = T>(value: RasterFill<U>): MapRendererRasterComponent<T>;
+    key(): string;
+    key(value: string): MapRendererRasterComponent<T>;
+    alt(): string;
+    alt(value: string): MapRendererRasterComponent<T>;
     opacity(): number;
     opacity(value: number): MapRendererRasterComponent<T>;
 }
-declare function export_default$1<T = unknown>(): MapRendererRasterComponent<T>;
+declare function mapRendererRaster<T = unknown>(): MapRendererRasterComponent<T>;
 
 /**
  * choropleth Map Component
@@ -6755,9 +6789,10 @@ declare function export_default$1<T = unknown>(): MapRendererRasterComponent<T>;
  * @property {Number} height                          The height of the map. Used to create the map projection function.
  *                                                    No default, and fails the same way as width.
  * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
- *                                                    Required and unguarded: it is the one property whose absence throws.
- * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default; a
- *                                                    missing mesh renders as one path with no `d` rather than as no path.
+ *                                                    Required and unguarded: its absence throws, as borders' does.
+ * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default, and
+ *                                                    required in practice: the mesh renderer throws a TypeError naming
+ *                                                    its geoJson property if it is left out.
  * @property {Object} lakeFeatures                    The shape of the part of Lake Zurich that lies within the city.
  *                                                    No default; a missing shape renders as an empty path.
  * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default, and it
@@ -6778,8 +6813,13 @@ declare function export_default$1<T = unknown>(): MapRendererRasterComponent<T>;
  *                                                    matched a datum: that draws geometry rather than values, keeps this
  *                                                    fill, and calls an accessor with undefined. See src/map/renderer/base.ts.
  * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
- *                                                    mesh, for the border color of the map entities. Default white.
- * @property {Number, Function} strokeWidth           The width of the entity borders. Default 1.25.
+ *                                                    mesh, for the border color of the map entities. Default white. An
+ *                                                    accessor that resolves to nothing keeps that default rather than
+ *                                                    clearing the stroke.
+ * @property {Number, Function} strokeWidth           The width of the border path stroke, delegated to the mesh
+ *                                                    renderer like borderColor. A number, or a function handed to d3
+ *                                                    and so called with the border mesh. Default 1.25, with the same
+ *                                                    resolves-to-nothing fallback as borderColor.
  * @property {String, Function} lakePathColor         The color of the entity borders which extend over the lake. No
  *                                                    default: left out, the paths take their stroke from the stylesheet.
  * @property {Boolean} withLake                       Whether or not to show the textured outline of the end of lake Zurich that is within the city. Default true
@@ -6800,8 +6840,9 @@ declare function export_default$1<T = unknown>(): MapRendererRasterComponent<T>;
  * areas rendered at the same size share the projection fitted to whichever rendered first, and the
  * second is projected outside its destination box.
  *
- * Note: features is the one property whose absence throws, because prepareMergedGeoData reads
- * geoJson.features. width and height have no defaults either, but a missing size degrades silently:
+ * Note: features and borders are the two properties whose absence throws - features because
+ * prepareMergedGeoData reads geoJson.features, borders because the mesh renderer now validates its
+ * own geoJson. width and height have no defaults either, but a missing size degrades silently:
  * fitSize gets undefined, the scale is NaN, and every area carries a path of NaN coordinates that
  * the browser drops, leaving a blank map instead of an error.
  *
@@ -6813,12 +6854,12 @@ declare function export_default$1<T = unknown>(): MapRendererRasterComponent<T>;
  *
  * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
  * renderer's own default of true, so the fade mask and its gradient are not created unless the
- * caller asks for them. A fade is not removable either: the renderer only ever adds the mask
- * attribute, so turning lakeFadeOut back off leaves the lake faded.
+ * caller asks for them. Toggling it is safe in both directions: turning lakeFadeOut back off
+ * removes the mask attribute and its two definitions again.
  *
  * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
- * emits the #lake-pattern definition and two empty paths. Every non-Zurich map - switzerland
- * included - has to set .withLake(false) or it carries them.
+ * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
+ * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
  *
  * Note: the event dispatch is created once per choropleth() call and closed over, while the four
  * renderers keep their props on the element they rendered into. So one instance can draw into two
@@ -6851,6 +6892,12 @@ interface AnchoredShape<T> extends ComponentBuilder<AnchoredShape<T>> {
 type BaseValue<T, R> = R | ((datum: T | undefined) => R);
 type HighlightValue<T, R> = R | ((datum: T) => R);
 type GeoStyleValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null>;
+/**
+ * The mesh renderer's own shape, which differs from GeoStyleValue in one way: an accessor there may
+ * resolve to undefined as well as null, because the mesh reads either as "keep the default" rather
+ * than passing it to d3. The lake overlay has no such guard, so lakePathColor keeps GeoStyleValue.
+ */
+type MeshStyleValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
 /**
  * A handler as this component's event API delivers it - which is to say, with undefined. See the
  * note on legacyDatum below.
@@ -6892,10 +6939,10 @@ interface ChoroplethComponent<T extends object = object> extends ComponentBuilde
     transitionColor(): boolean;
     transitionColor(value: boolean): ChoroplethComponent<T>;
     /** Delegated to the mesh renderer. */
-    borderColor(): GeoStyleValue<string>;
-    borderColor(value: GeoStyleValue<string>): ChoroplethComponent<T>;
-    strokeWidth(): GeoStyleValue<number>;
-    strokeWidth(value: GeoStyleValue<number>): ChoroplethComponent<T>;
+    borderColor(): MeshStyleValue<string>;
+    borderColor(value: MeshStyleValue<string>): ChoroplethComponent<T>;
+    strokeWidth(): MeshStyleValue<number>;
+    strokeWidth(value: MeshStyleValue<number>): ChoroplethComponent<T>;
     /** Delegated to the highlight renderer. */
     highlight(): (T | null | undefined)[];
     highlight(value: (T | null | undefined)[]): ChoroplethComponent<T>;
@@ -7369,5 +7416,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$E as annotationCircle, export_default$D as annotationConfidenceArea, export_default$C as annotationConfidenceBar, export_default$A as annotationLine, export_default$z as annotationRangeFlag, export_default$y as annotationRangeRuler, export_default$x as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$r as bar, bounds, export_default$F as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$g as dimensionsHeatTable, export_default$f as dimensionsHorizontalBarChart, export_default$b as dimensionsVerticalBarChart, export_default$q as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$B as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, export_default$e as layoutPopulationPyramid, export_default$d as layoutSmallMultiples, export_default$c as layoutStackedAreaMultiples, export_default$a as legendColorBinned, export_default$9 as legendColorLinear, legendColorOrdinal, export_default$8 as legendRadius, export_default$p as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$7 as mapRendererBase, export_default$6 as mapRendererBubble, mapRendererGeoJson, export_default$5 as mapRendererHighlight, export_default$4 as mapRendererImage, export_default$3 as mapRendererMesh, export_default$2 as mapRendererPatternedLakeOverlay, export_default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$u as move, muchDarker, nestedStackedBarsVertical, not, export_default$o as pack, export_default$t as panning, parseDate, parseNumber, parseYear, export_default$n as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$m as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$l as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, export_default$k as stackedArea, export_default$j as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$i as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$w as tooltip, export_default$v as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$h as treemap, valueFn, viewport, export_default$s as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$z as annotationCircle, export_default$y as annotationConfidenceArea, export_default$x as annotationConfidenceBar, export_default$v as annotationLine, export_default$u as annotationRangeFlag, export_default$t as annotationRangeRuler, export_default$s as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$m as bar, bounds, export_default$A as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$b as dimensionsHeatTable, export_default$a as dimensionsHorizontalBarChart, export_default$6 as dimensionsVerticalBarChart, export_default$l as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$w as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, export_default$9 as layoutPopulationPyramid, export_default$8 as layoutSmallMultiples, export_default$7 as layoutStackedAreaMultiples, export_default$5 as legendColorBinned, export_default$4 as legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, export_default$k as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$p as move, muchDarker, nestedStackedBarsVertical, not, export_default$j as pack, export_default$o as panning, parseDate, parseNumber, parseYear, export_default$i as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$h as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$g as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, export_default$f as stackedArea, export_default$e as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$d as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$r as tooltip, export_default$q as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$c as treemap, valueFn, viewport, export_default$n as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter, Viewport, ViewportListener };
