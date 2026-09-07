@@ -66,9 +66,9 @@
  *
  * Note: a cell's value is the sum of every row the accessors placed in it, so data that is not
  * already aggregated to one row per (stack, series) pair stacks to its true total. The slice's
- * `data` property still points at the first row of the cell. An unguarded read throws when a
- * stack is missing one of the series keys, so every stack has to carry a row for every series -
- * callers with sparse data have to pad it with zero rows.
+ * `data` property still points at the first row of the cell. A stack that carries no row for
+ * one of the series keys stacks that series as zero, and the slice's `data` is undefined, so
+ * sparse data needs no padding with explicit zero rows.
  *
  * Note: the series keys come from Object.keys over the grouped data, and JavaScript orders
  * integer-like keys numerically regardless of insertion order. A series accessor returning
@@ -128,11 +128,12 @@ const snd = fn.prop("1");
 
 /**
  * One slice of a stack: the [y0, y1] point d3.stack produces, with `data` narrowed from the
- * whole cascade row to the single datum the slice was computed from, and tagged with the
- * series and the stack it belongs to. It is d3's own SeriesPoint, which is why it is an
- * Array rather than a two-element tuple.
+ * whole cascade row to the first datum of the cell the slice was computed from, and tagged
+ * with the series and the stack it belongs to. It is d3's own SeriesPoint, which is why it is
+ * an Array rather than a two-element tuple. `data` is undefined when the stack carries no row
+ * for that series at all, which stacks as zero.
  */
-export type StackedBarSlice<T, X extends string | number = string> = SeriesPoint<T> & {
+export type StackedBarSlice<T, X extends string | number = string> = SeriesPoint<T | undefined> & {
   /** The series key the slice belongs to. */
   series: string;
   /** The stack the slice belongs to, as the stack accessor returned it. */
@@ -197,20 +198,27 @@ function stackedBarData(order: StackOrder) {
         // Every row the accessors placed in a cell contributes to that cell's value, so
         // data that is not pre-aggregated to one row per (stack, series) pair stacks to
         // its true total rather than to its first row.
-        .value((x, key) => sum(x[key], valueAcc))
+        // A stack that carries no row for one of the series keys stacks that series as
+        // zero rather than throwing.
+        .value((x, key) => sum(x[key] ?? [], valueAcc))
         .order(order)(rows);
 
       // Simplify the 'data' property. The slices themselves are the objects d3 created,
       // rewritten in place, so a caller holding one sees the new shape. The series arrays
       // are rebuilt, so d3's own `key` and `index` - the only two properties it hangs off a
       // series - have to be carried across by hand.
+      // The stack value of a row cannot be read off a cell that may be missing, so it is
+      // taken once per row from whichever datum the row does hold. The stack layers d3
+      // returns are index-aligned to the rows it was given.
+      const stackValues = rows.map((row) => _stackAcc(Object.values(row).flat()[0]));
+
       const series = stacks.map((stack) => {
-        const slices = stack.map((d) => {
-          const datum = d.data[stack.key][0];
+        const slices = stack.map((d, i) => {
+          const datum = d.data[stack.key]?.[0];
           return Object.assign(d, {
             series: stack.key,
             data: datum,
-            stack: _stackAcc(datum),
+            stack: stackValues[i],
           });
         });
         return Object.assign(slices, { key: stack.key, index: stack.index });
