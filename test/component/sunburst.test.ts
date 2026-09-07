@@ -410,9 +410,10 @@ describe("component/sunburst", () => {
       expect(fill.mock.calls).toEqual([["A"], ["A"]]);
     });
 
-    test("should lighten every further ring by 15% of its parent's lightness", () => {
+    test("should close 15% of the gap between a ring's lightness and white", () => {
       const node = render(sunburstOf(), hierarchyOf());
-      // #808080 is hsl lightness 0.502; 0.502 * 1.15 is 0.577, which is rgb 147.
+      // #808080 is hsl lightness 0.502; 0.502 + 0.15 * (1 - 0.502) is 0.577, which is
+      // rgb 147 - the same step the old multiply by 1.15 gave from a mid-tone.
       expect(attrs(node, "fill")).toEqual([
         "rgb(128, 128, 128)",
         "rgb(147, 147, 147)",
@@ -422,7 +423,7 @@ describe("component/sunburst", () => {
       ]);
     });
 
-    test("should compound the lightening over three rings", () => {
+    test("should compound the lightening over three rings, converging on white", () => {
       const threeLayers = prepareHierarchyData<Row & { sub2: string }>()
         .layer((d) => d.cat)
         .layer((d) => d.sub)
@@ -430,11 +431,24 @@ describe("component/sunburst", () => {
         .value((d) => d.value)
         .calculate([{ cat: "A", sub: "A1", sub2: "A1x", value: 1 }]);
       const node = render(sunburstOf(), threeLayers);
+      // Each step is smaller than the last, since it is measured against what is left.
       expect(attrs(node, "fill")).toEqual([
         "rgb(128, 128, 128)",
         "rgb(147, 147, 147)",
-        "rgb(169, 169, 169)",
+        "rgb(163, 163, 163)",
       ]);
+    });
+
+    test("should keep the rings apart even from a very light base colour", () => {
+      // The lightening never reaches white, so neighbouring rings stay distinguishable
+      // however little headroom the caller's colour scale leaves.
+      const node = render(
+        sunburstOf(() => "#eeeeee"),
+        hierarchyOf()
+      );
+      expect(attrs(node, "fill")[0]).toBe("rgb(238, 238, 238)");
+      expect(attrs(node, "fill")[1]).toBe("rgb(241, 241, 241)");
+      expect(attrs(node, "fill")[1]).not.toBe("rgb(255, 255, 255)");
     });
 
     test("should give siblings the same colour, since it is derived from their parent's", () => {
@@ -799,20 +813,6 @@ describe("component/sunburst", () => {
       await settle();
       g.datum(hierarchyOf()).call(component.fill(() => "#ff0000") as never);
       expect(attrs(g.node() as SVGGElement, "fill")[0]).toBe("rgb(255, 0, 0)");
-    });
-
-    test("washes deep rings out to white, since the lightness is never clamped", () => {
-      // NOTE: each ring multiplies its parent's lightness by 1.15, so the colours run towards
-      // white from the inside out - a five-layer chart built on a mid-tone starts at lightness
-      // 0.5 and ends past 0.87. A light starting colour tips over 1 on the very first step,
-      // and from there every further ring is pure white and indistinguishable from the one
-      // inside it, since nothing clamps the lightness before it saturates.
-      const node = render(
-        sunburstOf(() => "#eeeeee"),
-        hierarchyOf()
-      );
-      expect(attrs(node, "fill")[0]).toBe("rgb(238, 238, 238)");
-      expect(attrs(node, "fill")[1]).toBe("rgb(255, 255, 255)");
     });
 
     test("keeps a zero-value node in the DOM as a degenerate arc", async () => {

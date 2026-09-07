@@ -44,7 +44,7 @@
  *                                              sszvis.layout.sunburst.computeLayout. Required;
  *                                              leaving it unset throws before anything is
  *                                              rendered.
- * @property {Function} fill                    Function that returns the fill color for the
+ * @property {Color, Function} fill             Function that returns the fill color for the
  *                                              segments in the center of the chart. Note that this
  *                                              will only be called on the centermost segments. The
  *                                              segments which are subcategories of these center
@@ -55,10 +55,10 @@
  *                                              before anything is rendered - and it takes
  *                                              a constant colour or an accessor, since it is
  *                                              wrapped in fn.functor on set.
- *                                              Every ring further out multiplies its parent's
- *                                              lightness by 1.15, which is never clamped, so the
- *                                              colours run towards white from the inside out and
- *                                              saturate. Siblings therefore share a colour, since
+ *                                              Every ring further out closes 15% of the gap
+ *                                              between its parent's lightness and white, so the
+ *                                              colours run lighter from the inside out without ever
+ *                                              saturating. Siblings therefore share a colour, since
  *                                              it depends only on the top-level ancestor's key and
  *                                              on the depth.
  * @property {Color, Function} stroke           The stroke color of the segments. Defaults to white.
@@ -312,8 +312,12 @@ export default function <T = unknown>(): SunburstComponent<T> {
           return hsl(props.fill(colorKey(node)));
         } else {
           // Recurse up the tree and adjust the lightness value
+          // Lighten by 15% of what is left between the parent's lightness and white,
+          // rather than by 15% of the lightness itself. Both give the same step from a
+          // mid-tone, but this one can never reach white, so a deep ring stays
+          // distinguishable from the one inside it however light the base colour is.
           const pColor = getColorRecursive(node.parent);
-          pColor.l *= 1.15;
+          pColor.l += (1 - pColor.l) * 0.15;
           return pColor;
         }
       }
