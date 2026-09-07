@@ -241,13 +241,17 @@ export const hashableSet = <T, U extends string | number>(
   acc?: (element: T, index: number, array: T[]) => U
 ): U[] => {
   const accessor = acc || (identity as (element: T, index: number, array: T[]) => U);
-  const seen: Record<string | number, boolean> = {};
+  // A Set, not a plain object: an object inherits Object.prototype, so values naming one
+  // of its members ("constructor", "toString", ...) read back as already seen and were
+  // dropped from the result. Keys stay stringified, which is what "hashable" means here
+  // and why 1 and "1" are still one key.
+  const seen = new Set<string>();
   const result: U[] = [];
-  let value: U;
   for (let i = 0, l = arr.length; i < l; ++i) {
-    value = accessor(arr[i], i, arr);
-    if (!seen[value]) {
-      seen[value] = true;
+    const value = accessor(arr[i], i, arr);
+    const key = String(value);
+    if (!seen.has(key)) {
+      seen.add(key);
       result.push(value);
     }
   }
@@ -407,8 +411,13 @@ export const valueFn = <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>): 
 /**
  * fn.memoize
  *
- * Adapted from lodash's memoize() but using d3.map() as cache
+ * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
  * See https://lodash.com/docs/4.17.4#memoize
+ *
+ * Differs from lodash deliberately: lodash keys on the first argument and silently returns
+ * that entry for any later arguments, so memoizing a function of several arguments without
+ * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
+ * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
  */
 export const memoize = <TFunc extends (...args: any[]) => any>(
   func: TFunc,
@@ -418,6 +427,13 @@ export const memoize = <TFunc extends (...args: any[]) => any>(
     throw new TypeError("Expected a function");
   }
   const memoized = ((...args: Parameters<TFunc>): ReturnType<TFunc> => {
+    if (!resolver && args.length > 1) {
+      throw new TypeError(
+        "[fn.memoize] A function called with more than one argument needs a resolver: the " +
+          "default cache key is the first argument alone, so differing later arguments would " +
+          "return the first call's result."
+      );
+    }
     const key = resolver ? resolver(...args) : args[0];
     const cache = memoized.cache;
 

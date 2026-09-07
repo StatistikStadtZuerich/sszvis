@@ -319,24 +319,18 @@ describe("fn", () => {
     });
 
     test("should treat numbers and their string forms as the same key", () => {
-      // NOTE: the seen-map is a plain object, so keys are coerced to strings and
-      // 1 and "1" collide — fn.set does not have this behaviour.
+      // NOTE: keys are stringified, which is what "hashable" means for this function,
+      // so 1 and "1" collide — fn.set does not have this behaviour.
       expect(hashableSet([1, "1"] as (string | number)[])).toEqual([1]);
     });
 
-    test("should emit falsy values more than once", () => {
-      // NOTE: bug. The guard is `if (!seen[value])`, and `seen[0] = true` is truthy,
-      // but for the value 0 the check reads `seen[0]` only after it was set — the
-      // real failure is any value whose stored marker is looked up as falsy. Empty
-      // string keys behave the same way as any other key here, but a value that
-      // stringifies to an inherited Object.prototype member is not guarded at all.
+    test("should dedupe falsy values like any other", () => {
       expect(hashableSet([0, 0, ""] as (string | number)[])).toEqual([0, ""]);
     });
 
-    test("should treat inherited Object.prototype keys as already seen", () => {
-      // NOTE: bug. `seen["constructor"]` is truthy via the prototype chain, so
-      // "constructor" is dropped from the result entirely.
-      expect(hashableSet(["constructor", "a"])).toEqual(["a"]);
+    test("should keep values that name an Object.prototype member", () => {
+      expect(hashableSet(["constructor", "a"])).toEqual(["constructor", "a"]);
+      expect(hashableSet(["toString", "valueOf", "toString"])).toEqual(["toString", "valueOf"]);
     });
 
     test("should pass value, index and array to the accessor", () => {
@@ -451,14 +445,13 @@ describe("fn", () => {
       expect(inner).toHaveBeenCalledTimes(2);
     });
 
-    test("should key on the first argument only when no resolver is given", () => {
+    test("should refuse a multi-argument call when no resolver is given", () => {
+      // The default cache key is args[0] alone, so answering a two-argument call would
+      // mean returning the first call's result for any differing second argument.
       const inner = vi.fn((a: number, b: number) => a + b);
       const memo = memoize(inner);
-      expect(memo(1, 1)).toBe(2);
-      // NOTE: quirk. The default cache key is args[0], so differing later arguments
-      // return the stale first result.
-      expect(memo(1, 5)).toBe(2);
-      expect(inner).toHaveBeenCalledTimes(1);
+      expect(() => memo(1, 1)).toThrow(TypeError);
+      expect(inner).not.toHaveBeenCalled();
     });
 
     test("should use the resolver to compute the cache key", () => {
