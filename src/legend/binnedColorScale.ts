@@ -69,7 +69,7 @@ export interface BinnedColorScaleComponent extends ComponentBuilder<BinnedColorS
 }
 
 export default function (): BinnedColorScaleComponent {
-  return component()
+  return component<BinnedColorScaleComponent>()
     .prop("scale")
     .prop("displayValues")
     .prop("endpoints")

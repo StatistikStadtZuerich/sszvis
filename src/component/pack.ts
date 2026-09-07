@@ -97,7 +97,7 @@ interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> 
  * @template T The type of the original flat data objects
  */
 export default function <T = unknown>(): PackComponent<T> {
-  return component()
+  return component<PackComponent<T>>()
     .prop("colorScale")
     .prop("transition")
     .transition(true)

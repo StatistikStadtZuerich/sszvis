@@ -234,7 +234,7 @@ const dimension = <P>(value: AreaValue<P> | undefined): PointAccessor<P, number>
  * directly.
  */
 export default function <P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L> {
-  return component()
+  return component<StackedAreaComponent<P, L>>()
     .prop("x")
     .prop("y0")
     .prop("y1")

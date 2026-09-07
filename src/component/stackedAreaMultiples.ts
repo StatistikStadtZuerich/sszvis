@@ -300,87 +300,92 @@ const dimension = <P>(value: AreaValue<P> | undefined): PointAccessor<P, number>
  * directly.
  */
 export default function <P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L> {
-  return component()
-    .prop("x")
-    .prop("y0")
-    .prop("y1")
-    .prop("fill")
-    .prop("stroke")
-    .prop("strokeWidth")
-    .prop("defined")
-    .prop("key")
-    .key((_datum: unknown, index: number) => index)
-    .prop("valuesAccessor")
-    .valuesAccessor(fn.identity)
-    .prop("transition")
-    .transition(true)
-    .render(function (this: Element, data: L[]) {
-      const selection = select(this);
-      const props = selection.props<StackedAreaMultiplesProps<P, L>>();
+  return (
+    component<StackedAreaMultiplesComponent<P, L>>()
+      .prop("x")
+      .prop("y0")
+      .prop("y1")
+      .prop("fill")
+      .prop("stroke")
+      .prop("strokeWidth")
+      .prop("defined")
+      .prop("key")
+      .key((_datum: unknown, index: number) => index)
+      .prop("valuesAccessor")
+      // The default layer type L is P[], so the values ARE the layer and identity is correct.
+      // A caller who sets a different L must supply a matching accessor; the constraint
+      // cannot express "identity is valid only for the default instantiation".
+      .valuesAccessor(fn.identity as ValuesAccessor<L, P>)
+      .prop("transition")
+      .transition(true)
+      .render(function (this: Element, data: L[]) {
+        const selection = select(this);
+        const props = selection.props<StackedAreaMultiplesProps<P, L>>();
 
-      // Layouts
+        // Layouts
 
-      // Reversed for no stated reason - the line has carried an unanswered "//sszsch why
-      // reverse?" comment since 2017 - which puts the first layer of the input last in the
-      // DOM and mirrors the index every layer accessor is given. Taken on a copy, so the
-      // array the caller passed in is left alone. See
-      // test/component/stackedAreaMultiples.test.ts.
-      const layers = [...data].reverse();
+        // Reversed for no stated reason - the line has carried an unanswered "//sszsch why
+        // reverse?" comment since 2017 - which puts the first layer of the input last in the
+        // DOM and mirrors the index every layer accessor is given. Taken on a copy, so the
+        // array the caller passed in is left alone. See
+        // test/component/stackedAreaMultiples.test.ts.
+        const layers = [...data].reverse();
 
-      // The default predicate accepts every point, whatever its value. It reproduces the
-      // one it replaced, which read
-      //   function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }
-      // and so returned a function rather than calling either of them - and a function is
-      // truthy, which is all d3 tests. The missing-value guard this was meant to be has
-      // therefore never run.
-      const defined: PointAccessor<P, boolean> =
-        props.defined === undefined
-          ? () => true
-          : typeof props.defined === "function"
-            ? props.defined
-            : () => Boolean(props.defined);
+        // The default predicate accepts every point, whatever its value. It reproduces the
+        // one it replaced, which read
+        //   function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }
+        // and so returned a function rather than calling either of them - and a function is
+        // truthy, which is all d3 tests. The missing-value guard this was meant to be has
+        // therefore never run.
+        const defined: PointAccessor<P, boolean> =
+          props.defined === undefined
+            ? () => true
+            : typeof props.defined === "function"
+              ? props.defined
+              : () => Boolean(props.defined);
 
-      const areaGen = d3Area<P>().defined(defined).x(dimension(props.x)).y0(dimension(props.y0));
+        const areaGen = d3Area<P>().defined(defined).x(dimension(props.x)).y0(dimension(props.y0));
 
-      // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
-      // why an unset y1 collapses every band onto its own baseline. Its typings admit only
-      // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
-      // two identically.
-      if (props.y1 == null) {
-        areaGen.y1(null);
-      } else {
-        areaGen.y1(dimension(props.y1));
-      }
+        // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
+        // why an unset y1 collapses every band onto its own baseline. Its typings admit only
+        // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
+        // two identically.
+        if (props.y1 == null) {
+          areaGen.y1(null);
+        } else {
+          areaGen.y1(dimension(props.y1));
+        }
 
-      // Rendering
+        // Rendering
 
-      // Declared with `function` so that `this` and the node group are still forwarded to
-      // valuesAccessor, as they were when this was built with fn.compose.
-      const pathData: ValueFn<SVGPathElement, L, string | null> = function (datum, index, group) {
-        return areaGen(props.valuesAccessor.call(this, datum, index, group));
-      };
-      const fill = fn.valueFn(props.fill ?? null);
-      // No default, where stackedArea falls back to a #ffffff hairline.
-      const stroke = fn.valueFn(props.stroke ?? null);
-      const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+        // Declared with `function` so that `this` and the node group are still forwarded to
+        // valuesAccessor, as they were when this was built with fn.compose.
+        const pathData: ValueFn<SVGPathElement, L, string | null> = function (datum, index, group) {
+          return areaGen(props.valuesAccessor.call(this, datum, index, group));
+        };
+        const fill = fn.valueFn(props.fill ?? null);
+        // No default, where stackedArea falls back to a #ffffff hairline.
+        const stroke = fn.valueFn(props.stroke ?? null);
+        const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
 
-      const paths = selection
-        .selectAll<SVGPathElement, L>("path.sszvis-path")
-        .data(layers, props.key)
-        .join("path")
-        .classed("sszvis-path", true);
+        const paths = selection
+          .selectAll<SVGPathElement, L>("path.sszvis-path")
+          .data(layers, props.key)
+          .join("path")
+          .classed("sszvis-path", true);
 
-      // The transition is created and its return value dropped, so it carries no tweens and
-      // every attribute below is written to the plain selection: nothing animates, while the
-      // schedule still interrupts whatever else was animating these nodes.
-      if (props.transition) {
-        paths.transition(defaultTransition());
-      }
+        // The transition is created and its return value dropped, so it carries no tweens and
+        // every attribute below is written to the plain selection: nothing animates, while the
+        // schedule still interrupts whatever else was animating these nodes.
+        if (props.transition) {
+          paths.transition(defaultTransition());
+        }
 
-      paths
-        .attr("d", pathData)
-        .attr("fill", fill)
-        .attr("stroke", stroke)
-        .attr("stroke-width", strokeWidth);
-    });
+        paths
+          .attr("d", pathData)
+          .attr("fill", fill)
+          .attr("stroke", stroke)
+          .attr("stroke-width", strokeWidth);
+      })
+  );
 }

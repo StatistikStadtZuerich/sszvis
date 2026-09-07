@@ -144,7 +144,7 @@ export interface MapRendererPatternedLakeOverlayComponent
 }
 
 export default function (): MapRendererPatternedLakeOverlayComponent {
-  return component()
+  return component<MapRendererPatternedLakeOverlayComponent>()
     .prop("mapPath")
     .prop("lakeFeature")
     .prop("lakeBounds")

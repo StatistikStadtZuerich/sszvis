@@ -66,7 +66,7 @@ function vectorToTranslateString(vec: [number, number]): string {
 }
 
 export default function <T = unknown>(): TooltipAnchorComponent<T> {
-  return component()
+  return component<TooltipAnchorComponent<T>>()
     .prop("position")
     .position(fn.functor([0, 0]))
     .prop("debug")

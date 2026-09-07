@@ -91,7 +91,7 @@ const BLUR_PADDING = 5;
 export default function <T = unknown>(): TooltipComponent<T> {
   const renderer = tooltipRenderer<T>();
 
-  return component()
+  return component<TooltipComponent<T>>()
     .delegate("header", renderer)
     .delegate("body", renderer)
     .delegate("orientation", renderer)

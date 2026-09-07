@@ -77,7 +77,7 @@ export interface ButtonGroupComponent<T extends string | number = string | numbe
 export default function buttonGroup<
   T extends string | number = string | number,
 >(): ButtonGroupComponent<T> {
-  return component()
+  return component<ButtonGroupComponent<T>>()
     .prop("values")
     .prop("current")
     .prop("width")

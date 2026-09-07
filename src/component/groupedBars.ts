@@ -142,7 +142,7 @@ type GroupedBarsConfig<T> = {
 function createGroupedBarsComponent<T = unknown>(
   config: GroupedBarsConfig<T>
 ): GroupedBarsComponent<T> {
-  return component()
+  return component<GroupedBarsComponent<T>>()
     .prop("groupScale")
     .prop("groupSize")
     .prop("groupWidth")

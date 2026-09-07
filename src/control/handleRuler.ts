@@ -105,7 +105,7 @@ export interface HandleRulerComponent<T = unknown>
 }
 
 export default function handleRuler<T = unknown>(): HandleRulerComponent<T> {
-  return component()
+  return component<HandleRulerComponent<T>>()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
     .prop("top")

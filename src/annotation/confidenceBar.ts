@@ -56,7 +56,7 @@ interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<Confidenc
 }
 
 export default function <T = unknown>(): ConfidenceBarComponent<T> {
-  return component()
+  return component<ConfidenceBarComponent<T>>()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
     .prop("confidenceLow", fn.functor)

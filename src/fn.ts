@@ -452,7 +452,9 @@ export const valueFn = <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>): 
 export const memoize = <TFunc extends (...args: never[]) => unknown>(
   func: TFunc,
   resolver?: (...args: Parameters<TFunc>) => string | number
-): TFunc & { cache: Map<string | number, ReturnType<TFunc>> } => {
+  // The cache key is whatever the resolver returned, or - with no resolver - the first
+  // argument itself, which may be any value including an object compared by identity.
+): TFunc & { cache: Map<unknown, ReturnType<TFunc>> } => {
   if (typeof func !== "function" || (resolver != null && typeof resolver !== "function")) {
     throw new TypeError("Expected a function");
   }
@@ -473,8 +475,8 @@ export const memoize = <TFunc extends (...args: never[]) => unknown>(
     const result = func(...args) as ReturnType<TFunc>;
     memoized.cache = cache.set(key, result) || cache;
     return result;
-  }) as TFunc & { cache: Map<string | number, ReturnType<TFunc>> };
+  }) as TFunc & { cache: Map<unknown, ReturnType<TFunc>> };
 
-  memoized.cache = new Map<string | number, ReturnType<TFunc>>();
+  memoized.cache = new Map<unknown, ReturnType<TFunc>>();
   return memoized;
 };

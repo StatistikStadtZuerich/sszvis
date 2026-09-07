@@ -46,10 +46,14 @@ export type ComponentCallable = <
  * declared interface is never checked against what was actually built.
  *
  * Every component interface should extend `ComponentBuilder<Self>`.
+ *
+ * `prop` and `delegate` take `keyof C`, so installing an accessor the interface does not
+ * declare - a typo, or a prop someone forgot to add - is a compile error rather than a
+ * member that silently resolves through the escape hatch.
  */
 export interface ComponentBuilder<C> extends ComponentCallable {
-  prop<T>(prop: string, setter?: PropertySetter<T>): C;
-  delegate(prop: string, delegate: PropertyDelegate): C;
+  prop<T>(prop: keyof C & string, setter?: PropertySetter<T>): C;
+  delegate(prop: keyof C & string, delegate: PropertyDelegate): C;
   renderSelection(callback: SelectionRenderCallback): C;
   render(callback: RenderCallback): C;
 }

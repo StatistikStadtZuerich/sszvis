@@ -51,7 +51,7 @@ interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComp
 }
 
 export default function <T = unknown>(): RectangleComponent<T> {
-  return component()
+  return component<RectangleComponent<T>>()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
     .prop("width", fn.functor)

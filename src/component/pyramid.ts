@@ -181,7 +181,7 @@ export interface PyramidComponent<T = unknown, D = unknown>
 /* Module
 ----------------------------------------------- */
 export default function <T = unknown, D = unknown>(): PyramidComponent<T, D> {
-  return component()
+  return component<PyramidComponent<T, D>>()
     .prop("barHeight", fn.functor)
     .prop("barWidth", fn.functor)
     .prop("barPosition", fn.functor)
@@ -261,7 +261,7 @@ interface ReferenceLineComponent<D> extends ComponentBuilder<ReferenceLineCompon
  * of length one, since each side has at most one reference line.
  */
 function lineComponent<D>(): ReferenceLineComponent<D> {
-  return component()
+  return component<ReferenceLineComponent<D>>()
     .prop("barPosition")
     .prop("barWidth")
     .prop("mirror")

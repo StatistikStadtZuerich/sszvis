@@ -1,4 +1,3 @@
-import type { BaseType, Selection } from "d3";
 /**
  * Patterns module
  *
@@ -18,6 +17,7 @@ import type { BaseType, Selection } from "d3";
  *
  */
 
+import type { BaseType, Selection } from "d3";
 /**
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements

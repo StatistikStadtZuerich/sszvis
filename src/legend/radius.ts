@@ -59,61 +59,66 @@ export interface RadiusLegendComponent extends ComponentBuilder<RadiusLegendComp
 }
 
 export default function (): RadiusLegendComponent {
-  return component()
-    .prop("scale")
-    .prop("tickFormat")
-    .tickFormat(fn.identity)
-    .prop("tickValues")
-    .render(function (this: Element) {
-      const selection = select(this);
-      const props = selection.props<RadiusLegendProps>();
+  return (
+    component<RadiusLegendComponent>()
+      .prop("scale")
+      .prop("tickFormat")
+      // fn.identity is the documented "no formatting" default. It returns its argument, so it
+      // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
+      // at render time, which its own types do not model.
+      .tickFormat(fn.identity as TickFormatter)
+      .prop("tickValues")
+      .render(function (this: Element) {
+        const selection = select(this);
+        const props = selection.props<RadiusLegendProps>();
 
-      const tickValues = props.tickValues || defaultTickValues(props.scale);
-      const maxRadius = range(props.scale)[1];
+        const tickValues = props.tickValues || defaultTickValues(props.scale);
+        const maxRadius = range(props.scale)[1];
 
-      const group = selection
-        .selectAll("g.sszvis-legend__elementgroup")
-        .data([0])
-        .join("g")
-        .attr("class", "sszvis-legend__elementgroup");
+        const group = selection
+          .selectAll("g.sszvis-legend__elementgroup")
+          .data([0])
+          .join("g")
+          .attr("class", "sszvis-legend__elementgroup");
 
-      group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
+        group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
 
-      const circles = group
-        .selectAll("circle.sszvis-legend__greyline")
-        .data(tickValues)
-        .join("circle")
-        .classed("sszvis-legend__greyline", true);
+        const circles = group
+          .selectAll("circle.sszvis-legend__greyline")
+          .data(tickValues)
+          .join("circle")
+          .classed("sszvis-legend__greyline", true);
 
-      const getCircleCenter = (d: NumberValue): number => maxRadius - props.scale(d);
-      const getCircleEdge = (d: NumberValue): number => maxRadius - 2 * props.scale(d);
+        const getCircleCenter = (d: NumberValue): number => maxRadius - props.scale(d);
+        const getCircleEdge = (d: NumberValue): number => maxRadius - 2 * props.scale(d);
 
-      circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
+        circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
 
-      const lines = group
-        .selectAll("line.sszvis-legend__dashedline")
-        .data(tickValues)
-        .join("line")
-        .classed("sszvis-legend__dashedline", true);
+        const lines = group
+          .selectAll("line.sszvis-legend__dashedline")
+          .data(tickValues)
+          .join("line")
+          .classed("sszvis-legend__dashedline", true);
 
-      lines
-        .attr("x1", 0)
-        .attr("y1", getCircleEdge)
-        .attr("x2", maxRadius + 15)
-        .attr("y2", getCircleEdge);
+        lines
+          .attr("x1", 0)
+          .attr("y1", getCircleEdge)
+          .attr("x2", maxRadius + 15)
+          .attr("y2", getCircleEdge);
 
-      const labels = group
-        .selectAll(".sszvis-legend__label")
-        .data(tickValues)
-        .join("text")
-        .attr("class", "sszvis-legend__label sszvis-legend__label--small");
+        const labels = group
+          .selectAll(".sszvis-legend__label")
+          .data(tickValues)
+          .join("text")
+          .attr("class", "sszvis-legend__label sszvis-legend__label--small");
 
-      labels
-        .attr("dx", maxRadius + 18)
-        .attr("y", getCircleEdge)
-        .attr("dy", "0.35em") // vertically-center
-        .text(props.tickFormat);
-    });
+        labels
+          .attr("dx", maxRadius + 18)
+          .attr("y", getCircleEdge)
+          .attr("dy", "0.35em") // vertically-center
+          .text(props.tickFormat);
+      })
+  );
 }
 
 /**

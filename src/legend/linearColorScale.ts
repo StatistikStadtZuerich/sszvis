@@ -58,84 +58,89 @@ export interface LinearColorScaleComponent extends ComponentBuilder<LinearColorS
 }
 
 export default function (): LinearColorScaleComponent {
-  return component()
-    .prop("scale")
-    .prop("displayValues")
-    .displayValues([])
-    .prop("width")
-    .width(200)
-    .prop("segments")
-    .segments(8)
-    .prop("labelText")
-    .prop("labelFormat")
-    .labelFormat(fn.identity)
-    .render(function (this: Element) {
-      const selection = select(this);
-      const props = selection.props<LinearColorScaleProps>();
+  return (
+    component<LinearColorScaleComponent>()
+      .prop("scale")
+      .prop("displayValues")
+      .displayValues([])
+      .prop("width")
+      .width(200)
+      .prop("segments")
+      .segments(8)
+      .prop("labelText")
+      .prop("labelFormat")
+      // fn.identity is the documented "no formatting" default. It returns its argument, so it
+      // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
+      // at render time, which its own types do not model.
+      .labelFormat(fn.identity as LabelFormatter)
+      .render(function (this: Element) {
+        const selection = select(this);
+        const props = selection.props<LinearColorScaleProps>();
 
-      if (!props.scale) {
-        logger.error("legend.linearColorScale - a scale must be specified.");
-        return;
-      }
+        if (!props.scale) {
+          logger.error("legend.linearColorScale - a scale must be specified.");
+          return;
+        }
 
-      const domain = props.scale.domain();
+        const domain = props.scale.domain();
 
-      let values = props.displayValues;
-      if (values.length === 0 && props.scale.ticks) {
-        values = props.scale.ticks(props.segments - 1);
-      }
-      // Equivalent to fn.last(domain), without widening the element type to undefined.
-      values.push(domain[domain.length - 1]);
+        let values = props.displayValues;
+        if (values.length === 0 && props.scale.ticks) {
+          values = props.scale.ticks(props.segments - 1);
+        }
+        // Equivalent to fn.last(domain), without widening the element type to undefined.
+        values.push(domain[domain.length - 1]);
 
-      // Avoid division by zero
-      const segWidth = values.length > 0 ? props.width / values.length : 0;
-      const segHeight = 10;
+        // Avoid division by zero
+        const segWidth = values.length > 0 ? props.width / values.length : 0;
+        const segHeight = 10;
 
-      const segments = selection
-        .selectAll("rect.sszvis-legend__mark")
-        .data(values)
-        .join("rect")
-        .classed("sszvis-legend__mark", true);
+        const segments = selection
+          .selectAll("rect.sszvis-legend__mark")
+          .data(values)
+          .join("rect")
+          .classed("sszvis-legend__mark", true);
 
-      segments
-        .attr("x", (_d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
-        .attr("y", 0)
-        .attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
-        .attr("height", segHeight)
-        .attr("fill", (d) => props.scale(d));
+        segments
+          .attr("x", (_d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
+          .attr("y", 0)
+          .attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
+          .attr("height", segHeight)
+          .attr("fill", (d) => props.scale(d));
 
-      const startEnd = [domain[0], domain[domain.length - 1]];
-      const labelText = props.labelText || startEnd;
+        const startEnd = [domain[0], domain[domain.length - 1]];
+        const labelText = props.labelText || startEnd;
 
-      // rounded end caps for the segments
-      const endCaps = selection
-        .selectAll("circle.ssvis-legend--mark")
-        .data(startEnd)
-        .join("circle")
-        .attr("class", "ssvis-legend--mark");
+        // rounded end caps for the segments
+        const endCaps = selection
+          .selectAll("circle.ssvis-legend--mark")
+          .data(startEnd)
+          .join("circle")
+          .attr("class", "ssvis-legend--mark");
 
-      endCaps
-        .attr("cx", (_d, i) => i * props.width)
-        .attr("cy", segHeight / 2)
-        .attr("r", segHeight / 2)
-        .attr("fill", (d) => props.scale(d));
+        endCaps
+          .attr("cx", (_d, i) => i * props.width)
+          .attr("cy", segHeight / 2)
+          .attr("r", segHeight / 2)
+          .attr("fill", (d) => props.scale(d));
 
-      const labels = selection
-        .selectAll(".sszvis-legend__label")
-        .data(labelText)
-        .join("text")
-        .classed("sszvis-legend__label", true);
+        const labels = selection
+          .selectAll(".sszvis-legend__label")
+          .data(labelText)
+          .join("text")
+          .classed("sszvis-legend__label", true);
 
-      const labelPadding = 16;
+        const labelPadding = 16;
 
-      labels
-        .style("text-anchor", (_d, i) => (i === 0 ? "end" : "start"))
-        .attr("dy", "0.35em") // vertically-center
-        .attr(
-          "transform",
-          (_d, i) =>
-            `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`
-        )
-        .text((d, i) => props.labelFormat(d, i));
-    });
+        labels
+          .style("text-anchor", (_d, i) => (i === 0 ? "end" : "start"))
+          .attr("dy", "0.35em") // vertically-center
+          .attr(
+            "transform",
+            (_d, i) =>
+              `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`
+          )
+          .text((d, i) => props.labelFormat(d, i));
+      })
+  );
 }
