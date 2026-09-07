@@ -302,19 +302,14 @@ describe("map utils", () => {
       expect(merged.every((d) => d.datum === undefined)).toBe(true);
     });
 
-    // BUG: a datum keyed "__proto__" does not create an own property - it replaces the lookup
-    // object's prototype. The read happens to round-trip, so the merge looks correct, but every
-    // subsequent lookup now inherits from that datum: an unmatched feature is handed the datum's
-    // own fields instead of undefined.
-    test("replaces the lookup prototype for a datum keyed __proto__", () => {
+    test("keys a datum named __proto__ like any other, leaving other features unmatched", () => {
       const merged = prepareMergedGeoData(
         [{ id: "__proto__", value: 1 }],
         collection(square("__proto__"), square("value")),
         "id"
       );
       expect(merged[0].datum).toEqual({ id: "__proto__", value: 1 });
-      // "value" matches no datum, yet it is handed the poisoned prototype's `value` field.
-      expect(merged[1].datum).toBe(1);
+      expect(merged[1].datum).toBeUndefined();
     });
 
     // NOTE: ids are matched through object property lookup, so keys are stringified - a numeric
@@ -337,12 +332,12 @@ describe("map utils", () => {
       expect(prepareMergedGeoData([{ id: "a" }], collection(), "id")).toEqual([]);
     });
 
-    // BUG: the lookup is a plain object literal, so a feature whose id is an Object.prototype
-    // member name ("constructor", "toString", ...) is matched against the inherited property and
-    // handed a function as its datum, even though no such datum was supplied.
-    test("hands a feature named after a prototype member an inherited datum", () => {
+    test("leaves a feature named after a prototype member unmatched", () => {
       const merged = prepareMergedGeoData([{ id: "a" }], collection(square("constructor")), "id");
-      expect(merged[0].datum).toBe(Object);
+      expect(merged[0].datum).toBeUndefined();
+      expect(
+        prepareMergedGeoData([{ id: "a" }], collection(square("toString")), "id")[0].datum
+      ).toBeUndefined();
     });
 
     // NOTE: a falsy key name (including the empty string) falls back to the default rather than

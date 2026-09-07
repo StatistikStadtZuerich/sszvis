@@ -202,14 +202,9 @@ export interface MergedGeoDatum<Datum> {
  * which has a features array. Each feature is mapped to one data object, or to undefined where no
  * data object matched.
  *
- * Note: matching goes through a plain object literal, so ids are stringified - a numeric data key
- * matches a string feature id - and a feature whose id names an Object.prototype member
- * ("constructor", "toString", ...) is handed the inherited property as its datum even though no
- * such datum was supplied.
- *
- * Note: a datum keyed "__proto__" replaces the lookup object's prototype instead of creating an
- * entry. That datum still reads back correctly, but every unmatched feature afterwards is handed a
- * field of it rather than undefined. Do not feed untrusted ids to this function.
+ * Note: matching goes through a Map keyed by the stringified id, so a numeric data key still
+ * matches a string feature id, but only data that was actually passed in can ever be matched -
+ * ids such as "constructor" or "__proto__" are ordinary keys here.
  *
  * Note: a symbol data key stays a symbol property, so it can never be matched by a feature id,
  * which GeoJSON allows only as a string or a number. Two symbols with the same description stay
@@ -241,26 +236,20 @@ export function prepareMergedGeoData<Datum extends object>(
   const key = keyName || GEO_KEY_DEFAULT;
 
   // group the input data by map entity id
-  const groupedInputData: Record<string | symbol, Datum> = Array.isArray(dataset)
-    ? dataset.reduce<Record<string | symbol, Datum>>((m, v) => {
-        m[toLookupKey(Reflect.get(v, key))] = v;
-        return m;
-      }, {})
-    : {};
+  const groupedInputData = new Map<string | symbol, Datum>();
+  if (Array.isArray(dataset)) {
+    for (const datum of dataset) {
+      groupedInputData.set(toLookupKey(Reflect.get(datum, key)), datum);
+    }
+  }
 
   // merge the map features and the input data into new objects that include both
   return geoJson.features.map((feature) => ({
     geoJson: feature,
-    datum: groupedInputData[toLookupKey(feature.id)],
+    datum: groupedInputData.get(toLookupKey(feature.id)),
   }));
 }
 
-/**
- * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
- * symbols with the same description remain distinct and can never be matched by a string or numeric
- * feature id. Everything else stringifies, which is how a missing key becomes the string
- * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
- */
 /**
  * The key a feature id or datum value is looked up under. Symbols pass through; everything
  * else is stringified, so numeric and string ids that print the same collide deliberately.
