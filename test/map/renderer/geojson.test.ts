@@ -589,6 +589,26 @@ describe("map/renderer/geojson", () => {
       expect(anchors(node).map((a) => a.getAttribute("transform"))).toEqual(expected);
     });
 
+    // NOTE: a projection returning null is only reachable with a hand-written one - d3's own clip
+    // in the stream and return a NaN pair - and the null is passed straight to tooltipAnchor,
+    // which spreads it into translateString. Pinned because substituting a NaN pair here would
+    // change the attribute this writes. Matches the base renderer.
+    test("emits an undefined transform for an anchor whose projection returns null", () => {
+      const collection = geoJson();
+      const nullProjecting = Object.assign(() => "M0,0Z", {
+        projection: () => () => null,
+      }) as unknown as ReturnType<typeof mapPathOf>;
+      const node = group()
+        .datum(fullData)
+        .call(mapRendererGeoJson().geoJson(collection).mapPath(nullProjecting))
+        .node() as SVGGElement;
+      expect(anchors(node).map((a) => a.getAttribute("transform"))).toEqual([
+        "translate(undefined,undefined)",
+        "translate(undefined,undefined)",
+        "translate(undefined,undefined)",
+      ]);
+    });
+
     // NOTE: the centroid is cached onto each feature's properties, so rendering mutates the
     // geojson it was handed - and under a different key than the base renderer's cachedCenter.
     test("caches a sphericalCentroid onto every feature, and never invalidates it", () => {
