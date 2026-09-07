@@ -368,9 +368,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "defs > pattern")).toHaveLength(2);
       expect(idOf(node, 'defs > pattern[id$="a"]')).toBe("lake-pattern-a");
       expect(
-        defs(node, 'path.sszvis-map__lakezurich[data-sszvis-lake-overlay="b"]')[0]?.getAttribute(
-          "fill"
-        )
+        defs(node, 'path.sszvis-map__lakezurich[data-lake-key="b"]')[0]?.getAttribute("fill")
       ).toBe("url(#lake-pattern-b)");
       expect(
         defs(node, "path.sszvis-map__lakepath").map((path) => (path as SVGPathElement).style.stroke)
@@ -472,6 +470,25 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // NOTE: two unkeyed overlays in one group still share one scope, so the second rebinds the
     // first one's paths. Distinct keys are what separates them - see "scoping" above.
+    // The key is not only stamped on the paths, it is interpolated into the three definition
+    // ids and then back into "#id" selectors and url(#id) references, unescaped. A quote
+    // makes that selector unparseable and the render throws from inside ensureDefsElement;
+    // a space is worse-behaved rather than louder, since "#lake-pattern-a b" is a valid
+    // selector that simply matches nothing. The path join itself is safe - it reads
+    // data-lake-key back through getAttribute in a filter. See #258.
+    test("throws for a key that cannot be spelled in an id selector", () => {
+      const layer = group("awkward-key");
+      const renderWith = () =>
+        layer.call(
+          mapRendererPatternedLakeOverlay()
+            .key('a"b')
+            .mapPath(mapPathOf())
+            .lakeFeature(lake())
+            .lakeBounds(bounds())
+        );
+      expect(renderWith).toThrow(/not a valid selector/);
+    });
+
     test("shares one scope between two unkeyed overlays in a group", () => {
       const layer = group("two-unkeyed-overlays");
       const renderWith = (lakeFeature: ReturnType<typeof lake>) =>
