@@ -61,6 +61,7 @@ import { type ScaleBand, select } from "d3";
 import { axisX, type SlantDirection } from "../axis.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import * as logger from "../logger.js";
 import translateString from "../svgUtils/translateString.js";
 import type { AnySelection } from "../types.js";
 import type { StackedBarSeries, StackedBarSlice } from "./stackedBar.js";
@@ -158,7 +159,7 @@ function baseline(yScale: (value: number) => number): number {
   const high = Math.max(...extent);
   if (zero >= low && zero <= high) return zero;
   const clamped = zero < low ? low : high;
-  console.warn(
+  logger.warn(
     `[nestedStackedBarsVertical] the y-scale baseline ${zero} falls outside its range [${low}, ${high}]; placing the x-axis at ${clamped}`
   );
   return clamped;
@@ -203,7 +204,7 @@ export const nestedStackedBarsVertical = <
 
       const nestedGroups = group.join("g").attr("data-nested-stacked-bars", (d, i) => {
         if (d.length === 0) {
-          console.warn(
+          logger.warn(
             `[nestedStackedBarsVertical] the nested group at index ${i} has no stacks; rendering it empty`
           );
         }
@@ -213,7 +214,7 @@ export const nestedStackedBarsVertical = <
       nestedGroups.attr("transform", (d) => {
         const x = offset(d);
         if (!Number.isFinite(x)) {
-          console.warn(
+          logger.warn(
             `[nestedStackedBarsVertical] the offset accessor returned ${x}; positioning the group at 0`
           );
         }
