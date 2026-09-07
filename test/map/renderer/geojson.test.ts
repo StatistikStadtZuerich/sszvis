@@ -465,43 +465,32 @@ describe("map/renderer/geojson", () => {
       expect(component.on("over", () => undefined)).toBe(component);
     });
 
-    // BUG: the event API is dead. The handlers call `event.over(d.datum)`, but d3's dispatch has
-    // exposed only on/call/apply/copy since v4 - there is no per-type `over` method - so every
-    // mouseover, mouseout and click handler throws a TypeError before reaching the callback. The
-    // listeners are attached, so the component looks wired up; nothing can ever be delivered.
-    // (Separately, the handler signature is also stale: d3 v6+ calls listeners with
-    // (event, datum), so `d` would be the DOM event even if the dispatch call worked.)
-    /** Dispatches `type` on an element and returns the error the listener threw, if any. */
-    const errorFrom = (target: Element, type: string) => {
-      const errors: string[] = [];
-      const onError = (e: ErrorEvent) => {
-        errors.push(e.message);
-        e.preventDefault();
-      };
-      window.addEventListener("error", onError);
-      target.dispatchEvent(new MouseEvent(type, { bubbles: true }));
-      window.removeEventListener("error", onError);
-      return errors;
-    };
-
-    test("never delivers over, because the handler throws first", () => {
+    test("delivers the hovered entity's datum to an over handler", () => {
       const over = vi.fn();
       const node = render(fullData, (c) => c.transitionColor(false).on("over", over));
-      const errors = errorFrom(elements(node)[1], "mouseover");
-      expect(over).not.toHaveBeenCalled();
-      expect(errors.join(" ")).toMatch(/is not a function/);
+      elements(node)[1].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      expect(over).toHaveBeenCalledTimes(1);
+      expect(over).toHaveBeenCalledWith({ geoId: "b", value: 2 });
     });
 
-    test("never delivers out or click either", () => {
+    test("delivers out and click as well", () => {
       const out = vi.fn();
       const click = vi.fn();
       const node = render(fullData, (c) =>
         c.transitionColor(false).on("out", out).on("click", click)
       );
-      expect(errorFrom(elements(node)[1], "mouseout").join(" ")).toMatch(/is not a function/);
-      expect(errorFrom(elements(node)[1], "click").join(" ")).toMatch(/is not a function/);
-      expect(out).not.toHaveBeenCalled();
-      expect(click).not.toHaveBeenCalled();
+      elements(node)[1].dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+      elements(node)[1].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(out).toHaveBeenCalledWith({ geoId: "b", value: 2 });
+      expect(click).toHaveBeenCalledWith({ geoId: "b", value: 2 });
+    });
+
+    // An unmatched feature has no datum, so the handler is called with undefined.
+    test("delivers undefined for an entity with no datum", () => {
+      const over = vi.fn();
+      const node = render(partialData, (c) => c.transitionColor(false).on("over", over));
+      elements(node)[2].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      expect(over).toHaveBeenCalledWith(undefined);
     });
 
     test("reads a listener back through on()", () => {

@@ -32,11 +32,6 @@
  *                                          Default true. The transition does not currently animate anything; see the
  *                                          note below.
  *
- * Note: the on("over"|"out"|"click") API has never delivered anything. The listeners call
- * event.over(datum) and friends, but d3's dispatch exposes only on, call, apply and copy, so each
- * listener throws a TypeError before any registered handler runs. Both maps in docs/map-extended
- * register these handlers and receive nothing.
- *
  * Note: lookup keys are stringified, so a numeric and a string id that print the same collide. A
  * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
  * key at all is left unmatched.
@@ -158,19 +153,6 @@ function readFeatureKey(properties: GeoJsonProperties, key: string): unknown {
  * symbols with the same description remain distinct and can never be matched by a string id.
  * Everything else stringifies, which is how a missing key becomes the string "undefined".
  */
-/**
- * Reproduces what this component's event handlers have always done. The JavaScript called
- * `event.over(datum)`, but d3's dispatch provides only on, call, apply and copy - there has never
- * been a per-type method - so the call threw before any registered handler was reached. That is
- * why .on("over"|"out"|"click") has never delivered anything. The throw is unconditional because
- * the call could never succeed; the message is the one V8 produced for the original expression.
- * Transcribed rather than corrected so the port does not change behaviour - the fix is to use
- * event.apply(type, this, args), as src/behavior/panning.ts already does.
- */
-function emitLegacy(type: "over" | "out" | "click"): never {
-  throw new TypeError(`event.${type} is not a function`);
-}
-
 export default function <
   T extends Record<string, unknown> = Record<string, unknown>,
 >(): MapRendererGeoJsonComponent<T> {
@@ -237,7 +219,7 @@ export default function <
       }
 
       const geoElements = selection
-        .selectAll(".sszvis-map__geojsonelement")
+        .selectAll<SVGPathElement, MergedFeature>(".sszvis-map__geojsonelement")
         .data(mergedData)
         .join("path")
         .classed("sszvis-map__geojsonelement", true)
@@ -265,18 +247,17 @@ export default function <
         .attr("stroke", getMapStroke)
         .attr("stroke-width", (d) => props.strokeWidth(d.datum));
 
-      // The JavaScript read `.datum` off each listener's first parameter. d3 v6 and later call a
-      // listener with (event, datum), so that read was always of the DOM event and always
-      // undefined; the emit below throws before the value is used either way.
+      // d3 v6 and later call a listener with (event, datum), and the datum here is the merged
+      // { geoJson, datum } wrapper - the handler is given the entity's own datum.
       geoElements
-        .on("mouseover", () => {
-          emitLegacy("over");
+        .on("mouseover", function (_pointerEvent, d) {
+          event.call("over", this, d.datum);
         })
-        .on("mouseout", () => {
-          emitLegacy("out");
+        .on("mouseout", function (_pointerEvent, d) {
+          event.call("out", this, d.datum);
         })
-        .on("click", () => {
-          emitLegacy("click");
+        .on("click", function (_pointerEvent, d) {
+          event.call("click", this, d.datum);
         });
 
       // the tooltip anchor generator
