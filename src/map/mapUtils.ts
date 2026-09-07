@@ -346,8 +346,20 @@ export function getGeoJsonCenter(geoJson: MapFeature): GeoPoint {
  * so an empty token is rejected before it can become a coordinate - which also means an authored
  * empty string reaches the warning instead of being treated as an absent property.
  */
-function parseCenter(center: string | undefined, featureId: unknown): GeoPoint | undefined {
+function parseCenter(center: unknown, featureId: unknown): GeoPoint | undefined {
   if (center == null) return undefined;
+  // Declared a string on MapFeatureProperties, which says what an author should write, but the
+  // properties of a loaded map file are runtime data and nothing checks them on the way in. A
+  // number or an object would otherwise throw from split() rather than degrading to the centroid,
+  // which is what this function exists to guarantee.
+  if (typeof center !== "string") {
+    logger.warn(
+      `getGeoJsonCenter: ignoring the center property of feature ${String(featureId)}, which is ` +
+        `a ${typeof center} rather than a "longitude,latitude" string. Falling back to the ` +
+        "computed centroid."
+    );
+    return undefined;
+  }
   const parsed = center
     .split(",")
     .map((token) => (token.trim() === "" ? Number.NaN : Number(token)));
