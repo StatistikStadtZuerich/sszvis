@@ -468,6 +468,24 @@ describe("map utils", () => {
       warn.mockRestore();
     });
 
+    // The declared string type describes what an author should write; the properties of a loaded
+    // map file are unchecked runtime data, and a non-string would otherwise throw from split().
+    test("warns and falls back for a center that is not a string", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      for (const center of [42, {}, true]) {
+        const feature = square("a");
+        feature.properties = {};
+        // Written through the index signature: `center` is declared a string, and the point of the
+        // test is the value an unchecked map file can actually carry.
+        (feature.properties as Record<string, unknown>).center = center;
+        const [lon, lat] = getGeoJsonCenter(feature);
+        expect(lon).toBeCloseTo(0.5, 3);
+        expect(lat).toBeCloseTo(0.5, 3);
+      }
+      expect(warn).toHaveBeenCalledTimes(3);
+      warn.mockRestore();
+    });
+
     test("names the offending feature in the warning", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const feature = square("kreis-7");
