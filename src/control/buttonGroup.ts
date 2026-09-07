@@ -95,20 +95,65 @@ export default function buttonGroup<
         .data(["sszvis-control-buttonGroup"], (d) => d)
         .join("div")
         .classed("sszvis-control-optionSelectable", true)
-        .classed("sszvis-control-buttonGroup", true);
+        .classed("sszvis-control-buttonGroup", true)
+        .attr("role", "radiogroup");
 
       container.style("width", `${props.width}px`);
 
       const buttons = container
-        .selectAll<HTMLDivElement, T>(".sszvis-control-buttonGroup__item")
+        .selectAll<HTMLButtonElement, T>(".sszvis-control-buttonGroup__item")
         .data(props.values)
-        .join("div")
-        .classed("sszvis-control-buttonGroup__item", true);
+        .join("button")
+        .classed("sszvis-control-buttonGroup__item", true)
+        .attr("type", "button")
+        .attr("role", "radio");
+
+      // Roving tabindex: exactly one option is in the tab order. That is the current one, or
+      // the first option when `current` matches no value, so the group stays reachable.
+      const currentIndex = props.values.indexOf(props.current);
+      const rovingIndex = currentIndex === -1 ? 0 : currentIndex;
+
+      const nodes = buttons.nodes();
+
+      /** Moves the selection by `step` options, wrapping at both ends. */
+      const move = (event: Event, from: number, step: number) => {
+        const to = (from + step + nodes.length) % nodes.length;
+        event.preventDefault();
+        nodes[to]?.focus();
+        props.change(event, props.values[to]);
+      };
 
       buttons
         .style("width", `${buttonWidth}px`)
         .classed("selected", (d) => d === props.current)
+        // Keyed on the index, not on the value: duplicate values are supported, and a
+        // radiogroup with two checked radios is contradictory state for assistive
+        // technology. The legacy `selected` class still highlights every occurrence.
+        .attr("aria-checked", (_d, i) => (i === currentIndex ? "true" : "false"))
+        .attr("tabindex", (_d, i) => (i === rovingIndex ? 0 : -1))
         .text((d) => d)
-        .on("click", props.change);
+        .on("click", props.change)
+        .on("keydown", function (this: HTMLButtonElement, event: KeyboardEvent, d: T) {
+          const index = nodes.indexOf(this);
+          switch (event.key) {
+            case "Enter":
+            case " ":
+              // The native button would activate on its own, but calling `change` here and
+              // suppressing that activation keeps a keypress and a click on one code path.
+              event.preventDefault();
+              props.change(event, d);
+              break;
+            case "ArrowRight":
+            case "ArrowDown":
+              move(event, index, 1);
+              break;
+            case "ArrowLeft":
+            case "ArrowUp":
+              move(event, index, -1);
+              break;
+            default:
+              break;
+          }
+        });
     });
 }
