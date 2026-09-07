@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { bounds } from "../src/bounds";
+import { bounds } from "../src/bounds.js";
 
 describe("bounds", () => {
   describe("default", () => {

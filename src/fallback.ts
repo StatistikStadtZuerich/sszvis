@@ -13,8 +13,8 @@
  */
 
 import { select } from "d3";
-import * as fn from "./fn";
-import type { AnySelection, SelectableElement } from "./types";
+import * as fn from "./fn.js";
+import type { AnySelection, SelectableElement } from "./types.js";
 
 export interface FallbackOptions {
   src: string;

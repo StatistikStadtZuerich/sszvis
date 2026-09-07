@@ -13,6 +13,7 @@ import type { AnySelection } from "./types.js";
 
 // Augment the D3 Selection interface to include our custom method
 declare module "d3" {
+  // biome-ignore lint/correctness/noUnusedVariables: the type parameters must mirror d3's Selection signature for declaration merging to apply
   interface Selection<GElement, Datum, PElement, PDatum> {
     selectDiv(key: string): AnySelection;
   }

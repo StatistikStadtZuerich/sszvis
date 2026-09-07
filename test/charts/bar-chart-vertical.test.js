@@ -1,7 +1,7 @@
 import { extent, stack } from "d3";
 import { describe, expect, test } from "vitest";
-import { cascade } from "../../src/cascade";
-import { stackedBarVerticalData } from "../../src/component/stackedBar";
+import { cascade } from "../../src/cascade.js";
+import { stackedBarVerticalData } from "../../src/component/stackedBar.js";
 
 const xAcc = (d) => d.xValue;
 const yAcc = (d) => d.yValue;

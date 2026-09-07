@@ -136,7 +136,7 @@ export const computeLayout = (numLayers: number, chartWidth: number): SunburstLa
  *   a scale domain.
  */
 export const getRadiusExtent = (
-  formattedData: Array<{ y0?: number; y1?: number }>
+  formattedData: { y0?: number | undefined; y1?: number | undefined }[]
 ): [number | undefined, number | undefined] => [
   min(formattedData, (d) => d.y0),
   max(formattedData, (d) => d.y1),

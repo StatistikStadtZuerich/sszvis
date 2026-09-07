@@ -1,9 +1,9 @@
 import * as d3 from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import panning from "../../src/behavior/panning";
-import { bounds } from "../../src/bounds";
-import { createSvgLayer } from "../../src/createSvgLayer";
-import "../../src/d3-selectgroup";
+import panning from "../../src/behavior/panning.js";
+import { bounds } from "../../src/bounds.js";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import "../../src/d3-selectgroup.js";
 
 describe("behavior/panning", () => {
   let container: HTMLDivElement;

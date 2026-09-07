@@ -17,7 +17,7 @@
  *
  */
 
-import type { LinearGradientSelection, MaskSelection, PatternSelection } from "./types";
+import type { LinearGradientSelection, MaskSelection, PatternSelection } from "./types.js";
 
 /**
  * The pattern for the missing values in the heat table

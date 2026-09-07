@@ -90,8 +90,7 @@ export const swissMapProjection = memoize(
     _featureBoundsCacheKey?: string
   ): GeoProjection => geoMercator().fitSize([width, height], featureCollection),
   // Memoize resolver
-  (width, height, _, featureBoundsCacheKey) =>
-    "" + width + "," + height + "," + featureBoundsCacheKey
+  (width, height, _, featureBoundsCacheKey) => `${width},${height},${featureBoundsCacheKey}`
 );
 
 /**

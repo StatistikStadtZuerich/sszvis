@@ -5,8 +5,8 @@
  */
 
 import { formatLocale, timeFormatLocale } from "d3";
-import * as fn from "./fn";
-import { formatLocale as formatLocaleDefinition, timeLocale } from "./locale";
+import * as fn from "./fn.js";
+import { formatLocale as formatLocaleDefinition, timeLocale } from "./locale.js";
 
 const timeFormat = timeFormatLocale(timeLocale).format;
 const format = formatLocale(formatLocaleDefinition).format;

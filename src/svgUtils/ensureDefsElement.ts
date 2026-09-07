@@ -12,7 +12,7 @@
  * @param {string}       elementId  The ID to assign to the created element
  */
 
-import type { AnySelection } from "../types";
+import type { AnySelection } from "../types.js";
 
 export default function ensureDefsElement(
   selection: AnySelection,

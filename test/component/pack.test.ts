@@ -1,10 +1,10 @@
 import { scaleOrdinal } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { bounds } from "../../src/bounds";
+import { bounds } from "../../src/bounds.js";
 import pack from "../../src/component/pack.js";
-import { createSvgLayer } from "../../src/createSvgLayer";
-import "../../src/d3-selectgroup";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import "../../src/d3-selectgroup.js";
 import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
 
 // Test data structures

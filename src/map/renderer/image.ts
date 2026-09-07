@@ -181,10 +181,10 @@ export default function (): MapRendererImageComponent {
 
       image
         .attr("src", toValue(props.src))
-        .style("left", Math.round(coordinate(topLeft, 0)) + "px")
-        .style("top", Math.round(coordinate(topLeft, 1)) + "px")
-        .style("width", Math.round(coordinate(bottomRight, 0) - coordinate(topLeft, 0)) + "px")
-        .style("height", Math.round(coordinate(bottomRight, 1) - coordinate(topLeft, 1)) + "px")
+        .style("left", `${Math.round(coordinate(topLeft, 0))}px`)
+        .style("top", `${Math.round(coordinate(topLeft, 1))}px`)
+        .style("width", `${Math.round(coordinate(bottomRight, 0) - coordinate(topLeft, 0))}px`)
+        .style("height", `${Math.round(coordinate(bottomRight, 1) - coordinate(topLeft, 1))}px`)
         .style("opacity", toValue(props.opacity));
     });
 }

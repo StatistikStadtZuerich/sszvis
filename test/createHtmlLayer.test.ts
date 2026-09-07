@@ -1,7 +1,7 @@
 import { select } from "d3";
 import { describe, expect, test } from "vitest";
 import { bounds } from "../src/bounds.js";
-import { createHtmlLayer } from "../src/createHtmlLayer";
+import { createHtmlLayer } from "../src/createHtmlLayer.js";
 
 describe("createHtmlLayer", () => {
   test("should create HTML layer with default bounds", () => {

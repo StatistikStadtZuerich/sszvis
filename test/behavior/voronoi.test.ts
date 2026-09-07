@@ -1,9 +1,9 @@
 import * as d3 from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import voronoi, { VoronoiBounds } from "../../src/behavior/voronoi";
-import { bounds } from "../../src/bounds";
-import { createSvgLayer } from "../../src/createSvgLayer";
-import "../../src/d3-selectgroup";
+import voronoi, { type VoronoiBounds } from "../../src/behavior/voronoi.js";
+import { bounds } from "../../src/bounds.js";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import "../../src/d3-selectgroup.js";
 
 type TestDataPoint = {
   id: number;

@@ -1,7 +1,7 @@
 import { select } from "d3";
 import { describe, expect, test } from "vitest";
 import { bounds } from "../src/bounds.js";
-import { createSvgLayer } from "../src/createSvgLayer";
+import { createSvgLayer } from "../src/createSvgLayer.js";
 
 describe("createSvgLayer", () => {
   test("should create SVG layer with default bounds", () => {

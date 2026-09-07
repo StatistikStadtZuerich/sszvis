@@ -193,10 +193,7 @@ function stackedBarData(order: StackOrder) {
       const rows: CascadeRow<T>[] = cascade<T>().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
       // Collect all keys ()
-      const keys = rows.reduce<string[]>(
-        (a, row) => fn.set<string, string>([...a, ...Object.keys(row)]),
-        []
-      );
+      const keys = fn.set<string, string>(rows.flatMap((row) => Object.keys(row)));
 
       const stacks = d3Stack<CascadeRow<T>, string>()
         .keys(keys)

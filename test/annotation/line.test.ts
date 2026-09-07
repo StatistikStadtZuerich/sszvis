@@ -1,8 +1,8 @@
 import { type ScaleLinear, scaleLinear, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import line from "../../src/annotation/line";
-import { createSvgLayer } from "../../src/createSvgLayer";
-import "../../src/d3-selectgroup";
+import line from "../../src/annotation/line.js";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import "../../src/d3-selectgroup.js";
 
 describe("annotation/line", () => {
   let container: HTMLDivElement;

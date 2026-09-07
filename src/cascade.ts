@@ -133,13 +133,14 @@ export function cascade<T = any>(): CascadeInstance<T> {
     }
 
     const sorter = sorts[depth];
-    const key = keys[depth++];
+    const key = keys[depth];
+    const nextDepth = depth + 1;
     const grouped = groupBy(data, key.func);
 
     if (key.type === "obj") {
       const obj: Record<string, any> = {};
       groupEach(grouped, (value, k) => {
-        obj[k] = make(value, depth);
+        obj[k] = make(value, nextDepth);
       });
       return obj;
     } else if (key.type === "arr") {
@@ -147,11 +148,11 @@ export function cascade<T = any>(): CascadeInstance<T> {
       if (sorter) {
         const groupKeys = Object.keys(grouped).sort(sorter);
         arrEach(groupKeys, (k) => {
-          arr.push(make(grouped[k], depth));
+          arr.push(make(grouped[k], nextDepth));
         });
       } else {
         groupEach(grouped, (value) => {
-          arr.push(make(value, depth));
+          arr.push(make(value, nextDepth));
         });
       }
       return arr;

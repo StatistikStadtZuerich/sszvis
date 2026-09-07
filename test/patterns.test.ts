@@ -7,7 +7,7 @@ import {
   mapLakeGradientMask,
   mapLakePattern,
   mapMissingValuePattern,
-} from "../src/patterns";
+} from "../src/patterns.js";
 
 describe("patterns", () => {
   let svg: SVGSVGElement,

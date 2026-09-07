@@ -555,7 +555,8 @@ function axis(): AxisComponent {
               textContour = select<SVGTextElement, AxisDomain>(
                 textNode.cloneNode(true) as SVGTextElement
               ).classed("sszvis-axis__label-contour", true);
-              this.insertBefore(textContour.node()!, textNode);
+              const contourNode = textContour.node();
+              if (contourNode) this.insertBefore(contourNode, textNode);
             }
             if (textNode && "textContent" in textNode) {
               textContour.text(textNode.textContent || "");
@@ -578,8 +579,7 @@ const setOrdinalTicks = function (this: AxisComponent, count: number): number {
     if (domain[i] !== undefined) values.push(domain[i] as AxisDomain);
   }
   // include the last value
-  if (domain[domain.length - 1] !== "undefined")
-    values.push(domain[domain.length - 1] as AxisDomain);
+  if (domain[domain.length - 1] !== undefined) values.push(domain[domain.length - 1] as AxisDomain);
 
   this.tickValues(values);
 

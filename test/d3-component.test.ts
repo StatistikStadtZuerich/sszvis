@@ -1,6 +1,6 @@
 import { select } from "d3";
 import { describe, expect, test, vi } from "vitest";
-import { component } from "../src/d3-component";
+import { component } from "../src/d3-component.js";
 
 describe("d3-component", () => {
   describe("prop method", () => {
@@ -19,7 +19,7 @@ describe("d3-component", () => {
     });
 
     test("should bind setter context to component", () => {
-      let contextCheck = null;
+      let contextCheck: unknown = null;
       const comp = component().prop("test", function (this: any, value) {
         contextCheck = this;
         return value;
@@ -37,7 +37,7 @@ describe("d3-component", () => {
     });
 
     test("should pass correct context to render function", () => {
-      let renderContext = null;
+      let renderContext: unknown = null;
       const renderFn = function (this: any) {
         renderContext = this;
       };
@@ -47,7 +47,7 @@ describe("d3-component", () => {
 
     test("should receive data in render function", () => {
       const testData = [{ value: 42 }];
-      let receivedData = null;
+      let receivedData: unknown = null;
       const renderFn = (data: any) => {
         receivedData = data;
       };

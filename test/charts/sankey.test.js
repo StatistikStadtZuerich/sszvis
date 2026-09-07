@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { set } from "../../src/fn";
-import { prepareData } from "../../src/layout/sankey";
+import { set } from "../../src/fn.js";
+import { prepareData } from "../../src/layout/sankey.js";
 
 const sAcc = (d) => d.source;
 const tAcc = (d) => d.target;

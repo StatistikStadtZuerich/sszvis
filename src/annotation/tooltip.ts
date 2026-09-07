@@ -427,7 +427,7 @@ function tooltipBackgroundGenerator(
  */
 function supportsSVGFilters(): boolean {
   return (
-    window["SVGFEColorMatrixElement"] !== undefined &&
+    window.SVGFEColorMatrixElement !== undefined &&
     SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE === 2
   );
 }

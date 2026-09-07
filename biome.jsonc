@@ -22,19 +22,43 @@
     "rules": {
       "recommended": true,
       "correctness": {
-        "noUnusedVariables": "warn",
-        "noUnusedImports": "error"
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "noUndeclaredVariables": "error",
+        // Relative imports must carry the .js extension: the package ships ESM.
+        "useImportExtensions": {
+          "level": "error",
+          "options": { "forceJsExtensions": true }
+        }
       },
       "style": {
         "useBlockStatements": "off",
-        "useConsistentArrayType": "error",
+        "useConsistentArrayType": { "level": "error", "options": { "syntax": "shorthand" } },
         "useConst": "error",
-        "noParameterAssign": "warn",
-        "useTemplate": "warn"
+        "noParameterAssign": "error",
+        "useTemplate": "error",
+        "useImportType": "error",
+        "useExportType": "error",
+        "useShorthandFunctionType": "error",
+        "noInferrableTypes": "error",
+        "useAsConstAssertion": "error",
+        "useLiteralEnumMembers": "error",
+        "noEnum": "error",
+        "useThrowOnlyError": "error",
+        "useConsistentCurlyBraces": "error",
+        "useCollapsedIf": "error",
+        "noNonNullAssertion": "error",
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": { "filenameCases": ["camelCase", "kebab-case"] }
+        }
       },
       "suspicious": {
-        "noDoubleEquals": "warn",
-        "noExplicitAny": "warn",
+        "noDoubleEquals": "error",
+        "noEvolvingTypes": "error",
+        // Ratcheting down per directory; kept at "info" so it does not fail the
+        // --error-on-warnings gate while the count comes down. See TYPESCRIPT.md.
+        "noExplicitAny": "info",
         "noArrayIndexKey": "warn",
         "noDebugger": "error",
         "noConfusingVoidType": "off",
@@ -42,11 +66,13 @@
         "noAssignInExpressions": "warn"
       },
       "performance": {
-        "noDelete": "warn"
+        "noDelete": "error"
       },
       "complexity": {
         "noArguments": "off",
-        "useArrowFunction": "warn"
+        "useArrowFunction": "error",
+        "noBannedTypes": "error",
+        "noUselessTypeConstraint": "error"
       }
     }
   },

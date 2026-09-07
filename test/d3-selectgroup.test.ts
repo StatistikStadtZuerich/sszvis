@@ -1,6 +1,6 @@
 import { select } from "d3";
 import { describe, expect, test } from "vitest";
-import "../src/d3-selectgroup"; // Import to add prototype method
+import "../src/d3-selectgroup.js"; // Import to add prototype method
 
 describe("selectGroup", () => {
   test("should add selectGroup method to d3 selection prototype", () => {

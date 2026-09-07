@@ -310,12 +310,13 @@ export default function <
 
       // the tooltip anchor generator
       const ta = tooltipAnchor<MergedFeature>().position((d) => {
-        const properties: GeoJsonFeatureProperties =
-          d.geoJson.properties || (d.geoJson.properties = {});
+        if (!d.geoJson.properties) d.geoJson.properties = {};
+        const properties: GeoJsonFeatureProperties = d.geoJson.properties;
 
         let sphericalCentroid = properties.sphericalCentroid;
         if (!sphericalCentroid) {
-          properties.sphericalCentroid = sphericalCentroid = geoCentroid(d.geoJson);
+          sphericalCentroid = geoCentroid(d.geoJson);
+          properties.sphericalCentroid = sphericalCentroid;
         }
 
         // d3's own typings expect the projection type as a type argument here.

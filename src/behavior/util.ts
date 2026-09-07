@@ -59,7 +59,7 @@
 
 import { select } from "d3";
 
-import * as fn from "../fn";
+import * as fn from "../fn.js";
 
 interface DatumContainer<T = unknown> {
   data: T;

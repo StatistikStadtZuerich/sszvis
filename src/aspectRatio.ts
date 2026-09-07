@@ -37,9 +37,7 @@ export interface AspectRatioFunctionWithMaxHeight extends AspectRatioFunction {
  */
 export function aspectRatio(x: number, y: number): AspectRatioFunction {
   const ar = x / y;
-  return function (width: number): number {
-    return width / ar;
-  };
+  return (width: number): number => width / ar;
 }
 
 /**
@@ -65,9 +63,8 @@ export const aspectRatio16to10: AspectRatioFunction = aspectRatio(16, 10);
  *   - desk
  */
 const AR12TO5_MAX_HEIGHT = 500;
-export const aspectRatio12to5: AspectRatioFunctionWithMaxHeight = function (width: number): number {
-  return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
-} as AspectRatioFunctionWithMaxHeight;
+export const aspectRatio12to5: AspectRatioFunctionWithMaxHeight = ((width: number): number =>
+  Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT)) as AspectRatioFunctionWithMaxHeight;
 aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
 
 /**
@@ -84,11 +81,8 @@ aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
  *   - desk
  */
 const SQUARE_MAX_HEIGHT = 420;
-export const aspectRatioSquare: AspectRatioFunctionWithMaxHeight = function (
-  width: number
-): number {
-  return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
-} as AspectRatioFunctionWithMaxHeight;
+export const aspectRatioSquare: AspectRatioFunctionWithMaxHeight = ((width: number): number =>
+  Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT)) as AspectRatioFunctionWithMaxHeight;
 aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
 
 /**
@@ -105,11 +99,8 @@ aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
  *   - desk
  */
 const PORTRAIT_MAX_HEIGHT = 600;
-export const aspectRatioPortrait: AspectRatioFunctionWithMaxHeight = function (
-  width: number
-): number {
-  return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
-} as AspectRatioFunctionWithMaxHeight;
+export const aspectRatioPortrait: AspectRatioFunctionWithMaxHeight = ((width: number): number =>
+  Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT)) as AspectRatioFunctionWithMaxHeight;
 aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
 
 /**
@@ -133,7 +124,7 @@ const defaultAspectRatios: Record<string, AspectRatioFunction> = {
   _: aspectRatio12to5, // all other cases, including desk
 };
 
-export const aspectRatioAuto = function (measurement: Measurement): number {
+export const aspectRatioAuto = (measurement: Measurement): number => {
   const bp = breakpointFind(breakpointDefaultSpec(), measurement);
   const ar = defaultAspectRatios[bp?.name || "_"];
   return ar(measurement.width);

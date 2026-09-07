@@ -1,8 +1,8 @@
 import { scaleBand, scaleLinear, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { groupedBarsHorizontal, groupedBarsVertical } from "../../src/component/groupedBars.js";
-import { createSvgLayer } from "../../src/createSvgLayer";
-import "../../src/d3-selectgroup";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import "../../src/d3-selectgroup.js";
 
 type TestDatum = {
   category: string;

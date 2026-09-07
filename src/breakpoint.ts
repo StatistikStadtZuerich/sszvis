@@ -36,7 +36,7 @@
  * }
  */
 
-import * as fn from "./fn";
+import * as fn from "./fn.js";
 
 import type { Breakpoint, Measurement } from "./types.js";
 
@@ -173,7 +173,9 @@ export const breakpointLap = makeTest("lap");
  * @param {{width?: number, screenHeight?: number}} partialMeasurement
  * @returns Measurement
  */
-function parseMeasurement(partialMeasurement: Partial<Measurement>): Measurement {
+function parseMeasurement(
+  partialMeasurement: { [K in keyof Measurement]?: Measurement[K] | undefined }
+): Measurement {
   const widthOrInf = fn.propOr("width", Infinity);
   const screenHeightOrInf = fn.propOr("screenHeight", Infinity);
   return {

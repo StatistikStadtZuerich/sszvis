@@ -1,8 +1,8 @@
 import { select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import rangeRuler from "../../src/annotation/rangeRuler";
-import { createSvgLayer } from "../../src/createSvgLayer";
-import "../../src/d3-selectgroup";
+import rangeRuler from "../../src/annotation/rangeRuler.js";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import "../../src/d3-selectgroup.js";
 
 type TestDatum = {
   x: number;

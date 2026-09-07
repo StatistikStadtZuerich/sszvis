@@ -5,7 +5,7 @@
  */
 
 import { selection } from "d3";
-import type { AnySelection } from "./types";
+import type { AnySelection } from "./types.js";
 
 /**
  * fn.identity
@@ -297,7 +297,7 @@ export const foldPattern = <T>(key: string, pattern: Record<string, () => T>): T
   if (typeof result === "function") {
     return result();
   }
-  throw new Error("[foldPattern] No definition provided for key: " + key);
+  throw new Error(`[foldPattern] No definition provided for key: ${key}`);
 };
 
 /**
@@ -335,7 +335,7 @@ export const hashableSet = <T, U extends string | number>(
  * Determines if the passed value is a function
  */
 export const isFunction = (val: unknown): val is (...args: any[]) => any =>
-  typeof val == "function";
+  typeof val === "function";
 
 /**
  * fn.isNull
@@ -387,12 +387,10 @@ export const not = <T extends any[]>(f: (...args: T) => any): ((...args: T) => b
  * it returns that object's value for the named property. (or undefined, if the object
  * does not contain the property.)
  */
-export const prop = <K extends string | number | symbol>(
-  key: K
-): (<T extends Record<K, any>>(object: T) => T[K]) =>
-  function <T extends Record<K, any>>(object: T): T[K] {
-    return object[key];
-  };
+export const prop =
+  <K extends string | number | symbol>(key: K): (<T extends Record<K, any>>(object: T) => T[K]) =>
+  <T extends Record<K, any>>(object: T): T[K] =>
+    object[key];
 
 /**
  * fn.propOr
@@ -404,11 +402,12 @@ export const prop = <K extends string | number | symbol>(
  * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
  * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
  */
-export const propOr = <K extends string | number | symbol, D>(
-  key: K,
-  defaultVal?: D
-): (<T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D) =>
-  function <T extends Partial<Record<K, any>>>(object: T | undefined): T[K] | D {
+export const propOr =
+  <K extends string | number | symbol, D>(
+    key: K,
+    defaultVal?: D
+  ): (<T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D) =>
+  <T extends Partial<Record<K, any>>>(object: T | undefined): T[K] | D => {
     const value = object === undefined ? undefined : object[key];
     return value === undefined ? (defaultVal as D) : value;
   };
@@ -427,10 +426,12 @@ export const propOr = <K extends string | number | symbol, D>(
  */
 export const set = <T, U>(arr: T[], acc?: (value: T, index: number, array: T[]) => U): U[] => {
   const accessor = acc || (identity as (value: T, index: number, array: T[]) => U);
-  return arr.reduce((m: U[], value: T, i: number) => {
+  const result: U[] = [];
+  for (const [i, value] of arr.entries()) {
     const computed = accessor(value, i, arr);
-    return m.includes(computed) ? m : [...m, computed];
-  }, []);
+    if (!result.includes(computed)) result.push(computed);
+  }
+  return result;
 };
 
 /**
@@ -464,11 +465,7 @@ export const stringEqual = (a: { toString(): string }, b: { toString(): string }
  * Same as fn.functor in d3v3
  */
 export const functor = <T>(v: T | (() => T)): (() => T) =>
-  typeof v === "function"
-    ? (v as () => T)
-    : function (): T {
-        return v;
-      };
+  typeof v === "function" ? (v as () => T) : (): T => v;
 
 /**
  * fn.memoize
