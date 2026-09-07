@@ -84,9 +84,8 @@ export const roundTransformString = (transformStr: string): string => {
  * negative coordinate yields the distance above the enclosing pixel rather
  * than a negative offset: -12.3 shifts by 0.7, not -0.3.
  *
- * A translate carrying only an x component yields a y shift of 0.
- *
- * Known defects are pinned in test/svgUtils/crisp.test.ts.
+ * A translate carrying only an x component yields a y shift of 0. A transform
+ * with no translate instruction, including the empty string, reports [0, 0].
  *
  * @param  {string} transformStr A valid SVG transform string containing a
  *                               translate instruction
@@ -94,14 +93,9 @@ export const roundTransformString = (transformStr: string): string => {
  */
 export const transformTranslateSubpixelShift = (transformStr: string): [number, number] => {
   const roundNumber = fn.compose(Math.floor, Number);
-  const m = transformStr.match(/(translate\()\s*([\d ,.-]+)\s*(\))/i);
-  // A transform string without a translate instruction throws a TypeError here. This
-  // is preserved from the original implementation; see test/svgUtils/crisp.test.ts.
-  const vec = (m as RegExpMatchArray)[2]
-    .replace(",", " ")
-    .replace(/\s+/, " ")
-    .split(" ")
-    .map(Number);
+  const m = transformStr.match(/(translate\()\s*([\d ,.-]+?)\s*(\))/i);
+  if (!m) return [0, 0];
+  const vec = m[2].split(/[\s,]+/).map(Number);
 
   if (vec.length === 1) vec.push(0);
 
