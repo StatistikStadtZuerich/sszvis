@@ -65,7 +65,7 @@ function vectorToTranslateString(vec: [number, number]): string {
   return translateString.apply(null, vec);
 }
 
-export default function <T = unknown>(): TooltipAnchorComponent<T> {
+export default function tooltipAnchor<T = unknown>(): TooltipAnchorComponent<T> {
   return component<TooltipAnchorComponent<T>>()
     .prop("position")
     .position(fn.functor([0, 0]))
@@ -82,7 +82,6 @@ export default function <T = unknown>(): TooltipAnchorComponent<T> {
         .attr("width", 1)
         .attr("fill", "none")
         .attr("stroke", "none")
-        .attr("visibility", "none")
         .attr("data-tooltip-anchor", "");
 
       // Update
