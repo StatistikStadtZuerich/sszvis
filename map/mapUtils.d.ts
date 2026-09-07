@@ -3,7 +3,7 @@
  *
  * @module sszvis/map/utils
  */
-import { type ExtendedFeature, type ExtendedFeatureCollection, type ExtendedGeometryCollection, type GeoGeometryObjects, type GeoPath, type GeoProjection } from "d3";
+import { type BaseType, type ExtendedFeature, type ExtendedFeatureCollection, type ExtendedGeometryCollection, type GeoGeometryObjects, type GeoPath, type GeoProjection, type Selection } from "d3";
 export declare const STADT_KREISE_KEY = "zurichStadtKreise";
 export declare const STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
 export declare const STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
@@ -215,4 +215,32 @@ export declare function getGeoJsonCenter(geoJson: MapFeature): number[];
  * @return {number}          The stroke width that the map elements should have, clamped to [0.8, 1.1].
  */
 export declare function widthAdaptiveMapPathStroke(width: number): number;
+/**
+ * Whether a fill value references a paint server rather than naming a color. An absent attribute
+ * counts as neither: an entering element has no previous fill, and d3's rgb interpolator treats an
+ * unparseable start as a constant, so it still reaches its color on the first tick.
+ *
+ * The map renderers use this to keep a paint-server reference out of a color tween. d3 has no
+ * interpolator for one, so it falls back to interpolating the numbers embedded in the two strings:
+ * the "-1" of "url(#missing-pattern-1)" pairs with a color's channels and the tween spends its run
+ * pointing at patterns that do not exist, which paint nothing.
+ *
+ * See test/map/mapUtils.test.ts.
+ */
+export declare function isPaintServer(fill: string | null): boolean;
+/**
+ * The id of this layer's missing-value pattern, assigning one the first time the layer is
+ * rendered.
+ *
+ * Ids are document-global while the pattern definition lives inside each layer's own group, so a
+ * fixed id would have two map layers on one page define it twice and every url(#...) reference in
+ * the document resolve to whichever definition came first. The assigned id is cached on the layer
+ * element rather than counted per render, so re-rendering a layer keeps its own definition.
+ *
+ * The selection parameters are generic because d3's Selection is invariant in its element
+ * parameters - no single non-generic type accepts every selection.
+ *
+ * See test/map/mapUtils.test.ts.
+ */
+export declare function missingPatternId<G extends BaseType, D, P extends BaseType, PD>(selection: Selection<G, D, P, PD>): string;
 //# sourceMappingURL=mapUtils.d.ts.map

@@ -62,7 +62,7 @@ export { DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, legendColorOrdinal } from './l
 export { default as legendRadius } from './legend/radius.js';
 export { loadError } from './loadError.js';
 export { formatLocale, timeLocale } from './locale.js';
-export { AGGLOMERATION_2012_KEY, GEO_KEY_DEFAULT, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, getGeoJsonCenter, pixelsFromGeoDistance, prepareMergedGeoData, swissMapPath, swissMapProjection, toLookupKey, widthAdaptiveMapPathStroke } from './map/mapUtils.js';
+export { AGGLOMERATION_2012_KEY, GEO_KEY_DEFAULT, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, getGeoJsonCenter, isPaintServer, missingPatternId, pixelsFromGeoDistance, prepareMergedGeoData, swissMapPath, swissMapProjection, toLookupKey, widthAdaptiveMapPathStroke } from './map/mapUtils.js';
 export { default as mapRendererBase } from './map/renderer/base.js';
 export { default as mapRendererBubble } from './map/renderer/bubble.js';
 export { default as mapRendererGeoJson } from './map/renderer/geojson.js';

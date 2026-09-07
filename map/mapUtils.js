@@ -242,6 +242,46 @@ function getGeoJsonCenter(geoJson) {
 function widthAdaptiveMapPathStroke(width) {
   return Math.min(Math.max(0.8, width / 400), 1.1);
 }
+/**
+ * Whether a fill value references a paint server rather than naming a color. An absent attribute
+ * counts as neither: an entering element has no previous fill, and d3's rgb interpolator treats an
+ * unparseable start as a constant, so it still reaches its color on the first tick.
+ *
+ * The map renderers use this to keep a paint-server reference out of a color tween. d3 has no
+ * interpolator for one, so it falls back to interpolating the numbers embedded in the two strings:
+ * the "-1" of "url(#missing-pattern-1)" pairs with a color's channels and the tween spends its run
+ * pointing at patterns that do not exist, which paint nothing.
+ *
+ * See test/map/mapUtils.test.ts.
+ */
+function isPaintServer(fill) {
+  var _fill$startsWith;
+  return (_fill$startsWith = fill === null || fill === void 0 ? void 0 : fill.startsWith("url(")) !== null && _fill$startsWith !== void 0 ? _fill$startsWith : false;
+}
+/** Where a layer records the pattern id it was given, so re-renders reuse it. */
+const MISSING_PATTERN_ID_ATTR = "data-sszvis-missing-pattern-id";
+let missingPatternCount = 0;
+/**
+ * The id of this layer's missing-value pattern, assigning one the first time the layer is
+ * rendered.
+ *
+ * Ids are document-global while the pattern definition lives inside each layer's own group, so a
+ * fixed id would have two map layers on one page define it twice and every url(#...) reference in
+ * the document resolve to whichever definition came first. The assigned id is cached on the layer
+ * element rather than counted per render, so re-rendering a layer keeps its own definition.
+ *
+ * The selection parameters are generic because d3's Selection is invariant in its element
+ * parameters - no single non-generic type accepts every selection.
+ *
+ * See test/map/mapUtils.test.ts.
+ */
+function missingPatternId(selection) {
+  const assigned = selection.attr(MISSING_PATTERN_ID_ATTR);
+  if (assigned) return assigned;
+  const id = "missing-pattern-".concat(++missingPatternCount);
+  selection.attr(MISSING_PATTERN_ID_ATTR, id);
+  return id;
+}
 
-export { AGGLOMERATION_2012_KEY, GEO_KEY_DEFAULT, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, getGeoJsonCenter, pixelsFromGeoDistance, prepareMergedGeoData, swissMapPath, swissMapProjection, toLookupKey, widthAdaptiveMapPathStroke };
+export { AGGLOMERATION_2012_KEY, GEO_KEY_DEFAULT, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, getGeoJsonCenter, isPaintServer, missingPatternId, pixelsFromGeoDistance, prepareMergedGeoData, swissMapPath, swissMapProjection, toLookupKey, widthAdaptiveMapPathStroke };
 //# sourceMappingURL=mapUtils.js.map

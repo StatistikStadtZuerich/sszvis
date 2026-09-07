@@ -5,7 +5,7 @@ import { functor, prop, defined } from '../../fn.js';
 import { mapMissingValuePattern } from '../../patterns.js';
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { slowTransition } from '../../transition.js';
-import { GEO_KEY_DEFAULT, toLookupKey } from '../mapUtils.js';
+import { GEO_KEY_DEFAULT, missingPatternId, toLookupKey, isPaintServer } from '../mapUtils.js';
 
 /**
  * geojson renderer component
@@ -35,40 +35,20 @@ import { GEO_KEY_DEFAULT, toLookupKey } from '../mapUtils.js';
  *                                          string, called with the datum. Default black. Undefined entities are not
  *                                          asked for a stroke at all; see the note below.
  * @property {Number, Function} strokeWidth The thickness of the strokes of the shapes. A number, or a function
- *                                          returning a number - but see the note below: unlike fill and stroke, a
- *                                          strokeWidth accessor is handed the merged { geoJson, datum } wrapper
- *                                          rather than the datum. Default 1.25.
- * @property {Boolean} transitionColor      Whether to schedule a transition on the fill color of the geojson entities.
- *                                          Default true. The transition does not currently animate anything; see the
- *                                          note below.
+ *                                          returning a number, called with the datum as the fill and stroke
+ *                                          accessors are. Default 1.25. Undefined entities are not asked for a
+ *                                          stroke width; they carry no stroke-width attribute.
+ * @property {Boolean} transitionColor      Whether to transition the fill color of the geojson entities. Default true.
+ *                                          With it set the fill is only applied through the transition, so a color change
+ *                                          fades from the previous color; with it unset the fill is written synchronously.
+ *                                          An entering entity has no previous color, so it takes the final color at the
+ *                                          first tick. Only a color-to-color change is transitioned; an entity entering or
+ *                                          leaving the missing value texture takes its fill synchronously either way,
+ *                                          since a paint-server reference cannot be interpolated.
  *
- * Note: the data are grouped with a reduce that has no initial value, so the first datum becomes
- * the lookup table rather than an entry in it. That datum's feature never receives its data and
- * always renders as missing, the remaining data are written as properties onto the caller's first
- * array element, a single-datum dataset matches nothing at all, and an empty dataset throws.
- *
- * Note: the on("over"|"out"|"click") API has never delivered anything. The listeners call
- * event.over(datum) and friends, but d3's dispatch exposes only on, call, apply and copy, so each
- * listener throws a TypeError before any registered handler runs. Both maps in docs/map-extended
- * register these handlers and receive nothing.
- *
- * Note: a strokeWidth accessor is called with the merged { geoJson, datum } wrapper, not with the
- * datum, unlike the fill and stroke accessors. An accessor written against the datum reads
- * undefined and d3 removes the attribute entirely.
- *
- * Note: the key lookup reads a feature's properties without a guard, so a feature with the
- * spec-legal `properties: null`, or with no properties at all, crashes the merge with a bare
- * TypeError. That also makes the anchor's own `properties || (properties = {})` guard unreachable.
- *
- * Note: lookup keys are stringified, so a missing key on either side becomes the string
- * "undefined" and one keyless datum becomes the datum for every keyless feature. A symbol key stays
- * a symbol and can never be matched by a string id. The lookup table is a plain object, so a
- * feature keyed after an Object.prototype member - "valueOf", say - is handed the inherited
- * function as its datum, which fn.defined accepts and passes to the fill accessor.
- *
- * Note: the mouse listeners are bound layer-wide via the [data-event-target] attribute rather than
- * scoped to this component's own class. An overlay drawn into a group that already holds a base
- * layer rebinds that layer's areas to this component's handlers and merged data.
+ * Note: lookup keys are stringified, so a numeric and a string id that print the same collide. A
+ * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
+ * key at all is left unmatched.
  *
  * Note: rendering caches a sphericalCentroid onto every feature's properties and never invalidates
  * it, so moving a feature's geometry leaves its anchor behind. Unlike the base renderer it ignores
@@ -79,99 +59,99 @@ import { GEO_KEY_DEFAULT, toLookupKey } from '../mapUtils.js';
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
  * attribute or asking for no stroke.
  *
- * Note: this renderer shares four quirks with the base renderer, documented at length in
- * src/map/renderer/base.ts: the fill transition interpolates a colour onto itself, the
- * slowTransition call is a no-op that leaves d3's 250ms easeCubicInOut defaults in place of the
- * intended 500ms easePolyOut, the stale-class fill repaint is dead, and the data join is an index
- * join with no key function. The missing value pattern is likewise emitted per layer under the
- * fixed id "missing-pattern", so two map layers on one page define that id twice.
+ * Note: the missing value pattern is written into a defs element inside each layer, under an id of
+ * that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
+ * element so re-renders reuse it. The id is not part of the public API; do not select on it.
+ *
+ * Note: two quirks remain, shared with the base renderer. The slowTransition call is a no-op that
+ * leaves d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut, and the
+ * data join has no key function, so it is an index join: reordering the features repaints the
+ * existing nodes in place instead of moving them.
+ *
  * See test/map/renderer/geojson.test.ts.
  *
  * @return {sszvis.component}
  */
 /**
- * Reads a key off a feature's properties. The JavaScript used fn.prop, which indexes without a
- * guard, so a feature with spec-legal `properties: null` crashed the merge. The message matches
- * what that read produced.
+ * Reads a match key off a feature's properties. RFC 7946 permits a null properties member, and a
+ * feature may simply not carry the configured key, so both cases read as undefined - which the
+ * merge treats as unmatched rather than as the lookup key "undefined".
  */
 function readFeatureKey(properties, key) {
-  if (properties === null || properties === undefined) {
-    throw new TypeError("Cannot read properties of ".concat(properties, " (reading '").concat(key, "')"));
-  }
-  return properties[key];
+  return properties === null || properties === undefined ? undefined : properties[key];
 }
-/**
- * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
- * symbols with the same description remain distinct and can never be matched by a string id.
- * Everything else stringifies, which is how a missing key becomes the string "undefined".
- */
-/**
- * Reproduces what this component's event handlers have always done. The JavaScript called
- * `event.over(datum)`, but d3's dispatch provides only on, call, apply and copy - there has never
- * been a per-type method - so the call threw before any registered handler was reached. That is
- * why .on("over"|"out"|"click") has never delivered anything. The throw is unconditional because
- * the call could never succeed; the message is the one V8 produced for the original expression.
- * Transcribed rather than corrected so the port does not change behaviour - the fix is to use
- * event.apply(type, this, args), as src/behavior/panning.ts already does.
- */
-function emitLegacy(type) {
-  throw new TypeError("event.".concat(type, " is not a function"));
-}
-function geojson () {
+function mapRendererGeoJson() {
   const event = dispatch("over", "out", "click");
   const geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-    // render the missing value pattern
-    ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
+    // render the missing value pattern, under an id of this layer's own
+    const patternId = missingPatternId(selection);
+    ensureDefsElement(selection, "pattern", patternId).call(mapMissingValuePattern);
     // getDataKeyName will be called on data values. It should return a map entity id.
     // getMapKeyName will be called on the 'properties' of each map feature. It should
     // return a map entity id. Data values are matched with corresponding map features using
     // these entity ids.
     const getDataKeyName = prop(props.dataKeyName);
-    // The JavaScript grouped the data with `data.reduce((m, v) => { m[key(v)] = v; return m; })`
-    // and no initial value, so the first datum became the accumulator: it is never an entry of
-    // its own table, the rest of the data are written onto it, and an empty array throws.
-    // Written as an explicit loop here so the table has a type; the behaviour is unchanged.
-    if (data.length === 0) {
-      throw new TypeError("Reduce of empty array with no initial value");
+    // A prototype-less table, so a feature keyed after an Object.prototype member - "valueOf",
+    // say - cannot resolve to the inherited function, and so that the caller's data are never
+    // written to.
+    const groupedInputData = Object.create(null);
+    for (const datum of data) {
+      // A datum with no key is skipped rather than filed under the string "undefined", where it
+      // would have become the datum for every feature that also lacks a key.
+      const key = getDataKeyName(datum);
+      if (key === undefined) continue;
+      groupedInputData[toLookupKey(key)] = datum;
     }
-    const [firstDatum, ...remainingData] = data;
-    const groupedInputData = firstDatum;
-    for (const datum of remainingData) {
-      groupedInputData[toLookupKey(getDataKeyName(datum))] = datum;
-    }
-    const mergedData = props.geoJson.features.map(feature => ({
-      geoJson: feature,
-      datum: groupedInputData[toLookupKey(readFeatureKey(feature.properties, props.geoJsonKeyName))]
-    }));
+    const mergedData = props.geoJson.features.map(feature => {
+      const key = readFeatureKey(feature.properties, props.geoJsonKeyName);
+      return {
+        geoJson: feature,
+        datum: key === undefined ? undefined : groupedInputData[toLookupKey(key)]
+      };
+    });
     function getMapFill(d) {
-      return defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
+      return defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : "url(#".concat(patternId, ")");
     }
     function getMapStroke(d) {
       return defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
     }
-    const geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData).join("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "").attr("fill", getMapFill);
-    selection.selectAll(".sszvis-map__geojsonelement--undefined").attr("fill", getMapFill);
+    // Guarded like fill and stroke: an unmatched feature is not asked for a stroke width, and
+    // returning null removes the attribute rather than handing the accessor undefined.
+    function getMapStrokeWidth(d) {
+      return defined(d.datum) && props.defined(d.datum) ? props.strokeWidth(d.datum) : null;
+    }
+    const geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData).join("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "");
     geoElements.classed("sszvis-map__geojsonelement--undefined", d => !defined(d.datum) || !props.defined(d.datum)).attr("d", d => props.mapPath(d.geoJson));
+    // The fill is applied exactly once, so the transition has the previous color to interpolate
+    // from, and only a color-to-color change is tweened - a paint-server reference cannot be
+    // interpolated. Both rules are the base renderer's; see src/map/renderer/base.ts.
     if (props.transitionColor) {
-      geoElements.transition().call(slowTransition).attr("fill", getMapFill);
+      const tweenable = function (d) {
+        return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
+      };
+      geoElements.filter(tweenable).transition().call(slowTransition).attr("fill", getMapFill);
+      geoElements.filter(function (d) {
+        return !tweenable.call(this, d);
+      }).attr("fill", getMapFill);
     } else {
       geoElements.attr("fill", getMapFill);
     }
-    geoElements.attr("stroke", getMapStroke).attr("stroke-width", props.strokeWidth);
-    // The JavaScript read `.datum` off each listener's first parameter. d3 v6 and later call a
-    // listener with (event, datum), so that read was always of the DOM event and always
-    // undefined; the emit below throws before the value is used either way.
-    selection.selectAll("[data-event-target]").on("mouseover", () => {
-      emitLegacy("over");
-    }).on("mouseout", () => {
-      emitLegacy("out");
-    }).on("click", () => {
-      emitLegacy("click");
+    geoElements.attr("stroke", getMapStroke).attr("stroke-width", getMapStrokeWidth);
+    // d3 v6 and later call a listener with (event, datum), and the datum here is the merged
+    // { geoJson, datum } wrapper - the handler is given the entity's own datum.
+    geoElements.on("mouseover", function (_pointerEvent, d) {
+      event.call("over", this, d.datum);
+    }).on("mouseout", function (_pointerEvent, d) {
+      event.call("out", this, d.datum);
+    }).on("click", function (_pointerEvent, d) {
+      event.call("click", this, d.datum);
     });
     // the tooltip anchor generator
     const ta = tooltipAnchor().position(d => {
+      // A feature with the spec-legal `properties: null` reaches here now that the merge no
+      // longer crashes on one, and the centroid cache needs somewhere to live.
       if (!d.geoJson.properties) d.geoJson.properties = {};
       const properties = d.geoJson.properties;
       let sphericalCentroid = properties.sphericalCentroid;
@@ -206,5 +186,5 @@ function geojson () {
   return geojsonComponent;
 }
 
-export { geojson as default };
+export { mapRendererGeoJson as default };
 //# sourceMappingURL=geojson.js.map

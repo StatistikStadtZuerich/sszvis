@@ -26,40 +26,20 @@
  *                                          string, called with the datum. Default black. Undefined entities are not
  *                                          asked for a stroke at all; see the note below.
  * @property {Number, Function} strokeWidth The thickness of the strokes of the shapes. A number, or a function
- *                                          returning a number - but see the note below: unlike fill and stroke, a
- *                                          strokeWidth accessor is handed the merged { geoJson, datum } wrapper
- *                                          rather than the datum. Default 1.25.
- * @property {Boolean} transitionColor      Whether to schedule a transition on the fill color of the geojson entities.
- *                                          Default true. The transition does not currently animate anything; see the
- *                                          note below.
+ *                                          returning a number, called with the datum as the fill and stroke
+ *                                          accessors are. Default 1.25. Undefined entities are not asked for a
+ *                                          stroke width; they carry no stroke-width attribute.
+ * @property {Boolean} transitionColor      Whether to transition the fill color of the geojson entities. Default true.
+ *                                          With it set the fill is only applied through the transition, so a color change
+ *                                          fades from the previous color; with it unset the fill is written synchronously.
+ *                                          An entering entity has no previous color, so it takes the final color at the
+ *                                          first tick. Only a color-to-color change is transitioned; an entity entering or
+ *                                          leaving the missing value texture takes its fill synchronously either way,
+ *                                          since a paint-server reference cannot be interpolated.
  *
- * Note: the data are grouped with a reduce that has no initial value, so the first datum becomes
- * the lookup table rather than an entry in it. That datum's feature never receives its data and
- * always renders as missing, the remaining data are written as properties onto the caller's first
- * array element, a single-datum dataset matches nothing at all, and an empty dataset throws.
- *
- * Note: the on("over"|"out"|"click") API has never delivered anything. The listeners call
- * event.over(datum) and friends, but d3's dispatch exposes only on, call, apply and copy, so each
- * listener throws a TypeError before any registered handler runs. Both maps in docs/map-extended
- * register these handlers and receive nothing.
- *
- * Note: a strokeWidth accessor is called with the merged { geoJson, datum } wrapper, not with the
- * datum, unlike the fill and stroke accessors. An accessor written against the datum reads
- * undefined and d3 removes the attribute entirely.
- *
- * Note: the key lookup reads a feature's properties without a guard, so a feature with the
- * spec-legal `properties: null`, or with no properties at all, crashes the merge with a bare
- * TypeError. That also makes the anchor's own `properties || (properties = {})` guard unreachable.
- *
- * Note: lookup keys are stringified, so a missing key on either side becomes the string
- * "undefined" and one keyless datum becomes the datum for every keyless feature. A symbol key stays
- * a symbol and can never be matched by a string id. The lookup table is a plain object, so a
- * feature keyed after an Object.prototype member - "valueOf", say - is handed the inherited
- * function as its datum, which fn.defined accepts and passes to the fill accessor.
- *
- * Note: the mouse listeners are bound layer-wide via the [data-event-target] attribute rather than
- * scoped to this component's own class. An overlay drawn into a group that already holds a base
- * layer rebinds that layer's areas to this component's handlers and merged data.
+ * Note: lookup keys are stringified, so a numeric and a string id that print the same collide. A
+ * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
+ * key at all is left unmatched.
  *
  * Note: rendering caches a sphericalCentroid onto every feature's properties and never invalidates
  * it, so moving a feature's geometry leaves its anchor behind. Unlike the base renderer it ignores
@@ -70,34 +50,29 @@
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
  * attribute or asking for no stroke.
  *
- * Note: this renderer shares four quirks with the base renderer, documented at length in
- * src/map/renderer/base.ts: the fill transition interpolates a colour onto itself, the
- * slowTransition call is a no-op that leaves d3's 250ms easeCubicInOut defaults in place of the
- * intended 500ms easePolyOut, the stale-class fill repaint is dead, and the data join is an index
- * join with no key function. The missing value pattern is likewise emitted per layer under the
- * fixed id "missing-pattern", so two map layers on one page define that id twice.
+ * Note: the missing value pattern is written into a defs element inside each layer, under an id of
+ * that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
+ * element so re-renders reuse it. The id is not part of the public API; do not select on it.
+ *
+ * Note: two quirks remain, shared with the base renderer. The slowTransition call is a no-op that
+ * leaves d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut, and the
+ * data join has no key function, so it is an index join: reordering the features repaints the
+ * existing nodes in place instead of moving them.
+ *
  * See test/map/renderer/geojson.test.ts.
  *
  * @return {sszvis.component}
  */
-import { type ExtendedFeature, type ExtendedFeatureCollection, type GeoPath } from "d3";
+import { type ExtendedFeatureCollection, type GeoPath } from "d3";
 import { type ComponentBuilder } from "../../d3-component.js";
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
 type GeoJsonValue<T, R> = R | ((datum: T) => R);
 /**
  * How a functor-wrapped prop reads back once it is stored: always a function. The parameter is
- * typed as unknown because the data lookup reads through a plain object's prototype chain, so an
- * accessor can be handed something that is not a datum at all.
+ * typed as unknown because the data lookup is keyed at runtime and cannot promise the caller's
+ * datum type.
  */
 type StoredGeoJsonValue<R> = (datum: unknown) => R;
-/**
- * A feature paired with whatever the data lookup produced for it. `datum` is unknown rather than
- * the caller's datum type because the lookup reads through a plain object's prototype chain.
- */
-interface MergedFeature {
-    geoJson: ExtendedFeature;
-    datum: unknown;
-}
 /** A handler as this component's own event API delivers it. */
 type GeoJsonEventHandler = (datum: unknown) => void;
 export interface MapRendererGeoJsonComponent<T = unknown> extends ComponentBuilder<MapRendererGeoJsonComponent<T>> {
@@ -115,17 +90,13 @@ export interface MapRendererGeoJsonComponent<T = unknown> extends ComponentBuild
     fill<U = T>(value: GeoJsonValue<U, string>): MapRendererGeoJsonComponent<T>;
     stroke(): StoredGeoJsonValue<string>;
     stroke<U = T>(value: GeoJsonValue<U, string>): MapRendererGeoJsonComponent<T>;
-    /**
-     * Note that a strokeWidth accessor is called with the merged { geoJson, datum } wrapper, not
-     * with the datum, unlike fill and stroke.
-     */
-    strokeWidth(): (datum?: MergedFeature) => number;
-    strokeWidth<D = MergedFeature>(value: number | ((datum: D) => number)): MapRendererGeoJsonComponent<T>;
+    strokeWidth(): StoredGeoJsonValue<number>;
+    strokeWidth<U = T>(value: GeoJsonValue<U, number>): MapRendererGeoJsonComponent<T>;
     on(eventName: string, handler: GeoJsonEventHandler): MapRendererGeoJsonComponent<T>;
     on(eventName: string): GeoJsonEventHandler | undefined;
     transitionColor(): boolean;
     transitionColor(enabled: boolean): MapRendererGeoJsonComponent<T>;
 }
-export default function <T extends Record<string, unknown> = Record<string, unknown>>(): MapRendererGeoJsonComponent<T>;
+export default function mapRendererGeoJson<T extends Record<string, unknown> = Record<string, unknown>>(): MapRendererGeoJsonComponent<T>;
 export {};
 //# sourceMappingURL=geojson.d.ts.map
