@@ -446,20 +446,6 @@ describe("map/renderer/base", () => {
     // is built from them unguarded, giving a transform of "translate(NaN,NaN)" rather than the
     // anchor being skipped. A typo in an authored map file silently detaches that entity's
     // tooltip instead of reporting anything.
-    test("emits a NaN transform for an anchor whose center property is malformed", () => {
-      const collection = geoJson();
-      collection.features[1].properties = { center: "not,coordinates" };
-      const node = group()
-        .call(
-          mapRendererBase()
-            .mergedData(prepareMergedGeoData(fullData, collection))
-            .geoJson(collection)
-            .mapPath(mapPathOf(collection))
-        )
-        .node() as SVGGElement;
-      expect(anchors(node).map((a) => a.getAttribute("transform"))).toContain("translate(NaN,NaN)");
-    });
-
     /** A mapPath whose projection reports what it was handed, and where it sent it. */
     const spyPath = (project: (point: number[]) => [number, number] | null, seen: unknown[]) =>
       Object.assign(() => "M0,0Z", {
@@ -488,24 +474,6 @@ describe("map/renderer/base", () => {
         "translate(undefined,undefined)",
         "translate(undefined,undefined)",
       ]);
-    });
-
-    // NOTE: getGeoJsonCenter returns whatever the unvalidated `center` property parsed to, and the
-    // whole array reaches the projection. d3's projections read only the first two entries, but a
-    // hand-written one can read further, so the extra components must not be trimmed on the way.
-    test("hands the projection the whole centre array, extra components included", () => {
-      const collection = geoJson();
-      collection.features[1].properties = { center: "1,2,3" };
-      const seen: unknown[] = [];
-      group()
-        .call(
-          mapRendererBase()
-            .mergedData(prepareMergedGeoData(fullData, collection))
-            .geoJson(collection)
-            .mapPath(spyPath(() => [0, 0], seen))
-        )
-        .node();
-      expect(seen).toContainEqual([1, 2, 3]);
     });
 
     // Ids are document-global, so each layer defines its pattern under an id of its own and
@@ -622,6 +590,53 @@ describe("map/renderer/base", () => {
   });
 
   describe("tooltip anchors", () => {
+    /** A mapPath whose projection reports every point it was handed. */
+    const reportingPath = (seen: unknown[]) =>
+      Object.assign(() => "M0,0Z", {
+        projection: () => (point: number[]) => {
+          seen.push(point);
+          return [0, 0] as [number, number];
+        },
+      }) as unknown as ReturnType<typeof mapPathOf>;
+
+    // getGeoJsonCenter validates an authored `center` before using it, so a malformed one falls
+    // back to the computed centroid instead of reaching the projection as NaN.
+    test.each([
+      ["unparseable", "not,coordinates"],
+      ["too short", "8.54"],
+      ["too long", "1,2,3"],
+    ])("positions an anchor from the centroid for a %s center property", (_label, center) => {
+      const collection = geoJson();
+      collection.features[1].properties = { center };
+      const node = group()
+        .call(
+          mapRendererBase()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .geoJson(collection)
+            .mapPath(mapPathOf(collection))
+        )
+        .node() as SVGGElement;
+      for (const transform of anchors(node).map((a) => a.getAttribute("transform"))) {
+        expect(transform).not.toContain("NaN");
+      }
+    });
+
+    test("hands the projection a two-component centre", () => {
+      const collection = geoJson();
+      collection.features[1].properties = { center: "1,2,3" };
+      const seen: unknown[] = [];
+      group()
+        .call(
+          mapRendererBase()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .geoJson(collection)
+            .mapPath(reportingPath(seen))
+        )
+        .node();
+      expect(seen).not.toContainEqual([1, 2, 3]);
+      for (const point of seen) expect(point).toHaveLength(2);
+    });
+
     test("renders one anchor per merged datum", () => {
       const node = render(fullData);
       expect(anchors(node)).toHaveLength(3);
