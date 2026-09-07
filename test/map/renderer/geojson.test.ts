@@ -416,7 +416,9 @@ describe("map/renderer/geojson", () => {
     test("defaults the stroke to black and the stroke width to 1.25", () => {
       const node = render(partialData, (c) => c.transitionColor(false));
       expect(attrs(node, "stroke")).toEqual(["black", "black", ""]);
-      expect(attrs(node, "stroke-width")).toEqual(["1.25", "1.25", "1.25"]);
+      // The unmatched entity is not asked for a stroke width at all, so it carries no
+      // stroke-width attribute; its stroke is "" and paints nothing either way.
+      expect(attrs(node, "stroke-width")).toEqual(["1.25", "1.25", null]);
     });
 
     // NOTE: an undefined entity is given stroke="", which is not a valid paint value, so the
@@ -448,13 +450,30 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "stroke-width")).toEqual(["1", "2", "3"]);
     });
 
-    // An unmatched feature has no datum, so the accessor is called with undefined - as fill and
-    // stroke accessors are, though those are only reached through the defined check.
-    test("calls the stroke width accessor with undefined for an unmatched feature", () => {
+    test("never asks an unmatched feature for a stroke width", () => {
+      const seen: unknown[] = [];
       const node = render(partialData, (c) =>
-        c.transitionColor(false).strokeWidth((d?: Datum) => d?.value ?? 9)
+        c.transitionColor(false).strokeWidth((d: Datum) => {
+          seen.push(d);
+          return d.value;
+        })
       );
-      expect(attrs(node, "stroke-width")).toEqual(["1", "2", "9"]);
+      expect(seen).toEqual([
+        { geoId: "a", value: 1 },
+        { geoId: "b", value: 2 },
+      ]);
+      expect(elements(node)[2].hasAttribute("stroke-width")).toBe(false);
+      expect(attrs(node, "stroke-width").slice(0, 2)).toEqual(["1", "2"]);
+    });
+
+    test("drops the stroke width of an entity the defined predicate rejects", () => {
+      const node = render(fullData, (c) =>
+        c
+          .transitionColor(false)
+          .defined((d: Datum) => d.geoId !== "b")
+          .strokeWidth((d: Datum) => d.value)
+      );
+      expect(elements(node)[1].hasAttribute("stroke-width")).toBe(false);
     });
   });
 
