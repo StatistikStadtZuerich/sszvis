@@ -345,9 +345,9 @@ const num = (value: number | undefined): number => (value === undefined ? Number
  *
  * Behaviour notes:
  * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
- *   minimum across the columns is used for all of them. A single-node column divides by zero and
- *   contributes a phantom 50px candidate, but 50 is the cap, so that candidate only wins when
- *   every column is at 50 anyway - it never shrinks another column.
+ *   minimum across the columns is used for all of them. A single-node column draws no gaps, so
+ *   it has no padding to contribute and is left out of that minimum; a diagram whose columns
+ *   all hold one node has no padding at all.
  * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
  *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
  *   every total is 0; a diagram whose columns are all empty is zeroed instead.
@@ -408,15 +408,21 @@ export const computeLayout = (
   const padMax = 50;
   const minDisplayPixels = 1; // Minimum number of pixels used for display area
 
-  // Compute the padding value (in pixels) for each column, then take the minimum value
-  const computedPixPadding = min(
-    columnLengths.map((colLength) => {
-      // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
-      const colPadding = (columnHeight * padSpaceRatio) / (colLength - 1);
-      // Limit by minimum and maximum pixel padding values
-      return Math.max(padMin, Math.min(padMax, colPadding));
-    })
-  );
+  // Compute the padding value (in pixels) for each column, then take the minimum value.
+  // A column of one node draws no gaps, so it has no padding of its own to contribute, and
+  // charging its (divide-by-zero, then clamped) candidate to the other columns would shrink
+  // columns that do draw gaps.
+  const computedPixPadding =
+    min(
+      columnLengths
+        .filter((colLength) => colLength > 1)
+        .map((colLength) => {
+          // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
+          const colPadding = (columnHeight * padSpaceRatio) / (colLength - 1);
+          // Limit by minimum and maximum pixel padding values
+          return Math.max(padMin, Math.min(padMax, colPadding));
+        })
+    ) ?? 0;
 
   // Given the computed padding value, compute each column's resulting "pixels per unit"
   // This is the number of remaining pixels available to display the column's total units,
@@ -426,21 +432,21 @@ export const computeLayout = (
       // The non-padding pixels must have at least minDisplayPixels
       const nonPaddingPixels = Math.max(
         minDisplayPixels,
-        columnHeight - (colLength - 1) * num(computedPixPadding)
+        columnHeight - (colLength - 1) * computedPixPadding
       );
       return nonPaddingPixels / num(columnTotals[colIndex]);
     })
   );
 
   // The padding between bars, in bar value units
-  const valuePadding = num(computedPixPadding) / num(pixPerUnit);
+  const valuePadding = computedPixPadding / num(pixPerUnit);
   // The padding between bars, in pixels
   const nodePadding = computedPixPadding;
 
   // Compute y-padding required to vertically center each column (in pixels)
   const paddedHeights = columnLengths.map(
     (colLength, colIndex) =>
-      num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * num(nodePadding)
+      num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * nodePadding
   );
   const maxPaddedHeight = max(paddedHeights);
   const columnPaddings = columnLengths.map(
@@ -454,7 +460,7 @@ export const computeLayout = (
 
   return {
     valuePadding,
-    nodePadding: num(nodePadding),
+    nodePadding,
     columnPaddings,
     valueDomain,
     valueRange,

@@ -96,6 +96,26 @@ describe("verticalBarChartDimensions", () => {
     });
   });
 
+  describe("a single bar", () => {
+    test("reports no padding, because it draws no gaps", () => {
+      // the padding used to be recomputed over zero gaps, and the resulting Infinity was
+      // masked by the 100px clamp and then fed into padRatio
+      const dim = dimensionsVerticalBarChart(1000, 1);
+      expect(dim.barWidth).toBe(MAX_BAR_WIDTH);
+      expect(dim.padWidth).toBe(0);
+      expect(dim.padRatio).toBe(0);
+      expect(dim.barGroupWidth).toBe(MAX_BAR_WIDTH);
+    });
+
+    test("reports no padding below the 48px cap either", () => {
+      const dim = dimensionsVerticalBarChart(30, 1);
+      expect(dim.barWidth).toBe(30);
+      expect(dim.padWidth).toBe(0);
+      expect(dim.padRatio).toBe(0);
+      expect(dim.barGroupWidth).toBe(30);
+    });
+  });
+
   describe("degenerate inputs", () => {
     test("zero bars have no dimensions to report", () => {
       const dim = dimensionsVerticalBarChart(500, 0);
@@ -143,27 +163,6 @@ describe("verticalBarChartDimensions", () => {
       expect(dim.barGroupWidth).toBeGreaterThan(dim.totalWidth);
       // the overflow surfaces as a negative outer ratio
       expect(dim.outerRatio).toBeLessThan(0);
-    });
-
-    test("a single bar produces an Infinity padding that is masked by the 100px clamp", () => {
-      // BUG: with one bar there are zero padding spaces, so recomputing the padding after
-      // the bar width is capped divides by zero. The output only stays finite because the
-      // MAX_PADDING clamp happens to catch Infinity - padWidth is then a phantom padding
-      // that is never drawn, and padRatio is derived from it.
-      // got: padWidth 100, padRatio 0.676 for a chart with no gaps
-      // want: skip the recompute when numPads === 0.
-      const dim = dimensionsVerticalBarChart(1000, 1);
-      expect(dim.barWidth).toBe(MAX_BAR_WIDTH);
-      expect(dim.padWidth).toBe(MAX_PADDING);
-      expect(dim.barGroupWidth).toBe(MAX_BAR_WIDTH);
-      expect(dim.padRatio).toBeCloseTo(1 - 48 / 148, 9);
-    });
-
-    test("a single bar narrower than 48px keeps its unclamped phantom padding", () => {
-      const dim = dimensionsVerticalBarChart(30, 1);
-      expect(dim.barWidth).toBe(30);
-      expect(dim.padWidth).toBeCloseTo(30 * (0.3 / 0.7), 9);
-      expect(dim.barGroupWidth).toBe(30);
     });
 
     test("padRatio drifts away from the 0.3 target once the padding is clamped", () => {

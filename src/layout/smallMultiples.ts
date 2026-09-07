@@ -61,7 +61,7 @@
  * - The layout writes gx/gy/gw/gh/cx/cy back onto the bound data objects.
  * - width, height, rows and cols are required: omitting any of them throws before a group
  *   is created. paddingX and paddingY default to 0, as do the four title properties.
- * - More data than rows * cols overflows the declared height rather than erroring.
+ * - More data than rows * cols does not fit the declared grid, and throws.
  * - A datum without a `values` property binds `undefined` to its inner chart group.
  * - titleLabel is called after the layout fields have been attached to the datum, so it
  *   sees gx/gy/gw/gh/cx/cy alongside the caller's own fields.
@@ -162,6 +162,12 @@ export default function <
         if (props[propName] === undefined) {
           throw new TypeError(`smallMultiples: the ${propName} property is required`);
         }
+      }
+
+      if (data.length > props.rows * props.cols) {
+        throw new RangeError(
+          `smallMultiples: the ${props.rows} x ${props.cols} grid has no room for ${data.length} groups`
+        );
       }
 
       const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;

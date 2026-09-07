@@ -26,9 +26,10 @@
  *
  * Behaviour notes:
  * - The box side is fitted to the available width only; numY/rows never affect it.
- * - The side is capped at 30px but never floored, so too many columns, a large
- *   squarePadding, or a large horizontal chartPadding can drive it negative, which also
- *   pushes padRatio outside the [0, 1) range a band scale expects.
+ * - The side is capped at 30px and floored at 0. Too many columns, a large squarePadding
+ *   or a large horizontal chartPadding leave no room for a box at all, and the whole
+ *   layout is then zeroed rather than reporting a negative side and a padRatio outside
+ *   the [0, 1) range a band scale expects.
  * - The chartPadding argument is mutated in place (missing sides are defaulted onto the
  *   object itself), so passing a frozen object throws a TypeError.
  * - Defaults for chartPadding are applied with `||`, so an explicit 0 is indistinguishable
@@ -92,11 +93,18 @@ export default function dimensionsHeatTable(
   // this includes the default side length for the heat table
   const DEFAULT_SIDE = 30,
     availableChartWidth = spaceWidth - (padding.left ?? 0) - (padding.right ?? 0),
-    side = Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
+    // the side is capped from above and floored at 0: a box cannot have a negative side,
+    // and a padRatio derived from one lands outside the [0, 1) a band scale accepts
+    side = Math.max(
+      0,
+      Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE)
+    ),
     paddedSide = side + squarePadding,
     padRatio = 1 - side / paddedSide,
     tableWidth = numX * paddedSide - squarePadding, // subtract the squarePadding at the end
     tableHeight = numY * paddedSide - squarePadding; // subtract the squarePadding at the end
+  // no room for a box means no table to lay out
+  if (side === 0) return { ...EMPTY_DIMENSIONS };
   return {
     side,
     paddedSide,
