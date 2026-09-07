@@ -1,37 +1,93 @@
 /**
  * choropleth Map Component
  *
+ * @module sszvis/maps/choropleth
+ *
+ * @template T The type of the data values matched onto the map features
+ *
  * To use this component, pass data in the usual manner. Each data object is expected to have a value which
  * will be used to match that object with a particular map entity. The possible id values depend on the map type.
  * They are covered in more detail in the file sszvis/map/map-ids.txt. Which data key is used to fetch this value is configurable.
- * The default key which map.js expects is 'geoId', but by changing the keyName property of the map, you can pass data which
- * use any key. The map component assumes that datum[keyName] is a valid map ID which is matched with the available map entities.
+ * The default key is GEO_KEY_DEFAULT from src/map/index.js, which is 'geoId', but by changing the keyName
+ * property of the map, you can pass data which use any key. The map component assumes that
+ * datum[keyName] is a valid map ID which is matched with the available map entities.
  *
- * @module sszvis/maps/choropleth
- *
- * @property {Number} width                           The width of the map. Used to create the map projection function
- * @property {Number} height                          The height of the map. Used to create the map projection function
+ * @property {Number} width                           The width of the map. Used to create the map projection function.
+ *                                                    No default and unvalidated: leaving it out fits the projection to
+ *                                                    undefined, so every area is drawn with NaN coordinates.
+ * @property {Number} height                          The height of the map. Used to create the map projection function.
+ *                                                    No default, and fails the same way as width.
  * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
- * @property {Object} borders                         The mesh of entity borders, rendered as one path.
+ *                                                    Required and unguarded: it is the one property whose absence throws.
+ * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default; a
+ *                                                    missing mesh renders as one path with no `d` rather than as no path.
  * @property {Object} lakeFeatures                    The shape of the part of Lake Zurich that lies within the city.
- * @property {Object} lakeBorders                     The entity borders which extend over the lake.
- * @property {Boolean} lakeFadeOut                    Whether to fade the lake out towards the outer edge. Default false.
+ *                                                    No default; a missing shape renders as an empty path.
+ * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default, and it
+ *                                                    renders as an empty path too.
+ * @property {Boolean} lakeFadeOut                    Whether to fade the lake out towards the outer edge. Default false,
+ *                                                    which overrides the lake renderer's own default of true.
  * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
- * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities are highlighted.
- * @property {String, Function} highlightStroke       A function for the stroke of the highlighted entities
- * @property {Number, Function} highlightStrokeWidth  A function for the stroke width of the highlighted entities
+ * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities
+ *                                                    are highlighted. Default [], which renders no highlight path.
+ * @property {String, Function} highlightStroke       A function for the stroke of the highlighted entities. Default white.
+ * @property {Number, Function} highlightStrokeWidth  A function for the stroke width of the highlighted entities. Default 2.
  * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
  *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
- * @property {String, Function} fill                  A string or function for the fill of the map entities
- * @property {String} borderColor                     A string for the border color of the map entities
- * @property {Number, Function} strokeWidth           The width of the entity borders
+ *                                                    Defaults to a constant true, so nothing is textured unless it is set.
+ * @property {String, Function} fill                  A string or function for the fill of the map entities. An accessor is
+ *                                                    called with undefined for a feature no datum matched.
+ * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
+ *                                                    mesh, for the border color of the map entities.
+ * @property {Number, Function} strokeWidth           The width of the entity borders. Default 1.25.
  * @property {String, Function} lakePathColor         The color of the entity borders which extend over the lake
  * @property {Boolean} withLake                       Whether or not to show the textured outline of the end of lake Zurich that is within the city. Default true
- * @property {Component} anchoredShape                A shape to anchor to the base map elements of this map. For example, anchoredCircles for a bubble map.
+ * @property {AnchoredShape} anchoredShape            A shape to anchor to the base map elements of this map - a component
+ *                                                    carrying mergedData and mapPath properties, which this component sets
+ *                                                    before calling it. For example, mapRendererBubble for a bubble map.
+ *                                                    No default; left out, nothing extra is drawn.
  * @property {Boolean} transitionColor                Whether or not to transition the color of the base shapes. Default true.
  * @function on(String, function)                     This component has an event handler interface for binding events to the map entities.
  *                                                    The available events are 'over', 'out', and 'click'. These are triggered on map
  *                                                    elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
+ *                                                    A handler is called with undefined rather than with the entity's
+ *                                                    datum; see the note below.
+ *
+ * Note: the projection cache key is the literal string "zurichStadtfeatures" for every choropleth
+ * on the page, whatever it is a map of - and it names no map id in src/map/mapUtils.ts.
+ * swissMapProjection memoizes on width, height and that string alone, so two maps of different
+ * areas rendered at the same size share the projection fitted to whichever rendered first, and the
+ * second is projected outside its destination box.
+ *
+ * Note: features is the one property whose absence throws, because prepareMergedGeoData reads
+ * geoJson.features. width and height have no defaults either, but a missing size degrades silently:
+ * fitSize gets undefined, the scale is NaN, and every area carries a path of NaN coordinates that
+ * the browser drops, leaving a blank map instead of an error.
+ *
+ * Note: the lake and the anchored shape are not removed once drawn. Turning withLake off, or
+ * clearing anchoredShape, only stops the renderer being called; the lake, its border path, the
+ * pattern definition and the shape's own elements stay in the DOM from the previous render. The
+ * highlight is the exception - the highlight renderer removes its paths for an empty highlight
+ * array - which is what makes the other two read as oversights rather than as house style.
+ *
+ * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
+ * renderer's own default of true, so the fade mask and its gradient are not created unless the
+ * caller asks for them. A fade is not removable either: the renderer only ever adds the mask
+ * attribute, so turning lakeFadeOut back off leaves the lake faded.
+ *
+ * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
+ * emits the #lake-pattern definition and two empty paths. Every non-Zurich map - switzerland
+ * included - has to set .withLake(false) or it carries them.
+ *
+ * Note: the event dispatch is created once per choropleth() call and closed over, while the four
+ * renderers keep their props on the element they rendered into. So one instance can draw into two
+ * layers, each reflecting its own data, but both layers' event targets are bound to the one
+ * dispatch and share its handlers. Within a layer the handlers are rebound on each render rather
+ * than accumulating, and the binding is selectAll("[data-event-target]") scoped to the rendered
+ * group, so an anchored shape's own event targets are bound too, since it renders before the
+ * binding.
+ *
+ * See test/maps/choropleth.test.ts.
  *
  * @return {sszvis.component}
  */
