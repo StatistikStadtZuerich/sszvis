@@ -32,6 +32,7 @@ function parseRow(d) {
     konfvalue: d["95 % Konfidenzintervall (in %)"],
     value: sszvis.parseNumber(d["Anteil (in %)"]),
     nestedCategory: d["Geschlecht_F"],
+    ageGroup: d["Alter_F"],
   };
 }
 
@@ -41,6 +42,7 @@ const xjAcc = sszvis.prop("year");
 const yAcc = sszvis.prop("value");
 const cAcc = sszvis.prop("category");
 const aAcc = sszvis.prop("nestedCategory");
+const AGE_GROUP = "18 bis 29 Jahre";
 const kAcc = sszvis.prop("konfvalue");
 
 /* Application state
@@ -59,7 +61,11 @@ const state = {
   ----------------------------------------------- */
 const actions = {
   prepareState(data) {
-    state.data = data;
+    // The source data breaks every share down by age as well as by year, gender and
+    // answer, and the shares within one age group sum to 100%. Stacking across age
+    // groups would therefore add percentages that do not belong in one bar, so the
+    // example shows a single age group. Change AGE_GROUP to show another one.
+    state.data = data.filter((d) => d.ageGroup === AGE_GROUP);
 
     const stackLayout = sszvis.stackedBarVerticalData(xjAcc, cAcc, yAcc);
     state.stackedData = sszvis
