@@ -96,7 +96,7 @@ describe("createSvgLayer", () => {
       top: 30,
     });
     const group = createSvgLayer(container, customBounds).node();
-    expect(group.getAttribute("transform")).toBe("translate(50,30)");
+    expect(group?.getAttribute("transform")).toBe("translate(50,30)");
   });
 
   test("should return a d3 selection", () => {

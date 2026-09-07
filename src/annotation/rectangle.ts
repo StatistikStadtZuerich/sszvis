@@ -25,7 +25,7 @@ import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { dataAreaPattern } from "../patterns.js";
 import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
-import type { NumberAccessor, PatternSelection, StringAccessor } from "../types.js";
+import type { NumberAccessor, StringAccessor } from "../types.js";
 
 // Type definitions for rectangle annotation component
 type Datum<T = unknown> = T;
@@ -63,11 +63,7 @@ export default function <T = unknown>(): RectangleComponent<T> {
       const selection = select<Element, Datum<T>>(this);
       const props = selection.props<RectangleProps<T>>();
 
-      const patternSelection: PatternSelection = ensureDefsElement(
-        selection,
-        "pattern",
-        "data-area-pattern"
-      );
+      const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
       dataAreaPattern(patternSelection);
 
       const dataArea = selection

@@ -341,9 +341,10 @@ function interpolatedDivergentColorScale(
   if (!scale.range()) return scale;
   const length = scale.range().length;
 
-  // d3 types the scale's own .domain as read-only from the outside; this replaces it in
-  // place, which is the whole point of these two wrappers.
-  (scale as unknown as { domain: unknown }).domain = function (
+  // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+  // Reflect.set writes it without having to restate the scale's type.
+  const replaceDomain = function (
+    this: ScaleLinear<LabColor, LabColor>,
     dom?: number[]
   ): number[] | ScaleLinear<LabColor, LabColor> {
     if (!dom) return nativeDomain.call(this, []);
@@ -353,6 +354,7 @@ function interpolatedDivergentColorScale(
     }
     return nativeDomain.call(this, xDomain);
   };
+  Reflect.set(scale, "domain", replaceDomain);
 
   return scale;
 }
@@ -374,9 +376,10 @@ function interpolatedColorScale(
 ): ScaleLinear<LabColor, LabColor> {
   const nativeDomain = scale.domain;
 
-  // d3 types the scale's own .domain as read-only from the outside; this replaces it in
-  // place, which is the whole point of these two wrappers.
-  (scale as unknown as { domain: unknown }).domain = function (
+  // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+  // Reflect.set writes it without having to restate the scale's type.
+  const replaceDomain = function (
+    this: ScaleLinear<LabColor, LabColor>,
     dom?: number[]
   ): number[] | ScaleLinear<LabColor, LabColor> {
     if (arguments.length === 1 && dom && dom.length === 2) {
@@ -386,6 +389,7 @@ function interpolatedColorScale(
       return Reflect.apply(nativeDomain, this, arguments);
     }
   };
+  Reflect.set(scale, "domain", replaceDomain);
 
   return scale;
 }

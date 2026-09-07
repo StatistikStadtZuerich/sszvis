@@ -1,5 +1,5 @@
 import { type BaseType, selection as d3Selection, type Selection } from "d3";
-import type { $IntentionalAny, AnySelection } from "./types.js";
+import type { $IntentionalAny } from "./types.js";
 
 /**
  * The props bag a component accumulates through `.prop()`. Its keys are only known at
@@ -100,16 +100,17 @@ export function component<C extends Component = Component>(): C {
    *
    * @param  {d3.selection} selection Passed in by d3
    */
-  function sszvisComponent(selection: AnySelection): void {
+  function sszvisComponent<G extends BaseType, D, P extends BaseType, PD>(
+    selection: Selection<G, D, P, PD>
+  ): void {
     if (selectionRenderer) {
       // Attach the props reader d3's Selection prototype is augmented with below.
-      (selection as unknown as { props: () => ComponentProps }).props = (): ComponentProps =>
-        clone(props);
+      Reflect.set(selection, "props", (): ComponentProps => clone(props));
       selectionRenderer.apply(selection, slice(arguments));
     }
     selection.each(function () {
       // Stash the props on the node itself, where selection.props() reads them back.
-      (this as unknown as { __props__: ComponentProps }).__props__ = clone(props);
+      Reflect.set(this as object, "__props__", clone(props));
       renderer.apply(this, slice(arguments));
     });
   }
@@ -125,11 +126,11 @@ export function component<C extends Component = Component>(): C {
   sszvisComponent.prop = <T>(prop: string, setter: PropertySetter<T> = identity): Component => {
     // The accessor is created from a runtime prop name, so it cannot be assigned through
     // a statically known key.
-    (sszvisComponent as unknown as ComponentProps)[prop] = accessor(
-      props,
+    Reflect.set(
+      sszvisComponent,
       prop,
-      setter.bind(sszvisComponent)
-    ).bind(sszvisComponent);
+      accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent)
+    );
     return sszvisComponent as Component;
   };
 
@@ -142,14 +143,12 @@ export function component<C extends Component = Component>(): C {
    */
   sszvisComponent.delegate = (prop: string, delegate: PropertyDelegate): Component => {
     // Same as in prop(): a runtime prop name on both the component and the delegate.
-    (sszvisComponent as unknown as ComponentProps)[prop] = (
-      ...args: $IntentionalAny[]
-    ): $IntentionalAny => {
-      const result = (delegate as Record<string, (...a: $IntentionalAny[]) => $IntentionalAny>)[
-        prop
-      ].apply(delegate, slice(args));
+    const delegated = (...args: $IntentionalAny[]): $IntentionalAny => {
+      const target = Reflect.get(delegate, prop) as (...a: $IntentionalAny[]) => $IntentionalAny;
+      const result = target.apply(delegate, slice(args));
       return args.length === 0 ? result : sszvisComponent;
     };
+    Reflect.set(sszvisComponent, prop, delegated);
     return sszvisComponent as Component;
   };
 
@@ -209,12 +208,10 @@ d3Selection.prototype.props = function (): ComponentProps {
   if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
   if (this.size() !== 1) throw new Error("only one group is supported");
   // _groups is d3's internal selection storage and is not part of its public types.
-  const groups = (this as unknown as { _groups: { __props__?: ComponentProps }[][] })._groups;
-  if (groups[0].length !== 1) throw new Error("only one node is supported");
-
-  const group = groups[0];
-  const node = group[0];
-  return node.__props__ || {};
+  const node = this.node();
+  if (!node) throw new Error("only one node is supported");
+  // The props were stashed on the node itself by the component that rendered it.
+  return (Reflect.get(node as object, "__props__") as ComponentProps | undefined) || {};
 };
 
 /**

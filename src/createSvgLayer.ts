@@ -18,11 +18,10 @@
  * @returns {d3.selection}
  */
 
-import { select } from "d3";
+import { type BaseType, type Selection, select } from "d3";
 import type { BoundsResult } from "./bounds.js";
 import { bounds as mkBounds } from "./bounds.js";
-import * as fn from "./fn.js";
-import type { AnySelection, SelectableElement } from "./types.js";
+import type { LayerSelection, SelectableElement } from "./types.js";
 
 export interface SvgLayerMetadata {
   key?: string;
@@ -30,11 +29,16 @@ export interface SvgLayerMetadata {
   description?: string;
 }
 
-export function createSvgLayer(
-  selector: SelectableElement | HTMLElement,
+export function createSvgLayer<
+  G extends BaseType = BaseType,
+  D = unknown,
+  P extends BaseType = BaseType,
+  PD = unknown,
+>(
+  selector: SelectableElement<G, D, P, PD> | HTMLElement,
   bounds?: BoundsResult,
   metadata: SvgLayerMetadata = {}
-): AnySelection {
+): LayerSelection<SVGGElement, number> {
   const { padding, height, width } = bounds || mkBounds();
 
   const key = metadata.key || "default";
@@ -42,39 +46,44 @@ export function createSvgLayer(
   const title = metadata.title || "";
   const description = metadata.description || "";
 
-  const root: AnySelection = fn.isSelection(selector)
-    ? selector
-    : // d3's select() has one overload for a selector string and another for a node, and
-      // will not take the union of the two, so narrow rather than cast.
-      typeof selector === "string"
-      ? select(selector)
-      : select(selector);
-  const svg = root
-    .selectAll(`svg[${elementDataKey}]`)
-    .data([0])
-    .join("svg")
-    .classed("sszvis-svg-layer", true)
-    .attr(elementDataKey, "")
-    .attr("role", "img")
-    .attr("aria-label", `${title} – ${description}`)
-    .attr("height", height)
-    .attr("width", width);
+  // Each branch keeps its own concrete selection type and is rendered by the generic helper
+  // below, rather than being widened into a shared variable first: d3's select() has one
+  // overload for a selector string and another for a node, and Selection is invariant, so no
+  // single type holds all three.
+  const render = <G extends BaseType, D, P extends BaseType, PD>(
+    root: Selection<G, D, P, PD>
+  ): LayerSelection<SVGGElement, number> => {
+    const svg = root
+      .selectAll<SVGSVGElement, number>(`svg[${elementDataKey}]`)
+      .data([0])
+      .join<SVGSVGElement>("svg")
+      .classed("sszvis-svg-layer", true)
+      .attr(elementDataKey, "")
+      .attr("role", "img")
+      .attr("aria-label", `${title} – ${description}`)
+      .attr("height", height)
+      .attr("width", width);
 
-  svg.selectAll("title").data([0]).join("title").text(title);
+    svg.selectAll("title").data([0]).join("title").text(title);
 
-  svg
-    .selectAll("desc")
-    .data([0])
-    .join("desc")
-    .text(description)
-    .classed("sszvis-svg-layer", true)
-    .attr(elementDataKey, "")
-    .attr("role", "img");
+    svg
+      .selectAll("desc")
+      .data([0])
+      .join("desc")
+      .text(description)
+      .classed("sszvis-svg-layer", true)
+      .attr(elementDataKey, "")
+      .attr("role", "img");
 
-  return svg
-    .selectAll("[data-sszvis-svg-layer]")
-    .data(() => [0])
-    .join("g")
-    .attr("data-sszvis-svg-layer", "")
-    .attr("transform", `translate(${padding.left},${padding.top})`);
+    return svg
+      .selectAll<SVGGElement, number>("[data-sszvis-svg-layer]")
+      .data(() => [0])
+      .join<SVGGElement>("g")
+      .attr("data-sszvis-svg-layer", "")
+      .attr("transform", `translate(${padding.left},${padding.top})`);
+  };
+
+  if (typeof selector === "string") return render(select(selector));
+  if (selector instanceof Element) return render(select(selector));
+  return render(selector);
 }

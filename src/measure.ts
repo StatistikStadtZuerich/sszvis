@@ -3,15 +3,20 @@
  *
  * @module sszvis/measure
  */
-import { select } from "d3";
+import { type BaseType, type Selection, select } from "d3";
 import { isSelection, isString } from "./fn.js";
 
-import type { AnySelection, DimensionMeasurement } from "./types.js";
+import type { DimensionMeasurement } from "./types.js";
 
 /**
  * Type for elements that can be measured - selector string, DOM element, or d3 selection
  */
-export type MeasurableElement = string | Element | AnySelection;
+export type MeasurableElement<
+  G extends BaseType = BaseType,
+  D = unknown,
+  P extends BaseType = BaseType,
+  PD = unknown,
+> = string | Element | Selection<G, D, P, PD>;
 
 /**
  * measureDimensions
@@ -29,21 +34,38 @@ export type MeasurableElement = string | Element | AnySelection;
  *                      screenWidth: {number} The innerWidth of the screen
  *                      screenHeight: {number} The innerHeight of the screen
  */
-export const measureDimensions = (arg: MeasurableElement): DimensionMeasurement => {
-  let node: Element | null;
-  if (isString(arg)) {
-    node = select(arg).node() as Element | null;
-  } else if (isSelection(arg)) {
-    node = arg.node() as Element | null;
-  } else {
-    node = arg;
-  }
+export const measureDimensions = <
+  G extends BaseType = BaseType,
+  D = unknown,
+  P extends BaseType = BaseType,
+  PD = unknown,
+>(
+  arg: MeasurableElement<G, D, P, PD>
+): DimensionMeasurement => {
+  const node = measurableNode(arg);
   return {
     width: node ? node.getBoundingClientRect().width : undefined,
     screenWidth: window.innerWidth,
     screenHeight: window.innerHeight,
   };
 };
+
+/**
+ * The element a MeasurableElement refers to, or null when there is nothing to measure.
+ *
+ * Takes `unknown` rather than the generic parameter type: the three cases are told apart at
+ * runtime, and callers do pass null - the width is reported as undefined for it, which
+ * test/measure.test.ts pins.
+ */
+function measurableNode(arg: unknown): Element | null {
+  if (isString(arg)) return select<Element, unknown>(arg).node();
+  if (isSelection(arg)) {
+    // A selection's node may be any BaseType, but only an Element can be measured.
+    const selected = arg.node();
+    return selected instanceof Element ? selected : null;
+  }
+  return arg instanceof Element ? arg : null;
+}
 
 /**
  * measureText

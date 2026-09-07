@@ -1,9 +1,9 @@
 import { scaleOrdinal } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-
 import { bounds } from "../../src/bounds.js";
 import treemap from "../../src/component/treemap.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
 import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
 
@@ -17,7 +17,7 @@ type TestDatum = {
 
 describe("component/treemap", () => {
   let container: HTMLDivElement;
-  let svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
+  let svg: LayerSelection<SVGGElement, number>;
   let data: TestDatum[];
   let cScale: (key: string) => string;
 

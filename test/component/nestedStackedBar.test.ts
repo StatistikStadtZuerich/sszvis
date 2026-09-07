@@ -111,7 +111,7 @@ describe("component/nestedStackedBar", () => {
         "xLabel",
         "slant",
       ]) {
-        expect(typeof (component as unknown as Record<string, unknown>)[prop]).toBe("function");
+        expect(typeof Reflect.get(component, prop)).toBe("function");
       }
     });
 
@@ -437,9 +437,7 @@ describe("component/nestedStackedBar", () => {
       // NOTE: `stackedBarVertical` defaults `stroke` to #FFFFFF and this component does not
       // expose the prop, so the separator colour cannot be changed or removed.
       const node = render(nestedOf());
-      expect(
-        (nestedStackedBarsVertical() as unknown as Record<string, unknown>).stroke
-      ).toBeUndefined();
+      expect(Reflect.get(nestedStackedBarsVertical(), "stroke")).toBeUndefined();
       expect(new Set(attrs(rects(node), "stroke"))).toEqual(new Set(["#FFFFFF"]));
     });
   });

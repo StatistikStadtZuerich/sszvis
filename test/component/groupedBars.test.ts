@@ -2,6 +2,7 @@ import { scaleBand, scaleLinear, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { groupedBarsHorizontal, groupedBarsVertical } from "../../src/component/groupedBars.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
 
 type TestDatum = {
@@ -12,7 +13,7 @@ type TestDatum = {
 
 describe("component/groupedBars", () => {
   let container: HTMLDivElement;
-  let svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
+  let svg: LayerSelection<SVGGElement, number>;
 
   beforeEach(() => {
     container = document.createElement("div");

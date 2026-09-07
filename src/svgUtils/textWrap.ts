@@ -20,11 +20,13 @@
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
 
+import type { BaseType, Selection } from "d3";
 import { select } from "d3";
-import type { AnySelection } from "../types.js";
 
-export default function textWrap(
-  selection: AnySelection,
+export default function textWrap<D, P extends BaseType, PD>(
+  // Wrapping reads and rewrites the <text> nodes themselves, so the element parameter is
+  // fixed; the rest stay generic so any text selection can be passed.
+  selection: Selection<SVGTextElement, D, P, PD>,
   width: number,
   paddingRightLeft?: number,
   paddingTopBottom?: number
