@@ -199,10 +199,7 @@ export default function <T = unknown>(): PackComponent<T> {
         const labelXAcc = (d: PackLayout<T>) => d.x;
         const labelYAcc = (d: PackLayout<T>) => d.y + fontSize / 3;
         const labelFillAcc = (d: PackLayout<T>) => {
-          const bgColor = () => {
-            return nodeColor(d, props.colorScale);
-          };
-          return getAccessibleTextColor(bgColor());
+          return getAccessibleTextColor(nodeColor(d, props.colorScale));
         };
 
         // Filter data for labels - only show labels on leaf nodes that are large enough

@@ -156,6 +156,7 @@ export function cascade<T = unknown>(): CascadeInstance<T> {
       return obj;
     }
 
+    // key.type is "obj" | "arr", so the remaining case is "arr".
     {
       const arr: CascadeResult<T>[] = [];
       if (sorter) {

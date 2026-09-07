@@ -362,9 +362,7 @@ export default function <P = unknown, L = P[]>(): StackedAreaMultiplesComponent<
       const fill = fn.valueFn(props.fill ?? null);
       // No default, where stackedArea falls back to a #ffffff hairline.
       const stroke = fn.valueFn(props.stroke ?? null);
-      const strokeWidth = fn.valueFn(
-        props.strokeWidth === undefined ? 1 : (props.strokeWidth ?? null)
-      );
+      const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
 
       const paths = selection
         .selectAll<SVGPathElement, L>("path.sszvis-path")

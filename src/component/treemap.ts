@@ -200,10 +200,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
         const labelYAcc = (d: TreemapLayout<T>) =>
           calculateLabelPosition(d, props.labelPosition || "top-left").y;
         const labelFillAcc = (d: TreemapLayout<T>) => {
-          const bgColor = () => {
-            return nodeColor(d, props.colorScale);
-          };
-          return getAccessibleTextColor(bgColor());
+          return getAccessibleTextColor(nodeColor(d, props.colorScale));
         };
 
         // Filter data for labels - only show labels on leaf nodes that are large enough

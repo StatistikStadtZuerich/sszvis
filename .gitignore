@@ -7,7 +7,8 @@ node_modules
 build
 __diff_output__
 /test/snapshot/__results__
-/test/__screenshots__
+# vitest browser mode drops failure screenshots next to each test file
+**/__screenshots__/
 /playwright-report/
 /blob-report/
 /playwright/.cache/

@@ -1,345 +1,214 @@
 # AGENTS.md
 
-> **Note:** This file is the authoritative source for coding agent instructions.
-> If in doubt, prefer AGENTS.md over README.md.
+Authoritative instructions for coding agents working on SSZVIS, the D3-based
+data visualization library for Statistik Stadt Zürich. Prefer this file over
+`README.md`. Keep it current when commands, structure, or conventions change.
 
-## 🚦 Quick Reference
+## Commands
 
-- **Install dependencies:** `npm install`
-- **Run all tests:** `npm run test`
-- **Type check:** `npm run type-check`
-- **Lint & format:** `npm run lint` / `npm run check`
-- **Test a single file:** `npm run test -- test/color.test.ts`
-- **Search code:** `rg "pattern"`
+| Task | Command |
+|---|---|
+| Install | `npm install` |
+| Test (all) | `npm test` |
+| Test (unit only) | `npm run test:unit` |
+| Test (one file) | `npm test -- test/color.test.ts` |
+| Test (watch) | `npm run test:watch` |
+| Visual regression | `npm run test:snapshot` |
+| Type check | `npm run type-check` (tsc over `src/` **and** `test/`) |
+| Lint + format check | `npm run check` (fails on warnings) |
+| Autofix | `npm run check:fix` |
+| Docs server | `npm start` (port 8000) |
+| Full build | `npm run build` |
+| Search | `rg "pattern"` — always ripgrep, never grep/find |
 
----
+CI runs `check`, `type-check`, `test:unit`, and the snapshot suite. All four
+must pass. Publishing additionally runs them before `npm publish`.
 
-This file provides comprehensive guidance for coding agents when working with
-the SSZVIS D3.js-based data visualization library for Statistik Stadt Zürich.
+Dev environment is Nix + direnv (`nix develop`); npm is the package manager.
 
-## Core Development Philosophy
+## Philosophy
 
-### KISS (Keep It Simple, Stupid)
+- **KISS** — choose the straightforward solution.
+- **YAGNI** — build what is needed now, not what might be needed.
+- **Functional composition over OOP** — see `sszvis.compose(f, g)(x) === f(g(x))`.
+- **Responsive-first** — components take breakpoint values via `responsiveProps()`.
+- **Accessible** — charts provide fallbacks; `createSvgLayer` writes title/desc.
+- **Pure functions** — this library prefers computation over effects.
 
-Simplicity should be a key goal in design. Choose straightforward solutions over
-complex ones whenever possible. Simple solutions are easier to understand,
-maintain, and debug.
+## Structure
 
-### YAGNI (You Aren't Gonna Need It)
-
-Avoid building functionality on speculation. Implement features only when they
-are needed, not when you anticipate they might be useful in the future.
-
-### Design Principles
-
-- **Functional Composition**: Prefer functional patterns and composition over
-  OOP
-- **D3.js Method Chaining**: Components follow D3's fluent interface pattern
-- **Responsive-First**: All components support responsive breakpoints via
-  `sszvis.responsiveProps()`
-- **Modular Architecture**: Clear separation between components, behaviors,
-  layouts, and utilities
-- **Accessibility**: Charts should be accessible and provide fallback images
-
-## 🧱 Project Structure & Library Architecture
-
-SSZVIS is a D3.js-based data visualization library with a modular component
-architecture. Components are designed for composition and follow functional
-programming principles while maintaining D3's familiar method chaining API.
-
-### Directory Structure
+`src/` is 100% TypeScript. `test/` is TypeScript apart from seven legacy
+`.js` files.
 
 ```txt
-├── src/               - TypeScript/JavaScript source (mixed legacy and modern code)
-│   ├── annotation/    - Chart annotations (tooltips, rulers, confidence intervals)
-│   ├── behavior/      - Interaction behaviors (move, panning, voronoi)
-│   ├── component/     - Chart components (bar, line, pie, sankey, etc.)
-│   ├── control/       - UI controls (slider, buttonGroup, select)
-│   ├── layout/        - Layout algorithms (sankey, sunburst, smallMultiples)
-│   ├── legend/        - Legend components (color scales, radius)
-│   ├── map/           - Map renderers and Swiss geography utilities
-│   ├── maps/          - High-level map components (choropleth)
-│   └── svgUtils/      - SVG utilities (crisp lines, text wrapping)
-├── test/              - Vitest unit tests + Playwright visual regression
-├── docs/              - 11ty documentation with live interactive examples
-├── build/             - Compiled library output (JS + TypeScript declarations)
-├── contrib/           - Example projects and experiments
-└── geodata/           - GeoJSON/TopoJSON data for Swiss administrative regions
+src/
+├── annotation/   Tooltips, rulers, confidence intervals
+├── behavior/     Interaction (move, panning, voronoi)
+├── component/    Chart components (bar, line, pie, sankey, …)
+├── control/      UI controls (slider, buttonGroup, select)
+├── layout/       Layout algorithms (sankey, sunburst, smallMultiples)
+├── legend/       Colour and radius legends
+├── map/          Map renderers and Swiss geography utilities
+├── maps/         High-level map components (choropleth)
+├── svgUtils/     Crisp lines, text wrapping, defs elements
+└── viewport/     Resize handling
+test/     Vitest (browser mode, Chromium) + Playwright snapshots
+docs/     11ty documentation site with live examples
+build/    Compiled output (JS + .d.ts)
+geodata/  GeoJSON/TopoJSON for Swiss administrative regions
 ```
 
-### Library Design Patterns
+## Architecture
 
-**Component Pattern**: All chart components follow D3's method chaining:
+**Component pattern** — every chart component is a d3-style chainable factory:
 
-```javascript
+```ts
 const barChart = sszvis
   .bar()
   .x(sszvis.compose(xScale, xAccessor))
   .y(sszvis.compose(yScale, yAccessor))
-  .width(xScale.bandwidth())
-  .height(sszvis.compose(heightScale, yAccessor));
+  .width(xScale.bandwidth());
 ```
 
-**State/Actions Pattern**: Examples use simple state management:
+**Layers** — `createSvgLayer()` for charts, `createHtmlLayer()` for tooltips
+and overlays. Both accept a selector, an element, or a selection.
 
-```javascript
-const state = { data: [], selection: [] };
-const actions = {
-  prepareState(data) {
-    /* update state */ render();
-  },
-  showTooltip(datum) {
-    /* update state */ render();
-  },
-};
+**State/actions** — docs examples keep a plain `state` object and an `actions`
+object whose methods mutate it and call `render()`.
+
+## TypeScript conventions
+
+Biome enforces filename case, `.js` import extensions, `import type`, `T[]`
+array syntax, no inferrable annotations, no `any`, and no non-null `!`. Run
+`npm run check`; do not restate those rules here. What follows is what tooling
+**cannot** check.
+
+### Module shape
+
+- Chart modules (`component/`, `annotation/`, `legend/`, `control/`,
+  `map/renderer/`, `maps/`) **default-export their factory**. Utility modules
+  (`fn`, `color`, `format`, `scale`, `crisp`, `bounds`, …) use **named exports
+  only**. Never mix the two in one file.
+- Default exports **should be named**, so stack traces and symbol search work:
+  `export default function bar<T = unknown>(): BarComponent<T>` rather than
+  `export default function <T = unknown>()`. **Known deviation:** 43 of the 50
+  factory modules are still anonymous — the port carried the shape over
+  wholesale. Name them as you touch them; do not add new anonymous ones.
+- Top-level functions are `function` declarations. `const x = () => …` is for
+  local callbacks and short combinators.
+- The `d3-*.ts` prefix is reserved for the three d3 plugin modules.
+- Import d3 from the `"d3"` barrel, never from `d3-*` submodules — the peer
+  dependency is `d3` as a whole.
+
+### Types
+
+- Object shapes are `interface`. Reserve `type` for unions, intersections,
+  mapped/conditional types, and function aliases.
+- Suffixes are vocabulary, not decoration — use these and no synonyms
+  (`Config`, `Options`, `Dimensions` are not interchangeable):
+
+  | Suffix | Means |
+  |---|---|
+  | `…Props` | the component's internal prop bag (module-private) |
+  | `…Component` | the public chainable interface (exported, re-exported from `index.ts`) |
+  | `…Accessor` | a function from datum to value |
+  | `…Datum` | a single data record |
+  | `…Value` | a scalar a prop may hold or return |
+  | `…Layout` | the return of a `layout/` function |
+
+- Generic parameters are fixed by role: `T` datum, `P` point/inner datum,
+  `L` layer/series, `S` series key, `D` domain. Give each a default
+  (`<T = unknown>`) so call sites need not name them.
+
+### The component factory
+
+```ts
+export default function dot<T = unknown>(): DotComponent<T> {
+  return component<DotComponent<T>>()
+    .prop("x", fn.functor)
+    .render(function (data) { … });  // `function`, never an arrow — `this` is the group
+}
 ```
 
-**Layer Architecture**: Separate concerns with different layers:
+- Pass the interface explicitly to `component<…>()`, and have that interface
+  extend `ComponentBuilder<Self>` (see `d3-component.ts`). Without it the
+  builder chain degrades and the interface is never checked against what is
+  actually built.
+- `.render()` / `.renderSelection()` callbacks are `function` expressions —
+  they depend on d3's `this` binding.
+- Read every prop through `props` inside `render`; never re-read a setter.
 
-- `sszvis.createSvgLayer()` - Charts and visualizations
-- `sszvis.createHtmlLayer()` - Tooltips and HTML overlays
+### Escape hatches
 
-**Functional Composition**: Heavy use of `sszvis.compose()` for data
-transformations:
+- `$IntentionalAny` (in `types.ts`) is the only sanctioned `any` and carries the
+  only lint-ignore comment in the repo. Use it solely where a type genuinely
+  cannot be expressed — d3 internals, variadic combinators, the untyped
+  component core — and always with a comment saying which.
+  `rg '\$IntentionalAny'` lists every hatch; keep the list short and defensible.
+- Prefer `unknown` and narrow.
+- **`as unknown as X` is a smell, not a tool.** In this codebase it has almost
+  always meant a signature was wrong rather than inexpressible. Before writing
+  one, check:
+  - **Is a declaration lying?** `cascade`'s sorter promised the caller's key
+    type while the grouping hands it strings; fixing the declaration removed
+    the cast.
+  - **Is it trying to accept "any selection" non-generically?** d3's `Selection`
+    is invariant in all four type parameters, so no single type — not
+    `BaseType`, not `any` in the datum slot, not a union — accepts every
+    selection. Such a function must be **generic over d3's four parameters**.
+    See `textWrap`, `ensureDefsElement`, `createSvgLayer`.
+  - **Is a runtime string determining a type?** Derive it — `ensureDefsElement`
+    takes `K extends keyof SVGElementTagNameMap` and needs no cast at all.
+  - **Is it a dynamic property read or write?** Use `Reflect.get` /
+    `Reflect.set` — cast-free, and they say what they mean.
+  - **Is a chained d3 result a union you know is one member?** A direct `as`
+    narrows it; the `unknown` bridge is not needed.
 
-```javascript
-.x(sszvis.compose(xScale, xAccessor))  // compose(f, g)(x) = f(g(x))
-```
+  Two remain in `src/`, both predating this guide, each with a comment naming
+  the lie it encodes.
+- No `@ts-ignore`. `@ts-expect-error` with a one-line reason if truly stuck.
 
-## 🧪 Testing Strategy
+### Documentation
 
-**Unit Testing**: Vitest with browser mode (Playwright/Chromium) for
-DOM-dependent tests
+- Every module opens with `@module sszvis/<path>`, barrels included.
+- JSDoc carries **prose, not types** — no `@param {Type}`; TypeScript owns
+  types. Document units, defaults, and behavioural quirks instead.
+- Examples in JSDoc use `const`.
+- Every component needs a working example in `docs/`.
 
-- Test files: `test/**/*.test.{js,ts}`
-- Run all: `npm test` or `npm run test:unit`
-- Single file: `npm test -- test/color.test.ts`
-- Watch mode: `npm run test:watch`
+## Testing
 
-**Visual Regression Testing**: Playwright snapshots of all documentation
-examples
+Vitest in browser mode (Playwright/Chromium) — tests run against real DOM/SVG.
+Test files are `test/**/*.test.{js,ts}`. Playwright snapshots in
+`test/snapshot/snapshot.spec.js` compare every docs example, including
+interactive states, against stored screenshots.
 
-- Location: `test/snapshot/snapshot.spec.js`
-- Run: `npm run test:snapshot`
-- Compares rendered charts against stored screenshots
-- Tests interactive states (button clicks, tooltips)
+No feature is complete without tests. When pinning existing behaviour that
+looks wrong, keep it and mark it `// NOTE:` as a known quirk rather than
+silently fixing it.
 
-**CI Pipeline**: `npm run test:ci` runs lint + type-check + format check
+## Error handling
 
-## 🛠️ Development Environment
+Errors are thrown directly; graceful handling is a future enhancement. Use
+`sszvis.loadError` for data-loading failures:
 
-**Preferred Setup**: Nix with direnv for reproducible environment
-
-```bash
-nix develop  # Enter development shell
-```
-
-**Package Manager**: npm (see `package-lock.json`)
-
-**Build System**:
-
-- **Rollup** for library bundling (`npm run build:lib`)
-- **TypeScript** for type checking and compilation (`npm run build:ts`)
-- **11ty** for documentation site (`npm run build:docs`)
-
-**Development Commands**:
-
-- `npm start` - Start documentation server (port 8000)
-- `npm run build:watch` - Watch mode for library and docs
-- `npm run build` - Full build (TS + lib + topo + docs + contrib)
-
-**Editor**: VSCode recommended (no specific config files found)
-
-## 📋 Style & Conventions
-
-**Code Style**: Enforced by Biome (`biome.jsonc`)
-
-- **Formatting**: 2 spaces, 100 char lines, double quotes, semicolons always
-- **Commands**: `npm run format`, `npm run lint`, `npm run check`
-
-**Mixed Codebase**:
-
-- **Legacy**: JavaScript files (`.js`) for established components
-- **Modern**: TypeScript files (`.ts`) for new utilities and types
-- **Migration**: Gradually converting JS to TS
-
-**Import Conventions**:
-
-- Use `.js` extensions in TypeScript imports (required for ES modules)
-- Organize imports automatically (`"organizeImports": "on"`)
-- Named imports from D3: `import { select, scaleLinear } from "d3"`
-
-**Naming Conventions**:
-
-- **camelCase**: Variables, functions, properties
-- **PascalCase**: Types, interfaces, classes
-- **Prefixes**: Component functions often prefixed (e.g., `sszvis.bar()`)
-
-**Function Patterns**:
-
-- **Accessor functions**: `const xAcc = sszvis.prop("category")`
-- **Composition**: `sszvis.compose(scale, accessor)` for data transformations
-- **Method chaining**: D3-style fluent interfaces for components
-
-**Documentation**:
-
-- **JSDoc**: Required for all public components
-- **Module docs**: Use `@module` tags for module-level documentation
-- **Examples**: All components should have working examples in `docs/`
-
-## 🚨 Error Handling
-
-**Current Approach**: Errors are thrown directly (graceful handling is a future
-enhancement)
-
-**Data Loading**: Use `sszvis.loadError` for CSV/data loading failures:
-
-```javascript
+```js
 d3.csv("data.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 ```
 
-**Common Patterns**:
+Validate before use: check DOM elements exist, check data extents before
+building scales, and use fallbacks for NaN.
 
-- **NaN Handling**: Use fallback functions for missing data
-- **Selection Validation**: Check DOM elements exist before manipulation
-- **Scale Domain**: Validate data extents before creating scales
+## Git
 
-**Future Plans**: Implement graceful error handling and user-friendly error
-messages
+Branches: `feature/*`, `fix/*`, `docs/*`, `refactor/*`, `test/*`, off `main`.
 
-## 🔄 Git Workflow
+Conventional commits — `<type>(<scope>): <subject>`, types `feat`, `fix`,
+`docs`, `style`, `refactor`, `test`, `chore`. Explain *why* in the body, and
+reference issues in the footer (`Closes #123`).
 
-### Branch Strategy
+**Never mention coding agents or AI authorship in commit messages.**
 
-- `main` - Production-ready code
-- `feature/*` - New features
-- `fix/*` - Bug fixes
-- `docs/*` - Documentation updates
-- `refactor/*` - Code refactoring
-- `test/*` - Test additions or fixes
+## When in doubt
 
-### Commit Message Format
-
-Never include "coding agent" or "written by coding agent" in commit messages
-
-```bash
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-Types: feat, fix, docs, style, refactor, test, chore
-
-Example:
-
-```bash
-feat(component): add treemap visualization component
-
-- Implement hierarchical treemap using D3's treemap layout
-- Add responsive sizing and color scale support
-- Update documentation with data binding examples
-
-Closes #123
-```
-
-## 📝 Documentation Standards
-
-### Code Documentation
-
-**JSDoc Standard**: All public components require comprehensive JSDoc:
-
-```javascript
-/**
- * Bar component
- *
- * @module sszvis/component/bar
- * @property {number, function} x       The x-position accessor
- * @property {number, function} y       The y-position accessor
- * @property {number, function} width   The width accessor
- * @property {number, function} height  The height accessor
- */
-```
-
-**Documentation Site**: Live examples in `docs/` using 11ty
-
-- Each component has working examples with real data
-- Examples follow consistent patterns (state/actions/render)
-- Include responsive breakpoint handling
-
-## ℹ️ Where to Find More Information
-
-- For human contributors: see `README.md` for project overview and contribution
-  guidelines.
-- For coding agents: this `AGENTS.md` is your primary source for build, test,
-  and style instructions.
-
----
-
-## 📝 How to Update AGENTS.md
-
-**Keep this file current!** Update AGENTS.md whenever you add new scripts,
-change test commands, or update code style rules. Treat it as living
-documentation for all coding agents and future maintainers.
-
----
-
-## ❓ FAQ for Coding Agents
-
-**Q: Should I write new components in JavaScript or TypeScript?** A: Use
-TypeScript for new utilities and types. Follow existing patterns for components
-(many are still JS).
-
-**Q: How do I test components that depend on DOM/SVG?** A: Use Vitest's browser
-mode with Playwright. Tests run in real browser environment.
-
-**Q: What's the difference between `sszvis.createSvgLayer()` and
-`sszvis.createHtmlLayer()`?** A: SVG layers for charts/visualizations, HTML
-layers for tooltips and overlays.
-
-**Q: How do I handle responsive behavior?** A: Use `sszvis.responsiveProps()` to
-define breakpoint-specific values.
-
-**Q: Where do I find Swiss geodata?** A: Check `geodata/` directory for
-GeoJSON/TopoJSON files of Swiss administrative regions.
-
----
-
-## 📚 Useful Resources
-
-### Essential Tools
-
-- **D3.js Documentation**: <https://d3js.org/> - Core dependency
-- **Biome**: <https://biomejs.dev/> - Linting and formatting
-- **Vitest**: <https://vitest.dev/> - Unit testing framework
-- **Playwright**: <https://playwright.dev/> - Visual regression testing
-- **11ty**: <https://www.11ty.dev/> - Documentation site generator
-- **Rollup**: <https://rollupjs.org/> - Library bundling
-
-## ⚠️ Important Notes
-
-- **NEVER ASSUME OR GUESS** - When in doubt, ask for clarification
-- **Always verify file paths and module names** before use
-- **Keep AGENTS.md updated** when adding new patterns or dependencies
-- **Test your code** - No feature is complete without tests
-- **Focus on pure functions** - This library emphasizes functional composition
-  over effectful operations
-
-## 🔍 Search Command Requirements
-
-**CRITICAL**: Always use `rg` (ripgrep) for search operations:
-
-```bash
-# ✅ Use rg for pattern searches
-rg "pattern"
-
-# ✅ Use rg for file filtering
-rg --files -g "*.ts"
-rg --files -g "*.test.ts"
-```
-
----
-
-_This document is a living guide. Update it as the project evolves and new
-patterns emerge._
+Ask rather than guess. Verify file paths and module names before using them.

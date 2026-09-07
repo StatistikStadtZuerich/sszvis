@@ -4,7 +4,7 @@
  * @module sszvis/fn
  */
 
-import { type BaseType, selection, type ValueFn } from "d3";
+import { type BaseType, type Selection, select, selection, type ValueFn } from "d3";
 import type { $IntentionalAny, AnySelection } from "./types.js";
 
 /**
@@ -408,6 +408,23 @@ export const stringEqual = (a: { toString(): string }, b: { toString(): string }
  */
 export const functor = <T>(v: T | (() => T)): (() => T) =>
   typeof v === "function" ? (v as () => T) : (): T => v;
+
+/**
+ * Applies `render` to whichever selection `selector` denotes.
+ *
+ * Each branch keeps its own concrete selection type rather than being widened into a shared
+ * variable first: d3's select() has one overload for a selector string and another for a
+ * node, and Selection is invariant in all four of its type parameters, so no single type -
+ * and no union - holds all three cases. `render` is generic, so each branch infers.
+ */
+export function withRootSelection<R, SG extends BaseType, SD, SP extends BaseType, SPD>(
+  selector: string | Element | Selection<SG, SD, SP, SPD>,
+  render: <G extends BaseType, D, P extends BaseType, PD>(root: Selection<G, D, P, PD>) => R
+): R {
+  if (typeof selector === "string") return render(select(selector));
+  if (selector instanceof Element) return render(select(selector));
+  return render(selector);
+}
 
 /**
  * fn.valueFn
