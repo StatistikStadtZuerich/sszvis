@@ -239,15 +239,26 @@ describe("svgUtils/textWrap", () => {
 
     // Characterization test: pins down a defect so a behaviour-preserving port stays
     // verifiable. Carries a defect marker naming the cause and the correct behaviour.
-    describe("known quirks", () => {
-      test("keeps padding whitespace from the original text", () => {
-        // BUG: the text is split on /[\t\n\v\f\r ]+/ without trimming first, so leading and
-        // trailing whitespace yield empty words. Those survive the join(" ") and pad the
-        // rendered line, and they also count toward the measured width.
-        // current: " ab ". expected: "ab".
+    describe("surrounding whitespace", () => {
+      test("should drop whitespace padding from the rendered text", () => {
         const text = appendText("  ab  ");
         expect(textWrap(select(text), 100)).toEqual([1]);
-        expect(tspansOf(text)[0].textContent).toBe(" ab ");
+        expect(tspansOf(text)[0].textContent).toBe("ab");
+      });
+
+      test("should not let whitespace padding push the text onto another line", () => {
+        // NOTE: available width is 100 - 2 * 5 = 90px; "aa bb cc" measures exactly 80px,
+        // so a single leading and trailing space used to tip it over the threshold.
+        expect(textWrap(select(appendText("aa bb cc")), 100)).toEqual([1]);
+        expect(textWrap(select(appendText(" aa bb cc ")), 100)).toEqual([1]);
+      });
+
+      test("should preserve non-breaking and line/paragraph separator characters", () => {
+        // NOTE: the split class deliberately excludes \u00A0, \u2028 and \u2029 so they are
+        // never treated as word boundaries. A trim() would break this.
+        const text = appendText("a\u00A0b\u2028c\u2029d");
+        expect(textWrap(select(text), 1000)).toEqual([1]);
+        expect(tspansOf(text)[0].textContent).toBe("a\u00A0b\u2028c\u2029d");
       });
     });
   });
