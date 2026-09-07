@@ -18,8 +18,7 @@
  * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
  *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
  *   is discarded by the minimum rather than distorting the others.
- * - a single-column diagram gives computeLayout's columnRange an Infinity step (issue #120);
- *   an empty column list gives a negative step and NaN/undefined elsewhere.
+ * - an empty column list gives NaN/undefined elsewhere in computeLayout.
  */
 
 import { ascending, descending, max, min, sum } from "d3";
@@ -366,8 +365,7 @@ const num = (value: number | undefined): number => (value === undefined ? Number
  *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
  *   every total is 0; in that case the value range comes back [0, NaN].
  * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
- *   (numColumns - 1); a single column gives Infinity (issue #120) and an empty column list
- *   gives a negative step, an undefined nodePadding and NaN elsewhere.
+ *   (numColumns - 1). Fewer than two columns have no step at all and report an offset of 0.
  * - nodeThickness is always 20.
  */
 export const computeLayout = (
@@ -432,7 +430,10 @@ export const computeLayout = (
   // Calculate column (or row, as the case may be) positioning values
   const nodeThickness = 20;
   const numColumns = columnLengths.length;
-  const columnXMultiplier = (columnWidth - nodeThickness) / (numColumns - 1);
+  // With one column there are no steps to space out, so the offset is zero rather than a
+  // division by zero (issue #120).
+  const columnXMultiplier =
+    numColumns > 1 ? (columnWidth - nodeThickness) / (numColumns - 1) : 0;
   const columnDomain: [number, number] = [0, 1];
   const columnRange: [number, number] = [0, columnXMultiplier];
 

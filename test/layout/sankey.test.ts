@@ -166,6 +166,17 @@ describe("layout/sankey", () => {
       const three = computeLayout([2, 2, 2], [18, 18, 18], 400, 600);
       expect(three.columnRange).toEqual([0, (600 - 20) / 2]);
     });
+
+    test("a single column has no step at all", () => {
+      // there is nothing to space out, so the column offset is 0 rather than a division by zero
+      const single = computeLayout([2], [18], 400, 600);
+      expect(single.columnRange).toEqual([0, 0]);
+    });
+
+    test("a single node in a column still spreads the columns normally", () => {
+      const oneNode = computeLayout([1, 1], [18, 18], 400, 600);
+      expect(oneNode.columnRange).toEqual([0, 600 - 20]);
+    });
   });
 
   describe("known quirks", () => {
@@ -246,15 +257,6 @@ describe("layout/sankey", () => {
         .value((d: Row) => d.value)
         .idLists(COLUMNS);
       expect(() => (builder.apply as (a: unknown, b: unknown) => unknown)(null, [LINKS])).toThrow();
-    });
-
-    test("a single column gives an infinite column offset", () => {
-      // BUG: columnXMultiplier divides by (numColumns - 1), so a one-column diagram gets an
-      // Infinity range. Already reported as issue #120.
-      // got: columnRange [0, Infinity]
-      // want: [0, 0] for a single column.
-      const single = computeLayout([2], [18], 400, 600);
-      expect(single.columnRange).toEqual([0, Number.POSITIVE_INFINITY]);
     });
 
     test("a column of one node reports a padding it has no gap for", () => {
@@ -351,7 +353,7 @@ describe("layout/sankey", () => {
       const none = computeLayout([], [], 400, 600);
       expect(none.nodePadding).toBeUndefined();
       expect(none.valueRange[1]).toBeNaN();
-      expect(none.columnRange[1]).toBe(-(600 - 20));
+      expect(none.columnRange[1]).toBe(0);
     });
   });
 });
