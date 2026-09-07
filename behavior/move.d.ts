@@ -44,9 +44,9 @@
  *
  * @return {sszvis.component}
  */
-import { type ScaleBand, type ScaleLinear, type ScalePoint } from "d3";
+import { type ScaleBand, type ScaleContinuousNumeric, type ScalePoint, type ScaleTime } from "d3";
 import { type Component } from "../d3-component";
-type MoveScale<T = number | string> = ScaleLinear<number, number> | ScaleBand<T extends string ? T : string> | ScalePoint<T extends string ? T : string>;
+type MoveScale<T = number | string> = ScaleContinuousNumeric<number, number> | (T extends Date ? ScaleTime<number, number> : never) | ScaleBand<T extends string ? T : string> | ScalePoint<T extends string ? T : string>;
 type Padding = {
     top: number;
     right: number;

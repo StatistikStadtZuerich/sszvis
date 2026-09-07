@@ -1,4 +1,4 @@
-import { Selection, NumberValue, BaseType, HierarchyNode, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, HierarchyCircularNode, ValueFn, SeriesPoint, HierarchyRectangularNode, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
+import { Selection, NumberValue, BaseType, HierarchyNode, AxisScale, AxisDomain, ScaleContinuousNumeric, ScaleTime, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, ScaleLinear, HSLColor, HierarchyCircularNode, ValueFn, SeriesPoint, HierarchyRectangularNode, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
 import { Draft } from 'immer';
 import * as d3_transition from 'd3-transition';
 import * as d3_selection from 'd3-selection';
@@ -960,7 +960,7 @@ declare const axisY: {
  * @return {sszvis.component}
  */
 
-type MoveScale<T = number | string> = ScaleLinear<number, number> | ScaleBand<T extends string ? T : string> | ScalePoint<T extends string ? T : string>;
+type MoveScale<T = number | string> = ScaleContinuousNumeric<number, number> | (T extends Date ? ScaleTime<number, number> : never) | ScaleBand<T extends string ? T : string> | ScalePoint<T extends string ? T : string>;
 type Padding$1 = {
     top: number;
     right: number;
@@ -3814,13 +3814,276 @@ interface TreemapComponent<T = unknown> extends Component {
  */
 declare function export_default$9<T = unknown>(): TreemapComponent<T>;
 
-declare function _default$c(): any;
+/**
+ * Button Group control
+ *
+ * Control for switching top-level filter values. Use this control for changing between several
+ * options which affect the state of the chart. This component should be rendered into an html layer.
+ *
+ * This control is part of the `optionSelectable` class of controls and can be used interchangeably
+ * with other controls of this class (sszvis.control.select).
+ *
+ * @module sszvis/control/buttonGroup
+ *
+ * @property {array} values         an array of values which are the options available in the control.
+ *                                  Each one will become a button. Required - there is no default.
+ * @property {string|number} current the current value of the button group. Should be one of the
+ *                                  options passed to .values(). Compared with ===.
+ * @property {number} width         The total width of the button group, divided evenly between the
+ *                                  options. (default: 300px)
+ * @property {function} change      A callback/event handler function called as (event, value) when
+ *                                  the user clicks on a value. Note that clicking on a value does not
+ *                                  necessarily change any state unless this callback function does
+ *                                  something. (default: fn.identity, which returns the event and
+ *                                  silently discards the value)
+ *
+ * Note: both optionSelectable controls join their wrapper element on the
+ * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
+ * into a container that already holds the other replaces the other's DOM. This is what makes them
+ * interchangeable. They do not accept quite the same values, though: this control labels its buttons
+ * through d3's text coercion and so takes numbers as well as strings, while the select control
+ * trims its labels and therefore requires strings.
+ *
+ * Note: each button gets exactly `width / values.length` pixels, written out unrounded. Labels are
+ * never measured or trimmed, so a label wider than its button simply overflows - keep labels short.
+ *
+ * Note: selectedness is computed per button with no notion of uniqueness, so a value repeated in
+ * `values` renders twice and both copies are highlighted when they equal `current`.
+ *
+ * Note: the buttons are plain divs with a click handler. They carry no role, tabindex or pressed
+ * state, so the control cannot be operated by keyboard.
+ *
+ * Note: `values` has no default, so rendering before the data is available throws while computing
+ * the button width - before any DOM is created, so no partial control is left behind.
+ *
+ * See test/control/buttonGroup.test.ts.
+ *
+ * @return {sszvis.component}
+ */
 
-declare function _default$b(): any;
+/**
+ * Typed as `Event` rather than `MouseEvent` so that a handler is assignable to both
+ * optionSelectable controls, which are documented as interchangeable.
+ */
+type ButtonGroupChangeHandler<T> = (event: Event, value: T) => void;
+interface ButtonGroupComponent<T extends string | number = string | number> extends Component {
+    values(): T[];
+    values(values: T[]): ButtonGroupComponent<T>;
+    current(): T;
+    current(current: T): ButtonGroupComponent<T>;
+    width(): number;
+    width(width: number): ButtonGroupComponent<T>;
+    change(): ButtonGroupChangeHandler<T>;
+    change(handler: ButtonGroupChangeHandler<T>): ButtonGroupComponent<T>;
+}
+declare function buttonGroup<T extends string | number = string | number>(): ButtonGroupComponent<T>;
 
-declare function _default$a(): any;
+/**
+ * Ruler with a handle control
+ *
+ * The handle ruler component is very similar to the ruler component, except that it is rendered
+ * with a 24-pixel tall handle at the top. It is moved and repositioned in the same manner as a ruler,
+ * so the actual interaction with the handle is up to the developer to specify. This component also
+ * creates dots for each data point it finds bound to its layer.
+ *
+ * @module sszvis/control/handleRuler
+ *
+ * @property {function} x                   A function or number which determines the x-position of the ruler
+ * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.
+ * @property {number} top                   A number for the y-position of the top of the ruler.
+ * @property {number} bottom                A number for the y-position of the bottom of the ruler.
+ * @property {string, function} label       A string or string function for the labels of the ruler dots.
+ * @property {string, function} color       A string or color for the fill color of the ruler dots.
+ * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
+ *
+ * Note: the rule, the handle and the grip mark live in a group whose datum is the constant 0, so
+ * an `x` accessor function is called with 0 rather than with a data value and those three elements
+ * end up at NaN. In practice `x` has to be a number here, even though the dots and labels - which
+ * are bound to the data - do work with an accessor.
+ *
+ * Note: the three static elements are appended on every render instead of being joined, so a
+ * component that re-renders accumulates a rule, a handle and a grip mark each time, with the newest
+ * copies painted over the dots.
+ *
+ * Note: labels are written with `.html()`, as elsewhere in the library, because sszvis.modularText
+ * produces markup. Escaping untrusted label data is the caller's responsibility. Unlike
+ * sszvis.annotation.ruler, this control neither de-overlaps labels nor defaults `color`, and its
+ * labels are joined on the component's own selection rather than on the ruler group - so hiding or
+ * moving that group leaves the labels behind.
+ *
+ * Note: the rule stops 4px above `bottom`, but the label's vertical nudge is decided against the
+ * unadjusted `bottom`. A label falling in that 4px band is offset as if it were still on the ruler.
+ *
+ * Note: a label whose y is above `top` is nudged down by `2 * y` rather than by a constant, so it
+ * lands well below its dot - by up to twice the distance to the top of the chart. The same
+ * expression appears in sszvis.annotation.ruler.
+ *
+ * Note: `top` and `bottom` have no defaults; leaving them out writes NaN into the geometry and the
+ * ruler silently disappears.
+ *
+ * See test/control/handleRuler.test.ts.
+ *
+ * @returns {sszvis.component}
+ */
 
-declare function _default$9(): any;
+interface HandleRulerComponent<T = unknown> extends Component {
+    x(): (d: T | number) => NumberValue;
+    x(accessor: NumberAccessor$1<T | number>): HandleRulerComponent<T>;
+    y(): (d: T) => NumberValue;
+    y(accessor: NumberAccessor$1<T>): HandleRulerComponent<T>;
+    top(): number;
+    top(value: number): HandleRulerComponent<T>;
+    bottom(): number;
+    bottom(value: number): HandleRulerComponent<T>;
+    label(): StringAccessor<T>;
+    label(accessor: StringAccessor<T>): HandleRulerComponent<T>;
+    color(): string | ((d: T) => string) | undefined;
+    color(accessor: StringAccessor<T>): HandleRulerComponent<T>;
+    flip(): (d: T) => boolean;
+    flip(accessor: BooleanAccessor<T>): HandleRulerComponent<T>;
+}
+declare function handleRuler<T = unknown>(): HandleRulerComponent<T>;
+
+/**
+ * Select control
+ *
+ * Control for switching top-level filter values. Use this control for changing between several
+ * options which affect the state of the chart. This component should be rendered into an html layer.
+ *
+ * This control is part of the `optionSelectable` class of controls and can be used interchangeably
+ * with other controls of this class (sszvis.control.buttonGroup).
+ *
+ * @module sszvis/control/select
+ *
+ * @property {array} values         an array of string values which are the options available in
+ *                                  the control. Required - there is no default.
+ * @property {string} current       the currently selected value of the select control. Should be one
+ *                                  of the options passed to .values(). Compared with ===.
+ * @property {number} width         The total width of the select control. If text labels exceed this
+ *                                  width they will be trimmed to fit using an ellipsis mark.
+ *                                  (default: 300px)
+ * @property {function} change      A callback/event handler function called as (event, value) when
+ *                                  the user selects an option. Selecting a value does not change any
+ *                                  state unless this callback does something. (default: fn.identity,
+ *                                  which returns the event and silently discards the value)
+ *
+ * Note: both optionSelectable controls join their wrapper element on the
+ * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
+ * into a container that already holds the other replaces the other's DOM. This is what makes them
+ * interchangeable.
+ *
+ * Note: `current` is written as the `selected` content attribute, not as the option's `selected`
+ * property. Once the user has picked an option the browser stops deriving selectedness from the
+ * attribute, so a re-render cannot pull the selection back to `current`.
+ *
+ * Note: the wrapper is styled to `width`, but the select element itself is rendered 30px wider,
+ * while labels are measured and trimmed against `width - 40`.
+ *
+ * Note: label truncation removes one character more than strictly necessary (the ellipsis replaces
+ * the second-to-last character as well) and has no fixed point for very small widths - a width whose
+ * measuring budget is negative runs the full recursion limit before returning "…". Values must be
+ * strings: the measuring code slices the raw value, so a non-string value that needs trimming
+ * throws.
+ *
+ * Note: `values` has no default, so rendering before the data is available throws mid-render from
+ * d3's data join - after the wrapper and select have been created and styled, leaving an empty,
+ * width-styled control behind rather than nothing at all.
+ *
+ * See test/control/select.test.ts.
+ *
+ * @return {sszvis.component}
+ */
+
+type SelectChangeHandler<T> = (event: Event, value: T) => void;
+interface SelectComponent<T extends string = string> extends Component {
+    values(): T[];
+    values(values: T[]): SelectComponent<T>;
+    current(): T;
+    current(current: T): SelectComponent<T>;
+    width(): number;
+    width(width: number): SelectComponent<T>;
+    change(): SelectChangeHandler<T>;
+    change(handler: SelectChangeHandler<T>): SelectComponent<T>;
+}
+declare function selectMenu<T extends string = string>(): SelectComponent<T>;
+
+/**
+ * Slider control
+ *
+ * Control for use in filtering. Works very much like an interactive axis.
+ * A d3 scale is its primary configuration, and it has a labeled handle which can be used to
+ * select values on that scale. Ticks created using an sszvis.axis show the user where
+ * data values lie.
+ *
+ * @module  sszvis/control/slider
+ *
+ * @property {function} scale                 A scale function which this slider represents. The values in the scale's domain
+ *                                            are used as the possible values of the slider.
+ * @property {array} minorTicks               An array of ticks which become minor (smaller and unlabeled) ticks on the slider's axis
+ * @property {array} majorTicks               An array of ticks which become major (larger and labeled) ticks on the slider's axis
+ * @property {function} tickLabels            A function to use to format the major tick labels.
+ * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
+ *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
+ *                                                      Use "horizontal" to reset to a horizontal slant.
+ * @property {number|Date} value             The current value of the slider. Should be set whenever slider interaction causes the state to change.
+ * @property {string, function} label         A string or function for the handle label. The datum associated with it is the current slider value.
+ * @property {function} onchange              A callback function called whenever user interaction attempts to change the slider value.
+ *                                            Note that this component will not change its own state. The callback function must affect some state change
+ *                                            in order for this component's display to be updated.
+ *
+ * Note: the handle is positioned with a copy of the scale whose range is inset by half the handle
+ * width at each end, so that the handle stays inside the track, but the interaction layer inverts
+ * through the original scale. The two disagree by up to 5.5px, so a drag never quite reaches either
+ * end of the domain. Because that inset copy is built from the sorted extent of the range, a
+ * descending range is silently mirrored.
+ *
+ * Note: ticks are drawn in the order they are configured - all major ticks, then all minor ticks -
+ * and the first and last major label are anchored inwards by their position in that list rather
+ * than by their position on the track, so unsorted major ticks anchor the wrong labels. A lone
+ * major tick is anchored "start" rather than "middle".
+ *
+ * Note: the handle label element is appended on every render rather than joined, so a slider that
+ * re-renders accumulates label elements; only the first is ever updated.
+ *
+ * Note: `value` is not clamped to the domain, and it has no default - a slider rendered before its
+ * state exists throws part-way through, leaving a half-built control behind.
+ *
+ * Note: the move behaviour's y-scale is given a range but no domain, so the second argument passed
+ * to `onchange` is a meaningless fraction and should be ignored.
+ *
+ * See test/control/slider.test.ts.
+ *
+ * @returns {sszvis.component}
+ */
+
+/** The scales a slider can represent: a continuous numeric or time scale. */
+type SliderScale = ScaleContinuousNumeric<number, number> | ScaleTime<number, number>;
+type SliderValue = number | Date;
+/**
+ * Note: `x` is a Date for a time slider - the move behaviour inverts through the slider's
+ * own scale. `y` is the meaningless fraction described in the module docs; ignore it.
+ * Widening `x` here does not fix the underlying move handler type, which is #222.
+ */
+type SliderChangeHandler = (event: Event, x: number | string | Date | null, y: number | string | null) => void;
+interface SliderComponent extends Component {
+    scale(): SliderScale;
+    scale(scale: SliderScale): SliderComponent;
+    value(): SliderValue;
+    value(value: SliderValue): SliderComponent;
+    onchange(): SliderChangeHandler | undefined;
+    onchange(handler: SliderChangeHandler): SliderComponent;
+    minorTicks(): AxisDomain[];
+    minorTicks(ticks: AxisDomain[]): SliderComponent;
+    majorTicks(): AxisDomain[];
+    majorTicks(ticks: AxisDomain[]): SliderComponent;
+    tickLabels(): (d: AxisDomain) => string;
+    tickLabels(labels: StringAccessor<AxisDomain>): SliderComponent;
+    slant(): SlantDirection | undefined;
+    slant(direction: SlantDirection): SliderComponent;
+    label(): (d: SliderValue) => string;
+    label(label: StringAccessor<SliderValue>): SliderComponent;
+}
+declare function slider(): SliderComponent;
 
 /**
  * Factory that returns an HTML element appended to the given target selector,
@@ -5751,5 +6014,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$w as annotationCircle, export_default$v as annotationConfidenceArea, export_default$u as annotationConfidenceBar, export_default$s as annotationLine, export_default$r as annotationRangeFlag, export_default$q as annotationRangeRuler, export_default$p as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$j as bar, bounds, export_default$x as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$c as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$8 as dimensionsHeatTable, export_default$7 as dimensionsHorizontalBarChart, export_default$3 as dimensionsVerticalBarChart, export_default$i as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$t as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$b as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, export_default$6 as layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, export_default$4 as layoutStackedAreaMultiples, export_default$2 as legendColorBinned, export_default$1 as legendColorLinear, legendColorOrdinal, export_default as legendRadius, export_default$h as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$m as move, muchDarker, nestedStackedBarsVertical, not, export_default$g as pack, export_default$l as panning, parseDate, parseNumber, parseYear, export_default$f as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$e as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$d as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$a as selectMenu, set, _default$9 as slider, slightlyDarker, slowTransition, some, export_default$c as stackedArea, export_default$b as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$a as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$o as tooltip, export_default$n as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$9 as treemap, viewport, export_default$k as voronoi, widthAdaptiveMapPathStroke, withAlpha };
-export type { Action, ActionDispatchers, AppFallback, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter, Viewport, ViewportListener };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$w as annotationCircle, export_default$v as annotationConfidenceArea, export_default$u as annotationConfidenceBar, export_default$s as annotationLine, export_default$r as annotationRangeFlag, export_default$q as annotationRangeRuler, export_default$p as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$j as bar, bounds, export_default$x as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$8 as dimensionsHeatTable, export_default$7 as dimensionsHorizontalBarChart, export_default$3 as dimensionsVerticalBarChart, export_default$i as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$t as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, export_default$6 as layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, export_default$4 as layoutStackedAreaMultiples, export_default$2 as legendColorBinned, export_default$1 as legendColorLinear, legendColorOrdinal, export_default as legendRadius, export_default$h as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$m as move, muchDarker, nestedStackedBarsVertical, not, export_default$g as pack, export_default$l as panning, parseDate, parseNumber, parseYear, export_default$f as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$e as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$d as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, export_default$c as stackedArea, export_default$b as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$a as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$o as tooltip, export_default$n as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$9 as treemap, viewport, export_default$k as voronoi, widthAdaptiveMapPathStroke, withAlpha };
+export type { Action, ActionDispatchers, AppFallback, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, HandleRulerComponent, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter, Viewport, ViewportListener };

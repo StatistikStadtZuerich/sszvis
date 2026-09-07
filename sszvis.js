@@ -7746,23 +7746,50 @@
      *
      * @module sszvis/control/buttonGroup
      *
-     * @property {array} values         an array of values which are the options available in the control. Each one will become a button
-     * @property {any} current          the current value of the button group. Should be one of the options passed to .values()
-     * @property {number} width         The total width of the button group. Each option will have 1/3rd of this width. (default: 300px)
-     * @property {function} change      A callback/event handler function to call when the user clicks on a value.
-     *                                  Note that clicking on a value does not necessarily change any state unless this callback function does something.
+     * @property {array} values         an array of values which are the options available in the control.
+     *                                  Each one will become a button. Required - there is no default.
+     * @property {string|number} current the current value of the button group. Should be one of the
+     *                                  options passed to .values(). Compared with ===.
+     * @property {number} width         The total width of the button group, divided evenly between the
+     *                                  options. (default: 300px)
+     * @property {function} change      A callback/event handler function called as (event, value) when
+     *                                  the user clicks on a value. Note that clicking on a value does not
+     *                                  necessarily change any state unless this callback function does
+     *                                  something. (default: fn.identity, which returns the event and
+     *                                  silently discards the value)
+     *
+     * Note: both optionSelectable controls join their wrapper element on the
+     * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
+     * into a container that already holds the other replaces the other's DOM. This is what makes them
+     * interchangeable. They do not accept quite the same values, though: this control labels its buttons
+     * through d3's text coercion and so takes numbers as well as strings, while the select control
+     * trims its labels and therefore requires strings.
+     *
+     * Note: each button gets exactly `width / values.length` pixels, written out unrounded. Labels are
+     * never measured or trimmed, so a label wider than its button simply overflows - keep labels short.
+     *
+     * Note: selectedness is computed per button with no notion of uniqueness, so a value repeated in
+     * `values` renders twice and both copies are highlighted when they equal `current`.
+     *
+     * Note: the buttons are plain divs with a click handler. They carry no role, tabindex or pressed
+     * state, so the control cannot be operated by keyboard.
+     *
+     * Note: `values` has no default, so rendering before the data is available throws while computing
+     * the button width - before any DOM is created, so no partial control is left behind.
+     *
+     * See test/control/buttonGroup.test.ts.
      *
      * @return {sszvis.component}
      */
-    function buttonGroup () {
+    function buttonGroup() {
       return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
         const buttonWidth = props.width / props.values.length;
         const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true);
-        container.style("width", props.width + "px");
+        container.style("width", "".concat(props.width, "px"));
         const buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values).join("div").classed("sszvis-control-buttonGroup__item", true);
-        buttons.style("width", buttonWidth + "px").classed("selected", d => d === props.current).text(d => d).on("click", props.change);
+        buttons.style("width", "".concat(buttonWidth, "px")).classed("selected", d => d === props.current).text(d => d).on("click", props.change);
       });
     }
 
@@ -7784,38 +7811,79 @@
      * @property {string, function} color       A string or color for the fill color of the ruler dots.
      * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
      *
+     * Note: the rule, the handle and the grip mark live in a group whose datum is the constant 0, so
+     * an `x` accessor function is called with 0 rather than with a data value and those three elements
+     * end up at NaN. In practice `x` has to be a number here, even though the dots and labels - which
+     * are bound to the data - do work with an accessor.
+     *
+     * Note: the three static elements are appended on every render instead of being joined, so a
+     * component that re-renders accumulates a rule, a handle and a grip mark each time, with the newest
+     * copies painted over the dots.
+     *
+     * Note: labels are written with `.html()`, as elsewhere in the library, because sszvis.modularText
+     * produces markup. Escaping untrusted label data is the caller's responsibility. Unlike
+     * sszvis.annotation.ruler, this control neither de-overlaps labels nor defaults `color`, and its
+     * labels are joined on the component's own selection rather than on the ruler group - so hiding or
+     * moving that group leaves the labels behind.
+     *
+     * Note: the rule stops 4px above `bottom`, but the label's vertical nudge is decided against the
+     * unadjusted `bottom`. A label falling in that 4px band is offset as if it were still on the ruler.
+     *
+     * Note: a label whose y is above `top` is nudged down by `2 * y` rather than by a constant, so it
+     * lands well below its dot - by up to twice the distance to the top of the chart. The same
+     * expression appears in sszvis.annotation.ruler.
+     *
+     * Note: `top` and `bottom` have no defaults; leaving them out writes NaN into the geometry and the
+     * ruler silently disappears.
+     *
+     * See test/control/handleRuler.test.ts.
+     *
      * @returns {sszvis.component}
      */
-    function handleRuler () {
+    /** The gap kept between the bottom of the rule and props.bottom. */
+    const RULE_BOTTOM_INSET = 4;
+    const HANDLE_WIDTH$1 = 10;
+    const HANDLE_HEIGHT$1 = 24;
+    /** Where the grip mark starts and ends within the handle, as a fraction of its height. */
+    const HANDLE_MARK_TOP = 0.15;
+    const HANDLE_MARK_BOTTOM = 0.85;
+    const DOT_RADIUS = 3.5;
+    /** Horizontal distance between a dot and its label. */
+    const LABEL_OFFSET = 10;
+    function handleRuler() {
       return component().prop("x", functor).prop("y", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).render(function (data) {
+        var _props$color;
         const selection = d3.select(this);
         const props = selection.props();
         // Elements need to be placed on half-pixels in order to be rendered
         // crisply across browsers. That's why we create this position accessor
         // here that takes a datum as input, reads out its value (props.x) and
         // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
+        // Composed with fn.compose rather than written as arrow functions so that d3's full
+        // (d, i, nodes) argument list and its element-bound `this` still reach the accessor.
         const crispX = compose(halfPixel, props.x);
         const crispY = compose(halfPixel, props.y);
-        const bottom = props.bottom - 4;
-        const handleWidth = 10;
-        const handleHeight = 24;
-        const handleTop = props.top - handleHeight;
+        const bottom = props.bottom - RULE_BOTTOM_INSET;
+        const handleTop = props.top - HANDLE_HEIGHT$1;
         const group = selection.selectAll(".sszvis-handleRuler__group").data([0]).join("g").classed("sszvis-handleRuler__group", true);
         group.append("line").classed("sszvis-ruler__rule", true);
         group.append("rect").classed("sszvis-handleRuler__handle", true);
         group.append("line").classed("sszvis-handleRuler__handle-mark", true);
         group.selectAll(".sszvis-ruler__rule").attr("x1", crispX).attr("y1", halfPixel(props.top)).attr("x2", crispX).attr("y2", halfPixel(bottom));
-        group.selectAll(".sszvis-handleRuler__handle").attr("x", d => crispX(d) - handleWidth / 2).attr("y", halfPixel(handleTop)).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
-        group.selectAll(".sszvis-handleRuler__handle-mark").attr("x1", crispX).attr("y1", halfPixel(handleTop + handleHeight * 0.15)).attr("x2", crispX).attr("y2", halfPixel(handleTop + handleHeight * 0.85));
+        group.selectAll(".sszvis-handleRuler__handle").attr("x", d => crispX(d) - HANDLE_WIDTH$1 / 2).attr("y", halfPixel(handleTop)).attr("width", HANDLE_WIDTH$1).attr("height", HANDLE_HEIGHT$1).attr("rx", 2).attr("ry", 2);
+        group.selectAll(".sszvis-handleRuler__handle-mark").attr("x1", crispX).attr("y1", halfPixel(handleTop + HANDLE_HEIGHT$1 * HANDLE_MARK_TOP)).attr("x2", crispX).attr("y2", halfPixel(handleTop + HANDLE_HEIGHT$1 * HANDLE_MARK_BOTTOM));
         const dots = group.selectAll(".sszvis-ruler__dot").data(data).join("circle").classed("sszvis-ruler__dot", true);
-        dots.attr("cx", crispX).attr("cy", crispY).attr("r", 3.5).attr("fill", props.color);
+        dots.attr("cx", crispX).attr("cy", crispY).attr("r", DOT_RADIUS)
+        // `?? null` only to satisfy d3's attr signature: it treats null and undefined
+        // alike (`value == null` removes the attribute), so this matches the original.
+        .attr("fill", (_props$color = props.color) !== null && _props$color !== void 0 ? _props$color : null);
         selection.selectAll(".sszvis-ruler__label-outline").data(data).join("text").classed("sszvis-ruler__label-outline", true);
         selection.selectAll(".sszvis-ruler__label").data(data).join("text").classed("sszvis-ruler__label", true);
         // Update both labelOutline and labelOutline selections
         selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
-          const x = compose(halfPixel, props.x)(d);
-          const y = compose(halfPixel, props.y)(d);
-          const dx = props.flip(d) ? -10 : 10;
+          const x = crispX(d);
+          const y = crispY(d);
+          const dx = props.flip(d) ? -LABEL_OFFSET : LABEL_OFFSET;
           const dy = y < props.top ? 2 * y : y > props.bottom ? 0 : 5;
           return translateString(x + dx, y + dy);
         }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
@@ -7833,25 +7901,61 @@
      *
      * @module sszvis/control/select
      *
-     * @property {array} values         an array of values which are the options available in the control.
-     * @property {any} current          the currently selected value of the select control. Should be one of the options passed to .values()
-     * @property {number} width         The total width of the select control. If text labels exceed this width they will be trimmed to fit using an ellipsis mark. (default: 300px)
-     * @property {function} change      A callback/event handler function to call when the user clicks on a value.
-     *                                  Note that clicking on a value does not necessarily change any state unless this callback function does something.
+     * @property {array} values         an array of string values which are the options available in
+     *                                  the control. Required - there is no default.
+     * @property {string} current       the currently selected value of the select control. Should be one
+     *                                  of the options passed to .values(). Compared with ===.
+     * @property {number} width         The total width of the select control. If text labels exceed this
+     *                                  width they will be trimmed to fit using an ellipsis mark.
+     *                                  (default: 300px)
+     * @property {function} change      A callback/event handler function called as (event, value) when
+     *                                  the user selects an option. Selecting a value does not change any
+     *                                  state unless this callback does something. (default: fn.identity,
+     *                                  which returns the event and silently discards the value)
+     *
+     * Note: both optionSelectable controls join their wrapper element on the
+     * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
+     * into a container that already holds the other replaces the other's DOM. This is what makes them
+     * interchangeable.
+     *
+     * Note: `current` is written as the `selected` content attribute, not as the option's `selected`
+     * property. Once the user has picked an option the browser stops deriving selectedness from the
+     * attribute, so a re-render cannot pull the selection back to `current`.
+     *
+     * Note: the wrapper is styled to `width`, but the select element itself is rendered 30px wider,
+     * while labels are measured and trimmed against `width - 40`.
+     *
+     * Note: label truncation removes one character more than strictly necessary (the ellipsis replaces
+     * the second-to-last character as well) and has no fixed point for very small widths - a width whose
+     * measuring budget is negative runs the full recursion limit before returning "…". Values must be
+     * strings: the measuring code slices the raw value, so a non-string value that needs trimming
+     * throws.
+     *
+     * Note: `values` has no default, so rendering before the data is available throws mid-render from
+     * d3's data join - after the wrapper and select have been created and styled, leaving an empty,
+     * width-styled control behind rather than nothing at all.
+     *
+     * See test/control/select.test.ts.
      *
      * @return {sszvis.component}
      */
-    function select () {
+    /** Extra width given to the select element on top of the configured control width. */
+    const SELECT_WIDTH_PADDING = 30;
+    /** Width reserved for the select's own chrome when measuring whether a label fits. */
+    const LABEL_WIDTH_ALLOWANCE = 40;
+    function selectMenu() {
       return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
         const wrapperEl = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-select"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-select", true);
-        wrapperEl.style("width", props.width + "px");
+        wrapperEl.style("width", "".concat(props.width, "px"));
         const metricsEl = wrapperEl.selectDiv("selectMetrics").classed("sszvis-control-select__metrics", true);
         const selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]).join("select").classed("sszvis-control-select__element", true).on("change", function (e) {
           // We store the index in the select's value instead of the datum
-          // because an option's value can only hold strings.
-          const i = d3.select(this).property("value");
+          // because an option's value can only hold strings. An empty value means
+          // nothing is selected, which must not be read as index 0.
+          const value = this.value;
+          const i = value === "" ? -1 : Number(value);
           props.change(e, props.values[i]);
           // Prevent highlights on the select element after users have selected
           // an option by moving away from it.
@@ -7859,16 +7963,25 @@
             window.focus();
           }, 0);
         });
-        selectEl.style("width", props.width + 30 + "px");
-        selectEl.selectAll("option").data(props.values).join("option").attr("selected", d => d === props.current ? "selected" : null).attr("value", (d, i) => i).text(d => truncateToWidth(metricsEl, props.width - 40, d));
+        selectEl.style("width", "".concat(props.width + SELECT_WIDTH_PADDING, "px"));
+        selectEl.selectAll("option").data(props.values).join("option").attr("selected", d => d === props.current ? "selected" : null).attr("value", (_d, i) => i).text(d => truncateToWidth(metricsEl, props.width - LABEL_WIDTH_ALLOWANCE, d));
       });
     }
+    /**
+     * Shortens a label until it fits within maxWidth, measured by writing it into the
+     * (invisible) metrics element and reading back its rendered width.
+     *
+     * Note: each step replaces the last two characters with a single ellipsis, so the first
+     * step removes one character more than strictly necessary. The recursion also has no
+     * fixed point check - a maxWidth that not even "…" fits into runs the full MAX_RECURSION.
+     * See test/control/select.test.ts.
+     */
     function truncateToWidth(metricsEl, maxWidth, originalString) {
       const MAX_RECURSION = 1000;
-      const fitText = function (str, i) {
+      const fitText = (str, i) => {
         metricsEl.text(str);
         const textWidth = Math.ceil(metricsEl.node().clientWidth);
-        return i < MAX_RECURSION && textWidth > maxWidth ? fitText(str.slice(0, -2) + "…", i + 1) : str;
+        return i < MAX_RECURSION && textWidth > maxWidth ? fitText("".concat(str.slice(0, -2), "\u2026"), i + 1) : str;
       };
       return fitText(originalString, 0);
     }
@@ -7891,44 +8004,71 @@
      * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
      *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
      *                                                      Use "horizontal" to reset to a horizontal slant.
-     * @property {any} value                      The current value of the slider. Should be set whenever slider interaction causes the state to change.
+     * @property {number|Date} value             The current value of the slider. Should be set whenever slider interaction causes the state to change.
      * @property {string, function} label         A string or function for the handle label. The datum associated with it is the current slider value.
      * @property {function} onchange              A callback function called whenever user interaction attempts to change the slider value.
      *                                            Note that this component will not change its own state. The callback function must affect some state change
      *                                            in order for this component's display to be updated.
      *
+     * Note: the handle is positioned with a copy of the scale whose range is inset by half the handle
+     * width at each end, so that the handle stays inside the track, but the interaction layer inverts
+     * through the original scale. The two disagree by up to 5.5px, so a drag never quite reaches either
+     * end of the domain. Because that inset copy is built from the sorted extent of the range, a
+     * descending range is silently mirrored.
+     *
+     * Note: ticks are drawn in the order they are configured - all major ticks, then all minor ticks -
+     * and the first and last major label are anchored inwards by their position in that list rather
+     * than by their position on the track, so unsorted major ticks anchor the wrong labels. A lone
+     * major tick is anchored "start" rather than "middle".
+     *
+     * Note: the handle label element is appended on every render rather than joined, so a slider that
+     * re-renders accumulates label elements; only the first is ever updated.
+     *
+     * Note: `value` is not clamped to the domain, and it has no default - a slider rendered before its
+     * state exists throws part-way through, leaving a half-built control behind.
+     *
+     * Note: the move behaviour's y-scale is given a range but no domain, so the second argument passed
+     * to `onchange` is a meaningless fraction and should be ignored.
+     *
+     * See test/control/slider.test.ts.
+     *
      * @returns {sszvis.component}
      */
+    const AXIS_OFFSET = 28; // vertical offset for the axis
+    const MAJOR_TICK_SIZE = 12;
+    const MINOR_TICK_SIZE = 4;
+    const BACKGROUND_OFFSET = halfPixel(18); // vertical offset for the middle of the background
+    const HANDLE_WIDTH = 10; // the width of the handle
+    const HANDLE_HEIGHT = 23; // the height of the handle
+    const BG_WIDTH = 6; // the width of the background
+    const LINE_END_OFFSET = BG_WIDTH / 2; // the amount by which to offset the ends of the background line
+    const HANDLE_SIDE_OFFSET = HANDLE_WIDTH / 2 + 0.5; // the amount by which to offset the position of the handle
+    /** The amount by which to offset the small handle line within the handle. */
+    const HANDLE_LINE_DIMENSION = HANDLE_HEIGHT / 2 - 4;
+    /** Vertical extent of the interaction layer: from the label top (text is 11px tall) to the axis. */
+    const INTERACTION_TOP = -11;
     function contains(x, a) {
       return a.includes(x);
     }
-    function slider () {
+    function slider() {
       return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).prop("slant").tickLabels(identity).prop("label", functor).label(identity).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
-        const axisOffset = 28; // vertical offset for the axis
-        const majorTickSize = 12;
-        const backgroundOffset = halfPixel(18); // vertical offset for the middle of the background
-        const handleWidth = 10; // the width of the handle
-        const handleHeight = 23; // the height of the handle
-        const bgWidth = 6; // the width of the background
-        const lineEndOffset = bgWidth / 2; // the amount by which to offset the ends of the background line
-        const handleSideOffset = handleWidth / 2 + 0.5; // the amount by which to offset the position of the handle
         const scaleDomain = props.scale.domain();
         const scaleRange = range(props.scale);
-        const alteredScale = props.scale.copy().range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
+        const alteredScale = props.scale.copy().range([scaleRange[0] + HANDLE_SIDE_OFFSET, scaleRange[1] - HANDLE_SIDE_OFFSET]);
         // the mostly unchanging bits
         const bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]).join("g").classed("sszvis-control-slider__backgroundgroup", true);
         // create the axis
-        const axis = axisX().scale(alteredScale).orient("bottom").slant(props.slant).hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set$1([...props.majorTicks, ...props.minorTicks])).tickFormat(d => contains(d, props.majorTicks) ? props.tickLabels(d) : "");
+        const axis = axisX().scale(alteredScale).orient("bottom").slant(props.slant).hideBorderTickThreshold(0).tickSize(MAJOR_TICK_SIZE).tickPadding(6).tickValues(set$1([...props.majorTicks, ...props.minorTicks])).tickFormat(d => contains(d, props.majorTicks) ? props.tickLabels(d) : "");
         const axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]).join("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
-        axisSelection.attr("transform", translateString(0, axisOffset)).call(axis);
+        axisSelection.attr("transform", translateString(0, AXIS_OFFSET)).call(axis);
         // adjust visual aspects of the axis to fit the design
-        axisSelection.selectAll(".tick line").filter(d => !contains(d, props.majorTicks)).attr("y2", 4);
+        axisSelection.selectAll(".tick line").filter(d => !contains(d, props.majorTicks)).attr("y2", MINOR_TICK_SIZE);
         const majorAxisText = axisSelection.selectAll(".tick text").filter(d => contains(d, props.majorTicks));
         if (!props.slant || props.slant === "horizontal") {
           const numTicks = majorAxisText.size();
-          majorAxisText.style("text-anchor", (d, i) => i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle");
+          majorAxisText.style("text-anchor", (_d, i) => i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle");
         }
         if (props.slant === "vertical") {
           majorAxisText.attr("dx", "-1.8em");
@@ -7939,20 +8079,24 @@
           majorAxisText.attr("dy", "0.2em");
         }
         // create the slider background
-        const backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]).join("g").classed("sszvis-slider__background", true).attr("transform", translateString(0, backgroundOffset));
-        backgroundSelection.selectAll(".sszvis-slider__background__bg1").data([1]).join("line").classed("sszvis-slider__background__bg1", true).style("stroke-width", bgWidth).style("stroke", "#888").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
-        backgroundSelection.selectAll(".sszvis-slider__background__bg2").data([1]).join("line").classed("sszvis-slider__background__bg2", true).style("stroke-width", bgWidth - 1).style("stroke", "#fff").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
-        backgroundSelection.selectAll(".sszvis-slider__backgroundshadow").data([props.value]).join("line").attr("class", "sszvis-slider__backgroundshadow").attr("stroke-width", bgWidth - 1).style("stroke", "#E0E0E0").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", compose(Math.floor, alteredScale));
+        const backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]).join("g").classed("sszvis-slider__background", true).attr("transform", translateString(0, BACKGROUND_OFFSET));
+        backgroundSelection.selectAll(".sszvis-slider__background__bg1").data([1]).join("line").classed("sszvis-slider__background__bg1", true).style("stroke-width", BG_WIDTH).style("stroke", "#888").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET)).attr("x2", Math.floor(scaleRange[1] - LINE_END_OFFSET));
+        backgroundSelection.selectAll(".sszvis-slider__background__bg2").data([1]).join("line").classed("sszvis-slider__background__bg2", true).style("stroke-width", BG_WIDTH - 1).style("stroke", "#fff").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET)).attr("x2", Math.floor(scaleRange[1] - LINE_END_OFFSET));
+        backgroundSelection.selectAll(".sszvis-slider__backgroundshadow").data([props.value]).join("line").attr("class", "sszvis-slider__backgroundshadow").attr("stroke-width", BG_WIDTH - 1).style("stroke", "#E0E0E0").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET)).attr("x2", d => Math.floor(alteredScale(d)));
         // draw the handle and the label
         const handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]).join("g").classed("sszvis-control-slider__handle", true).attr("transform", d => translateString(halfPixel(alteredScale(d)), 0.5));
         handle.append("text").classed("sszvis-control-slider--label", true);
-        handle.selectAll(".sszvis-control-slider--label").data(d => [d]).text(props.label).style("text-anchor", d => stringEqual(d, scaleDomain[0]) ? "start" : stringEqual(d, scaleDomain[1]) ? "end" : "middle").attr("dx", d => stringEqual(d, scaleDomain[0]) ? -5 : stringEqual(d, scaleDomain[1]) ? handleWidth / 2 : 0);
-        handle.selectAll(".sszvis-control-slider__handlebox").data([1]).join("rect").classed("sszvis-control-slider__handlebox", true).attr("x", -5).attr("y", backgroundOffset - handleHeight / 2).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
-        const handleLineDimension = handleHeight / 2 - 4; // the amount by which to offset the small handle line within the handle
-        handle.selectAll(".sszvis-control-slider__handleline").data([1]).join("line").classed("sszvis-control-slider__handleline", true).attr("y1", backgroundOffset - handleLineDimension).attr("y2", backgroundOffset + handleLineDimension);
+        handle.selectAll(".sszvis-control-slider--label").data(d => [d]).text(props.label).style("text-anchor", d => stringEqual(d, scaleDomain[0]) ? "start" : stringEqual(d, scaleDomain[1]) ? "end" : "middle").attr("dx", d => stringEqual(d, scaleDomain[0]) ? -5 : stringEqual(d, scaleDomain[1]) ? HANDLE_WIDTH / 2 : 0);
+        handle.selectAll(".sszvis-control-slider__handlebox").data([1]).join("rect").classed("sszvis-control-slider__handlebox", true).attr("x", -5).attr("y", BACKGROUND_OFFSET - HANDLE_HEIGHT / 2).attr("width", HANDLE_WIDTH).attr("height", HANDLE_HEIGHT).attr("rx", 2).attr("ry", 2);
+        handle.selectAll(".sszvis-control-slider__handleline").data([1]).join("line").classed("sszvis-control-slider__handleline", true).attr("y1", BACKGROUND_OFFSET - HANDLE_LINE_DIMENSION).attr("y2", BACKGROUND_OFFSET + HANDLE_LINE_DIMENSION);
+        // The original always called .on("drag", props.onchange), including with undefined,
+        // which d3-dispatch treats as removing the listener. The guard is equivalent.
         const sliderInteraction = move().xScale(props.scale)
         // range goes from the text top (text is 11px tall) to the bottom of the axis
-        .yScale(d3.scaleLinear().range([-11, axisOffset + majorTickSize])).draggable(true).on("drag", props.onchange);
+        .yScale(d3.scaleLinear().range([INTERACTION_TOP, AXIS_OFFSET + MAJOR_TICK_SIZE])).draggable(true);
+        if (props.onchange) {
+          sliderInteraction.on("drag", props.onchange);
+        }
         selection.selectGroup("sliderInteraction").classed("sszvis-control-slider--interactionLayer", true).attr("transform", translateString(0, 4)).call(sliderInteraction);
       });
     }
@@ -10575,7 +10719,7 @@
     exports.scaleSeqBrn = scaleSeqBrn;
     exports.scaleSeqGrn = scaleSeqGrn;
     exports.scaleSeqRed = scaleSeqRed;
-    exports.selectMenu = select;
+    exports.selectMenu = selectMenu;
     exports.set = set$1;
     exports.slider = slider;
     exports.slightlyDarker = slightlyDarker;
