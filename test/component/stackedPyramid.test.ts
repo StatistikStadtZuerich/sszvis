@@ -182,7 +182,15 @@ describe("component/stackedPyramid", () => {
     test("should return an empty layout for empty data", () => {
       const sides = layout([]);
       expect(sides.length).toBe(0);
-      expect(sides.maxValue).toBeUndefined();
+      expect(sides.maxValue).toBe(0);
+    });
+
+    test("should report maxValue as 0 for an empty layout", () => {
+      // d3.max over an empty array is undefined, which the fold coerces to 0: the examples
+      // feed maxValue straight into a scale domain - `domain([0, state.maxStackedValue])` -
+      // where undefined would become NaN and the axis would lose its ticks. An empty data
+      // state is ordinary, not an edge case: any filter that can match nothing reaches it.
+      expect(layout([]).maxValue).toBe(0);
     });
 
     test("should not mutate the input rows", () => {
@@ -352,16 +360,6 @@ describe("component/stackedPyramid", () => {
         expect(sides.maxValue).toBe(70);
         expect(([...sides] as Layout).maxValue).toBeUndefined();
         expect((JSON.parse(JSON.stringify(sides)) as Layout).maxValue).toBeUndefined();
-      });
-
-      test("reports maxValue as undefined rather than 0 for an empty layout", () => {
-        // BUG: maxValue is d3.max over an empty array, which is undefined rather than 0. The
-        // example feeds it straight into a scale domain - `domain([0, state.maxStackedValue])`
-        // - where undefined coerces to NaN, so the scale maps every value to NaN and the axis
-        // draws its domain line with no ticks at all. An empty data state is ordinary, not an
-        // edge case: any filter that can match nothing reaches it. Shared with stackedBarData.
-        // current: undefined. expected: 0, so a domain built from it stays valid.
-        expect(layout([]).maxValue).toBeUndefined();
       });
 
       test("computes maxValue from the upper bounds only", () => {

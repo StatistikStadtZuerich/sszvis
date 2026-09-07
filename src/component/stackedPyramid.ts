@@ -158,10 +158,9 @@
  *
  * Note: `maxValue` is hung off the returned array rather than wrapped in an object, so any array
  * operation - a spread, a map, a filter, a trip through JSON - drops it. It is the maximum of the
- * upper bounds only, so it is not the extent of the data when a value is negative, and it is
- * undefined rather than 0 for an empty layout, where it coerces to NaN in the scale domain the
- * examples feed it into, so the scale maps every value to NaN and the axis draws its domain line
- * with no ticks at all. A slice's `value` is a convenience of the same kind:
+ * upper bounds only, so it is not the extent of the data when a value is negative. An empty layout
+ * reports 0, so a scale domain built from it stays valid. A slice's `value` is a convenience of the
+ * same kind:
  * the component never reads it, and it duplicates d[1] - d[0] as it stood when the layout ran, so
  * it goes stale if a caller rewrites the pair. Shared with stackedBarData. See
  * test/component/stackedPyramid.test.ts.
@@ -309,7 +308,7 @@ export type StackedPyramidLayout<T, S extends string | number = string> = Stacke
   T,
   S
 >[] & {
-  maxValue: number | undefined;
+  maxValue: number;
 };
 
 /* Data layout
@@ -377,7 +376,7 @@ export function stackedPyramidData<T, S extends string | number = string>(
 
     // Compute the max value, for convenience. This value is needed to construct
     // the horizontal scale.
-    const maxValue = max(sides, (s) => max(s, (rows) => max(rows, (row) => row[1])));
+    const maxValue = max(sides, (s) => max(s, (rows) => max(rows, (row) => row[1]))) ?? 0;
 
     return Object.assign(sides, { maxValue });
   };
