@@ -113,16 +113,19 @@ describe("map/renderer/image", () => {
     });
   });
 
-  describe("known quirks", () => {
-    // BUG: the image carries no alt attribute and no role, and the component offers no property
-    // for one, so a topographic layer is announced by screen readers as an unlabelled image. All
-    // six docs examples ship this.
-    test("renders no alt text and offers no way to supply one", () => {
-      const node = render();
-      expect(image(node)?.hasAttribute("alt")).toBe(false);
-      expect(image(node)?.hasAttribute("role")).toBe(false);
+  describe("alt", () => {
+    test("marks the image decorative by default", () => {
+      expect(mapRendererImage().alt()).toBe("");
+      expect(image(render())?.getAttribute("alt")).toBe("");
     });
 
+    test("writes a caller-supplied description to alt", () => {
+      const node = render((c) => c.alt("Topographic layer of the city of Zurich"));
+      expect(image(node)?.getAttribute("alt")).toBe("Topographic layer of the city of Zurich");
+    });
+  });
+
+  describe("known quirks", () => {
     // BUG: the component writes left and top but never position, so both are inert unless
     // sszvis.css is loaded - it is the stylesheet that sets position: absolute, along with
     // display: block and pointer-events: none. Without it the image sits in the document flow at

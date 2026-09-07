@@ -32,14 +32,16 @@
  *                                      Default 1. An invalid value is dropped by the CSS parser rather than reported,
  *                                      leaving the image fully opaque; 0 renders nothing at all, which is
  *                                      indistinguishable from a src that failed to load.
+ * @property {String, Function} alt      The alternative text describing the image. Defaults to the
+ *                                      empty string, which marks the layer decorative so that
+ *                                      screen readers skip it - the right default for a
+ *                                      topographic or raster backdrop whose data lives in the svg
+ *                                      layers above. Pass a description when the image itself
+ *                                      carries information.
  *
  * Note: this component renders an HTML img element, so it belongs in a createHtmlLayer. Nothing
  * enforces that: called on an SVG selection it appends an SVG-namespaced img, which no browser
  * renders, without complaining.
- *
- * Note: the img carries no alt attribute and no role, and the component offers no property for
- * one, so a topographic layer is announced by screen readers as an unlabelled image. All six docs
- * examples ship this.
  *
  * Note: the component writes left and top but never position, so both are inert unless sszvis.css
  * is loaded - it is the stylesheet that sets position: absolute, along with display: block and
@@ -117,6 +119,7 @@ type ImageProps = {
   src: ImageValue<string>;
   geoBounds: [GeoPoint, GeoPoint];
   opacity: ImageValue<number>;
+  alt: ImageValue<string>;
 };
 
 export interface MapRendererImageComponent extends ComponentBuilder<MapRendererImageComponent> {
@@ -128,6 +131,8 @@ export interface MapRendererImageComponent extends ComponentBuilder<MapRendererI
   geoBounds(value: [GeoPoint, GeoPoint]): MapRendererImageComponent;
   opacity(): ImageValue<number>;
   opacity(value: ImageValue<number>): MapRendererImageComponent;
+  alt(): ImageValue<string>;
+  alt(value: ImageValue<string>): MapRendererImageComponent;
 }
 
 /**
@@ -150,7 +155,9 @@ export default function (): MapRendererImageComponent {
     .prop("src")
     .prop("geoBounds")
     .prop("opacity")
+    .prop("alt")
     .opacity(1)
+    .alt("")
     .render(function (this: Element) {
       const selection = select(this);
       const props = selection.props<ImageProps>();
@@ -172,6 +179,7 @@ export default function (): MapRendererImageComponent {
 
       image
         .attr("src", fn.valueFn(props.src))
+        .attr("alt", fn.valueFn(props.alt))
         .style("left", `${Math.round(coordinate(topLeft, 0))}px`)
         .style("top", `${Math.round(coordinate(topLeft, 1))}px`)
         .style("width", `${Math.round(coordinate(bottomRight, 0) - coordinate(topLeft, 0))}px`)
