@@ -87,10 +87,12 @@
  * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
  * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
  *
- * Note: a handler receives the datum bound to the event target it fired on - the base layer's
- * areas carry a merged entry, so the handler gets the entity's own datum, undefined where the
- * entity matched no data. An event target an anchored shape contributed carries no merged entry,
- * so a handler bound through this component is called with undefined for it.
+ * Note: a handler receives the datum of the map entity the event fired on, which this component
+ * recognises by identity: the value bound to the event target has to be one of the merged entries
+ * it produced for this render. The base layer's areas carry exactly those, so a handler gets the
+ * entity's own datum, undefined where the entity matched no data. An event target an anchored
+ * shape contributed yields undefined unless that shape bound one of the same merged entries to it,
+ * in which case it names an entity like any other target and the handler gets its datum.
  *
  * Note: the event dispatch is created once per choropleth() call and closed over, while the four
  * renderers keep their props on the element they rendered into. So one instance can draw into two
@@ -189,8 +191,9 @@ type MeshStyleValue<R extends string | number> =
 
 /**
  * A handler as this component's event API delivers it: with the datum of the map entity the event
- * happened on, which is undefined for an entity that matched no data - and for an event target an
- * anchored shape contributed, which carries no merged entry of its own.
+ * happened on, which is undefined for an entity that matched no data - and for an event target
+ * bound to anything other than one of this render's merged entries, an anchored shape's own markup
+ * included, unless that shape bound those entries itself.
  */
 export type ChoroplethEventHandler<T = object> = (datum: T | undefined) => void;
 
