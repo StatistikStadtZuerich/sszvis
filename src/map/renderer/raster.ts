@@ -38,10 +38,11 @@
  *                                   fades the whole layer rather than the individual cells, and 0 still draws
  *                                   every one of them.
  *
- * Note: the bitmap is sized in CSS pixels - the width and height attributes are the layer dimensions,
- * with no devicePixelRatio factor and no compensating style width - so on a display with a device
- * pixel ratio above 1 the bitmap is stretched across more device pixels than it has, and the cells
- * come out soft while the SVG layers over them stay sharp.
+ * Note: the bitmap is sized in device pixels - the width and height attributes are the layer
+ * dimensions multiplied by devicePixelRatio, with the CSS size pinned to the layer dimensions and
+ * the drawing context scaled to match - so the cells are as sharp as the SVG layers over them on a
+ * high-DPI display. Positions, cell sides and the debug rectangle are all in CSS pixels, as before;
+ * the scale factor costs one fill of ratio-squared as many device pixels per cell.
  *
  * Note: a fractional width or height is rounded up, since the bitmap is a whole number of pixels.
  * Every docs caller passes bounds.innerWidth, which is routinely fractional, so a raster layer
@@ -84,7 +85,8 @@
  * Note: the component writes no position, so the canvas is only positioned because sszvis.css sets
  * position: absolute on the class - the same dependency as the image renderer, along with
  * display: block, pointer-events: none and user-select: none. The opacity, by contrast, is written
- * as an inline style; nothing in sszvis.css sets it, so nothing is overridden - but a consumer
+ * as an inline style, as are the CSS width and height that pin the scaled bitmap to the layer size;
+ * nothing in sszvis.css sets any of them, so nothing is overridden - but a consumer
  * cannot restyle it from their own stylesheet either. The positions themselves are written unshifted, and
  * createHtmlLayer offsets the layer by the bounds padding, so cell positions are layer-relative and
  * the padding is applied exactly once.
@@ -219,6 +221,16 @@ function fillParses(ctx: CanvasRenderingContext2D, value: string): boolean {
 }
 
 /**
+ * The device pixels per CSS pixel to render at. Read from the global rather than from the canvas's
+ * own realm: an iframe reports its parent's ratio anyway, and a missing or nonsensical value (a
+ * non-browser host, say) falls back to drawing one device pixel per CSS pixel.
+ */
+function pixelRatio(): number {
+  const ratio = globalThis.devicePixelRatio;
+  return typeof ratio === "number" && ratio > 0 && Number.isFinite(ratio) ? ratio : 1;
+}
+
+/**
  * Reads a required dimension, reporting a missing or nonsensical one rather than letting the canvas
  * fall back to its intrinsic 300x150 size - which also stopped it clearing between renders, since
  * clearRect was then called with NaN.
@@ -259,10 +271,21 @@ export default function <T = unknown>(): MapRendererRasterComponent<T> {
         .join("canvas")
         .classed("sszvis-map__rasterimage", true);
 
-      canvas.attr("width", width).attr("height", height).style("opacity", props.opacity);
+      // The bitmap is in device pixels while the element is laid out in CSS pixels, so the cells
+      // are as sharp as the SVG layers over them on a high-DPI display.
+      const ratio = pixelRatio();
+      canvas
+        .attr("width", Math.round(width * ratio))
+        .attr("height", Math.round(height * ratio))
+        .style("width", `${width}px`)
+        .style("height", `${height}px`)
+        .style("opacity", props.opacity);
 
       const ctx = context2d(canvas.node());
 
+      // Everything below draws in CSS pixels. setTransform rather than scale, because the
+      // transform is absolute: scale would compound if the bitmap had not just been reset.
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.clearRect(0, 0, width, height);
 
       if (props.debug) {
