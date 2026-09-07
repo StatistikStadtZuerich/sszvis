@@ -75,12 +75,9 @@
  *                                            bounds itself.
  * @property {function} [key]                 The key function for the data join, called with a
  *                                            layer and its index. The value it returns should be
- *                                            unique among layers. Defaults to the index - which,
- *                                            because the layers are reversed first, counts from the
- *                                            end of the array that was passed in, so dropping the
- *                                            *last* layer of the input reuses the first path node
- *                                            and rebinds it to a different layer, where
- *                                            stackedArea's default key drops the last node instead.
+ *                                            unique among layers. Defaults to the index, which
+ *                                            matches layers by position in the array that was
+ *                                            passed in, as stackedArea's does.
  *                                            Setting it preserves object constancy across renders,
  *                                            which matters when a chart switches between the
  *                                            stacked and the separated view.
@@ -102,18 +99,14 @@
  * an invalid path rather than an error. Only a value whose coercion itself throws, such as a Symbol
  * or a BigInt, raises - and it raises before the join rather than once per point.
  *
- * Note: the layers are reversed before the data join, so the first layer of the array that was
- * passed in is the last path in the DOM and paints over the others. The line has carried an
- * unanswered "//sszsch why reverse?" comment since 2017, and nothing - not the header this replaces,
- * not docs/area-chart-stacked/README.md, not stackedAreaMultiplesLayout, which lays the bands out -
- * says why. stackedArea does not reverse, so the same datum comes out of the two components in
- * opposite order, and the toggle in docs/area-chart-stacked/sa-two.js moves every path on the
- * switch. The reversal also renumbers the layers, so the index handed to the style accessors, to
- * key and to valuesAccessor is the position in the reversed array: an index-keyed palette is
- * applied back to front here and front to back in stackedArea. The array itself is copied rather
- * than reversed in place, so a caller holding on to it - as sa-two.js does, rendering both views
- * from one datum - sees it unchanged. .join() orders the merged selection, so the paint order
- * follows the reversed data on every render, even when the nodes are reused.
+ * Note: the layers are bound in the order they were given, as stackedArea binds them, so the first
+ * layer of the input is the first path in the DOM and the index handed to the style accessors, to
+ * key and to valuesAccessor is its position in that array. The component used to reverse the data
+ * before the join - a line carrying an unanswered "//sszsch why reverse?" comment since 2017, which
+ * nothing explained - which mirrored every index, applied an index-keyed palette back to front, and
+ * moved both paths whenever docs/area-chart-stacked/sa-two.js toggled between the two views.
+ * .join() orders the merged selection, so the paint order follows the data on every render, even
+ * when the nodes are reused.
  *
  * Note: transition animates nothing. The transition is created on its own statement and its return
  * value is dropped, so every attribute is written to the plain selection instead. It did animate
@@ -137,9 +130,7 @@
  * accessors therefore receive the layer object rather than a point, the inverse of what the
  * dimensions receive - the same asymmetry documented on line.
  * key sees a layer and its index too, but its third argument depends on which half of the keyed
- * join is running: the array of incoming layers, or the group of nodes already in the DOM. That node
- * group is in the reversed order the previous render left it in, so the two halves of the join agree
- * only because the reversal is applied on every render.
+ * join is running: the array of incoming layers, or the group of nodes already in the DOM.
  *
  * Note: the default defined predicate guards both vertical bounds by hand, as stackedArea and line
  * do. The expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
@@ -344,13 +335,6 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
 
         // Layouts
 
-        // Reversed for no stated reason - the line has carried an unanswered "//sszsch why
-        // reverse?" comment since 2017 - which puts the first layer of the input last in the
-        // DOM and mirrors the index every layer accessor is given. Taken on a copy, so the
-        // array the caller passed in is left alone. See
-        // test/component/stackedAreaMultiples.test.ts.
-        const layers = [...data].reverse();
-
         const y0 = dimension(props.y0);
         const y1Given = props.y1 == null ? undefined : dimension(props.y1);
 
@@ -407,7 +391,7 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
 
         const paths = selection
           .selectAll<SVGPathElement, L>("path.sszvis-path")
-          .data(layers, props.key)
+          .data(data, props.key)
           .join("path")
           .classed("sszvis-path", true);
 

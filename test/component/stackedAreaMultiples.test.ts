@@ -97,9 +97,8 @@ describe("component/stackedAreaMultiples", () => {
     });
 
     test("should keep the layers independent of one another", () => {
-      // Each multiple is drawn from its own points only; the paths are emitted back to
-      // front, which the layer order block below covers.
-      expect(ds(render(areaOf(), twoLayers))).toEqual([secondLayerPath, firstLayerPath]);
+      // Each multiple is drawn from its own points only, in the order they were given.
+      expect(ds(render(areaOf(), twoLayers))).toEqual([firstLayerPath, secondLayerPath]);
     });
 
     test("should render nothing for an empty data array", () => {
@@ -153,17 +152,15 @@ describe("component/stackedAreaMultiples", () => {
           .fill((d: { key: string }) => (d.key === "a" ? "#f00" : "#00f")),
         series
       );
-      // Series "b" comes first in the DOM, because the layers are reversed before the join.
-      expect(ds(node)).toEqual(["M0,3L10,7L10,3L0,1Z", "M0,1L10,3L10,0L0,0Z"]);
-      expect(attrs(node, "fill")).toEqual(["#00f", "#f00"]);
+      expect(ds(node)).toEqual(["M0,1L10,3L10,0L0,0Z", "M0,3L10,7L10,3L0,1Z"]);
+      expect(attrs(node, "fill")).toEqual(["#f00", "#00f"]);
     });
   });
 
   describe("layer order", () => {
     test("should not mutate the array it was given", () => {
-      // The reversal is taken on a copy, so a caller holding on to the same array - as the
-      // docs example does, rendering the stacked and the separated view from one datum -
-      // sees it unchanged.
+      // A caller holding on to the same array - as the docs example does, rendering the
+      // stacked and the separated view from one datum - sees it unchanged.
       const data = [twoLayers[0], twoLayers[1]];
       render(areaOf(), data);
       expect(data).toEqual([twoLayers[0], twoLayers[1]]);
@@ -171,71 +168,57 @@ describe("component/stackedAreaMultiples", () => {
     });
 
     test("should follow the data order when the layers are reordered", () => {
-      // .join() orders the merged selection for free, so the paint order follows the
-      // (reversed) data even when the nodes are reused.
+      // .join() orders the merged selection for free, so the paint order follows the data
+      // even when the nodes are reused.
       const component = areaOf().key((d: Layer) => d[0].y1);
       const g = group("order");
       g.datum(twoLayers).call(component as never);
       g.datum([twoLayers[1], twoLayers[0]]).call(component as never);
-      expect(ds(g.node() as SVGGElement)).toEqual([firstLayerPath, secondLayerPath]);
+      expect(ds(g.node() as SVGGElement)).toEqual([secondLayerPath, firstLayerPath]);
     });
 
-    describe("known quirks", () => {
-      test("the layers are reversed before the join, so the first one is painted last", () => {
-        // BUG: the component reverses its data with no stated reason - the line carries an
-        // unanswered "//sszsch why reverse?" comment from 2017 - and neither the JSDoc header,
-        // docs/area-chart-stacked/README.md nor stackedAreaMultiplesLayout, which lays the
-        // bands out, mentions it. stackedArea, which this
-        // component is otherwise a copy of, does not reverse, so the same datum produces the
-        // opposite DOM order in the two components, and a chart toggling between the stacked
-        // and the separated view reorders every path on the switch. Later siblings paint
-        // over earlier ones in SVG, so this also inverts which layer wins an overlap.
-        // current: the last layer of the input is the first child. expected: the DOM order
-        // follows the input, as in stackedArea.
-        const node = render(areaOf(), twoLayers);
-        expect(ds(node)).toEqual([secondLayerPath, firstLayerPath]);
-        expect(paths(node).at(-1)?.getAttribute("d")).toBe(firstLayerPath);
-      });
+    test("should paint the layers in the order they were given", () => {
+      // The component used to reverse its data before the join, which put the first layer of
+      // the input last in the DOM. It now matches stackedArea, so a chart toggling between
+      // the two views no longer reorders its paths, and later siblings paint over earlier
+      // ones in the order the caller asked for.
+      const node = render(areaOf(), twoLayers);
+      expect(ds(node)).toEqual([firstLayerPath, secondLayerPath]);
+      expect(paths(node).at(-1)?.getAttribute("d")).toBe(secondLayerPath);
+    });
 
-      test("the reversal renumbers the layers, so every index accessor is mirrored", () => {
-        // NOTE: the consequence of the above for callers. The index handed to the style
-        // accessors, to the key function and to valuesAccessor is the position in the
-        // reversed array, so `fill((_d, i) => colours[i])` - the shorthand the examples avoid
-        // only because they key off the layer's own name - assigns the palette back to front
-        // here and front to back in stackedArea.
-        const seen: [Layer, number][] = [];
-        const node = render(
-          areaOf().fill((d: Layer, i: number) => {
-            seen.push([d, i]);
-            return i === 0 ? "#f00" : "#00f";
-          }),
-          twoLayers
-        );
-        expect(seen).toEqual([
-          [twoLayers[1], 0],
-          [twoLayers[0], 1],
-        ]);
-        // The first colour of the palette lands on the last layer of the input.
-        expect(attrs(node, "fill")).toEqual(["#f00", "#00f"]);
-        expect(ds(node)).toEqual([secondLayerPath, firstLayerPath]);
-      });
+    test("should number the layers from the start of the input", () => {
+      // The index handed to the style accessors, to the key function and to valuesAccessor is
+      // the position in the array that was passed in, so `fill((_d, i) => colours[i])` puts
+      // the first colour on the first layer, here and in stackedArea alike.
+      const seen: [Layer, number][] = [];
+      const node = render(
+        areaOf().fill((d: Layer, i: number) => {
+          seen.push([d, i]);
+          return i === 0 ? "#f00" : "#00f";
+        }),
+        twoLayers
+      );
+      expect(seen).toEqual([
+        [twoLayers[0], 0],
+        [twoLayers[1], 1],
+      ]);
+      expect(attrs(node, "fill")).toEqual(["#f00", "#00f"]);
+      expect(ds(node)).toEqual([firstLayerPath, secondLayerPath]);
+    });
 
-      test("the default key numbers the layers from the other end", () => {
-        // NOTE: the default key is the index, which is the mirrored index here, so dropping
-        // the *last* layer of the input reuses the first node and rebinds it to a different
-        // layer. stackedArea's default key drops the last node instead. Only matters when
-        // the key is left unset, which the JSDoc already warns against for charts that
-        // transition between the two views.
-        const component = areaOf();
-        const g = group("defaultkey");
-        g.datum(twoLayers).call(component as never);
-        const before = paths(g.node() as SVGGElement);
-        g.datum([twoLayers[0]]).call(component as never);
-        const after = paths(g.node() as SVGGElement);
-        expect(after.length).toBe(1);
-        expect(after[0]).toBe(before[0]);
-        expect(ds(g.node() as SVGGElement)).toEqual([firstLayerPath]);
-      });
+    test("should match layers by position when the key is left unset", () => {
+      // The default key is the index into the input, so dropping the last layer keeps the
+      // first node bound to the first layer and removes the last one - as stackedArea does.
+      const component = areaOf();
+      const g = group("defaultkey");
+      g.datum(twoLayers).call(component as never);
+      const before = paths(g.node() as SVGGElement);
+      g.datum([twoLayers[0]]).call(component as never);
+      const after = paths(g.node() as SVGGElement);
+      expect(after.length).toBe(1);
+      expect(after[0]).toBe(before[0]);
+      expect(ds(g.node() as SVGGElement)).toEqual([firstLayerPath]);
     });
   });
 
@@ -276,25 +259,23 @@ describe("component/stackedAreaMultiples", () => {
       expect(new Set(after)).toEqual(new Set(before));
     });
 
+    test("should keep every path in place across the switch", async () => {
+      // Both components bind the layers in the order they were given, so toggling the view
+      // moves nothing: each node keeps its position and only its geometry changes. It used
+      // to reorder both paths, because only the separated view reversed.
+      const g = group("toggle-order");
+      g.datum(twoLayers).call(stackedView() as never);
+      await settle();
+      const stacked = paths(g.node() as SVGGElement);
+      expect(ds(g.node() as SVGGElement)).toEqual([firstLayerPath, secondLayerPath]);
+
+      g.datum(twoLayers).call(separatedView() as never);
+      const separated = paths(g.node() as SVGGElement);
+      expect(separated[0]).toBe(stacked[0]);
+      expect(separated[1]).toBe(stacked[1]);
+    });
+
     describe("known quirks", () => {
-      test("the switch reorders every path, because only one of the two reverses", async () => {
-        // NOTE: the consequence of the reversal for the only in-repo caller. The same datum,
-        // keyed the same way, comes out in opposite DOM order from the two components, so
-        // toggling the view moves both nodes even though neither the data nor the keys
-        // changed. Invisible in sa-two.js, where the bands never overlap, but it is churn
-        // that no property asked for.
-        const g = group("toggle-order");
-        g.datum(twoLayers).call(stackedView() as never);
-        await settle();
-        const stacked = paths(g.node() as SVGGElement);
-        expect(ds(g.node() as SVGGElement)).toEqual([firstLayerPath, secondLayerPath]);
-
-        g.datum(twoLayers).call(separatedView() as never);
-        const separated = paths(g.node() as SVGGElement);
-        expect(separated[0]).toBe(stacked[1]);
-        expect(separated[1]).toBe(stacked[0]);
-      });
-
       test("the switch into the separated view snaps, and the switch back eases", async () => {
         // BUG: the two halves of the toggle the JSDoc's key property exists for behave
         // differently, because stackedArea routes its attributes through the transition and
@@ -308,10 +289,10 @@ describe("component/stackedAreaMultiples", () => {
         await settle();
 
         g.datum(twoLayers).call(separatedView() as never);
-        expect(ds(g.node() as SVGGElement)).toEqual([secondSeparated, firstSeparated]);
+        expect(ds(g.node() as SVGGElement)).toEqual([firstSeparated, secondSeparated]);
 
         g.datum(twoLayers).call(stackedView() as never);
-        // Still the separated geometry, in the order the stacked view puts it in.
+        // Still the separated geometry, because the stacked view eases away from it.
         expect(ds(g.node() as SVGGElement)).toEqual([firstSeparated, secondSeparated]);
         await settle();
         expect(ds(g.node() as SVGGElement)).toEqual([firstLayerPath, secondLayerPath]);
@@ -358,7 +339,7 @@ describe("component/stackedAreaMultiples", () => {
       // Style accessors receive the array of points, not a single point - the inverse of
       // what x, y0 and y1 receive. The third argument is d3's group of path nodes.
       expect(seen.map((args) => args.length)).toEqual([3, 3]);
-      expect(seen.map((args) => args[0])).toEqual([twoLayers[1], twoLayers[0]]);
+      expect(seen.map((args) => args[0])).toEqual([twoLayers[0], twoLayers[1]]);
       expect(seen.map((args) => args[1])).toEqual([0, 1]);
       expect(Array.from(seen[0][2] as ArrayLike<Element>)).toEqual(paths(node));
     });
@@ -414,7 +395,7 @@ describe("component/stackedAreaMultiples", () => {
         areaOf().valuesAccessor((d: NamedLayer) => d.values),
         named
       );
-      expect(ds(node)).toEqual([secondLayerPath, firstLayerPath]);
+      expect(ds(node)).toEqual([firstLayerPath, secondLayerPath]);
     });
 
     test("should combine with style accessors reading the wrapper", () => {
@@ -425,7 +406,7 @@ describe("component/stackedAreaMultiples", () => {
           .fill((d: NamedLayer) => (d.name === "first" ? "#f00" : "#00f")),
         named
       );
-      expect(attrs(node, "fill")).toEqual(["#00f", "#f00"]);
+      expect(attrs(node, "fill")).toEqual(["#f00", "#00f"]);
     });
 
     test("should pass the layer, its index and the node group to valuesAccessor", () => {
@@ -448,7 +429,7 @@ describe("component/stackedAreaMultiples", () => {
       // function for an attribute is: with the layer datum, its index, and the group of
       // path nodes, with the node itself as `this`.
       expect(seen.map((args) => args.length)).toEqual([3, 3]);
-      expect(seen.map((args) => args[0])).toEqual([twoLayers[1], twoLayers[0]]);
+      expect(seen.map((args) => args[0])).toEqual([twoLayers[0], twoLayers[1]]);
       expect(seen.map((args) => args[1])).toEqual([0, 1]);
       expect(Array.from(seen[0][2] as ArrayLike<Element>)).toEqual(paths(node));
       expect(thises).toEqual(paths(node));
@@ -507,7 +488,7 @@ describe("component/stackedAreaMultiples", () => {
         areaOf().fill((d: Layer) => (d[0].y1 === 60 ? "#f00" : "#00f")),
         twoLayers
       );
-      expect(attrs(node, "fill")).toEqual(["#00f", "#f00"]);
+      expect(attrs(node, "fill")).toEqual(["#f00", "#00f"]);
     });
 
     describe("known quirks", () => {
@@ -545,7 +526,7 @@ describe("component/stackedAreaMultiples", () => {
         areaOf().stroke((d: Layer) => (d[0].y1 === 60 ? "#f00" : "#00f")),
         twoLayers
       );
-      expect(attrs(node, "stroke")).toEqual(["#00f", "#f00"]);
+      expect(attrs(node, "stroke")).toEqual(["#f00", "#00f"]);
     });
 
     test("should default the strokeWidth to 1", () => {
@@ -753,19 +734,17 @@ describe("component/stackedAreaMultiples", () => {
       g.datum(twoLayers).call(component as never);
       const before = paths(g.node() as SVGGElement);
       // Only the layer keyed 60 survives, and it must reuse the node it already had - the
-      // second one, because the layers were reversed.
+      // first one, since the layers are bound in the order they were given.
       g.datum([twoLayers[0]]).call(component as never);
       const after = paths(g.node() as SVGGElement);
       expect(after.length).toBe(1);
-      expect(after[0]).toBe(before[1]);
+      expect(after[0]).toBe(before[0]);
     });
 
     test("should hand the node group to the key when it runs over the existing paths", () => {
       // The key runs once for each half of the join. Over the nodes already in the DOM it is
       // called with the node as `this` and d3's group of nodes as the third argument; over
-      // the incoming layers it gets the parent as `this` and the array of layers. The node
-      // group is in the reversed order the previous render left it in, so the two halves
-      // agree only because the reversal is applied on every render.
+      // the incoming layers it gets the parent as `this` and the array of layers.
       const component = areaOf().key((d: Layer) => d[0].y1);
       const g = group("key-update");
       g.datum(twoLayers).call(component as never);
@@ -786,7 +765,7 @@ describe("component/stackedAreaMultiples", () => {
         g.node() as SVGGElement,
         g.node() as SVGGElement,
       ]);
-      expect(seen[2].group).toEqual([twoLayers[1], twoLayers[0]]);
+      expect(seen[2].group).toEqual([twoLayers[0], twoLayers[1]]);
     });
 
     test("should pass the layer, its index and the layer array to the key function", () => {
@@ -799,11 +778,10 @@ describe("component/stackedAreaMultiples", () => {
         twoLayers
       );
       expect(seen.map((args) => args.length)).toEqual([3, 3]);
-      // The array it is given is the reversed copy, not the caller's array.
-      expect(seen.map((args) => args[0])).toEqual([twoLayers[1], twoLayers[0]]);
+      // The array it is given is the caller's own array, which is no longer copied.
+      expect(seen.map((args) => args[0])).toEqual([twoLayers[0], twoLayers[1]]);
       expect(seen.map((args) => args[1])).toEqual([0, 1]);
-      expect(seen[0][2]).toEqual([twoLayers[1], twoLayers[0]]);
-      expect(seen[0][2]).not.toBe(twoLayers);
+      expect(seen[0][2]).toBe(twoLayers);
     });
   });
 
@@ -913,11 +891,14 @@ describe("component/stackedAreaMultiples", () => {
     });
 
     describe("known quirks", () => {
-      test("a datum that is not iterable throws before the join", () => {
-        // NOTE: the reversal spreads the datum, so binding anything that is not iterable
-        // fails with "data is not iterable" from the component rather than from the data
-        // join. The message names neither the component nor the property.
-        expect(() => render(areaOf(), { values: oneLayer })).toThrow(TypeError);
+      test("a datum that is not an array of layers is silently ignored", () => {
+        // NOTE: the datum reaches the data join as it is, and d3 reads a plain object as an
+        // array-like of length undefined, so nothing is bound and nothing is drawn. It used
+        // to throw "data is not iterable", from the copy the reversal took rather than from
+        // the join - a message naming neither the component nor the property. Neither
+        // behaviour reports the mistake usefully; stackedArea binds the same way.
+        const node = render(areaOf(), { values: oneLayer });
+        expect(paths(node).length).toBe(0);
       });
 
       test("adopts any pre-existing path.sszvis-path in the group", () => {
