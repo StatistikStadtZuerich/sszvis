@@ -210,6 +210,32 @@ describe("map/renderer/raster", () => {
       expect(canvasOf(target.node() as HTMLElement)).toBeNull();
     });
 
+    // Both accessors are validated alongside the dimensions, so a misconfigured raster is named
+    // before the canvas is created - and reported for an empty dataset too, which is the state
+    // every chart is in before its data load.
+    test.each([
+      ["position", () => mapRendererRaster().width(20).height(20).fill("#ff0000")],
+      [
+        "fill",
+        () =>
+          mapRendererRaster()
+            .width(20)
+            .height(20)
+            .position((d: Cell) => [d.x, d.y]),
+      ],
+    ])("reports a missing %s, naming the component and the property", (name, raster) => {
+      const target = layer();
+      expect(() => target.datum([cell(1, 1)]).call(raster())).toThrow(
+        new RegExp(`\\[map/renderer/raster\\] ${name} is required`)
+      );
+      // The same report for an empty dataset, which used to hide the misconfiguration entirely,
+      // and no canvas left behind either way.
+      expect(() => layer().datum([]).call(raster())).toThrow(
+        new RegExp(`\\[map/renderer/raster\\] ${name} is required`)
+      );
+      expect(canvasOf(target.node() as HTMLElement)).toBeNull();
+    });
+
     test.each([Number.NaN, -1])("reports a nonsensical dimension (%s)", (width) => {
       expect(() =>
         layer()
@@ -445,33 +471,6 @@ describe("map/renderer/raster", () => {
         )
       ).toThrow(TypeError);
       expect(canvasOf(target.node() as HTMLElement)).not.toBeNull();
-    });
-
-    // BUG: neither accessor is validated either. A missing position or fill throws a bare
-    // TypeError from calling undefined, once per render, naming neither property - and only when
-    // the data are non-empty, so an empty dataset hides the misconfiguration entirely.
-    test("throws when position is missing, but only for non-empty data", () => {
-      const raster = () => mapRendererRaster().width(20).height(20).fill("#ff0000");
-      expect(() =>
-        layer()
-          .datum([cell(1, 1)])
-          .call(raster())
-      ).toThrow(TypeError);
-      expect(() => layer().datum([]).call(raster())).not.toThrow();
-    });
-
-    test("throws when fill is missing, but only for non-empty data", () => {
-      const raster = () =>
-        mapRendererRaster()
-          .width(20)
-          .height(20)
-          .position((d: Cell) => [d.x, d.y]);
-      expect(() =>
-        layer()
-          .datum([cell(1, 1)])
-          .call(raster())
-      ).toThrow(TypeError);
-      expect(() => layer().datum([]).call(raster())).not.toThrow();
     });
 
     // NOTE: a non-finite position is dropped by the canvas API rather than reported, so a datum
