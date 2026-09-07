@@ -566,6 +566,49 @@ describe("component/sunburst", () => {
       expect(data(node)[1].x1).toBeCloseTo(0.375, 6);
     });
 
+    test("should animate a hierarchy that was re-summed in place, not only a fresh one", async () => {
+      // The natural state shape for a chart driven by a filter or a slider: one prepared
+      // hierarchy kept in state and re-summed. The on-screen angles are read off the arcs
+      // before the component re-partitions the very same node objects, so they survive.
+      const root = hierarchyOf([
+        { cat: "A", sub: "A1", value: 1 },
+        { cat: "B", sub: "B1", value: 1 },
+      ]);
+      const component = sunburstOf();
+      const g = group("same-object");
+      g.datum(root).call(component as never);
+      await settle();
+      const node = g.node() as SVGGElement;
+      expect(data(node)[0].x1).toBe(0.5);
+
+      root.sum((n) => (n._tag !== "leaf" ? 0 : n.rootKey === "A" ? 3 : 1));
+      g.datum(root).call(component as never);
+      expect(data(node)[0].x1).toBe(0.5);
+      expect(data(node)[0]._x1).toBe(0.75);
+    });
+
+    test("should animate mid-flight when the same hierarchy object is re-summed", async () => {
+      const root = hierarchyOf([
+        { cat: "A", sub: "A1", value: 1 },
+        { cat: "B", sub: "B1", value: 1 },
+      ]);
+      const component = sunburstOf();
+      const g = group("same-object-midflight");
+      g.datum(root).call(component as never);
+      await settle();
+      const node = g.node() as SVGGElement;
+
+      root.sum((n) => (n._tag !== "leaf" ? 0 : n.rootKey === "A" ? 3 : 1));
+      g.datum(root).call(component as never);
+      await nextFrame();
+      // Mid-flight: past the old angle, not yet at the new one.
+      expect(data(node)[0].x1).toBeGreaterThan(0.5);
+      expect(data(node)[0].x1).toBeLessThan(0.75);
+
+      await settle();
+      expect(data(node)[0].x1).toBeCloseTo(0.75, 6);
+    });
+
     test("should reach the destination geometry after the transition", async () => {
       const node = render(sunburstOf(), hierarchyOf());
       await settle();
@@ -663,31 +706,6 @@ describe("component/sunburst", () => {
       expect(points(node)).toEqual(before);
       await settle();
       expect(points(node)).toEqual(before);
-    });
-
-    test("skips the animation when the same hierarchy object is rendered twice", async () => {
-      // BUG: the component partitions its input in place, which overwrites the x0/x1 the
-      // tween had been writing - the very values the next transition is supposed to start
-      // from. When the caller keeps one hierarchy in its state and re-sums it (the natural
-      // shape for a chart driven by a filter or a slider), the handover then reads the new
-      // positions back and start equals destination, so the arcs jump.
-      // current: x0 already equals _x0 after the update. expected: the arcs animate from the
-      // geometry that is on screen, as they do when a fresh hierarchy is built.
-      const root = hierarchyOf([
-        { cat: "A", sub: "A1", value: 1 },
-        { cat: "B", sub: "B1", value: 1 },
-      ]);
-      const component = sunburstOf();
-      const g = group("same-object");
-      g.datum(root).call(component as never);
-      await settle();
-      const node = g.node() as SVGGElement;
-      expect(data(node)[0].x1).toBe(0.5);
-
-      root.sum((n) => (n._tag !== "leaf" ? 0 : n.rootKey === "A" ? 3 : 1));
-      g.datum(root).call(component as never);
-      expect(data(node)[0].x1).toBe(0.75);
-      expect(data(node)[0]._x1).toBe(0.75);
     });
 
     test("re-partitions its input, discarding any layout the caller applied", () => {
