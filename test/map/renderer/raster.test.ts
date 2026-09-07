@@ -261,6 +261,54 @@ describe("map/renderer/raster", () => {
       expect(canvasOf(renderWith())).toBe(first);
     });
 
+    test("gives each keyed raster in one layer its own canvas", () => {
+      const target = layer("two-rasters");
+      const raster = (key: string, fill: string) =>
+        mapRendererRaster()
+          .width(20)
+          .height(20)
+          .position((d: Cell) => [d.x, d.y])
+          .fill(fill)
+          .cellSide(4)
+          .key(key);
+      target.datum([cell(4, 4)]).call(raster("below", "#ff0000"));
+      target.datum([cell(12, 12)]).call(raster("above", "#0000ff"));
+      const node = target.node() as HTMLElement;
+      const canvases = node.querySelectorAll<HTMLCanvasElement>("canvas.sszvis-map__rasterimage");
+      expect(canvases).toHaveLength(2);
+      // Each keeps its own cells, and they stack in the order they were rendered.
+      const cellsOf = (canvas: HTMLCanvasElement, x: number, y: number) => {
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("no canvas context");
+        const { data } = context.getImageData(Math.floor(x * dpr()), Math.floor(y * dpr()), 1, 1);
+        return [data[0], data[1], data[2], data[3]];
+      };
+      expect(cellsOf(canvases[0], 4, 4)).toEqual([255, 0, 0, 255]);
+      expect(cellsOf(canvases[0], 12, 12)).toEqual([0, 0, 0, 0]);
+      expect(cellsOf(canvases[1], 12, 12)).toEqual([0, 0, 255, 255]);
+      expect(canvases[0].getAttribute("data-raster-key")).toBe("below");
+      expect(canvases[1].getAttribute("data-raster-key")).toBe("above");
+    });
+
+    test("defaults to one raster per layer, so two unkeyed rasters share a canvas", () => {
+      expect(mapRendererRaster().key()).toBe("raster");
+      const target = layer("one-raster");
+      const raster = (fill: string) =>
+        mapRendererRaster()
+          .width(20)
+          .height(20)
+          .position((d: Cell) => [d.x, d.y])
+          .fill(fill)
+          .cellSide(4);
+      target.datum([cell(4, 4)]).call(raster("#ff0000"));
+      const first = canvasOf(target.node() as HTMLElement);
+      target.datum([cell(12, 12)]).call(raster("#0000ff"));
+      const node = target.node() as HTMLElement;
+      expect(node.querySelectorAll("canvas.sszvis-map__rasterimage")).toHaveLength(1);
+      expect(canvasOf(node)).toBe(first);
+      expect(pixelAt(node, 12, 12)).toEqual([0, 0, 255, 255]);
+    });
+
     test("renders an empty canvas for empty data", () => {
       const node = render([]);
       expect(canvasOf(node)).not.toBeNull();
@@ -502,28 +550,6 @@ describe("map/renderer/raster", () => {
       const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
       expect(canvas.style.position).toBe("");
       expect(canvas.style.pointerEvents).toBe("");
-    });
-
-    // BUG: the selector is unscoped and the join binds a placeholder, so a second raster renderer
-    // in the same layer redraws the first one's canvas instead of adding its own. The same defect
-    // as the mesh, highlight, lake overlay and image renderers.
-    test("a second raster renderer in one layer redraws the first", () => {
-      const target = layer("two-rasters");
-      const raster = (fill: string) =>
-        mapRendererRaster()
-          .width(20)
-          .height(20)
-          .position((d: Cell) => [d.x, d.y])
-          .fill(fill)
-          .cellSide(4);
-      target.datum([cell(4, 4)]).call(raster("#ff0000"));
-      const first = canvasOf(target.node() as HTMLElement);
-      target.datum([cell(12, 12)]).call(raster("#0000ff"));
-      const node = target.node() as HTMLElement;
-      expect(node.querySelectorAll("canvas.sszvis-map__rasterimage")).toHaveLength(1);
-      expect(canvasOf(node)).toBe(first);
-      expect(pixelAt(node, 12, 12)).toEqual([0, 0, 255, 255]);
-      expect(pixelAt(node, 4, 4)).toEqual([0, 0, 0, 0]);
     });
 
     // NOTE: a change of dimensions resizes the existing canvas rather than replacing it, which is
