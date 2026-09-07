@@ -119,12 +119,11 @@
  * never quite touch the bars. It is a local constant, deliberately not a property, and it
  * does not scale with the chart.
  *
- * Note: only the node bars are guarded against missing values. They are drawn by bar, which
- * replaces NaN with 0, while the link paths, the labels and the hit boxes are written here
- * by hand from the same numbers. A size scale that returns NaN for one value - a d3 scale
- * fed undefined, a gap in the data - therefore gives that node a bar of zero height and its
- * links a d and a stroke-width of NaN, which the browser drops entirely: the node renders
- * and the link disappears. Nothing is logged either way.
+ * Note: a size scale that returns NaN for one value - a d3 scale fed undefined, a gap in the
+ * data - is reported. The node bars are guarded by bar, which replaces NaN with 0, and the
+ * node labels and hit boxes follow the same rule with a warning. A link whose geometry is
+ * not finite cannot be drawn correctly at all, so it is warned about and left out of the
+ * document rather than drawn wrong.
  *
  * Note: a node's box is snapped to whole pixels, the position floored and the height ceiled,
  * so neighbouring nodes never leave a sub-pixel gap between them. The link geometry is not
@@ -162,6 +161,7 @@ import {
   type RenderCallback,
 } from "../d3-component.js";
 import * as fn from "../fn.js";
+import * as logger from "../logger.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import bar from "./bar.js";
@@ -411,6 +411,11 @@ const linkBounds = (
 /** The links are keyed on their id, so a redrawn link keeps its path element. */
 const idAcc = (link: SankeyLink) => link.id;
 
+/** True when every number is a real, drawable coordinate. */
+function allFinite(values: number[]): boolean {
+  return values.every((v) => Number.isFinite(v));
+}
+
 /* Module
 ----------------------------------------------- */
 export default function (): SankeyComponent {
@@ -557,12 +562,21 @@ export default function (): SankeyComponent {
 
       const linkThickness = (link: SankeyLink): number => Math.max(props.sizeScale(link.value), 1);
 
-      // Render the links
+      // Render the links. A link whose geometry is not finite - a size scale with a gap in
+      // its domain - cannot be drawn at all: coercing it to zero would draw a link that is
+      // merely wrong instead of one that is missing, so it is reported and left out.
+      const drawableLinks = data.links.filter((link) => {
+        const points = linkPoints(link);
+        if (allFinite([...points, props.sizeScale(link.value)])) return true;
+        logger.warn("[component/sankey] skipping a link with non-finite geometry, id:", link.id);
+        return false;
+      });
+
       const linksGroup = selection.selectGroup("links");
 
       const linksElems = linksGroup
         .selectAll<SVGPathElement, SankeyLink>(".sszvis-link")
-        .data(data.links, idAcc)
+        .data(drawableLinks, idAcc)
         .join("path")
         .attr("class", "sszvis-link");
 
@@ -573,7 +587,7 @@ export default function (): SankeyComponent {
         .attr("stroke", props.linkColor ?? null)
         .sort(props.linkSort);
 
-      linksGroup.datum(data.links);
+      linksGroup.datum(drawableLinks);
 
       const linkTooltipAnchor = tooltipAnchor<SankeyLink>().position((link): [number, number] => {
         const bbox = linkBoundingBox(link);
@@ -628,6 +642,17 @@ export default function (): SankeyComponent {
         return side;
       };
 
+      // The labels and the hit boxes are written by hand, so they need the guard bar
+      // applies to the bars: a non-finite coordinate is reported and drawn at zero, which
+      // keeps them on top of the zero-height bar the same value produced.
+      const guarded = (value: number, node: SankeyNode, what: string): number => {
+        if (Number.isFinite(value)) return value;
+        logger.warn(`[component/sankey] non-finite ${what} for node`, node.id);
+        return 0;
+      };
+      const safeY = (node: SankeyNode): number => guarded(yPosition(node), node, "position");
+      const safeExtent = (node: SankeyNode): number => guarded(yExtent(node), node, "height");
+
       const nodeLabelsGroup = selection.selectGroup("nodelabels");
 
       const barLabels = nodeLabelsGroup
@@ -647,7 +672,7 @@ export default function (): SankeyComponent {
             ? xPosition(node) - 6
             : xPosition(node) + props.nodeThickness + 6
         )
-        .attr("y", (node) => yPosition(node) + yExtent(node) / 2)
+        .attr("y", (node) => safeY(node) + safeExtent(node) / 2)
         .style("opacity", props.labelOpacity);
 
       const barLabelHitBoxes = nodeLabelsGroup
@@ -664,8 +689,8 @@ export default function (): SankeyComponent {
             xPosition(node) +
             (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)
         )
-        .attr("y", (node) => yPosition(node) - props.nodePadding / 2)
+        .attr("y", (node) => safeY(node) - props.nodePadding / 2)
         .attr("width", props.labelHitBoxSize + props.nodeThickness)
-        .attr("height", (node) => yExtent(node) + props.nodePadding);
+        .attr("height", (node) => safeExtent(node) + props.nodePadding);
     });
 }
