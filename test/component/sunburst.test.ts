@@ -406,8 +406,11 @@ describe("component/sunburst", () => {
     test("should hand the node's key to the fill accessor, not the node", () => {
       const fill = vi.fn(() => "#808080");
       render(sunburstOf(fill), hierarchyOf([{ cat: "A", sub: "A1", value: 1 }]));
-      // Once for the category's own arc, once more while colouring its child.
-      expect(fill.mock.calls).toEqual([["A"], ["A"]]);
+      // Only ever the category's key: its own arc and its child both resolve to it. An
+      // entering arc is painted twice, once outright and once through the transition, so
+      // each of the two arcs asks for it twice.
+      expect(new Set(fill.mock.calls.flat())).toEqual(new Set(["A"]));
+      expect(fill.mock.calls.length).toBe(4);
     });
 
     test("should close 15% of the gap between a ring's lightness and white", () => {
@@ -691,6 +694,56 @@ describe("component/sunburst", () => {
       expect(data(node)[0].x1).toBeCloseTo(0.75, 6);
     });
 
+    test("should ease the radii alongside the angles when the radius scale changes", async () => {
+      // The arc generator draws from the radii on the datum, which the tween walks towards
+      // the ones the current radius scale gives - so a resize that lands mid-update moves
+      // the rings out as the angles are still turning, instead of snapping them.
+      const component = sunburstOf();
+      const g = group("radius-ease");
+      g.datum(hierarchyOf()).call(component as never);
+      await settle();
+
+      g.datum(
+        hierarchyOf([
+          { cat: "A", sub: "A1", value: 3 },
+          { cat: "A", sub: "A2", value: 1 },
+          { cat: "B", sub: "B1", value: 4 },
+        ])
+      ).call(component.radiusScale((v: number) => v * 600) as never);
+      const node = g.node() as SVGGElement;
+      await nextFrame();
+      // Mid-flight on both counts: the outer radius is on its way from 210 to 410...
+      const [outer, inner] = radii(attrs(node, "d")[0] ?? "");
+      expect(outer).toBeGreaterThan(210);
+      expect(outer).toBeLessThan(410);
+      expect(inner).toBeGreaterThan(110);
+      expect(inner).toBeLessThan(210);
+      // ...while the child's angle is on its way from 0.25 to 0.375.
+      expect(data(node)[1].x1).toBeGreaterThan(0.25);
+      expect(data(node)[1].x1).toBeLessThan(0.375);
+
+      await settle();
+      expect(radii(attrs(node, "d")[0] ?? "")).toEqual([410, 210]);
+    });
+
+    test("should ease the fill when the colour scale changes", async () => {
+      const component = sunburstOf();
+      const g = group("colour-ease");
+      g.datum(hierarchyOf()).call(component as never);
+      await settle();
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "fill")[0]).toBe("rgb(128, 128, 128)");
+
+      g.datum(hierarchyOf()).call(component.fill(() => "#ff0000") as never);
+      await nextFrame();
+      // Mid-flight: away from the grey, not yet at the red.
+      expect(attrs(node, "fill")[0]).not.toBe("rgb(128, 128, 128)");
+      expect(attrs(node, "fill")[0]).not.toBe("rgb(255, 0, 0)");
+
+      await settle();
+      expect(attrs(node, "fill")[0]).toBe("rgb(255, 0, 0)");
+    });
+
     test("should reach the destination geometry after the transition", async () => {
       const node = render(sunburstOf(), hierarchyOf());
       await settle();
@@ -722,10 +775,11 @@ describe("component/sunburst", () => {
     test("writes two destination fields onto every node it renders", () => {
       const node = render(sunburstOf(), hierarchyOf());
       // NOTE: like pie, the component keeps no state of its own - the transition needs the
-      // old and the new angles on the same object, and the only object shared between two
+      // old and the new geometry on the same object, and the only object shared between two
       // renders is the datum. x0/x1/y0/y1 come from the partition the component runs, _x0
-      // and _x1 are added on top, and the tween keeps writing x0/x1 on every frame. Anything
-      // that compares, hashes or serialises the hierarchy sees all of it.
+      // and _x1 (the destination angles) and r0/r1 (the radii on screen, in pixels) are added
+      // on top, and the tween keeps writing x0/x1/r0/r1 on every frame. Anything that
+      // compares, hashes or serialises the hierarchy sees all of it.
       expect(Object.keys(data(node)[0]).sort()).toEqual([
         "_x0",
         "_x1",
@@ -734,6 +788,8 @@ describe("component/sunburst", () => {
         "depth",
         "height",
         "parent",
+        "r0",
+        "r1",
         "value",
         "x0",
         "x1",
@@ -802,19 +858,6 @@ describe("component/sunburst", () => {
       expect(Math.max(...data(node).map((d) => d.x1))).toBe(1);
     });
 
-    test("never animates the colours, and cannot be told not to animate at all", async () => {
-      // NOTE: fill and stroke are applied once, outside the transition, so a sunburst whose
-      // colour scale changes jumps while its angles ease. Unlike bar, dot or treemap there is
-      // no `transition` property either, so a caller who wants no animation at all has no way
-      // to ask for one - and the arcs cannot be rendered synchronously (see above).
-      const component = sunburstOf();
-      const g = group("colour-jump");
-      g.datum(hierarchyOf()).call(component as never);
-      await settle();
-      g.datum(hierarchyOf()).call(component.fill(() => "#ff0000") as never);
-      expect(attrs(g.node() as SVGGElement, "fill")[0]).toBe("rgb(255, 0, 0)");
-    });
-
     test("keeps a zero-value node in the DOM as a degenerate arc", async () => {
       // NOTE: a category with no value gets x0 === x1 and is drawn as a zero-width sliver - a
       // straight line out from the centre. Consistent with pie, which keeps its zero-width
@@ -858,33 +901,6 @@ describe("component/sunburst", () => {
       for (const d of data(node).slice(2)) {
         expect([d.x0, d.x1]).toEqual([d._x0, d._x1]);
       }
-    });
-
-    test("eases the angles but snaps the radii, since only x is tweened", async () => {
-      // NOTE: the tween interpolates x0/x1 only, and the arc generator reads the radii from
-      // the current props on every frame, so a render that changes the radius scale puts the
-      // new radii on screen immediately while the angles are still moving. The docs rebuild
-      // the radius scale on every resize, which is when a caller would notice.
-      const component = sunburstOf();
-      const g = group("radius-snap");
-      g.datum(hierarchyOf()).call(component as never);
-      await settle();
-
-      g.datum(
-        hierarchyOf([
-          { cat: "A", sub: "A1", value: 3 },
-          { cat: "A", sub: "A2", value: 1 },
-          { cat: "B", sub: "B1", value: 4 },
-        ])
-      ).call(component.radiusScale((v: number) => v * 600) as never);
-      const node = g.node() as SVGGElement;
-      await nextFrame();
-      // The doubled radii are already final on the first frame...
-      expect(radii(attrs(node, "d")[0] ?? "")).toEqual([410, 210]);
-      // ...while the angle of the same arc is still on its way from 0.5 to 0.5 - unchanged
-      // here - and its child's from 0.25 to 0.375.
-      expect(data(node)[1].x1).toBeGreaterThan(0.25);
-      expect(data(node)[1].x1).toBeLessThan(0.375);
     });
 
     test("draws an arc backwards when its start is past its end", async () => {
