@@ -28,15 +28,17 @@
  *
  * @function {string, function} off     removes a listener by function identity. An unknown event name
  *                                      or an unregistered function is ignored. A single `off` undoes
- *                                      any number of `on` calls for the same function.
+ *                                      any number of `on` calls for the same function. Called with
+ *                                      only an event name it drops every listener for that event,
+ *                                      which is how a host releases listeners it no longer holds a
+ *                                      reference to.
  *
  * @function {string, ...any} trigger   calls every listener registered for the event name, forwarding
  *                                      any further arguments. An event name with no listeners is
  *                                      ignored.
  *
- * Note: the registry is never cleared, so listeners outlive the chart that registered them. A chart
- * that is torn down keeps receiving resize events unless it calls `off` with the exact same function
- * reference; an inline arrow function can never be removed.
+ * Note: the registry is a page-wide singleton, so a chart that is torn down has to release its
+ * listener itself - either with `off(name, cb)`, or with `off(name)` to drop the whole bucket.
  *
  * Note: `trigger` isolates the listeners from one another. A listener that throws is reported
  * through `sszvis.logger.error` and the remaining listeners still run, so one broken chart cannot
@@ -77,7 +79,7 @@ export interface Viewport {
     name: Name extends "resize" ? never : Name,
     cb: ViewportListener
   ): Viewport;
-  off(this: Viewport, name: string, cb: ViewportListener): Viewport;
+  off(this: Viewport, name: string, cb?: ViewportListener): Viewport;
   trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport;
 }
 
@@ -114,11 +116,11 @@ function on(this: Viewport, name: string, cb: ViewportListener): Viewport {
   return this;
 }
 
-function off(this: Viewport, name: string, cb: ViewportListener): Viewport {
+function off(this: Viewport, name: string, cb?: ViewportListener): Viewport {
   if (!callbacks[name]) {
     return this;
   }
-  callbacks[name] = callbacks[name].filter((fn) => fn !== cb);
+  callbacks[name] = cb === undefined ? [] : callbacks[name].filter((fn) => fn !== cb);
   return this;
 }
 

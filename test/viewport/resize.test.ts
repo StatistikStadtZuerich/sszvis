@@ -1,16 +1,17 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { viewport } from "../../src/viewport/resize.js";
 
-/** Every listener registered through `listen` is removed again after the test. */
+/** Every event a test registers on is emptied again afterwards. */
 type Listener = (...args: unknown[]) => void;
 
 describe("viewport/resize", () => {
   // NOTE: the module keeps one callback registry and one throttle in module scope, so
   // there is no way to obtain a fresh instance - `vi.resetModules()` does not re-execute
   // an already-evaluated module in browser mode. Every test therefore shares the same
-  // registry and has to clean up after itself, and the clock is moved past the throttle
-  // window so that one test's window resize cannot swallow the next test's.
-  const registered: [string, Listener][] = [];
+  // registry and has to clean up after itself; `off(name)` empties a whole bucket, so the
+  // names a test touched are all that has to be recorded. The clock is moved past the
+  // throttle window so that one test's window resize cannot swallow the next test's.
+  const registered = new Set<string>();
 
   // The fake clock has to advance monotonically across tests: the throttle records the
   // end of its window as an absolute timestamp, so rewinding the clock to "now" in the
@@ -18,7 +19,7 @@ describe("viewport/resize", () => {
   let clock = Date.now();
 
   const listen = (name: string, cb: Listener) => {
-    registered.push([name, cb]);
+    registered.add(name);
     return viewport.on(name, cb);
   };
 
@@ -29,7 +30,8 @@ describe("viewport/resize", () => {
   });
 
   afterEach(() => {
-    for (const [name, cb] of registered.splice(0)) viewport.off(name, cb);
+    for (const name of registered) viewport.off(name);
+    registered.clear();
     vi.runOnlyPendingTimers();
     vi.useRealTimers();
     vi.restoreAllMocks();
@@ -181,6 +183,44 @@ describe("viewport/resize", () => {
     });
   });
 
+  describe("releasing listeners", () => {
+    test("should drop every listener for an event when off is called without a callback", () => {
+      const first = vi.fn();
+      const second = vi.fn();
+      listen("resize", first);
+      listen("resize", () => second());
+      viewport.off("resize");
+      viewport.trigger("resize");
+      expect(first).not.toHaveBeenCalled();
+      expect(second).not.toHaveBeenCalled();
+    });
+
+    test("should leave other events alone when one event is dropped", () => {
+      const resized = vi.fn();
+      const other = vi.fn();
+      listen("resize", resized);
+      listen("orientationchange", other);
+      viewport.off("resize");
+      viewport.trigger("resize");
+      viewport.trigger("orientationchange");
+      expect(resized).not.toHaveBeenCalled();
+      expect(other).toHaveBeenCalledTimes(1);
+    });
+
+    test("should accept a bucket-wide off for an event that was never registered", () => {
+      expect(() => viewport.off("never-registered")).not.toThrow();
+    });
+
+    test("should allow registering again after the bucket was dropped", () => {
+      const cb = vi.fn();
+      listen("resize", cb);
+      viewport.off("resize");
+      listen("resize", cb);
+      viewport.trigger("resize");
+      expect(cb).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("known quirks", () => {
     test("registering the same listener twice only calls it once", () => {
       // NOTE: `on` filters the existing list for the incoming callback before appending
@@ -230,11 +270,10 @@ describe("viewport/resize", () => {
       expect(cb).toHaveBeenCalledWith(1, "two");
     });
 
-    test("listeners outlive the chart that registered them", () => {
-      // NOTE: there is one registry for the whole page, it is never cleared, and removal
-      // is by function identity. A chart that is torn down keeps receiving resize events
-      // unless it calls `off` with the exact same reference, and an inline arrow function
-      // can never be removed at all.
+    test("off by reference cannot remove a listener registered as an inline arrow", () => {
+      // NOTE: removal by function identity is unchanged, so a caller that did not keep the
+      // exact reference it registered still cannot release it that way. `off(name)` is the
+      // way out of this, and is covered under "releasing listeners".
       const cb = vi.fn();
       listen("resize", () => cb());
       viewport.off(
@@ -252,7 +291,7 @@ describe("viewport/resize", () => {
       // the module. The registration itself still works; only the return value is lost.
       const { on } = viewport;
       const cb = vi.fn();
-      registered.push(["resize", cb]);
+      registered.add("resize");
       // @ts-expect-error - the ported types spell the requirement out: `on` declares a
       // `this` of the viewport object, so a destructured call is rejected at compile time.
       expect(on("resize", cb)).toBeUndefined();
