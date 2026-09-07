@@ -4,7 +4,7 @@
  * @module sszvis/measure
  */
 import { type Selection, select } from "d3";
-import { isSelection, isString } from "./fn";
+import { isSelection, isString } from "./fn.js";
 
 import type { DimensionMeasurement } from "./types.js";
 
@@ -62,7 +62,8 @@ export const measureDimensions = (arg: MeasurableElement): DimensionMeasurement 
  **/
 export const measureText = ((): ((fontSize: number, fontFace: string, text: string) => number) => {
   const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d")!; // Non-null assertion since canvas 2d context is always available
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("[measureText] Could not acquire a 2d canvas context");
   const cache: Record<string, number> = {};
 
   return (fontSize: number, fontFace: string, text: string): number => {

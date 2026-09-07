@@ -5,7 +5,7 @@
  */
 
 import { timeFormatLocale } from "d3";
-import { timeLocale } from "./locale";
+import { timeLocale } from "./locale.js";
 
 const timeParse = timeFormatLocale(timeLocale).parse;
 

@@ -1,5 +1,5 @@
 import { type HierarchyNode, hierarchy, rollup } from "d3";
-import * as fn from "../fn";
+import * as fn from "../fn.js";
 
 // Type definitions for hierarchical data structure using discriminated union
 export type NodeDatum<T> =

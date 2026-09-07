@@ -1,6 +1,6 @@
 import { select } from "d3";
 import { beforeEach, describe, expect, test } from "vitest";
-import { defaultTransition, fastTransition, slowTransition } from "../src/transition";
+import { defaultTransition, fastTransition, slowTransition } from "../src/transition.js";
 
 describe("transition", () => {
   let container: HTMLDivElement;
@@ -129,7 +129,7 @@ describe("transition", () => {
     });
 
     test("should work with multiple elements", async () => {
-      const elements = [];
+      const elements: HTMLDivElement[] = [];
       for (let i = 0; i < 3; i++) {
         const element = document.createElement("div");
         element.style.opacity = "1";

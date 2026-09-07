@@ -5,7 +5,7 @@ import {
   aspectRatio12to5,
   aspectRatio16to10,
   aspectRatioAuto,
-} from "../src/aspectRatio";
+} from "../src/aspectRatio.js";
 
 describe("aspectRatio", () => {
   describe("aspectRatio", () => {

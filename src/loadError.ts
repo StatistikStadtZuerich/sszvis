@@ -4,7 +4,7 @@
  * @module sszvis/loadError
  */
 
-import * as logger from "./logger";
+import * as logger from "./logger.js";
 
 /**
  * Handle data loading errors by logging them

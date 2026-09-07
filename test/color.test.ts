@@ -19,7 +19,7 @@ import {
   scaleSeqBrn,
   scaleSeqGrn,
   scaleSeqRed,
-} from "../src/color";
+} from "../src/color.js";
 
 const expectIsColor = (color: LabColor) => {
   expect(color).toHaveProperty("l");

@@ -88,12 +88,6 @@ interface TreemapComponent<T = unknown> extends Component {
   onClick(handler: TreemapClickHandler<T>): TreemapComponent<T>;
 }
 
-// Helper function to handle missing/invalid numeric values
-function handleMissingVal(v: NumberValue): number {
-  const num = Number(v);
-  return Number.isNaN(num) ? 0 : num;
-}
-
 /**
  * Main treemap component
  *

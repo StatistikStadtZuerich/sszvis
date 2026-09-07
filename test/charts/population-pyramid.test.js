@@ -1,7 +1,7 @@
 import { ascending } from "d3";
 import { describe, expect, test } from "vitest";
-import { cascade } from "../../src/cascade";
-import { stackedPyramidData } from "../../src/component/stackedPyramid";
+import { cascade } from "../../src/cascade.js";
+import { stackedPyramidData } from "../../src/component/stackedPyramid.js";
 
 const xAcc = (d) => d.xValue;
 const yAcc = (d) => d.yValue;
@@ -62,7 +62,7 @@ describe("population-pyramid", () => {
     });
     for (const bin of binnedData) {
       expect(bin.map(gAcc).every((d) => d === gAcc(bin[0]))).toBe(true);
-      expect(bin.map(yAcc).every((d) => d % binWidth == 0)).toBe(true);
+      expect(bin.map(yAcc).every((d) => d % binWidth === 0)).toBe(true);
     }
   });
 

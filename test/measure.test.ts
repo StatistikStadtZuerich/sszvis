@@ -1,6 +1,6 @@
 import { select } from "d3";
 import { describe, expect, test, vi } from "vitest";
-import { measureDimensions, measureText } from "../src/measure";
+import { measureDimensions, measureText } from "../src/measure.js";
 
 describe("measure", () => {
   describe("measureDimensions", () => {

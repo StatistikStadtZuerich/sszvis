@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import fitTooltip from "../../src/annotation/fitTooltip.js";
 import tooltip from "../../src/annotation/tooltip.js";
 import tooltipAnchor from "../../src/annotation/tooltipAnchor.js";
-import { createHtmlLayer } from "../../src/createHtmlLayer";
-import { createSvgLayer } from "../../src/createSvgLayer";
-import "../../src/d3-selectgroup";
+import { createHtmlLayer } from "../../src/createHtmlLayer.js";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import "../../src/d3-selectgroup.js";
 
 type TestDatum = {
   id: string;

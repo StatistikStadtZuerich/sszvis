@@ -1,8 +1,8 @@
 import { select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import confidenceArea from "../../src/annotation/confidenceArea";
-import { createSvgLayer } from "../../src/createSvgLayer";
-import "../../src/d3-selectgroup";
+import confidenceArea from "../../src/annotation/confidenceArea.js";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import "../../src/d3-selectgroup.js";
 
 type TestDatum = {
   x: number;

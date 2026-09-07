@@ -58,8 +58,8 @@ import { defaultTransition } from "../transition.js";
  * a0/a1 can be replaced by a foreign value again by the index-based angle handover below.
  */
 export interface PieAngles {
-  a0?: number | null;
-  a1?: number | null;
+  a0?: number | null | undefined;
+  a1?: number | null | undefined;
   _a0?: number;
   _a1?: number;
 }

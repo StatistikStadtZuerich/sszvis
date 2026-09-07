@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { parseDate, parseNumber, parseYear } from "../src/parse";
+import { parseDate, parseNumber, parseYear } from "../src/parse.js";
 
 describe("parse", () => {
   describe("parseDate", () => {
@@ -69,7 +69,7 @@ describe("parse", () => {
     test("should parse numbers with whitespace", () => {
       expect(parseNumber("  42  ")).toBe(42);
       expect(
-        parseNumber(String.raw`	123
+        parseNumber(`	123
 `)
       ).toBe(123);
     });
@@ -78,7 +78,7 @@ describe("parse", () => {
       expect(parseNumber("")).toBeNaN();
       expect(parseNumber("   ")).toBeNaN();
       expect(
-        parseNumber(String.raw`	
+        parseNumber(`	
 `)
       ).toBeNaN();
     });

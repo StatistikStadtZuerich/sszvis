@@ -132,6 +132,7 @@ export function component<C extends Component = Component>(): C {
 }
 
 declare module "d3" {
+  // biome-ignore lint/correctness/noUnusedVariables: the type parameters must mirror d3's Selection signature for declaration merging to apply
   interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
     props<A>(): A extends ComponentProps ? A : ComponentProps;
   }

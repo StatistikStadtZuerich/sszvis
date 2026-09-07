@@ -1,9 +1,9 @@
 import { scaleBand, scaleLinear, scalePoint } from "d3";
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from "vitest";
-import move from "../../src/behavior/move";
-import { bounds } from "../../src/bounds";
-import { createSvgLayer } from "../../src/createSvgLayer";
-import "../../src/d3-selectgroup";
+import move from "../../src/behavior/move.js";
+import { bounds } from "../../src/bounds.js";
+import { createSvgLayer } from "../../src/createSvgLayer.js";
+import "../../src/d3-selectgroup.js";
 
 describe("behavior/move", () => {
   let container: HTMLDivElement;

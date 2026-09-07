@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { cascade } from "../src/cascade";
+import { cascade } from "../src/cascade.js";
 
 type DataItem = {
   city: string;

@@ -1,8 +1,8 @@
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from "vitest";
-import breadcrumb, { createBreadcrumbItems } from "../../src/annotation/breadcrumb";
-import { createHtmlLayer } from "../../src/createHtmlLayer";
-import "../../src/d3-selectdiv";
-import { prepareHierarchyData } from "../../src/layout/hierarchy";
+import breadcrumb, { createBreadcrumbItems } from "../../src/annotation/breadcrumb.js";
+import { createHtmlLayer } from "../../src/createHtmlLayer.js";
+import "../../src/d3-selectdiv.js";
+import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
 
 describe("annotation/breadcrumb", () => {
   let container: HTMLDivElement;

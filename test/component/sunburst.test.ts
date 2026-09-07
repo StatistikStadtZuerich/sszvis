@@ -23,10 +23,10 @@ type Row = { cat: string; sub: string; value: number };
  * hand-built nodes, which no exported type describes.
  */
 type Arc = {
-  data: { _tag?: string; key?: string };
+  data: { _tag?: string | undefined; key?: string | undefined };
   depth: number;
   parent: Arc | null;
-  value?: number;
+  value?: number | undefined;
   x0: number;
   x1: number;
   y0: number;

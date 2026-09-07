@@ -1,17 +1,17 @@
 import { max, sum } from "d3";
-import { type ExtendedOrdinalScale, scaleQual6, scaleQual12 } from "../color";
+import { type ExtendedOrdinalScale, scaleQual6, scaleQual12 } from "../color.js";
 import {
   DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT,
   type LegendOrientation,
   legendColorOrdinal,
   type OrdinalColorScaleComponent,
-} from "../legend/ordinalColorScale";
+} from "../legend/ordinalColorScale.js";
 import {
   type MeasurableElement,
   measureAxisLabel,
   measureDimensions,
   measureLegendLabel,
-} from "../measure";
+} from "../measure.js";
 
 export type ColorLegendLayoutOptions = {
   legendLabels: string[];
