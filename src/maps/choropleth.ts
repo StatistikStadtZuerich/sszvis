@@ -36,7 +36,8 @@
  *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
  *                                                    Defaults to a constant true, so nothing is textured unless it is set.
  * @property {String, Function} fill                  A string or function for the fill of the map entities. Default black.
- *                                                    An accessor is called with undefined for a feature no datum matched.
+ *                                                    A feature that matched no datum shows the missing value texture, so
+ *                                                    an accessor is never called with undefined.
  * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
  *                                                    mesh, for the border color of the map entities. Default white.
  * @property {Number, Function} strokeWidth           The width of the entity borders. Default 1.25.

@@ -134,6 +134,11 @@ describe("maps/choropleth", () => {
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__area"),
   ];
   const attrs = (node: Element, attr: string) => areas(node).map((a) => a.getAttribute(attr));
+  /**
+   * The base renderer names its missing-value pattern per layer, so a test can only assert the
+   * shape of the reference: the counter is global and drifts with the rest of the suite.
+   */
+  const missingPattern = /^url\(#missing-pattern-\d+\)$/;
   const borders = (node: Element) => [
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__border"),
   ];
@@ -229,8 +234,8 @@ describe("maps/choropleth", () => {
     });
 
     // NOTE: prepareMergedGeoData treats anything that is not an array as no data at all, so a
-    // layer rendered before its data arrives draws the map with every datum undefined instead of
-    // throwing.
+    // layer rendered before its data arrives draws the whole map textured as missing instead of
+    // throwing. The fill accessor is not called at all, since no feature matched a datum.
     test("renders the whole map with no data at all", () => {
       const collection = geoJson();
       const seen: unknown[] = [];
@@ -242,6 +247,7 @@ describe("maps/choropleth", () => {
             .width(130)
             .height(130)
             .withLake(false)
+            .transitionColor(false)
             .fill((d?: Datum) => {
               seen.push(d);
               return "#ff0000";
@@ -249,18 +255,24 @@ describe("maps/choropleth", () => {
         )
         .node() as SVGGElement;
       expect(areas(node)).toHaveLength(3);
-      expect(distinct(seen)).toEqual([undefined]);
+      expect(distinct(seen)).toEqual([]);
+      for (const fill of attrs(node, "fill")) expect(fill).toMatch(missingPattern);
     });
 
-    test("hands the fill accessor undefined for a feature with no datum", () => {
+    // A feature that matched no datum is textured as missing rather than painted with the ordinary
+    // fill, so the accessor is never handed undefined - a caller whose accessor dereferences its
+    // datum no longer crashes.
+    test("textures a feature with no datum instead of calling the fill accessor", () => {
       const seen: unknown[] = [];
-      render([{ geoId: "a", value: 1 }], (c) =>
-        c.fill((d?: Datum) => {
+      const node = render([{ geoId: "a", value: 1 }], (c) =>
+        c.transitionColor(false).fill((d?: Datum) => {
           seen.push(d);
           return "#ff0000";
         })
       );
-      expect(distinct(seen)).toEqual([{ geoId: "a", value: 1 }, undefined]);
+      expect(distinct(seen)).toEqual([{ geoId: "a", value: 1 }]);
+      expect(attrs(node, "fill")[1]).toMatch(missingPattern);
+      expect(attrs(node, "fill")[2]).toMatch(missingPattern);
     });
 
     // An interface has no implicit index signature, so it does not satisfy Record<string,
@@ -290,8 +302,10 @@ describe("maps/choropleth", () => {
             })
         )
         .node() as SVGGElement;
-      expect(attrs(node, "fill")).toEqual(["#0000ff", "#ff0000", "#0000ff"]);
-      expect(distinct(seen)).toEqual([undefined, { geoId: "b", value: 7 }]);
+      expect(attrs(node, "fill")[1]).toBe("#ff0000");
+      expect(attrs(node, "fill")[0]).toMatch(missingPattern);
+      expect(attrs(node, "fill")[2]).toMatch(missingPattern);
+      expect(distinct(seen)).toEqual([{ geoId: "b", value: 7 }]);
       expect(highlights(node)).toHaveLength(1);
     });
   });
@@ -383,7 +397,9 @@ describe("maps/choropleth", () => {
           .transitionColor(false)
           .defined((d?: Datum) => d?.value !== 2)
       );
-      expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
+      const fills = attrs(node, "fill");
+      expect([fills[0], fills[2]]).toEqual(["#ff0000", "#ff0000"]);
+      expect(fills[1]).toMatch(missingPattern);
     });
 
     test("delegates borderColor and strokeWidth to the mesh renderer", () => {
@@ -741,9 +757,12 @@ describe("maps/choropleth", () => {
         .datum([{ geoId: "a", value: 1 }])
         .call(map)
         .node() as SVGGElement;
-      // Each layer reflects its own data.
+      // Each layer reflects its own data, and each textures its unmatched features under a
+      // pattern id of its own.
       expect(attrs(one, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
-      expect(attrs(two, "fill")).toEqual(["#ff0000", "#0000ff", "#0000ff"]);
+      expect(attrs(two, "fill")[0]).toBe("#ff0000");
+      expect(attrs(two, "fill")[1]).toMatch(missingPattern);
+      expect(attrs(two, "fill")[2]).toMatch(missingPattern);
       // But both layers' areas are bound to the one dispatch.
       areas(one)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
       areas(two)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
