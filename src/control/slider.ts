@@ -255,11 +255,11 @@ export default function slider(): SliderComponent {
           .classed("sszvis-control-slider__handle", true)
           .attr("transform", (d) => translateString(halfPixel(alteredScale(d)), 0.5));
 
-        handle.append("text").classed("sszvis-control-slider--label", true);
-
         handle
           .selectAll<SVGTextElement, SliderValue>(".sszvis-control-slider--label")
           .data((d) => [d])
+          .join("text")
+          .classed("sszvis-control-slider--label", true)
           .text(props.label)
           .style("text-anchor", (d) =>
             fn.stringEqual(d, scaleDomain[0])
