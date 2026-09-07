@@ -4,7 +4,7 @@ import { createSvgLayer } from "../../src/createSvgLayer.js";
 import { component } from "../../src/d3-component.js";
 import "../../src/d3-selectgroup.js";
 import { swissMapPath, swissMapProjection } from "../../src/map/mapUtils.js";
-import choropleth from "../../src/maps/choropleth.js";
+import choropleth, { type AnchoredShape } from "../../src/maps/choropleth.js";
 
 type Datum = { geoId: string; value: number | null };
 
@@ -107,7 +107,8 @@ describe("maps/choropleth", () => {
    */
   const nextSize = () => 100 + ++size;
 
-  type Configure = (c: ReturnType<typeof choropleth>) => ReturnType<typeof choropleth>;
+  type Choropleth<T extends Record<string, unknown>> = ReturnType<typeof choropleth<T>>;
+  type Configure = (c: Choropleth<Datum>) => Choropleth<Datum>;
 
   /** Renders a choropleth over `data`, returning the layer group it drew into. */
   const render = (
@@ -118,7 +119,7 @@ describe("maps/choropleth", () => {
     const collection = options.collection ?? geoJson();
     const side = options.size ?? nextSize();
     const map = configure(
-      choropleth()
+      choropleth<Datum>()
         .features(collection)
         .borders(mesh())
         .lakeFeatures(lakeFeature())
@@ -199,7 +200,7 @@ describe("maps/choropleth", () => {
     test("matches data to features on geoId by default", () => {
       const seen: unknown[] = [];
       render(fullData, (c) =>
-        c.fill((d: Datum) => {
+        c.fill((d?: Datum) => {
           seen.push(d);
           return "#ff0000";
         })
@@ -210,7 +211,7 @@ describe("maps/choropleth", () => {
     test("matches on a custom keyName", () => {
       const collection = geoJson();
       const seen: unknown[] = [];
-      const map = choropleth()
+      const map = choropleth<{ kreis: string }>()
         .features(collection)
         .borders(mesh())
         .width(120)
@@ -235,7 +236,7 @@ describe("maps/choropleth", () => {
       const seen: unknown[] = [];
       const node = layer()
         .call(
-          choropleth()
+          choropleth<Datum>()
             .features(collection)
             .borders(mesh())
             .width(130)
@@ -317,7 +318,7 @@ describe("maps/choropleth", () => {
 
     test("matches the highlight data with the map's keyName", () => {
       const collection = geoJson();
-      const map = choropleth()
+      const map = choropleth<{ kreis: string }>()
         .features(collection)
         .borders(mesh())
         .width(140)
@@ -348,7 +349,7 @@ describe("maps/choropleth", () => {
         c
           .fill("#ff0000")
           .transitionColor(false)
-          .defined((d: Datum) => d.value !== 2)
+          .defined((d?: Datum) => d?.value !== 2)
       );
       expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
     });
@@ -360,10 +361,10 @@ describe("maps/choropleth", () => {
     });
 
     test("reads a delegated property back from its renderer", () => {
-      const map = choropleth().borderColor("#0000ff");
+      const map = choropleth<Datum>().borderColor("#0000ff");
       expect(map.borderColor()).toBe("#0000ff");
       expect(map.strokeWidth()).toBe(1.25);
-      expect(map.highlightStroke()("anything")).toBe("white");
+      expect(map.highlightStroke()(fullData[0])).toBe("white");
     });
 
     test("returns the component from a delegated setter, so it can be chained", () => {
@@ -384,16 +385,18 @@ describe("maps/choropleth", () => {
     /** A stand-in for anchoredCircles: records what choropleth hands it, and draws one marker. */
     const recordingShape = () => {
       const calls: { mergedData: unknown; mapPath: unknown }[] = [];
-      const shape = component()
-        .prop("mergedData")
-        .prop("mapPath")
-        .render(function (this: Element) {
-          const props = (this as Element & { __props__: Record<string, unknown> }).__props__;
-          calls.push({ mergedData: props.mergedData, mapPath: props.mapPath });
-          this.appendChild(
-            document.createElementNS("http://www.w3.org/2000/svg", "circle")
-          ).classList.add("anchored-marker");
-        });
+      // Configured statement by statement rather than in one chain: prop() and render() mutate
+      // and return the same object, but their declared return type is the base component, which
+      // would lose the anchored-shape properties choropleth requires of it.
+      const shape = component<AnchoredShape<Datum>>();
+      shape.prop("mergedData").prop("mapPath");
+      shape.render(function (this: Element) {
+        const props = (this as Element & { __props__: Record<string, unknown> }).__props__;
+        calls.push({ mergedData: props.mergedData, mapPath: props.mapPath });
+        this.appendChild(
+          document.createElementNS("http://www.w3.org/2000/svg", "circle")
+        ).classList.add("anchored-marker");
+      });
       return { shape, calls };
     };
 
@@ -472,15 +475,14 @@ describe("maps/choropleth", () => {
     });
 
     test("binds an anchored shape's own event targets, since it renders before the binding", () => {
-      const marked = component()
-        .prop("mergedData")
-        .prop("mapPath")
-        .render(function (this: Element) {
-          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          circle.setAttribute("data-event-target", "");
-          circle.classList.add("shape-target");
-          this.appendChild(circle);
-        });
+      const marked = component<AnchoredShape<Datum>>();
+      marked.prop("mergedData").prop("mapPath");
+      marked.render(function (this: Element) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("data-event-target", "");
+        circle.classList.add("shape-target");
+        this.appendChild(circle);
+      });
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
         c.anchoredShape(marked).on("click", (d: unknown) => seen.push(d))
@@ -608,14 +610,13 @@ describe("maps/choropleth", () => {
     test("leaves a previously rendered anchored shape in place when it is cleared", () => {
       const collection = geoJson();
       const target = layer("shape-toggle");
-      const shape = component()
-        .prop("mergedData")
-        .prop("mapPath")
-        .render(function (this: Element) {
-          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          circle.classList.add("anchored-marker");
-          this.appendChild(circle);
-        });
+      const shape = component<AnchoredShape<Datum>>();
+      shape.prop("mergedData").prop("mapPath");
+      shape.render(function (this: Element) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.classList.add("anchored-marker");
+        this.appendChild(circle);
+      });
       const map = choropleth()
         .features(collection)
         .borders(mesh())
@@ -694,7 +695,7 @@ describe("maps/choropleth", () => {
     // share one set of handlers, which is what the rebinding test above shows.
     test("draws two layers from one component instance, but shares their handlers", () => {
       const collection = geoJson();
-      const map = choropleth()
+      const map = choropleth<Datum>()
         .features(collection)
         .borders(mesh())
         .withLake(false)
