@@ -43,7 +43,7 @@ sszvis.app({
       state.categories = sszvis.set(data, cAcc);
       state.maxY = d3.max(data, yAcc);
       state.selection = [];
-      return (dispatch) => dispatch("resetDate");
+      return (dispatch) => dispatch("resetDate", []);
     }),
 
   // Actions
@@ -53,7 +53,7 @@ sszvis.app({
       // Find the most recent date in the data and set it as the selected date
       const mostRecentDate = d3.max(state.data, xAcc);
       return (dispatch) => {
-        dispatch("changeDate", mostRecentDate);
+        dispatch("changeDate", [null, mostRecentDate]);
       };
     },
 
