@@ -126,6 +126,42 @@ describe("control/select", () => {
       expect(focus).toHaveBeenCalled();
     });
 
+    test("should ignore a selection whose index no longer maps to a value", () => {
+      const change = vi.fn();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
+      const el = selectEl() as HTMLSelectElement;
+      // Drive the handler the way a shrunk list would: an option whose index no
+      // longer exists in `values`.
+      el.querySelectorAll("option")[2]?.setAttribute("value", "9");
+      el.value = "9";
+      el.dispatchEvent(new Event("change"));
+      expect(change).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalled();
+    });
+
+    test("should ignore an empty select value rather than reading it as index 0", () => {
+      const change = vi.fn();
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
+      const el = selectEl() as HTMLSelectElement;
+      el.querySelectorAll("option")[1]?.setAttribute("value", "");
+      el.value = "";
+      el.dispatchEvent(new Event("change"));
+      expect(change).not.toHaveBeenCalled();
+    });
+
+    test("should ignore a non-numeric option value", () => {
+      const change = vi.fn();
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
+      const el = selectEl() as HTMLSelectElement;
+      el.querySelectorAll("option")[1]?.setAttribute("value", "nope");
+      el.value = "nope";
+      el.dispatchEvent(new Event("change"));
+      expect(change).not.toHaveBeenCalled();
+    });
+
     test("should default to a no-op-ish handler that does not throw", () => {
       render(selectMenu().values(["A", "B"]).current("A"));
       const el = selectEl() as HTMLSelectElement;
