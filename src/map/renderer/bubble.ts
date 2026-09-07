@@ -150,17 +150,27 @@ export interface MapRendererBubbleComponent<T = unknown>
  * given collection, and weakly so a discarded collection is still collectable.
  */
 /**
- * The two halves of a d3 typename, "over.tooltip" being type "over" and name "tooltip". Either may
- * be empty: ".tooltip" carries a name alone, "over" a type alone.
+ * A d3 typename split into its two halves and put back together in one canonical form. "over.tip"
+ * is type "over" and name "tip"; either half may be empty, so ".tip" carries a name alone and
+ * "over" a type alone. d3 reads "over" and "over." as the same registration, which is why the two
+ * are stored under one key rather than as written.
  */
-function typeOf(typename: string): string {
-  const dot = typename.indexOf(".");
-  return dot < 0 ? typename : typename.slice(0, dot);
+interface Typename {
+  type: string;
+  name: string;
+  key: string;
 }
 
-function nameOf(typename: string): string {
+function parseTypename(typename: string): Typename {
   const dot = typename.indexOf(".");
-  return dot < 0 ? "" : typename.slice(dot + 1);
+  const type = dot < 0 ? typename : typename.slice(0, dot);
+  const name = dot < 0 ? "" : typename.slice(dot + 1);
+  return { type, name, key: `${type}.${name}` };
+}
+
+/** The name half of a canonical key, which is everything after its single separating dot. */
+function nameOfKey(key: string): string {
+  return key.slice(key.indexOf(".") + 1);
 }
 
 const anonymousKeys = new WeakMap<object, string>();
@@ -339,21 +349,24 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
     if (value !== event) return value;
 
     // A setter call, and d3 validated the typenames by returning the dispatch. It accepts a
-    // space-separated list of them, and a null handler removes rather than registers. The two
-    // remaining rules are d3's own, for a typename with no type: a null handler removes that name
-    // from every event type, and a non-null one is ignored.
+    // space-separated list of them, and a null handler removes rather than registers. The rest are
+    // d3's own rules, checked against it rather than read off its source: an empty or
+    // whitespace-only list does nothing at all, and for a typename carrying a name but no type a
+    // null handler removes that name from every event type while a non-null one is ignored.
     const [typenames, handler] = args;
-    for (const typename of String(typenames).trim().split(/\s+/)) {
-      const type = typeOf(typename);
+    const list = String(typenames).trim();
+    if (list === "") return anchoredCirclesComponent;
+
+    for (const typename of list.split(/\s+/)) {
+      const { type, name, key } = parseTypename(typename);
       if (handler == null) {
         if (type === "") {
-          const name = nameOf(typename);
-          for (const held of [...registered]) if (nameOf(held) === name) registered.delete(held);
+          for (const held of [...registered]) if (nameOfKey(held) === name) registered.delete(held);
         } else {
-          registered.delete(typename);
+          registered.delete(key);
         }
       } else if (type !== "") {
-        registered.add(typename);
+        registered.add(key);
       }
     }
     return anchoredCirclesComponent;
