@@ -33,6 +33,12 @@
  *                                   the notes below.
  *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
  *                                   CanvasPattern at runtime, which this contract deliberately excludes.
+ * @property {String} alt            An accessible description of what the raster shows. Default "", which
+ *                                   marks the canvas decorative so assistive technology skips it
+ *                                   deliberately. A non-empty value is written as an aria-label with
+ *                                   role="img", and as the canvas's fallback content. Named to match the
+ *                                   image renderer's alt, so the two non-SVG layers are labelled the same
+ *                                   way, though on a canvas it is not an HTML attribute.
  * @property {Number} opacity        The opacity of the canvas. Default 1; use a lower value to reveal the
  *                                   layers underneath. It is a style on the canvas, so it
  *                                   fades the whole layer rather than the individual cells, and 0 still draws
@@ -100,10 +106,11 @@
  * SVG-namespaced canvas, which has no getContext, so it throws - where the image renderer silently
  * appends an unrenderable img instead.
  *
- * Note: the canvas carries no role, no aria-label and no fallback content, and the component offers
- * no property for one, so a raster data layer is invisible to screen readers - the same gap as the
- * image renderer's unlabelled img, and unlike the SVG layers there is no per-element markup a
- * consumer could annotate instead.
+ * Note: the canvas is labelled through the alt property. In the four docs rasters the raster IS the
+ * data - the SVG layers over it are borders and annotations - so a description belongs on it; where
+ * a raster really is decoration, the empty default hides it from assistive technology on purpose
+ * rather than by accident. A canvas has no per-element markup a consumer could annotate instead,
+ * which is why the property has to exist here.
  *
  * Note: no transition is scheduled - a canvas cannot be transitioned by d3 anyway - so the raster
  * repaints in full on every render, one fillStyle write and one fillRect per datum. Unlike the base
@@ -145,6 +152,7 @@ type RasterProps<T> = {
   position: (datum: T) => Position | null;
   cellSide: number;
   fill: StoredRasterFill<T>;
+  alt: string;
   opacity: number;
 };
 
@@ -162,6 +170,8 @@ export interface MapRendererRasterComponent<T = unknown>
   cellSide(value: number): MapRendererRasterComponent<T>;
   fill(): StoredRasterFill<T> | undefined;
   fill<U = T>(value: RasterFill<U>): MapRendererRasterComponent<T>;
+  alt(): string;
+  alt(value: string): MapRendererRasterComponent<T>;
   opacity(): number;
   opacity(value: number): MapRendererRasterComponent<T>;
 }
@@ -254,6 +264,8 @@ export default function <T = unknown>(): MapRendererRasterComponent<T> {
     .prop("cellSide")
     .cellSide(2)
     .prop("fill", fn.functor)
+    .prop("alt")
+    .alt("")
     .prop("opacity")
     .opacity(1)
     .render(function (this: Element, data: T[]) {
@@ -280,6 +292,15 @@ export default function <T = unknown>(): MapRendererRasterComponent<T> {
         .style("width", `${width}px`)
         .style("height", `${height}px`)
         .style("opacity", props.opacity);
+
+      // An empty alt marks the layer decorative, so it is skipped deliberately rather than by
+      // accident; a description is exposed both to assistive technology and as fallback content.
+      const described = props.alt !== "";
+      canvas
+        .attr("role", described ? "img" : null)
+        .attr("aria-label", described ? props.alt : null)
+        .attr("aria-hidden", described ? null : "true")
+        .text(props.alt);
 
       const ctx = context2d(canvas.node());
 
