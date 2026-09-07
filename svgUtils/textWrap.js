@@ -33,7 +33,11 @@ selection, width, paddingRightLeft, paddingTopBottom) {
   selection.each(function () {
     var _text$attr;
     const text = select(this);
-    const words = text.text().split(/[\t\n\v\f\r ]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
+    const words = text.text().split(/[\t\n\v\f\r ]+/)
+    // Splitting text with leading or trailing whitespace yields empty tokens, which
+    // would be rejoined as spaces and padded into the rendered line and its measured
+    // width. Only these tokens are dropped; the words themselves are untouched.
+    .filter(word => word !== "").reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
     let line = [];
     let lineNumber = 0;
     const lineHeight = 1.1; //Em

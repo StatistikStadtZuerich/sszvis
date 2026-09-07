@@ -1146,17 +1146,19 @@
      *
      * Scope: only the first translate instruction of a string is processed, and a
      * translate is expected to carry one or two components. Other instructions
-     * (rotate, scale, …) are passed through untouched.
+     * (rotate, scale, …) are passed through untouched. A translate carrying more
+     * than two components is not valid SVG; every component is floored and
+     * re-emitted, which is undefined-input behaviour rather than a guarantee.
      *
-     * Known defects are pinned in test/svgUtils/crisp.test.ts.
+     * Negative coordinates and coordinates padded with spaces are handled.
      *
      * @param  {string} transformStr A valid SVG transform string
      * @return {string}              An SVG transform string with rounded values
      */
     const roundTransformString = transformStr => {
       const roundNumber = compose(Math.floor, Number);
-      return transformStr.replace(/(translate\()\s*([\d ,.]+)\s*(\))/i, (_, left, vecStr, right) => {
-        const roundVec = vecStr.replace(",", " ").replace(/\s+/, " ").split(" ").map(roundNumber).join(",");
+      return transformStr.replace(/(translate\()\s*([\d ,.-]+?)\s*(\))/i, (_, left, vecStr, right) => {
+        const roundVec = vecStr.split(/[\s,]+/).map(roundNumber).join(",");
         return "".concat(left).concat(roundVec).concat(right);
       });
     };
@@ -1173,9 +1175,8 @@
      * negative coordinate yields the distance above the enclosing pixel rather
      * than a negative offset: -12.3 shifts by 0.7, not -0.3.
      *
-     * A translate carrying only an x component yields a y shift of 0.
-     *
-     * Known defects are pinned in test/svgUtils/crisp.test.ts.
+     * A translate carrying only an x component yields a y shift of 0. A transform
+     * with no translate instruction, including the empty string, reports [0, 0].
      *
      * @param  {string} transformStr A valid SVG transform string containing a
      *                               translate instruction
@@ -1183,10 +1184,9 @@
      */
     const transformTranslateSubpixelShift = transformStr => {
       const roundNumber = compose(Math.floor, Number);
-      const m = transformStr.match(/(translate\()\s*([\d ,.-]+)\s*(\))/i);
-      // A transform string without a translate instruction throws a TypeError here. This
-      // is preserved from the original implementation; see test/svgUtils/crisp.test.ts.
-      const vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
+      const m = transformStr.match(/(translate\()\s*([\d ,.-]+?)\s*(\))/i);
+      if (!m) return [0, 0];
+      const vec = m[2].split(/[\s,]+/).map(Number);
       if (vec.length === 1) vec.push(0);
       const vecRound = vec.map(roundNumber);
       return [vec[0] - vecRound[0], vec[1] - vecRound[1]];
@@ -1255,11 +1255,11 @@
     function vectorToTranslateString(vec) {
       return translateString.apply(null, vec);
     }
-    function tooltipAnchor () {
+    function tooltipAnchor() {
       return component().prop("position").position(functor([0, 0])).prop("debug").render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-        const anchor = selection.selectAll("[data-tooltip-anchor]").data(data).join("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("visibility", "none").attr("data-tooltip-anchor", "");
+        const anchor = selection.selectAll("[data-tooltip-anchor]").data(data).join("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("data-tooltip-anchor", "");
         // Update
         anchor.attr("transform", compose(vectorToTranslateString, props.position));
         // Visible anchor if debug is true
@@ -3443,7 +3443,11 @@
       selection.each(function () {
         var _text$attr;
         const text = d3.select(this);
-        const words = text.text().split(/[\t\n\v\f\r ]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
+        const words = text.text().split(/[\t\n\v\f\r ]+/)
+        // Splitting text with leading or trailing whitespace yields empty tokens, which
+        // would be rejoined as spaces and padded into the rendered line and its measured
+        // width. Only these tokens are dropped; the words themselves are untouched.
+        .filter(word => word !== "").reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
         let line = [];
         let lineNumber = 0;
         const lineHeight = 1.1; //Em
@@ -3852,8 +3856,11 @@
       for (let i = step, l = domain.length; i < l - 1; i += step) {
         if (domain[i] !== undefined) values.push(domain[i]);
       }
-      // include the last value
-      if (domain[domain.length - 1] !== undefined) values.push(domain[domain.length - 1]);
+      // include the last value, unless it is the first one again — a single-element domain
+      // would otherwise render two identical, overlapping ticks
+      if (domain.length > 1 && domain[domain.length - 1] !== undefined) {
+        values.push(domain[domain.length - 1]);
+      }
       this.tickValues(values);
       return count;
     };

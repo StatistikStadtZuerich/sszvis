@@ -50,11 +50,11 @@ import translateString from '../svgUtils/translateString.js';
 function vectorToTranslateString(vec) {
   return translateString.apply(null, vec);
 }
-function tooltipAnchor () {
+function tooltipAnchor() {
   return component().prop("position").position(functor([0, 0])).prop("debug").render(function (data) {
     const selection = select(this);
     const props = selection.props();
-    const anchor = selection.selectAll("[data-tooltip-anchor]").data(data).join("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("visibility", "none").attr("data-tooltip-anchor", "");
+    const anchor = selection.selectAll("[data-tooltip-anchor]").data(data).join("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("data-tooltip-anchor", "");
     // Update
     anchor.attr("transform", compose(vectorToTranslateString, props.position));
     // Visible anchor if debug is true

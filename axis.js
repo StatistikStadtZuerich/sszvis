@@ -371,8 +371,11 @@ const setOrdinalTicks = function (count) {
   for (let i = step, l = domain.length; i < l - 1; i += step) {
     if (domain[i] !== undefined) values.push(domain[i]);
   }
-  // include the last value
-  if (domain[domain.length - 1] !== undefined) values.push(domain[domain.length - 1]);
+  // include the last value, unless it is the first one again — a single-element domain
+  // would otherwise render two identical, overlapping ticks
+  if (domain.length > 1 && domain[domain.length - 1] !== undefined) {
+    values.push(domain[domain.length - 1]);
+  }
   this.tickValues(values);
   return count;
 };

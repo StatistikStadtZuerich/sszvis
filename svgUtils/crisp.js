@@ -46,17 +46,19 @@ const halfPixel = pos => Math.floor(pos) + 0.5;
  *
  * Scope: only the first translate instruction of a string is processed, and a
  * translate is expected to carry one or two components. Other instructions
- * (rotate, scale, …) are passed through untouched.
+ * (rotate, scale, …) are passed through untouched. A translate carrying more
+ * than two components is not valid SVG; every component is floored and
+ * re-emitted, which is undefined-input behaviour rather than a guarantee.
  *
- * Known defects are pinned in test/svgUtils/crisp.test.ts.
+ * Negative coordinates and coordinates padded with spaces are handled.
  *
  * @param  {string} transformStr A valid SVG transform string
  * @return {string}              An SVG transform string with rounded values
  */
 const roundTransformString = transformStr => {
   const roundNumber = compose(Math.floor, Number);
-  return transformStr.replace(/(translate\()\s*([\d ,.]+)\s*(\))/i, (_, left, vecStr, right) => {
-    const roundVec = vecStr.replace(",", " ").replace(/\s+/, " ").split(" ").map(roundNumber).join(",");
+  return transformStr.replace(/(translate\()\s*([\d ,.-]+?)\s*(\))/i, (_, left, vecStr, right) => {
+    const roundVec = vecStr.split(/[\s,]+/).map(roundNumber).join(",");
     return "".concat(left).concat(roundVec).concat(right);
   });
 };
@@ -73,9 +75,8 @@ const roundTransformString = transformStr => {
  * negative coordinate yields the distance above the enclosing pixel rather
  * than a negative offset: -12.3 shifts by 0.7, not -0.3.
  *
- * A translate carrying only an x component yields a y shift of 0.
- *
- * Known defects are pinned in test/svgUtils/crisp.test.ts.
+ * A translate carrying only an x component yields a y shift of 0. A transform
+ * with no translate instruction, including the empty string, reports [0, 0].
  *
  * @param  {string} transformStr A valid SVG transform string containing a
  *                               translate instruction
@@ -83,10 +84,9 @@ const roundTransformString = transformStr => {
  */
 const transformTranslateSubpixelShift = transformStr => {
   const roundNumber = compose(Math.floor, Number);
-  const m = transformStr.match(/(translate\()\s*([\d ,.-]+)\s*(\))/i);
-  // A transform string without a translate instruction throws a TypeError here. This
-  // is preserved from the original implementation; see test/svgUtils/crisp.test.ts.
-  const vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
+  const m = transformStr.match(/(translate\()\s*([\d ,.-]+?)\s*(\))/i);
+  if (!m) return [0, 0];
+  const vec = m[2].split(/[\s,]+/).map(Number);
   if (vec.length === 1) vec.push(0);
   const vecRound = vec.map(roundNumber);
   return [vec[0] - vecRound[0], vec[1] - vecRound[1]];

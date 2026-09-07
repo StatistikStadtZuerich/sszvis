@@ -46,6 +46,6 @@ interface TooltipAnchorComponent<T = unknown> extends ComponentBuilder<TooltipAn
     position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
     debug(value?: boolean): TooltipAnchorComponent<T>;
 }
-export default function <T = unknown>(): TooltipAnchorComponent<T>;
+export default function tooltipAnchor<T = unknown>(): TooltipAnchorComponent<T>;
 export {};
 //# sourceMappingURL=tooltipAnchor.d.ts.map

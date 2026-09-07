@@ -44,9 +44,11 @@ export declare const halfPixel: (pos: number) => number;
  *
  * Scope: only the first translate instruction of a string is processed, and a
  * translate is expected to carry one or two components. Other instructions
- * (rotate, scale, …) are passed through untouched.
+ * (rotate, scale, …) are passed through untouched. A translate carrying more
+ * than two components is not valid SVG; every component is floored and
+ * re-emitted, which is undefined-input behaviour rather than a guarantee.
  *
- * Known defects are pinned in test/svgUtils/crisp.test.ts.
+ * Negative coordinates and coordinates padded with spaces are handled.
  *
  * @param  {string} transformStr A valid SVG transform string
  * @return {string}              An SVG transform string with rounded values
@@ -65,9 +67,8 @@ export declare const roundTransformString: (transformStr: string) => string;
  * negative coordinate yields the distance above the enclosing pixel rather
  * than a negative offset: -12.3 shifts by 0.7, not -0.3.
  *
- * A translate carrying only an x component yields a y shift of 0.
- *
- * Known defects are pinned in test/svgUtils/crisp.test.ts.
+ * A translate carrying only an x component yields a y shift of 0. A transform
+ * with no translate instruction, including the empty string, reports [0, 0].
  *
  * @param  {string} transformStr A valid SVG transform string containing a
  *                               translate instruction
