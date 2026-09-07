@@ -510,66 +510,97 @@ describe("component/line", () => {
       expect(ds(node)).toEqual(["M-10,-5L0.5,12.25"]);
     });
 
-    describe("known quirks", () => {
-      test("omitting y throws an unhelpful TypeError", () => {
-        // BUG: the default defined calls props.y, so leaving y unset fails with a bare
-        // "props.y is not a function" rather than naming the missing property. Other parts
-        // of the library log a readable message for a missing required prop - see
-        // src/legend/binnedColorScale.ts.
-        expect(() => render(line().transition(false).x(0), oneLine)).toThrow(TypeError);
-      });
+    test("should name the component and the property when y is not configured", () => {
+      expect(() => render(line().transition(false).x(0), oneLine)).toThrow(
+        "[line] the y property is required"
+      );
+    });
 
-      test("omitting x draws nothing instead of throwing", () => {
-        // BUG: the two required properties still fail in two different ways. A missing x
-        // resolves to undefined for every point, which the guard treats as missing, so no
-        // point is drawn and the path element is left empty. Better than the NaN path this
-        // produced before both dimensions were guarded, but it is still silent - compare
-        // the TypeError a missing y throws.
-        const node = render(
+    test("should name the component and the property when x is not configured", () => {
+      // Both required properties now fail the same way. A missing x used to resolve to
+      // undefined for every point, which the guard treated as missing, so the path element
+      // was left empty and the line simply vanished with a clean console.
+      expect(() =>
+        render(
           line()
             .transition(false)
             .y((d: Point) => d.y),
+          oneLine
+        )
+      ).toThrow("[line] the x property is required");
+    });
+
+    test("should report a missing property before any path is created", () => {
+      const g = group("line-missing-prop");
+      expect(() => g.datum(oneLine).call(line().transition(false).x(0) as never)).toThrow();
+      expect(paths(g.node() as SVGGElement)).toEqual([]);
+    });
+
+    test("should accept a constant for either dimension", () => {
+      // bar wraps every accessor in fn.functor and dot wraps all five of its properties, so
+      // a constant is accepted where an accessor is; line now does the same. A constant y
+      // used to throw, because the default defined predicate called it, while a constant x
+      // passed straight through to d3.line.
+      const constantX = render(
+        line()
+          .transition(false)
+          .x(5)
+          .y((d: Point) => d.y),
+        [[{ y: 1 }, { y: 2 }]]
+      );
+      expect(ds(constantX)).toEqual(["M5,1L5,2"]);
+
+      const constantY = render(line().transition(false).x(5).y(7), [[{}, {}]]);
+      expect(ds(constantY)).toEqual(["M5,7L5,7"]);
+
+      expect(ds(render(line().transition(false).x(3).y(4), [[{}]]))).toEqual(["M3,4Z"]);
+    });
+
+    test("should let an explicitly set defined predicate override the default", () => {
+      // The escape hatch callers use today: defined replaces the default guard rather than
+      // composing with it, so a predicate that returns true keeps points the default would
+      // have dropped - and one that returns false drops points it would have kept.
+      const kept = render(
+        line()
+          .transition(false)
+          .x((d: Point) => d.x)
+          .y(() => Number.NaN)
+          .defined(() => true),
+        [
           [
-            [
-              { x: 0, y: 0 },
-              { x: 10, y: 20 },
-            ],
-          ]
-        );
-        expect(ds(node)).toEqual([null]);
-      });
+            { x: 0, y: 0 },
+            { x: 10, y: 0 },
+          ],
+        ]
+      );
+      expect(ds(kept)).toEqual(["M0,NaNL10,NaN"]);
 
-      test("y must be a function, though x may be a constant", () => {
-        // BUG: bar wraps every accessor in fn.functor and dot wraps x and y, so a constant
-        // is accepted where an accessor is. line wraps nothing, and the default defined
-        // predicate calls props.y - so a constant y throws where a constant x is fine.
-        // The asymmetry is undocumented and there is no reason for it.
-        // @ts-expect-error - y is modelled as function-only, which is what this asserts
-        expect(() => render(line().transition(false).x(5).y(7), [[{}, {}]])).toThrow(TypeError);
+      const dropped = render(
+        line()
+          .transition(false)
+          .x((d: Point) => d.x)
+          .y((d: Point) => d.y)
+          .defined(() => false),
+        oneLine
+      );
+      expect(ds(dropped)).toEqual([null]);
+    });
 
-        // x is never touched by the default predicate, so d3.line just wraps the constant.
-        const constantX = render(
-          line()
-            .transition(false)
-            .x(5)
-            .y((d: Point) => d.y),
-          [[{ y: 1 }, { y: 2 }]]
-        );
-        expect(ds(constantX)).toEqual(["M5,1L5,2"]);
+    test("should read back an unset required property as undefined", () => {
+      // x and y have no default - required() only runs at render - so the getters return
+      // undefined until they are set, which is what their types now say.
+      const component = line();
+      expect(component.x()).toBeUndefined();
+      expect(component.y()).toBeUndefined();
+    });
 
-        // Setting defined explicitly steps around the predicate, and a constant y works
-        // too - which shows the limitation is the default predicate, not d3.line.
-        const node = render(
-          line()
-            .transition(false)
-            .x(5)
-            // @ts-expect-error - as above, a constant y is deliberately not in the interface
-            .y(7)
-            .defined(() => true),
-          [[{}, {}]]
-        );
-        expect(ds(node)).toEqual(["M5,7L5,7"]);
-      });
+    test("should read back x and y as functions, whatever they were set to", () => {
+      const component = line()
+        .x(5)
+        .y((d: Point) => d.y);
+      expect(typeof component.x()).toBe("function");
+      expect(component.x()?.()).toBe(5);
+      expect(typeof component.y()).toBe("function");
     });
   });
 
