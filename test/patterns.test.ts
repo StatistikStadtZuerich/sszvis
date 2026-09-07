@@ -152,6 +152,47 @@ describe("patterns", () => {
     });
   });
 
+  describe("idempotency", () => {
+    test("heatTableMissingValuePattern applied twice leaves one copy", () => {
+      heatTableMissingValuePattern(select(pattern));
+      heatTableMissingValuePattern(select(pattern));
+      expect(pattern.querySelectorAll("rect")).toHaveLength(1);
+      expect(pattern.querySelectorAll("line")).toHaveLength(2);
+    });
+
+    test("mapMissingValuePattern applied twice leaves one copy", () => {
+      mapMissingValuePattern(select(pattern));
+      mapMissingValuePattern(select(pattern));
+      expect(pattern.querySelectorAll("rect")).toHaveLength(1);
+      expect(pattern.querySelectorAll("line")).toHaveLength(4);
+    });
+
+    test("mapLakePattern applied twice leaves one copy", () => {
+      mapLakePattern(select(pattern));
+      mapLakePattern(select(pattern));
+      expect(pattern.querySelectorAll("rect")).toHaveLength(1);
+      expect(pattern.querySelectorAll("line")).toHaveLength(2);
+    });
+
+    test("mapLakeFadeGradient applied twice leaves two stops", () => {
+      mapLakeFadeGradient(select(gradient));
+      mapLakeFadeGradient(select(gradient));
+      expect(gradient.querySelectorAll("stop")).toHaveLength(2);
+    });
+
+    test("mapLakeGradientMask applied twice leaves one rect", () => {
+      mapLakeGradientMask(select(mask));
+      mapLakeGradientMask(select(mask));
+      expect(mask.querySelectorAll("rect")).toHaveLength(1);
+    });
+
+    test("dataAreaPattern applied twice leaves one copy", () => {
+      dataAreaPattern(select(pattern));
+      dataAreaPattern(select(pattern));
+      expect(pattern.querySelectorAll("line")).toHaveLength(2);
+    });
+  });
+
   describe("dataAreaPattern", () => {
     test("should set pattern dimensions", () => {
       dataAreaPattern(select(pattern));

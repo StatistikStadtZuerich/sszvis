@@ -6,6 +6,11 @@
  * This module contains svg patterns and pattern helper functions which are used
  * to render important textures for various other components.
  *
+ * Every helper here is idempotent: the contents are data-joined rather than appended, so calling a
+ * helper again on the same element updates that element's contents in place instead of adding a
+ * second copy. Map renderers re-derive their definition selection on every render and `call` these
+ * helpers unconditionally, so appending would grow the definition without bound.
+ *
  * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
  * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
  * @method  mapLakePattern                  The pattern for Lake Zurich in the map component. Used by map.js internally
@@ -18,6 +23,24 @@
  */
 
 import type { BaseType, Selection } from "d3";
+
+/** The default id `mapLakeFadeGradient` defines and `mapLakeGradientMask` references. */
+export const LAKE_FADE_GRADIENT_ID = "lake-fade-gradient";
+
+/** One line of a tile pattern, in the pattern's own content units. */
+interface PatternLine {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+/** One stop of the lake fade gradient. */
+interface GradientStop {
+  offset: number;
+  opacity: number;
+}
+
 /**
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements
@@ -31,6 +54,11 @@ export const heatTableMissingValuePattern = <D, P extends BaseType, PD>(
     cross1 = 0.35,
     cross2 = 0.65;
 
+  const lines: PatternLine[] = [
+    { x1: cross1, y1: cross1, x2: cross2, y2: cross2 },
+    { x1: cross2, y1: cross1, x2: cross1, y2: cross2 },
+  ];
+
   selection
     .attr("patternUnits", "objectBoundingBox")
     .attr("patternContentUnits", "objectBoundingBox")
@@ -40,7 +68,9 @@ export const heatTableMissingValuePattern = <D, P extends BaseType, PD>(
     .attr("height", 1);
 
   selection
-    .append("rect")
+    .selectAll<SVGRectElement, number>("rect")
+    .data([0])
+    .join("rect")
     .attr("x", 0)
     .attr("y", 0)
     .attr("width", 1)
@@ -48,20 +78,13 @@ export const heatTableMissingValuePattern = <D, P extends BaseType, PD>(
     .attr("fill", rectFill);
 
   selection
-    .append("line")
-    .attr("x1", cross1)
-    .attr("y1", cross1)
-    .attr("x2", cross2)
-    .attr("y2", cross2)
-    .attr("stroke-width", crossStrokeWidth)
-    .attr("stroke", crossStroke);
-
-  selection
-    .append("line")
-    .attr("x1", cross2)
-    .attr("y1", cross1)
-    .attr("x2", cross1)
-    .attr("y2", cross2)
+    .selectAll<SVGLineElement, PatternLine>("line")
+    .data(lines)
+    .join("line")
+    .attr("x1", (d) => d.x1)
+    .attr("y1", (d) => d.y1)
+    .attr("x2", (d) => d.x2)
+    .attr("y2", (d) => d.y2)
     .attr("stroke-width", crossStrokeWidth)
     .attr("stroke", crossStroke);
 };
@@ -78,6 +101,13 @@ export const mapMissingValuePattern = <D, P extends BaseType, PD>(
     fillColor = "#FAFAFA",
     lineStroke = "#CCCCCC";
 
+  const lines: PatternLine[] = [
+    { x1: 1, y1: 10, x2: 5, y2: 14 },
+    { x1: 5, y1: 10, x2: 1, y2: 14 },
+    { x1: 8, y1: 3, x2: 12, y2: 7 },
+    { x1: 12, y1: 3, x2: 8, y2: 7 },
+  ];
+
   selection
     .attr("patternUnits", "userSpaceOnUse")
     .attr("patternContentUnits", "userSpaceOnUse")
@@ -87,7 +117,9 @@ export const mapMissingValuePattern = <D, P extends BaseType, PD>(
     .attr("height", pHeight);
 
   selection
-    .append("rect")
+    .selectAll<SVGRectElement, number>("rect")
+    .data([0])
+    .join("rect")
     .attr("x", 0)
     .attr("y", 0)
     .attr("width", pWidth)
@@ -95,35 +127,13 @@ export const mapMissingValuePattern = <D, P extends BaseType, PD>(
     .attr("fill", fillColor);
 
   selection
-    .append("line")
-    .attr("x1", 1)
-    .attr("y1", 10)
-    .attr("x2", 5)
-    .attr("y2", 14)
-    .attr("stroke", lineStroke);
-
-  selection
-    .append("line")
-    .attr("x1", 5)
-    .attr("y1", 10)
-    .attr("x2", 1)
-    .attr("y2", 14)
-    .attr("stroke", lineStroke);
-
-  selection
-    .append("line")
-    .attr("x1", 8)
-    .attr("y1", 3)
-    .attr("x2", 12)
-    .attr("y2", 7)
-    .attr("stroke", lineStroke);
-
-  selection
-    .append("line")
-    .attr("x1", 12)
-    .attr("y1", 3)
-    .attr("x2", 8)
-    .attr("y2", 7)
+    .selectAll<SVGLineElement, PatternLine>("line")
+    .data(lines)
+    .join("line")
+    .attr("x1", (d) => d.x1)
+    .attr("y1", (d) => d.y1)
+    .attr("x2", (d) => d.x2)
+    .attr("y2", (d) => d.y2)
     .attr("stroke", lineStroke);
 };
 
@@ -138,6 +148,11 @@ export const mapLakePattern = <D, P extends BaseType, PD>(
   const pHeight = 6;
   const offset = 0.5;
 
+  const lines: PatternLine[] = [
+    { x1: 0, y1: pHeight * offset, x2: pWidth * offset, y2: 0 },
+    { x1: pWidth * offset, y1: pHeight, x2: pWidth, y2: pHeight * offset },
+  ];
+
   selection
     .attr("patternUnits", "userSpaceOnUse")
     .attr("patternContentUnits", "userSpaceOnUse")
@@ -147,7 +162,9 @@ export const mapLakePattern = <D, P extends BaseType, PD>(
     .attr("height", pHeight);
 
   selection
-    .append("rect")
+    .selectAll<SVGRectElement, number>("rect")
+    .data([0])
+    .join("rect")
     .attr("x", 0)
     .attr("y", 0)
     .attr("width", pWidth)
@@ -155,20 +172,13 @@ export const mapLakePattern = <D, P extends BaseType, PD>(
     .attr("fill", "#fff");
 
   selection
-    .append("line")
-    .attr("x1", 0)
-    .attr("y1", pHeight * offset)
-    .attr("x2", pWidth * offset)
-    .attr("y2", 0)
-    .attr("stroke", "#ddd")
-    .attr("stroke-linecap", "square");
-
-  selection
-    .append("line")
-    .attr("x1", pWidth * offset)
-    .attr("y1", pHeight)
-    .attr("x2", pWidth)
-    .attr("y2", pHeight * offset)
+    .selectAll<SVGLineElement, PatternLine>("line")
+    .data(lines)
+    .join("line")
+    .attr("x1", (d) => d.x1)
+    .attr("y1", (d) => d.y1)
+    .attr("x2", (d) => d.x2)
+    .attr("y2", (d) => d.y2)
     .attr("stroke", "#ddd")
     .attr("stroke-linecap", "square");
 };
@@ -180,16 +190,25 @@ export const mapLakePattern = <D, P extends BaseType, PD>(
 export const mapLakeFadeGradient = <D, P extends BaseType, PD>(
   selection: Selection<SVGLinearGradientElement, D, P, PD>
 ): void => {
+  const stops: GradientStop[] = [
+    { offset: 0.74, opacity: 1 },
+    { offset: 0.97, opacity: 0 },
+  ];
+
   selection
     .attr("x1", 0)
     .attr("y1", 0)
     .attr("x2", 0.55)
     .attr("y2", 1)
-    .attr("id", "lake-fade-gradient");
+    .attr("id", LAKE_FADE_GRADIENT_ID);
 
-  selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
-
-  selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
+  selection
+    .selectAll<SVGStopElement, GradientStop>("stop")
+    .data(stops)
+    .join("stop")
+    .attr("offset", (d) => d.offset)
+    .attr("stop-color", "white")
+    .attr("stop-opacity", (d) => d.opacity);
 };
 
 /**
@@ -202,8 +221,10 @@ export const mapLakeGradientMask = <D, P extends BaseType, PD>(
   selection.attr("maskContentUnits", "objectBoundingBox");
 
   selection
-    .append("rect")
-    .attr("fill", "url(#lake-fade-gradient)")
+    .selectAll<SVGRectElement, number>("rect")
+    .data([0])
+    .join("rect")
+    .attr("fill", `url(#${LAKE_FADE_GRADIENT_ID})`)
     .attr("width", 1)
     .attr("height", 1);
 };
@@ -219,6 +240,11 @@ export const dataAreaPattern = <D, P extends BaseType, PD>(
   const pHeight = 6;
   const offset = 0.5;
 
+  const lines: PatternLine[] = [
+    { x1: 0, y1: pHeight * offset, x2: pWidth * offset, y2: 0 },
+    { x1: pWidth * offset, y1: pHeight, x2: pWidth, y2: pHeight * offset },
+  ];
+
   selection
     .attr("patternUnits", "userSpaceOnUse")
     .attr("patternContentUnits", "userSpaceOnUse")
@@ -228,20 +254,13 @@ export const dataAreaPattern = <D, P extends BaseType, PD>(
     .attr("height", pHeight);
 
   selection
-    .append("line")
-    .attr("x1", 0)
-    .attr("y1", pHeight * offset)
-    .attr("x2", pWidth * offset)
-    .attr("y2", 0)
-    .attr("stroke", "#e6e6e6")
-    .attr("stroke-width", 1.1);
-
-  selection
-    .append("line")
-    .attr("x1", pWidth * offset)
-    .attr("y1", pHeight)
-    .attr("x2", pWidth)
-    .attr("y2", pHeight * offset)
+    .selectAll<SVGLineElement, PatternLine>("line")
+    .data(lines)
+    .join("line")
+    .attr("x1", (d) => d.x1)
+    .attr("y1", (d) => d.y1)
+    .attr("x2", (d) => d.x2)
+    .attr("y2", (d) => d.y2)
     .attr("stroke", "#e6e6e6")
     .attr("stroke-width", 1.1);
 };
