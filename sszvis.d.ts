@@ -291,7 +291,7 @@ interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbCo
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$s<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$q<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -323,7 +323,7 @@ interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$r<T = unknown>(): CircleComponent<T>;
+declare function export_default$p<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -363,7 +363,7 @@ interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<Confiden
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$q<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function export_default$o<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -403,7 +403,7 @@ interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<Confidenc
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$p<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$n<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -429,7 +429,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$o<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$m<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -468,7 +468,7 @@ interface LineComponent$1<T = unknown> extends ComponentBuilder<LineComponent$1<
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent$1<T>;
 }
-declare function export_default$n<T = unknown>(): LineComponent$1<T>;
+declare function export_default$l<T = unknown>(): LineComponent$1<T>;
 
 /**
  * Range Flag annotation
@@ -494,7 +494,7 @@ interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComp
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$m<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$k<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -531,7 +531,7 @@ interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerCo
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$l<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$j<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -565,7 +565,7 @@ interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComp
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$k<T = unknown>(): RectangleComponent<T>;
+declare function export_default$i<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -670,7 +670,7 @@ interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponen
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$j<T = unknown>(): TooltipComponent<T>;
+declare function export_default$h<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -1046,7 +1046,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBui
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$i<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$g<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -1096,7 +1096,7 @@ interface PanningComponent extends ComponentBuilder<PanningComponent> {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$h(): PanningComponent;
+declare function export_default$f(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -1158,7 +1158,7 @@ interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponen
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default$g<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$e<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -1644,7 +1644,7 @@ interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent<T>> {
     transition(): boolean;
     transition(enabled: boolean): BarComponent<T>;
 }
-declare function export_default$f<T = unknown>(): BarComponent<T>;
+declare function export_default$d<T = unknown>(): BarComponent<T>;
 
 /**
  * Dot component
@@ -1755,7 +1755,7 @@ interface DotComponent<T = unknown> extends ComponentBuilder<DotComponent<T>> {
     transition(): boolean;
     transition(enabled: boolean): DotComponent<T>;
 }
-declare function export_default$e<T = unknown>(): DotComponent<T>;
+declare function export_default$c<T = unknown>(): DotComponent<T>;
 
 /**
  * Grouped Bars component
@@ -1952,7 +1952,7 @@ interface LineComponent<P = unknown, L = unknown> extends ComponentBuilder<LineC
     transition(): boolean;
     transition(enabled: boolean): LineComponent<P, L>;
 }
-declare function export_default$d<P = unknown, L = unknown>(): LineComponent<P, L>;
+declare function export_default$b<P = unknown, L = unknown>(): LineComponent<P, L>;
 
 /**
  * Stacked Bar components
@@ -2307,7 +2307,7 @@ interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> 
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$c<T = unknown>(): PackComponent<T>;
+declare function export_default$a<T = unknown>(): PackComponent<T>;
 
 /**
  * Pie component
@@ -2536,7 +2536,7 @@ interface PyramidComponent<T = unknown, D = unknown> extends ComponentBuilder<Py
     rightRefAccessor(): SideAccessor$1<T, D> | undefined;
     rightRefAccessor<U = T, V = D>(accessor: SideAccessor$1<U, V>): PyramidComponent<T, D>;
 }
-declare function export_default$b<T = unknown, D = unknown>(): PyramidComponent<T, D>;
+declare function export_default$9<T = unknown, D = unknown>(): PyramidComponent<T, D>;
 
 /**
  * Sankey component
@@ -2843,7 +2843,7 @@ interface SankeyComponent extends SankeyBuilder {
     linkLabel(): LabelAccessor<SankeyLink> | undefined;
     linkLabel<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
 }
-declare function export_default$a(): SankeyComponent;
+declare function export_default$8(): SankeyComponent;
 
 /**
  * Stacked Area component
@@ -2862,25 +2862,18 @@ declare function export_default$a(): SankeyComponent;
  * @template L The type of one layer, an Iterable of P
  *
  * @property {number, function} x             An accessor for the x-value of a point, or a constant.
- *                                            Should return a value in screen pixels. Required, and
- *                                            its absence is not reported: an unset dimension
- *                                            resolves to a constant NaN, so every coordinate is
- *                                            written as NaN, the browser rejects the path, and the
- *                                            chart is simply empty.
+ *                                            Should return a value in screen pixels. Required:
+ *                                            leaving it unset throws before anything is appended.
  * @property {number, function} y0            An accessor for the lower bound of the band at a
  *                                            point, i.e. the baseline, or a constant. In screen
- *                                            pixels. Required. When it is missing the top line is
- *                                            still written and the browser drops the shape at the
- *                                            first NaN.
+ *                                            pixels. Required, on the same terms as x.
  * @property {number, function} y1            An accessor for the upper bound of the band at a
- *                                            point, or a constant. In screen pixels. Required, and
- *                                            the most damaging of the three to omit because it
- *                                            renders successfully: d3 reads a null-ish upper bound
- *                                            as no upper bound and falls back to y0, so each layer
- *                                            collapses onto its own baseline and becomes a
- *                                            zero-height sliver. With the default white stroke the
- *                                            chart looks like a set of line charts. null and
- *                                            undefined are treated identically here.
+ *                                            point, or a constant. In screen pixels. Required, on
+ *                                            the same terms as x - but only an unset property is
+ *                                            caught. An explicit null keeps its d3 meaning, which
+ *                                            is "no upper bound": d3 then falls back to y0, so each
+ *                                            layer collapses onto its own baseline and becomes a
+ *                                            zero-height sliver.
  * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
  *                                            layer. It has no default, and unlike .sszvis-line
  *                                            there is no .sszvis-path rule in sszvis.css to fall
@@ -2910,11 +2903,14 @@ declare function export_default$a(): SankeyComponent;
  *                                            whether a point is drawn; a constant is coerced to a
  *                                            boolean. Each surviving run of points becomes its own
  *                                            subpath, and a run of one point is emitted as a
- *                                            degenerate top-and-bottom pair. The default accepts
- *                                            every point whatever its value (see below), so this is
- *                                            the only missing-value guard available, and it has to
- *                                            test both bounds by hand because it replaces the
- *                                            default rather than composing with it.
+ *                                            degenerate top-and-bottom pair. Defaults to a
+ *                                            missing-value guard over both vertical bounds: a point
+ *                                            whose y0 or y1 is null, undefined or has no numeric
+ *                                            form is skipped and the area breaks around it, and the
+ *                                            first such point in a render is logged as a warning.
+ *                                            Setting it replaces that guard rather than composing
+ *                                            with it, so an explicit predicate must test both
+ *                                            bounds itself.
  * @property {function} [key]                 The key function for the data join, called with a
  *                                            layer and its index. The value it returns should be
  *                                            unique among layers. Defaults to the
@@ -2934,15 +2930,14 @@ declare function export_default$a(): SankeyComponent;
  * key sees a layer and its index too, but its third argument depends on which half of the keyed
  * join is running: the array of incoming layers, or the group of nodes already in the DOM.
  *
- * Note: the default defined predicate never rejects anything. It reproduces the one it replaced,
- * which read `function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }` and
- * so returned a function rather than calling either composed accessor, and a function is truthy,
- * which is all d3 tests. A NaN therefore reaches the d attribute verbatim, the browser stops
- * rendering at the invalid command, and the whole layer disappears rather than only the segment the
- * missing value belongs to. undefined goes the same way, since d3.area applies unary + to it, and
- * null is not caught by an isNaN guard at all: it coerces to 0 and is plotted as data, pinning that
- * point to the top of the chart. Nothing is reported in any of these cases. line writes its
- * two-dimension guard by hand for this reason.
+ * Note: the default defined predicate guards both vertical bounds by hand, as line does. The
+ * expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
+ * fn.compose(...y1); }` and so returned a function rather than calling either composed accessor -
+ * and a function is truthy, which is all d3 tests - so a NaN reached the d attribute verbatim, the
+ * browser stopped rendering at the invalid command, and the whole layer disappeared rather than
+ * only the segment the missing value belonged to. The guard treats null and undefined as missing
+ * too, which a plain isNaN test would not: isNaN(null) is false, so a null would coerce to 0 and be
+ * plotted at the top of the chart. line, by contrast, still lets null through.
  *
  * Note: with transition enabled the selection is replaced by the transition before any attribute is
  * written, so d, fill, stroke and stroke-width are all deferred and the class is the only thing
@@ -3031,7 +3026,7 @@ interface StackedAreaComponent<P = unknown, L extends Iterable<P> = P[]> extends
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-declare function export_default$9<P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L>;
+declare function stackedArea<P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L>;
 
 /**
  * Stacked Area Multiples component
@@ -3052,25 +3047,19 @@ declare function export_default$9<P = unknown, L extends Iterable<P> = P[]>(): S
  * @template L The type of one layer, whatever valuesAccessor unwraps into points
  *
  * @property {number, function} x             An accessor for the x-value of a point, or a constant.
- *                                            Should return a value in screen pixels. Required, and
- *                                            its absence is not reported: an unset dimension
- *                                            resolves to a constant NaN, so every coordinate is
- *                                            written as NaN, the browser rejects the path, and the
- *                                            chart is simply empty.
+ *                                            Should return a value in screen pixels. Required:
+ *                                            leaving it unset throws before anything is appended.
  * @property {number, function} y0            An accessor for the lower bound of the band at a
  *                                            point, i.e. the baseline, or a constant. In screen
- *                                            pixels. Required. When it is missing the top line is
- *                                            still written and the baseline arrives as NaN.
+ *                                            pixels. Required, on the same terms as x.
  * @property {number, function} y1            An accessor for the upper bound of the band at a
- *                                            point, or a constant. In screen pixels. Required, and
- *                                            the most damaging of the three to omit because it
- *                                            renders successfully: d3 reads a null-ish upper bound
- *                                            as no upper bound and falls back to y0, so each band
- *                                            collapses onto its own baseline and becomes a
- *                                            zero-height sliver - and with no default stroke to
- *                                            draw it, there is nothing on screen. The code tests
- *                                            `props.y1 == null`, as d3 does, so an explicit null is
- *                                            read as unset too.
+ *                                            point, or a constant. In screen pixels. Required, on
+ *                                            the same terms as x - but only an unset property is
+ *                                            caught. An explicit null keeps its d3 meaning, which
+ *                                            is "no upper bound": d3 then falls back to y0, so each
+ *                                            band collapses onto its own baseline and becomes a
+ *                                            zero-height sliver, and with no default stroke to draw
+ *                                            it there is nothing on screen.
  * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
  *                                            layer. It has no default, and unlike .sszvis-line
  *                                            there is no .sszvis-path rule in the stylesheet to
@@ -3106,21 +3095,19 @@ declare function export_default$9<P = unknown, L extends Iterable<P> = P[]>(): S
  *                                            whether a point is drawn; a constant is coerced to a
  *                                            boolean. Each surviving run of points becomes its own
  *                                            subpath, and a run of one point is emitted as a
- *                                            degenerate top-and-bottom pair. Defaults to
- *                                            `() => true`, spelled out in place of the dead
- *                                            predicate it replaces (see below), so it accepts every
- *                                            point whatever its value: this is the only
- *                                            missing-value guard available, and it has to test both
- *                                            bounds by hand because it replaces the default rather
- *                                            than composing with it.
+ *                                            degenerate top-and-bottom pair. Defaults to a
+ *                                            missing-value guard over both vertical bounds: a point
+ *                                            whose y0 or y1 is null, undefined or has no numeric
+ *                                            form is skipped and the band breaks around it, and the
+ *                                            first such point in a render is logged as a warning.
+ *                                            Setting it replaces that guard rather than composing
+ *                                            with it, so an explicit predicate must test both
+ *                                            bounds itself.
  * @property {function} [key]                 The key function for the data join, called with a
  *                                            layer and its index. The value it returns should be
- *                                            unique among layers. Defaults to the index - which,
- *                                            because the layers are reversed first, counts from the
- *                                            end of the array that was passed in, so dropping the
- *                                            *last* layer of the input reuses the first path node
- *                                            and rebinds it to a different layer, where
- *                                            stackedArea's default key drops the last node instead.
+ *                                            unique among layers. Defaults to the index, which
+ *                                            matches layers by position in the array that was
+ *                                            passed in, as stackedArea's does.
  *                                            Setting it preserves object constancy across renders,
  *                                            which matters when a chart switches between the
  *                                            stacked and the separated view.
@@ -3133,8 +3120,9 @@ declare function export_default$9<P = unknown, L extends Iterable<P> = P[]>(): S
  *                                            strokeWidth and key still see the layer object, which
  *                                            is what lets the colour be read off the layer's name.
  * @property {boolean} transition             Whether to transition the layers when their values
- *                                            change. Defaults to true, and animates nothing (see
- *                                            below).
+ *                                            change. Defaults to true. An updating band eases into
+ *                                            its new geometry and colours over 300ms; an entering
+ *                                            band is painted synchronously (see below).
  *
  * Note: a constant dimension is coerced with unary + once, before the data join, exactly as d3's own
  * constant() would - so a numeric string works, while a value that has no numeric form, such as
@@ -3142,33 +3130,23 @@ declare function export_default$9<P = unknown, L extends Iterable<P> = P[]>(): S
  * an invalid path rather than an error. Only a value whose coercion itself throws, such as a Symbol
  * or a BigInt, raises - and it raises before the join rather than once per point.
  *
- * Note: the layers are reversed before the data join, so the first layer of the array that was
- * passed in is the last path in the DOM and paints over the others. The line has carried an
- * unanswered "//sszsch why reverse?" comment since 2017, and nothing - not the header this replaces,
- * not docs/area-chart-stacked/README.md, not stackedAreaMultiplesLayout, which lays the bands out -
- * says why. stackedArea does not reverse, so the same datum comes out of the two components in
- * opposite order, and the toggle in docs/area-chart-stacked/sa-two.js moves every path on the
- * switch. The reversal also renumbers the layers, so the index handed to the style accessors, to
- * key and to valuesAccessor is the position in the reversed array: an index-keyed palette is
- * applied back to front here and front to back in stackedArea. The array itself is copied rather
- * than reversed in place, so a caller holding on to it - as sa-two.js does, rendering both views
- * from one datum - sees it unchanged. .join() orders the merged selection, so the paint order
- * follows the reversed data on every render, even when the nodes are reused.
+ * Note: the layers are bound in the order they were given, as stackedArea binds them, so the first
+ * layer of the input is the first path in the DOM and the index handed to the style accessors, to
+ * key and to valuesAccessor is its position in that array. The component used to reverse the data
+ * before the join - a line carrying an unanswered "//sszsch why reverse?" comment since 2017, which
+ * nothing explained - which mirrored every index, applied an index-keyed palette back to front, and
+ * moved both paths whenever docs/area-chart-stacked/sa-two.js toggled between the two views.
+ * .join() orders the merged selection, so the paint order follows the data on every render, even
+ * when the nodes are reused.
  *
- * Note: transition animates nothing. The transition is created on its own statement and its return
- * value is dropped, so every attribute is written to the plain selection instead. It did animate
- * until 47f58578 ("perf: change .enter() to .join() API", Oct 2024), which dropped the `paths =`
- * the transition used to be assigned back to. As far as output goes the property is inert - the two
- * settings are indistinguishable in the DOM, before and after the 300ms the transition would have
- * taken - but it is not harmless: the transition is still scheduled, and a d3 transition interrupts
- * any unnamed transition already running on the same node when it starts, so a render freezes
- * another component's animation on a shared or adopted path mid-flight. bar carries the same
- * discarded-transition shape, though it writes its attributes before creating the transition, so its
- * elements are never blank. One visible consequence is that the switch into the separated view snaps
- * while the switch back, drawn by stackedArea, eases - the chart animates in one direction only, and
- * it is that switch the key property exists for. The one upside is that a freshly rendered chart is
- * complete on the same tick, with nothing to disable in order to measure it synchronously, where
- * stackedArea leaves an empty path element until the first animation frame.
+ * Note: transition applies to updating bands only. An entering band is painted directly, as bar
+ * does, so a freshly rendered chart is complete on the same tick rather than leaving an empty path
+ * element until the first animation frame, which is what stackedArea does. A band already on screen
+ * holds its old geometry and colours and eases into the new ones over 300ms. Between 47f58578
+ * ("perf: change .enter() to .join() API", Oct 2024) and this fix the transition was created on its
+ * own statement with its return value dropped, so it carried no tweens and every attribute was
+ * written to the plain selection: nothing animated, while the schedule still interrupted whatever
+ * else was animating those nodes.
  *
  * Note: the dimension accessors and defined are called by d3.area with a single point, that point's
  * index within the layer, and the array of points the layer is drawn from. fill, stroke,
@@ -3176,22 +3154,23 @@ declare function export_default$9<P = unknown, L extends Iterable<P> = P[]>(): S
  * layer's index, and d3's group of path nodes, with the node itself as `this`. The style-related
  * accessors therefore receive the layer object rather than a point, the inverse of what the
  * dimensions receive - the same asymmetry documented on line.
+ * That third argument is the group of the half of the join being evaluated, not of the merged
+ * selection: entering and updating bands are styled separately so that an entering one can be
+ * painted synchronously, and d3 leaves a null hole in each half's group for every node belonging
+ * to the other. A render that both reuses and enters bands therefore hands these accessors a
+ * sparse ArrayLike, so an accessor that walks it - rather than reading its own datum, as the
+ * first two arguments give it - has to skip the holes. key has the same caveat, below.
  * key sees a layer and its index too, but its third argument depends on which half of the keyed
- * join is running: the array of incoming layers, or the group of nodes already in the DOM. That node
- * group is in the reversed order the previous render left it in, so the two halves of the join agree
- * only because the reversal is applied on every render.
+ * join is running: the array of incoming layers, or the group of nodes already in the DOM.
  *
- * Note: the default defined predicate never rejects anything. It reproduces the one it replaced,
- * which read `function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }` and
- * so returned a function rather than calling either composed accessor, and a function is truthy,
- * which is all d3 tests. A NaN therefore reaches the d attribute verbatim, the browser stops
- * rendering at the invalid command, and the whole band disappears rather than only the segment the
- * missing value belongs to. undefined goes the same way, since d3.area applies unary + to it, and
- * null is not caught by an isNaN guard at all: it coerces to 0 and is plotted as data, pinning that
- * point to the top of the chart. Nothing is reported in any of these cases. stackedArea behaves
- * identically; line guards both of its dimensions by hand and works.
- * docs/area-chart-stacked/README.md describes the default of both components as "y0 and y1 are not
- * NaN", a guard that has never run, and the header this replaces did not mention defined at all.
+ * Note: the default defined predicate guards both vertical bounds by hand, as stackedArea and line
+ * do. The expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
+ * fn.compose(...y1); }` and so returned a function rather than calling either composed accessor -
+ * and a function is truthy, which is all d3 tests - so a NaN reached the d attribute verbatim, the
+ * browser stopped rendering at the invalid command, and the whole band disappeared rather than only
+ * the segment the missing value belonged to. The guard treats null and undefined as missing too,
+ * which a plain isNaN test would not: isNaN(null) is false, so a null would coerce to 0 and be
+ * plotted at the top of the chart. line, by contrast, still lets null through.
  *
  * Note: forgetting valuesAccessor for a wrapper layer produces an empty chart rather than an error,
  * because d3.area runs its datum through Array.from and that yields [] for a plain object. An
@@ -3209,11 +3188,7 @@ declare function export_default$9<P = unknown, L extends Iterable<P> = P[]>(): S
  * Note: nothing constrains the geometry, and nothing reports its own absence. A layer with no points
  * yields a path element with no d attribute, a single point yields a closed shape that encloses no
  * area and, with no default stroke, draws nothing at all, and a band whose y1 lies below y0 simply
- * winds the other way. With no props set at all the render still reports success - one correctly
- * classed path per layer, with neither fill nor stroke written and every coordinate NaN - so the DOM
- * looks healthy for a chart that is entirely empty. Binding a datum that is not iterable throws
- * "data is not iterable" out of the reversal, before the join. See
- * test/component/stackedAreaMultiples.test.ts.
+ * winds the other way. See test/component/stackedAreaMultiples.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -3275,7 +3250,7 @@ interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends ComponentB
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-declare function export_default$8<P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L>;
+declare function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAreaMultiplesComponent<P, L>;
 
 /**
  * Stacked Pyramid component
@@ -7385,5 +7360,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$r as annotationCircle, export_default$q as annotationConfidenceArea, export_default$p as annotationConfidenceBar, export_default$n as annotationLine, export_default$m as annotationRangeFlag, export_default$l as annotationRangeRuler, export_default$k as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$f as bar, bounds, export_default$s as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, export_default$e as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$o as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, export_default$d as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$i as move, muchDarker, nestedStackedBarsVertical, not, export_default$c as pack, export_default$h as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$b as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$a as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, export_default$9 as stackedArea, export_default$8 as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$7 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$j as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$6 as treemap, valueFn, viewport, export_default$g as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$p as annotationCircle, export_default$o as annotationConfidenceArea, export_default$n as annotationConfidenceBar, export_default$l as annotationLine, export_default$k as annotationRangeFlag, export_default$j as annotationRangeRuler, export_default$i as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$d as bar, bounds, export_default$q as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, export_default$c as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$m as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, export_default$b as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$g as move, muchDarker, nestedStackedBarsVertical, not, export_default$a as pack, export_default$f as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$9 as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$8 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$7 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$h as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$6 as treemap, valueFn, viewport, export_default$e as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };

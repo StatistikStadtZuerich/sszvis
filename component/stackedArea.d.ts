@@ -15,25 +15,18 @@
  * @template L The type of one layer, an Iterable of P
  *
  * @property {number, function} x             An accessor for the x-value of a point, or a constant.
- *                                            Should return a value in screen pixels. Required, and
- *                                            its absence is not reported: an unset dimension
- *                                            resolves to a constant NaN, so every coordinate is
- *                                            written as NaN, the browser rejects the path, and the
- *                                            chart is simply empty.
+ *                                            Should return a value in screen pixels. Required:
+ *                                            leaving it unset throws before anything is appended.
  * @property {number, function} y0            An accessor for the lower bound of the band at a
  *                                            point, i.e. the baseline, or a constant. In screen
- *                                            pixels. Required. When it is missing the top line is
- *                                            still written and the browser drops the shape at the
- *                                            first NaN.
+ *                                            pixels. Required, on the same terms as x.
  * @property {number, function} y1            An accessor for the upper bound of the band at a
- *                                            point, or a constant. In screen pixels. Required, and
- *                                            the most damaging of the three to omit because it
- *                                            renders successfully: d3 reads a null-ish upper bound
- *                                            as no upper bound and falls back to y0, so each layer
- *                                            collapses onto its own baseline and becomes a
- *                                            zero-height sliver. With the default white stroke the
- *                                            chart looks like a set of line charts. null and
- *                                            undefined are treated identically here.
+ *                                            point, or a constant. In screen pixels. Required, on
+ *                                            the same terms as x - but only an unset property is
+ *                                            caught. An explicit null keeps its d3 meaning, which
+ *                                            is "no upper bound": d3 then falls back to y0, so each
+ *                                            layer collapses onto its own baseline and becomes a
+ *                                            zero-height sliver.
  * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
  *                                            layer. It has no default, and unlike .sszvis-line
  *                                            there is no .sszvis-path rule in sszvis.css to fall
@@ -63,11 +56,14 @@
  *                                            whether a point is drawn; a constant is coerced to a
  *                                            boolean. Each surviving run of points becomes its own
  *                                            subpath, and a run of one point is emitted as a
- *                                            degenerate top-and-bottom pair. The default accepts
- *                                            every point whatever its value (see below), so this is
- *                                            the only missing-value guard available, and it has to
- *                                            test both bounds by hand because it replaces the
- *                                            default rather than composing with it.
+ *                                            degenerate top-and-bottom pair. Defaults to a
+ *                                            missing-value guard over both vertical bounds: a point
+ *                                            whose y0 or y1 is null, undefined or has no numeric
+ *                                            form is skipped and the area breaks around it, and the
+ *                                            first such point in a render is logged as a warning.
+ *                                            Setting it replaces that guard rather than composing
+ *                                            with it, so an explicit predicate must test both
+ *                                            bounds itself.
  * @property {function} [key]                 The key function for the data join, called with a
  *                                            layer and its index. The value it returns should be
  *                                            unique among layers. Defaults to the
@@ -87,15 +83,14 @@
  * key sees a layer and its index too, but its third argument depends on which half of the keyed
  * join is running: the array of incoming layers, or the group of nodes already in the DOM.
  *
- * Note: the default defined predicate never rejects anything. It reproduces the one it replaced,
- * which read `function () { return fn.compose(fn.not(isNaN), props.y0) && fn.compose(...y1); }` and
- * so returned a function rather than calling either composed accessor, and a function is truthy,
- * which is all d3 tests. A NaN therefore reaches the d attribute verbatim, the browser stops
- * rendering at the invalid command, and the whole layer disappears rather than only the segment the
- * missing value belongs to. undefined goes the same way, since d3.area applies unary + to it, and
- * null is not caught by an isNaN guard at all: it coerces to 0 and is plotted as data, pinning that
- * point to the top of the chart. Nothing is reported in any of these cases. line writes its
- * two-dimension guard by hand for this reason.
+ * Note: the default defined predicate guards both vertical bounds by hand, as line does. The
+ * expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
+ * fn.compose(...y1); }` and so returned a function rather than calling either composed accessor -
+ * and a function is truthy, which is all d3 tests - so a NaN reached the d attribute verbatim, the
+ * browser stopped rendering at the invalid command, and the whole layer disappeared rather than
+ * only the segment the missing value belonged to. The guard treats null and undefined as missing
+ * too, which a plain isNaN test would not: isNaN(null) is false, so a null would coerce to 0 and be
+ * plotted at the top of the chart. line, by contrast, still lets null through.
  *
  * Note: with transition enabled the selection is replaced by the transition before any attribute is
  * written, so d, fill, stroke and stroke-width are all deferred and the class is the only thing
@@ -185,6 +180,6 @@ export interface StackedAreaComponent<P = unknown, L extends Iterable<P> = P[]> 
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
-export default function <P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L>;
+export default function stackedArea<P = unknown, L extends Iterable<P> = P[]>(): StackedAreaComponent<P, L>;
 export {};
 //# sourceMappingURL=stackedArea.d.ts.map
