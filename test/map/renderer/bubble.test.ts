@@ -373,6 +373,26 @@ describe("map/renderer/bubble", () => {
       expect(circles(node)[0].style.pointerEvents).toBe("");
     });
 
+    // A namespaced registration is a registration: d3's dispatch cannot be asked what it holds, so
+    // the component tallies them itself rather than probing the bare event names.
+    test("restores hit testing for a namespaced listener, and withdraws it again on removal", () => {
+      const collection = geoJson();
+      const layer = group("bubble-listener-namespaced");
+      const component = mapRendererBubble<Datum>()
+        .mergedData(prepareMergedGeoData(fullData, collection))
+        .mapPath(mapPathOf(collection))
+        .radius(5)
+        .fill("#ff0000");
+
+      const withListener = layer
+        .call(component.on("over.tooltip", () => undefined))
+        .node() as SVGGElement;
+      expect(circles(withListener)[0].style.pointerEvents).toBe("");
+
+      const withoutListener = layer.call(component.on("over.tooltip", null)).node() as SVGGElement;
+      expect(circles(withoutListener)[0].style.pointerEvents).toBe("none");
+    });
+
     // The classes are written with classed rather than attr, and only when the circle enters, so
     // the component never touches a class a consumer added to it.
     test("keeps a class a consumer put on a circle", () => {
