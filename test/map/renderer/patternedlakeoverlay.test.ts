@@ -248,6 +248,40 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(lakeBorder(node)?.style.stroke).toBe("rgb(124, 124, 124)");
     });
 
+    test("clears a colour already set when handed a falsy colour", () => {
+      const layer = group("lake-falsy-colour");
+      const renderWith = (lakePathColor: string) =>
+        layer
+          .call(
+            mapRendererPatternedLakeOverlay()
+              .mapPath(mapPathOf())
+              .lakeFeature(lake())
+              .lakeBounds(bounds())
+              .lakePathColor(lakePathColor)
+          )
+          .node() as SVGGElement;
+      renderWith("#ff0000");
+      const node = renderWith("");
+      expect(lakeBorder(node)?.style.stroke).toBe("");
+    });
+
+    test("clears the stroke when an accessor returns undefined", () => {
+      const layer = group("lake-undefined-colour");
+      const renderWith = (colour: string | undefined) =>
+        layer
+          .call(
+            mapRendererPatternedLakeOverlay()
+              .mapPath(mapPathOf())
+              .lakeFeature(lake())
+              .lakeBounds(bounds())
+              .lakePathColor(() => colour ?? null)
+          )
+          .node() as SVGGElement;
+      renderWith("#ff0000");
+      const node = renderWith(undefined);
+      expect(lakeBorder(node)?.style.stroke).toBe("");
+    });
+
     // NOTE: lakePathColor is not wrapped in fn.functor, like the mesh renderer's borderColor and
     // unlike the colour props of base, geojson and highlight. A function is handed straight to
     // d3, so it is called with the lakeBounds object itself and d3's index - there is no
@@ -296,26 +330,6 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "pattern#lake-pattern > line")).toHaveLength(2);
       expect(defs(node, "linearGradient#lake-fade-gradient > stop")).toHaveLength(2);
       expect(defs(node, "mask#lake-fade-mask > rect")).toHaveLength(1);
-    });
-
-    // BUG: the colour is applied only when the property is truthy, so there is no way to clear a
-    // previously set colour by passing "" - and a falsy colour is silently ignored rather than
-    // reported. The guard exists because the property has no default.
-    test("ignores a falsy lakePathColor instead of clearing the stroke", () => {
-      const layer = group("lake-falsy-colour");
-      const renderWith = (lakePathColor: string) =>
-        layer
-          .call(
-            mapRendererPatternedLakeOverlay()
-              .mapPath(mapPathOf())
-              .lakeFeature(lake())
-              .lakeBounds(bounds())
-              .lakePathColor(lakePathColor)
-          )
-          .node() as SVGGElement;
-      renderWith("#ff0000");
-      const node = renderWith("");
-      expect(lakeBorder(node)?.style.stroke).toBe("rgb(255, 0, 0)");
     });
 
     // BUG: all three definitions use fixed ids, so two maps on one page define #lake-pattern,
