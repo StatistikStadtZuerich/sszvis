@@ -22,8 +22,7 @@
  * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
  *                                                    A falsy keyName is used as given, unlike prepareMergedGeoData, which
  *                                                    falls back to the default - so an empty keyName reads datum[""],
- *                                                    which is undefined, and matches a keyless feature rather than the
- *                                                    intended entity.
+ *                                                    which is undefined, and therefore matches nothing.
  * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities
  *                                                    are highlighted. Falsy entries are dropped. Default [].
  * @property {String, Function} highlightStroke       A colour, or an accessor called with the highlighted datum only.
@@ -39,13 +38,12 @@
  * cannot tell that from the entity being off-screen.
  *
  * Note: the feature lookup keys on feature.id, which GeoJSON does not require, and goes through a
- * plain object literal. So ids are stringified on both sides - a numeric feature id is matched by
- * either a numeric or a string data key, which is load-bearing because SSZ geodata uses numeric
- * ids - every feature without an id collapses onto the key "undefined" and the last of them wins,
- * where a datum with no key finds it because the datum side stringifies the same way, and an id
- * naming an Object.prototype member ("valueOf", "toString", ...) is "found" even though no such
- * feature exists, failing exactly like an unmatched id. A symbol stays a symbol key, so it can
- * never be matched by a string id.
+ * Map. Ids are still stringified on both sides - a numeric feature id is matched by either a
+ * numeric or a string data key, which is load-bearing because SSZ geodata uses numeric ids - but
+ * only keys actually put into the Map can be found: a feature without an id is left out of the
+ * lookup, a datum with no entity id matches nothing, and an id naming an Object.prototype member
+ * ("valueOf", "toString", "__proto__", ...) is unmatched like any other absent id. A symbol stays a
+ * symbol key, so it can never be matched by a string id.
  *
  * Note: neither geoJson nor mapPath is validated, and once there is something to highlight both
  * are required. A missing geoJson throws while the lookup table is built, before the join runs, so
@@ -102,7 +100,7 @@
  * @return {sszvis.component}
  */
 
-import type { ExtendedFeatureCollection, GeoPath } from "d3";
+import type { ExtendedFeature, ExtendedFeatureCollection, GeoPath } from "d3";
 import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
@@ -115,27 +113,25 @@ type HighlightValue<T, R> = R | ((datum: T) => R);
 type StoredHighlightValue<T, R> = (datum: T) => R;
 
 /**
- * The path generator as this component calls it: with whatever the lookup returned. That is the
- * matched feature, or undefined where nothing matched - but because the lookup is a plain object
- * literal, an id naming an Object.prototype member yields the inherited value instead, so the
- * parameter is unknown rather than ExtendedFeature | undefined. See the module note. A d3.geoPath
- * satisfies this at runtime - it returns null for a non-feature - but not by its types, so the
- * setter accepts either shape and HighlightProps states how the component actually calls it.
+ * The path generator as this component calls it: with the matched feature, or with undefined where
+ * nothing matched. A d3.geoPath satisfies this at runtime - it returns null for a non-feature - but
+ * not by its types, so the setter accepts either shape and HighlightProps states how the component
+ * actually calls it.
  */
 export type HighlightPath = (feature: unknown) => string | null;
 
-/** A highlighted datum paired with whatever the feature lookup returned for it. */
+/** A highlighted datum paired with the feature the lookup matched it to, if any. */
 interface HighlightedFeature<T> {
-  geoJson: unknown;
+  geoJson: ExtendedFeature | undefined;
   datum: T;
 }
 
 /**
- * The lookup table the merge goes through. It is a plain object literal rather than a Map, which is
- * what stringifies the keys and lets an id naming an Object.prototype member resolve to the
- * inherited property.
+ * The lookup table the merge goes through. A Map holds only the keys actually put into it, so no id
+ * can resolve through Object.prototype and no datum can be matched by a feature that was never
+ * given an id.
  */
-type FeatureLookup = Record<string | symbol, unknown>;
+type FeatureLookup = Map<string | symbol, ExtendedFeature>;
 
 type HighlightProps<T> = {
   keyName: string;
@@ -208,15 +204,21 @@ export default function <T = unknown>(): MapRendererHighlightComponent<T> {
       }
 
       const groupedMapData = props.geoJson.features.reduce<FeatureLookup>((m, feature) => {
-        m[toLookupKey(feature.id)] = feature;
+        // A feature without an id names no entity, so it is not addressable: keying it would
+        // collapse every such feature onto the single key "undefined" and let a datum with no
+        // entity id match the last of them.
+        if (feature.id != null) {
+          m.set(toLookupKey(feature.id), feature);
+        }
         return m;
-      }, {});
+      }, new Map());
 
       // merge the highlight data
       const mergedHighlight = props.highlight.reduce<HighlightedFeature<T>[]>((m, v) => {
         if (v) {
+          const entityId = readEntityKey(v, props.keyName);
           m.push({
-            geoJson: groupedMapData[toLookupKey(readEntityKey(v, props.keyName))],
+            geoJson: entityId == null ? undefined : groupedMapData.get(toLookupKey(entityId)),
             datum: v,
           });
         }

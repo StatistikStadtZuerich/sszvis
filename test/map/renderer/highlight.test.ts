@@ -68,6 +68,22 @@ describe("map/renderer/highlight", () => {
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__highlight"),
   ];
 
+  /**
+   * A mapPath that records what it is called with, so a test can tell "matched nothing" from
+   * "matched something that happens to produce no geometry".
+   */
+  const seenFeatures = () => {
+    const features: unknown[] = [];
+    const path = mapPathOf();
+    return {
+      features,
+      mapPath: (feature: unknown) => {
+        features.push(feature);
+        return feature === undefined ? null : path(feature as Parameters<typeof path>[0]);
+      },
+    };
+  };
+
   /** Renders the highlight layer, returning the group node it drew into. */
   const render = (
     configure: (c: MapRendererHighlightComponent<Datum>) => MapRendererHighlightComponent<Datum> = (
@@ -278,6 +294,66 @@ describe("map/renderer/highlight", () => {
     });
   });
 
+  describe("entity matching", () => {
+    // The lookup goes through a Map holding only the ids the geoJson actually supplies, so a
+    // feature without an id is not addressable and a datum naming no entity matches nothing.
+    // Previously every keyless feature collapsed onto the single key "undefined" and the last of
+    // them was handed to a keyless datum.
+    test("matches a keyless datum to no feature at all", () => {
+      const features: FeatureCollection<Polygon> = {
+        type: "FeatureCollection",
+        features: [square(undefined), square(undefined, 2)],
+      };
+      const seen = seenFeatures();
+      group().call(
+        mapRendererHighlight<Datum>().geoJson(features).mapPath(seen.mapPath).highlight([{}])
+      );
+      expect(seen.features).toEqual([undefined]);
+    });
+
+    // A Map holds no inherited keys, so an id naming an Object.prototype member is absent like any
+    // other id the geoJson does not supply. A plain object literal handed the inherited function
+    // to the path generator instead, which is observable in what mapPath is called with.
+    test("treats an id naming an Object.prototype member as unmatched", () => {
+      const seen = seenFeatures();
+      render((c) => c.mapPath(seen.mapPath).highlight([{ geoId: "valueOf" }]));
+      expect(seen.features).toEqual([undefined]);
+    });
+
+    // "__proto__" is the sharper case: assigning it on a plain object literal replaces that
+    // object's prototype instead of creating an entry, which corrupts every later lookup.
+    test("treats an id of __proto__ as unmatched without disturbing other lookups", () => {
+      const features = collection();
+      const seen = seenFeatures();
+      group().call(
+        mapRendererHighlight<Datum>()
+          .geoJson(features)
+          .mapPath(seen.mapPath)
+          .highlight([{ geoId: "__proto__" }, { geoId: "a" }, { geoId: "nope" }])
+      );
+      expect(seen.features).toEqual([undefined, features.features[0], undefined]);
+    });
+
+    // NOTE: lookup keys are stringified on both sides, so a numeric feature id matches both a
+    // numeric and a string datum key. Real SSZ geodata uses numeric ids, so this is load-bearing
+    // rather than a curiosity, and must survive the Map-backed lookup.
+    test("matches a numeric feature id against either a numeric or a string key", () => {
+      const features: FeatureCollection<Polygon> = {
+        type: "FeatureCollection",
+        features: [{ ...square("1"), id: 1 }],
+      };
+      const mapPath = mapPathOf();
+      const renderWith = (geoId: unknown) =>
+        group()
+          .call(
+            mapRendererHighlight<Datum>().geoJson(features).mapPath(mapPath).highlight([{ geoId }])
+          )
+          .node() as SVGGElement;
+      expect(highlights(renderWith(1))[0].getAttribute("d")).toBe(mapPath(features.features[0]));
+      expect(highlights(renderWith("1"))[0].getAttribute("d")).toBe(mapPath(features.features[0]));
+    });
+  });
+
   describe("known quirks", () => {
     // BUG: an entity id that matches no feature is not reported. The lookup yields undefined,
     // geoPath(undefined) returns null, and d3 removes the attribute - leaving a classed, styled
@@ -359,51 +435,6 @@ describe("map/renderer/highlight", () => {
           .highlight("")
       );
       expect(highlights(layer.node() as SVGGElement)).toHaveLength(0);
-    });
-
-    // NOTE: lookup keys are stringified on both sides, so a numeric feature id matches both a
-    // numeric and a string datum key. Real SSZ geodata uses numeric ids, so this is load-bearing
-    // rather than a curiosity.
-    test("matches a numeric feature id against either a numeric or a string key", () => {
-      const features: FeatureCollection<Polygon> = {
-        type: "FeatureCollection",
-        features: [{ ...square("1"), id: 1 }],
-      };
-      const mapPath = mapPathOf();
-      const renderWith = (geoId: unknown) =>
-        group()
-          .call(
-            mapRendererHighlight<Datum>().geoJson(features).mapPath(mapPath).highlight([{ geoId }])
-          )
-          .node() as SVGGElement;
-      expect(highlights(renderWith(1))[0].getAttribute("d")).toBe(mapPath(features.features[0]));
-      expect(highlights(renderWith("1"))[0].getAttribute("d")).toBe(mapPath(features.features[0]));
-    });
-
-    // BUG: the feature lookup keys on feature.id, which GeoJSON does not require. Every feature
-    // without one collapses onto the single key "undefined", so the last such feature wins - and
-    // a datum whose key is missing matches it, because the datum side stringifies the same way.
-    test("matches a keyless datum to the last keyless feature", () => {
-      const features: FeatureCollection<Polygon> = {
-        type: "FeatureCollection",
-        features: [square(undefined), square(undefined, 2)],
-      };
-      const mapPath = mapPathOf();
-      const node = group()
-        .call(mapRendererHighlight<Datum>().geoJson(features).mapPath(mapPath).highlight([{}]))
-        .node() as SVGGElement;
-      expect(highlights(node)[0].getAttribute("d")).toBe(mapPath(features.features[1]));
-    });
-
-    // NOTE: the same observable as the unmatched id above, reached a different way. The lookup
-    // table is a plain object, so an id naming an Object.prototype member is "found" even though
-    // no such feature exists. The inherited function is handed to the path
-    // generator, which reads no recognised geometry type off it and returns null - so this fails
-    // exactly like an unmatched id, silently and with no way to tell the two apart.
-    test("treats an id naming an Object.prototype member as a match", () => {
-      const node = render((c) => c.highlight([{ geoId: "valueOf" }]));
-      expect(highlights(node)).toHaveLength(1);
-      expect(highlights(node)[0].hasAttribute("d")).toBe(false);
     });
 
     // NOTE: nothing deduplicates the highlight array, so the same entity highlighted twice draws
