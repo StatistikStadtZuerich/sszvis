@@ -51,7 +51,11 @@
  *                                      vertical orientation does for width.
  * @property {string, function} fill    Optional. A constant or an accessor over a slice. When
  *                                      unset, no fill attribute is written at all and the
- *                                      rectangles fall back to the SVG/CSS default.
+ *                                      rectangles fall back to the SVG/CSS default. An accessor
+ *                                      is not called for a slice the stack carries no row for:
+ *                                      that slice is zero-sized, so its fill would never be
+ *                                      painted, and an accessor reading `d.data` would be
+ *                                      handed undefined. Such a slice gets no fill attribute.
  * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
  *                                      unset, a 1px #FFFFFF stroke separates the segments -
  *                                      centred on the bar edge, so it overpaints half a pixel
@@ -383,6 +387,20 @@ function drawStacks<T, X extends string | number>(
   groups.call(barGen);
 }
 
+/**
+ * Applies a fill to a slice, leaving a slice with no source row unpainted.
+ *
+ * A stack that carries no row for one of its series contributes a zero-height (or zero-width)
+ * slice whose `data` is undefined. Nothing of it is visible, so the caller's accessor - which
+ * is written over the row, as every docs example is - is skipped rather than handed an
+ * undefined datum to dereference.
+ */
+function fillOf<T, X extends string | number>(fill: FillValue<T, X> | undefined) {
+  if (typeof fill !== "function") return fill;
+  return (slice: StackedBarSlice<T, X>, index: number) =>
+    slice.data === undefined ? undefined : fill(slice, index);
+}
+
 export function stackedBarHorizontal<
   T = unknown,
   X extends string | number = string,
@@ -406,7 +424,7 @@ export function stackedBarHorizontal<
         .y(fn.compose(props.yScale, stackAcc))
         .width((d) => Math.abs(props.xScale(d[1]) - props.xScale(d[0])))
         .height(props.height)
-        .fill(props.fill)
+        .fill(fillOf(props.fill))
         .stroke(props.stroke || "#FFFFFF");
 
       drawStacks(selection, data, barGen);
@@ -436,7 +454,7 @@ export function stackedBarVertical<
         .y((d) => Math.min(props.yScale(d[0]), props.yScale(d[1])))
         .width(props.width)
         .height((d) => Math.abs(props.yScale(d[0]) - props.yScale(d[1])))
-        .fill(props.fill)
+        .fill(fillOf(props.fill))
         .stroke(props.stroke || "#FFFFFF");
 
       drawStacks(selection, data, barGen);
