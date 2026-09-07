@@ -18,6 +18,11 @@
  * @property {d3.geo.path} mapPath                    A path-generator used to create the path data string for each matched
  *                                                    feature. A d3.geoPath or a bare generator function is accepted; it is
  *                                                    called only with features that were actually matched.
+ * @property {String} layerKey                        Scopes this layer's paths within the group it renders into, so
+ *                                                    several highlight layers can share one group. Default 'highlight'.
+ *                                                    Two layers in one group need different layerKeys; two renders of
+ *                                                    the same layer must share one, which is what makes the render
+ *                                                    idempotent.
  * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
  *                                                    A falsy keyName is used as given, unlike prepareMergedGeoData, which
  *                                                    falls back to the default - so an empty keyName reads datum[""],
@@ -83,12 +88,14 @@
  * swallows the base layer's hover and click events - which matters more here than for the mesh,
  * since a highlight is normally driven by exactly that hover.
  *
- * Note: the border selector is unscoped and the join unkeyed, so a second highlight layer rendered
- * into the same group rebinds the first one's paths instead of drawing its own. One highlight layer
- * per group; choropleth uses exactly one, so the collision is latent, but the renderer is exported
- * publicly. Being an index join, it also re-purposes surviving elements by position rather than by
- * entity when the highlight array shrinks; the rendered result is still right, because "d" and both
- * styles are reapplied on every render rather than only on enter.
+ * Note: the paths are scoped by layerKey and the join is keyed by map entity. Each layer selects
+ * only paths carrying its own data-highlight-layer, so two highlight layers rendered into one group
+ * coexist as long as they are given different layerKeys - sharing the default key still means
+ * sharing one set of paths, which is what makes an ordinary layer idempotent across renders even
+ * though consumers build a fresh component every time. The keyed join means an element stays with
+ * its entity when the array shrinks or is reordered, so per-entity transitions and enter/exit
+ * styling are now possible. One entity highlighted twice still draws two paths: the join key
+ * carries an occurrence counter.
  *
  * Note: the empty-highlight branch used to return a decorative `true`. Nothing consumed it -
  * d3's selection.each ignores the render callback's return value - so the port returns nothing.
@@ -124,6 +131,19 @@ export type HighlightPath = (feature: unknown) => string | null;
 interface HighlightedFeature<T> {
   geoJson: ExtendedFeature;
   datum: T;
+  /**
+   * The join key: the entity's lookup key, plus an occurrence counter so that highlighting one
+   * entity twice still draws two paths rather than collapsing them.
+   */
+  joinKey: string;
+}
+
+/** The default scope, so that a lone highlight layer needs no configuration. */
+const LAYER_KEY_DEFAULT = "highlight";
+
+/** Escapes a value for use inside a double-quoted CSS attribute selector. */
+function escapeSelectorValue(value: string): string {
+  return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
 }
 
 /**
@@ -135,6 +155,7 @@ type FeatureLookup = Map<string | symbol, ExtendedFeature>;
 
 type HighlightProps<T> = {
   keyName: string;
+  layerKey: string;
   geoJson: ExtendedFeatureCollection;
   mapPath: HighlightPath;
   highlight: (T | null | undefined)[];
@@ -146,6 +167,8 @@ export interface MapRendererHighlightComponent<T = unknown>
   extends ComponentBuilder<MapRendererHighlightComponent<T>> {
   keyName(): string;
   keyName(value: string): MapRendererHighlightComponent<T>;
+  layerKey(): string;
+  layerKey(value: string): MapRendererHighlightComponent<T>;
   geoJson(): ExtendedFeatureCollection | undefined;
   geoJson(value: ExtendedFeatureCollection): MapRendererHighlightComponent<T>;
   mapPath(): GeoPath | HighlightPath | undefined;
@@ -196,6 +219,8 @@ export default function <T = unknown>(): MapRendererHighlightComponent<T> {
   return component<MapRendererHighlightComponent<T>>()
     .prop("keyName")
     .keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
+    .prop("layerKey")
+    .layerKey(LAYER_KEY_DEFAULT) // scopes this layer's paths, so several can share one group
     .prop("geoJson")
     .prop("mapPath")
     .prop("highlight")
@@ -208,7 +233,11 @@ export default function <T = unknown>(): MapRendererHighlightComponent<T> {
       const selection = select(this);
       const props = selection.props<HighlightProps<T>>();
 
-      const highlightBorders = selection.selectAll(".sszvis-map__highlight");
+      // Scoped to this layer, so a second highlight layer in the same group draws its own paths
+      // instead of rebinding these.
+      const highlightBorders = selection.selectAll<Element, HighlightedFeature<T>>(
+        `.sszvis-map__highlight[data-highlight-layer="${escapeSelectorValue(props.layerKey)}"]`
+      );
 
       if (props.highlight.length === 0) {
         highlightBorders.remove();
@@ -229,6 +258,7 @@ export default function <T = unknown>(): MapRendererHighlightComponent<T> {
 
       // merge the highlight data, collecting the ids no map entity answers to
       const unmatchedIds: unknown[] = [];
+      const occurrences = new Map<string, number>();
       const mergedHighlight = props.highlight.reduce<HighlightedFeature<T>[]>((m, v) => {
         if (v) {
           const entityId = readEntityKey(v, props.keyName);
@@ -236,7 +266,10 @@ export default function <T = unknown>(): MapRendererHighlightComponent<T> {
           if (feature === undefined) {
             unmatchedIds.push(entityId);
           } else {
-            m.push({ geoJson: feature, datum: v });
+            const entityKey = String(toLookupKey(entityId));
+            const occurrence = occurrences.get(entityKey) ?? 0;
+            occurrences.set(entityKey, occurrence + 1);
+            m.push({ geoJson: feature, datum: v, joinKey: `${entityKey}#${occurrence}` });
           }
         }
         return m;
@@ -245,9 +278,12 @@ export default function <T = unknown>(): MapRendererHighlightComponent<T> {
       warnUnmatched(unmatchedIds, props.keyName);
 
       highlightBorders
-        .data(mergedHighlight)
+        // Keyed by map entity, so an element stays with its entity when the highlight array
+        // shrinks or is reordered rather than being re-purposed by position.
+        .data(mergedHighlight, (d) => d.joinKey)
         .join("path")
         .classed("sszvis-map__highlight", true)
+        .attr("data-highlight-layer", props.layerKey)
         .attr("d", (d) => props.mapPath(d.geoJson))
         .style("stroke", (d) => props.highlightStroke(d.datum))
         .style("stroke-width", (d) => props.highlightStrokeWidth(d.datum));

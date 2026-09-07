@@ -422,6 +422,134 @@ describe("map/renderer/highlight", () => {
     });
   });
 
+  describe("element identity", () => {
+    // The join is keyed by map entity, so shrinking the highlight array leaves the surviving
+    // entity on its own element instead of re-purposing the first slot by position.
+    test("keeps the surviving entity on its own element when the array shrinks", () => {
+      const layer = group("highlight-keyed-join");
+      const renderWith = (highlight: Datum[]) =>
+        layer
+          .call(
+            mapRendererHighlight<Datum>()
+              .geoJson(collection())
+              .mapPath(mapPathOf())
+              .highlight(highlight)
+          )
+          .node() as SVGGElement;
+      const before = highlights(renderWith([{ geoId: "a" }, { geoId: "b" }]));
+      const after = highlights(renderWith([{ geoId: "b" }]));
+      expect(after).toHaveLength(1);
+      expect(after[0]).toBe(before[1]);
+      expect(after[0].getAttribute("d")).toBe(before[1].getAttribute("d"));
+    });
+
+    // Reordering moves the existing elements rather than repainting them in place, which is what
+    // makes per-entity transitions and enter/exit styling possible.
+    test("moves the elements when the highlight array is reordered", () => {
+      const layer = group("highlight-reorder");
+      const renderWith = (highlight: Datum[]) =>
+        layer
+          .call(
+            mapRendererHighlight<Datum>()
+              .geoJson(collection())
+              .mapPath(mapPathOf())
+              .highlight(highlight)
+          )
+          .node() as SVGGElement;
+      const before = highlights(renderWith([{ geoId: "a" }, { geoId: "b" }]));
+      const after = highlights(renderWith([{ geoId: "b" }, { geoId: "a" }]));
+      expect(after).toEqual([before[1], before[0]]);
+    });
+
+    // The join key carries an occurrence counter, so highlighting one entity twice still draws two
+    // stacked paths rather than collapsing them onto one element.
+    test("keeps one element per entry when an entity is highlighted twice", () => {
+      const layer = group("highlight-duplicate-keyed");
+      const renderWith = (highlight: Datum[]) =>
+        layer
+          .call(
+            mapRendererHighlight<Datum>()
+              .geoJson(collection())
+              .mapPath(mapPathOf())
+              .highlight(highlight)
+          )
+          .node() as SVGGElement;
+      expect(highlights(renderWith([{ geoId: "a" }, { geoId: "a" }]))).toHaveLength(2);
+      expect(highlights(renderWith([{ geoId: "a" }]))).toHaveLength(1);
+    });
+
+    // Each layer selects only the paths carrying its own layerKey, so two highlight layers in one
+    // group no longer fight over a single set of elements.
+    test("lets two layers with different layerKeys share one group", () => {
+      const layer = group("two-highlights");
+      layer.call(
+        mapRendererHighlight<Datum>()
+          .layerKey("first")
+          .geoJson(collection())
+          .mapPath(mapPathOf())
+          .highlight([{ geoId: "a" }])
+          .highlightStroke("#ff0000")
+      );
+      const first = highlights(layer.node() as SVGGElement)[0];
+      layer.call(
+        mapRendererHighlight<Datum>()
+          .layerKey("second")
+          .geoJson(collection())
+          .mapPath(mapPathOf())
+          .highlight([{ geoId: "b" }])
+          .highlightStroke("#00ff00")
+      );
+      const after = highlights(layer.node() as SVGGElement);
+      expect(after).toHaveLength(2);
+      expect(after).toContain(first);
+      expect(first.style.stroke).toBe("rgb(255, 0, 0)");
+      expect(after.map((p) => p.style.stroke)).toContain("rgb(0, 255, 0)");
+    });
+
+    // An empty highlight clears only this layer's paths, leaving the other layer's alone.
+    test("clears only its own layer when its highlight empties", () => {
+      const layer = group("two-highlights-clear");
+      const renderWith = (layerKey: string, highlight: Datum[]) =>
+        layer.call(
+          mapRendererHighlight<Datum>()
+            .layerKey(layerKey)
+            .geoJson(collection())
+            .mapPath(mapPathOf())
+            .highlight(highlight)
+        );
+      renderWith("first", [{ geoId: "a" }]);
+      renderWith("second", [{ geoId: "b" }]);
+      renderWith("second", []);
+      const after = highlights(layer.node() as SVGGElement);
+      expect(after).toHaveLength(1);
+      expect(after[0].getAttribute("data-highlight-layer")).toBe("first");
+    });
+
+    // NOTE: two layers sharing the default layerKey still share one set of paths - which is the
+    // same mechanism that lets a consumer build a fresh component on every render and still get
+    // its previous elements back. Scoping is opt-in per layer, not automatic.
+    test("still shares elements between two layers on the same layerKey", () => {
+      const layer = group("two-highlights-same-key");
+      const renderWith = (geoId: string) =>
+        layer.call(
+          mapRendererHighlight<Datum>()
+            .geoJson(collection())
+            .mapPath(mapPathOf())
+            .highlight([{ geoId }])
+        );
+      renderWith("a");
+      const first = highlights(layer.node() as SVGGElement)[0];
+      renderWith("b");
+      const after = highlights(layer.node() as SVGGElement);
+      expect(after).toHaveLength(1);
+      expect(after[0]).not.toBe(first);
+    });
+
+    test("defaults layerKey to highlight", () => {
+      expect(mapRendererHighlight<Datum>().layerKey()).toBe("highlight");
+    });
+  });
+
   describe("known quirks", () => {
     // NOTE: falsy entries are dropped by the merge, so a sparse or partially-cleared highlight
     // array is tolerated. Note the asymmetry with the empty case: dropping every entry still
@@ -500,57 +628,6 @@ describe("map/renderer/highlight", () => {
       const node = render((c) => c.highlight([{ geoId: "a" }, { geoId: "a" }]));
       expect(highlights(node)).toHaveLength(2);
       expect(highlights(node)[0].getAttribute("d")).toBe(highlights(node)[1].getAttribute("d"));
-    });
-
-    // BUG: the join is an index join with no key function, so removing an entry from the middle
-    // of the highlight array re-purposes the surviving elements by position rather than by
-    // entity. The rendered result is right, but element identity does not track entities.
-    test("rebinds by index when the highlight array shrinks", () => {
-      const layer = group("highlight-index-join");
-      const renderWith = (highlight: Datum[]) =>
-        layer
-          .call(
-            mapRendererHighlight<Datum>()
-              .geoJson(collection())
-              .mapPath(mapPathOf())
-              .highlight(highlight)
-          )
-          .node() as SVGGElement;
-      const before = highlights(renderWith([{ geoId: "a" }, { geoId: "b" }]));
-      const firstElement = before[0];
-      const after = highlights(renderWith([{ geoId: "b" }]));
-      expect(after).toHaveLength(1);
-      expect(after[0]).toBe(firstElement);
-      // The rendered result is still right: "d" and the styles are reapplied on every render,
-      // not only on enter, so the reused element switches to the surviving entity.
-      expect(after[0].getAttribute("d")).toBe(before[1].getAttribute("d"));
-    });
-
-    // BUG: the selector is unscoped and the join unkeyed, so a second highlight layer rendered
-    // into the same group rebinds the first one's paths instead of adding its own. choropleth
-    // uses a single highlight renderer, so this is latent - but the renderer is exported
-    // publicly.
-    test("a second highlight layer in one group rebinds the first instead of adding its own", () => {
-      const layer = group("two-highlights");
-      layer.call(
-        mapRendererHighlight<Datum>()
-          .geoJson(collection())
-          .mapPath(mapPathOf())
-          .highlight([{ geoId: "a" }])
-          .highlightStroke("#ff0000")
-      );
-      const first = highlights(layer.node() as SVGGElement)[0];
-      layer.call(
-        mapRendererHighlight<Datum>()
-          .geoJson(collection())
-          .mapPath(mapPathOf())
-          .highlight([{ geoId: "b" }])
-          .highlightStroke("#00ff00")
-      );
-      const after = highlights(layer.node() as SVGGElement);
-      expect(after).toHaveLength(1);
-      expect(after[0]).toBe(first);
-      expect(after[0].style.stroke).toBe("rgb(0, 255, 0)");
     });
 
     // NOTE: the component sets neither fill nor pointer-events, so both come from sszvis.css. A
