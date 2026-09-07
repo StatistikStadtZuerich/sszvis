@@ -76,16 +76,15 @@
  * its `_tag`s; it is rendered the same way - the parentless node is the root either way, and every
  * colour still comes from a node's own top-level ancestor - with one warning per chart.
  *
- * Note: only x0 and x1 are interpolated, and the geometry exists only from the first animation
- * frame, since `d` is written by the arc tween alone and there is no transition property to opt out
- * of - a chart serialised on the render tick is blank. The radii and the colours are not
- * interpolated at all and snap to their new values. The angle handover matches the old arcs by
- * index, so an arc that did not exist a render ago starts at its destination, and exits are removed
- * with no transition.
+ * Note: the angles, the radii and the colours are all interpolated, but the geometry exists only
+ * from the first animation frame, since `d` is written by the arc tween alone and there is no
+ * transition property to opt out of - a chart serialised on the render tick is blank. The handover
+ * matches the old arcs by index, so an arc that did not exist a render ago starts at its
+ * destination and is painted outright, and exits are removed with no transition.
  *
  * Note: the component keeps no state of its own. It writes x0/x1 (the positions currently on
- * screen) and _x0/_x1 (the positions the running transition is heading for) onto every node it
- * renders, so the data has to be mutable - frozen data throws. The on-screen angles are read off
+ * screen), r0/r1 (the radii currently on screen, in pixels) and _x0/_x1 (the positions the running
+ * transition is heading for) onto every node it renders, so the data has to be mutable - frozen data throws. The on-screen angles are read off
  * the existing arcs before the re-partition overwrites them, so re-rendering the same hierarchy
  * object animates the same way a freshly built one does.
  *
@@ -128,10 +127,22 @@ const TWO_PI = 2 * Math.PI;
 export type SunburstNode<T = unknown> = HierarchyRectangularNode<NodeDatum<T>> & {
   _x0?: number;
   _x1?: number;
+  r0?: number;
+  r1?: number;
 };
 
-/** The same node once the render has stamped its destination angles onto it. */
-export type PositionedNode<T = unknown> = SunburstNode<T> & { _x0: number; _x1: number };
+/**
+ * The same node once the render has stamped its destination angles and its current radii
+ * onto it. r0 and r1 are pixels rather than positions in the radius scale's domain, because
+ * the scale itself can change between two renders and the arcs have to ease from the radii
+ * that are on screen rather than from the old scale's reading of them.
+ */
+export type PositionedNode<T = unknown> = SunburstNode<T> & {
+  _x0: number;
+  _x1: number;
+  r0: number;
+  r1: number;
+};
 
 /**
  * Both scales are only ever called, never inspected, so this is all the component needs. A
@@ -246,7 +257,12 @@ export default function <T = unknown>(): SunburstComponent<T> {
           // A path inserted without d3 has no datum at all, which throws here rather than
           // silently shifting the handover - see test/component/sunburst.test.ts.
           const d = Reflect.get(element, "__data__") as SunburstNode<T>;
-          return [d.x0, d.x1] as const;
+          return {
+            angles: [d.x0, d.x1] as const,
+            // Absent until a render has drawn this arc once, in which case it starts at
+            // whatever radii this render computes for it.
+            radii: d.r0 === undefined || d.r1 === undefined ? undefined : ([d.r0, d.r1] as const),
+          };
         });
 
       // NOTE: Determine if we have raw hierarchical data or pre-computed sunburst data
@@ -276,20 +292,37 @@ export default function <T = unknown>(): SunburstComponent<T> {
         nodes = flatten(root).filter((d) => d.parent !== null && d.data._tag !== "root");
       }
 
-      // _x0 and _x1 are the destination values for the transition. We set these to the
-      // computed x0 and x1. Object.assign writes them onto the node the caller handed over
-      // and hands back that same node typed as carrying them, so no cast is needed further
-      // down. Array.from rather than map, because it visits the holes of a sparse array the
-      // way a for...of loop does, and so still fails before anything is rendered.
-      const data = Array.from(nodes, (d) => Object.assign(d, { _x0: d.x0, _x1: d.x1 }));
+      // The geometry accessors read positions off a node, so they are declared before the
+      // destination values are stamped on. The two radius accessors return pixels, and are
+      // the destination of the radius half of the transition.
+      const startAngle = (d: SunburstNode<T>) =>
+        Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
+      const endAngle = (d: SunburstNode<T>) =>
+        Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
+      const innerRadius = (d: SunburstNode<T>) =>
+        props.centerRadius + Math.max(0, props.radiusScale(d.y0));
+      const outerRadius = (d: SunburstNode<T>) =>
+        props.centerRadius + Math.max(0, props.radiusScale(d.y1));
 
-      // Put the on-screen angles back, matched to the new data by index, so the tween below
-      // has somewhere to start from. An arc past the previous element count keeps the angles
-      // the partition just gave it and therefore starts at its destination.
-      for (const [i, angles] of onScreen.entries()) {
+      // _x0 and _x1 are the destination values for the transition. We set these to the
+      // computed x0 and x1, and r0/r1 to the destination radii, which the handover below
+      // replaces wherever an arc is already on screen. Object.assign writes them onto the
+      // node the caller handed over and hands back that same node typed as carrying them, so
+      // no cast is needed further down. Array.from rather than map, because it visits the
+      // holes of a sparse array the way a for...of loop does, and so still fails before
+      // anything is rendered.
+      const data = Array.from(nodes, (d) =>
+        Object.assign(d, { _x0: d.x0, _x1: d.x1, r0: innerRadius(d), r1: outerRadius(d) })
+      );
+
+      // Put the on-screen geometry back, matched to the new data by index, so the tween
+      // below has somewhere to start from. An arc past the previous element count keeps what
+      // this render gave it and therefore starts at its destination.
+      for (const [i, previous] of onScreen.entries()) {
         const node = data[i];
         if (node) {
-          [node.x0, node.x1] = angles;
+          [node.x0, node.x1] = previous.angles;
+          if (previous.radii) [node.r0, node.r1] = previous.radii;
         }
       }
 
@@ -328,39 +361,44 @@ export default function <T = unknown>(): SunburstComponent<T> {
       const fillColor = (node: SunburstNode<T>): string =>
         isRoot(node) ? "transparent" : String(getColorRecursive(node));
 
-      // The four geometry accessors only read positions, so they are declared over the node
-      // before its destination angles are stamped on: the tooltip anchors are rendered from
-      // the datum bound to the group, which for a hierarchy is every node including the root,
-      // and those never go through the data array above.
-      const startAngle = (d: SunburstNode<T>) =>
-        Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
-      const endAngle = (d: SunburstNode<T>) =>
-        Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
-      const innerRadius = (d: SunburstNode<T>) =>
-        props.centerRadius + Math.max(0, props.radiusScale(d.y0));
-      const outerRadius = (d: SunburstNode<T>) =>
-        props.centerRadius + Math.max(0, props.radiusScale(d.y1));
-
       const arcGen = arc<PositionedNode<T>>()
         .startAngle(startAngle)
         .endAngle(endAngle)
-        .innerRadius(innerRadius)
-        .outerRadius(outerRadius);
+        // The radii the arc is drawn at right now, which the tween walks towards the
+        // destination ones. Reading props here instead would put a changed radius scale on
+        // screen in full on the first frame, while the angles were still moving.
+        .innerRadius((d) => d.r0)
+        .outerRadius((d) => d.r1);
 
       const arcs = selection
         .selectAll<SVGPathElement, PositionedNode<T>>(".sszvis-sunburst-arc")
         .data(data)
-        .join("path")
-        .attr("class", "sszvis-sunburst-arc");
+        .join((enter) =>
+          // An entering arc has no colour to ease from, so it is painted outright; every
+          // other attribute change goes through the transition below.
+          enter
+            .append("path")
+            .attr("class", "sszvis-sunburst-arc")
+            .attr("stroke", fn.valueFn(props.stroke))
+            .attr("fill", fillColor)
+        );
 
-      arcs.attr("stroke", fn.valueFn(props.stroke)).attr("fill", fillColor);
+      // One transition for the whole arc: scheduling a second one on the same elements would
+      // cancel this one.
+      const arcTransition = arcs.transition(defaultTransition());
 
-      arcs.transition(defaultTransition()).attrTween("d", (d) => {
+      arcTransition.attr("stroke", fn.valueFn(props.stroke)).attr("fill", fillColor);
+
+      arcTransition.attrTween("d", (d) => {
         const x0Interp = interpolate(d.x0, d._x0);
         const x1Interp = interpolate(d.x1, d._x1);
+        const r0Interp = interpolate(d.r0, innerRadius(d));
+        const r1Interp = interpolate(d.r1, outerRadius(d));
         return (t) => {
           d.x0 = x0Interp(t);
           d.x1 = x1Interp(t);
+          d.r0 = r0Interp(t);
+          d.r1 = r1Interp(t);
           // arc returns null only for an empty path buffer, and every branch of it writes at
           // least a moveTo - even for NaN radii, which come out as "M0,0Z" - so this is
           // unreachable.
