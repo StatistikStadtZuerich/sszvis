@@ -5634,14 +5634,75 @@ declare const fastTransition: () => d3_transition.Transition<d3_selection.BaseTy
  */
 declare const slowTransition: () => d3_transition.Transition<d3_selection.BaseType, unknown, null, undefined>;
 
-declare namespace viewport {
-    export { on };
-    export { off };
-    export { trigger };
+/**
+ * Viewport Resize watcher
+ *
+ * The resize watcher in the sszvis.viewport module alerts user code to changes in the browser
+ * window size. This includes window resizing on desktop browsers, but also orientation changes
+ * on mobile browsers. Functions registered for the 'resize' event are called when the window
+ * fires a resize event:
+ *
+ * sszvis.viewport.on('resize', listenerFunction);
+ *
+ * The window handler is throttled on a 500ms window, leading edge first: the first resize event
+ * calls the listeners synchronously, and if further events arrive within the window the listeners
+ * are called once more on the trailing edge, 500ms later. A single isolated resize event produces
+ * exactly one call. Resize listeners are called with no arguments.
+ *
+ * The module is a page-wide singleton: there is one registry, shared by every chart on the page.
+ *
+ * @module sszvis/viewport
+ *
+ * @function {string, function} on      registers a listener for an event name. 'resize' is the only
+ *                                      name the module itself ever fires, but any name creates a
+ *                                      bucket that the caller can `trigger` by hand. Registering the
+ *                                      same function twice is de-duplicated: the earlier entry is
+ *                                      dropped and the function is appended, so re-registering moves
+ *                                      it to the end of the call order. Listeners run in registration
+ *                                      order.
+ *
+ * @function {string, function} off     removes a listener by function identity. An unknown event name
+ *                                      or an unregistered function is ignored. A single `off` undoes
+ *                                      any number of `on` calls for the same function.
+ *
+ * @function {string, ...any} trigger   calls every listener registered for the event name, forwarding
+ *                                      any further arguments. An event name with no listeners is
+ *                                      ignored.
+ *
+ * Note: the registry is never cleared, so listeners outlive the chart that registered them. A chart
+ * that is torn down keeps receiving resize events unless it calls `off` with the exact same function
+ * reference; an inline arrow function can never be removed.
+ *
+ * Note: `trigger` calls the listeners in a bare loop with no error isolation. A throwing listener
+ * blocks every listener registered after it and the error escapes `trigger`. Thrown from the window
+ * handler it also escapes the throttle before the window is recorded, which leaves throttling
+ * disabled for subsequent resize events. `on` accepts anything it is given, so a non-callable
+ * listener fails the same way on the next trigger rather than at registration.
+ *
+ * Note: `on`, `off` and `trigger` return `this`, so they chain when called as methods on the viewport
+ * object but return `undefined` once destructured. The registration itself still works.
+ *
+ * Note: when there is no `window`, nothing is registered and only manual `trigger` calls fire.
+ *
+ * See test/viewport/resize.test.ts.
+ *
+ * @return {Object}
+ */
+/** A listener on a caller-triggered event. `trigger` forwards whatever the caller passes,
+ * and only the caller knows what that is, so any function is accepted here. Resize listeners
+ * are constrained separately - see the `"resize"` overload on `Viewport.on`. */
+type ViewportListener = (...args: never[]) => void;
+/** A listener on the `"resize"` event. The window handler triggers `"resize"` with no
+ * arguments, so a listener that declares parameters would only ever see `undefined`. */
+type ResizeListener = () => void;
+/** The event emitter returned by this module. There is exactly one, page-wide. */
+interface Viewport {
+    on(this: Viewport, name: "resize", cb: ResizeListener): Viewport;
+    on<Name extends string>(this: Viewport, name: Name extends "resize" ? never : Name, cb: ViewportListener): Viewport;
+    off(this: Viewport, name: string, cb: ViewportListener): Viewport;
+    trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport;
 }
-declare function on(name: any, cb: any): any;
-declare function off(name: any, cb: any): any;
-declare function trigger(name: any, ...args: any[]): any;
+declare const viewport: Viewport;
 
 export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$w as annotationCircle, export_default$v as annotationConfidenceArea, export_default$u as annotationConfidenceBar, export_default$s as annotationLine, export_default$r as annotationRangeFlag, export_default$q as annotationRangeRuler, export_default$p as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$j as bar, bounds, export_default$x as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$c as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$8 as dimensionsHeatTable, export_default$7 as dimensionsHorizontalBarChart, export_default$3 as dimensionsVerticalBarChart, export_default$i as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$t as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$b as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, export_default$6 as layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, export_default$4 as layoutStackedAreaMultiples, export_default$2 as legendColorBinned, export_default$1 as legendColorLinear, legendColorOrdinal, export_default as legendRadius, export_default$h as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$m as move, muchDarker, nestedStackedBarsVertical, not, export_default$g as pack, export_default$l as panning, parseDate, parseNumber, parseYear, export_default$f as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$e as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$d as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$a as selectMenu, set, _default$9 as slider, slightlyDarker, slowTransition, some, export_default$c as stackedArea, export_default$b as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$a as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$o as tooltip, export_default$n as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$9 as treemap, viewport, export_default$k as voronoi, widthAdaptiveMapPathStroke, withAlpha };
-export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter };
+export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SlantDirection, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter, Viewport, ViewportListener };
