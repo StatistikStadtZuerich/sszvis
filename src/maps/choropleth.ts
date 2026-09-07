@@ -18,7 +18,7 @@
  * @property {Number} height                          The height of the map. Used to create the map projection function.
  *                                                    No default, and fails the same way as width.
  * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
- *                                                    Required and unguarded: it is the one property whose absence throws.
+ *                                                    Required and unguarded: its absence throws, as borders' does.
  * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default, and
  *                                                    required in practice: the mesh renderer throws a TypeError naming
  *                                                    its geoJson property if it is left out.
@@ -39,10 +39,13 @@
  * @property {String, Function} fill                  A string or function for the fill of the map entities. Default black.
  *                                                    An accessor is called with undefined for a feature no datum matched.
  * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
- *                                                    mesh, for the border color of the map entities. Default white.
+ *                                                    mesh, for the border color of the map entities. Default white. An
+ *                                                    accessor that resolves to nothing keeps that default rather than
+ *                                                    clearing the stroke.
  * @property {Number, Function} strokeWidth           The width of the border path stroke, delegated to the mesh
  *                                                    renderer like borderColor. A number, or a function handed to d3
- *                                                    and so called with the border mesh. Default 1.25.
+ *                                                    and so called with the border mesh. Default 1.25, with the same
+ *                                                    resolves-to-nothing fallback as borderColor.
  * @property {String, Function} lakePathColor         The color of the entity borders which extend over the lake. No
  *                                                    default: left out, the paths take their stroke from the stylesheet.
  * @property {Boolean} withLake                       Whether or not to show the textured outline of the end of lake Zurich that is within the city. Default true
@@ -63,8 +66,9 @@
  * areas rendered at the same size share the projection fitted to whichever rendered first, and the
  * second is projected outside its destination box.
  *
- * Note: features is the one property whose absence throws, because prepareMergedGeoData reads
- * geoJson.features. width and height have no defaults either, but a missing size degrades silently:
+ * Note: features and borders are the two properties whose absence throws - features because
+ * prepareMergedGeoData reads geoJson.features, borders because the mesh renderer now validates its
+ * own geoJson. width and height have no defaults either, but a missing size degrades silently:
  * fitSize gets undefined, the scale is NaN, and every area carries a path of NaN coordinates that
  * the browser drops, leaving a blank map instead of an error.
  *
@@ -129,11 +133,14 @@ export interface AnchoredShape<T> extends ComponentBuilder<AnchoredShape<T>> {
 
 /**
  * The mesh and lake renderers as this component configures them. borders, lakeFeatures and
- * lakeBorders have no defaults, and the JavaScript passed whatever it was given straight through -
- * which is how a choropleth without borders or lake data renders empty paths instead of failing -
+ * lakeBorders have no defaults, and the JavaScript passed whatever it was given straight through,
  * so the shape these views accept includes the absent case that the renderers' own signatures do
- * not. Everything else about them is unchanged; the delegated properties are reached through
- * component.delegate rather than through these types.
+ * not. The absent case no longer means the same thing for both: a missing lakeFeature or lakeBounds
+ * still renders an empty path, while a missing borders now reaches the mesh renderer's guard and
+ * throws a TypeError naming geoJson. The view keeps the widened parameter so the call site
+ * type-checks; what it no longer promises is that the render survives. Everything else about them
+ * is unchanged; the delegated properties are reached through component.delegate rather than through
+ * these types.
  *
  * Note: the renderers satisfy these views only because method parameters are checked bivariantly,
  * so the compiler is standing in for a cast here rather than proving the widening sound. The
