@@ -3,6 +3,8 @@
  *
  * @module sszvis/map/renderer/geojson
  *
+ * @template T The type of the data values merged onto the geojson features
+ *
  * A component used for rendering overlays of geojson above map layers.
  * It can be used to render any arbitrary GeoJson.
  *
@@ -319,8 +321,11 @@ export default function <
         // d3's own typings expect the projection type as a type argument here.
         const point = props.mapPath.projection<GeoProjection>()(sphericalCentroid);
         // Only a hand-written projection can return null: d3's projections clip in the stream,
-        // not in the point call, and return a pair - of NaN, for a degenerate centroid.
-        return point ?? [Number.NaN, Number.NaN];
+        // not in the point call, and return a pair - of NaN, for a degenerate centroid. A null is
+        // passed on rather than replaced, as the JavaScript did: tooltipAnchor spreads it into
+        // translateString and renders transform="translate(undefined,undefined)". Substituting a
+        // NaN pair here would put a different attribute value in the DOM for the same input.
+        return point as [number, number];
       });
 
       const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
