@@ -64,6 +64,23 @@ describe("horizontalBarChartDimensions", () => {
     });
   });
 
+  describe("degenerate inputs", () => {
+    test("zero bars occupy no height", () => {
+      const dim = dimensionsHorizontalBarChart(0);
+      expect(dim.barGroupHeight).toBe(0);
+      expect(dim.totalHeight).toBe(0);
+      // the fixed properties are constants and stay valid
+      expect(dim.barHeight).toBe(DEFAULT_HEIGHT);
+      expect(dim.padHeight).toBe(MIN_PADDING);
+      expect(dim.axisOffset).toBe(-22);
+    });
+
+    test("rejects a bar count that is not a whole number of bars", () => {
+      expect(() => dimensionsHorizontalBarChart(2.5)).toThrow(/numBars/);
+      expect(() => dimensionsHorizontalBarChart(-3)).toThrow(/numBars/);
+    });
+  });
+
   describe("known quirks", () => {
     test("totalHeight always equals barGroupHeight", () => {
       // NOTE: the JSDoc describes totalHeight as barGroupHeight plus the outer padding, but
@@ -74,32 +91,6 @@ describe("horizontalBarChartDimensions", () => {
         const dim = dimensionsHorizontalBarChart(numBars);
         expect(dim.totalHeight).toBe(dim.barGroupHeight);
       }
-    });
-
-    test("zero bars yields a negative group height", () => {
-      // BUG: numPads = numBars - 1 goes to -1, so the padding term subtracts a full 20px
-      // from an otherwise empty layout.
-      // got: { barGroupHeight: -20, totalHeight: -20 }
-      // want: 0 for an empty chart.
-      const dim = dimensionsHorizontalBarChart(0);
-      expect(dim.barGroupHeight).toBe(-MIN_PADDING);
-      expect(dim.totalHeight).toBe(-MIN_PADDING);
-      // the fixed properties stay valid, so the negative height is easy to miss: the
-      // returned object is half sensible and half nonsense
-      expect(dim.barHeight).toBe(DEFAULT_HEIGHT);
-      expect(dim.padRatio).toBeCloseTo(0.454_545, 5);
-      expect(dim.axisOffset).toBe(-22);
-      // one bar is the last count that still works: numPads is 0, not negative
-      expect(dimensionsHorizontalBarChart(1).barGroupHeight).toBe(DEFAULT_HEIGHT);
-    });
-
-    test("a negative or fractional bar count is accepted without complaint", () => {
-      // BUG: no input validation. A fractional count produces a fractional group height and
-      // a negative count a negative one, rather than an error or a clamp.
-      // got: dimensionsHorizontalBarChart(2.5).barGroupHeight === 90
-      // want: reject or round a non-integer bar count.
-      expect(dimensionsHorizontalBarChart(2.5).barGroupHeight).toBe(24 * 2.5 + 20 * 1.5);
-      expect(dimensionsHorizontalBarChart(-3).barGroupHeight).toBeLessThan(0);
     });
 
     test("the available height is never an input, so the chart cannot be fitted", () => {

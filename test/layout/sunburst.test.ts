@@ -130,6 +130,29 @@ describe("layout/sunburst", () => {
     });
   });
 
+  describe("degenerate inputs", () => {
+    test("a hierarchy with no layers has no rings", () => {
+      expect(computeLayout(0, 600)).toEqual({ centerRadius: 0, numLayers: 0, ringWidth: 0 });
+    });
+
+    test("a chart of no width has no rings", () => {
+      expect(computeLayout(3, 0)).toEqual({ centerRadius: 0, numLayers: 3, ringWidth: 0 });
+    });
+
+    test("rejects a layer count that is not a whole number of layers", () => {
+      expect(() => computeLayout(-3, 600)).toThrow(/numLayers/);
+      expect(() => computeLayout(2.5, 600)).toThrow(/numLayers/);
+    });
+
+    test("rejects a negative width", () => {
+      expect(() => computeLayout(4, -300)).toThrow(/chartWidth/);
+    });
+
+    test("an empty data array has an empty radius extent", () => {
+      expect(getRadiusExtent([])).toEqual([0, 0]);
+    });
+  });
+
   describe("known quirks", () => {
     test("the rings can overflow the chart once they hit the 10px floor", () => {
       // BUG: centerRadius is always a sixth of the width, and the ring width is floored at
@@ -150,54 +173,6 @@ describe("layout/sunburst", () => {
       const outerRadius = layout.centerRadius + layout.ringWidth * layout.numLayers;
       expect(layout.ringWidth).toBe(MAX_SUNBURST_RING_WIDTH);
       expect(outerRadius).toBeLessThan(1200 / 2);
-    });
-
-    test("zero layers gives a full-width ring instead of no rings", () => {
-      // BUG: numLayers = 0 divides by zero. The resulting Infinity is caught by the 60px
-      // cap, so the layout looks valid and reports a ring width for a chart with no rings.
-      // got: { ringWidth: 60, numLayers: 0 }
-      // want: a zero ring width, or an explicit error.
-      const layout = computeLayout(0, 600);
-      expect(layout.ringWidth).toBe(MAX_SUNBURST_RING_WIDTH);
-      expect(layout.numLayers).toBe(0);
-    });
-
-    test("a negative layer count is floored to a 10px ring", () => {
-      // BUG: no input validation. A negative count produces a negative ring width that the
-      // 10px floor turns back into a positive one, so the error is completely hidden.
-      // got: ringWidth 10
-      // want: an explicit error.
-      expect(computeLayout(-3, 600).ringWidth).toBe(MIN_SUNBURST_RING_WIDTH);
-    });
-
-    test("a negative width gives a negative centre and a positive ring", () => {
-      // BUG: no validation of chartWidth either. The centre radius follows the negative
-      // width while the ring width is floored back to 10px, so the two disagree about which
-      // way the chart grows.
-      // got: { centerRadius: -50, ringWidth: 10 }
-      // want: an explicit error.
-      const layout = computeLayout(4, -300);
-      expect(layout.centerRadius).toBe(-50);
-      expect(layout.ringWidth).toBe(MIN_SUNBURST_RING_WIDTH);
-    });
-
-    test("a zero width still reports a 10px ring", () => {
-      // BUG: a container measured before layout gives width 0, but the ring floor means the
-      // layout claims a 10px ring around a zero-radius centre.
-      // got: { centerRadius: 0, ringWidth: 10 }
-      // want: a zero-sized layout.
-      const layout = computeLayout(3, 0);
-      expect(layout.centerRadius).toBe(0);
-      expect(layout.ringWidth).toBe(MIN_SUNBURST_RING_WIDTH);
-    });
-
-    test("an empty data array gives an extent of undefined", () => {
-      // BUG: d3.min and d3.max are undefined for an empty array, so the extent is
-      // [undefined, undefined]. Used as a scale domain, that produces a NaN radius for
-      // every node rather than an empty chart.
-      // got: [undefined, undefined]
-      // want: [0, 0], or an explicit error.
-      expect(getRadiusExtent([])).toEqual([undefined, undefined]);
     });
 
     test("the extent ignores nodes whose positions are missing", () => {

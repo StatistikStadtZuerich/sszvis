@@ -82,8 +82,15 @@ describe("stackedAreaMultiplesLayout", () => {
       expect(layoutStackedAreaMultiples(300, 3, 4)).toEqual(EMPTY);
     });
 
-    test("a negative height has no band to lay out", () => {
-      expect(layoutStackedAreaMultiples(-300, 3)).toEqual(EMPTY);
+    test("rejects a negative height", () => {
+      expect(() => layoutStackedAreaMultiples(-300, 3)).toThrow(/height/);
+    });
+
+    test("rejects a stack count that is not a whole number of stacks", () => {
+      // 0.1 and 0.5 are the counts that used to divide by zero and to empty the range
+      expect(() => layoutStackedAreaMultiples(300, 0.1)).toThrow(/num/);
+      expect(() => layoutStackedAreaMultiples(300, 0.5)).toThrow(/num/);
+      expect(() => layoutStackedAreaMultiples(300, -2)).toThrow(/num/);
     });
   });
 
@@ -112,28 +119,6 @@ describe("stackedAreaMultiplesLayout", () => {
       expect(layoutStackedAreaMultiples(300, 3, Number.NaN)).toEqual(omitted);
     });
 
-    test("num equal to the padding ratio yields an infinite step and no baselines", () => {
-      // BUG: `step = height / (num - pct)` divides by zero when num === pct, so bandHeight
-      // is Infinity and the loop exits immediately with an empty range.
-      // got: { range: [], bandHeight: Infinity, padHeight: Infinity }
-      // want: a guard on num.
-      const layout = layoutStackedAreaMultiples(300, 0.1);
-      expect(layout.range).toEqual([]);
-      expect(layout.bandHeight).toBe(Number.POSITIVE_INFINITY);
-      expect(layout.padHeight).toBe(Number.POSITIVE_INFINITY);
-    });
-
-    test("a fractional num between the padding ratio and 1 yields no baselines at all", () => {
-      // BUG: for 0.1 < num < 1 the first baseline already sits below the chart, so the loop
-      // never runs and the ordinal scale is left with an empty range - every stack then maps
-      // to undefined.
-      // got: range []
-      // want: a guard on num, or at least one baseline.
-      const layout = layoutStackedAreaMultiples(300, 0.5);
-      expect(layout.range).toEqual([]);
-      expect(layout.bandHeight).toBe(675);
-    });
-
     test("a pct equal to num emits a single -Infinity baseline", () => {
       // BUG: step is Infinity here, and bandHeight is Infinity * (1 - 3) = -Infinity, which
       // passes the loop condition once before `level += step` makes it NaN and stops the
@@ -157,6 +142,5 @@ describe("stackedAreaMultiplesLayout", () => {
         expect(layoutStackedAreaMultiples(height, num).range[num - 1]).toBeCloseTo(height, 9);
       }
     });
-
   });
 });

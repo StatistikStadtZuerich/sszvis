@@ -86,6 +86,32 @@ describe("heatTableDimensions", () => {
     });
   });
 
+  describe("degenerate inputs", () => {
+    const EMPTY = { side: 0, paddedSide: 0, padRatio: 0, width: 0, height: 0, centeredOffset: 0 };
+
+    test("a table with no columns has no dimensions to report", () => {
+      expect(dimensionsHeatTable(100, 2, 0, 5)).toEqual(EMPTY);
+    });
+
+    test("a table with no rows has no dimensions to report", () => {
+      expect(dimensionsHeatTable(100, 2, 5, 0)).toEqual(EMPTY);
+    });
+
+    test("a container of no width has no dimensions to report", () => {
+      expect(dimensionsHeatTable(0, 2, 10, 5)).toEqual(EMPTY);
+    });
+
+    test("rejects a column or row count that is not a whole number", () => {
+      expect(() => dimensionsHeatTable(800, 2, 2.5, 5)).toThrow(/numX/);
+      expect(() => dimensionsHeatTable(800, 2, 10, -5)).toThrow(/numY/);
+    });
+
+    test("rejects a negative width or padding", () => {
+      expect(() => dimensionsHeatTable(-800, 2, 10, 5)).toThrow(/spaceWidth/);
+      expect(() => dimensionsHeatTable(800, -4, 10, 5)).toThrow(/squarePadding/);
+    });
+  });
+
   describe("known quirks", () => {
     test("mutates the chartPadding object it is given", () => {
       // BUG: the defaults are written back onto the caller's object instead of onto a copy,
@@ -134,36 +160,6 @@ describe("heatTableDimensions", () => {
       // 30px space is enough.
       const dim = dimensionsHeatTable(30, 40, 2, 2);
       expect(dim.side).toBeLessThan(0);
-    });
-
-    test("a negative squarePadding overlaps the boxes and inverts padRatio", () => {
-      // BUG: squarePadding is not validated. A negative value shrinks paddedSide below the
-      // box side, so the boxes overlap and padRatio goes negative - again outside the
-      // [0, 1) range a band scale accepts.
-      // got: side 30, paddedSide 26, padRatio -0.154
-      // want: reject a negative padding.
-      const dim = dimensionsHeatTable(800, -4, 10, 5);
-      expect(dim.paddedSide).toBeLessThan(dim.side);
-      expect(dim.padRatio).toBeLessThan(0);
-    });
-
-    test("a fractional column count is accepted without rounding", () => {
-      // BUG: numX and numY are used directly in the geometry, so a fractional count yields
-      // a table sized for two and a half columns rather than an error.
-      // got: width for numX 2.5 is 2.5 * paddedSide - squarePadding
-      // want: reject or round a non-integer count.
-      const dim = dimensionsHeatTable(800, 2, 2.5, 5);
-      expect(dim.width).toBeCloseTo(2.5 * dim.paddedSide - 2, 9);
-    });
-
-    test("zero columns fall back to the default side and a negative width", () => {
-      // BUG: numX = 0 divides by zero, giving an Infinity side that Math.min silently
-      // replaces with the 30px default. The width then comes out as -squarePadding.
-      // got: { side: 30, width: -2 }
-      // want: a zero-sized table, or an explicit error.
-      const dim = dimensionsHeatTable(100, 2, 0, 5);
-      expect(dim.side).toBe(DEFAULT_SIDE);
-      expect(dim.width).toBe(-2);
     });
 
     test("a zero-valued padding side is indistinguishable from a missing one", () => {

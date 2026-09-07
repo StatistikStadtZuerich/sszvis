@@ -17,7 +17,8 @@
  * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
  *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
  *   is discarded by the minimum rather than distorting the others.
- * - an empty column list gives NaN/undefined elsewhere in computeLayout.
+ * - computeLayout returns a zeroed layout for a diagram with no columns, no room, or no
+ *   values at all.
  */
 
 import { ascending, descending, max, min, sum } from "d3";
@@ -25,6 +26,7 @@ import { ascending, descending, max, min, sum } from "d3";
 import type { SankeyLink, SankeyNode } from "../component/sankey.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
+import { requireCount, requireSize } from "./validate.js";
 
 /** A node as this module builds it: every link list is present, unlike the component's view. */
 type PreparedNode = SankeyNode & {
@@ -61,11 +63,9 @@ export interface SankeyDataPreparation<T = unknown> {
 
 export type SankeyComputedLayout = {
   valuePadding: number;
-  /** undefined when there are no columns at all - see the behaviour notes. */
-  nodePadding: number | undefined;
+  nodePadding: number;
   columnPaddings: number[];
-  /** The upper bound is undefined when there are no columns at all. */
-  valueDomain: [number, number | undefined];
+  valueDomain: [number, number];
   valueRange: [number, number];
   nodeThickness: number;
   columnDomain: [number, number];
@@ -350,10 +350,12 @@ const num = (value: number | undefined): number => (value === undefined ? Number
  *   every column is at 50 anyway - it never shrinks another column.
  * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
  *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
- *   every total is 0; in that case the value range comes back [0, NaN].
+ *   every total is 0; a diagram whose columns are all empty is zeroed instead.
  * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
  *   (numColumns - 1). Fewer than two columns have no step at all and report an offset of 0.
  * - nodeThickness is always 20.
+ * - A diagram with no columns, no room or no values at all comes back zeroed; a negative
+ *   height or width, or a negative or fractional column length, throws.
  */
 export const computeLayout = (
   columnLengths: number[],
@@ -361,6 +363,45 @@ export const computeLayout = (
   columnHeight: number,
   columnWidth: number
 ): SankeyComputedLayout => {
+  requireSize("sankeyLayout", "columnHeight", columnHeight);
+  requireSize("sankeyLayout", "columnWidth", columnWidth);
+  for (const colLength of columnLengths) {
+    requireCount("sankeyLayout", "columnLengths", colLength);
+  }
+  if (columnTotals.length !== columnLengths.length) {
+    throw new RangeError(
+      `sankeyLayout: columnTotals must hold one total per column, got ${columnTotals.length} for ${columnLengths.length} columns`
+    );
+  }
+
+  // The maximum total value of any column
+  const maxTotal = max(columnTotals) ?? 0;
+
+  const nodeThickness = 20;
+  const numColumns = columnLengths.length;
+  // With one column there are no steps to space out, so the offset is zero rather than a
+  // division by zero (issue #120).
+  const columnXMultiplier = numColumns > 1 ? (columnWidth - nodeThickness) / (numColumns - 1) : 0;
+  const columnDomain: [number, number] = [0, 1];
+  const columnRange: [number, number] = [0, columnXMultiplier];
+
+  // Nothing to scale: no columns, no room for them, or no values in any of them
+  if (numColumns === 0 || columnHeight === 0 || columnWidth === 0 || maxTotal === 0) {
+    return {
+      valuePadding: 0,
+      nodePadding: 0,
+      columnPaddings: columnLengths.map(() => 0),
+      valueDomain: [0, maxTotal],
+      valueRange: [0, 0],
+      nodeThickness,
+      columnDomain,
+      // Zeroed with the rest of the layout. Computed from columnWidth, the multiplier is
+      // negative once columnWidth falls below nodeThickness, which would place the columns
+      // outside a container that has no room for them at all.
+      columnRange: [0, 0],
+    };
+  }
+
   // Calculate appropriate scale and padding values (in pixels)
   const padSpaceRatio = 0.15;
   const padMin = 12;
@@ -396,9 +437,6 @@ export const computeLayout = (
   // The padding between bars, in pixels
   const nodePadding = computedPixPadding;
 
-  // The maximum total value of any column
-  const maxTotal = max(columnTotals);
-
   // Compute y-padding required to vertically center each column (in pixels)
   const paddedHeights = columnLengths.map(
     (colLength, colIndex) =>
@@ -410,23 +448,13 @@ export const computeLayout = (
   );
 
   // The domain of the size scale
-  const valueDomain: [number, number | undefined] = [0, maxTotal];
+  const valueDomain: [number, number] = [0, maxTotal];
   // The range of the size scale
-  const valueRange: [number, number] = [0, num(maxTotal) * num(pixPerUnit)];
-
-  // Calculate column (or row, as the case may be) positioning values
-  const nodeThickness = 20;
-  const numColumns = columnLengths.length;
-  // With one column there are no steps to space out, so the offset is zero rather than a
-  // division by zero (issue #120).
-  const columnXMultiplier =
-    numColumns > 1 ? (columnWidth - nodeThickness) / (numColumns - 1) : 0;
-  const columnDomain: [number, number] = [0, 1];
-  const columnRange: [number, number] = [0, columnXMultiplier];
+  const valueRange: [number, number] = [0, maxTotal * num(pixPerUnit)];
 
   return {
     valuePadding,
-    nodePadding,
+    nodePadding: num(nodePadding),
     columnPaddings,
     valueDomain,
     valueRange,

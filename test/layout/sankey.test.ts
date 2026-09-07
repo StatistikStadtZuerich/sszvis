@@ -196,6 +196,62 @@ describe("layout/sankey", () => {
     });
   });
 
+  describe("degenerate layouts", () => {
+    test("a diagram with no values at all is zeroed", () => {
+      const empty = computeLayout([2, 2], [0, 0], 400, 600);
+      expect(empty.valueDomain).toEqual([0, 0]);
+      expect(empty.valueRange).toEqual([0, 0]);
+      expect(empty.nodePadding).toBe(0);
+      expect(empty.valuePadding).toBe(0);
+      expect(empty.columnPaddings).toEqual([0, 0]);
+    });
+
+    test("one empty column among populated ones changes nothing", () => {
+      const partial = computeLayout([2, 2], [18, 0], 400, 600);
+      expect(partial.valueRange).toEqual(computeLayout([2, 2], [18, 18], 400, 600).valueRange);
+    });
+
+    test("a diagram with no columns is zeroed", () => {
+      expect(computeLayout([], [], 400, 600)).toEqual({
+        valuePadding: 0,
+        nodePadding: 0,
+        columnPaddings: [],
+        valueDomain: [0, 0],
+        valueRange: [0, 0],
+        nodeThickness: 20,
+        columnDomain: [0, 1],
+        columnRange: [0, 0],
+      });
+    });
+
+    test("a diagram with no room is zeroed", () => {
+      expect(computeLayout([2, 2], [18, 18], 0, 600).valueRange).toEqual([0, 0]);
+      expect(computeLayout([2, 2], [18, 18], 400, 0).valueRange).toEqual([0, 0]);
+    });
+
+    test("a zeroed diagram zeroes its column range too", () => {
+      // The multiplier is (columnWidth - nodeThickness) / (numColumns - 1), so a zero
+      // columnWidth used to yield -20 here and place the second column to the left of a
+      // container that has no room for either.
+      expect(computeLayout([2, 2], [18, 18], 400, 0).columnRange).toEqual([0, 0]);
+      expect(computeLayout([2, 2], [18, 18], 0, 600).columnRange).toEqual([0, 0]);
+    });
+
+    test("rejects a negative height or width", () => {
+      expect(() => computeLayout([2, 2], [18, 18], -400, 600)).toThrow(/columnHeight/);
+      expect(() => computeLayout([2, 2], [18, 18], 400, -600)).toThrow(/columnWidth/);
+    });
+
+    test("rejects a column length that is not a whole number of nodes", () => {
+      expect(() => computeLayout([2, 2.5], [18, 18], 400, 600)).toThrow(/columnLengths/);
+      expect(() => computeLayout([2, -1], [18, 18], 400, 600)).toThrow(/columnLengths/);
+    });
+
+    test("rejects a totals list that does not match the columns", () => {
+      expect(() => computeLayout([2, 2], [18], 400, 600)).toThrow(/columnTotals/);
+    });
+  });
+
   describe("known quirks", () => {
     test("link ids are handed out from a module-level counter", () => {
       // BUG: undocumented. The counter is shared by every prepareData instance in the page and never
@@ -267,21 +323,6 @@ describe("layout/sankey", () => {
       expect(computeLayout([1, 20], [18, 18], 400, 600).nodePadding).toBe(12);
     });
 
-    test("a layout with nothing in it at all poisons the value range", () => {
-      // BUG: pixels-per-unit divides by the column total, so an empty column contributes
-      // Infinity. Only when EVERY column is empty does that become the minimum, and the
-      // value range is then [0, 0 * Infinity] = [0, NaN].
-      // got: valueRange [0, NaN]
-      // want: a zero-height layout.
-      const empty = computeLayout([2, 2], [0, 0], 400, 600);
-      expect(empty.valueRange[1]).toBeNaN();
-      expect(empty.valueDomain).toEqual([0, 0]);
-
-      // one empty column among populated ones is harmless: min ignores the Infinity
-      const partial = computeLayout([2, 2], [18, 0], 400, 600);
-      expect(partial.valueRange).toEqual(computeLayout([2, 2], [18, 18], 400, 600).valueRange);
-    });
-
     test("the default accessors drop every row of objects", () => {
       // BUG: source, target and value all default to fn.identity, so without accessors the
       // raw row is looked up as a node id. For the object rows this layout is built around
@@ -330,17 +371,6 @@ describe("layout/sankey", () => {
       // ends at -3, so the links are drawn outside the node they belong to
       expect(links.find((l) => l.tgt.id === "d")?.srcOffset).toBe(0);
       expect(links.find((l) => l.tgt.id === "c")?.srcOffset).toBe(2);
-    });
-
-    test("no columns at all yields NaN everywhere", () => {
-      // BUG: d3.min of an empty array is undefined, so every derived value is NaN, and the
-      // column multiplier divides by -1.
-      // got: { nodePadding: undefined, valueRange: [0, NaN] }
-      // want: an explicit error, or an empty layout.
-      const none = computeLayout([], [], 400, 600);
-      expect(none.nodePadding).toBeUndefined();
-      expect(none.valueRange[1]).toBeNaN();
-      expect(none.columnRange[1]).toBe(0);
     });
   });
 });

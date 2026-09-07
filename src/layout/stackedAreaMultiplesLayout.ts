@@ -29,13 +29,13 @@
  * - The baseline loop terminates on an absolute 1px slack (`level - height < 1`), not a fraction of the step,
  *   so charts whose step is under ~1px get MORE baselines than there are stacks.
  * - pct defaults via `pct || 0.1`, so an explicit 0 (or NaN) is silently replaced by 0.1.
- * - num === pct divides by zero. With the default pct the step is Infinity and the range comes
- *   back empty; with a pct above 1 the first baseline is -Infinity and the range holds that one
- *   unusable value.
- * - 0.1 < num < 1 also yields an empty range (the first baseline already sits below the chart).
+ * - num is a count of stacks: a negative or fractional value throws, which also rules out the
+ *   num === pct division by zero.
  * - A step that is not strictly positive - a zero or negative height, or a num at or below pct -
  *   describes no band at all, and the layout comes back empty rather than looping forever.
  */
+
+import { requireCount, requireSize } from "./validate.js";
 
 export type StackedAreaMultiplesLayout = {
   range: number[];
@@ -51,6 +51,9 @@ export default function layoutStackedAreaMultiples(
   num: number,
   pct?: number
 ): StackedAreaMultiplesLayout {
+  requireSize("layoutStackedAreaMultiples", "height", height);
+  requireCount("layoutStackedAreaMultiples", "num", num);
+
   const padRatio = pct || 0.1;
   const step = height / (num - padRatio);
   // A non-positive step never reaches the bottom of the chart, so the baseline loop below
