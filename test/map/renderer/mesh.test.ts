@@ -76,7 +76,9 @@ describe("map/renderer/mesh", () => {
   const mapPathOf = () =>
     geoPath().projection(swissMapProjection(100, 100, collection(), `mesh-path-${++pathKey}`));
 
-  const borders = (node: Element) => [...node.querySelectorAll("path.sszvis-map__border")];
+  const borders = (node: Element) => [
+    ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__border"),
+  ];
 
   /** Renders the mesh, returning the group node it drew into. */
   const render = (
@@ -143,18 +145,21 @@ describe("map/renderer/mesh", () => {
       expect(borders(node)[0].style.strokeWidth).toBe("2");
     });
 
-    // NOTE: these two props are written as inline styles rather than attributes, so they override
-    // any stylesheet rule for .sszvis-map__border - unlike the fill and stroke of the base and
-    // geojson renderers, which are attributes and lose to CSS.
+    // NOTE: these two props are written as inline styles rather than attributes, unlike the fill
+    // and stroke of the base and geojson renderers. sszvis.css does not set stroke or stroke-width
+    // for .sszvis-map__border, so nothing is being overridden - the cost runs the other way: a
+    // consumer cannot restyle a mesh border from their own stylesheet, because an inline style
+    // beats any author rule short of !important.
     test("writes the border colour as an inline style, not an attribute", () => {
       const node = render((c) => c.borderColor("#7C7C7C"));
       expect(borders(node)[0].hasAttribute("stroke")).toBe(false);
       expect(borders(node)[0].getAttribute("style")).toContain("stroke");
     });
 
-    // NOTE: unlike every other map renderer's colour props, borderColor and strokeWidth are not
-    // wrapped in fn.functor. A function is handed straight to d3, so it is called with the mesh
-    // object itself and d3's index - there is no per-border datum, since there is only one path.
+    // NOTE: borderColor and strokeWidth are not wrapped in fn.functor, unlike the colour props of
+    // the base, geojson and highlight renderers. A function is handed straight to d3, so it is
+    // called with the mesh object itself and d3's index - there is no per-border datum, since
+    // there is only one path. The lake overlay's lakePathColor has the same shape.
     test("calls a borderColor function with the mesh object and the index", () => {
       const meshFeature = mesh();
       const seen: unknown[] = [];
@@ -195,8 +200,10 @@ describe("map/renderer/mesh", () => {
   });
 
   describe("known quirks", () => {
-    // NOTE: strokeWidth is a real property with a default, but it is absent from the module's
-    // @property documentation, so the only way to discover it is to read the source.
+    // NOTE: strokeWidth is a real property with a default, and choropleth delegates it publicly,
+    // but src/maps/choropleth.js does not list it among its own @property lines - so a caller
+    // reading choropleth's docs would conclude border thickness is not configurable. Every docs
+    // example leaves it at the default, which is consistent with it being undiscoverable.
     test("exposes strokeWidth, which the documentation does not mention", () => {
       expect(mapRendererMesh().strokeWidth()).toBe(1.25);
       expect(mapRendererMesh().borderColor()).toBe("white");
@@ -215,17 +222,120 @@ describe("map/renderer/mesh", () => {
       expect(borders(node)[0].style.stroke).toBe("white");
     });
 
-    // BUG: a missing mapPath is equally silent. d3 removes an attribute set to undefined without
-    // ever calling anything, so the path is created and left geometry-less.
+    // The same root defect as above, by a different d3 mechanism: an attribute set to undefined
+    // is removed without anything being called.
     test("renders a styled but empty path when mapPath is missing", () => {
       const node = group().call(mapRendererMesh().geoJson(mesh())).node() as SVGGElement;
       expect(borders(node)).toHaveLength(1);
       expect(borders(node)[0].hasAttribute("d")).toBe(false);
     });
 
+    // BUG: the component sets neither fill nor pointer-events, so both come from sszvis.css. A
+    // mesh rendered without that stylesheet is a filled black shape covering the map - SVG's
+    // initial fill is black - and it swallows the base layer's hover and click events, because it
+    // sits on top of them and only CSS makes it transparent to the pointer.
+    test("relies on the stylesheet for fill and pointer-events", () => {
+      const node = render();
+      const border = borders(node)[0];
+      expect(border.hasAttribute("fill")).toBe(false);
+      expect(border.style.fill).toBe("");
+      expect(border.style.pointerEvents).toBe("");
+    });
+
+    // BUG: a borderColor function that returns null or undefined removes the inline stroke, and
+    // with no stylesheet stroke the SVG initial value `none` applies - an invisible border, no
+    // error. This is a realistic outcome, since the accessor is called with the mesh object
+    // rather than a datum, so a caller's (d) => colorScale(d.value) yields undefined.
+    test("silently removes the border when borderColor returns undefined", () => {
+      // @ts-expect-error - d3 removes a style whose value is undefined, though its types allow
+      // only null. Returning undefined is what a real accessor written against a datum produces.
+      const node = render((c) => c.borderColor(() => undefined));
+      expect(borders(node)[0].style.stroke).toBe("");
+      expect(borders(node)[0].getAttribute("style") ?? "").not.toContain("stroke:");
+    });
+
+    // NOTE: an invalid stroke-width is dropped by the CSS parser, so the SVG initial width of 1
+    // applies - a typo yields a slightly thinner border rather than an error. Zero renders
+    // nothing at all.
+    test("falls back to the initial width for an invalid strokeWidth", () => {
+      expect(
+        borders(
+          // @ts-expect-error - a string is a caller error; pinned because it fails silently
+          render((c) => c.strokeWidth("abc"))
+        ).at(0)?.style.strokeWidth
+      ).toBe("");
+      expect(borders(render((c) => c.strokeWidth(-1))).at(0)?.style.strokeWidth).toBe("");
+      expect(borders(render((c) => c.strokeWidth(0))).at(0)?.style.strokeWidth).toBe("0");
+    });
+
+    // This renderer is genuinely free of the quirk family its siblings share: there is no
+    // transition to interpolate a colour onto itself, no slowTransition no-op, no stale-class
+    // repaint and no missing-value pattern. Pinned so the port cannot introduce one.
+    test("schedules no transition at all", () => {
+      const node = render();
+      expect(
+        (borders(node)[0] as Element & { __transition?: unknown }).__transition
+      ).toBeUndefined();
+    });
+
+    // BUG: the border selector is unscoped and unkeyed, so a second mesh rendered into the same
+    // group rebinds and restyles the first one's path instead of adding its own. choropleth uses
+    // a single mesh, so this is latent - but the renderer is exported publicly.
+    test("a second mesh in one group restyles the first instead of adding its own", () => {
+      const layer = group("two-meshes");
+      layer.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#ff0000"));
+      const first = borders(layer.node() as SVGGElement)[0];
+      layer.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#00ff00"));
+      const after = borders(layer.node() as SVGGElement);
+      expect(after).toHaveLength(1);
+      expect(after[0]).toBe(first);
+      expect(after[0].style.stroke).toBe("rgb(0, 255, 0)");
+    });
+
+    // The path data is reapplied on every render rather than only on enter, so a geoJson mutated
+    // in place still repaints even though the bound datum is identical. The siblings' keyed joins
+    // do not give that for free.
+    test("repaints a geoJson that was mutated in place", () => {
+      const meshFeature = mesh();
+      const mapPath = mapPathOf();
+      const layer = group("mesh-mutated");
+      const renderWith = () =>
+        layer.call(mapRendererMesh().geoJson(meshFeature).mapPath(mapPath)).node() as SVGGElement;
+      const before = borders(renderWith())[0].getAttribute("d");
+      meshFeature.geometry.coordinates = [
+        [
+          [4, 4],
+          [4, 5],
+        ],
+      ];
+      expect(borders(renderWith())[0].getAttribute("d")).not.toBe(before);
+    });
+
+    // NOTE: mapPath is handed to d3 as the attribute callback, so it is invoked as
+    // mapPath(datum, index, group). d3-geo forwards the extra arguments to its own accessors,
+    // which is harmless, but a caller-supplied generator does receive them.
+    test("calls mapPath with d3's index and group as extra arguments", () => {
+      const meshFeature = mesh();
+      const seen: unknown[][] = [];
+      const node = group()
+        .call(
+          mapRendererMesh()
+            .geoJson(meshFeature)
+            .mapPath((...args: unknown[]) => {
+              seen.push(args);
+              return "M0,0L1,1";
+            })
+        )
+        .node() as SVGGElement;
+      expect(seen[0][0]).toBe(meshFeature);
+      expect(seen[0][1]).toBe(0);
+      expect(seen[0]).toHaveLength(3);
+      expect(borders(node)[0].getAttribute("d")).toBe("M0,0L1,1");
+    });
+
     // NOTE: nothing constrains the geoJson to be a mesh. A feature collection renders as one path
-    // containing every feature's outline, which is the documented mesh behaviour applied to
-    // filled shapes - it just cannot be styled per shape.
+    // containing every feature's outline, drawn as outlines only because the stylesheet sets
+    // fill: none - it just cannot be styled per shape.
     test("renders a feature collection as one path too", () => {
       const features = collection();
       const mapPath = mapPathOf();
