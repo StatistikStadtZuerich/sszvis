@@ -25,13 +25,11 @@
  * @template P The type of one point along a line
  * @template L The type of the datum for a whole line
  *
- * @property {number, function} x       An accessor function for getting the x-value of the line, or a
- *                                       constant. Required: omitting it draws nothing at all, with no
- *                                       warning, because every point then reads as missing.
- * @property {function} y                An accessor function for getting the y-value of the line. Required,
- *                                       and unlike x it must be a function, because the default defined
- *                                       predicate calls it. Omitting it throws a TypeError rather than a
- *                                       named missing-property error.
+ * @property {number, function} x       An accessor function for getting the x-value of the line, in
+ *                                       pixels, or a constant. Becomes a functor. Required: leaving it
+ *                                       unset throws before anything is rendered.
+ * @property {number, function} y        An accessor function for getting the y-value of the line, in
+ *                                       pixels, or a constant. Becomes a functor. Required, like x.
  * @property {function} [defined]        A per-point predicate handed to d3.line, deciding whether a point is
  *                                       drawn. Defaults to skipping points whose x or y is missing. It
  *                                       replaces that default rather than composing with it, so setting it
@@ -81,6 +79,13 @@ import { defaultTransition } from "../transition.js";
 type PointAccessor<P, R> = (datum: P, index: number, points: P[]) => R;
 
 /**
+ * How x and y read back once they are stored. Every parameter is optional because a constant
+ * handed to either of them becomes a functor that ignores its arguments; one of these is
+ * still assignable to a setter, so a value read from a getter can be handed straight back.
+ */
+type StoredPointAccessor<P, R> = (datum?: P, index?: number, points?: P[]) => R;
+
+/**
  * Style accessors are handed to the d3 selection, which calls them with the datum for a
  * whole line and that line's index within the outer array - not with a single point.
  */
@@ -93,8 +98,8 @@ type StyleValue<L, R> = R | LineAccessor<L, R>;
 type ValuesAccessor<L, P> = (datum: L, index: number) => P[];
 
 type LineProps<P, L> = {
-  x: number | PointAccessor<P, number>;
-  y: PointAccessor<P, number>;
+  x: StoredPointAccessor<P, number> | undefined;
+  y: StoredPointAccessor<P, number> | undefined;
   defined?: PointAccessor<P, boolean>;
   key: LineAccessor<L, string | number>;
   valuesAccessor: ValuesAccessor<L, P>;
@@ -105,10 +110,13 @@ type LineProps<P, L> = {
 
 export interface LineComponent<P = unknown, L = unknown>
   extends ComponentBuilder<LineComponent<P, L>> {
-  x(): number | PointAccessor<P, number> | undefined;
+  // x and y have no default: required() runs at render time, so the getter is undefined
+  // until the caller sets one. The type says so rather than letting an unset property be
+  // called without narrowing.
+  x(): StoredPointAccessor<P, number> | undefined;
   x<Q = P>(value: number | PointAccessor<Q, number>): LineComponent<P, L>;
-  y(): PointAccessor<P, number> | undefined;
-  y<Q = P>(accessor: PointAccessor<Q, number>): LineComponent<P, L>;
+  y(): StoredPointAccessor<P, number> | undefined;
+  y<Q = P>(value: number | PointAccessor<Q, number>): LineComponent<P, L>;
   defined(): PointAccessor<P, boolean> | undefined;
   defined<Q = P>(predicate: PointAccessor<Q, boolean>): LineComponent<P, L>;
   key(): LineAccessor<L, string | number>;
@@ -144,11 +152,23 @@ export interface LineComponent<P = unknown, L = unknown>
  */
 const isMissingVal = (value: unknown): boolean => Number.isNaN(Number(value));
 
-export default function <P = unknown, L = unknown>(): LineComponent<P, L> {
+/**
+ * Reports a required property the caller left unset, naming both the component and the
+ * property. Called before the data join, so a missing accessor is reported by name instead of
+ * arriving as a TypeError from d3's internals (a missing y) or as an empty path (a missing x).
+ */
+function required<T>(value: T | undefined, name: string): T {
+  if (value === undefined) {
+    throw new Error(`[line] the ${name} property is required`);
+  }
+  return value;
+}
+
+export default function line<P = unknown, L = unknown>(): LineComponent<P, L> {
   return (
     component<LineComponent<P, L>>()
-      .prop("x")
-      .prop("y")
+      .prop("x", fn.functor)
+      .prop("y", fn.functor)
       .prop("stroke")
       .prop("strokeWidth")
       .prop("defined")
@@ -167,22 +187,23 @@ export default function <P = unknown, L = unknown>(): LineComponent<P, L> {
 
         // Layouts
 
-        // d3 has separate overloads for a constant and an accessor, so a constant x is
-        // normalised here. d3 would wrap it in exactly the same way.
-        const xProp = props.x;
-        const x: PointAccessor<P, number> = typeof xProp === "function" ? xProp : () => xProp;
+        // Both properties are wrapped by fn.functor on set, so a constant reads back as a
+        // function and needs no normalising here - but an unset property is still undefined,
+        // and is reported by name before anything is rendered.
+        const x = required(props.x, "x");
+        const y = required(props.y, "y");
 
         // Both dimensions are guarded. Checking only y would let a missing x reach the d
         // attribute verbatim, and the browser then drops that segment along with every
-        // segment after it, silently truncating the series.
+        // segment after it, silently truncating the series. An explicitly set predicate
+        // replaces this one rather than composing with it.
         const defined: PointAccessor<P, boolean> =
           props.defined === undefined
             ? (datum, index, points) =>
-                !isMissingVal(x(datum, index, points)) &&
-                !isMissingVal(props.y(datum, index, points))
+                !isMissingVal(x(datum, index, points)) && !isMissingVal(y(datum, index, points))
             : props.defined;
 
-        const line = d3Line<P>().defined(defined).x(x).y(props.y);
+        const line = d3Line<P>().defined(defined).x(x).y(y);
 
         // Rendering
 
