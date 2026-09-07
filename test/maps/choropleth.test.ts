@@ -148,6 +148,11 @@ describe("maps/choropleth", () => {
   const lakePaths = (node: Element) => [
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__lakepath"),
   ];
+  /**
+   * The scope the lake overlay generated for this group, which qualifies its three definition ids.
+   * Read back rather than hardcoded, since the generated scope is a global counter.
+   */
+  const lakeScope = (node: Element) => node.getAttribute("data-sszvis-lake-overlay");
   const highlights = (node: Element) => [
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__highlight"),
   ];
@@ -341,12 +346,35 @@ describe("maps/choropleth", () => {
       const node = render(fullData);
       expect(lake(node)[0].getAttribute("mask")).toBeNull();
       const root = node.ownerSVGElement as SVGSVGElement;
-      expect(root.querySelectorAll("#lake-fade-gradient")).toHaveLength(0);
+      expect(root.querySelectorAll(`#lake-fade-gradient-${lakeScope(node)}`)).toHaveLength(0);
     });
 
+    // The lake definitions are scoped per overlay, so the mask id is read back from the scope the
+    // renderer recorded on the group rather than hardcoded.
     test("fades the lake out when lakeFadeOut is set", () => {
       const node = render(fullData, (c) => c.lakeFadeOut(true));
-      expect(lake(node)[0].getAttribute("mask")).toBe("url(#lake-fade-mask)");
+      expect(lake(node)[0].getAttribute("mask")).toBe(`url(#lake-fade-mask-${lakeScope(node)})`);
+    });
+
+    // Turning the fade back off removes it: the renderer drops the mask attribute and both of its
+    // definitions rather than only skipping the write, so a chart driving lakeFadeOut from a
+    // control can unfade.
+    test("removes the fade when lakeFadeOut is turned back off", () => {
+      const collection = geoJson();
+      const target = layer("fade-toggle");
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .lakeFeatures(lakeFeature())
+        .lakeBorders(lakeBorders())
+        .width(240)
+        .height(240);
+      target.call(map.lakeFadeOut(true));
+      const node = target.call(map.lakeFadeOut(false)).node() as SVGGElement;
+      expect(lake(node)[0].getAttribute("mask")).toBeNull();
+      const scope = lakeScope(node);
+      expect(node.querySelectorAll(`#lake-fade-mask-${scope}`)).toHaveLength(0);
+      expect(node.querySelectorAll(`#lake-fade-gradient-${scope}`)).toHaveLength(0);
     });
 
     test("delegates lakePathColor to the lake renderer", () => {
@@ -630,7 +658,7 @@ describe("maps/choropleth", () => {
       expect(lake(node)[0].getAttribute("d")).toBeNull();
       expect(lakePaths(node)[0].getAttribute("d")).toBeNull();
       const root = node.ownerSVGElement as SVGSVGElement;
-      expect(root.querySelectorAll("#lake-pattern")).toHaveLength(1);
+      expect(root.querySelectorAll(`#lake-pattern-${lakeScope(node)}`)).toHaveLength(1);
     });
 
     // BUG: turning the lake off after it has been drawn does not remove it. The render only skips
@@ -768,25 +796,6 @@ describe("maps/choropleth", () => {
       areas(one)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
       areas(two)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
       expect(clicks).toBe(2);
-    });
-
-    // BUG: the same leftover as withLake, reached through lakeFadeOut alone: the mask stays on the
-    // lake path once a render has applied it, because the lake renderer only ever adds the
-    // attribute. Turning the fade back off leaves the lake faded. See the lake renderer's own
-    // report of this, filed as issue #224.
-    test("leaves the lake faded after lakeFadeOut is turned back off", () => {
-      const collection = geoJson();
-      const target = layer("fade-toggle");
-      const map = choropleth()
-        .features(collection)
-        .borders(mesh())
-        .lakeFeatures(lakeFeature())
-        .lakeBorders(lakeBorders())
-        .width(240)
-        .height(240);
-      target.call(map.lakeFadeOut(true));
-      const node = target.call(map.lakeFadeOut(false)).node() as SVGGElement;
-      expect(lake(node)[0].getAttribute("mask")).toBe("url(#lake-fade-mask)");
     });
 
     // NOTE: the highlight is the one layer that is cleared when its input goes away - the

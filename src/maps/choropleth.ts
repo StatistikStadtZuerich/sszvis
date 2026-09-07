@@ -83,12 +83,12 @@
  *
  * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
  * renderer's own default of true, so the fade mask and its gradient are not created unless the
- * caller asks for them. A fade is not removable either: the renderer only ever adds the mask
- * attribute, so turning lakeFadeOut back off leaves the lake faded.
+ * caller asks for them. Toggling it is safe in both directions: turning lakeFadeOut back off
+ * removes the mask attribute and its two definitions again.
  *
  * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
- * emits the #lake-pattern definition and two empty paths. Every non-Zurich map - switzerland
- * included - has to set .withLake(false) or it carries them.
+ * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
+ * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
  *
  * Note: the event dispatch is created once per choropleth() call and closed over, while the four
  * renderers keep their props on the element they rendered into. So one instance can draw into two
