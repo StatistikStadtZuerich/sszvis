@@ -64,10 +64,11 @@
  * order, so the last key sits on the baseline; the horizontal one keeps the key order, so the
  * first key does.
  *
- * Note: the value of a cell is read from its first row only, so data that is not already
- * aggregated to one row per (stack, series) pair is silently truncated rather than summed. The
- * same unguarded read throws when a stack is missing one of the series keys, so every stack has
- * to carry a row for every series - callers with sparse data have to pad it with zero rows.
+ * Note: a cell's value is the sum of every row the accessors placed in it, so data that is not
+ * already aggregated to one row per (stack, series) pair stacks to its true total. The slice's
+ * `data` property still points at the first row of the cell. An unguarded read throws when a
+ * stack is missing one of the series keys, so every stack has to carry a row for every series -
+ * callers with sparse data have to pad it with zero rows.
  *
  * Note: the series keys come from Object.keys over the grouped data, and JavaScript orders
  * integer-like keys numerically regardless of insertion order. A series accessor returning
@@ -109,6 +110,7 @@ import {
   select,
   stackOrderNone,
   stackOrderReverse,
+  sum,
 } from "d3";
 import { cascade } from "../cascade.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
@@ -192,9 +194,10 @@ function stackedBarData(order: StackOrder) {
 
       const stacks = d3Stack<CascadeRow<T>, string>()
         .keys(keys)
-        // Only the first datum of each cell is read, and the read is unguarded: a stack
-        // that is missing one of the series keys throws here.
-        .value((x, key) => valueAcc(x[key][0]))
+        // Every row the accessors placed in a cell contributes to that cell's value, so
+        // data that is not pre-aggregated to one row per (stack, series) pair stacks to
+        // its true total rather than to its first row.
+        .value((x, key) => sum(x[key], valueAcc))
         .order(order)(rows);
 
       // Simplify the 'data' property. The slices themselves are the objects d3 created,
@@ -213,7 +216,7 @@ function stackedBarData(order: StackOrder) {
         return Object.assign(slices, { key: stack.key, index: stack.index });
       });
 
-      const maxValue = max(series, (stack) => max(stack, (d) => d[1]));
+      const maxValue = max(series, (stack) => max(stack, (d) => d[1])) ?? 0;
 
       return Object.assign(series, { keys, maxValue });
     };
