@@ -43,10 +43,10 @@
  * enforces that: called on an SVG selection it appends an SVG-namespaced img, which no browser
  * renders, without complaining.
  *
- * Note: the component writes left and top but never position, so both are inert unless sszvis.css
- * is loaded - it is the stylesheet that sets position: absolute, along with display: block and
- * pointer-events: none. Without it the image sits in the document flow at the computed pixel size,
- * unoffset and clickable.
+ * Note: the component writes position: absolute inline alongside left and top, so the offsets it
+ * computes are never inert. sszvis.css adds display: block and pointer-events: none for the same
+ * class; without the stylesheet the image is still positioned correctly but does take pointer
+ * events, so the map layers beneath it cannot be hovered.
  *
  * Note: the projected coordinates are written unshifted, and createHtmlLayer positions the layer
  * itself by the bounds padding - so the image's offset is relative to the layer and the padding is
@@ -180,6 +180,7 @@ export default function (): MapRendererImageComponent {
       image
         .attr("src", fn.valueFn(props.src))
         .attr("alt", fn.valueFn(props.alt))
+        .style("position", "absolute")
         .style("left", `${Math.round(coordinate(topLeft, 0))}px`)
         .style("top", `${Math.round(coordinate(topLeft, 1))}px`)
         .style("width", `${Math.round(coordinate(bottomRight, 0) - coordinate(topLeft, 0))}px`)

@@ -80,6 +80,12 @@ describe("map/renderer/image", () => {
       expect(image(node)?.style.height).toBe(`${Math.round(bottomRight[1] - topLeft[1])}px`);
     });
 
+    test("positions the image itself, without relying on the stylesheet", () => {
+      const node = render();
+      expect(image(node)?.style.position).toBe("absolute");
+      expect(image(node)?.style.left).not.toBe("");
+    });
+
     test("calls the projection once per corner, with the corner coordinates", () => {
       const seen: unknown[] = [];
       const projection = projectionOf();
@@ -126,16 +132,6 @@ describe("map/renderer/image", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: the component writes left and top but never position, so both are inert unless
-    // sszvis.css is loaded - it is the stylesheet that sets position: absolute, along with
-    // display: block and pointer-events: none. Without it the image sits in the document flow at
-    // the computed pixel size, unoffset and clickable, which is not a recognisable failure.
-    test("relies on the stylesheet for the positioning it depends on", () => {
-      const node = render();
-      expect(image(node)?.style.position).toBe("");
-      expect(image(node)?.style.left).not.toBe("");
-    });
-
     // BUG: the width is the rounded difference of the unrounded corners, while left is the rounded
     // north-west corner - so left + width does not necessarily equal the rounded south-east
     // corner. The image's right and bottom edges can sit a pixel off the map layers it is meant
