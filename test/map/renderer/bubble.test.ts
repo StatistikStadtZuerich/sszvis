@@ -250,6 +250,40 @@ describe("map/renderer/bubble", () => {
       expect(hit).not.toBe(circle);
       expect(hit.closest("[data-event-target]")).not.toBeNull();
     });
+
+    // The join falls back to the feature's index when it has no id, so keyless features keep their
+    // own elements across renders instead of all colliding on the key "undefined".
+    test("keeps every circle across renders when the features have no ids", () => {
+      const collection: FeatureCollection<Polygon> = {
+        type: "FeatureCollection",
+        features: [
+          { ...square("a"), id: undefined },
+          { ...square("b", 2), id: undefined },
+        ],
+      };
+      const layer = group("bubble-keyless");
+      const renderWith = () =>
+        layer
+          .call(
+            mapRendererBubble()
+              .mergedData(
+                collection.features.map((feature) => ({
+                  geoJson: feature,
+                  datum: { geoId: "x", value: 1 },
+                }))
+              )
+              .mapPath(mapPathOf(collection))
+              .radius(5)
+              .fill("#ff0000")
+              .transition(false)
+          )
+          .node() as SVGGElement;
+      const [firstBefore, secondBefore] = circles(renderWith());
+      const after = circles(renderWith());
+      expect(after).toHaveLength(2);
+      expect(after).toContain(firstBefore);
+      expect(after).toContain(secondBefore);
+    });
   });
 
   describe("transition", () => {
@@ -483,43 +517,6 @@ describe("map/renderer/bubble", () => {
       );
       expect(circles(node)).toHaveLength(3);
       expect(seen).toContain(undefined);
-    });
-
-    // BUG: the join is keyed on geoJson.id, which GeoJSON does not require. Features without one
-    // all key to "undefined", so on every re-render the first node matches and every node past it
-    // is exited and replaced by a fresh enter node. The count stays right and the map looks fine,
-    // but all but one circle is destroyed and recreated on each render, losing any transition in
-    // flight.
-    test("recreates all but one circle on every render when the features have no ids", () => {
-      const collection: FeatureCollection<Polygon> = {
-        type: "FeatureCollection",
-        features: [
-          { ...square("a"), id: undefined },
-          { ...square("b", 2), id: undefined },
-        ],
-      };
-      const layer = group("bubble-keyless");
-      const renderWith = () =>
-        layer
-          .call(
-            mapRendererBubble()
-              .mergedData(
-                collection.features.map((feature) => ({
-                  geoJson: feature,
-                  datum: { geoId: "x", value: 1 },
-                }))
-              )
-              .mapPath(mapPathOf(collection))
-              .radius(5)
-              .fill("#ff0000")
-              .transition(false)
-          )
-          .node() as SVGGElement;
-      const [firstBefore, secondBefore] = circles(renderWith());
-      const after = circles(renderWith());
-      expect(after).toHaveLength(2);
-      expect(after).toContain(firstBefore);
-      expect(after).not.toContain(secondBefore);
     });
 
     // NOTE: the anchor positions go through getGeoJsonCenter, which caches a centre onto every
