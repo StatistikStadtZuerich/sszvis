@@ -57,19 +57,19 @@
  *                                                   0.5, which puts both control points at the horizontal midpoint. Never clamped: at 1 the control
  *                                                   points swap ends, which still keeps the curve inside the column gap as a pronounced S, and above
  *                                                   1 they leave the gap altogether and the curve swings out past both columns. Must be a plain
- *                                                   number, like nodeThickness; an accessor yields NaN control points and the browser drops the path.
+ *                                                   number, like nodeThickness; an accessor is reported before anything is drawn.
  * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color. Optional:
  *                                                   when unset no fill attribute is written and the bars fall back to the stylesheet.
  * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color. Optional, as
  *                                                   nodeColor: unset leaves the stroke attribute off the paths.
  * @property {Function} linkSort                     A function determining how to sort the links, which are rendered stacked on top of each other.
  *                                                   The comparator is handed to d3's selection.sort, which orders the elements ascending, so the
- *                                                   comparator's largest link is the last one in the document and paints over all the others. The
+ *                                                   comparator's largest link is the last one in the document and paints over all the others. A
+ *                                                   value that is not a function is reported, since a comparator can never be a constant. The
  *                                                   default comparator is descending by value, so the thinnest links paint over the thickest and a
  *                                                   thin link is never hidden by a thick one it crosses. This matches the descending order
- *                                                   sszvis.layout.sankey.prepareData puts the array in. The property is wrapped in fn.functor,
- *                                                   so a value that is not a function is silently turned into a comparator claiming every pair is
- *                                                   already ordered. The sort reorders elements only; the data array, and with it the link tooltip
+ *                                                   sszvis.layout.sankey.prepareData puts the array in. The sort reorders elements only; the data
+ *                                                   array, and with it the link tooltip
  *                                                   anchors, keeps its original order.
  * @property {String, Function} labelSide            A function determining the position of labels for the nodes. Should take a column index and
  *                                                   return a side ('left' or 'right'). Default is always 'left'. A function receives the column index
@@ -86,13 +86,13 @@
  *                                                   basically be equal to the width of the widest label. For performance reasons, it doesn't make
  *                                                   sense to calculate this value at run time while the component is rendered. Far better is to
  *                                                   position the chart so that the labels are visible, find the value of the widest label, and use
- *                                                   that. Default 0, which leaves a box exactly as wide as a node. Must be a plain number: the width
+ *                                                   that. Default 0, which leaves a box exactly as wide as a node. Must be a plain number, and an
+ *                                                   accessor is reported: the width
  *                                                   is computed once, from labelHitBoxSize plus nodeThickness, so every box is the same width
  *                                                   whatever its own label says. The boxes are appended after the labels and so paint over them,
  *                                                   which is what lets them catch the pointer.
- * @property {Function} nameLabel                    A function which takes the id of a node and should return the label for that node. Defaults to
- *                                                   using the id directly. The only label accessor that has to be a function: it is not wrapped in
- *                                                   fn.functor, so a constant throws "props.nameLabel is not a function".
+ * @property {String, Function} nameLabel           A string, or a function which takes the id of a node and returns the label for that node.
+ *                                                   Defaults to using the id directly.
  * @property {Array} linkSourceLabels                An array containing the data for links which should have labels on their 'source' end, that is
  *                                                   the end of the link which is connected to the source node. These data values should match the
  *                                                   values returned by sszvis.layout.sankey.prepareData. For performance reasons, you need to give
@@ -378,7 +378,7 @@ export interface SankeyComponent extends SankeyBuilder {
   labelHitBoxSize(): number;
   labelHitBoxSize(size: number): SankeyComponent;
   nameLabel(): (id: string) => string;
-  nameLabel(accessor: (id: string) => string): SankeyComponent;
+  nameLabel(value: string | ((id: string) => string)): SankeyComponent;
   linkSourceLabels(): SankeyLink[];
   linkSourceLabels(links: SankeyLink[]): SankeyComponent;
   linkTargetLabels(): SankeyLink[];
@@ -441,7 +441,7 @@ export default function (): SankeyComponent {
     .linkCurvature(0.5)
     .prop("nodeColor", fn.functor)
     .prop("linkColor", fn.functor)
-    .prop("linkSort", fn.functor)
+    .prop("linkSort")
     .linkSort((a: SankeyLink, b: SankeyLink) => b.value - a.value) // Descending, so the thinnest links paint on top
     .prop("labelSide", fn.functor)
     .labelSide("left")
@@ -450,7 +450,7 @@ export default function (): SankeyComponent {
     .labelOpacity(1)
     .prop("labelHitBoxSize")
     .labelHitBoxSize(0)
-    .prop("nameLabel")
+    .prop("nameLabel", fn.functor)
     .nameLabel(fn.identity)
     .prop("linkSourceLabels")
     .linkSourceLabels([])
@@ -461,13 +461,22 @@ export default function (): SankeyComponent {
       const selection = select(this);
       const props = selection.props<SankeyProps>();
 
-      // Checked before anything is drawn: an unset thickness or padding produces NaN
-      // geometry, which bar's missing-value guard turns into an empty-looking chart.
-      if (props.nodeThickness === undefined) {
-        throw new Error("[component/sankey] the nodeThickness property is required");
+      // Checked before anything is drawn. These four are used directly in arithmetic, so
+      // an unset value or an accessor - the shape most other properties in this library
+      // accept - produces NaN geometry, which bar's missing-value guard turns into an
+      // empty-looking chart rather than an error.
+      for (const name of [
+        "nodeThickness",
+        "nodePadding",
+        "labelHitBoxSize",
+        "linkCurvature",
+      ] as const) {
+        if (typeof props[name] !== "number" || !Number.isFinite(props[name])) {
+          throw new Error(`[component/sankey] the ${name} property must be a number`);
+        }
       }
-      if (props.nodePadding === undefined) {
-        throw new Error("[component/sankey] the nodePadding property is required");
+      if (typeof props.linkSort !== "function") {
+        throw new Error("[component/sankey] the linkSort property must be a comparator function");
       }
 
       const getNodePosition = (node: SankeyNode): number =>
