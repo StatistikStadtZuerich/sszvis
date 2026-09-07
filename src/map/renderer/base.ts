@@ -37,9 +37,9 @@
  * transition, while slowTransition ignores its argument and builds a fresh detached transition
  * that is discarded.
  *
- * Note: the missing value pattern is written into a defs element inside each map layer with the
- * fixed id "missing-pattern". Two map layers on one page emit two definitions of that id, and
- * every url(#missing-pattern) reference in the document resolves to whichever comes first.
+ * Note: the missing value pattern is written into a defs element inside each map layer, under an id
+ * of that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
+ * element so re-renders reuse it. The id is not part of the public API; do not select on it.
  *
  * Note: rendering mutates the geojson it is handed. Anchor positions go through getGeoJsonCenter,
  * which caches a center onto every feature's properties. A malformed `center` property parses to
@@ -58,7 +58,7 @@
  * @return {sszvis.component}
  */
 
-import type { ExtendedFeatureCollection, GeoPath, GeoProjection } from "d3";
+import type { BaseType, ExtendedFeatureCollection, GeoPath, GeoProjection, Selection } from "d3";
 import { select } from "d3";
 import tooltipAnchor from "../../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../../d3-component.js";
@@ -75,6 +75,33 @@ import { type GeoPoint, getGeoJsonCenter, type MergedGeoDatum } from "../mapUtil
  * feature whose datum exists.
  */
 type MapValue<T, R> = R | ((datum: T | undefined) => R);
+
+/** Where a layer records the pattern id it was given, so re-renders reuse it. */
+const MISSING_PATTERN_ID_ATTR = "data-sszvis-missing-pattern-id";
+
+let missingPatternCount = 0;
+
+/**
+ * The id of this layer's missing-value pattern, assigning one the first time the layer is
+ * rendered.
+ *
+ * Ids are document-global while the pattern definition lives inside each layer's own group, so a
+ * fixed id would have two map layers on one page define it twice and every url(#...) reference in
+ * the document resolve to whichever definition came first. The assigned id is cached on the layer
+ * element rather than counted per render, so re-rendering a layer keeps its own definition.
+ *
+ * The selection parameters are generic because d3's Selection is invariant in its element
+ * parameters - no single non-generic type accepts every selection.
+ */
+function missingPatternId<G extends BaseType, D, P extends BaseType, PD>(
+  selection: Selection<G, D, P, PD>
+): string {
+  const assigned = selection.attr(MISSING_PATTERN_ID_ATTR);
+  if (assigned) return assigned;
+  const id = `missing-pattern-${++missingPatternCount}`;
+  selection.attr(MISSING_PATTERN_ID_ATTR, id);
+  return id;
+}
 
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredMapValue<T, R> = (datum?: T) => R;
@@ -121,8 +148,9 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
       const selection = select(this);
       const props = selection.props<BaseProps<T>>();
 
-      // render the missing value pattern
-      ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
+      // render the missing value pattern, under an id of this layer's own
+      const patternId = missingPatternId(selection);
+      ensureDefsElement(selection, "pattern", patternId).call(mapMissingValuePattern);
 
       // One notion of a missing value, shared by the fill and the --undefined class: a feature that
       // matched no datum is as missing as one the predicate rejects. Short-circuiting also keeps
@@ -133,7 +161,7 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
 
       // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
       function getMapFill(d: MergedGeoDatum<T>): string {
-        return hasValue(d) ? props.fill(d.datum) : "url(#missing-pattern)";
+        return hasValue(d) ? props.fill(d.datum) : `url(#${patternId})`;
       }
 
       const mapAreas = selection
