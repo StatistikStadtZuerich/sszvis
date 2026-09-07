@@ -1,0 +1,595 @@
+import { geoCentroid } from "d3";
+import type { Feature, FeatureCollection, Polygon } from "geojson";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { createSvgLayer } from "../../../src/createSvgLayer.js";
+import "../../../src/d3-selectgroup.js";
+import {
+  prepareMergedGeoData,
+  swissMapPath,
+  swissMapProjection,
+} from "../../../src/map/mapUtils.js";
+import mapRendererBubble from "../../../src/map/renderer/bubble.js";
+
+type Datum = { geoId: string; value: number };
+
+/**
+ * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
+ * counter-clockwise would describe the whole globe minus the square.
+ */
+const square = (id: string, offset = 0): Feature<Polygon> => ({
+  type: "Feature",
+  id,
+  properties: {},
+  geometry: {
+    type: "Polygon",
+    coordinates: [
+      [
+        [offset, offset],
+        [offset, offset + 1],
+        [offset + 1, offset + 1],
+        [offset + 1, offset],
+        [offset, offset],
+      ],
+    ],
+  },
+});
+
+describe("map/renderer/bubble", () => {
+  let container: HTMLDivElement;
+  let layerKey = 0;
+  let pathKey = 0;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    container.id = "chart-container";
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    container?.parentNode?.removeChild(container);
+  });
+
+  const group = (key?: string) =>
+    createSvgLayer("#chart-container", undefined, {
+      key: key ?? `bubble-${++layerKey}`,
+    }).selectGroup("map");
+
+  /** A fresh geojson each time, since getGeoJsonCenter caches onto the features. */
+  const geoJson = (): FeatureCollection<Polygon> => ({
+    type: "FeatureCollection",
+    features: [square("a"), square("b", 2), square("c", 4)],
+  });
+
+  const mapPathOf = (collection: FeatureCollection<Polygon>) =>
+    swissMapPath(100, 100, collection, `bubble-path-${++pathKey}`);
+
+  const circles = (node: Element) => [
+    ...node.querySelectorAll<SVGCircleElement>("circle.sszvis-anchored-circle"),
+  ];
+
+  /** The names of the tweens d3 scheduled on a node, e.g. ["attr.r"]. */
+  const tweenNames = (node: Element) => {
+    const schedules = (node as Element & { __transition?: Record<string, unknown> }).__transition;
+    if (!schedules) return null;
+    return Object.values(schedules)
+      .filter((s): s is { tween: { name: string }[] } => typeof s === "object" && s !== null)
+      .flatMap((s) => s.tween.map((t) => t.name));
+  };
+
+  /** Renders the bubbles over `data`, returning the group node they drew into. */
+  const render = (
+    data: Datum[],
+    configure: (c: ReturnType<typeof mapRendererBubble>) => ReturnType<typeof mapRendererBubble> = (
+      c
+    ) => c,
+    key?: string
+  ) => {
+    const collection = geoJson();
+    const component = configure(
+      mapRendererBubble()
+        .mergedData(prepareMergedGeoData(data, collection))
+        .mapPath(mapPathOf(collection))
+        .radius(5)
+        // fill has no default and is called unguarded, so every render needs one.
+        .fill("#ff0000")
+    );
+    return group(key).call(component).node() as SVGGElement;
+  };
+
+  const fullData: Datum[] = [
+    { geoId: "a", value: 1 },
+    { geoId: "b", value: 2 },
+    { geoId: "c", value: 3 },
+  ];
+
+  describe("rendering", () => {
+    test("renders one classed circle per merged datum", () => {
+      const node = render(fullData);
+      expect(circles(node)).toHaveLength(3);
+      expect(circles(node)[0].tagName).toBe("circle");
+    });
+
+    test("draws the circles into an anchoredCircles group", () => {
+      const node = render(fullData);
+      const inner = node.querySelector("[data-d3-selectgroup='anchoredCircles']");
+      expect(inner).not.toBeNull();
+      expect(circles(node)[0].parentElement).toBe(inner);
+    });
+
+    test("takes the radius from the radius accessor, called with the datum", () => {
+      const seen: unknown[] = [];
+      const node = render(fullData, (c) =>
+        c.radius((d: Datum) => {
+          seen.push(d);
+          return d.value * 2;
+        })
+      );
+      expect(seen).toEqual(expect.arrayContaining(fullData));
+      expect(
+        circles(node)
+          .map((circle) => circle.getAttribute("r"))
+          .sort()
+      ).toEqual(["2", "4", "6"]);
+    });
+
+    test("takes a constant radius", () => {
+      const node = render(fullData, (c) => c.radius(7));
+      expect(circles(node).map((circle) => circle.getAttribute("r"))).toEqual(["7", "7", "7"]);
+    });
+
+    test("anchors each circle at its feature's projected centre", () => {
+      const collection = geoJson();
+      // The same cache key gives back the same projection the path generator uses.
+      const key = `bubble-anchor-${++pathKey}`;
+      const projection = swissMapProjection(100, 100, collection, key);
+      const node = group()
+        .call(
+          mapRendererBubble()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .mapPath(swissMapPath(100, 100, collection, key))
+            .radius(5)
+            .fill("#ff0000")
+        )
+        .node() as SVGGElement;
+      // Every radius is equal here, so the size sort leaves the features in their own order.
+      const expected = collection.features.map((feature) => {
+        const point = projection(geoCentroid(feature)) as [number, number];
+        return `translate(${point[0]},${point[1]})`;
+      });
+      expect(circles(node).map((circle) => circle.getAttribute("transform"))).toEqual(expected);
+    });
+
+    test("fills and strokes from the accessors, called with the datum", () => {
+      const node = render(fullData, (c) =>
+        c
+          .fill((d: Datum) => (d.value === 1 ? "#ff0000" : "#00ff00"))
+          .strokeColor("#0000ff")
+          .strokeWidth((d: Datum) => d.value)
+      );
+      const byRadius = circles(node);
+      expect(byRadius.map((circle) => circle.style.stroke)).toEqual([
+        "rgb(0, 0, 255)",
+        "rgb(0, 0, 255)",
+        "rgb(0, 0, 255)",
+      ]);
+      expect(byRadius.map((circle) => circle.style.fill)).toContain("rgb(255, 0, 0)");
+      expect(byRadius.map((circle) => circle.style.strokeWidth).sort()).toEqual(["1", "2", "3"]);
+    });
+
+    test("defaults to a white stroke one pixel wide", () => {
+      const node = render(fullData);
+      expect(circles(node)[0].style.stroke).toBe("rgb(255, 255, 255)");
+      expect(circles(node)[0].style.strokeWidth).toBe("1");
+    });
+
+    test("orders the circles largest first, so smaller ones draw on top", () => {
+      const node = render(fullData, (c) => c.radius((d: Datum) => d.value));
+      expect(circles(node).map((circle) => circle.getAttribute("r"))).toEqual(["3", "2", "1"]);
+    });
+
+    test("keys the join on the feature id, so a circle survives a data change", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("bubble-keyed");
+      const renderWith = (data: Datum[]) =>
+        layer
+          .call(
+            mapRendererBubble()
+              .mergedData(prepareMergedGeoData(data, collection))
+              .mapPath(mapPath)
+              .radius((d: Datum | undefined) => d?.value ?? 0)
+              .fill("#ff0000")
+              .transition(false)
+          )
+          .node() as SVGGElement;
+      renderWith(fullData);
+      const first = circles(renderWith(fullData))[0];
+      const after = circles(renderWith([{ geoId: "a", value: 9 }]));
+      // Only "a" has a datum now, but every feature is still in the merged data.
+      expect(after).toHaveLength(3);
+      expect(circles(layer.node() as SVGGElement)).toContain(first);
+    });
+  });
+
+  describe("transition", () => {
+    test("defaults to transitioning the radius", () => {
+      expect(mapRendererBubble().transition()).toBe(true);
+      const node = render(fullData);
+      expect(tweenNames(circles(node)[0])).toContain("attr.r");
+    });
+
+    test("schedules no transition when disabled", () => {
+      const node = render(fullData, (c) => c.transition(false));
+      expect(tweenNames(circles(node)[0])).toBeNull();
+    });
+
+    // BUG: the radius is written onto the plain selection first and then transitioned to the very
+    // same value, so the tween interpolates a radius onto itself. The final radius is already in
+    // the DOM before the transition starts, so nothing animates - on enter or on update. The same
+    // defect as the base renderer's fill transition.
+    test("writes the final radius immediately, so the tween interpolates it onto itself", () => {
+      const node = render(fullData, (c) => c.radius(9));
+      expect(circles(node)[0].getAttribute("r")).toBe("9");
+      expect(tweenNames(circles(node)[0])).toContain("attr.r");
+    });
+
+    // Unlike the base and geojson renderers, this component's transition really is the intended
+    // one: defaultTransition() is passed as `t` to .transition(t) rather than through the no-op
+    // `.transition().call(slowTransition)` pattern, so its 300ms and easePolyOut survive.
+    test("uses the default transition's 300ms and polynomial ease", () => {
+      const node = render(fullData);
+      const schedules = (circles(node)[0] as Element & { __transition?: Record<string, unknown> })
+        .__transition;
+      const scheduled = Object.values(schedules ?? {}).filter(
+        (v): v is { duration: number; ease: (t: number) => number } =>
+          typeof v === "object" && v !== null && "duration" in v
+      );
+      expect(scheduled).toHaveLength(1);
+      expect(scheduled[0].duration).toBe(300);
+      expect(scheduled[0].ease.name).not.toBe("cubicInOut");
+    });
+  });
+
+  describe("known quirks", () => {
+    // BUG: the exit selection is read off the merged selection that join() returned, where it does
+    // not exist - so `.exit()` is empty and both exit branches are dead code, the shrink-to-zero
+    // transition and the plain remove alike. join() has already removed the exiting circles
+    // synchronously, so a bubble leaving the data disappears instantly instead of shrinking away,
+    // whatever `transition` says.
+    test("removes a departing circle instantly instead of shrinking it", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("bubble-exit");
+      const renderWith = (features: Feature<Polygon>[]) =>
+        layer
+          .call(
+            mapRendererBubble()
+              .mergedData(
+                features.map((feature) => ({ geoJson: feature, datum: { geoId: "x", value: 1 } }))
+              )
+              .mapPath(mapPath)
+              .radius(5)
+              .fill("#ff0000")
+          )
+          .node() as SVGGElement;
+      renderWith(collection.features);
+      expect(circles(renderWith(collection.features))).toHaveLength(3);
+      const node = renderWith([collection.features[0]]);
+      // No exiting circle is left in the DOM to animate.
+      expect(circles(node)).toHaveLength(1);
+    });
+
+    // BUG: the mouse listeners are written for d3 v3. Since d3 v6 a listener is called with the
+    // event first and the datum second, so `d` here is a PointerEvent and `d.datum` is undefined -
+    // every over, out and click handler receives undefined instead of the map entity's datum. The
+    // dispatch itself works, unlike the geojson renderer's, so the handler does fire.
+    test("delivers undefined to an over handler instead of the datum", () => {
+      const seen: unknown[] = [];
+      const node = render(fullData, (c) => c.on("over", (datum: unknown) => seen.push(datum)));
+      circles(node)[0].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      expect(seen).toEqual([undefined]);
+    });
+
+    test("delivers undefined to out and click handlers too", () => {
+      const seen: unknown[] = [];
+      const node = render(fullData, (c) =>
+        c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d))
+      );
+      circles(node)[0].dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+      circles(node)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(seen).toEqual([undefined, undefined]);
+    });
+
+    test("returns the component from on() so it can be chained", () => {
+      const component = mapRendererBubble();
+      expect(component.on("over", () => undefined)).toBe(component);
+      expect(typeof component.on("over")).toBe("function");
+    });
+
+    // BUG: the --entering modifier is added and removed within the same render, so it is never
+    // observable from outside and offers no enter-only styling hook. The same dead affordance as
+    // the base renderer's --entering class.
+    test("never leaves the entering modifier on a circle", () => {
+      const node = render(fullData);
+      expect(circles(node)[0].getAttribute("class")).toBe("sszvis-anchored-circle");
+      expect(node.querySelectorAll(".sszvis-anchored-circle--entering")).toHaveLength(0);
+    });
+
+    // NOTE: nothing in sszvis.css styles .sszvis-anchored-circle, so fill, stroke and stroke-width
+    // come entirely from the inline styles this component writes - and a consumer cannot restyle
+    // them from their own stylesheet, since an inline style beats any author rule short of
+    // !important.
+    test("writes the colours as inline styles, with no stylesheet behind them", () => {
+      const node = render(fullData, (c) => c.fill("#123456"));
+      expect(circles(node)[0].hasAttribute("fill")).toBe(false);
+      expect(circles(node)[0].style.fill).toBe("rgb(18, 52, 86)");
+    });
+
+    // NOTE: the radius accessor is called for every circle twice over on the initial render - once
+    // for the attribute and once for the transition - and again for each comparison the sort
+    // makes: three data produce ten calls. A radius function doing real work is called far more
+    // often than there are data.
+    test("calls the radius accessor many more times than there are data", () => {
+      let calls = 0;
+      render(fullData, (c) =>
+        c.radius(() => {
+          calls += 1;
+          return 5;
+        })
+      );
+      expect(calls).toBeGreaterThan(fullData.length);
+    });
+
+    // BUG: mergedData is not validated. Omitting it reaches d3's data join as undefined, which
+    // throws a bare TypeError rather than rendering nothing - and the group has already been
+    // created by then.
+    test("throws when mergedData is missing", () => {
+      const collection = geoJson();
+      expect(() =>
+        group().call(mapRendererBubble().mapPath(mapPathOf(collection)).radius(5).fill("#ff0000"))
+      ).toThrow(TypeError);
+    });
+
+    // BUG: mapPath is read as a d3.geoPath - the anchor positions call mapPath.projection() - so a
+    // bare path function throws a TypeError from inside the transform callback, after the circles
+    // have been created and sized. The same requirement, and the same failure, as the base
+    // renderer's anchors.
+    test("throws when mapPath is a bare path function", () => {
+      const collection = geoJson();
+      const layer = group("bubble-bare-path");
+      expect(() =>
+        layer.call(
+          mapRendererBubble()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .mapPath(() => "M0,0")
+            .radius(5)
+            .fill("#ff0000")
+        )
+      ).toThrow(TypeError);
+      expect(circles(layer.node() as SVGGElement)).toHaveLength(3);
+    });
+
+    test("throws when mapPath is missing entirely", () => {
+      const collection = geoJson();
+      expect(() =>
+        group().call(
+          mapRendererBubble()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .radius(5)
+            .fill("#ff0000")
+        )
+      ).toThrow(TypeError);
+    });
+
+    // BUG: neither radius nor fill has a default, and both are called unguarded - so a bubble map
+    // configured without one throws a bare TypeError naming neither property. Four of the
+    // component's six properties are effectively required, and only strokeColor and strokeWidth
+    // have defaults.
+    test("throws when radius is missing", () => {
+      const collection = geoJson();
+      expect(() =>
+        group().call(
+          mapRendererBubble()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .mapPath(mapPathOf(collection))
+            .fill("#ff0000")
+        )
+      ).toThrow(TypeError);
+    });
+
+    test("throws when fill is missing", () => {
+      const collection = geoJson();
+      expect(() =>
+        group().call(
+          mapRendererBubble()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .mapPath(mapPathOf(collection))
+            .radius(5)
+        )
+      ).toThrow(TypeError);
+    });
+
+    // NOTE: a feature with no datum is still given a circle - prepareMergedGeoData pairs every
+    // feature with undefined where nothing matched - so the accessors are called with undefined.
+    // That is why the docs examples guard their radius functions with sszvis.defined at all: an
+    // unguarded one throws, as the next test shows.
+    test("draws a circle for a feature with no datum, calling the accessors with undefined", () => {
+      const seen: unknown[] = [];
+      const node = render([{ geoId: "a", value: 1 }], (c) =>
+        c.radius((d: Datum | undefined) => {
+          seen.push(d);
+          return d ? 5 : 0;
+        })
+      );
+      expect(circles(node)).toHaveLength(3);
+      expect(seen).toContain(undefined);
+    });
+
+    // BUG: the join is keyed on geoJson.id, which GeoJSON does not require. Features without one
+    // all key to "undefined", so on every re-render the first node matches and every node past it
+    // is exited and replaced by a fresh enter node. The count stays right and the map looks fine,
+    // but all but one circle is destroyed and recreated on each render, losing any transition in
+    // flight.
+    test("recreates all but one circle on every render when the features have no ids", () => {
+      const collection: FeatureCollection<Polygon> = {
+        type: "FeatureCollection",
+        features: [
+          { ...square("a"), id: undefined },
+          { ...square("b", 2), id: undefined },
+        ],
+      };
+      const layer = group("bubble-keyless");
+      const renderWith = () =>
+        layer
+          .call(
+            mapRendererBubble()
+              .mergedData(
+                collection.features.map((feature) => ({
+                  geoJson: feature,
+                  datum: { geoId: "x", value: 1 },
+                }))
+              )
+              .mapPath(mapPathOf(collection))
+              .radius(5)
+              .fill("#ff0000")
+              .transition(false)
+          )
+          .node() as SVGGElement;
+      const [firstBefore, secondBefore] = circles(renderWith());
+      const after = circles(renderWith());
+      expect(after).toHaveLength(2);
+      expect(after).toContain(firstBefore);
+      expect(after).not.toContain(secondBefore);
+    });
+
+    // NOTE: the anchor positions go through getGeoJsonCenter, which caches a centre onto every
+    // feature's properties and never invalidates it - so moving a feature's geometry leaves its
+    // bubble behind. Shared with the base renderer, and documented in mapUtils.
+    test("keeps a bubble at the cached centre after the geometry moves", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("bubble-cached-centre");
+      const renderWith = () =>
+        layer
+          .call(
+            mapRendererBubble()
+              .mergedData(
+                collection.features.map((feature) => ({
+                  geoJson: feature,
+                  datum: { geoId: "x", value: 1 },
+                }))
+              )
+              .mapPath(mapPath)
+              .radius(5)
+              .fill("#ff0000")
+              .transition(false)
+          )
+          .node() as SVGGElement;
+      const before = circles(renderWith())[0].getAttribute("transform");
+      collection.features[0].geometry.coordinates = [
+        [
+          [8, 8],
+          [8, 9],
+          [9, 9],
+          [8, 8],
+        ],
+      ];
+      expect(circles(renderWith())[0].getAttribute("transform")).toBe(before);
+    });
+
+    // BUG: the circles are drawn into a group appended after the base layer's areas, so they paint
+    // on top - and they carry neither a data-event-target attribute nor a pointer-events override.
+    // choropleth binds its over/out/click handlers to [data-event-target] *after* calling the
+    // anchored shape, so the circles are never bound, and a pointer over a bubble reaches neither
+    // the base layer's handler nor (usefully) the bubble's own, which delivers undefined. Hovering
+    // the middle of a bubble in either docs example therefore produces no tooltip at all.
+    test("covers the base layer's event targets without becoming one", async () => {
+      const { default: mapRendererBase } = await import("../../../src/map/renderer/base.js");
+      const collection = geoJson();
+      const key = `bubble-over-base-${++pathKey}`;
+      const merged = prepareMergedGeoData(fullData, collection);
+      const layer = group("bubble-over-base");
+      layer.call(
+        mapRendererBase()
+          .mergedData(merged)
+          .mapPath(swissMapPath(100, 100, collection, key))
+          .fill("#cccccc")
+      );
+      layer.call(
+        mapRendererBubble()
+          .mergedData(merged)
+          .mapPath(swissMapPath(100, 100, collection, key))
+          .radius(5)
+          .fill("#ff0000")
+      );
+      const node = layer.node() as SVGGElement;
+      const children = [...node.children].map((child) => child.getAttribute("data-d3-selectgroup"));
+      // The circles' group is last, so it paints over the base areas.
+      expect(children.at(-1)).toBe("anchoredCircles");
+      // And nothing marks a circle as an event target, so choropleth never binds to it.
+      expect(circles(node)[0].hasAttribute("data-event-target")).toBe(false);
+      expect(circles(node)[0].style.pointerEvents).toBe("");
+      expect(node.querySelectorAll("circle[data-event-target]")).toHaveLength(0);
+    });
+
+    // The other half of the "no datum" note above: an accessor that reads through the datum
+    // without guarding throws, taking the whole render with it - one unmatched feature is enough.
+    test("throws when an unguarded radius accessor meets a feature with no datum", () => {
+      expect(() =>
+        render([{ geoId: "a", value: 1 }], (c) => c.radius((d: Datum) => d.value))
+      ).toThrow(TypeError);
+    });
+
+    // BUG: the class is written with attr rather than classed, so it is replaced wholesale on every
+    // render - any class a consumer added to a circle is destroyed, and there is no way to keep one.
+    test("clobbers any class a consumer put on a circle", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("bubble-class-clobber");
+      const renderWith = () =>
+        layer
+          .call(
+            mapRendererBubble()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .mapPath(mapPath)
+              .radius(5)
+              .fill("#ff0000")
+              .transition(false)
+          )
+          .node() as SVGGElement;
+      const circle = circles(renderWith())[0];
+      circle.classList.add("consumer-added");
+      expect(circles(renderWith())[0].classList.contains("consumer-added")).toBe(false);
+    });
+
+    // NOTE: on() forwards to a d3 dispatch, so it inherits its semantics: an unknown event name
+    // throws rather than being ignored, a namespaced name is accepted, and null removes a handler.
+    test("inherits d3 dispatch semantics from on()", () => {
+      const component = mapRendererBubble();
+      expect(() => component.on("bogus", () => undefined)).toThrow(/unknown type/);
+      expect(component.on("over.scoped", () => undefined)).toBe(component);
+      expect(component.on("over.scoped", null)).toBe(component);
+      expect(component.on("over.scoped")).toBeUndefined();
+    });
+
+    // NOTE: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill
+    // are all required in practice, and each of them fails differently when left out.
+    test("defaults only the two stroke properties", () => {
+      const component = mapRendererBubble();
+      expect(component.strokeColor()("x")).toBe("#ffffff");
+      expect(component.strokeWidth()("x")).toBe(1);
+      expect(component.radius()).toBeUndefined();
+      expect(component.fill()).toBeUndefined();
+      expect(component.mergedData()).toBeUndefined();
+      expect(component.mapPath()).toBeUndefined();
+    });
+
+    // NOTE: this component adds no tooltip anchors of its own. A bubble map's tooltips are
+    // anchored by the base renderer underneath it, which is why the docs examples read the datum
+    // through a merged wrapper.
+    test("adds no tooltip anchors", () => {
+      const node = render(fullData);
+      expect(node.querySelectorAll("[data-tooltip-anchor]")).toHaveLength(0);
+    });
+  });
+});
