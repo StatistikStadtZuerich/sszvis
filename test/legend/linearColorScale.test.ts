@@ -97,7 +97,7 @@ describe("legend/linearColorScale", () => {
   test("should cap both ends with a circle coloured from the domain extent", () => {
     const s = scale();
     const node = render(legendColorLinear().scale(s).displayValues([0, 50]).width(200));
-    const caps = [...node.querySelectorAll("circle")];
+    const caps = [...node.querySelectorAll("circle.sszvis-legend__mark")];
     expect(caps.length).toBe(2);
     expect(caps.map((c) => c.getAttribute("cx"))).toEqual(["0", "200"]);
     expect(caps.map((c) => c.getAttribute("cy"))).toEqual(["5", "5"]);
@@ -190,13 +190,9 @@ describe("legend/linearColorScale", () => {
     expect(attrs(node, "rect.sszvis-legend__mark", "fill").length).toBe(3);
   });
 
-  describe("known quirks", () => {
-    test("misspells the end-cap class as ssvis-legend--mark", () => {
-      // BUG: the end caps are classed "ssvis-legend--mark" - missing the "z", and using
-      // "--" where every sibling uses "__". See issue #65.
-      const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
-      expect(node.querySelectorAll("circle.ssvis-legend--mark").length).toBe(2);
-      expect(node.querySelectorAll("circle.sszvis-legend__mark").length).toBe(0);
-    });
+  test("should class the end caps sszvis-legend__mark", () => {
+    const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
+    expect(node.querySelectorAll("circle.sszvis-legend__mark").length).toBe(2);
+    expect(node.querySelectorAll("circle.ssvis-legend--mark").length).toBe(0);
   });
 });
