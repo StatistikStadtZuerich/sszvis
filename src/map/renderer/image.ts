@@ -76,7 +76,9 @@
  *
  * Note: the src identifies the image within its layer, so two renderers with different sources
  * each own an element and stack, while re-rendering the same source reuses the element it drew
- * before. The element carries the source in a data-sszvis-image-src attribute for that purpose.
+ * before. The element carries the resolved source in a data-image-key attribute for that purpose:
+ * the same key convention as the mesh, raster and highlight renderers, except that this renderer
+ * derives its key from the src rather than taking one as a property.
  *
  * Note: no transition is scheduled, so the image jumps to its new position on a resize rather than
  * animating. Unlike the base and geojson renderers this component keeps no caches, emits no
@@ -100,8 +102,13 @@ import type { GeoPoint, PointProjection } from "../mapUtils.js";
  */
 type ImageValue<R extends string | number> = R | ValueFn<BaseType, number, R>;
 
-/** Marks which image in a layer belongs to which source, so the join can find its own element. */
-const SRC_KEY = "data-sszvis-image-src";
+/**
+ * Marks the image a renderer owns, keyed by its resolved src, so the join can find its own
+ * element. Read back through d3's filter rather than an attribute selector, which would have to
+ * escape an arbitrary src - the same idiom as the mesh renderer's data-mesh-key, whose key is a
+ * property rather than being derived.
+ */
+const KEY_ATTRIBUTE = "data-image-key";
 
 /**
  * The props as they are read at runtime. projection, src and geoBounds are required, but the
@@ -205,12 +212,12 @@ export default function (): MapRendererImageComponent {
       const image = selection
         .selectAll<Element, number>(".sszvis-map__image")
         .filter(function () {
-          return this.getAttribute(SRC_KEY) === srcValue;
+          return this.getAttribute(KEY_ATTRIBUTE) === srcValue;
         })
         .data([0])
         .join("img")
         .classed("sszvis-map__image", true)
-        .attr(SRC_KEY, srcValue);
+        .attr(KEY_ATTRIBUTE, srcValue);
 
       image
         .attr("src", srcValue)
