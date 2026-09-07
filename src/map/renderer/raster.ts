@@ -14,9 +14,10 @@
  *
  * @property {Boolean} debug         Whether to activate debug mode, which shows a red square over the whole
  *                                   canvas, for testing alignment with other map layers. Default false.
- * @property {Number} width          The width of the canvas. Required, and unvalidated; a fractional value is
- *                                   truncated to whole pixels. See the notes below.
- * @property {Number} height         The height of the canvas. Required and unvalidated, like the width.
+ * @property {Number} width          The width of the canvas, in CSS pixels. Required: a missing, non-finite
+ *                                   or negative width throws. A fractional value is truncated to whole
+ *                                   pixels; see the notes below.
+ * @property {Number} height         The height of the canvas. Required and validated like the width.
  * @property {Function} position     A function which takes a datum and returns a position for the corresponding
  *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
  *                                   index, no array - unlike a d3 accessor, though the render callback itself
@@ -48,12 +49,11 @@
  * fractional value, so the markup reads 20.5 while the bitmap is 20.
  *
  * Note: the visible clearing between renders comes from writing the width attribute, which resets
- * the bitmap per spec; the clearRect call is redundant while the dimensions are set, and a no-op
- * when they are missing. When width and height are missing the attributes are removed, the canvas
- * falls back to its intrinsic 300x150, clearRect is called with NaN and silently does nothing - so
- * nothing clears at all and each render's cells pile up on the previous ones. The same canvas
- * element is reused across renders, with width, height and opacity reapplied each time, and a
- * change of dimensions resizes that canvas rather than replacing it - which is what makes the
+ * the bitmap per spec; the clearRect call is belt and braces. Both dimensions are validated before
+ * anything is drawn, so a missing one is reported instead of leaving the canvas at its intrinsic
+ * 300x150 with a NaN clearRect that never cleared and each render's cells piling up. The same
+ * canvas element is reused across renders, with the dimensions and opacity reapplied each time, and
+ * a change of dimensions resizes that canvas rather than replacing it - which is what makes the
  * bitmap reset double as the clear.
  *
  * Note: fillStyle is stateful and the canvas API ignores a value it cannot parse, so a cell whose
@@ -68,7 +68,7 @@
  *
  * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
  * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
- * nothing. Neither position nor fill is validated either, and each throws a bare TypeError from
+ * nothing. Neither position nor fill is validated, and each throws a bare TypeError from
  * being called, naming neither property - but only for non-empty data, so an empty dataset hides
  * the misconfiguration entirely. The canvas has already been created by the time any of these
  * throw.
@@ -130,11 +130,10 @@ type StoredRasterFill<T> = (datum: T) => string;
 
 /**
  * The props as this component's contract describes them, which is deliberately narrower than what
- * the runtime tolerates: width, height, position and fill are required here even though none is
- * validated. Missing dimensions leave the canvas at its intrinsic size and stop it clearing, and a
- * missing accessor throws when the data are non-empty; the characterization tests pin both, which
- * is why the getters report all four as possibly undefined. Following the same split as
- * src/map/renderer/mesh.ts.
+ * the runtime tolerates: width, height, position and fill are required here. A missing dimension is
+ * reported; a missing accessor throws when the data are non-empty, and goes unnoticed when they are
+ * empty. The characterization tests pin both, which is why the getters report all four as possibly
+ * undefined. Following the same split as src/map/renderer/mesh.ts.
  */
 type RasterProps<T> = {
   debug: boolean;
@@ -218,6 +217,20 @@ function fillParses(ctx: CanvasRenderingContext2D, value: string): boolean {
   return fromBlack === fromWhite;
 }
 
+/**
+ * Reads a required dimension, reporting a missing or nonsensical one rather than letting the canvas
+ * fall back to its intrinsic 300x150 size - which also stopped it clearing between renders, since
+ * clearRect was then called with NaN.
+ */
+function dimension(value: number | undefined, name: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new Error(
+      `[map/renderer/raster] ${name} is required, and must be a finite, non-negative number`
+    );
+  }
+  return value;
+}
+
 export default function <T = unknown>(): MapRendererRasterComponent<T> {
   return component<MapRendererRasterComponent<T>>()
     .prop("debug")
@@ -233,6 +246,8 @@ export default function <T = unknown>(): MapRendererRasterComponent<T> {
     .render(function (this: Element, data: T[]) {
       const selection = select(this);
       const props = selection.props<RasterProps<T>>();
+      const width = dimension(props.width, "width");
+      const height = dimension(props.height, "height");
 
       const canvas = selection
         .selectAll(".sszvis-map__rasterimage")
@@ -240,20 +255,17 @@ export default function <T = unknown>(): MapRendererRasterComponent<T> {
         .join("canvas")
         .classed("sszvis-map__rasterimage", true);
 
-      canvas
-        .attr("width", props.width)
-        .attr("height", props.height)
-        .style("opacity", props.opacity);
+      canvas.attr("width", width).attr("height", height).style("opacity", props.opacity);
 
       const ctx = context2d(canvas.node());
 
-      ctx.clearRect(0, 0, props.width, props.height);
+      ctx.clearRect(0, 0, width, height);
 
       if (props.debug) {
         // Displays a rectangle that fills the canvas.
         // Useful for checking alignment with other render layers.
         ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
-        ctx.fillRect(0, 0, props.width, props.height);
+        ctx.fillRect(0, 0, width, height);
       }
 
       const halfSide = props.cellSide / 2;

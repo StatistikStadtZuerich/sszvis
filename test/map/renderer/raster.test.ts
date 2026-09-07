@@ -167,6 +167,38 @@ describe("map/renderer/raster", () => {
       expect(pixelAt(node, 4, 4)).toEqual([0, 0, 0, 0]);
     });
 
+    test.each([
+      ["width", () => mapRendererRaster().height(20)],
+      ["height", () => mapRendererRaster().width(20)],
+    ])("reports a missing %s rather than sizing the canvas by default", (name, raster) => {
+      const target = layer();
+      expect(() =>
+        target
+          .datum([cell(10, 10)])
+          .call(
+            raster()
+              .position((d: Cell) => [d.x, d.y])
+              .fill("#ff0000")
+          )
+      ).toThrow(new RegExp(`${name} is required`));
+      // Nothing is drawn, so no stale canvas is left behind either.
+      expect(canvasOf(target.node() as HTMLElement)).toBeNull();
+    });
+
+    test.each([Number.NaN, -1])("reports a nonsensical dimension (%s)", (width) => {
+      expect(() =>
+        layer()
+          .datum([cell(10, 10)])
+          .call(
+            mapRendererRaster()
+              .width(width)
+              .height(20)
+              .position((d: Cell) => [d.x, d.y])
+              .fill("#ff0000")
+          )
+      ).toThrow(/width is required/);
+    });
+
     test("reuses the same canvas element across renders", () => {
       const target = layer("raster-reuse");
       const renderWith = () =>
@@ -229,26 +261,6 @@ describe("map/renderer/raster", () => {
       const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
       expect(canvas.width).toBe(20);
       expect(canvas.style.width).toBe("");
-    });
-
-    // BUG: neither width nor height is validated. Omitting them removes the attributes, so the
-    // canvas falls back to its intrinsic 300x150, clearRect is called with NaN and silently does
-    // nothing, and the cells are still drawn - a raster layer at the wrong size, with no error.
-    test("falls back to the canvas default size when width and height are missing", () => {
-      const node = layer()
-        .datum([cell(10, 10)])
-        .call(
-          mapRendererRaster()
-            .position((d: Cell) => [d.x, d.y])
-            .fill("#ff0000")
-            .cellSide(4)
-        )
-        .node() as HTMLElement;
-      const canvas = canvasOf(node) as HTMLCanvasElement;
-      expect(canvas.hasAttribute("width")).toBe(false);
-      expect(canvas.width).toBe(300);
-      expect(canvas.height).toBe(150);
-      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
     });
 
     // BUG: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum -
@@ -394,29 +406,6 @@ describe("map/renderer/raster", () => {
       expect(canvasOf(node)).toBe(first);
       expect(pixelAt(node, 12, 12)).toEqual([0, 0, 255, 255]);
       expect(pixelAt(node, 4, 4)).toEqual([0, 0, 0, 0]);
-    });
-
-    // BUG: the visible clearing comes from writing the width attribute, which resets the bitmap
-    // per spec, not from the clearRect call - so when width and height are missing nothing clears
-    // at all and each render's cells pile up on the previous ones. The compounding half of the
-    // missing-dimensions bug above.
-    test("accumulates stale cells across renders when width and height are missing", () => {
-      const target = layer("raster-no-clear");
-      const renderWith = (data: Cell[]) =>
-        target
-          .datum(data)
-          .call(
-            mapRendererRaster()
-              .position((d: Cell) => [d.x, d.y])
-              .fill("#ff0000")
-              .cellSide(4)
-          )
-          .node() as HTMLElement;
-      renderWith([cell(4, 4)]);
-      const node = renderWith([cell(12, 12)]);
-      expect(pixelAt(node, 12, 12)).toEqual([255, 0, 0, 255]);
-      // The first render's cell is still there.
-      expect(pixelAt(node, 4, 4)).toEqual([255, 0, 0, 255]);
     });
 
     // BUG: a fractional width is truncated to an integer bitmap, and every docs caller passes
