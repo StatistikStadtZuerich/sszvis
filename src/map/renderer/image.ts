@@ -52,9 +52,9 @@
  * itself by the bounds padding - so the image's offset is relative to the layer and the padding is
  * applied exactly once. That is what keeps the image aligned with the svg layer.
  *
- * Note: the width is the rounded difference of the unrounded corners, while left is the rounded
- * north-west corner, so left + width does not necessarily equal the rounded south-east corner. The
- * image's right and bottom edges can sit a pixel off the map layers they are meant to align with.
+ * Note: both corners are rounded before the size is taken as their difference, so left + width is
+ * the rounded south-east corner and the image's edges land on the same pixels as the map layers it
+ * is aligned with.
  *
  * Note: neither geoBounds nor projection is validated. A missing geoBounds throws a bare TypeError
  * from indexing undefined, and a missing projection throws from calling it - both before any
@@ -183,8 +183,16 @@ export default function (): MapRendererImageComponent {
         .style("position", "absolute")
         .style("left", `${Math.round(coordinate(topLeft, 0))}px`)
         .style("top", `${Math.round(coordinate(topLeft, 1))}px`)
-        .style("width", `${Math.round(coordinate(bottomRight, 0) - coordinate(topLeft, 0))}px`)
-        .style("height", `${Math.round(coordinate(bottomRight, 1) - coordinate(topLeft, 1))}px`)
+        // Each corner is rounded before the subtraction, so the right and bottom edges land on the
+        // same pixels as the projected south-east corner rather than a pixel either side of it.
+        .style(
+          "width",
+          `${Math.round(coordinate(bottomRight, 0)) - Math.round(coordinate(topLeft, 0))}px`
+        )
+        .style(
+          "height",
+          `${Math.round(coordinate(bottomRight, 1)) - Math.round(coordinate(topLeft, 1))}px`
+        )
         .style("opacity", fn.valueFn(props.opacity));
     });
 }
