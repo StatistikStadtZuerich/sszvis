@@ -207,6 +207,21 @@ describe("map/renderer/base", () => {
       expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
     });
 
+    // The corollary of the rule above: with nothing textured, every entity goes through the fill
+    // accessor, and there is no datum to hand it. An accessor that dereferences its argument has
+    // to tolerate undefined on a geometry-only layer - the docs on `fill` say so.
+    test("calls the fill accessor with undefined when no entity has a datum", () => {
+      const seen: unknown[] = [];
+      const node = render([], (c) =>
+        c.transitionColor(false).fill((d?: Datum) => {
+          seen.push(d);
+          return "none";
+        })
+      );
+      expect(seen).toEqual([undefined, undefined, undefined]);
+      expect(attrs(node, "fill")).toEqual(["none", "none", "none"]);
+    });
+
     // One matched datum is enough to make the layer a data layer, and then the entities it does
     // not cover are textured as missing again.
     test("textures the uncovered entities as soon as one datum matches", () => {

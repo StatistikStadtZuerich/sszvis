@@ -24,8 +24,13 @@
  *                                                    entities that fail it display the missing value texture, as do entities
  *                                                    that matched no datum at all - the predicate is only consulted for a
  *                                                    datum that exists. It is wrapped in fn.functor and defaults to the
- *                                                    constant true, so a constant false textures the whole map.
- * @property {String, Function} fill                  A string or function for the fill of the map entities
+ *                                                    constant true, so a constant false textures the whole map. The
+ *                                                    exception is a layer where no entity has a datum; see the note below.
+ * @property {String, Function} fill                  A string or function for the fill of the map entities. An accessor is
+ *                                                    called with the entity's datum, and is not called at all for an entity
+ *                                                    the dataset does not cover - that one is textured instead. On a layer
+ *                                                    where no entity has a datum, though, nothing is textured and the
+ *                                                    accessor is called with undefined for every entity; see the note below.
  * @property {Boolean} transitionColor                Whether to transition the fill color of the map entities.
  *                                                    (default: true) With it set, the fill is only applied through the
  *                                                    transition, so a color change fades from the previous color; with it
@@ -36,6 +41,14 @@
  * intended 500ms easePolyOut. `.transition().call(slowTransition)` returns the original
  * transition, while slowTransition ignores its argument and builds a fresh detached transition
  * that is discarded.
+ *
+ * Note: "missing" only means something relative to a dataset, so a layer where no entity has a
+ * datum is taken to be drawing geometry rather than encoding values - it keeps the caller's fill,
+ * is not classed --undefined, and calls the fill accessor with undefined for every entity. One
+ * matched datum is enough to make it a data layer, and then the entities the dataset does not
+ * cover are textured and the accessor is not called for them. A dataset that is supplied but
+ * matches nothing is indistinguishable from no dataset here, since this renderer receives only
+ * mergedData; such a map renders with the caller's fill rather than an all-textured map.
  *
  * Note: the missing value pattern is written into a defs element inside each map layer, under an id
  * of that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
@@ -71,8 +84,9 @@ import { type GeoPoint, getGeoJsonCenter, type MergedGeoDatum } from "../mapUtil
 /**
  * A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. The
  * accessor parameter includes undefined because MergedGeoDatum.datum is optional, so an accessor
- * written for the wrapper's datum slot type-checks; the render only calls these accessors for a
- * feature whose datum exists.
+ * written for the wrapper's datum slot type-checks. The render calls these accessors only for a
+ * feature whose datum exists, except on a layer where no feature has one - there fill is called
+ * with undefined throughout, since the layer is drawing geometry rather than encoding values.
  */
 type MapValue<T, R> = R | ((datum: T | undefined) => R);
 
