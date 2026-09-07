@@ -53,6 +53,7 @@
 import { type Selection, select } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import * as logger from "../logger.js";
 
 /** Extra width given to the select element on top of the configured control width. */
 const SELECT_WIDTH_PADDING = 30;
@@ -121,8 +122,8 @@ export default function selectMenu<T extends string = string>(): SelectComponent
             // The recorded index can go stale between renders - a shorter `values` array
             // removes options but leaves the browser's selection pointing at an index
             // that is gone. A selection that maps to no value is not a selection.
-            console.warn(
-              `sszvis.selectMenu: ignoring a selection whose option value "${value}" does not resolve to one of the ${props.values.length} configured values.`
+            logger.warn(
+              `[selectMenu] ignoring a selection whose option value "${value}" does not resolve to one of the ${props.values.length} configured values.`
             );
             return;
           }
