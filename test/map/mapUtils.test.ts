@@ -97,12 +97,28 @@ describe("map utils", () => {
       expect(y).toBeLessThan(0);
     });
 
-    // BUG: featureBoundsCacheKey is optional, so every caller that omits it shares the single
-    // key "<width>,<height>,undefined" - different maps at the same size silently collide.
-    test("collides across different collections when the cache key is omitted", () => {
+    test("bypasses the cache when no cache key is given, fitting each collection", () => {
       const first = swissMapProjection(400, 400, collection(square("a")));
       const second = swissMapProjection(400, 400, collection(square("b", 50)));
-      expect(second).toBe(first);
+      expect(second).not.toBe(first);
+      // Each is fitted to its own collection, so both centres land inside the destination box -
+      // where sharing a cached projection would have thrown the far collection right out of it.
+      for (const [projection, centre] of [
+        [first, [0.5, 0.5]],
+        [second, [50.5, 50.5]],
+      ] as const) {
+        const [x, y] = projection(centre as [number, number]) as [number, number];
+        expect(x).toBeGreaterThan(0);
+        expect(x).toBeLessThan(400);
+        expect(y).toBeGreaterThan(0);
+        expect(y).toBeLessThan(400);
+      }
+    });
+
+    test("keeps the cache untouched for an unkeyed call", () => {
+      const before = swissMapProjection.cache.size;
+      swissMapProjection(444, 444, collection(square("a")));
+      expect(swissMapProjection.cache.size).toBe(before);
     });
 
     // NOTE: the memo cache is a module-level Map with no eviction, so every distinct
