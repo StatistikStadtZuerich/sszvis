@@ -4,7 +4,9 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
 import { swissMapProjection } from "../../../src/map/mapUtils.js";
-import mapRendererHighlight from "../../../src/map/renderer/highlight.js";
+import mapRendererHighlight, {
+  type MapRendererHighlightComponent,
+} from "../../../src/map/renderer/highlight.js";
 
 /**
  * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
@@ -68,12 +70,14 @@ describe("map/renderer/highlight", () => {
 
   /** Renders the highlight layer, returning the group node it drew into. */
   const render = (
-    configure: (
-      c: ReturnType<typeof mapRendererHighlight>
-    ) => ReturnType<typeof mapRendererHighlight> = (c) => c,
+    configure: (c: MapRendererHighlightComponent<Datum>) => MapRendererHighlightComponent<Datum> = (
+      c
+    ) => c,
     key?: string
   ) => {
-    const component = configure(mapRendererHighlight().geoJson(collection()).mapPath(mapPathOf()));
+    const component = configure(
+      mapRendererHighlight<Datum>().geoJson(collection()).mapPath(mapPathOf())
+    );
     return group(key).call(component).node() as SVGGElement;
   };
 
@@ -89,7 +93,7 @@ describe("map/renderer/highlight", () => {
       const mapPath = mapPathOf();
       const node = group()
         .call(
-          mapRendererHighlight()
+          mapRendererHighlight<Datum>()
             .geoJson(features)
             .mapPath(mapPath)
             .highlight([{ geoId: "b" }])
@@ -103,7 +107,7 @@ describe("map/renderer/highlight", () => {
       const mapPath = mapPathOf();
       const node = group()
         .call(
-          mapRendererHighlight()
+          mapRendererHighlight<Datum>()
             .geoJson(features)
             .mapPath(mapPath)
             .highlight([{ geoId: "a" }])
@@ -119,7 +123,7 @@ describe("map/renderer/highlight", () => {
     });
 
     test("defaults keyName to geoId", () => {
-      expect(mapRendererHighlight().keyName()).toBe("geoId");
+      expect(mapRendererHighlight<Datum>().keyName()).toBe("geoId");
     });
 
     test("reuses the same path elements across renders", () => {
@@ -127,7 +131,7 @@ describe("map/renderer/highlight", () => {
       const renderWith = () =>
         layer
           .call(
-            mapRendererHighlight()
+            mapRendererHighlight<Datum>()
               .geoJson(collection())
               .mapPath(mapPathOf())
               .highlight([{ geoId: "a" }])
@@ -155,20 +159,20 @@ describe("map/renderer/highlight", () => {
     test("removes previously rendered highlights when the highlight array empties", () => {
       const layer = group("highlight-clear");
       layer.call(
-        mapRendererHighlight()
+        mapRendererHighlight<Datum>()
           .geoJson(collection())
           .mapPath(mapPathOf())
           .highlight([{ geoId: "a" }])
       );
       expect(highlights(layer.node() as SVGGElement)).toHaveLength(1);
-      layer.call(mapRendererHighlight().geoJson(collection()).mapPath(mapPathOf()));
+      layer.call(mapRendererHighlight<Datum>().geoJson(collection()).mapPath(mapPathOf()));
       expect(highlights(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
     // NOTE: the empty-highlight branch returns early, before geoJson or mapPath is touched, so
     // this is the one configuration in which the renderer tolerates having neither.
     test("needs neither geoJson nor mapPath when there is nothing to highlight", () => {
-      expect(() => group().call(mapRendererHighlight())).not.toThrow();
+      expect(() => group().call(mapRendererHighlight<Datum>())).not.toThrow();
     });
   });
 
@@ -298,10 +302,13 @@ describe("map/renderer/highlight", () => {
     // still reads geoJson and mapPath, so it needs both.
     test("clears previously rendered highlights when every entry is falsy", () => {
       const layer = group("highlight-all-falsy");
-      const renderWith = (highlight: unknown[]) =>
+      const renderWith = (highlight: (Datum | null | undefined)[]) =>
         layer
           .call(
-            mapRendererHighlight().geoJson(collection()).mapPath(mapPathOf()).highlight(highlight)
+            mapRendererHighlight<Datum>()
+              .geoJson(collection())
+              .mapPath(mapPathOf())
+              .highlight(highlight)
           )
           .node() as SVGGElement;
       expect(highlights(renderWith([{ geoId: "a" }]))).toHaveLength(1);
@@ -313,12 +320,19 @@ describe("map/renderer/highlight", () => {
     test("treats an empty string highlight as nothing to highlight", () => {
       const layer = group("highlight-empty-string");
       layer.call(
-        mapRendererHighlight()
+        mapRendererHighlight<Datum>()
           .geoJson(collection())
           .mapPath(mapPathOf())
           .highlight([{ geoId: "a" }])
       );
-      layer.call(mapRendererHighlight().geoJson(collection()).mapPath(mapPathOf()).highlight(""));
+      layer.call(
+        mapRendererHighlight<Datum>()
+          .geoJson(collection())
+          .mapPath(mapPathOf())
+          // @ts-expect-error - a string is a caller error; pinned because "" is accepted while
+          // every other string throws.
+          .highlight("")
+      );
       expect(highlights(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
@@ -333,7 +347,9 @@ describe("map/renderer/highlight", () => {
       const mapPath = mapPathOf();
       const renderWith = (geoId: unknown) =>
         group()
-          .call(mapRendererHighlight().geoJson(features).mapPath(mapPath).highlight([{ geoId }]))
+          .call(
+            mapRendererHighlight<Datum>().geoJson(features).mapPath(mapPath).highlight([{ geoId }])
+          )
           .node() as SVGGElement;
       expect(highlights(renderWith(1))[0].getAttribute("d")).toBe(mapPath(features.features[0]));
       expect(highlights(renderWith("1"))[0].getAttribute("d")).toBe(mapPath(features.features[0]));
@@ -349,7 +365,7 @@ describe("map/renderer/highlight", () => {
       };
       const mapPath = mapPathOf();
       const node = group()
-        .call(mapRendererHighlight().geoJson(features).mapPath(mapPath).highlight([{}]))
+        .call(mapRendererHighlight<Datum>().geoJson(features).mapPath(mapPath).highlight([{}]))
         .node() as SVGGElement;
       expect(highlights(node)[0].getAttribute("d")).toBe(mapPath(features.features[1]));
     });
@@ -381,7 +397,10 @@ describe("map/renderer/highlight", () => {
       const renderWith = (highlight: Datum[]) =>
         layer
           .call(
-            mapRendererHighlight().geoJson(collection()).mapPath(mapPathOf()).highlight(highlight)
+            mapRendererHighlight<Datum>()
+              .geoJson(collection())
+              .mapPath(mapPathOf())
+              .highlight(highlight)
           )
           .node() as SVGGElement;
       const before = highlights(renderWith([{ geoId: "a" }, { geoId: "b" }]));
@@ -401,7 +420,7 @@ describe("map/renderer/highlight", () => {
     test("a second highlight layer in one group rebinds the first instead of adding its own", () => {
       const layer = group("two-highlights");
       layer.call(
-        mapRendererHighlight()
+        mapRendererHighlight<Datum>()
           .geoJson(collection())
           .mapPath(mapPathOf())
           .highlight([{ geoId: "a" }])
@@ -409,7 +428,7 @@ describe("map/renderer/highlight", () => {
       );
       const first = highlights(layer.node() as SVGGElement)[0];
       layer.call(
-        mapRendererHighlight()
+        mapRendererHighlight<Datum>()
           .geoJson(collection())
           .mapPath(mapPathOf())
           .highlight([{ geoId: "b" }])
@@ -449,7 +468,7 @@ describe("map/renderer/highlight", () => {
     test("throws when geoJson is missing but something is highlighted", () => {
       expect(() =>
         group().call(
-          mapRendererHighlight()
+          mapRendererHighlight<Datum>()
             .mapPath(mapPathOf())
             .highlight([{ geoId: "a" }])
         )
@@ -462,7 +481,7 @@ describe("map/renderer/highlight", () => {
       const layer = group("highlight-no-geojson");
       expect(() =>
         layer.call(
-          mapRendererHighlight()
+          mapRendererHighlight<Datum>()
             .mapPath(mapPathOf())
             .highlight([{ geoId: "a" }])
         )
@@ -476,7 +495,7 @@ describe("map/renderer/highlight", () => {
       const layer = group("highlight-no-mappath");
       expect(() =>
         layer.call(
-          mapRendererHighlight()
+          mapRendererHighlight<Datum>()
             .geoJson(collection())
             .highlight([{ geoId: "a" }])
         )
@@ -492,7 +511,9 @@ describe("map/renderer/highlight", () => {
     test("throws for a geoJson that is not a feature collection", () => {
       expect(() =>
         group().call(
-          mapRendererHighlight()
+          mapRendererHighlight<Datum>()
+            // @ts-expect-error - a bare Feature is a caller error; pinned because it throws from
+            // inside the component rather than being reported.
             .geoJson(square("a"))
             .mapPath(mapPathOf())
             .highlight([{ geoId: "a" }])
@@ -506,6 +527,7 @@ describe("map/renderer/highlight", () => {
     test("throws when highlight is not an array", () => {
       // a bare datum is a caller error; pinned because the failure is a bare TypeError from
       // inside the component rather than a reported one.
+      // @ts-expect-error - a bare datum is a caller error
       expect(() => render((c) => c.highlight({ geoId: "a" }))).toThrow(TypeError);
     });
 
@@ -522,7 +544,7 @@ describe("map/renderer/highlight", () => {
     // otherwise. Nothing consumes either value - d3's selection.each ignores the return - so the
     // `true` is decorative.
     test("returns nothing observable from the render callback", () => {
-      expect(group().call(mapRendererHighlight().highlight([]))).toBeDefined();
+      expect(group().call(mapRendererHighlight<Datum>().highlight([]))).toBeDefined();
     });
   });
 });
