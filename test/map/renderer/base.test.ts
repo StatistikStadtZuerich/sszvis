@@ -196,6 +196,23 @@ describe("map/renderer/base", () => {
       expect(seen).not.toContain(undefined);
       expect(attrs(node, "fill")).toEqual(["#00ff00", missingFill(node), missingFill(node)]);
     });
+
+    // "Missing" is relative to a dataset: a layer where nothing has a datum encodes no data, so it
+    // is drawing geometry rather than values. docs/map-extended/rastermap-bins.js depends on this,
+    // drawing the map as a transparent outline over a raster with fill("none") and no data at all -
+    // texturing those entities would paint over the raster the outline exists to frame.
+    test("keeps the caller's fill when no entity has a datum", () => {
+      const node = render([], (c) => c.transitionColor(false).fill("none"));
+      expect(attrs(node, "fill")).toEqual(["none", "none", "none"]);
+      expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
+    });
+
+    // One matched datum is enough to make the layer a data layer, and then the entities it does
+    // not cover are textured as missing again.
+    test("textures the uncovered entities as soon as one datum matches", () => {
+      const node = render([{ geoId: "a", value: 1 }], (c) => c.transitionColor(false).fill("none"));
+      expect(attrs(node, "fill")).toEqual(["none", missingFill(node), missingFill(node)]);
+    });
   });
 
   describe("the undefined class", () => {
