@@ -37,11 +37,10 @@
  * that is torn down keeps receiving resize events unless it calls `off` with the exact same function
  * reference; an inline arrow function can never be removed.
  *
- * Note: `trigger` calls the listeners in a bare loop with no error isolation. A throwing listener
- * blocks every listener registered after it and the error escapes `trigger`. Thrown from the window
- * handler it also escapes the throttle before the window is recorded, which leaves throttling
- * disabled for subsequent resize events. `on` accepts anything it is given, so a non-callable
- * listener fails the same way on the next trigger rather than at registration.
+ * Note: `trigger` isolates the listeners from one another. A listener that throws is reported
+ * through `sszvis.logger.error` and the remaining listeners still run, so one broken chart cannot
+ * silence the rest of the page or escape the throttle. `on` accepts anything it is given, so a
+ * non-callable listener still fails on the next trigger rather than at registration.
  *
  * Note: `on`, `off` and `trigger` return `this`, so they chain when called as methods on the viewport
  * object but return `undefined` once destructured. The registration itself still works.
@@ -55,6 +54,7 @@
 
 import { select } from "d3";
 import throttle from "nano-throttle";
+import * as logger from "../logger.js";
 
 /** A listener on a caller-triggered event. `trigger` forwards whatever the caller passes,
  * and only the caller knows what that is, so any function is accepted here. Resize listeners
@@ -117,8 +117,15 @@ function off(this: Viewport, name: string, cb: ViewportListener): Viewport {
 
 function trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport {
   if (callbacks[name]) {
-    for (const fn of callbacks[name]) {
-      Reflect.apply(fn, null, evtArgs);
+    // A copy, so that a listener which registers or releases listeners cannot change the
+    // list being iterated. Each call is isolated: one failing chart must not silence the
+    // charts after it, nor let the error escape into the throttled window handler.
+    for (const fn of [...callbacks[name]]) {
+      try {
+        Reflect.apply(fn, null, evtArgs);
+      } catch (error) {
+        logger.error(`[sszvis.viewport] A "${name}" listener threw:`, error);
+      }
     }
   }
   return this;

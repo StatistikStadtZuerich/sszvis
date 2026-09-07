@@ -130,6 +130,43 @@ describe("viewport/resize", () => {
     });
   });
 
+  describe("listener isolation", () => {
+    test("should keep calling the remaining listeners when one throws", () => {
+      const later = vi.fn();
+      listen("resize", () => {
+        throw new Error("boom");
+      });
+      listen("resize", later);
+      expect(() => viewport.trigger("resize")).not.toThrow();
+      expect(later).toHaveBeenCalledTimes(1);
+    });
+
+    test("should report a failing listener rather than swallow it", () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const boom = new Error("boom");
+      listen("resize", () => {
+        throw boom;
+      });
+      viewport.trigger("resize");
+      expect(error).toHaveBeenCalledWith(boom);
+      expect(error.mock.calls.flat().join()).toContain(
+        '[sszvis.viewport] A "resize" listener threw'
+      );
+    });
+
+    test("should keep throttling window resizes when a listener throws", () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      let calls = 0;
+      listen("resize", () => {
+        calls++;
+        throw new Error("boom");
+      });
+      for (let index = 0; index < 3; index++) globalThis.dispatchEvent(new Event("resize"));
+      expect(calls).toBe(1);
+      expect(error).toHaveBeenCalled();
+    });
+  });
+
   describe("known quirks", () => {
     test("registering the same listener twice only calls it once", () => {
       // NOTE: `on` filters the existing list for the incoming callback before appending
@@ -179,21 +216,6 @@ describe("viewport/resize", () => {
       expect(cb).toHaveBeenCalledWith(1, "two");
     });
 
-    test("a throwing listener stops every listener registered after it", () => {
-      // BUG: `trigger` calls the listeners in a bare loop with no error isolation, so one
-      // failing chart blocks every listener after it, on every resize.
-      // current: the second listener is never called and the error escapes `trigger`.
-      // expected: each listener runs independently and a failure is reported, not fatal.
-      const boom = () => {
-        throw new Error("boom");
-      };
-      const later = vi.fn();
-      listen("resize", boom);
-      listen("resize", later);
-      expect(() => viewport.trigger("resize")).toThrow("boom");
-      expect(later).not.toHaveBeenCalled();
-    });
-
     test("listeners outlive the chart that registered them", () => {
       // NOTE: there is one registry for the whole page, it is never cleared, and removal
       // is by function identity. A chart that is torn down keeps receiving resize events
@@ -210,46 +232,22 @@ describe("viewport/resize", () => {
       expect(cb).toHaveBeenCalledTimes(2);
     });
 
-    test("registering a non-function listener crashes the next trigger", () => {
+    test("registering a non-function listener fails on the next trigger", () => {
       // BUG: `on` appends whatever it is given without checking that it is callable, so a
       // typo such as `viewport.on("resize", myChart.render())` corrupts the registry and
-      // the failure only surfaces on the next resize, far away from its cause.
-      // current: TypeError inside `trigger`. expected: reject the registration in `on`.
+      // the failure only surfaces on the next resize, far away from its cause. Error
+      // isolation now keeps it from taking the other listeners down with it, but the
+      // registration itself is still accepted.
+      // current: a reported TypeError on the next trigger. expected: reject it in `on`.
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
       const later = vi.fn();
       // @ts-expect-error - the test helper's own `Listener` signature rejects this; the
       // module accepts it at runtime, which is the half of the fix that types cannot do.
       listen("resize", undefined);
       listen("resize", later);
-      expect(() => viewport.trigger("resize")).toThrow(TypeError);
-      expect(later).not.toHaveBeenCalled();
-    });
-
-    test("a throwing listener also disables the throttle", () => {
-      // BUG: the error escapes through nano-throttle before it records the end of the
-      // throttle window, so `t` is never advanced and the leading-edge call fires again
-      // for every subsequent resize event. A single broken listener therefore turns the
-      // throttled handler into an unthrottled one for the whole page.
-      // current: three resize events in one window run the listeners three times.
-      // expected: the throttle window is recorded whether or not a listener threw.
-      let calls = 0;
-      listen("resize", () => {
-        calls++;
-        throw new Error("boom");
-      });
-      // The throw escapes the DOM event listener, so it surfaces as an uncaught error on
-      // the window. Swallow it during the capture phase to keep the runner from failing
-      // the file over an error the test is deliberately provoking.
-      const swallow = (event: ErrorEvent) => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      };
-      globalThis.addEventListener("error", swallow, true);
-      try {
-        for (let index = 0; index < 3; index++) globalThis.dispatchEvent(new Event("resize"));
-      } finally {
-        globalThis.removeEventListener("error", swallow, true);
-      }
-      expect(calls).toBe(3);
+      expect(() => viewport.trigger("resize")).not.toThrow();
+      expect(error.mock.calls.flat().join()).toContain("TypeError");
+      expect(later).toHaveBeenCalledTimes(1);
     });
 
     test("the chainable functions only work when called as methods", () => {
