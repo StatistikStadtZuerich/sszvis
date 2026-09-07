@@ -347,6 +347,53 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "defs > pattern")).toHaveLength(1);
       expect(idOf(node, "defs > pattern")).toBe(firstId);
     });
+
+    // Two overlays in one group each own their definitions and paths when given distinct keys.
+    test("keeps two keyed overlays in one group apart", () => {
+      const layer = group("two-overlays");
+      const renderWith = (key: string, lakeFeature: ReturnType<typeof lake>, colour: string) =>
+        layer.call(
+          mapRendererPatternedLakeOverlay()
+            .key(key)
+            .mapPath(mapPathOf())
+            .lakeFeature(lakeFeature)
+            .lakeBounds(bounds())
+            .lakePathColor(colour)
+        );
+      renderWith("a", lake(), "#ff0000");
+      renderWith("b", lake(2), "#00ff00");
+      const node = layer.node() as SVGGElement;
+      expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(2);
+      expect(defs(node, "path.sszvis-map__lakepath")).toHaveLength(2);
+      expect(defs(node, "defs > pattern")).toHaveLength(2);
+      expect(idOf(node, 'defs > pattern[id$="a"]')).toBe("lake-pattern-a");
+      expect(
+        defs(node, 'path.sszvis-map__lakezurich[data-sszvis-lake-overlay="b"]')[0]?.getAttribute(
+          "fill"
+        )
+      ).toBe("url(#lake-pattern-b)");
+      expect(
+        defs(node, "path.sszvis-map__lakepath").map((path) => (path as SVGPathElement).style.stroke)
+      ).toEqual(["rgb(255, 0, 0)", "rgb(0, 255, 0)"]);
+    });
+
+    test("re-renders a keyed overlay into its own existing paths", () => {
+      const layer = group("keyed-rerender");
+      const renderWith = () =>
+        layer.call(
+          mapRendererPatternedLakeOverlay()
+            .key("only")
+            .mapPath(mapPathOf())
+            .lakeFeature(lake())
+            .lakeBounds(bounds())
+        );
+      renderWith();
+      const first = lakeShape(layer.node() as SVGGElement);
+      renderWith();
+      const node = layer.node() as SVGGElement;
+      expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(1);
+      expect(lakeShape(node)).toBe(first);
+    });
   });
 
   describe("known quirks", () => {
@@ -423,30 +470,23 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(mapRendererPatternedLakeOverlay().fadeOut()).toBe(true);
     });
 
-    // BUG: both selectors are unscoped and both joins unkeyed, so a second overlay rendered into
-    // the same group rebinds the first one's paths instead of adding its own. choropleth uses a
-    // single overlay, so this is latent - but the renderer is exported publicly.
-    test("a second overlay in one group rebinds the first instead of adding its own", () => {
-      const layer = group("two-overlays");
-      layer.call(
-        mapRendererPatternedLakeOverlay()
-          .mapPath(mapPathOf())
-          .lakeFeature(lake())
-          .lakeBounds(bounds())
-          .lakePathColor("#ff0000")
-      );
+    // NOTE: two unkeyed overlays in one group still share one scope, so the second rebinds the
+    // first one's paths. Distinct keys are what separates them - see "scoping" above.
+    test("shares one scope between two unkeyed overlays in a group", () => {
+      const layer = group("two-unkeyed-overlays");
+      const renderWith = (lakeFeature: ReturnType<typeof lake>) =>
+        layer.call(
+          mapRendererPatternedLakeOverlay()
+            .mapPath(mapPathOf())
+            .lakeFeature(lakeFeature)
+            .lakeBounds(bounds())
+        );
+      renderWith(lake());
       const first = lakeShape(layer.node() as SVGGElement);
-      layer.call(
-        mapRendererPatternedLakeOverlay()
-          .mapPath(mapPathOf())
-          .lakeFeature(lake(2))
-          .lakeBounds(bounds())
-          .lakePathColor("#00ff00")
-      );
+      renderWith(lake(2));
       const node = layer.node() as SVGGElement;
       expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(1);
       expect(lakeShape(node)).toBe(first);
-      expect(lakeBorder(node)?.style.stroke).toBe("rgb(0, 255, 0)");
     });
 
     // The path data is reapplied on every render rather than only on enter, so a lakeFeature
