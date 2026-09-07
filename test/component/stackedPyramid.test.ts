@@ -661,7 +661,8 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "leftStack", "y")).toEqual(["0", "0"]);
     });
 
-    test("should update the geometry when the data changes", () => {
+    test("should update the geometry when the data changes", async () => {
+      // bar animates the update, so the destination geometry lands with the transition.
       const component = pyramidOf();
       const g = group("update");
       g.datum(layout()).call(component as never);
@@ -672,9 +673,11 @@ describe("component/stackedPyramid", () => {
         ])
       ).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(attrs(node, "leftStack", "x")).toEqual(["-99.5"]);
-      expect(attrs(node, "leftStack", "width")).toEqual(["99"]);
-      expect(attrs(node, "rightStack", "width")).toEqual(["7"]);
+      await vi.waitFor(() => {
+        expect(attrs(node, "leftStack", "x")).toEqual(["-99.5"]);
+        expect(attrs(node, "leftStack", "width")).toEqual(["99"]);
+        expect(attrs(node, "rightStack", "width")).toEqual(["7"]);
+      });
     });
   });
 
@@ -1150,11 +1153,11 @@ describe("component/stackedPyramid", () => {
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
     });
 
-    test("the bars jump while the reference line animates", async () => {
-      // BUG: bar's transition property is inert (see test/component/bar.test.ts), but the
-      // reference line's transition is real. On a state change the outline eases into place
-      // over 300ms while the bars underneath it snap immediately, so the line visibly
-      // detaches from the bars for the length of the transition. Shared with pyramid.
+    test("should animate the bars in step with the reference line", async () => {
+      // Both the bars and the outline transition now, so on the tick after a state change
+      // both still describe the old geometry and both ease to the new one together. Before
+      // bar's transition was made real the bars snapped ahead and the line visibly detached
+      // from them for the length of the transition. Shared with pyramid.
       let ref = [
         { row: 0, value: 0 },
         { row: 1, value: 1 },
@@ -1175,10 +1178,16 @@ describe("component/stackedPyramid", () => {
           { side: "m", row: 0, series: "a", value: 99 },
         ])
       ).call(component as never);
-      // The bar is already at its new width on this tick...
-      expect(attrs(node, "rightStack", "width")).toEqual(["99"]);
-      // ...while the line still describes the old state.
+      // On this tick the bars have not jumped ahead...
+      expect(attrs(node, "rightStack", "width")).toEqual(["30"]);
+      // ...and the line still describes the same old state.
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M0,0L1,12");
+
+      // Once the transition has run, both have arrived.
+      await vi.waitFor(() => {
+        expect(attrs(node, "rightStack", "width")).toEqual(["99"]);
+        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M2,24L3,36");
+      });
     });
 
     test("attaches a discarded transition to every rect on every render", () => {
@@ -1269,13 +1278,13 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "rightStack", "x")).toEqual(["0.5"]);
     });
 
-    test("matches surviving stacks and bars by index rather than by series", () => {
+    test("matches surviving stacks and bars by index rather than by series", async () => {
       // NOTE: neither join uses a key function, so on a re-render the stack groups and the
       // rects inside them are matched positionally. When a series is dropped from anywhere
       // but the end, the groups that remain are re-bound to different series and every bar in
       // them is rewritten. Only the geometry moves, so it is invisible here, but any state
-      // held on a stack group - a class, a listener, an in-flight transition - follows the
-      // position rather than the series. Shared with stackedBar.
+      // held on a stack group - a class, a listener, or the transition that now really runs -
+      // follows the position rather than the series. Shared with stackedBar.
       const component = pyramidOf();
       const g = group("rebind");
       g.datum(layout()).call(component as never);
@@ -1291,7 +1300,9 @@ describe("component/stackedPyramid", () => {
       ).call(component as never);
       // The group that used to hold series "a" now holds series "b".
       expect(stacks(node, "leftStack")[0]).toBe(firstStack);
-      expect(attrs(node, "leftStack", "width")).toEqual(["20", "15"]);
+      await vi.waitFor(() => {
+        expect(attrs(node, "leftStack", "width")).toEqual(["20", "15"]);
+      });
     });
   });
 

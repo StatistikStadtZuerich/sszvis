@@ -832,7 +832,9 @@ describe("component/sankey", () => {
       expect(all(node, "nodelabels", "text.sszvis-sankey-node-label").length).toBe(4);
     });
 
-    test("should update the geometry when the data changes", () => {
+    test("should update the geometry when the data changes", async () => {
+      // bar animates an update, so the destination height only lands once the transition
+      // has run; reading it synchronously would pin the start value.
       const component = sankeyOf();
       const g = group("update");
       g.datum(makeData()).call(component as never);
@@ -840,7 +842,9 @@ describe("component/sankey", () => {
       next.nodes[0].value = 60;
       g.datum(next).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[0]).toBe("60");
+      await vi.waitFor(() => {
+        expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[0]).toBe("60");
+      });
     });
 
     test("should remove elements when the data shrinks", () => {
@@ -861,29 +865,33 @@ describe("component/sankey", () => {
       expect(all(node, "nodelabels", "rect.sszvis-sankey-hitbox").length).toBe(1);
     });
 
-    test("should move the nodes to their new geometry without animating", () => {
-      // NOTE: the sankey never sets bar's transition property, so it keeps bar's default of
-      // true - and that transition does not animate anything (see test/component/bar.test.ts
-      // and the note in bar.ts). The new geometry is on the rects on the same tick as the
-      // re-render. It is not free either: a d3 transition is still created and discarded on
-      // every node rect on every render.
+    test("should animate the nodes to their new geometry", async () => {
+      // The sankey never sets bar's transition property, so it keeps bar's default of true.
+      // The node rects therefore ease to their new height rather than snapping: on the tick
+      // after the re-render the old height is still on the DOM, and the new one arrives when
+      // the transition finishes.
       const component = sankeyOf();
-      const g = group("no-animation");
+      const g = group("animation");
       g.datum(makeData()).call(component as never);
+      const node = g.node() as SVGGElement;
+      const before = attrs(node, "nodes", "rect.sszvis-bar", "height")[0];
+
       const next = makeData();
       next.nodes[0].value = 90;
       g.datum(next).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[0]).toBe("90");
+      expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[0]).toBe(before);
+      await vi.waitFor(() => {
+        expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[0]).toBe("90");
+      });
     });
 
-    test("should match nodes by index, not by id", () => {
+    test("should match nodes by index, not by id", async () => {
       // NOTE: the nodes are handed to bar, whose join is unkeyed, so rect identity follows
       // the array index: a reordered node array does not move any element, it rewrites the
       // attributes in place and each rect ends up bound to a different node. That matters
-      // for anything holding on to a rect - a transition, a hover handler - and it goes
-      // unnoticed here only because bar's transition does not actually animate. The links,
-      // which are keyed by id, do not behave this way.
+      // for anything holding on to a rect - a hover handler, or the transition that now
+      // really runs, which eases each rect from another node's height. The links, which are
+      // keyed by id, do not behave this way.
       const component = sankeyOf();
       const g = group("node-reorder");
       const data = makeData();
@@ -893,7 +901,9 @@ describe("component/sankey", () => {
 
       g.datum({ ...data, nodes: [...data.nodes].reverse() }).call(component as never);
       expect(all(node, "nodes", "rect.sszvis-bar")[0]).toBe(first);
-      expect(attrs(node, "nodes", "rect.sszvis-bar", "height")).toEqual(["15", "25", "10", "30"]);
+      await vi.waitFor(() => {
+        expect(attrs(node, "nodes", "rect.sszvis-bar", "height")).toEqual(["15", "25", "10", "30"]);
+      });
     });
   });
 
