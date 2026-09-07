@@ -183,6 +183,45 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(lakeShape(node)?.hasAttribute("mask")).toBe(false);
     });
 
+    test("removes the fade when fadeOut is turned off after being on", () => {
+      const layer = group("lake-toggle-fade");
+      const renderWith = (fadeOut: boolean) =>
+        layer
+          .call(
+            mapRendererPatternedLakeOverlay()
+              .mapPath(mapPathOf())
+              .lakeFeature(lake())
+              .lakeBounds(bounds())
+              .fadeOut(fadeOut)
+          )
+          .node() as SVGGElement;
+      renderWith(true);
+      const node = renderWith(false);
+      expect(lakeShape(node)?.hasAttribute("mask")).toBe(false);
+      expect(defs(node, "mask#lake-fade-mask")).toHaveLength(0);
+      expect(defs(node, "linearGradient#lake-fade-gradient")).toHaveLength(0);
+    });
+
+    test("re-applies the fade when it is turned back on", () => {
+      const layer = group("lake-retoggle-fade");
+      const renderWith = (fadeOut: boolean) =>
+        layer
+          .call(
+            mapRendererPatternedLakeOverlay()
+              .mapPath(mapPathOf())
+              .lakeFeature(lake())
+              .lakeBounds(bounds())
+              .fadeOut(fadeOut)
+          )
+          .node() as SVGGElement;
+      renderWith(true);
+      renderWith(false);
+      const node = renderWith(true);
+      expect(defs(node, "mask#lake-fade-mask > rect")).toHaveLength(1);
+      expect(defs(node, "linearGradient#lake-fade-gradient > stop")).toHaveLength(2);
+      expect(lakeShape(node)?.getAttribute("mask")).toBe("url(#lake-fade-mask)");
+    });
+
     // NOTE: the mask references the gradient by id, and the gradient helper sets that id a second
     // time on the element ensureDefsElement already identified - a harmless redundancy, pinned
     // because it is the only place two code paths write the same id.
@@ -277,29 +316,6 @@ describe("map/renderer/patternedlakeoverlay", () => {
       renderWith("#ff0000");
       const node = renderWith("");
       expect(lakeBorder(node)?.style.stroke).toBe("rgb(255, 0, 0)");
-    });
-
-    // BUG: disabling fadeOut after a render with it enabled leaves both the mask attribute on the
-    // lake shape and the gradient and mask definitions in the defs, because the disabled branch
-    // only skips writing them. A chart that toggles the fade - choropleth exposes it as
-    // lakeFadeOut - stays faded after the toggle.
-    test("keeps the mask when fadeOut is turned off after being on", () => {
-      const layer = group("lake-toggle-fade");
-      const renderWith = (fadeOut: boolean) =>
-        layer
-          .call(
-            mapRendererPatternedLakeOverlay()
-              .mapPath(mapPathOf())
-              .lakeFeature(lake())
-              .lakeBounds(bounds())
-              .fadeOut(fadeOut)
-          )
-          .node() as SVGGElement;
-      renderWith(true);
-      const node = renderWith(false);
-      expect(lakeShape(node)?.getAttribute("mask")).toBe("url(#lake-fade-mask)");
-      expect(defs(node, "mask#lake-fade-mask")).toHaveLength(1);
-      expect(defs(node, "linearGradient#lake-fade-gradient")).toHaveLength(1);
     });
 
     // BUG: all three definitions use fixed ids, so two maps on one page define #lake-pattern,
