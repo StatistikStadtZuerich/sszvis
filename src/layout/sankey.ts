@@ -9,8 +9,6 @@
  *   when it is applied.
  * - a link with an unknown source or target id is warned about and dropped, so the returned
  *   links array holds only links.
- * - link ids come from a module-level counter shared across every builder instance, so they
- *   are unique but not stable between renders.
  * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
  *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
  *   is discarded by the minimum rather than distorting the others.
@@ -70,11 +68,6 @@ export type SankeyComputedLayout = {
   columnRange: [number, number];
 };
 
-const newLinkId = (() => {
-  let id = 0;
-  return () => ++id;
-})();
-
 /**
  * sszvis.layout.sankey.prepareData
  *
@@ -109,8 +102,8 @@ const newLinkId = (() => {
  *   applied, rather than looking the raw row up as a node id.
  * - a link whose source or target id is not in idLists is warned about and dropped from the
  *   returned links array.
- * - link ids come from a module-level counter shared by every builder instance, so they are
- *   unique but not stable across renders.
+ * - a link's id is the index of the row it came from, so re-preparing the same data gives the
+ *   same links the same ids and the component's data join can match them up.
  * - a duplicate id warns and keeps only the last column.
  * - a row whose value is not a number of zero or more is warned about and dropped.
  * - a link whose two ends are in the same column is warned about and dropped: a sankey link
@@ -179,7 +172,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
       new Map<unknown, PreparedNode>()
     );
 
-    const listOfLinks = inputData.flatMap<SankeyLink>((datum) => {
+    const listOfLinks = inputData.flatMap<SankeyLink>((datum, rowIndex) => {
       const srcId = getSource(datum);
       const tgtId = getTarget(datum);
       const rawValue = getValue(datum);
@@ -218,7 +211,8 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
       }
 
       const item: SankeyLink = {
-        id: newLinkId(),
+        // the row's own index: an id that identifies a link rather than a call
+        id: rowIndex,
         value,
         src: srcNode,
         srcOffset: 0,

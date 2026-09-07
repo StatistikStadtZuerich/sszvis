@@ -30,8 +30,8 @@
  *   or a large horizontal chartPadding leave no room for a box at all, and the whole
  *   layout is then zeroed rather than reporting a negative side and a padRatio outside
  *   the [0, 1) range a band scale expects.
- * - The chartPadding argument is mutated in place (missing sides are defaulted onto the
- *   object itself), so passing a frozen object throws a TypeError.
+ * - The chartPadding argument is copied before the missing sides are defaulted onto it, so
+ *   a shared or frozen padding object is left as the caller wrote it.
  * - Defaults for chartPadding are applied with `||`, so an explicit 0 is indistinguishable
  *   from a missing value.
  * - Only left/right padding affect the layout; top/bottom are accepted but unused.
@@ -83,8 +83,8 @@ export default function dimensionsHeatTable(
   requireCount("dimensionsHeatTable", "numY", numY);
   if (spaceWidth === 0 || numX === 0 || numY === 0) return { ...EMPTY_DIMENSIONS };
 
-  // the defaults are written back onto the caller's object, as the original did
-  const padding: HeatTableChartPadding = chartPadding || {};
+  // a copy: a dimension calculator has no business writing to its arguments
+  const padding: HeatTableChartPadding = { ...chartPadding };
   padding.top ||= 0;
   padding.right ||= 0;
   padding.bottom ||= 0;

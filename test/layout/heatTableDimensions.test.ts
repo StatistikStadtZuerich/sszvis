@@ -129,26 +129,25 @@ describe("heatTableDimensions", () => {
     });
   });
 
-  describe("known quirks", () => {
-    test("mutates the chartPadding object it is given", () => {
-      // BUG: the defaults are written back onto the caller's object instead of onto a copy,
-      // so a padding object shared between charts (or frozen) is silently rewritten.
-      // got: { left: 20 } becomes { left: 20, top: 0, right: 0, bottom: 0 }
-      // want: the argument left untouched.
+  describe("chart padding is the caller's", () => {
+    test("leaves the chartPadding object it is given untouched", () => {
       const padding: { left: number; top?: number; right?: number; bottom?: number } = {
         left: 20,
       };
       dimensionsHeatTable(800, 2, 10, 5, padding);
-      expect(padding).toEqual({ left: 20, top: 0, right: 0, bottom: 0 });
+      expect(padding).toEqual({ left: 20 });
     });
 
-    test("throws on a frozen chartPadding object in strict mode", () => {
-      // BUG: the same mutation, made fatal. A frozen or shared config object is a normal
-      // thing to pass; the layout should not need write access to it.
+    test("accepts a frozen chartPadding object", () => {
       const frozen = Object.freeze({ left: 20 });
-      expect(() => dimensionsHeatTable(800, 2, 10, 5, frozen)).toThrow(TypeError);
+      expect(() => dimensionsHeatTable(800, 2, 10, 5, frozen)).not.toThrow();
+      expect(dimensionsHeatTable(800, 2, 10, 5, frozen)).toEqual(
+        dimensionsHeatTable(800, 2, 10, 5, { left: 20 })
+      );
     });
+  });
 
+  describe("known quirks", () => {
     test("a zero-valued padding side is indistinguishable from a missing one", () => {
       // NOTE: harmless today - the defaults are applied with `||`, so an explicit 0 is
       // overwritten with 0. It becomes a trap only if a falsy-but-meaningful value is ever

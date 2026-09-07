@@ -101,6 +101,12 @@ describe("layout/sankey", () => {
       expect(bc?.tgtOffset).toBe(10);
     });
 
+    test("gives the same links the same ids on every render", () => {
+      // the component keys its link join on the id, so an id that changed between renders
+      // would remove and re-add every path instead of transitioning it
+      expect(prepare().links.map((l) => l.id)).toEqual(prepare().links.map((l) => l.id));
+    });
+
     test("gives every link a unique id", () => {
       const links = prepare().links;
       expect(new Set(links.map((l) => l.id)).size).toBe(links.length);
@@ -315,15 +321,6 @@ describe("layout/sankey", () => {
   });
 
   describe("known quirks", () => {
-    test("link ids are handed out from a module-level counter", () => {
-      // BUG: undocumented. The counter is shared by every prepareData instance in the page and never
-      // resets, so link ids are unique but not stable between renders. Anything keying a
-      // d3 join on a link id therefore sees a completely new set of keys on every update.
-      const first = prepare().links.map((l) => l.id);
-      const second = prepare().links.map((l) => l.id);
-      expect(Math.min(...second)).toBeGreaterThan(Math.max(...first));
-    });
-
     test("a duplicate id across columns overwrites the first node", () => {
       // NOTE: warned about, and documented as a requirement - all ids must be unique. The
       // node keeps only the later column, so its links appear in the wrong column.
