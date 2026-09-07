@@ -1,4 +1,4 @@
-/*
+/**
  * A collection of utilities used by the map modules
  *
  * @module sszvis/map/utils
@@ -210,6 +210,10 @@ export interface MergedGeoDatum<Datum> {
  * entry. That datum still reads back correctly, but every unmatched feature afterwards is handed a
  * field of it rather than undefined. Do not feed untrusted ids to this function.
  *
+ * Note: a symbol data key stays a symbol property, so it can never be matched by a feature id,
+ * which GeoJSON allows only as a string or a number. Two symbols with the same description stay
+ * distinct for the same reason.
+ *
  * Note: several data sharing a key are not reported; the last one wins.
  *
  * Note: a falsy keyName, the empty string included, falls back to GEO_KEY_DEFAULT rather than being
@@ -227,7 +231,7 @@ export interface MergedGeoDatum<Datum> {
  * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
-export function prepareMergedGeoData<Datum extends Record<string, unknown>>(
+export function prepareMergedGeoData<Datum extends object>(
   dataset: readonly Datum[] | null | undefined,
   geoJson: ExtendedFeatureCollection,
   keyName?: string
@@ -236,9 +240,9 @@ export function prepareMergedGeoData<Datum extends Record<string, unknown>>(
   const key = keyName || GEO_KEY_DEFAULT;
 
   // group the input data by map entity id
-  const groupedInputData: Record<string, Datum> = Array.isArray(dataset)
-    ? dataset.reduce<Record<string, Datum>>((m, v) => {
-        m[toLookupKey(v[key])] = v;
+  const groupedInputData: Record<string | symbol, Datum> = Array.isArray(dataset)
+    ? dataset.reduce<Record<string | symbol, Datum>>((m, v) => {
+        m[toLookupKey(Reflect.get(v, key))] = v;
         return m;
       }, {})
     : {};
@@ -251,12 +255,13 @@ export function prepareMergedGeoData<Datum extends Record<string, unknown>>(
 }
 
 /**
- * Stringifies a key the way a property access would. Symbols are described rather than converted,
- * since String() throws on them - like the property access this replaces, such a key simply never
- * matches a feature id.
+ * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
+ * symbols with the same description remain distinct and can never be matched by a string or numeric
+ * feature id. Everything else stringifies, which is how a missing key becomes the string
+ * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
  */
-function toLookupKey(value: unknown): string {
-  return typeof value === "symbol" ? value.toString() : String(value);
+function toLookupKey(value: unknown): string | symbol {
+  return typeof value === "symbol" ? value : String(value);
 }
 
 /** The properties these utilities read from and write back to a map feature. */
