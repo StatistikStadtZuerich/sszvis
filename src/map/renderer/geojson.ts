@@ -26,9 +26,8 @@
  *                                          string, called with the datum. Default black. Undefined entities are not
  *                                          asked for a stroke at all; see the note below.
  * @property {Number, Function} strokeWidth The thickness of the strokes of the shapes. A number, or a function
- *                                          returning a number - but see the note below: unlike fill and stroke, a
- *                                          strokeWidth accessor is handed the merged { geoJson, datum } wrapper
- *                                          rather than the datum. Default 1.25.
+ *                                          returning a number, called with the datum as the fill and stroke
+ *                                          accessors are. Default 1.25.
  * @property {Boolean} transitionColor      Whether to schedule a transition on the fill color of the geojson entities.
  *                                          Default true. The transition does not currently animate anything; see the
  *                                          note below.
@@ -37,10 +36,6 @@
  * event.over(datum) and friends, but d3's dispatch exposes only on, call, apply and copy, so each
  * listener throws a TypeError before any registered handler runs. Both maps in docs/map-extended
  * register these handlers and receive nothing.
- *
- * Note: a strokeWidth accessor is called with the merged { geoJson, datum } wrapper, not with the
- * datum, unlike the fill and stroke accessors. An accessor written against the datum reads
- * undefined and d3 removes the attribute entirely.
  *
  * Note: lookup keys are stringified, so a numeric and a string id that print the same collide. A
  * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
@@ -122,7 +117,7 @@ type GeoJsonProps = {
   defined: StoredGeoJsonValue<boolean>;
   fill: StoredGeoJsonValue<string>;
   stroke: StoredGeoJsonValue<string>;
-  strokeWidth: (datum?: MergedFeature) => number;
+  strokeWidth: StoredGeoJsonValue<number>;
   transitionColor: boolean;
 };
 
@@ -145,14 +140,8 @@ export interface MapRendererGeoJsonComponent<T = unknown>
   fill<U = T>(value: GeoJsonValue<U, string>): MapRendererGeoJsonComponent<T>;
   stroke(): StoredGeoJsonValue<string>;
   stroke<U = T>(value: GeoJsonValue<U, string>): MapRendererGeoJsonComponent<T>;
-  /**
-   * Note that a strokeWidth accessor is called with the merged { geoJson, datum } wrapper, not
-   * with the datum, unlike fill and stroke.
-   */
-  strokeWidth(): (datum?: MergedFeature) => number;
-  strokeWidth<D = MergedFeature>(
-    value: number | ((datum: D) => number)
-  ): MapRendererGeoJsonComponent<T>;
+  strokeWidth(): StoredGeoJsonValue<number>;
+  strokeWidth<U = T>(value: GeoJsonValue<U, number>): MapRendererGeoJsonComponent<T>;
   on(eventName: string, handler: GeoJsonEventHandler): MapRendererGeoJsonComponent<T>;
   on(eventName: string): GeoJsonEventHandler | undefined;
   transitionColor(): boolean;
@@ -276,7 +265,9 @@ export default function <
         geoElements.attr("fill", getMapFill);
       }
 
-      geoElements.attr("stroke", getMapStroke).attr("stroke-width", props.strokeWidth);
+      geoElements
+        .attr("stroke", getMapStroke)
+        .attr("stroke-width", (d) => props.strokeWidth(d.datum));
 
       // The JavaScript read `.datum` off each listener's first parameter. d3 v6 and later call a
       // listener with (event, datum), so that read was always of the DOM event and always
