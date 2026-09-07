@@ -19,8 +19,9 @@
  *                                                    No default, and fails the same way as width.
  * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
  *                                                    Required and unguarded: it is the one property whose absence throws.
- * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default; a
- *                                                    missing mesh renders as one path with no `d` rather than as no path.
+ * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default, and
+ *                                                    required in practice: the mesh renderer throws a TypeError naming
+ *                                                    its geoJson property if it is left out.
  * @property {Object} lakeFeatures                    The shape of the part of Lake Zurich that lies within the city.
  *                                                    No default; a missing shape renders as an empty path.
  * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default, and it

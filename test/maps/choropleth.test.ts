@@ -180,6 +180,16 @@ describe("maps/choropleth", () => {
       expect(borders(node)[0].getAttribute("d")).toMatch(/^M/);
     });
 
+    // The mesh renderer now names the missing property instead of leaving a geometry-less path
+    // behind, so a choropleth without borders fails loudly rather than drawing a blank border
+    // layer.
+    test("throws when borders are missing, naming the mesh renderer's property", () => {
+      const collection = geoJson();
+      expect(() =>
+        layer().call(choropleth().features(collection).width(160).height(160).withLake(false))
+      ).toThrow(/geoJson is required/);
+    });
+
     test("projects the areas with a path fitted to the features at the given size", () => {
       const collection = geoJson();
       const node = render(fullData, (c) => c, { collection, size: 300 });
@@ -607,17 +617,6 @@ describe("maps/choropleth", () => {
     // features is required and unguarded: prepareMergedGeoData reads geoJson.features.
     test("throws when features are missing", () => {
       expect(() => layer().call(choropleth().width(100).height(100))).toThrow();
-    });
-
-    // NOTE: borders is not required, and a missing mesh renders as a path with no `d` rather than
-    // as no path at all, so the border layer is silently empty.
-    test("renders an empty border path when borders are missing", () => {
-      const collection = geoJson();
-      const node = layer()
-        .call(choropleth().features(collection).width(160).height(160).withLake(false))
-        .node() as SVGGElement;
-      expect(borders(node)).toHaveLength(1);
-      expect(borders(node)[0].getAttribute("d")).toBeNull();
     });
 
     // NOTE: withLake defaults to true, so a map with no lake data still gets the lake renderer,
