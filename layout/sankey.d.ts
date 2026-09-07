@@ -5,21 +5,15 @@
  * and layout required by the sankey component.
  *
  * Behaviour notes:
- * - prepareData's source/target/value accessors default to fn.identity, which only matches when
- *   the rows are themselves the id strings; for the object rows this layout is built around, no
- *   link ever matches a node id.
- * - a link with an unknown source or target id becomes a null entry left in the returned links
- *   array. Any such null throws a TypeError from the value sort as soon as a second link exists,
- *   valid or not; a sole invalid row survives only because sort skips a one-element array.
- * - link ids come from a module-level counter shared across every builder instance, so they
- *   are unique but not stable between renders.
- * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
- *   on the link, so the link stack runs outside its node.
+ * - prepareData's source, target and value accessors are required; a builder missing one throws
+ *   when it is applied.
+ * - a link with an unknown source or target id is warned about and dropped, so the returned
+ *   links array holds only links.
  * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
  *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
  *   is discarded by the minimum rather than distorting the others.
- * - a single-column diagram gives computeLayout's columnRange an Infinity step (issue #120);
- *   an empty column list gives a negative step and NaN/undefined elsewhere.
+ * - computeLayout returns a zeroed layout for a diagram with no columns, no room, or no
+ *   values at all.
  */
 import type { SankeyLink, SankeyNode } from "../component/sankey.js";
 /** A node as this module builds it: every link list is present, unlike the component's view. */
@@ -27,11 +21,11 @@ type PreparedNode = SankeyNode & {
     linksFrom: SankeyLink[];
     linksTo: SankeyLink[];
 };
-/** What prepareData returns. Links can contain nulls; see the module's behaviour notes. */
+/** What prepareData returns. */
 export type SankeyPreparedData = {
     nodes: PreparedNode[];
-    /** One entry per input row. An invalid row leaves a null behind - see the behaviour notes. */
-    links: (SankeyLink | null)[];
+    /** One entry per valid input row; rows with an unknown source or target are dropped. */
+    links: SankeyLink[];
     columnTotals: number[];
     columnLengths: number[];
 };
@@ -46,7 +40,8 @@ export interface SankeyDataPreparation<T = unknown> {
     source(func: (d: T) => string): SankeyDataPreparation<T>;
     /** The id of the link's target node. Must be one of the ids passed to idLists. */
     target(func: (d: T) => string): SankeyDataPreparation<T>;
-    /** The size of the flow. A string is coerced with Number(); anything unparseable becomes 0. */
+    /** The size of the flow. A string is coerced with Number(); an unparseable or negative
+     * value is warned about and the row is dropped. */
     value(func: (d: T) => number | string): SankeyDataPreparation<T>;
     descendingSort(): SankeyDataPreparation<T>;
     ascendingSort(): SankeyDataPreparation<T>;
@@ -54,11 +49,9 @@ export interface SankeyDataPreparation<T = unknown> {
 }
 export type SankeyComputedLayout = {
     valuePadding: number;
-    /** undefined when there are no columns at all - see the behaviour notes. */
-    nodePadding: number | undefined;
+    nodePadding: number;
     columnPaddings: number[];
-    /** The upper bound is undefined when there are no columns at all. */
-    valueDomain: [number, number | undefined];
+    valueDomain: [number, number];
     valueRange: [number, number];
     nodeThickness: number;
     columnDomain: [number, number];
@@ -94,19 +87,16 @@ export type SankeyComputedLayout = {
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
  *
  * Behaviour notes:
- * - source/target/value default to fn.identity, which only matches when a row is itself the id
- *   string; omitting them makes every link invalid for the usual object rows.
- * - a link whose source or target id is not in idLists is warned about and replaced by null, and
- *   the null stays in the returned links array. Any null throws a TypeError from the value sort
- *   once a second link exists, valid or not; a sole invalid row survives only because sort skips
- *   a one-element array.
- * - link ids come from a module-level counter shared by every builder instance, so they are
- *   unique but not stable across renders.
+ * - source, target and value are required accessors; a builder missing one throws when it is
+ *   applied, rather than looking the raw row up as a node id.
+ * - a link whose source or target id is not in idLists is warned about and dropped from the
+ *   returned links array.
+ * - a link's id is the index of the row it came from, so re-preparing the same data gives the
+ *   same links the same ids and the component's data join can match them up.
  * - a duplicate id warns and keeps only the last column.
- * - a non-numeric value silently becomes 0; a negative value is kept on the link but clamped
- *   away at the node (node.value is Math.max(0, from, to)), so the link stack runs outside
- *   its node.
- * - nothing checks that the two ends of a link are in different columns.
+ * - a row whose value is not a number of zero or more is warned about and dropped.
+ * - a link whose two ends are in the same column is warned about and dropped: a sankey link
+ *   runs between columns.
  * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
  *   or builder(data).
  * - nodes are sorted across all columns at once (descending by default), then offsets are
@@ -137,16 +127,17 @@ export declare const prepareData: <T = unknown>() => SankeyDataPreparation<T>;
  *
  * Behaviour notes:
  * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
- *   minimum across the columns is used for all of them. A single-node column divides by zero and
- *   contributes a phantom 50px candidate, but 50 is the cap, so that candidate only wins when
- *   every column is at 50 anyway - it never shrinks another column.
+ *   minimum across the columns is used for all of them. A single-node column draws no gaps, so
+ *   it has no padding to contribute and is left out of that minimum; a diagram whose columns
+ *   all hold one node has no padding at all.
  * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
  *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
- *   every total is 0; in that case the value range comes back [0, NaN].
+ *   every total is 0; a diagram whose columns are all empty is zeroed instead.
  * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
- *   (numColumns - 1); a single column gives Infinity (issue #120) and an empty column list
- *   gives a negative step, an undefined nodePadding and NaN elsewhere.
+ *   (numColumns - 1). Fewer than two columns have no step at all and report an offset of 0.
  * - nodeThickness is always 20.
+ * - A diagram with no columns, no room or no values at all comes back zeroed; a negative
+ *   height or width, or a negative or fractional column length, throws.
  */
 export declare const computeLayout: (columnLengths: number[], columnTotals: number[], columnHeight: number, columnWidth: number) => SankeyComputedLayout;
 export {};

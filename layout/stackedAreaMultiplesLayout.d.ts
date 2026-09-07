@@ -28,20 +28,17 @@
  * - By construction, step * (num - pct) === height, so baseline number `num` always lands exactly on `height`.
  * - The baseline loop terminates on an absolute 1px slack (`level - height < 1`), not a fraction of the step,
  *   so charts whose step is under ~1px get MORE baselines than there are stacks.
- * - pct defaults via `pct || 0.1`, so an explicit 0 (or NaN) is silently replaced by 0.1.
- * - num === pct divides by zero. With the default pct the step is Infinity and the range comes
- *   back empty; with a pct above 1 the first baseline is -Infinity and the range holds that one
- *   unusable value.
- * - 0.1 < num < 1 also yields an empty range (the first baseline already sits below the chart).
- * - A zero height, or num < pct < 1, makes both the step and the first baseline non-positive, and
- *   the baseline loop then runs forever (WARNING: no guard). A pct above 1 escapes this, because
- *   the negative step is multiplied by a negative (1 - pct) and the loop never starts.
- * - A negative height returns an empty range with a negative, unusable bandHeight.
+ * - pct defaults to 0.1 when it is omitted. An explicit 0 means exactly that: gapless
+ *   multiples. A pct outside [0, 1] throws.
+ * - num is a count of stacks: a negative or fractional value throws, which also rules out the
+ *   num === pct division by zero.
+ * - A step that is not strictly positive - a zero or negative height, or a num at or below pct -
+ *   describes no band at all, and the layout comes back empty rather than looping forever.
  */
 export type StackedAreaMultiplesLayout = {
     range: number[];
     bandHeight: number;
     padHeight: number;
 };
-export default function (height: number, num: number, pct?: number): StackedAreaMultiplesLayout;
+export default function layoutStackedAreaMultiples(height: number, num: number, pct?: number): StackedAreaMultiplesLayout;
 //# sourceMappingURL=stackedAreaMultiplesLayout.d.ts.map

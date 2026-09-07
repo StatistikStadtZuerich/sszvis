@@ -1,6 +1,7 @@
-import { min, max, sum, descending, ascending } from 'd3';
-import { identity, prop, filledArray } from '../fn.js';
+import { max, min, sum, descending, ascending } from 'd3';
+import { prop, filledArray } from '../fn.js';
 import { warn } from '../logger.js';
+import { requireSize, requireCount } from './validate.js';
 
 /**
  * @module sszvis/layout/sankey
@@ -9,26 +10,16 @@ import { warn } from '../logger.js';
  * and layout required by the sankey component.
  *
  * Behaviour notes:
- * - prepareData's source/target/value accessors default to fn.identity, which only matches when
- *   the rows are themselves the id strings; for the object rows this layout is built around, no
- *   link ever matches a node id.
- * - a link with an unknown source or target id becomes a null entry left in the returned links
- *   array. Any such null throws a TypeError from the value sort as soon as a second link exists,
- *   valid or not; a sole invalid row survives only because sort skips a one-element array.
- * - link ids come from a module-level counter shared across every builder instance, so they
- *   are unique but not stable between renders.
- * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
- *   on the link, so the link stack runs outside its node.
+ * - prepareData's source, target and value accessors are required; a builder missing one throws
+ *   when it is applied.
+ * - a link with an unknown source or target id is warned about and dropped, so the returned
+ *   links array holds only links.
  * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
  *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
  *   is discarded by the minimum rather than distorting the others.
- * - a single-column diagram gives computeLayout's columnRange an Infinity step (issue #120);
- *   an empty column list gives a negative step and NaN/undefined elsewhere.
+ * - computeLayout returns a zeroed layout for a diagram with no columns, no room, or no
+ *   values at all.
  */
-const newLinkId = (() => {
-  let id = 0;
-  return () => ++id;
-})();
 /**
  * sszvis.layout.sankey.prepareData
  *
@@ -59,45 +50,39 @@ const newLinkId = (() => {
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
  *
  * Behaviour notes:
- * - source/target/value default to fn.identity, which only matches when a row is itself the id
- *   string; omitting them makes every link invalid for the usual object rows.
- * - a link whose source or target id is not in idLists is warned about and replaced by null, and
- *   the null stays in the returned links array. Any null throws a TypeError from the value sort
- *   once a second link exists, valid or not; a sole invalid row survives only because sort skips
- *   a one-element array.
- * - link ids come from a module-level counter shared by every builder instance, so they are
- *   unique but not stable across renders.
+ * - source, target and value are required accessors; a builder missing one throws when it is
+ *   applied, rather than looking the raw row up as a node id.
+ * - a link whose source or target id is not in idLists is warned about and dropped from the
+ *   returned links array.
+ * - a link's id is the index of the row it came from, so re-preparing the same data gives the
+ *   same links the same ids and the component's data join can match them up.
  * - a duplicate id warns and keeps only the last column.
- * - a non-numeric value silently becomes 0; a negative value is kept on the link but clamped
- *   away at the node (node.value is Math.max(0, from, to)), so the link stack runs outside
- *   its node.
- * - nothing checks that the two ends of a link are in different columns.
+ * - a row whose value is not a number of zero or more is warned about and dropped.
+ * - a link whose two ends are in the same column is warned about and dropped: a sankey link
+ *   runs between columns.
  * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
  *   or builder(data).
  * - nodes are sorted across all columns at once (descending by default), then offsets are
  *   assigned per column.
  */
 const prepareData = () => {
-  let mGetSource = identity;
-  let mGetTarget = identity;
-  let mGetValue = identity;
+  let mGetSource;
+  let mGetTarget;
+  let mGetValue;
   let mColumnIds = [];
   // Helper functions
   const valueAcc = prop("value");
-  /**
-   * Reads a link's value. The links array can hold nulls for rows whose source or target was
-   * not found, and reading through one throws, exactly as the original property accessor did.
-   */
-  const linkValue = link => {
-    if (link === null) {
-      throw new TypeError("Cannot read properties of null (reading 'value')");
-    }
-    return link.value;
-  };
   const byAscendingValue = (a, b) => ascending(valueAcc(a), valueAcc(b));
   const byDescendingValue = (a, b) => descending(valueAcc(a), valueAcc(b));
   let valueSortFunc = byDescendingValue;
   const main = inputData => {
+    const getSource = mGetSource;
+    const getTarget = mGetTarget;
+    const getValue = mGetValue;
+    if (!getSource || !getTarget || !getValue) {
+      const missing = [getSource ? undefined : "source", getTarget ? undefined : "target", getValue ? undefined : "value"].filter(Boolean);
+      throw new TypeError("sankeyPrepareData: the ".concat(missing.join(", "), " accessor").concat(missing.length > 1 ? "s are" : " is", " required"));
+    }
     const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
       for (const id of columnIdsList) {
         if (index.has(id)) {
@@ -118,22 +103,32 @@ const prepareData = () => {
       }
       return index;
     }, new Map());
-    const listOfLinks = inputData.map(datum => {
-      const srcId = mGetSource(datum);
-      const tgtId = mGetTarget(datum);
-      const value = Number(mGetValue(datum)) || 0; // Cast this to number
+    const listOfLinks = inputData.flatMap((datum, rowIndex) => {
+      const srcId = getSource(datum);
+      const tgtId = getTarget(datum);
+      const rawValue = getValue(datum);
+      const value = Number(rawValue);
       const srcNode = columnIndex.get(srcId);
       const tgtNode = columnIndex.get(tgtId);
       if (!srcNode) {
         warn("Found invalid source column id:", srcId);
-        return null;
+        return [];
       }
       if (!tgtNode) {
         warn("Found invalid target column id:", tgtId);
-        return null;
+        return [];
+      }
+      if (srcNode.columnIndex === tgtNode.columnIndex) {
+        warn("Found a link whose source and target are in the same column, and dropped it:", srcId, tgtId);
+        return [];
+      }
+      if (!Number.isFinite(value) || value < 0) {
+        warn("Found a link value that is not a number of zero or more, and dropped the link:", rawValue, srcId, tgtId);
+        return [];
       }
       const item = {
-        id: newLinkId(),
+        // the row's own index: an id that identifies a link rather than a call
+        id: rowIndex,
         value,
         src: srcNode,
         srcOffset: 0,
@@ -142,7 +137,7 @@ const prepareData = () => {
       };
       srcNode.linksFrom.push(item);
       tgtNode.linksTo.push(item);
-      return item;
+      return [item];
     });
     // Extract the column nodes from the index
     const listOfNodes = [...columnIndex.values()];
@@ -151,7 +146,7 @@ const prepareData = () => {
       const fromTotal = sum(node.linksFrom, valueAcc);
       const toTotal = sum(node.linksTo, valueAcc);
       // For correct visual display, the node's value is the max of the from and to links
-      node.value = Math.max(0, fromTotal, toTotal);
+      node.value = Math.max(fromTotal, toTotal);
       totals[node.columnIndex] += node.value;
       return totals;
     }, filledArray(mColumnIds.length, 0));
@@ -163,7 +158,7 @@ const prepareData = () => {
     // Sort the links in descending order of value. This means smaller links will render
     // on top of larger links.
     // (note, this sorts all links for all columns in the same array)
-    listOfLinks.sort((a, b) => descending(linkValue(a), linkValue(b)));
+    listOfLinks.sort(byDescendingValue);
     // Assign the valueOffset and nodeIndex properties
     // Here, columnData[0] is an array adding up value totals
     // and columnData[1] is an array adding up the number of nodes in each column
@@ -257,58 +252,88 @@ const num = value => value === undefined ? Number.NaN : value;
  *
  * Behaviour notes:
  * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
- *   minimum across the columns is used for all of them. A single-node column divides by zero and
- *   contributes a phantom 50px candidate, but 50 is the cap, so that candidate only wins when
- *   every column is at 50 anyway - it never shrinks another column.
+ *   minimum across the columns is used for all of them. A single-node column draws no gaps, so
+ *   it has no padding to contribute and is left out of that minimum; a diagram whose columns
+ *   all hold one node has no padding at all.
  * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
  *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
- *   every total is 0; in that case the value range comes back [0, NaN].
+ *   every total is 0; a diagram whose columns are all empty is zeroed instead.
  * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
- *   (numColumns - 1); a single column gives Infinity (issue #120) and an empty column list
- *   gives a negative step, an undefined nodePadding and NaN elsewhere.
+ *   (numColumns - 1). Fewer than two columns have no step at all and report an offset of 0.
  * - nodeThickness is always 20.
+ * - A diagram with no columns, no room or no values at all comes back zeroed; a negative
+ *   height or width, or a negative or fractional column length, throws.
  */
 const computeLayout = (columnLengths, columnTotals, columnHeight, columnWidth) => {
+  var _max, _min;
+  requireSize("sankeyLayout", "columnHeight", columnHeight);
+  requireSize("sankeyLayout", "columnWidth", columnWidth);
+  for (const colLength of columnLengths) {
+    requireCount("sankeyLayout", "columnLengths", colLength);
+  }
+  if (columnTotals.length !== columnLengths.length) {
+    throw new RangeError("sankeyLayout: columnTotals must hold one total per column, got ".concat(columnTotals.length, " for ").concat(columnLengths.length, " columns"));
+  }
+  // The maximum total value of any column
+  const maxTotal = (_max = max(columnTotals)) !== null && _max !== void 0 ? _max : 0;
+  const nodeThickness = 20;
+  const numColumns = columnLengths.length;
+  // With one column there are no steps to space out, so the offset is zero rather than a
+  // division by zero (issue #120).
+  const columnXMultiplier = numColumns > 1 ? (columnWidth - nodeThickness) / (numColumns - 1) : 0;
+  const columnDomain = [0, 1];
+  const columnRange = [0, columnXMultiplier];
+  // Nothing to scale: no columns, no room for them, or no values in any of them
+  if (numColumns === 0 || columnHeight === 0 || columnWidth === 0 || maxTotal === 0) {
+    return {
+      valuePadding: 0,
+      nodePadding: 0,
+      columnPaddings: columnLengths.map(() => 0),
+      valueDomain: [0, maxTotal],
+      valueRange: [0, 0],
+      nodeThickness,
+      columnDomain,
+      // Zeroed with the rest of the layout. Computed from columnWidth, the multiplier is
+      // negative once columnWidth falls below nodeThickness, which would place the columns
+      // outside a container that has no room for them at all.
+      columnRange: [0, 0]
+    };
+  }
   // Calculate appropriate scale and padding values (in pixels)
   const padSpaceRatio = 0.15;
   const padMin = 12;
   const padMax = 50;
   const minDisplayPixels = 1; // Minimum number of pixels used for display area
-  // Compute the padding value (in pixels) for each column, then take the minimum value
-  const computedPixPadding = min(columnLengths.map(colLength => {
+  // Compute the padding value (in pixels) for each column, then take the minimum value.
+  // A column of one node draws no gaps, so it has no padding of its own to contribute, and
+  // charging its (divide-by-zero, then clamped) candidate to the other columns would shrink
+  // columns that do draw gaps.
+  const computedPixPadding = (_min = min(columnLengths.filter(colLength => colLength > 1).map(colLength => {
     // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
     const colPadding = columnHeight * padSpaceRatio / (colLength - 1);
     // Limit by minimum and maximum pixel padding values
     return Math.max(padMin, Math.min(padMax, colPadding));
-  }));
+  }))) !== null && _min !== void 0 ? _min : 0;
   // Given the computed padding value, compute each column's resulting "pixels per unit"
   // This is the number of remaining pixels available to display the column's total units,
   // after padding pixels have been subtracted. Then take the minimum value of that.
   const pixPerUnit = min(columnLengths.map((colLength, colIndex) => {
     // The non-padding pixels must have at least minDisplayPixels
-    const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * num(computedPixPadding));
+    const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
     return nonPaddingPixels / num(columnTotals[colIndex]);
   }));
   // The padding between bars, in bar value units
-  const valuePadding = num(computedPixPadding) / num(pixPerUnit);
+  const valuePadding = computedPixPadding / num(pixPerUnit);
   // The padding between bars, in pixels
   const nodePadding = computedPixPadding;
-  // The maximum total value of any column
-  const maxTotal = max(columnTotals);
   // Compute y-padding required to vertically center each column (in pixels)
-  const paddedHeights = columnLengths.map((colLength, colIndex) => num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * num(nodePadding));
+  const paddedHeights = columnLengths.map((colLength, colIndex) => num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * nodePadding);
   const maxPaddedHeight = max(paddedHeights);
   const columnPaddings = columnLengths.map((_colLength, colIndex) => (num(maxPaddedHeight) - num(paddedHeights[colIndex])) / 2);
   // The domain of the size scale
   const valueDomain = [0, maxTotal];
   // The range of the size scale
-  const valueRange = [0, num(maxTotal) * num(pixPerUnit)];
-  // Calculate column (or row, as the case may be) positioning values
-  const nodeThickness = 20;
-  const numColumns = columnLengths.length;
-  const columnXMultiplier = (columnWidth - nodeThickness) / (numColumns - 1);
-  const columnDomain = [0, 1];
-  const columnRange = [0, columnXMultiplier];
+  const valueRange = [0, maxTotal * num(pixPerUnit)];
   return {
     valuePadding,
     nodePadding,

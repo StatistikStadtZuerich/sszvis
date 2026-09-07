@@ -26,16 +26,10 @@
  * - Padding is then clamped to [2, 100] WITHOUT recomputing the bar width, so the bar group
  *   can overflow or underflow the given width (outerRatio can go negative).
  * - padRatio/outerRatio are derived from the clamped barWidth/padding, not from the 0.7/0.3 target.
- * - numBars === 1 has zero padding spaces, so its padWidth is a phantom that is never drawn but
- *   still feeds padRatio. When the single bar would be wider than the 48px cap, the padding
- *   recompute additionally divides by zero and the resulting Infinity is masked by the 100px
- *   clamp; a narrower single bar skips that branch and keeps its finite target padding.
- * - numBars === 0 yields NaN for barWidth, padRatio, outerRatio, and barGroupWidth (0/0), while
- *   padWidth still clamps to the 2px minimum.
- * - width === 0 gives barWidth 0 and padRatio exactly 1 (outside the [0, 1) range band scales expect).
- * - Negative width produces a negative barWidth and a padRatio outside the [0, 1) range band
- *   scales accept - above 1 for small negative widths (width -1 gives 1.04) and below 0 for
- *   larger ones (width -200 gives -0.16). There is no input validation.
+ * - numBars === 1 has zero padding spaces, so it reports no padding at all.
+ * - A zero width or a zero bar count is a chart with nothing to draw, and every dimension
+ *   comes back 0 (totalWidth still reports the width that was asked for).
+ * - A negative width, or a negative or fractional bar count, throws.
  */
 export type VerticalBarChartDimensions = {
     barWidth: number;
@@ -45,5 +39,5 @@ export type VerticalBarChartDimensions = {
     barGroupWidth: number;
     totalWidth: number;
 };
-export default function (width: number, numBars: number): VerticalBarChartDimensions;
+export default function dimensionsVerticalBarChart(width: number, numBars: number): VerticalBarChartDimensions;
 //# sourceMappingURL=verticalBarChartDimensions.d.ts.map

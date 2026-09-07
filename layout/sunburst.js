@@ -1,5 +1,7 @@
 import { min, max, partition } from 'd3';
+import { warn } from '../logger.js';
 import { prepareHierarchyData } from './hierarchy.js';
+import { requireCount, requireSize } from './validate.js';
 
 /**
  * @module sszvis/layout/sunburst
@@ -67,21 +69,38 @@ const MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  *
  * Behaviour notes:
- * - centerRadius is always chartWidth / 6.
+ * - centerRadius is chartWidth / 6, shrunk when the rings would not otherwise fit.
  * - ringWidth is the remaining radius divided by numLayers, clamped to [10, 60].
- * - Because the clamp does not feed back into centerRadius, a deep hierarchy in a narrow
- *   chart overflows (centerRadius + ringWidth * numLayers can exceed chartWidth / 2, which
- *   is exactly the outer radius the sunburst component draws, per docs/sunburst/basic.js),
- *   and a shallow one leaves empty space.
- * - numLayers === 0 divides by zero and the resulting Infinity is masked by the 60px cap.
- * - A negative numLayers or a zero/negative chartWidth is not validated (the 10px floor
- *   hides the negative ring width).
+ * - The 10px floor is reconciled with the centre: a deep hierarchy in a narrow chart gives
+ *   its rings the room by shrinking centerRadius, so that
+ *   centerRadius + ringWidth * numLayers stays within chartWidth / 2 - the outer radius the
+ *   sunburst component draws, per docs/sunburst/basic.js. A hierarchy so deep that even a
+ *   centre of nothing cannot hold it warns and overflows. The 60px cap is not compensated
+ *   for in the other direction: a shallow hierarchy simply leaves empty space.
+ * - A zero chartWidth or a hierarchy with no layers is a chart with nothing to draw, and
+ *   every dimension comes back 0.
+ * - A negative chartWidth, or a negative or fractional layer count, throws.
  */
 const computeLayout = (numLayers, chartWidth) => {
+  requireCount("sunburstLayout", "numLayers", numLayers);
+  requireSize("sunburstLayout", "chartWidth", chartWidth);
+  if (numLayers === 0 || chartWidth === 0) {
+    return {
+      centerRadius: 0,
+      numLayers,
+      ringWidth: 0
+    };
+  }
   // Diameter of the center circle is one-third the width
   const halfWidth = chartWidth / 2;
-  const centerRadius = halfWidth / 3;
-  const ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
+  const targetCenterRadius = halfWidth / 3;
+  const ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - targetCenterRadius) / numLayers));
+  // Once the ring width is floored, the rings may need more room than the target centre
+  // leaves them. Give it to them, down to a centre of nothing.
+  const centerRadius = Math.max(0, Math.min(targetCenterRadius, halfWidth - ringWidth * numLayers));
+  if (ringWidth * numLayers > halfWidth) {
+    warn("sunburstLayout: ".concat(numLayers, " rings of the minimum ").concat(MIN_RW, "px do not fit a chart ").concat(chartWidth, "px wide, and will be drawn outside it"));
+  }
   return {
     centerRadius,
     numLayers,
@@ -100,10 +119,12 @@ const computeLayout = (numLayers, chartWidth) => {
  * Behaviour notes:
  * - Returns [min y0, max y1] taken independently of each other.
  * - d3.min/max skip undefined and NaN nodes.
- * - An empty array gives [undefined, undefined], which produces a NaN radius when used as
- *   a scale domain.
+ * - An empty array gives [0, 0], which is a usable, if empty, scale domain.
  */
-const getRadiusExtent = formattedData => [min(formattedData, d => d.y0), max(formattedData, d => d.y1)];
+const getRadiusExtent = formattedData => {
+  var _min, _max;
+  return [(_min = min(formattedData, d => d.y0)) !== null && _min !== void 0 ? _min : 0, (_max = max(formattedData, d => d.y1)) !== null && _max !== void 0 ? _max : 0];
+};
 
 export { MAX_SUNBURST_RING_WIDTH, MIN_SUNBURST_RING_WIDTH, computeLayout, getRadiusExtent, prepareData };
 //# sourceMappingURL=sunburst.js.map

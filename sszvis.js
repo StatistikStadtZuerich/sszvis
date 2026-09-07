@@ -8639,6 +8639,7 @@
       });
     }
 
+    const SLANTS = ["horizontal", "vertical", "diagonal"];
     const DEFAULT_COLUMN_COUNT = 2;
     const LABEL_PADDING = 40;
     /**
@@ -8650,26 +8651,39 @@
      * Behaviour notes:
      * - scaleQual6 is used up to six labels, scaleQual12 above six; colours repeat
      *   silently beyond twelve labels.
-     * - axisLabelPadding is 60 for slant "horizontal" (and for any unrecognised slant),
-     *   40 + widest axis label for "vertical", and 40 + widest axis label / sqrt(2) for
-     *   "diagonal".
-     * - A "vertical" or "diagonal" slant with no axisLabels gives NaN, which propagates
-     *   into bottomPadding and thus into sszvis.bounds().
+     * - axisLabelPadding is 60 for slant "horizontal", 40 + widest axis label for "vertical",
+     *   and 40 + widest axis label / sqrt(2) for "diagonal". An omitted or null slant is
+     *   horizontal; any other value throws.
+     * - More labels than the chosen colour scale has colours is warned about, because a d3
+     *   ordinal scale recycles its range rather than running out.
+     * - A "vertical" or "diagonal" slant with no axisLabels reserves the 40px base padding
+     *   and nothing for the labels themselves.
+     * - A container that cannot be measured is warned about and treated as having no width.
      * - legendPadding is rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT.
      */
     function colorLegendLayout(_ref, container) {
-      var _measureDimensions$wi;
       let {
         legendLabels,
         axisLabels = [],
-        slant = "horizontal"
+        slant
       } = _ref;
-      // an unmeasurable container yields undefined; NaN keeps every comparison below false
-      const containerWidth = (_measureDimensions$wi = measureDimensions(container).width) !== null && _measureDimensions$wi !== void 0 ? _measureDimensions$wi : Number.NaN;
+      // an omitted slant - null included, as the docs examples pass it - is horizontal
+      const resolvedSlant = slant !== null && slant !== void 0 ? slant : "horizontal";
+      if (!SLANTS.includes(resolvedSlant)) {
+        throw new RangeError("colorLegendLayout: slant must be one of ".concat(SLANTS.join(", "), ", got ").concat(slant));
+      }
+      const measuredWidth = measureDimensions(container).width;
+      if (!measuredWidth) {
+        warn("colorLegendLayout could not measure its container, and is laying the legend out as if it had no width:", container);
+      }
+      const containerWidth = measuredWidth !== null && measuredWidth !== void 0 ? measuredWidth : 0;
       const layout = colorLegendDimensions(legendLabels, containerWidth);
       const scale = legendLabels.length > 6 ? scaleQual12().domain(legendLabels) : scaleQual6().domain(legendLabels);
+      if (legendLabels.length > scale.range().length) {
+        warn("colorLegendLayout: ".concat(legendLabels.length, " labels share the ").concat(scale.range().length, " colours of this scale, so some categories are drawn in the same colour"));
+      }
       const legend = legendColorOrdinal().scale(scale).horizontalFloat(layout.horizontalFloat).rows(layout.rows).columnWidth(layout.columnWidth).orientation(layout.orientation);
-      const axisLabelPadding = axisLabelHeight(slant, axisLabels);
+      const axisLabelPadding = axisLabelHeight(resolvedSlant, axisLabels);
       const legendPadding = layout.rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;
       return {
         axisLabelPadding,
@@ -8691,17 +8705,16 @@
      * - Horizontal float only when there is one column AND all labels fit on one line.
      * - Each label is padded by 40px.
      * - columnWidth is null for a single column.
-     * - legendWidth is columns * widest label, so for a floated legend it under-reports
-     *   the actual line width.
-     * - An empty label list gives legendWidth NaN.
-     * - An unmeasurable container (width 0 or undefined) silently degrades to one
-     *   column, one row per label.
+     * - legendWidth is columns * widest label, or the width of the whole line for a floated
+     *   legend, which is laid out on one line rather than in columns.
+     * - An empty label list gives a zero legendWidth.
+     * - A container of no width degrades to one column, one row per label.
      */
     function colorLegendDimensions(labels, containerWidth) {
       var _max;
       const labelCount = labels.length;
-      // d3.max is undefined for an empty label list; NaN propagates the same way
-      const maxLabelWidth = (_max = d3.max(labels, labelWidth)) !== null && _max !== void 0 ? _max : Number.NaN;
+      // an empty legend has no labels to be as wide as
+      const maxLabelWidth = (_max = d3.max(labels, labelWidth)) !== null && _max !== void 0 ? _max : 0;
       const totalLabelsWidth = d3.sum(labels, labelWidth);
       // Use a single column for four or fewer items
       const columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
@@ -8711,7 +8724,8 @@
         columns,
         rows: isHorizontal ? 1 : Math.ceil(labelCount / columns),
         columnWidth: columns === 1 ? null : maxLabelWidth,
-        legendWidth: columns * maxLabelWidth,
+        // a floated legend is one line of labels, not a column of the widest one
+        legendWidth: isHorizontal ? totalLabelsWidth : columns * maxLabelWidth,
         horizontalFloat: isHorizontal,
         orientation: isHorizontal ? null : "vertical"
       };
@@ -8723,12 +8737,12 @@
         case "vertical":
           {
             var _max2;
-            return 40 + ((_max2 = d3.max(labels, measureAxisLabel)) !== null && _max2 !== void 0 ? _max2 : Number.NaN);
+            return 40 + ((_max2 = d3.max(labels, measureAxisLabel)) !== null && _max2 !== void 0 ? _max2 : 0);
           }
         case "diagonal":
           {
             var _max3;
-            return 40 + Math.sqrt(2 * (((_max3 = d3.max(labels, measureAxisLabel)) !== null && _max3 !== void 0 ? _max3 : Number.NaN) / 2) ** 2);
+            return 40 + Math.sqrt(2 * (((_max3 = d3.max(labels, measureAxisLabel)) !== null && _max3 !== void 0 ? _max3 : 0) / 2) ** 2);
           }
         default:
           {
@@ -8744,54 +8758,102 @@
       return columnWidth <= totalWidth / num ? num : numCols(totalWidth, columnWidth, num - 1);
     }
 
+    function _defineProperty(e, r, t) {
+      return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+        value: t,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      }) : e[r] = t, e;
+    }
+    function ownKeys(e, r) {
+      var t = Object.keys(e);
+      if (Object.getOwnPropertySymbols) {
+        var o = Object.getOwnPropertySymbols(e);
+        r && (o = o.filter(function (r) {
+          return Object.getOwnPropertyDescriptor(e, r).enumerable;
+        })), t.push.apply(t, o);
+      }
+      return t;
+    }
+    function _objectSpread2(e) {
+      for (var r = 1; r < arguments.length; r++) {
+        var t = null != arguments[r] ? arguments[r] : {};
+        r % 2 ? ownKeys(Object(t), true).forEach(function (r) {
+          _defineProperty(e, r, t[r]);
+        }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) {
+          Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
+        });
+      }
+      return e;
+    }
+    function _toPrimitive(t, r) {
+      if ("object" != typeof t || !t) return t;
+      var e = t[Symbol.toPrimitive];
+      if (void 0 !== e) {
+        var i = e.call(t, r);
+        if ("object" != typeof i) return i;
+        throw new TypeError("@@toPrimitive must return a primitive value.");
+      }
+      return ("string" === r ? String : Number)(t);
+    }
+    function _toPropertyKey(t) {
+      var i = _toPrimitive(t, "string");
+      return "symbol" == typeof i ? i : i + "";
+    }
+
     /**
-     * Heat Table Dimensions
+     * Argument checks shared by the layout functions.
      *
-     * Utility function for calculating different demensions in the heat table
+     * @module sszvis/layout/validate
      *
-     * @module sszvis/layout/heatTableDimensions
+     * Every layout in this directory turns measurements and counts into geometry, and the two
+     * degenerate cases they meet are distinguished here:
      *
-     * @param  {Number} spaceWidth   the total available width for the heat table within its container
-     * @param  {Number} squarePadding the padding, in pixels, between squares in the heat table
-     * @param  {Number} numX     The number of columns that need to fit within the heat table width
-     * @param {Number} numY The number of rows in the table
-     * @param {Object} [chartPadding] An object that includes padding values for the left, right, top,
-     *                              and bottom padding which the heat table should have within its container.
-     *                              These padding values should be enough to include any axis labels or other things
-     *                              that show up around the table itself. The heat table will then fill the rest
-     *                              of the available space as appropriate (up to a certain maximum size of box)
-     * @return {object}         An object with dimension information about the heat table:
-     *                          {
-     *                              side: the length of one side of a table box
-     *                              paddedSide: the length of the side plus padding
-     *                              padRatio: the ratio of padding to paddedSide (used for configuring d3.scaleOrdinal.rangeBands as the second parameter)
-     *                              width: the total width of all table boxes plus padding in between
-     *                              height: the total height of all table boxes plus padding in between
-     *                              centeredOffset: the left offset required to center the table horizontally within its container
-     *                          }
-     *
-     * Behaviour notes:
-     * - The box side is fitted to the available width only; numY/rows never affect it.
-     * - The side is capped at 30px but never floored, so too many columns, a large
-     *   squarePadding, or a large horizontal chartPadding can drive it negative, which also
-     *   pushes padRatio outside the [0, 1) range a band scale expects.
-     * - The chartPadding argument is mutated in place (missing sides are defaulted onto the
-     *   object itself), so passing a frozen object throws a TypeError.
-     * - Defaults for chartPadding are applied with `||`, so an explicit 0 is indistinguishable
-     *   from a missing value.
-     * - Only left/right padding affect the layout; top/bottom are accepted but unused.
-     * - numX === 0 divides by zero, and Math.min silently falls back to the 30px default side,
-     *   which then yields a negative width.
-     * - numX and numY are not validated: fractional and negative values pass straight through
-     *   into the geometry.
-     * - A negative squarePadding makes paddedSide smaller than side (boxes overlap) and drives
-     *   padRatio negative.
-     * - centeredOffset is clamped at 0 but never validated otherwise.
+     * - A size or a count that cannot describe any chart - negative, fractional where only whole
+     *   items exist, or not a number at all - is a misconfiguration. It throws, naming the layout
+     *   and the argument, before any dimension is computed.
+     * - A zero size or a zero count is an ordinary runtime state: a container measured before its
+     *   first paint, or a series filtered down to nothing. Each layout returns a zeroed layout for
+     *   those rather than throwing, so a chart can render itself as empty.
      */
-    function heatTableDimensions (spaceWidth, squarePadding, numX, numY, chartPadding) {
+    /** Throws unless `value` is a finite number of zero or more pixels. */
+    function requireSize(layoutName, propName, value) {
+      if (!Number.isFinite(value) || value < 0) {
+        throw new RangeError("".concat(layoutName, ": ").concat(propName, " must be a finite number of pixels of zero or more, got ").concat(value));
+      }
+    }
+    /** Throws unless `value` is a finite ratio within `[0, 1]`. */
+    function requireRatio(layoutName, propName, value) {
+      if (!Number.isFinite(value) || value < 0 || value > 1) {
+        throw new RangeError("".concat(layoutName, ": ").concat(propName, " must be a ratio within [0, 1], got ").concat(value));
+      }
+    }
+    /** Throws unless `value` is a whole number of zero or more items. */
+    function requireCount(layoutName, propName, value) {
+      if (!Number.isInteger(value) || value < 0) {
+        throw new RangeError("".concat(layoutName, ": ").concat(propName, " must be a whole number of zero or more, got ").concat(value));
+      }
+    }
+
+    /** A table with no columns, no rows or no room: nothing to draw and nothing to report. */
+    const EMPTY_DIMENSIONS = {
+      side: 0,
+      paddedSide: 0,
+      padRatio: 0,
+      width: 0,
+      height: 0,
+      centeredOffset: 0
+    };
+    function dimensionsHeatTable(spaceWidth, squarePadding, numX, numY, chartPadding) {
       var _padding$left, _padding$right;
-      // the defaults are written back onto the caller's object, as the original did
-      const padding = chartPadding || {};
+      requireSize("dimensionsHeatTable", "spaceWidth", spaceWidth);
+      requireSize("dimensionsHeatTable", "squarePadding", squarePadding);
+      requireCount("dimensionsHeatTable", "numX", numX);
+      requireCount("dimensionsHeatTable", "numY", numY);
+      if (spaceWidth === 0 || numX === 0 || numY === 0) return _objectSpread2({}, EMPTY_DIMENSIONS);
+      // a copy: a dimension calculator has no business writing to its arguments
+      const padding = _objectSpread2({}, chartPadding);
       padding.top || (padding.top = 0);
       padding.right || (padding.right = 0);
       padding.bottom || (padding.bottom = 0);
@@ -8799,12 +8861,16 @@
       // this includes the default side length for the heat table
       const DEFAULT_SIDE = 30,
         availableChartWidth = spaceWidth - ((_padding$left = padding.left) !== null && _padding$left !== void 0 ? _padding$left : 0) - ((_padding$right = padding.right) !== null && _padding$right !== void 0 ? _padding$right : 0),
-        side = Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
+        // the side is capped from above and floored at 0: a box cannot have a negative side,
+        // and a padRatio derived from one lands outside the [0, 1) a band scale accepts
+        side = Math.max(0, Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE)),
         paddedSide = side + squarePadding,
         padRatio = 1 - side / paddedSide,
         tableWidth = numX * paddedSide - squarePadding,
         // subtract the squarePadding at the end
         tableHeight = numY * paddedSide - squarePadding; // subtract the squarePadding at the end
+      // no room for a box means no table to lay out
+      if (side === 0) return _objectSpread2({}, EMPTY_DIMENSIONS);
       return {
         side,
         paddedSide,
@@ -8837,8 +8903,9 @@
      *                                              in order to ensure that the axis labels are visible. This can be used as the y-component
      *                                              of a call to sszvis.svgUtils.translateString.
      *                                  barGroupHeight: the combined height of all the bars and their inner padding.
-     *                                  totalHeight: barGroupHeight plus the height of the outerPadding. This distance can be used
-     *                                               to translate scales below the bars.
+     *                                  totalHeight: barGroupHeight plus the height of the outer padding. Since this layout
+     *                                               has no outer padding, it always equals barGroupHeight; the two are kept
+     *                                               distinct to match the shape of the vertical bar chart layout.
      *                                 }
      *
      * Behaviour notes:
@@ -8847,17 +8914,18 @@
      * - outerRatio is always 0, so totalHeight always equals barGroupHeight. The two properties
      *   are kept distinct only to match the shape of the vertical bar chart layout.
      * - axisOffset is derived from the constant bar height and is therefore always -22.
-     * - numBars is not validated: 0 gives a barGroupHeight of -20 (numPads goes to -1), and
-     *   negative or fractional counts pass through unchanged.
+     * - Zero bars give a zero group height; a negative or fractional bar count throws.
      */
-    function horizontalBarChartDimensions (numBars) {
+    function dimensionsHorizontalBarChart(numBars) {
+      requireCount("dimensionsHorizontalBarChart", "numBars", numBars);
       const DEFAULT_HEIGHT = 24,
         // the default bar height
         MIN_PADDING = 20,
         // the minimum padding size
         barHeight = DEFAULT_HEIGHT,
         // the bar height
-        numPads = numBars - 1,
+        // an empty chart draws no bars, so it draws no gaps between them either
+        numPads = Math.max(numBars - 1, 0),
         padding = MIN_PADDING,
         // compute other information
         padRatio = 1 - barHeight / (barHeight + padding),
@@ -8899,7 +8967,7 @@
      *                                      In situations with very wide screens, this limits the width of the entire pyramid to a reasonable size.
      *                                      chartPadding: left padding for the chart. When the maxBarLength is less than what would fill the entire width
      *                                      of the chart, this value is needed to offset the axes and legend so that they line up with the chart. Otherwise,
-     *                                      the value is floored at 1 and no further padding is needed.
+     *                                      the value is 0 and no further padding is needed.
      *                                    }
      *
      * Behaviour notes:
@@ -8911,14 +8979,26 @@
      *   expects them: the first is the bottom bar (the largest y) and the last is the top bar at
      *   exactly 0. There is one position per bar for a positive whole numBars, since the integer
      *   arithmetic guarantees the loop lands on 0; a fractional or negative count is not validated.
-     * - maxBarLength is capped at 240 (= aspectRatioPortrait.MAX_HEIGHT * 4/5 / 2), which only
-     *   coincidentally equals this module's own MAX_HEIGHT / 2 and can drift if either constant changes.
-     * - chartPadding is floored at 1.
-     * - numBars === 0 gives an Infinity barHeight, a NaN totalHeight, and no positions.
-     * - A zero or negative spaceWidth is not validated. Both produce 2px bars and a 1px
-     *   chartPadding; maxBarLength is 0 for a zero width and negative for a negative one.
+     * - maxBarLength is capped at half this module's own MAX_HEIGHT, so a very wide screen keeps
+     *   the whole pyramid to a reasonable size.
+     * - chartPadding is 0 once the pyramid fills the width.
+     * - A zero spaceWidth or a pyramid with no bars is a chart with nothing to draw, and every
+     *   dimension comes back 0.
+     * - A negative spaceWidth, or a negative or fractional bar count, throws.
      */
-    function populationPyramidLayout (spaceWidth, numBars) {
+    function layoutPopulationPyramid(spaceWidth, numBars) {
+      requireSize("layoutPopulationPyramid", "spaceWidth", spaceWidth);
+      requireCount("layoutPopulationPyramid", "numBars", numBars);
+      if (spaceWidth === 0 || numBars === 0) {
+        return {
+          barHeight: 0,
+          padding: 0,
+          totalHeight: 0,
+          positions: [],
+          maxBarLength: 0,
+          chartPadding: 0
+        };
+      }
       const MAX_HEIGHT = 480; // Chart no taller than this
       const MIN_BAR_HEIGHT = 2; // Bars no shorter than this
       const defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);
@@ -8935,8 +9015,9 @@
         positions.push(barPos);
         barPos -= step;
       }
-      const maxBarLength = Math.min(spaceWidth / 2, aspectRatioPortrait.MAX_HEIGHT * (4 / 5) / 2);
-      const chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
+      // half of each side, up to half the chart's own maximum height
+      const maxBarLength = Math.min(spaceWidth / 2, MAX_HEIGHT / 2);
+      const chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 0);
       return {
         barHeight: roundedBarHeight,
         padding,
@@ -8954,26 +9035,16 @@
      * and layout required by the sankey component.
      *
      * Behaviour notes:
-     * - prepareData's source/target/value accessors default to fn.identity, which only matches when
-     *   the rows are themselves the id strings; for the object rows this layout is built around, no
-     *   link ever matches a node id.
-     * - a link with an unknown source or target id becomes a null entry left in the returned links
-     *   array. Any such null throws a TypeError from the value sort as soon as a second link exists,
-     *   valid or not; a sole invalid row survives only because sort skips a one-element array.
-     * - link ids come from a module-level counter shared across every builder instance, so they
-     *   are unique but not stable between renders.
-     * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
-     *   on the link, so the link stack runs outside its node.
+     * - prepareData's source, target and value accessors are required; a builder missing one throws
+     *   when it is applied.
+     * - a link with an unknown source or target id is warned about and dropped, so the returned
+     *   links array holds only links.
      * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
      *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
      *   is discarded by the minimum rather than distorting the others.
-     * - a single-column diagram gives computeLayout's columnRange an Infinity step (issue #120);
-     *   an empty column list gives a negative step and NaN/undefined elsewhere.
+     * - computeLayout returns a zeroed layout for a diagram with no columns, no room, or no
+     *   values at all.
      */
-    const newLinkId = (() => {
-      let id = 0;
-      return () => ++id;
-    })();
     /**
      * sszvis.layout.sankey.prepareData
      *
@@ -9004,45 +9075,39 @@
      *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
      *
      * Behaviour notes:
-     * - source/target/value default to fn.identity, which only matches when a row is itself the id
-     *   string; omitting them makes every link invalid for the usual object rows.
-     * - a link whose source or target id is not in idLists is warned about and replaced by null, and
-     *   the null stays in the returned links array. Any null throws a TypeError from the value sort
-     *   once a second link exists, valid or not; a sole invalid row survives only because sort skips
-     *   a one-element array.
-     * - link ids come from a module-level counter shared by every builder instance, so they are
-     *   unique but not stable across renders.
+     * - source, target and value are required accessors; a builder missing one throws when it is
+     *   applied, rather than looking the raw row up as a node id.
+     * - a link whose source or target id is not in idLists is warned about and dropped from the
+     *   returned links array.
+     * - a link's id is the index of the row it came from, so re-preparing the same data gives the
+     *   same links the same ids and the component's data join can match them up.
      * - a duplicate id warns and keeps only the last column.
-     * - a non-numeric value silently becomes 0; a negative value is kept on the link but clamped
-     *   away at the node (node.value is Math.max(0, from, to)), so the link stack runs outside
-     *   its node.
-     * - nothing checks that the two ends of a link are in different columns.
+     * - a row whose value is not a number of zero or more is warned about and dropped.
+     * - a link whose two ends are in the same column is warned about and dropped: a sankey link
+     *   runs between columns.
      * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
      *   or builder(data).
      * - nodes are sorted across all columns at once (descending by default), then offsets are
      *   assigned per column.
      */
     const prepareData = () => {
-      let mGetSource = identity;
-      let mGetTarget = identity;
-      let mGetValue = identity;
+      let mGetSource;
+      let mGetTarget;
+      let mGetValue;
       let mColumnIds = [];
       // Helper functions
       const valueAcc = prop("value");
-      /**
-       * Reads a link's value. The links array can hold nulls for rows whose source or target was
-       * not found, and reading through one throws, exactly as the original property accessor did.
-       */
-      const linkValue = link => {
-        if (link === null) {
-          throw new TypeError("Cannot read properties of null (reading 'value')");
-        }
-        return link.value;
-      };
       const byAscendingValue = (a, b) => d3.ascending(valueAcc(a), valueAcc(b));
       const byDescendingValue = (a, b) => d3.descending(valueAcc(a), valueAcc(b));
       let valueSortFunc = byDescendingValue;
       const main = inputData => {
+        const getSource = mGetSource;
+        const getTarget = mGetTarget;
+        const getValue = mGetValue;
+        if (!getSource || !getTarget || !getValue) {
+          const missing = [getSource ? undefined : "source", getTarget ? undefined : "target", getValue ? undefined : "value"].filter(Boolean);
+          throw new TypeError("sankeyPrepareData: the ".concat(missing.join(", "), " accessor").concat(missing.length > 1 ? "s are" : " is", " required"));
+        }
         const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
           for (const id of columnIdsList) {
             if (index.has(id)) {
@@ -9063,22 +9128,32 @@
           }
           return index;
         }, new Map());
-        const listOfLinks = inputData.map(datum => {
-          const srcId = mGetSource(datum);
-          const tgtId = mGetTarget(datum);
-          const value = Number(mGetValue(datum)) || 0; // Cast this to number
+        const listOfLinks = inputData.flatMap((datum, rowIndex) => {
+          const srcId = getSource(datum);
+          const tgtId = getTarget(datum);
+          const rawValue = getValue(datum);
+          const value = Number(rawValue);
           const srcNode = columnIndex.get(srcId);
           const tgtNode = columnIndex.get(tgtId);
           if (!srcNode) {
             warn("Found invalid source column id:", srcId);
-            return null;
+            return [];
           }
           if (!tgtNode) {
             warn("Found invalid target column id:", tgtId);
-            return null;
+            return [];
+          }
+          if (srcNode.columnIndex === tgtNode.columnIndex) {
+            warn("Found a link whose source and target are in the same column, and dropped it:", srcId, tgtId);
+            return [];
+          }
+          if (!Number.isFinite(value) || value < 0) {
+            warn("Found a link value that is not a number of zero or more, and dropped the link:", rawValue, srcId, tgtId);
+            return [];
           }
           const item = {
-            id: newLinkId(),
+            // the row's own index: an id that identifies a link rather than a call
+            id: rowIndex,
             value,
             src: srcNode,
             srcOffset: 0,
@@ -9087,7 +9162,7 @@
           };
           srcNode.linksFrom.push(item);
           tgtNode.linksTo.push(item);
-          return item;
+          return [item];
         });
         // Extract the column nodes from the index
         const listOfNodes = [...columnIndex.values()];
@@ -9096,7 +9171,7 @@
           const fromTotal = d3.sum(node.linksFrom, valueAcc);
           const toTotal = d3.sum(node.linksTo, valueAcc);
           // For correct visual display, the node's value is the max of the from and to links
-          node.value = Math.max(0, fromTotal, toTotal);
+          node.value = Math.max(fromTotal, toTotal);
           totals[node.columnIndex] += node.value;
           return totals;
         }, filledArray(mColumnIds.length, 0));
@@ -9108,7 +9183,7 @@
         // Sort the links in descending order of value. This means smaller links will render
         // on top of larger links.
         // (note, this sorts all links for all columns in the same array)
-        listOfLinks.sort((a, b) => d3.descending(linkValue(a), linkValue(b)));
+        listOfLinks.sort(byDescendingValue);
         // Assign the valueOffset and nodeIndex properties
         // Here, columnData[0] is an array adding up value totals
         // and columnData[1] is an array adding up the number of nodes in each column
@@ -9202,58 +9277,88 @@
      *
      * Behaviour notes:
      * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
-     *   minimum across the columns is used for all of them. A single-node column divides by zero and
-     *   contributes a phantom 50px candidate, but 50 is the cap, so that candidate only wins when
-     *   every column is at 50 anyway - it never shrinks another column.
+     *   minimum across the columns is used for all of them. A single-node column draws no gaps, so
+     *   it has no padding to contribute and is left out of that minimum; a diagram whose columns
+     *   all hold one node has no padding at all.
      * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
      *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
-     *   every total is 0; in that case the value range comes back [0, NaN].
+     *   every total is 0; a diagram whose columns are all empty is zeroed instead.
      * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
-     *   (numColumns - 1); a single column gives Infinity (issue #120) and an empty column list
-     *   gives a negative step, an undefined nodePadding and NaN elsewhere.
+     *   (numColumns - 1). Fewer than two columns have no step at all and report an offset of 0.
      * - nodeThickness is always 20.
+     * - A diagram with no columns, no room or no values at all comes back zeroed; a negative
+     *   height or width, or a negative or fractional column length, throws.
      */
     const computeLayout$1 = (columnLengths, columnTotals, columnHeight, columnWidth) => {
+      var _max, _min;
+      requireSize("sankeyLayout", "columnHeight", columnHeight);
+      requireSize("sankeyLayout", "columnWidth", columnWidth);
+      for (const colLength of columnLengths) {
+        requireCount("sankeyLayout", "columnLengths", colLength);
+      }
+      if (columnTotals.length !== columnLengths.length) {
+        throw new RangeError("sankeyLayout: columnTotals must hold one total per column, got ".concat(columnTotals.length, " for ").concat(columnLengths.length, " columns"));
+      }
+      // The maximum total value of any column
+      const maxTotal = (_max = d3.max(columnTotals)) !== null && _max !== void 0 ? _max : 0;
+      const nodeThickness = 20;
+      const numColumns = columnLengths.length;
+      // With one column there are no steps to space out, so the offset is zero rather than a
+      // division by zero (issue #120).
+      const columnXMultiplier = numColumns > 1 ? (columnWidth - nodeThickness) / (numColumns - 1) : 0;
+      const columnDomain = [0, 1];
+      const columnRange = [0, columnXMultiplier];
+      // Nothing to scale: no columns, no room for them, or no values in any of them
+      if (numColumns === 0 || columnHeight === 0 || columnWidth === 0 || maxTotal === 0) {
+        return {
+          valuePadding: 0,
+          nodePadding: 0,
+          columnPaddings: columnLengths.map(() => 0),
+          valueDomain: [0, maxTotal],
+          valueRange: [0, 0],
+          nodeThickness,
+          columnDomain,
+          // Zeroed with the rest of the layout. Computed from columnWidth, the multiplier is
+          // negative once columnWidth falls below nodeThickness, which would place the columns
+          // outside a container that has no room for them at all.
+          columnRange: [0, 0]
+        };
+      }
       // Calculate appropriate scale and padding values (in pixels)
       const padSpaceRatio = 0.15;
       const padMin = 12;
       const padMax = 50;
       const minDisplayPixels = 1; // Minimum number of pixels used for display area
-      // Compute the padding value (in pixels) for each column, then take the minimum value
-      const computedPixPadding = d3.min(columnLengths.map(colLength => {
+      // Compute the padding value (in pixels) for each column, then take the minimum value.
+      // A column of one node draws no gaps, so it has no padding of its own to contribute, and
+      // charging its (divide-by-zero, then clamped) candidate to the other columns would shrink
+      // columns that do draw gaps.
+      const computedPixPadding = (_min = d3.min(columnLengths.filter(colLength => colLength > 1).map(colLength => {
         // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
         const colPadding = columnHeight * padSpaceRatio / (colLength - 1);
         // Limit by minimum and maximum pixel padding values
         return Math.max(padMin, Math.min(padMax, colPadding));
-      }));
+      }))) !== null && _min !== void 0 ? _min : 0;
       // Given the computed padding value, compute each column's resulting "pixels per unit"
       // This is the number of remaining pixels available to display the column's total units,
       // after padding pixels have been subtracted. Then take the minimum value of that.
       const pixPerUnit = d3.min(columnLengths.map((colLength, colIndex) => {
         // The non-padding pixels must have at least minDisplayPixels
-        const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * num(computedPixPadding));
+        const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
         return nonPaddingPixels / num(columnTotals[colIndex]);
       }));
       // The padding between bars, in bar value units
-      const valuePadding = num(computedPixPadding) / num(pixPerUnit);
+      const valuePadding = computedPixPadding / num(pixPerUnit);
       // The padding between bars, in pixels
       const nodePadding = computedPixPadding;
-      // The maximum total value of any column
-      const maxTotal = d3.max(columnTotals);
       // Compute y-padding required to vertically center each column (in pixels)
-      const paddedHeights = columnLengths.map((colLength, colIndex) => num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * num(nodePadding));
+      const paddedHeights = columnLengths.map((colLength, colIndex) => num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * nodePadding);
       const maxPaddedHeight = d3.max(paddedHeights);
       const columnPaddings = columnLengths.map((_colLength, colIndex) => (num(maxPaddedHeight) - num(paddedHeights[colIndex])) / 2);
       // The domain of the size scale
       const valueDomain = [0, maxTotal];
       // The range of the size scale
-      const valueRange = [0, num(maxTotal) * num(pixPerUnit)];
-      // Calculate column (or row, as the case may be) positioning values
-      const nodeThickness = 20;
-      const numColumns = columnLengths.length;
-      const columnXMultiplier = (columnWidth - nodeThickness) / (numColumns - 1);
-      const columnDomain = [0, 1];
-      const columnRange = [0, columnXMultiplier];
+      const valueRange = [0, maxTotal * num(pixPerUnit)];
       return {
         valuePadding,
         nodePadding,
@@ -9319,7 +9424,7 @@
      * @property {number} cols            the number of columns to generate
      * @property {boolean} showTitle      whether to show a title above each multiple (default: false)
      * @property {function} titleLabel    accessor function to get the title text from the data
-     * @property {string} titleAnchor     text-anchor for the title: "start", "middle", or "end" (default: "middle")
+     * @property {string} titleAnchor     text-anchor for the title: "start", "middle", or "end" (default: "middle"). Any other value throws.
      * @property {number} titleY          y-position offset for the title (default: 0)
      *
      * Behaviour notes:
@@ -9327,22 +9432,37 @@
      * - gx/gy are grid-absolute; cx/cy are unit-relative and identical for every multiple,
      *   since each group is translated to its own gx/gy.
      * - The layout writes gx/gy/gw/gh/cx/cy back onto the bound data objects.
-     * - width, height, rows, cols, paddingX and paddingY have no defaults; omitting any of
-     *   them silently produces NaN geometry. Only the four title properties (showTitle,
-     *   titleLabel, titleAnchor, titleY) have defaults.
-     * - More data than rows * cols overflows the declared height rather than erroring.
-     * - A datum without a `values` property binds `undefined` to its inner chart group.
+     * - width, height, rows and cols are required: omitting any of them throws before a group
+     *   is created. paddingX and paddingY default to 0, as do the four title properties.
+     * - More data than rows * cols does not fit the declared grid, and throws.
+     * - A datum without a `values` property throws: the inner chart group has nothing to bind.
      * - titleLabel is called after the layout fields have been attached to the datum, so it
      *   sees gx/gy/gw/gh/cx/cy alongside the caller's own fields.
-     * - A titleAnchor other than "start"/"end" is positioned as "middle" but is still written
-     *   to the text-anchor attribute verbatim.
+     * - titleAnchor must be "start", "middle" or "end"; any other value throws.
      *
      * @return {sszvis.component}
      */
+    const TITLE_ANCHORS = ["start", "middle", "end"];
     function smallMultiples () {
-      return component().prop("width").prop("height").prop("paddingX").prop("paddingY").prop("rows").prop("cols").prop("showTitle").showTitle(false).prop("titleLabel").titleLabel(() => "").prop("titleAnchor").titleAnchor("middle").prop("titleY").titleY(0).render(function (data) {
+      return component().prop("width").prop("height").prop("paddingX").paddingX(0).prop("paddingY").paddingY(0).prop("rows").prop("cols").prop("showTitle").showTitle(false).prop("titleLabel").titleLabel(() => "").prop("titleAnchor").titleAnchor("middle").prop("titleY").titleY(0).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
+        for (const propName of ["width", "height", "rows", "cols"]) {
+          if (props[propName] === undefined) {
+            throw new TypeError("smallMultiples: the ".concat(propName, " property is required"));
+          }
+        }
+        if (props.showTitle && !TITLE_ANCHORS.includes(props.titleAnchor)) {
+          throw new RangeError("smallMultiples: titleAnchor must be one of ".concat(TITLE_ANCHORS.join(", "), ", got ").concat(props.titleAnchor));
+        }
+        for (const [index, datum] of data.entries()) {
+          if (!(datum && "values" in datum)) {
+            throw new TypeError("smallMultiples: group ".concat(index, " has no values property"));
+          }
+        }
+        if (data.length > props.rows * props.cols) {
+          throw new RangeError("smallMultiples: the ".concat(props.rows, " x ").concat(props.cols, " grid has no room for ").concat(data.length, " groups"));
+        }
         const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
         const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
         const horizontalCenter = unitWidth / 2;
@@ -9368,50 +9488,24 @@
       });
     }
 
-    /**
-     * Stacked Area Multiples Layout
-     *
-     * This function is used to compute layout parameters for the area multiples chart.
-     *
-     * @module sszvis/layout/stackedAreaMultiplesLayout
-     *
-     * @param  {number} height      The available height of the chart
-     * @param  {number} num         The number of individual stacks to display
-     * @param  {number} pct         the planned-for ratio between the space allotted to each area and the amount of space + area.
-     *                              This value is used to compute the baseline positions for the areas, and how much vertical space to leave
-     *                              between the areas.
-     *
-     * @return {object}             An object containing configuration properties for use in laying out the stacked area multiples.
-     *                              {
-     *                                range:          This is an array of baseline positions, counting from the top of the stack downwards.
-     *                                                It should be used to configure a d3.scaleOrdinal(). The values passed into the ordinal
-     *                                                scale will be given a y-value which descends from the top of the stack, so that the resulting
-     *                                                scale will match the organization scheme of sszvis.stackedArea. Use the ordinal scale to
-     *                                                configure the sszvis.stackedAreaMultiples component.
-     *                                bandHeight:     The height of each multiples band. This can be used to configure the within-area y-scale.
-     *                                                This height represents the height of the y-axis of the individual area multiple.
-     *                                padHeight:      This is the amount of vertical padding between each area multiple.
-     *                              }
-     *
-     * Behaviour notes:
-     * - step = height / (num - pct); band and pad split that step in a (1 - pct) / pct ratio.
-     * - By construction, step * (num - pct) === height, so baseline number `num` always lands exactly on `height`.
-     * - The baseline loop terminates on an absolute 1px slack (`level - height < 1`), not a fraction of the step,
-     *   so charts whose step is under ~1px get MORE baselines than there are stacks.
-     * - pct defaults via `pct || 0.1`, so an explicit 0 (or NaN) is silently replaced by 0.1.
-     * - num === pct divides by zero. With the default pct the step is Infinity and the range comes
-     *   back empty; with a pct above 1 the first baseline is -Infinity and the range holds that one
-     *   unusable value.
-     * - 0.1 < num < 1 also yields an empty range (the first baseline already sits below the chart).
-     * - A zero height, or num < pct < 1, makes both the step and the first baseline non-positive, and
-     *   the baseline loop then runs forever (WARNING: no guard). A pct above 1 escapes this, because
-     *   the negative step is multiplied by a negative (1 - pct) and the loop never starts.
-     * - A negative height returns an empty range with a negative, unusable bandHeight.
-     */
-    function stackedAreaMultiplesLayout (height, num, pct) {
-      const padRatio = pct || 0.1;
-      const step = height / (num - padRatio),
-        bandHeight = step * (1 - padRatio),
+    /** Nothing can be drawn: no baselines, and no band or padding to report. */
+    const EMPTY_LAYOUT = {
+      range: [],
+      bandHeight: 0,
+      padHeight: 0
+    };
+    function layoutStackedAreaMultiples(height, num, pct) {
+      requireSize("layoutStackedAreaMultiples", "height", height);
+      requireCount("layoutStackedAreaMultiples", "num", num);
+      const padRatio = pct !== null && pct !== void 0 ? pct : 0.1;
+      requireRatio("layoutStackedAreaMultiples", "pct", padRatio);
+      const step = height / (num - padRatio);
+      // A non-positive step never reaches the bottom of the chart, so the baseline loop below
+      // would never terminate. An infinite one - num and pct both 0, or both 1, either of
+      // which divides by zero - overshoots on the first iteration and yields NaN geometry.
+      // There is no layout to describe in either case.
+      if (!(step > 0) || !Number.isFinite(step)) return _objectSpread2({}, EMPTY_LAYOUT);
+      const bandHeight = step * (1 - padRatio),
         range = [];
       let level = bandHeight; // count from the top, and start at the bottom of the first band
       while (level - height < 1) {
@@ -9454,21 +9548,38 @@
      *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
      *
      * Behaviour notes:
-     * - centerRadius is always chartWidth / 6.
+     * - centerRadius is chartWidth / 6, shrunk when the rings would not otherwise fit.
      * - ringWidth is the remaining radius divided by numLayers, clamped to [10, 60].
-     * - Because the clamp does not feed back into centerRadius, a deep hierarchy in a narrow
-     *   chart overflows (centerRadius + ringWidth * numLayers can exceed chartWidth / 2, which
-     *   is exactly the outer radius the sunburst component draws, per docs/sunburst/basic.js),
-     *   and a shallow one leaves empty space.
-     * - numLayers === 0 divides by zero and the resulting Infinity is masked by the 60px cap.
-     * - A negative numLayers or a zero/negative chartWidth is not validated (the 10px floor
-     *   hides the negative ring width).
+     * - The 10px floor is reconciled with the centre: a deep hierarchy in a narrow chart gives
+     *   its rings the room by shrinking centerRadius, so that
+     *   centerRadius + ringWidth * numLayers stays within chartWidth / 2 - the outer radius the
+     *   sunburst component draws, per docs/sunburst/basic.js. A hierarchy so deep that even a
+     *   centre of nothing cannot hold it warns and overflows. The 60px cap is not compensated
+     *   for in the other direction: a shallow hierarchy simply leaves empty space.
+     * - A zero chartWidth or a hierarchy with no layers is a chart with nothing to draw, and
+     *   every dimension comes back 0.
+     * - A negative chartWidth, or a negative or fractional layer count, throws.
      */
     const computeLayout = (numLayers, chartWidth) => {
+      requireCount("sunburstLayout", "numLayers", numLayers);
+      requireSize("sunburstLayout", "chartWidth", chartWidth);
+      if (numLayers === 0 || chartWidth === 0) {
+        return {
+          centerRadius: 0,
+          numLayers,
+          ringWidth: 0
+        };
+      }
       // Diameter of the center circle is one-third the width
       const halfWidth = chartWidth / 2;
-      const centerRadius = halfWidth / 3;
-      const ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
+      const targetCenterRadius = halfWidth / 3;
+      const ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - targetCenterRadius) / numLayers));
+      // Once the ring width is floored, the rings may need more room than the target centre
+      // leaves them. Give it to them, down to a centre of nothing.
+      const centerRadius = Math.max(0, Math.min(targetCenterRadius, halfWidth - ringWidth * numLayers));
+      if (ringWidth * numLayers > halfWidth) {
+        warn("sunburstLayout: ".concat(numLayers, " rings of the minimum ").concat(MIN_RW, "px do not fit a chart ").concat(chartWidth, "px wide, and will be drawn outside it"));
+      }
       return {
         centerRadius,
         numLayers,
@@ -9487,10 +9598,12 @@
      * Behaviour notes:
      * - Returns [min y0, max y1] taken independently of each other.
      * - d3.min/max skip undefined and NaN nodes.
-     * - An empty array gives [undefined, undefined], which produces a NaN radius when used as
-     *   a scale domain.
+     * - An empty array gives [0, 0], which is a usable, if empty, scale domain.
      */
-    const getRadiusExtent = formattedData => [d3.min(formattedData, d => d.y0), d3.max(formattedData, d => d.y1)];
+    const getRadiusExtent = formattedData => {
+      var _min, _max;
+      return [(_min = d3.min(formattedData, d => d.y0)) !== null && _min !== void 0 ? _min : 0, (_max = d3.max(formattedData, d => d.y1)) !== null && _max !== void 0 ? _max : 0];
+    };
 
     /**
      * Vertical Bar Chart Dimensions
@@ -9520,18 +9633,24 @@
      * - Padding is then clamped to [2, 100] WITHOUT recomputing the bar width, so the bar group
      *   can overflow or underflow the given width (outerRatio can go negative).
      * - padRatio/outerRatio are derived from the clamped barWidth/padding, not from the 0.7/0.3 target.
-     * - numBars === 1 has zero padding spaces, so its padWidth is a phantom that is never drawn but
-     *   still feeds padRatio. When the single bar would be wider than the 48px cap, the padding
-     *   recompute additionally divides by zero and the resulting Infinity is masked by the 100px
-     *   clamp; a narrower single bar skips that branch and keeps its finite target padding.
-     * - numBars === 0 yields NaN for barWidth, padRatio, outerRatio, and barGroupWidth (0/0), while
-     *   padWidth still clamps to the 2px minimum.
-     * - width === 0 gives barWidth 0 and padRatio exactly 1 (outside the [0, 1) range band scales expect).
-     * - Negative width produces a negative barWidth and a padRatio outside the [0, 1) range band
-     *   scales accept - above 1 for small negative widths (width -1 gives 1.04) and below 0 for
-     *   larger ones (width -200 gives -0.16). There is no input validation.
+     * - numBars === 1 has zero padding spaces, so it reports no padding at all.
+     * - A zero width or a zero bar count is a chart with nothing to draw, and every dimension
+     *   comes back 0 (totalWidth still reports the width that was asked for).
+     * - A negative width, or a negative or fractional bar count, throws.
      */
-    function verticalBarChartDimensions (width, numBars) {
+    function dimensionsVerticalBarChart(width, numBars) {
+      requireSize("dimensionsVerticalBarChart", "width", width);
+      requireCount("dimensionsVerticalBarChart", "numBars", numBars);
+      if (width === 0 || numBars === 0) {
+        return {
+          barWidth: 0,
+          padWidth: 0,
+          padRatio: 0,
+          outerRatio: 0,
+          barGroupWidth: 0,
+          totalWidth: width
+        };
+      }
       const MAX_BAR_WIDTH = 48,
         // the maximum width of a bar
         MIN_PADDING = 2,
@@ -9552,10 +9671,16 @@
       if (barWidth > MAX_BAR_WIDTH) {
         barWidth = MAX_BAR_WIDTH;
         // recompute the padding value where necessary
-        padding = (width - barWidth * numBars) / numPads;
+        padding = numPads === 0 ? 0 : (width - barWidth * numBars) / numPads;
       }
-      if (padding < MIN_PADDING) padding = MIN_PADDING;
-      if (padding > MAX_PADDING) padding = MAX_PADDING;
+      if (numPads === 0) {
+        // a single bar draws no gaps, so any padding reported here is a phantom that would
+        // still feed padRatio
+        padding = 0;
+      } else {
+        if (padding < MIN_PADDING) padding = MIN_PADDING;
+        if (padding > MAX_PADDING) padding = MAX_PADDING;
+      }
       // compute other information
       const padRatio = 1 - barWidth / (barWidth + padding),
         computedBarSpace = barWidth * numBars + padding * numPads,
@@ -12122,9 +12247,9 @@
     exports.defaultTransition = defaultTransition;
     exports.defined = defined;
     exports.derivedSet = derivedSet;
-    exports.dimensionsHeatTable = heatTableDimensions;
-    exports.dimensionsHorizontalBarChart = horizontalBarChartDimensions;
-    exports.dimensionsVerticalBarChart = verticalBarChartDimensions;
+    exports.dimensionsHeatTable = dimensionsHeatTable;
+    exports.dimensionsHorizontalBarChart = dimensionsHorizontalBarChart;
+    exports.dimensionsVerticalBarChart = dimensionsVerticalBarChart;
     exports.dot = dot;
     exports.ensureDefsElement = ensureDefsElement;
     exports.every = every;
@@ -12169,9 +12294,9 @@
     exports.isSelection = isSelection;
     exports.isString = isString;
     exports.last = last;
-    exports.layoutPopulationPyramid = populationPyramidLayout;
+    exports.layoutPopulationPyramid = layoutPopulationPyramid;
     exports.layoutSmallMultiples = smallMultiples;
-    exports.layoutStackedAreaMultiples = stackedAreaMultiplesLayout;
+    exports.layoutStackedAreaMultiples = layoutStackedAreaMultiples;
     exports.legendColorBinned = binnedColorScale;
     exports.legendColorLinear = legendColorLinear;
     exports.legendColorOrdinal = legendColorOrdinal;

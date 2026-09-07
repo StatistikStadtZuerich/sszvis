@@ -1,3 +1,5 @@
+import { requireSize, requireCount } from './validate.js';
+
 /**
  * Vertical Bar Chart Dimensions
  *
@@ -26,18 +28,24 @@
  * - Padding is then clamped to [2, 100] WITHOUT recomputing the bar width, so the bar group
  *   can overflow or underflow the given width (outerRatio can go negative).
  * - padRatio/outerRatio are derived from the clamped barWidth/padding, not from the 0.7/0.3 target.
- * - numBars === 1 has zero padding spaces, so its padWidth is a phantom that is never drawn but
- *   still feeds padRatio. When the single bar would be wider than the 48px cap, the padding
- *   recompute additionally divides by zero and the resulting Infinity is masked by the 100px
- *   clamp; a narrower single bar skips that branch and keeps its finite target padding.
- * - numBars === 0 yields NaN for barWidth, padRatio, outerRatio, and barGroupWidth (0/0), while
- *   padWidth still clamps to the 2px minimum.
- * - width === 0 gives barWidth 0 and padRatio exactly 1 (outside the [0, 1) range band scales expect).
- * - Negative width produces a negative barWidth and a padRatio outside the [0, 1) range band
- *   scales accept - above 1 for small negative widths (width -1 gives 1.04) and below 0 for
- *   larger ones (width -200 gives -0.16). There is no input validation.
+ * - numBars === 1 has zero padding spaces, so it reports no padding at all.
+ * - A zero width or a zero bar count is a chart with nothing to draw, and every dimension
+ *   comes back 0 (totalWidth still reports the width that was asked for).
+ * - A negative width, or a negative or fractional bar count, throws.
  */
-function verticalBarChartDimensions (width, numBars) {
+function dimensionsVerticalBarChart(width, numBars) {
+  requireSize("dimensionsVerticalBarChart", "width", width);
+  requireCount("dimensionsVerticalBarChart", "numBars", numBars);
+  if (width === 0 || numBars === 0) {
+    return {
+      barWidth: 0,
+      padWidth: 0,
+      padRatio: 0,
+      outerRatio: 0,
+      barGroupWidth: 0,
+      totalWidth: width
+    };
+  }
   const MAX_BAR_WIDTH = 48,
     // the maximum width of a bar
     MIN_PADDING = 2,
@@ -58,10 +66,16 @@ function verticalBarChartDimensions (width, numBars) {
   if (barWidth > MAX_BAR_WIDTH) {
     barWidth = MAX_BAR_WIDTH;
     // recompute the padding value where necessary
-    padding = (width - barWidth * numBars) / numPads;
+    padding = numPads === 0 ? 0 : (width - barWidth * numBars) / numPads;
   }
-  if (padding < MIN_PADDING) padding = MIN_PADDING;
-  if (padding > MAX_PADDING) padding = MAX_PADDING;
+  if (numPads === 0) {
+    // a single bar draws no gaps, so any padding reported here is a phantom that would
+    // still feed padRatio
+    padding = 0;
+  } else {
+    if (padding < MIN_PADDING) padding = MIN_PADDING;
+    if (padding > MAX_PADDING) padding = MAX_PADDING;
+  }
   // compute other information
   const padRatio = 1 - barWidth / (barWidth + padding),
     computedBarSpace = barWidth * numBars + padding * numPads,
@@ -76,5 +90,5 @@ function verticalBarChartDimensions (width, numBars) {
   };
 }
 
-export { verticalBarChartDimensions as default };
+export { dimensionsVerticalBarChart as default };
 //# sourceMappingURL=verticalBarChartDimensions.js.map

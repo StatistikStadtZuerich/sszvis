@@ -20,8 +20,9 @@
  *                                              in order to ensure that the axis labels are visible. This can be used as the y-component
  *                                              of a call to sszvis.svgUtils.translateString.
  *                                  barGroupHeight: the combined height of all the bars and their inner padding.
- *                                  totalHeight: barGroupHeight plus the height of the outerPadding. This distance can be used
- *                                               to translate scales below the bars.
+ *                                  totalHeight: barGroupHeight plus the height of the outer padding. Since this layout
+ *                                               has no outer padding, it always equals barGroupHeight; the two are kept
+ *                                               distinct to match the shape of the vertical bar chart layout.
  *                                 }
  *
  * Behaviour notes:
@@ -30,8 +31,7 @@
  * - outerRatio is always 0, so totalHeight always equals barGroupHeight. The two properties
  *   are kept distinct only to match the shape of the vertical bar chart layout.
  * - axisOffset is derived from the constant bar height and is therefore always -22.
- * - numBars is not validated: 0 gives a barGroupHeight of -20 (numPads goes to -1), and
- *   negative or fractional counts pass through unchanged.
+ * - Zero bars give a zero group height; a negative or fractional bar count throws.
  */
 export type HorizontalBarChartDimensions = {
     barHeight: number;
@@ -42,5 +42,5 @@ export type HorizontalBarChartDimensions = {
     barGroupHeight: number;
     totalHeight: number;
 };
-export default function (numBars: number): HorizontalBarChartDimensions;
+export default function dimensionsHorizontalBarChart(numBars: number): HorizontalBarChartDimensions;
 //# sourceMappingURL=horizontalBarChartDimensions.d.ts.map

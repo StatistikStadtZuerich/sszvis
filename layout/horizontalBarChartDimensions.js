@@ -1,3 +1,5 @@
+import { requireCount } from './validate.js';
+
 /**
  * Horizontal Bar Chart Dimensions
  *
@@ -20,8 +22,9 @@
  *                                              in order to ensure that the axis labels are visible. This can be used as the y-component
  *                                              of a call to sszvis.svgUtils.translateString.
  *                                  barGroupHeight: the combined height of all the bars and their inner padding.
- *                                  totalHeight: barGroupHeight plus the height of the outerPadding. This distance can be used
- *                                               to translate scales below the bars.
+ *                                  totalHeight: barGroupHeight plus the height of the outer padding. Since this layout
+ *                                               has no outer padding, it always equals barGroupHeight; the two are kept
+ *                                               distinct to match the shape of the vertical bar chart layout.
  *                                 }
  *
  * Behaviour notes:
@@ -30,17 +33,18 @@
  * - outerRatio is always 0, so totalHeight always equals barGroupHeight. The two properties
  *   are kept distinct only to match the shape of the vertical bar chart layout.
  * - axisOffset is derived from the constant bar height and is therefore always -22.
- * - numBars is not validated: 0 gives a barGroupHeight of -20 (numPads goes to -1), and
- *   negative or fractional counts pass through unchanged.
+ * - Zero bars give a zero group height; a negative or fractional bar count throws.
  */
-function horizontalBarChartDimensions (numBars) {
+function dimensionsHorizontalBarChart(numBars) {
+  requireCount("dimensionsHorizontalBarChart", "numBars", numBars);
   const DEFAULT_HEIGHT = 24,
     // the default bar height
     MIN_PADDING = 20,
     // the minimum padding size
     barHeight = DEFAULT_HEIGHT,
     // the bar height
-    numPads = numBars - 1,
+    // an empty chart draws no bars, so it draws no gaps between them either
+    numPads = Math.max(numBars - 1, 0),
     padding = MIN_PADDING,
     // compute other information
     padRatio = 1 - barHeight / (barHeight + padding),
@@ -57,5 +61,5 @@ function horizontalBarChartDimensions (numBars) {
   };
 }
 
-export { horizontalBarChartDimensions as default };
+export { dimensionsHorizontalBarChart as default };
 //# sourceMappingURL=horizontalBarChartDimensions.js.map

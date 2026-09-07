@@ -54,7 +54,7 @@ import { component } from '../d3-component.js';
  * @property {number} cols            the number of columns to generate
  * @property {boolean} showTitle      whether to show a title above each multiple (default: false)
  * @property {function} titleLabel    accessor function to get the title text from the data
- * @property {string} titleAnchor     text-anchor for the title: "start", "middle", or "end" (default: "middle")
+ * @property {string} titleAnchor     text-anchor for the title: "start", "middle", or "end" (default: "middle"). Any other value throws.
  * @property {number} titleY          y-position offset for the title (default: 0)
  *
  * Behaviour notes:
@@ -62,22 +62,37 @@ import { component } from '../d3-component.js';
  * - gx/gy are grid-absolute; cx/cy are unit-relative and identical for every multiple,
  *   since each group is translated to its own gx/gy.
  * - The layout writes gx/gy/gw/gh/cx/cy back onto the bound data objects.
- * - width, height, rows, cols, paddingX and paddingY have no defaults; omitting any of
- *   them silently produces NaN geometry. Only the four title properties (showTitle,
- *   titleLabel, titleAnchor, titleY) have defaults.
- * - More data than rows * cols overflows the declared height rather than erroring.
- * - A datum without a `values` property binds `undefined` to its inner chart group.
+ * - width, height, rows and cols are required: omitting any of them throws before a group
+ *   is created. paddingX and paddingY default to 0, as do the four title properties.
+ * - More data than rows * cols does not fit the declared grid, and throws.
+ * - A datum without a `values` property throws: the inner chart group has nothing to bind.
  * - titleLabel is called after the layout fields have been attached to the datum, so it
  *   sees gx/gy/gw/gh/cx/cy alongside the caller's own fields.
- * - A titleAnchor other than "start"/"end" is positioned as "middle" but is still written
- *   to the text-anchor attribute verbatim.
+ * - titleAnchor must be "start", "middle" or "end"; any other value throws.
  *
  * @return {sszvis.component}
  */
+const TITLE_ANCHORS = ["start", "middle", "end"];
 function smallMultiples () {
-  return component().prop("width").prop("height").prop("paddingX").prop("paddingY").prop("rows").prop("cols").prop("showTitle").showTitle(false).prop("titleLabel").titleLabel(() => "").prop("titleAnchor").titleAnchor("middle").prop("titleY").titleY(0).render(function (data) {
+  return component().prop("width").prop("height").prop("paddingX").paddingX(0).prop("paddingY").paddingY(0).prop("rows").prop("cols").prop("showTitle").showTitle(false).prop("titleLabel").titleLabel(() => "").prop("titleAnchor").titleAnchor("middle").prop("titleY").titleY(0).render(function (data) {
     const selection = select(this);
     const props = selection.props();
+    for (const propName of ["width", "height", "rows", "cols"]) {
+      if (props[propName] === undefined) {
+        throw new TypeError("smallMultiples: the ".concat(propName, " property is required"));
+      }
+    }
+    if (props.showTitle && !TITLE_ANCHORS.includes(props.titleAnchor)) {
+      throw new RangeError("smallMultiples: titleAnchor must be one of ".concat(TITLE_ANCHORS.join(", "), ", got ").concat(props.titleAnchor));
+    }
+    for (const [index, datum] of data.entries()) {
+      if (!(datum && "values" in datum)) {
+        throw new TypeError("smallMultiples: group ".concat(index, " has no values property"));
+      }
+    }
+    if (data.length > props.rows * props.cols) {
+      throw new RangeError("smallMultiples: the ".concat(props.rows, " x ").concat(props.cols, " grid has no room for ").concat(data.length, " groups"));
+    }
     const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
     const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
     const horizontalCenter = unitWidth / 2;

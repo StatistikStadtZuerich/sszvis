@@ -57,15 +57,17 @@ export declare const MIN_SUNBURST_RING_WIDTH = 10;
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  *
  * Behaviour notes:
- * - centerRadius is always chartWidth / 6.
+ * - centerRadius is chartWidth / 6, shrunk when the rings would not otherwise fit.
  * - ringWidth is the remaining radius divided by numLayers, clamped to [10, 60].
- * - Because the clamp does not feed back into centerRadius, a deep hierarchy in a narrow
- *   chart overflows (centerRadius + ringWidth * numLayers can exceed chartWidth / 2, which
- *   is exactly the outer radius the sunburst component draws, per docs/sunburst/basic.js),
- *   and a shallow one leaves empty space.
- * - numLayers === 0 divides by zero and the resulting Infinity is masked by the 60px cap.
- * - A negative numLayers or a zero/negative chartWidth is not validated (the 10px floor
- *   hides the negative ring width).
+ * - The 10px floor is reconciled with the centre: a deep hierarchy in a narrow chart gives
+ *   its rings the room by shrinking centerRadius, so that
+ *   centerRadius + ringWidth * numLayers stays within chartWidth / 2 - the outer radius the
+ *   sunburst component draws, per docs/sunburst/basic.js. A hierarchy so deep that even a
+ *   centre of nothing cannot hold it warns and overflows. The 60px cap is not compensated
+ *   for in the other direction: a shallow hierarchy simply leaves empty space.
+ * - A zero chartWidth or a hierarchy with no layers is a chart with nothing to draw, and
+ *   every dimension comes back 0.
+ * - A negative chartWidth, or a negative or fractional layer count, throws.
  */
 export declare const computeLayout: (numLayers: number, chartWidth: number) => SunburstLayout;
 /**
@@ -80,11 +82,10 @@ export declare const computeLayout: (numLayers: number, chartWidth: number) => S
  * Behaviour notes:
  * - Returns [min y0, max y1] taken independently of each other.
  * - d3.min/max skip undefined and NaN nodes.
- * - An empty array gives [undefined, undefined], which produces a NaN radius when used as
- *   a scale domain.
+ * - An empty array gives [0, 0], which is a usable, if empty, scale domain.
  */
 export declare const getRadiusExtent: (formattedData: {
     y0?: number | undefined;
     y1?: number | undefined;
-}[]) => [number | undefined, number | undefined];
+}[]) => [number, number];
 //# sourceMappingURL=sunburst.d.ts.map

@@ -23,7 +23,7 @@
  *                                      In situations with very wide screens, this limits the width of the entire pyramid to a reasonable size.
  *                                      chartPadding: left padding for the chart. When the maxBarLength is less than what would fill the entire width
  *                                      of the chart, this value is needed to offset the axes and legend so that they line up with the chart. Otherwise,
- *                                      the value is floored at 1 and no further padding is needed.
+ *                                      the value is 0 and no further padding is needed.
  *                                    }
  *
  * Behaviour notes:
@@ -35,12 +35,12 @@
  *   expects them: the first is the bottom bar (the largest y) and the last is the top bar at
  *   exactly 0. There is one position per bar for a positive whole numBars, since the integer
  *   arithmetic guarantees the loop lands on 0; a fractional or negative count is not validated.
- * - maxBarLength is capped at 240 (= aspectRatioPortrait.MAX_HEIGHT * 4/5 / 2), which only
- *   coincidentally equals this module's own MAX_HEIGHT / 2 and can drift if either constant changes.
- * - chartPadding is floored at 1.
- * - numBars === 0 gives an Infinity barHeight, a NaN totalHeight, and no positions.
- * - A zero or negative spaceWidth is not validated. Both produce 2px bars and a 1px
- *   chartPadding; maxBarLength is 0 for a zero width and negative for a negative one.
+ * - maxBarLength is capped at half this module's own MAX_HEIGHT, so a very wide screen keeps
+ *   the whole pyramid to a reasonable size.
+ * - chartPadding is 0 once the pyramid fills the width.
+ * - A zero spaceWidth or a pyramid with no bars is a chart with nothing to draw, and every
+ *   dimension comes back 0.
+ * - A negative spaceWidth, or a negative or fractional bar count, throws.
  */
 export type PopulationPyramidLayout = {
     barHeight: number;
@@ -50,5 +50,5 @@ export type PopulationPyramidLayout = {
     maxBarLength: number;
     chartPadding: number;
 };
-export default function (spaceWidth: number, numBars: number): PopulationPyramidLayout;
+export default function layoutPopulationPyramid(spaceWidth: number, numBars: number): PopulationPyramidLayout;
 //# sourceMappingURL=populationPyramidLayout.d.ts.map
