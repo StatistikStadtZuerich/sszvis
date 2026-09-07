@@ -152,6 +152,30 @@ describe("patterns", () => {
     });
   });
 
+  describe("scoped ids", () => {
+    test("mapLakeFadeGradient writes a supplied id", () => {
+      mapLakeFadeGradient(select(gradient), "lake-fade-gradient-7");
+      expect(gradient.getAttribute("id")).toBe("lake-fade-gradient-7");
+    });
+
+    test("mapLakeFadeGradient accepts the id through selection.call", () => {
+      select(gradient).call(mapLakeFadeGradient, "lake-fade-gradient-8");
+      expect(gradient.getAttribute("id")).toBe("lake-fade-gradient-8");
+    });
+
+    test("mapLakeGradientMask references a supplied gradient id", () => {
+      mapLakeGradientMask(select(mask), "lake-fade-gradient-7");
+      expect(mask.querySelector("rect")?.getAttribute("fill")).toBe("url(#lake-fade-gradient-7)");
+    });
+
+    test("a later call repoints an existing mask rect at the new id", () => {
+      mapLakeGradientMask(select(mask));
+      mapLakeGradientMask(select(mask), "lake-fade-gradient-9");
+      expect(mask.querySelectorAll("rect")).toHaveLength(1);
+      expect(mask.querySelector("rect")?.getAttribute("fill")).toBe("url(#lake-fade-gradient-9)");
+    });
+  });
+
   describe("idempotency", () => {
     test("heatTableMissingValuePattern applied twice leaves one copy", () => {
       heatTableMissingValuePattern(select(pattern));
