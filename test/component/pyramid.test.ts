@@ -71,7 +71,7 @@ describe("component/pyramid", () => {
   const lines = (node: Element, key: string) => [
     ...(side(node, key)?.querySelectorAll("path.sszvis-pyramid__referenceline") ?? []),
   ];
-  /** The reference line's `d` is applied through a transition, so it lands a frame later. */
+  /** Entering paths carry `d` at once; updates settle a transition later. */
   const lineD = (node: Element, key: string) =>
     vi.waitFor(() => {
       const d = lines(node, key)[0]?.getAttribute("d");
@@ -221,6 +221,16 @@ describe("component/pyramid", () => {
       expect(bars(node, "right").length).toBe(2);
     });
 
+    test("should forward d3's index to an index-aware barWidth on both sides", () => {
+      const node = render(
+        pyramidOf().barWidth((_d: Datum, i: number) => 100 + i),
+        testData
+      );
+      expect(attrs(node, "left", "width")).toEqual(["100", "101"]);
+      expect(attrs(node, "left", "x")).toEqual(["-100.5", "-101.5"]);
+      expect(attrs(node, "right", "x")).toEqual(["0.5", "0.5"]);
+    });
+
     test("should update the geometry when the data changes", () => {
       const component = pyramidOf();
       const g = group("update");
@@ -315,11 +325,36 @@ describe("component/pyramid", () => {
       expect(lines(node, "rightReference")[0].getAttribute("transform")).toBe("");
     });
 
-    test("should draw the path from barWidth and barPosition", async () => {
+    test("should draw the path along the bars' outer edges at their mid-height", async () => {
       const node = render(withRefs(), refData);
-      // x comes from barWidth, y from barPosition - the same accessors the bars use
-      expect(await lineD(node, "rightReference")).toBe("M30,0L10,12");
-      expect(await lineD(node, "leftReference")).toBe("M40,0L20,12");
+      // x is SPINE_PADDING + barWidth, y is barPosition + barHeight / 2
+      expect(await lineD(node, "rightReference")).toBe("M30.5,5L10.5,17");
+      expect(await lineD(node, "leftReference")).toBe("M40.5,5L20.5,17");
+    });
+
+    test("should line up with the bars it describes", async () => {
+      // The reference point sits exactly on the bar's outer edge, vertically centred on it.
+      const node = render(
+        pyramidOf().rightRefAccessor((d: Population) => d.right),
+        { left, right: [{ age: 0, value: 100 }] }
+      );
+      const barRight =
+        Number(attrs(node, "right", "x")[0]) + Number(attrs(node, "right", "width")[0]);
+      const barMiddle =
+        Number(attrs(node, "right", "y")[0]) + Number(attrs(node, "right", "height")[0]) / 2;
+      expect([barRight, barMiddle]).toEqual([100.5, 5]);
+      // d3.line closes a single-point path with Z
+      expect(await lineD(node, "rightReference")).toBe(`M${barRight},${barMiddle}Z`);
+    });
+
+    test("should carry geometry synchronously on the tick it is first rendered", () => {
+      // getBBox, snapshots and PNG exports all measure right after render, so an entering
+      // path must not wait for the first animation frame.
+      const node = render(
+        pyramidOf().rightRefAccessor((d: Population) => d.right),
+        testData
+      );
+      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M30.5,5L10.5,17");
     });
 
     test("should follow reference data that differs from the bar data", async () => {
@@ -330,7 +365,7 @@ describe("component/pyramid", () => {
         ]),
         testData
       );
-      expect(await lineD(node, "rightReference")).toBe("M5,0L7,24");
+      expect(await lineD(node, "rightReference")).toBe("M5.5,5L7.5,29");
     });
 
     test("should re-render the reference line in place", async () => {
@@ -340,7 +375,7 @@ describe("component/pyramid", () => {
       g.datum(refData).call(component as never);
       const node = g.node() as SVGGElement;
       expect(lines(node, "rightReference").length).toBe(1);
-      expect(await lineD(node, "rightReference")).toBe("M30,0L10,12");
+      expect(await lineD(node, "rightReference")).toBe("M30.5,5L10.5,17");
     });
 
     test("should animate the reference line when the data changes", async () => {
@@ -348,7 +383,7 @@ describe("component/pyramid", () => {
       const g = group("ref-animate");
       g.datum(refData).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(await lineD(node, "rightReference")).toBe("M30,0L10,12");
+      expect(await lineD(node, "rightReference")).toBe("M30.5,5L10.5,17");
 
       g.datum({
         ...refData,
@@ -359,10 +394,149 @@ describe("component/pyramid", () => {
       }).call(component as never);
       // Unlike the bars, the line really does transition: the old path is still in place
       // on the tick the re-render happens.
-      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M30,0L10,12");
+      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M30.5,5L10.5,17");
       await vi.waitFor(() =>
-        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M100,0L90,12")
+        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M100.5,5L90.5,17")
       );
+    });
+
+    describe("missing reference data", () => {
+      const warn = () => vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      test("should render no path when the accessor returns undefined", () => {
+        const spy = warn();
+        const node = render(
+          // @ts-expect-error - deliberately violating the accessor's return contract
+          pyramidOf().rightRefAccessor(() => undefined),
+          testData
+        );
+        expect(lines(node, "rightReference").length).toBe(0);
+        expect(spy).toHaveBeenCalledOnce();
+        spy.mockRestore();
+      });
+
+      test("should render no path when the accessor returns null", () => {
+        const spy = warn();
+        const node = render(
+          // @ts-expect-error - deliberately violating the accessor's return contract
+          pyramidOf().rightRefAccessor(() => null),
+          testData
+        );
+        expect(lines(node, "rightReference").length).toBe(0);
+        expect(spy).toHaveBeenCalledOnce();
+        spy.mockRestore();
+      });
+
+      test("should render no path for a non-array the accessor returned", () => {
+        // The guard tests Array.isArray rather than null-ness: an array-like such as
+        // { length: 0 } used to pass as an empty series, and a plain object was wrapped
+        // and handed to d3.line, where it renders nonsense or throws.
+        for (const value of [{ length: 0 }, { a: 1 }, "abc"]) {
+          const spy = warn();
+          const node = render(
+            // @ts-expect-error - deliberately violating the accessor's return contract
+            pyramidOf().rightRefAccessor(() => value),
+            testData
+          );
+          expect(lines(node, "rightReference").length).toBe(0);
+          expect(spy).toHaveBeenCalledOnce();
+          spy.mockRestore();
+        }
+      });
+
+      test("should render no path for an empty series, without warning", () => {
+        // An empty array is a legitimately empty series, unlike undefined or null.
+        const spy = warn();
+        const node = render(
+          pyramidOf().rightRefAccessor(() => []),
+          testData
+        );
+        expect(lines(node, "rightReference").length).toBe(0);
+        expect(spy).not.toHaveBeenCalled();
+        spy.mockRestore();
+      });
+
+      test("should remove a rendered path when its series goes away", async () => {
+        const component = pyramidOf().rightRefAccessor((d: Population) => d.rightRef ?? []);
+        const g = group("ref-removal");
+        g.datum({ left, right, rightRef: right }).call(component as never);
+        const node = g.node() as SVGGElement;
+        expect(await lineD(node, "rightReference")).toBe("M30.5,5L10.5,17");
+
+        g.datum({ left, right }).call(component as never);
+        expect(lines(node, "rightReference").length).toBe(0);
+      });
+
+      test("should render the path again on a later non-empty render", async () => {
+        const component = pyramidOf().rightRefAccessor((d: Population) => d.rightRef ?? []);
+        const g = group("ref-return");
+        const node = g
+          .datum({ left, right })
+          .call(component as never)
+          .node() as SVGGElement;
+        expect(lines(node, "rightReference").length).toBe(0);
+
+        g.datum({ left, right, rightRef: right }).call(component as never);
+        expect(lines(node, "rightReference").length).toBe(1);
+        expect(await lineD(node, "rightReference")).toBe("M30.5,5L10.5,17");
+      });
+    });
+
+    describe("gaps in the reference series", () => {
+      test("should skip a missing value and continue the outline past it", async () => {
+        const node = render(
+          pyramidOf().rightRefAccessor(() => [
+            { age: 0, value: 10 },
+            { age: 1, value: Number.NaN },
+            { age: 2, value: 30 },
+          ]),
+          testData
+        );
+        // The gap breaks the outline into two segments rather than truncating it.
+        expect(await lineD(node, "rightReference")).toBe("M10.5,5ZM30.5,29Z");
+      });
+
+      test("should skip a missing value in the first position", async () => {
+        const node = render(
+          pyramidOf().rightRefAccessor(() => [
+            { age: 0, value: Number.NaN },
+            { age: 1, value: 5 },
+            { age: 2, value: 7 },
+          ]),
+          testData
+        );
+        expect(await lineD(node, "rightReference")).toBe("M5.5,17L7.5,29");
+      });
+
+      test("should skip a missing value in the last position", async () => {
+        const node = render(
+          pyramidOf().rightRefAccessor(() => [
+            { age: 0, value: 5 },
+            { age: 1, value: 7 },
+            { age: 2, value: Number.NaN },
+          ]),
+          testData
+        );
+        expect(await lineD(node, "rightReference")).toBe("M5.5,5L7.5,17");
+      });
+
+      test("should skip a point whose vertical position is missing", async () => {
+        const node = render(
+          pyramid()
+            .barHeight(10)
+            .barWidth((d: Datum) => d.value)
+            .barPosition((d: Datum) => (d.age === 1 ? Number.NaN : d.age * 12))
+            .leftAccessor((d: Population) => d.left)
+            .rightAccessor((d: Population) => d.right)
+            .rightRefAccessor(() => [
+              { age: 0, value: 10 },
+              { age: 1, value: 20 },
+              { age: 2, value: 30 },
+            ]),
+          testData
+        );
+        expect(await lineD(node, "rightReference")).toBe("M10.5,5ZM30.5,29Z");
+      });
     });
   });
 
@@ -373,144 +547,86 @@ describe("component/pyramid", () => {
         .leftAccessor((d: Population) => d.left)
         .rightAccessor((d: Population) => d.right);
 
-    test("should throw when leftAccessor is missing", () => {
-      expect(() => render(pyramid().barHeight(1).barWidth(1).barPosition(1), testData)).toThrow(
-        TypeError
+    /** A pyramid with every required property set, so one can be dropped at a time. */
+    const complete = () => bare().barHeight(5).barWidth(10).barPosition(5);
+
+    test("should throw a named error when barHeight is missing", () => {
+      expect(() => render(bare().barWidth(10).barPosition(5), testData)).toThrow(
+        "[pyramid] the barHeight property is required"
       );
     });
 
-    test("should throw when barWidth is missing", () => {
-      // barWidth is the only bar dimension the component itself calls: the left bar's x is
-      // computed as -SPINE_PADDING - props.barWidth(d), which dies on an unset prop.
-      expect(() => render(bare().barHeight(1).barPosition(1), testData)).toThrow(TypeError);
+    test("should throw a named error when barWidth is missing", () => {
+      expect(() => render(bare().barHeight(5).barPosition(5), testData)).toThrow(
+        "[pyramid] the barWidth property is required"
+      );
     });
 
-    describe("known quirks", () => {
-      test("silently renders zero-height bars when barHeight is missing", () => {
-        // BUG: barHeight and barPosition are passed straight through to bar, which runs
-        // them through its NaN guard, so an unset prop becomes 0 instead of an error. The
-        // chart renders as an empty axis frame with no bars and no warning - the failure is
-        // invisible, unlike the barWidth case above.
-        // current: height="0". expected: an error naming the missing prop.
-        const node = render(bare().barWidth(10).barPosition(5), testData);
-        expect(attrs(node, "right", "height")).toEqual(["0", "0"]);
-      });
+    test("should throw a named error when barPosition is missing", () => {
+      expect(() => render(bare().barHeight(5).barWidth(10), testData)).toThrow(
+        "[pyramid] the barPosition property is required"
+      );
+    });
 
-      test("silently stacks every bar at y=0 when barPosition is missing", () => {
-        // BUG: same root cause as barHeight above. All the bars pile up on one row.
-        // current: y="0" for every bar. expected: an error naming the missing prop.
-        const node = render(bare().barWidth(10).barHeight(5), testData);
-        expect(attrs(node, "right", "y")).toEqual(["0", "0"]);
-      });
+    test("should throw a named error when leftAccessor is missing", () => {
+      expect(() =>
+        render(
+          pyramid()
+            .barHeight(5)
+            .barWidth(10)
+            .barPosition(5)
+            .rightAccessor((d: Population) => d.right),
+          testData
+        )
+      ).toThrow("[pyramid] the leftAccessor property is required");
+    });
 
-      test("throws when a side accessor returns undefined", () => {
-        // NOTE: the error comes from d3's data join, so the message names neither the prop
-        // nor the component: "undefined is not iterable".
-        expect(() =>
-          render(
-            // @ts-expect-error - deliberately violating the accessor's return contract
-            pyramidOf().leftAccessor(() => undefined),
-            testData
-          )
-        ).toThrow(TypeError);
-      });
+    test("should throw a named error when rightAccessor is missing", () => {
+      expect(() =>
+        render(
+          pyramid()
+            .barHeight(5)
+            .barWidth(10)
+            .barPosition(5)
+            .leftAccessor((d: Population) => d.left),
+          testData
+        )
+      ).toThrow("[pyramid] the rightAccessor property is required");
+    });
+
+    test("should render nothing at all when a required property is missing", () => {
+      // The check runs before the first selectGroup, so a failed render leaves no partial
+      // chart behind for the caller to misread.
+      const g = group("required-no-render");
+      expect(() => g.datum(testData).call(bare().barWidth(10) as never)).toThrow();
+      expect((g.node() as SVGGElement).childElementCount).toBe(0);
+    });
+
+    test("should not throw once every required property is set", () => {
+      expect(() => render(complete(), testData)).not.toThrow();
+    });
+
+    test("should throw when a side accessor returns undefined", () => {
+      // NOTE: only the *unset* case is reported by name. A side accessor that returns no
+      // data is a broken chart rather than an empty one, so it is left to throw from d3's
+      // data join - unlike a reference accessor, which warns and skips its line.
+      expect(() =>
+        render(
+          // @ts-expect-error - deliberately violating the accessor's return contract
+          pyramidOf().leftAccessor(() => undefined),
+          testData
+        )
+      ).toThrow(TypeError);
     });
   });
 
   describe("known quirks", () => {
-    test("the reference line ignores the spine padding, so it sits half a pixel inside the bars", async () => {
-      // NOTE: the bars are offset outwards by SPINE_PADDING (0.5) but the reference line is
-      // drawn straight from barWidth with no offset, so a reference value equal to a bar
-      // value lands half a pixel inside that bar's outer edge. It does so symmetrically on
-      // both sides, and the line is the side that agrees with the axis scale - the padding
-      // is a deliberate cosmetic gap between the bars. stackedPyramid makes the identical
-      // choice. Filed as a NOTE rather than a BUG for that reason, but it does mean bars
-      // and reference lines are drawn in two subtly different coordinate systems.
-      const node = render(
-        pyramid()
-          .barHeight(10)
-          .barWidth((d: Datum) => d.value)
-          .barPosition(0)
-          .leftAccessor((d: Population) => d.left)
-          .rightAccessor((d: Population) => d.right)
-          .rightRefAccessor((d: Population) => d.right),
-        { left, right: [{ age: 0, value: 100 }] }
-      );
-      const barRight =
-        Number(attrs(node, "right", "x")[0]) + Number(attrs(node, "right", "width")[0]);
-      expect(barRight).toBe(100.5);
-      // d3.line closes a single-point path with Z
-      expect(await lineD(node, "rightReference")).toBe("M100,0Z");
-    });
-
-    test("has no d attribute on the tick it is first rendered", async () => {
-      // NOTE: the path's `d` is only ever applied through a transition, so the element
-      // exists with no geometry until the first animation frame. Anything that measures
-      // the chart synchronously after render (getBBox, a snapshot, an export to PNG) sees
-      // an empty path.
-      const node = render(
-        pyramidOf().rightRefAccessor((d: Population) => d.right),
-        testData
-      );
-      expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
-      expect(await lineD(node, "rightReference")).toBe("M30,0L10,12");
-    });
-
-    test("crashes when a reference accessor returns undefined", () => {
-      // BUG: the reference line is guarded on the accessor existing, not on it returning
-      // data - `props.rightRefAccessor ? [props.rightRefAccessor(data)] : []`. An accessor
-      // that returns undefined for some states (a filter with no matches, a group that is
-      // missing for one year) throws instead of hiding the line.
-      // current: TypeError "undefined is not iterable". expected: no line.
-      expect(() =>
-        render(
-          // @ts-expect-error - deliberately violating the accessor's return contract
-          pyramidOf().rightRefAccessor(() => undefined),
-          testData
-        )
-      ).toThrow(TypeError);
-      // null takes a different path through d3 and produces a different message again:
-      // "Cannot use 'in' operator to search for 'length' in null".
-      expect(() =>
-        render(
-          // @ts-expect-error - deliberately violating the accessor's return contract
-          pyramidOf().rightRefAccessor(() => null),
-          testData
-        )
-      ).toThrow(TypeError);
-    });
-
-    test("leaves an empty path element behind for empty reference data", async () => {
-      // NOTE: an empty array is handled, but the path is still created - d3.line returns
-      // null for no points, so `d` is simply absent.
-      const node = render(
-        pyramidOf().rightRefAccessor(() => []),
-        testData
-      );
-      expect(lines(node, "rightReference").length).toBe(1);
-      await vi.waitFor(() => expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull());
-    });
-
-    test("does not guard the reference line against missing values", async () => {
-      // BUG: bar runs every geometry value through a NaN guard, but the reference line
-      // passes barWidth and barPosition straight to d3.line. One missing value poisons the
-      // path string; the browser renders the valid prefix and drops the rest of the line,
-      // so a single gap in the reference series truncates the outline.
-      // current: d="MNaN,0L5,12". expected: the point is skipped, or coerced to 0.
-      const node = render(
-        pyramidOf().rightRefAccessor(() => [
-          { age: 0, value: Number.NaN },
-          { age: 1, value: 5 },
-        ]),
-        testData
-      );
-      expect(await lineD(node, "rightReference")).toBe("MNaN,0L5,12");
-    });
-
     test("collapses a mirrored bar onto the spine when its width is missing", () => {
       // NOTE: -SPINE_PADDING - NaN is NaN, which bar's guard turns into 0. The left bar
       // therefore lands at x=0 rather than at the spine's -0.5, so a missing value on the
-      // left is drawn half a pixel off from a missing value on the right.
+      // left is drawn half a pixel off from a missing value on the right. Left as is
+      // deliberately: bar owns the missing-value guard, and duplicating it here to guard
+      // barWidth before the mirroring arithmetic would put the same rule in two places.
       const node = render(
         pyramidOf().barWidth(() => Number.NaN),
         testData
@@ -539,15 +655,16 @@ describe("component/pyramid", () => {
     });
 
     test("the bars jump while the reference lines animate", async () => {
-      // BUG: bar's transition property is inert (see test/component/bar.test.ts), but the
+      // NOTE: bar's transition property is inert (see test/component/bar.test.ts), but the
       // reference line's transition is real. On a state change the outline eases into
       // place over 300ms while the bars underneath it snap immediately, so the reference
-      // line visibly detaches from the bars mid-transition.
+      // line visibly detaches from the bars mid-transition. The fix belongs to bar, which
+      // owns the inert transition; this component would need no change of its own.
       const component = pyramidOf().rightRefAccessor((d: Population) => d.right);
       const g = group("mixed-transitions");
       g.datum(testData).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(await lineD(node, "rightReference")).toBe("M30,0L10,12");
+      expect(await lineD(node, "rightReference")).toBe("M30.5,5L10.5,17");
 
       g.datum({
         left,
@@ -559,41 +676,7 @@ describe("component/pyramid", () => {
       // The bar is already at its new width on this tick...
       expect(attrs(node, "right", "width")).toEqual(["100", "90"]);
       // ...while the line still describes the old one.
-      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M30,0L10,12");
-    });
-
-    test("traces the top edges of the bars, not their mid-lines", async () => {
-      // BUG: the reference line takes y straight from barPosition, which is the bar's top
-      // edge, and never accounts for barHeight. The outline is therefore drawn half a bar
-      // height above the values it describes - a much larger error than the half pixel of
-      // spine padding above, and it grows with barHeight.
-      // current: the line passes through the bars' top left corners. expected: through
-      // their mid-height, or as a step path along their outer edges.
-      const node = render(
-        pyramidOf().rightRefAccessor((d: Population) => d.right),
-        testData
-      );
-      expect(attrs(node, "right", "y")).toEqual(["0", "12"]);
-      expect(attrs(node, "right", "height")).toEqual(["10", "10"]);
-      // Bar mid-lines are at y = 5 and y = 17, but the line is drawn at 0 and 12.
-      expect(await lineD(node, "rightReference")).toBe("M30,0L10,12");
-    });
-
-    test("drops the index when computing the left bars' x", () => {
-      // BUG: the left bar's x calls props.barWidth(d) with the datum only, while bar calls
-      // width with (d, i, nodes). An index-aware or node-aware barWidth accessor therefore
-      // sees undefined for i, and on the left side only: position desynchronises from
-      // width, here collapsing to x=0 because 100 + undefined is NaN and bar's guard turns
-      // that into 0. stackedPyramid has the same shape.
-      // current: left x="0" with width="100"/"101". expected: x="-100.5"/"-101.5".
-      const node = render(
-        pyramidOf().barWidth((_d: Datum, i: number) => 100 + i),
-        testData
-      );
-      expect(attrs(node, "left", "width")).toEqual(["100", "101"]);
-      expect(attrs(node, "left", "x")).toEqual(["0", "0"]);
-      // The right side, which passes the accessor to bar untouched, is fine.
-      expect(attrs(node, "right", "x")).toEqual(["0.5", "0.5"]);
+      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M30.5,5L10.5,17");
     });
 
     test("puts a negative-width left bar on the wrong side of the spine", () => {
@@ -606,24 +689,6 @@ describe("component/pyramid", () => {
       expect(attrs(node, "left", "x")).toEqual(["4.5", "4.5"]);
       expect(attrs(node, "left", "width")).toEqual(["-5", "-5"]);
       expect(attrs(node, "right", "x")).toEqual(["0.5", "0.5"]);
-    });
-
-    test("never removes a reference path once it has been rendered", async () => {
-      // BUG: the reference datum is wrapped in an array - [props.rightRefAccessor(data)] -
-      // so the join always has exactly one element and the exit selection can never fire.
-      // When the reference series goes away the stale path stays in the DOM; only `d` is
-      // dropped. Harmless visually, but the DOM keeps state that no longer corresponds to
-      // the data, and CSS or a hit test can still find the element. The same wrapping caps
-      // each side at one reference line.
-      const component = pyramidOf().rightRefAccessor((d: Population) => d.rightRef ?? []);
-      const g = group("ref-removal");
-      g.datum({ left, right, rightRef: right }).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(await lineD(node, "rightReference")).toBe("M30,0L10,12");
-
-      g.datum({ left, right }).call(component as never);
-      await vi.waitFor(() => expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull());
-      expect(lines(node, "rightReference").length).toBe(1);
     });
 
     test("gives the right reference line an empty transform attribute", () => {
