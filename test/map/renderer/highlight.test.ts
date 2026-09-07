@@ -38,7 +38,7 @@ interface Datum {
 
 describe("map/renderer/highlight", () => {
   let container: HTMLDivElement;
-  let layerKey = 0;
+  let layerCount = 0;
   let pathKey = 0;
   const warnedSpies: { mockRestore: () => void }[] = [];
 
@@ -56,7 +56,7 @@ describe("map/renderer/highlight", () => {
 
   const group = (key?: string) =>
     createSvgLayer("#chart-container", undefined, {
-      key: key ?? `highlight-${++layerKey}`,
+      key: key ?? `highlight-${++layerCount}`,
     }).selectGroup("map");
 
   const collection = (): FeatureCollection<Polygon> => ({
@@ -478,13 +478,13 @@ describe("map/renderer/highlight", () => {
       expect(highlights(renderWith([{ geoId: "a" }]))).toHaveLength(1);
     });
 
-    // Each layer selects only the paths carrying its own layerKey, so two highlight layers in one
+    // Each layer selects only the paths carrying its own key, so two highlight layers in one
     // group no longer fight over a single set of elements.
-    test("lets two layers with different layerKeys share one group", () => {
+    test("lets two layers with different keys share one group", () => {
       const layer = group("two-highlights");
       layer.call(
         mapRendererHighlight<Datum>()
-          .layerKey("first")
+          .key("first")
           .geoJson(collection())
           .mapPath(mapPathOf())
           .highlight([{ geoId: "a" }])
@@ -493,7 +493,7 @@ describe("map/renderer/highlight", () => {
       const first = highlights(layer.node() as SVGGElement)[0];
       layer.call(
         mapRendererHighlight<Datum>()
-          .layerKey("second")
+          .key("second")
           .geoJson(collection())
           .mapPath(mapPathOf())
           .highlight([{ geoId: "b" }])
@@ -509,10 +509,10 @@ describe("map/renderer/highlight", () => {
     // An empty highlight clears only this layer's paths, leaving the other layer's alone.
     test("clears only its own layer when its highlight empties", () => {
       const layer = group("two-highlights-clear");
-      const renderWith = (layerKey: string, highlight: Datum[]) =>
+      const renderWith = (key: string, highlight: Datum[]) =>
         layer.call(
           mapRendererHighlight<Datum>()
-            .layerKey(layerKey)
+            .key(key)
             .geoJson(collection())
             .mapPath(mapPathOf())
             .highlight(highlight)
@@ -522,13 +522,15 @@ describe("map/renderer/highlight", () => {
       renderWith("second", []);
       const after = highlights(layer.node() as SVGGElement);
       expect(after).toHaveLength(1);
-      expect(after[0].getAttribute("data-highlight-layer")).toBe("first");
+      expect(after[0].getAttribute("data-highlight-key")).toBe("first");
     });
 
-    // NOTE: two layers sharing the default layerKey still share one set of paths - which is the
+    // NOTE: two layers sharing the default key still share one set of paths - which is the
     // same mechanism that lets a consumer build a fresh component on every render and still get
-    // its previous elements back. Scoping is opt-in per layer, not automatic.
-    test("still shares elements between two layers on the same layerKey", () => {
+    // its previous elements back. Scoping is opt-in per layer, not automatic: a second `.call()`
+    // on one group is indistinguishable, from inside the render, from a re-render of the same
+    // layer, so only an explicit key can tell them apart. See issue #216.
+    test("still shares elements between two layers on the same key", () => {
       const layer = group("two-highlights-same-key");
       const renderWith = (geoId: string) =>
         layer.call(
@@ -545,8 +547,8 @@ describe("map/renderer/highlight", () => {
       expect(after[0]).not.toBe(first);
     });
 
-    test("defaults layerKey to highlight", () => {
-      expect(mapRendererHighlight<Datum>().layerKey()).toBe("highlight");
+    test("defaults key to highlight", () => {
+      expect(mapRendererHighlight<Datum>().key()).toBe("highlight");
     });
   });
 
