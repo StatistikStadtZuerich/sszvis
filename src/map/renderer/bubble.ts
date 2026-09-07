@@ -149,6 +149,20 @@ export interface MapRendererBubbleComponent<T = unknown>
  * Held against the feature object, which is the same object from one render to the next for a
  * given collection, and weakly so a discarded collection is still collectable.
  */
+/**
+ * The two halves of a d3 typename, "over.tooltip" being type "over" and name "tooltip". Either may
+ * be empty: ".tooltip" carries a name alone, "over" a type alone.
+ */
+function typeOf(typename: string): string {
+  const dot = typename.indexOf(".");
+  return dot < 0 ? typename : typename.slice(0, dot);
+}
+
+function nameOf(typename: string): string {
+  const dot = typename.indexOf(".");
+  return dot < 0 ? "" : typename.slice(dot + 1);
+}
+
 const anonymousKeys = new WeakMap<object, string>();
 let anonymousCount = 0;
 
@@ -325,11 +339,22 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
     if (value !== event) return value;
 
     // A setter call, and d3 validated the typenames by returning the dispatch. It accepts a
-    // space-separated list of them, and a null handler removes rather than registers.
+    // space-separated list of them, and a null handler removes rather than registers. The two
+    // remaining rules are d3's own, for a typename with no type: a null handler removes that name
+    // from every event type, and a non-null one is ignored.
     const [typenames, handler] = args;
     for (const typename of String(typenames).trim().split(/\s+/)) {
-      if (handler == null) registered.delete(typename);
-      else registered.add(typename);
+      const type = typeOf(typename);
+      if (handler == null) {
+        if (type === "") {
+          const name = nameOf(typename);
+          for (const held of [...registered]) if (nameOf(held) === name) registered.delete(held);
+        } else {
+          registered.delete(typename);
+        }
+      } else if (type !== "") {
+        registered.add(typename);
+      }
     }
     return anchoredCirclesComponent;
   }) as MapRendererBubbleComponent<T>["on"];
