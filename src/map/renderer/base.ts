@@ -152,11 +152,18 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
       const patternId = missingPatternId(selection);
       ensureDefsElement(selection, "pattern", patternId).call(mapMissingValuePattern);
 
-      // One notion of a missing value, shared by the fill and the --undefined class: a feature that
-      // matched no datum is as missing as one the predicate rejects. Short-circuiting also keeps
-      // both accessors from ever being called with undefined.
+      // "Missing" only means something relative to a dataset. A layer where no entity has a datum
+      // is being used for its geometry rather than to encode data - rastermap-bins.js draws the
+      // choropleth as a transparent outline over a raster, with fill("none") and no data at all -
+      // so texturing every entity there would paint over what the layer is meant to reveal. Such a
+      // layer keeps the caller's fill and is not classed --undefined.
+      const encodesData = props.mergedData.some((d) => fn.defined(d.datum));
+
+      // Where a dataset is present, one notion of a missing value is shared by the fill and the
+      // --undefined class: an entity the dataset does not cover is as missing as one the predicate
+      // rejects. Short-circuiting also keeps both accessors from being called with undefined.
       function hasValue(d: MergedGeoDatum<T>): boolean {
-        return fn.defined(d.datum) && props.defined(d.datum);
+        return !encodesData || (fn.defined(d.datum) && props.defined(d.datum));
       }
 
       // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test

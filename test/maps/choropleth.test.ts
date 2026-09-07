@@ -233,10 +233,11 @@ describe("maps/choropleth", () => {
       expect(distinct(seen)).toEqual([{ kreis: "a" }, { kreis: "b" }, { kreis: "c" }]);
     });
 
-    // NOTE: prepareMergedGeoData treats anything that is not an array as no data at all, so a
-    // layer rendered before its data arrives draws the whole map textured as missing instead of
-    // throwing. The fill accessor is not called at all, since no feature matched a datum.
-    test("renders the whole map with no data at all", () => {
+    // A layer where no entity has a datum encodes no data, so it is drawing geometry rather than
+    // values and keeps the caller's fill instead of texturing everything as missing.
+    // docs/map-extended/rastermap-bins.js relies on this: it draws the choropleth as a
+    // transparent outline over a raster image, with fill("none") and no data at all.
+    test("keeps the caller's fill for a map with no data at all", () => {
       const collection = geoJson();
       const seen: unknown[] = [];
       const node = layer()
@@ -255,8 +256,9 @@ describe("maps/choropleth", () => {
         )
         .node() as SVGGElement;
       expect(areas(node)).toHaveLength(3);
-      expect(distinct(seen)).toEqual([]);
-      for (const fill of attrs(node, "fill")) expect(fill).toMatch(missingPattern);
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
+      // Nothing is classed --undefined either, so the fill and the class still agree.
+      expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
     });
 
     // A feature that matched no datum is textured as missing rather than painted with the ordinary
