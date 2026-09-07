@@ -14,7 +14,7 @@
  *                                          with data entities. Default 'id'.
  * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
  *                                          without a 'features' property throws a TypeError. Rendering mutates it; see
- *                                          the note below on the cached centroid.
+ *                                          the note below on the cached centre.
  * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
  * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
  *                                          that fail it, and entities with no datum at all, display the missing value
@@ -41,10 +41,10 @@
  * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
  * key at all is left unmatched.
  *
- * Note: rendering caches a sphericalCentroid onto every feature's properties and never invalidates
- * it, so moving a feature's geometry leaves its anchor behind. Unlike the base renderer it ignores
- * an authored `center` property and caches under a different key, so the two renderers disagree
- * about where the same entity's tooltip belongs.
+ * Note: anchor positions go through getGeoJsonCenter, the same source the base renderer uses, so an
+ * authored `center` property is honoured here too and a feature drawn by both renderers anchors in
+ * one place. That centre is cached as `cachedCenter` on the feature's properties and never
+ * invalidated, so moving a feature's geometry leaves its anchor behind.
  *
  * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
@@ -69,7 +69,6 @@ import {
   type ExtendedFeatureCollection,
   type GeoPath,
   type GeoProjection,
-  geoCentroid,
   select,
 } from "d3";
 import type { GeoJsonProperties } from "geojson";
@@ -79,7 +78,14 @@ import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 import { slowTransition } from "../../transition.js";
-import { GEO_KEY_DEFAULT, isPaintServer, missingPatternId, toLookupKey } from "../mapUtils.js";
+import {
+  GEO_KEY_DEFAULT,
+  type GeoPoint,
+  getGeoJsonCenter,
+  isPaintServer,
+  missingPatternId,
+  toLookupKey,
+} from "../mapUtils.js";
 
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
 type GeoJsonValue<T, R> = R | ((datum: T) => R);
@@ -99,12 +105,6 @@ type StoredGeoJsonValue<R> = (datum: unknown) => R;
 interface MergedFeature {
   geoJson: ExtendedFeature;
   datum: unknown;
-}
-
-/** The properties this renderer reads from, and caches onto, a feature. */
-interface GeoJsonFeatureProperties {
-  sphericalCentroid?: [number, number];
-  [key: string]: unknown;
 }
 
 type GeoJsonProps = {
@@ -276,18 +276,17 @@ export default function mapRendererGeoJson<
       // the tooltip anchor generator
       const ta = tooltipAnchor<MergedFeature>().position((d) => {
         // A feature with the spec-legal `properties: null` reaches here now that the merge no
-        // longer crashes on one, and the centroid cache needs somewhere to live.
+        // longer crashes on one, and the centre cache needs somewhere to live. Without this
+        // getGeoJsonCenter would throw on it.
         if (!d.geoJson.properties) d.geoJson.properties = {};
-        const properties: GeoJsonFeatureProperties = d.geoJson.properties;
 
-        let sphericalCentroid = properties.sphericalCentroid;
-        if (!sphericalCentroid) {
-          sphericalCentroid = geoCentroid(d.geoJson);
-          properties.sphericalCentroid = sphericalCentroid;
-        }
+        // The same centre the base renderer uses, so a feature drawn by both places its tooltip
+        // in one spot: an authored `center` property is honoured, and the result is memoized as
+        // `cachedCenter` on the feature.
+        const center = getGeoJsonCenter(d.geoJson) as GeoPoint;
 
         // d3's own typings expect the projection type as a type argument here.
-        const point = props.mapPath.projection<GeoProjection>()(sphericalCentroid);
+        const point = props.mapPath.projection<GeoProjection>()(center);
         // Only a hand-written projection can return null: d3's projections clip in the stream,
         // not in the point call, and return a pair - of NaN, for a degenerate centroid. A null is
         // passed on rather than replaced, as the JavaScript did: tooltipAnchor spreads it into
