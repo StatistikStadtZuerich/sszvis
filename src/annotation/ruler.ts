@@ -37,6 +37,11 @@ import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import type { AnySelection, BooleanAccessor, NumberAccessor, StringAccessor } from "../types.js";
 
+/** Horizontal distance between a dot and its label. */
+const LABEL_OFFSET = 10;
+/** Vertical nudge that drops a label's baseline clear of its dot. */
+const LABEL_BASELINE_NUDGE = 5;
+
 // Type definitions for ruler component
 type Datum<T = unknown> = T;
 
@@ -131,8 +136,11 @@ export const annotationRuler = <T = unknown>(): RulerComponent<T> =>
           const x = crispX(d);
           const y = crispY(d);
 
-          const dx = props.flip(d) ? -10 : 10;
-          const dy = y < props.top ? 2 * y : y > props.bottom ? 0 : 5;
+          const dx = props.flip(d) ? -LABEL_OFFSET : LABEL_OFFSET;
+          // A constant nudge, whether the dot sits on the ruler or above its top; only a
+          // dot below `bottom` needs none. The same expression lives in
+          // src/control/handleRuler.ts and the two must not drift.
+          const dy = y > props.bottom ? 0 : LABEL_BASELINE_NUDGE;
 
           return translateString(x + dx, y + dy);
         })
