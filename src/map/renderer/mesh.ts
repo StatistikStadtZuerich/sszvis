@@ -24,12 +24,12 @@
  * which either omission left a classed, styled path with no geometry - invisible, silent, and
  * indistinguishable from having had no borders to draw.
  *
- * Note: borderColor and strokeWidth are not wrapped in fn.functor, unlike the colour properties of
- * the base, geojson and highlight renderers. An accessor is handed straight to d3 and called with
- * the mesh object and d3's index, not with a per-entity datum - there is only one path, so there is
- * no such datum. An accessor written against a datum therefore resolves to undefined, and d3
- * removes the style, leaving the borders invisible with no error. The lake overlay's lakePathColor
- * has the same shape.
+ * Note: an accessor passed for borderColor or strokeWidth is called with the mesh object and d3's
+ * index, not with a per-entity datum - there is only one path, so there is no such datum. An
+ * accessor written against a datum, the way every other map renderer's colour accessor is written,
+ * therefore resolves to undefined. A null or undefined result is read as "keep the default" rather
+ * than passed to d3, which would have removed the style and left the borders invisible with no
+ * error. The lake overlay's lakePathColor still has the unguarded shape.
  *
  * Note: both properties are written as inline styles rather than attributes. Nothing in sszvis.css
  * sets stroke or stroke-width for .sszvis-map__border, so nothing is being overridden - but a
@@ -67,13 +67,36 @@ import * as fn from "../../fn.js";
 type MeshPath = ValueFn<BaseType, GeoPermissibleObjects, string | null>;
 
 /**
- * A constant or an accessor. Neither of this component's style props is wrapped in fn.functor, so
- * an accessor is called by d3 with the mesh object itself rather than with a per-entity datum -
- * there is only one path, so there is no such datum. An accessor may resolve to null to leave the
- * style off, which is how d3 reads it; at runtime undefined does the same, though d3's own types
- * do not say so.
+ * A constant or an accessor. An accessor is called by d3 with the mesh object itself rather than
+ * with a per-entity datum - there is only one path, so there is no such datum. It may resolve to
+ * null or undefined, which is read as "keep the default" rather than as "remove the style", so a
+ * border cannot silently vanish.
  */
-type MeshValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null>;
+type MeshValue<R extends string | number> =
+  | R
+  | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
+
+/** The defaults, named here because they are also the fallback for an accessor that resolves to nothing. */
+const DEFAULT_BORDER_COLOR = "white";
+const DEFAULT_STROKE_WIDTH = 1.25;
+
+/**
+ * Resolves a style prop, substituting the component's default for a null or undefined result. d3
+ * would remove the style for either, and since sszvis.css sets no stroke for .sszvis-map__border,
+ * SVG's initial value `none` would then apply - invisible borders, with no error. That is the
+ * outcome of an accessor written against a datum, the way every other map renderer's colour
+ * accessor is written, so the default stands instead.
+ */
+const withDefault = <R extends string | number>(
+  value: MeshValue<R>,
+  fallback: R
+): ValueFn<BaseType, GeoPermissibleObjects, R> =>
+  function (this: BaseType, datum, index, groups) {
+    const resolved = fn
+      .valueFn<BaseType, GeoPermissibleObjects, R | null | undefined>(value)
+      .call(this, datum, index, groups);
+    return resolved ?? fallback;
+  };
 
 /**
  * The props as they arrive at render time. geoJson and mapPath are required by the component's
@@ -104,9 +127,9 @@ export default function (): MapRendererMeshComponent {
     .prop("geoJson")
     .prop("mapPath")
     .prop("borderColor")
-    .borderColor("white") // A function or string for the color of all borders. Note: all borders have the same color
+    .borderColor(DEFAULT_BORDER_COLOR) // A function or string for the color of all borders. Note: all borders have the same color
     .prop("strokeWidth")
-    .strokeWidth(1.25)
+    .strokeWidth(DEFAULT_STROKE_WIDTH)
     .render(function (this: Element) {
       const selection = select(this);
       const props = selection.props<MeshProps>();
@@ -135,7 +158,7 @@ export default function (): MapRendererMeshComponent {
 
       meshLine
         .attr("d", mapPath)
-        .style("stroke", fn.valueFn(props.borderColor))
-        .style("stroke-width", fn.valueFn(props.strokeWidth));
+        .style("stroke", withDefault(props.borderColor, DEFAULT_BORDER_COLOR))
+        .style("stroke-width", withDefault(props.strokeWidth, DEFAULT_STROKE_WIDTH));
     });
 }
