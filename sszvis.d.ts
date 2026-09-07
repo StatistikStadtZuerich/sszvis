@@ -291,7 +291,7 @@ interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbCo
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$t<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$s<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -323,7 +323,7 @@ interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$s<T = unknown>(): CircleComponent<T>;
+declare function export_default$r<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -363,7 +363,7 @@ interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<Confiden
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$r<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function export_default$q<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -403,7 +403,7 @@ interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<Confidenc
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$q<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$p<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -429,7 +429,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$p<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$o<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -468,7 +468,7 @@ interface LineComponent$1<T = unknown> extends ComponentBuilder<LineComponent$1<
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent$1<T>;
 }
-declare function export_default$o<T = unknown>(): LineComponent$1<T>;
+declare function export_default$n<T = unknown>(): LineComponent$1<T>;
 
 /**
  * Range Flag annotation
@@ -494,7 +494,7 @@ interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComp
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$n<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$m<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -531,7 +531,7 @@ interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerCo
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$m<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$l<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -565,7 +565,7 @@ interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComp
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$l<T = unknown>(): RectangleComponent<T>;
+declare function export_default$k<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -670,7 +670,7 @@ interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponen
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$k<T = unknown>(): TooltipComponent<T>;
+declare function export_default$j<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -1046,7 +1046,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBui
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$j<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$i<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -1096,7 +1096,7 @@ interface PanningComponent extends ComponentBuilder<PanningComponent> {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$i(): PanningComponent;
+declare function export_default$h(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -1158,7 +1158,7 @@ interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponen
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default$h<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$g<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -1644,7 +1644,7 @@ interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent<T>> {
     transition(): boolean;
     transition(enabled: boolean): BarComponent<T>;
 }
-declare function export_default$g<T = unknown>(): BarComponent<T>;
+declare function export_default$f<T = unknown>(): BarComponent<T>;
 
 /**
  * Dot component
@@ -1755,7 +1755,7 @@ interface DotComponent<T = unknown> extends ComponentBuilder<DotComponent<T>> {
     transition(): boolean;
     transition(enabled: boolean): DotComponent<T>;
 }
-declare function export_default$f<T = unknown>(): DotComponent<T>;
+declare function export_default$e<T = unknown>(): DotComponent<T>;
 
 /**
  * Grouped Bars component
@@ -1952,7 +1952,7 @@ interface LineComponent<P = unknown, L = unknown> extends ComponentBuilder<LineC
     transition(): boolean;
     transition(enabled: boolean): LineComponent<P, L>;
 }
-declare function export_default$e<P = unknown, L = unknown>(): LineComponent<P, L>;
+declare function export_default$d<P = unknown, L = unknown>(): LineComponent<P, L>;
 
 /**
  * Nested Stacked Bars Vertical component
@@ -2121,7 +2121,7 @@ interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> 
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$d<T = unknown>(): PackComponent<T>;
+declare function export_default$c<T = unknown>(): PackComponent<T>;
 
 /**
  * Pie component
@@ -2137,69 +2137,57 @@ declare function export_default$d<T = unknown>(): PackComponent<T>;
  *                                            used to translate every wedge to (radius, radius); since the arc
  *                                            then extends another radius in every direction, the pie occupies a
  *                                            box of 2 * radius by 2 * radius.
- *                                            The inner radius is hardcoded to 4px and cannot be configured. If the
- *                                            property is left unset the wedges receive an unparseable transform and
- *                                            the tooltip anchors are positioned at NaN, with no warning.
+ *                                            The inner radius is hardcoded to 4px and cannot be configured.
+ *                                            Rendering without it throws.
  * @property {string, function} fill          a fill color for wedges in the pie. Ideally a function which takes a
  *                                            data value. If unset, the attribute is omitted and the wedges fall back
  *                                            to the SVG default, black.
  * @property {string, function} stroke        the stroke color for wedges in the pie (default "#FFFFFF", which
- *                                            separates touching wedges). A falsy value passed as the property, such
- *                                            as "" or null, is replaced by that default; a falsy value returned from
- *                                            an accessor is not.
+ *                                            separates touching wedges). The default applies only when the property
+ *                                            was never set: a falsy value, such as "" or null, is passed through, and
+ *                                            behaves the same whether it is given as a constant or returned from an
+ *                                            accessor.
  * @property {number, function} angle         Required. Specifies the angle of the wedges in radians. Theoretically
  *                                            this could be a constant, but that would make for a very strange pie.
  *                                            Ideally, this is a function which takes a data value and returns the
- *                                            angle in radians. Angles are summed as given and never clamped, and if
- *                                            the property is left unset the render throws a TypeError.
+ *                                            angle in radians. Angles are summed as given and never clamped, so a
+ *                                            total beyond a full turn overshoots and a negative angle draws its wedge
+ *                                            backwards. A value that is not finite is reported through sszvis.logger and
+ *                                            treated as zero, so one bad datum costs at most its own wedge.
+ *                                            Rendering without the property throws.
+ * @property {boolean} transition             Whether to animate between renders (default true). The wedge angles, the
+ *                                            transform, the fill and the stroke all ease over the default 300ms. With
+ *                                            transition(false) every attribute is written on the render tick instead,
+ *                                            which is what a chart serialised synchronously - a snapshot, an SVG
+ *                                            export - or one rendered in a hidden tab wants, since d3-timer runs on
+ *                                            requestAnimationFrame.
  *
- * Note: the wedge geometry is written only by the arc tween, so no `d` attribute exists until
- * the first animation frame, and there is no transition property to opt out of - a chart
- * serialised on the render tick comes out empty. Nothing else animates: transform, fill and
- * stroke are applied to the transition from the values already on the DOM. The tooltip anchors
- * are positioned from the pre-transition angles and are never repositioned when the transition
- * ends, so after an update they describe the previous layout.
- *
- * Note: the component keeps no state of its own. It writes a0/a1 (the angles currently on
- * screen) and _a0/_a1 (the destination angles of the running transition) onto every datum it
- * renders, which is what lets a transition continue from the current geometry. Consequently
- * the data must be mutable - frozen data throws - two entries sharing one object collapse into
- * a single wedge, and a single NaN angle poisons the running total and every wedge after it.
- * See test/component/pie.test.ts.
+ * Note: the component keeps its transition state - the angles currently on screen - in a
+ * WeakMap keyed by the wedge element, so it never writes to the caller's data. Frozen data,
+ * two entries sharing one datum object, and data carrying fields of its own all render
+ * correctly. The wedges carry their own `sszvis-pie-path` class alongside the generic
+ * `sszvis-path` one, and the component matches only the former, so a foreign path left in the
+ * same group by another component is left alone.
  *
  * @return {sszvis.component}
  */
 
-/**
- * The angle bookkeeping the component keeps on each datum: a0/a1 are the angles currently
- * on screen, _a0/_a1 the destination angles of the running transition. All four are
- * optional because the caller's data does not carry them until the first render, and
- * a0/a1 can be replaced by a foreign value again by the index-based angle handover below.
- */
-interface PieAngles {
-    a0?: number | null | undefined;
-    a1?: number | null | undefined;
-    _a0?: number;
-    _a1?: number;
-}
-/** A datum of the caller's own shape, once the component has annotated it. */
-type PieDatum<T = PieAngles> = T & PieAngles;
 /** The angle property is wrapped by fn.functor on set, so it is always a function here. */
-type AngleAccessor<T = PieAngles> = (d: PieDatum<T>) => number;
+type AngleAccessor<T = unknown> = (d: T) => number;
 /**
  * fill and stroke accept a constant or an accessor and are not normalised on set. An
  * accessor may resolve to null or undefined to leave the attribute off, which is how d3
  * reads both, so one nullish-aware alias describes what the setters accept and what the
  * getters return.
  */
-type ColorAccessor$1<T = PieAngles> = (d: PieDatum<T>, i: number) => string | null | undefined;
-type ColorValue<T = PieAngles> = string | ColorAccessor$1<T>;
+type ColorAccessor$1<T = unknown> = (d: T, i: number) => string | null | undefined;
+type ColorValue<T = unknown> = string | null | undefined | ColorAccessor$1<T>;
 /**
  * The getters return whatever was last set, which is undefined for radius and angle until
- * the caller sets them - both are required, and rendering without them fails, so both
+ * the caller sets them - both are required, and rendering without them throws, so both
  * getters report the undefined the props actually hold.
  */
-interface PieComponent<T = PieAngles> extends ComponentBuilder<PieComponent<T>> {
+interface PieComponent<T = unknown> extends ComponentBuilder<PieComponent<T>> {
     radius(): number | undefined;
     radius(radius: number): PieComponent<T>;
     fill(): ColorValue<T> | undefined;
@@ -2208,8 +2196,10 @@ interface PieComponent<T = PieAngles> extends ComponentBuilder<PieComponent<T>> 
     stroke<U = T>(stroke: ColorValue<U>): PieComponent<T>;
     angle(): AngleAccessor<T> | undefined;
     angle<U = T>(angle: number | AngleAccessor<U>): PieComponent<T>;
+    transition(): boolean;
+    transition(enabled: boolean): PieComponent<T>;
 }
-declare function export_default$c<T = PieAngles>(): PieComponent<T>;
+declare function pie<T = unknown>(): PieComponent<T>;
 
 /**
  * Pyramid component
@@ -7399,5 +7389,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$s as annotationCircle, export_default$r as annotationConfidenceArea, export_default$q as annotationConfidenceBar, export_default$o as annotationLine, export_default$n as annotationRangeFlag, export_default$m as annotationRangeRuler, export_default$l as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$g as bar, bounds, export_default$t as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, export_default$f as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$p as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, export_default$e as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$j as move, muchDarker, nestedStackedBarsVertical, not, export_default$d as pack, export_default$i as panning, parseDate, parseNumber, parseYear, export_default$c as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$b as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$a as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, export_default$9 as stackedArea, export_default$8 as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$7 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$k as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$6 as treemap, valueFn, viewport, export_default$h as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$r as annotationCircle, export_default$q as annotationConfidenceArea, export_default$p as annotationConfidenceBar, export_default$n as annotationLine, export_default$m as annotationRangeFlag, export_default$l as annotationRangeRuler, export_default$k as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$f as bar, bounds, export_default$s as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, export_default$e as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$o as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, export_default$d as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$i as move, muchDarker, nestedStackedBarsVertical, not, export_default$c as pack, export_default$h as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$b as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$a as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, export_default$9 as stackedArea, export_default$8 as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$7 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$j as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$6 as treemap, valueFn, viewport, export_default$g as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };
