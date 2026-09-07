@@ -63,9 +63,9 @@
  * @property {Function} linkSort                     A function determining how to sort the links, which are rendered stacked on top of each other.
  *                                                   The comparator is handed to d3's selection.sort, which orders the elements ascending, so the
  *                                                   comparator's largest link is the last one in the document and paints over all the others. The
- *                                                   default comparator is ascending by value, so the thickest links paint over the thinnest, undoing
- *                                                   in the DOM the descending order sszvis.layout.sankey.prepareData put the array in for the
- *                                                   opposite reason. Reverse it to keep the thin links on top. The property is wrapped in fn.functor,
+ *                                                   default comparator is descending by value, so the thinnest links paint over the thickest and a
+ *                                                   thin link is never hidden by a thick one it crosses. This matches the descending order
+ *                                                   sszvis.layout.sankey.prepareData puts the array in. The property is wrapped in fn.functor,
  *                                                   so a value that is not a function is silently turned into a comparator claiming every pair is
  *                                                   already ordered. The sort reorders elements only; the data array, and with it the link tooltip
  *                                                   anchors, keeps its original order.
@@ -431,7 +431,7 @@ export default function (): SankeyComponent {
     .prop("nodeColor", fn.functor)
     .prop("linkColor", fn.functor)
     .prop("linkSort", fn.functor)
-    .linkSort((a: SankeyLink, b: SankeyLink) => a.value - b.value) // Ascending, so the thickest links paint on top
+    .linkSort((a: SankeyLink, b: SankeyLink) => b.value - a.value) // Descending, so the thinnest links paint on top
     .prop("labelSide", fn.functor)
     .labelSide("left")
     .prop("labelSideSwitch")
