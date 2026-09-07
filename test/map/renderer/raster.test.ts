@@ -115,6 +115,38 @@ describe("map/renderer/raster", () => {
       expect(pixelAt(node, 10, 10)).toEqual([0, 0, 255, 255]);
     });
 
+    test("leaves a cell unpainted when its fill does not parse", () => {
+      const node = render([cell(4, 4), cell(12, 12)], (c) =>
+        c.cellSide(4).fill((d: Cell) => (d.x === 4 ? "#00ff00" : "not-a-colour"))
+      );
+      expect(pixelAt(node, 4, 4)).toEqual([0, 255, 0, 255]);
+      expect(pixelAt(node, 12, 12)).toEqual([0, 0, 0, 0]);
+    });
+
+    test("leaves a cell unpainted when its fill is undefined", () => {
+      const node = render([cell(4, 4), cell(12, 12)], (c) =>
+        c.cellSide(4).fill(
+          // @ts-expect-error - an accessor returning undefined is a caller error; pinned because
+          // the cell must be skipped rather than inherit the previous cell's colour.
+          (d: Cell) => (d.x === 4 ? "#00ff00" : undefined)
+        )
+      );
+      expect(pixelAt(node, 4, 4)).toEqual([0, 255, 0, 255]);
+      expect(pixelAt(node, 12, 12)).toEqual([0, 0, 0, 0]);
+    });
+
+    test("keeps debug mode additive when a fill does not parse", () => {
+      const node = render([cell(10, 10)], (c) =>
+        c
+          .debug(true)
+          .cellSide(4)
+          .fill(() => "not-a-colour")
+      );
+      // Only the debug rectangle, not a cell composited on top of it.
+      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 51]);
+      expect(pixelAt(node, 0, 0)).toEqual([255, 0, 0, 51]);
+    });
+
     test("clears the canvas before redrawing", () => {
       const target = layer("raster-clear");
       const renderWith = (data: Cell[]) =>
@@ -197,33 +229,6 @@ describe("map/renderer/raster", () => {
       const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
       expect(canvas.width).toBe(20);
       expect(canvas.style.width).toBe("");
-    });
-
-    // BUG: an invalid fill colour is ignored by the canvas API rather than reported, and fillStyle
-    // is stateful - so the cell is drawn in whatever colour was last set. Here that is the
-    // previous cell's colour, which makes a broken colour scale look like a working one.
-    test("draws a cell in the previous cell's colour when the fill is invalid", () => {
-      const node = render([cell(4, 4), cell(12, 12)], (c) =>
-        c.cellSide(4).fill((d: Cell) => (d.x === 4 ? "#00ff00" : "not-a-colour"))
-      );
-      expect(pixelAt(node, 4, 4)).toEqual([0, 255, 0, 255]);
-      expect(pixelAt(node, 12, 12)).toEqual([0, 255, 0, 255]);
-    });
-
-    // The same statefulness as above, with the debug rectangle as the last colour set: an
-    // invalid-fill cell is drawn in the debug red at 20% alpha and composites to a darker red, so
-    // it reads as data. Only reachable on top of the invalid-fill defect, but it means debug mode
-    // is not purely additive.
-    test("draws an invalid-fill cell in the debug colour when debug is on", () => {
-      const node = render([cell(10, 10)], (c) =>
-        c
-          .debug(true)
-          .cellSide(4)
-          .fill(() => "not-a-colour")
-      );
-      // 0.2 alpha over the 0.2 alpha rectangle, rather than the transparent pixel it should be.
-      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 91]);
-      expect(pixelAt(node, 0, 0)).toEqual([255, 0, 0, 51]);
     });
 
     // BUG: neither width nor height is validated. Omitting them removes the attributes, so the

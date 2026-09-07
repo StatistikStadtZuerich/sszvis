@@ -13,8 +13,7 @@
  * data from the layer's datum rather than from a property.
  *
  * @property {Boolean} debug         Whether to activate debug mode, which shows a red square over the whole
- *                                   canvas, for testing alignment with other map layers. Default false. See
- *                                   the note below: it is not purely additive.
+ *                                   canvas, for testing alignment with other map layers. Default false.
  * @property {Number} width          The width of the canvas. Required, and unvalidated; a fractional value is
  *                                   truncated to whole pixels. See the notes below.
  * @property {Number} height         The height of the canvas. Required and unvalidated, like the width.
@@ -29,7 +28,8 @@
  *                                   returns a float.
  * @property {String, Function} fill The fill function. Takes a datum and should return a fill color for the datum's pixel.
  *                                   Wrapped in fn.functor, so a constant colour is accepted too. It has no
- *                                   default, and an invalid colour is not reported; see the notes below.
+ *                                   default. A value the canvas cannot parse leaves the cell unpainted; see
+ *                                   the notes below.
  *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
  *                                   CanvasPattern at runtime, which this contract deliberately excludes.
  * @property {Number} opacity        The opacity of the canvas. Default 1; use a lower value to reveal the
@@ -56,11 +56,11 @@
  * change of dimensions resizes that canvas rather than replacing it - which is what makes the
  * bitmap reset double as the clear.
  *
- * Note: fillStyle is stateful, and an invalid colour is ignored by the canvas API rather than
- * reported - so a cell whose fill does not parse is drawn in whatever colour was last set. That is
- * the previous cell's colour, which makes a broken colour scale look like a working one, or, in
- * debug mode, the debug red at 20% alpha, which reads as data. Debug mode is therefore not purely
- * additive.
+ * Note: fillStyle is stateful and the canvas API ignores a value it cannot parse, so a cell whose
+ * fill does not parse would otherwise be drawn in whatever colour was last set - the previous
+ * cell's colour, or the debug red. Each fill is therefore probed before it is used and a cell whose
+ * fill does not parse is left unpainted, so a broken colour scale shows as holes in the raster
+ * rather than as plausible data. Debug mode stays purely additive as a result.
  *
  * Note: no docs example can turn debug on - rastermap-gradient guards its debug(DEBUG) call with
  * `if (DEBUG)` on a hardcoded false, and the other three rastermaps never touch the property - so
@@ -199,6 +199,25 @@ function context2d(node: BaseType | null): CanvasRenderingContext2D {
   return ctx;
 }
 
+/**
+ * Whether the canvas can parse a fill value, established by assignment rather than by a colour
+ * parser of our own: fillStyle keeps its previous value when the assignment fails, so probing from
+ * two different starting colours tells a parsed value (which normalises to the same colour from
+ * both) from an unparseable one (which leaves each probe in place). A non-string reaching here at
+ * runtime fails the same way, which is the point.
+ */
+function fillParses(ctx: CanvasRenderingContext2D, value: string): boolean {
+  const before = ctx.fillStyle;
+  ctx.fillStyle = "#000000";
+  ctx.fillStyle = value;
+  const fromBlack = ctx.fillStyle;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = value;
+  const fromWhite = ctx.fillStyle;
+  ctx.fillStyle = before;
+  return fromBlack === fromWhite;
+}
+
 export default function <T = unknown>(): MapRendererRasterComponent<T> {
   return component<MapRendererRasterComponent<T>>()
     .prop("debug")
@@ -238,15 +257,22 @@ export default function <T = unknown>(): MapRendererRasterComponent<T> {
       }
 
       const halfSide = props.cellSide / 2;
+      // A colour scale usually yields only a handful of distinct values, so parsing each one once
+      // per render keeps the probe off the hot path.
+      const parsed = new Map<string, boolean>();
       for (const datum of data) {
         const position = props.position(datum);
-        ctx.fillStyle = props.fill(datum);
-        ctx.fillRect(
-          coordinate(position, 0) - halfSide,
-          coordinate(position, 1) - halfSide,
-          props.cellSide,
-          props.cellSide
-        );
+        const x = coordinate(position, 0) - halfSide;
+        const y = coordinate(position, 1) - halfSide;
+        const fill = props.fill(datum);
+        let parses = parsed.get(fill);
+        if (parses === undefined) {
+          parses = fillParses(ctx, fill);
+          parsed.set(fill, parses);
+        }
+        if (!parses) continue;
+        ctx.fillStyle = fill;
+        ctx.fillRect(x, y, props.cellSide, props.cellSide);
       }
     });
 }
