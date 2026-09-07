@@ -663,7 +663,6 @@ export default function (): SankeyComponent {
 
       barLabels
         .text((node) => props.nameLabel(node.id))
-        .attr("text-align", "middle")
         .attr("text-anchor", (node) =>
           getLabelSide(node.columnIndex) === "left" ? "end" : "start"
         )

@@ -658,19 +658,6 @@ describe("component/sankey", () => {
         )
       ).toEqual(["", ""]);
     });
-
-    test("should set an inert text-align attribute on every label", () => {
-      // NOTE: `text-align` is a CSS property for flow content and has no meaning as an SVG
-      // attribute; SVG uses `text-anchor`, which the component sets on the next line. The
-      // attribute is written on every label and does nothing.
-      const node = render(sankeyOf(), testData);
-      expect(labels(node).map((l) => l.getAttribute("text-align"))).toEqual([
-        "middle",
-        "middle",
-        "middle",
-        "middle",
-      ]);
-    });
   });
 
   describe("label hit boxes", () => {
