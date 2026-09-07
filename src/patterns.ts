@@ -185,22 +185,25 @@ export const mapLakePattern = <D, P extends BaseType, PD>(
 
 /**
  * The gradient used by the alpha fade pattern in the Lake Zurich shape
+ *
+ * The id it writes is the one `mapLakeGradientMask` has to be pointed at. It defaults to the
+ * historical fixed id, so an unparameterised call is unchanged; pass an id to scope the definition
+ * to one map rather than rewriting the attribute afterwards. Because it is a trailing parameter it
+ * can also be handed over as `selection.call(mapLakeFadeGradient, id)`.
+ *
  * @param selection A d3 selection of SVG linear gradient elements
+ * @param gradientId The id to write on the gradient. Defaults to `lake-fade-gradient`.
  */
 export const mapLakeFadeGradient = <D, P extends BaseType, PD>(
-  selection: Selection<SVGLinearGradientElement, D, P, PD>
+  selection: Selection<SVGLinearGradientElement, D, P, PD>,
+  gradientId: string = LAKE_FADE_GRADIENT_ID
 ): void => {
   const stops: GradientStop[] = [
     { offset: 0.74, opacity: 1 },
     { offset: 0.97, opacity: 0 },
   ];
 
-  selection
-    .attr("x1", 0)
-    .attr("y1", 0)
-    .attr("x2", 0.55)
-    .attr("y2", 1)
-    .attr("id", LAKE_FADE_GRADIENT_ID);
+  selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", gradientId);
 
   selection
     .selectAll<SVGStopElement, GradientStop>("stop")
@@ -213,10 +216,18 @@ export const mapLakeFadeGradient = <D, P extends BaseType, PD>(
 
 /**
  * The gradient alpha fade mask for the Lake Zurich shape
+ *
+ * The mask fades the lake by filling itself with the fade gradient, so it is only useful beside a
+ * `mapLakeFadeGradient` that defines the id given here; the two must be scoped together. The id
+ * defaults to the historical fixed one, and is written on every call, so a later call with a new id
+ * repoints the existing rect.
+ *
  * @param selection A d3 selection of SVG mask elements
+ * @param gradientId The id of the gradient to fill the mask with. Defaults to `lake-fade-gradient`.
  */
 export const mapLakeGradientMask = <D, P extends BaseType, PD>(
-  selection: Selection<SVGMaskElement, D, P, PD>
+  selection: Selection<SVGMaskElement, D, P, PD>,
+  gradientId: string = LAKE_FADE_GRADIENT_ID
 ): void => {
   selection.attr("maskContentUnits", "objectBoundingBox");
 
@@ -224,7 +235,7 @@ export const mapLakeGradientMask = <D, P extends BaseType, PD>(
     .selectAll<SVGRectElement, number>("rect")
     .data([0])
     .join("rect")
-    .attr("fill", `url(#${LAKE_FADE_GRADIENT_ID})`)
+    .attr("fill", `url(#${gradientId})`)
     .attr("width", 1)
     .attr("height", 1);
 };
