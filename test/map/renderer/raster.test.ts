@@ -199,6 +199,25 @@ describe("map/renderer/raster", () => {
       ).toThrow(/width is required/);
     });
 
+    // A fractional dimension is rounded up, so the raster covers the layers it aligns with rather
+    // than falling a hairline short of them. Every docs caller passes a fractional bounds value.
+    test("rounds a fractional width and height up to whole pixels", () => {
+      const node = layer()
+        .datum([cell(10, 10)])
+        .call(
+          mapRendererRaster()
+            .width(20.5)
+            .height(20.9)
+            .position((d: Cell) => [d.x, d.y])
+            .fill("#ff0000")
+        )
+        .node() as HTMLElement;
+      const canvas = canvasOf(node) as HTMLCanvasElement;
+      expect(canvas.getAttribute("width")).toBe("21");
+      expect(canvas.width).toBe(21);
+      expect(canvas.height).toBe(21);
+    });
+
     test("reuses the same canvas element across renders", () => {
       const target = layer("raster-reuse");
       const renderWith = () =>
@@ -406,26 +425,6 @@ describe("map/renderer/raster", () => {
       expect(canvasOf(node)).toBe(first);
       expect(pixelAt(node, 12, 12)).toEqual([0, 0, 255, 255]);
       expect(pixelAt(node, 4, 4)).toEqual([0, 0, 0, 0]);
-    });
-
-    // BUG: a fractional width is truncated to an integer bitmap, and every docs caller passes
-    // bounds.innerWidth, which is routinely fractional - so a raster layer is up to a pixel
-    // narrower and shorter than the SVG layers it has to line up with.
-    test("truncates a fractional width and height", () => {
-      const node = layer()
-        .datum([cell(10, 10)])
-        .call(
-          mapRendererRaster()
-            .width(20.5)
-            .height(20.9)
-            .position((d: Cell) => [d.x, d.y])
-            .fill("#ff0000")
-        )
-        .node() as HTMLElement;
-      const canvas = canvasOf(node) as HTMLCanvasElement;
-      expect(canvas.getAttribute("width")).toBe("20.5");
-      expect(canvas.width).toBe(20);
-      expect(canvas.height).toBe(20);
     });
 
     // NOTE: a change of dimensions resizes the existing canvas rather than replacing it, which is
