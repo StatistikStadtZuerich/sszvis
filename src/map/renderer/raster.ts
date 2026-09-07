@@ -3,6 +3,8 @@
  *
  * @module  sszvis/map/renderer/raster
  *
+ * @template T The type of the data values bound to the raster cells
+ *
  * Used for rendering a raster layer within a map (can also be used in other contexts, but the map usage
  * is the most straightforward). Requires a width and a height for the raster layer, a function which
  * returns raster positions, and one which returns fill colors.

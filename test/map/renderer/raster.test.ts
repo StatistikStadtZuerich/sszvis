@@ -300,7 +300,8 @@ describe("map/renderer/raster", () => {
     });
 
     // A null position throws instead, from indexing it - so the two ways a projection can fail to
-    // place a point fail differently.
+    // place a point fail differently. The message is asserted because the guard is a strict null
+    // check on purpose: loosening it to a nullish check would swallow the undefined case below.
     test("throws when position returns null", () => {
       expect(() =>
         layer()
@@ -312,7 +313,26 @@ describe("map/renderer/raster", () => {
               .position(() => null)
               .fill("#ff0000")
           )
-      ).toThrow(TypeError);
+      ).toThrow(new TypeError("Cannot read properties of null (reading '0')"));
+    });
+
+    // The other half of that distinction: an undefined position falls through the strict null check
+    // and is indexed, so the error comes from the engine and names undefined, not null. A nullish
+    // guard would report null for both and lose the difference.
+    test("throws the engine's own undefined error when position returns undefined", () => {
+      expect(() =>
+        layer()
+          .datum([cell(1, 1)])
+          .call(
+            mapRendererRaster()
+              .width(20)
+              .height(20)
+              // @ts-expect-error - a position accessor returning undefined is a caller error;
+              // pinned because it fails with a different error than the null case.
+              .position(() => undefined)
+              .fill("#ff0000")
+          )
+      ).toThrow(/Cannot read properties of undefined/);
     });
 
     // NOTE: a zero cellSide draws nothing at all, which is indistinguishable from data that fell
@@ -496,6 +516,41 @@ describe("map/renderer/raster", () => {
               .fill("#ff0000")
           )
       ).toThrow(TypeError);
+    });
+
+    // NOTE: the context is fetched by testing for a getContext method rather than with
+    // `instanceof HTMLCanvasElement`, which would reject a canvas created by another realm's
+    // document. An iframe's canvas is such a case, and the JavaScript drew onto it happily.
+    test("draws onto a canvas owned by an iframe document", async () => {
+      const frame = document.createElement("iframe");
+      container.appendChild(frame);
+      const frameDocument = frame.contentDocument;
+      if (!frameDocument) throw new Error("no iframe document");
+
+      const host = frameDocument.createElement("div");
+      frameDocument.body.appendChild(host);
+
+      const { select } = await import("d3");
+      const node = select(host)
+        .datum([cell(10, 10)])
+        .call(
+          mapRendererRaster()
+            .width(20)
+            .height(20)
+            .position((d: Cell) => [d.x, d.y])
+            .fill("#ff0000")
+            .cellSide(4)
+        )
+        .node() as HTMLElement;
+
+      const canvas = node.querySelector<HTMLCanvasElement>("canvas.sszvis-map__rasterimage");
+      expect(canvas).not.toBeNull();
+      // The proof this is cross-realm: it is a canvas, but not this realm's HTMLCanvasElement.
+      expect(canvas).not.toBeInstanceOf(HTMLCanvasElement);
+      const context = canvas?.getContext("2d");
+      if (!context) throw new Error("no canvas context");
+      const { data } = context.getImageData(10, 10, 1, 1);
+      expect([data[0], data[1], data[2], data[3]]).toEqual([255, 0, 0, 255]);
     });
 
     // NOTE: the canvas is appended to the layer rather than positioned within it, so it stacks
