@@ -470,9 +470,9 @@ describe("map utils", () => {
 
     // The declared string type describes what an author should write; the properties of a loaded
     // map file are unchecked runtime data, and a non-string would otherwise throw from split().
-    test("warns and falls back for a center that is not a string", () => {
+    test("warns and falls back for a center that is not a string, null included", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      for (const center of [42, {}, true]) {
+      for (const center of [42, {}, true, null]) {
         const feature = square("a");
         feature.properties = {};
         // Written through the index signature: `center` is declared a string, and the point of the
@@ -482,7 +482,7 @@ describe("map utils", () => {
         expect(lon).toBeCloseTo(0.5, 3);
         expect(lat).toBeCloseTo(0.5, 3);
       }
-      expect(warn).toHaveBeenCalledTimes(3);
+      expect(warn).toHaveBeenCalledTimes(4);
       warn.mockRestore();
     });
 
