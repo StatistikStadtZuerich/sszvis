@@ -56,13 +56,27 @@
 import { select } from "d3";
 import throttle from "nano-throttle";
 
-/** A listener registered through `viewport.on`. Resize listeners are called with no
- * arguments; `trigger` forwards whatever the caller passes, so any function is accepted. */
+/** A listener on a caller-triggered event. `trigger` forwards whatever the caller passes,
+ * and only the caller knows what that is, so any function is accepted here. Resize listeners
+ * are constrained separately - see the `"resize"` overload on `Viewport.on`. */
 export type ViewportListener = (...args: never[]) => void;
+
+/** A listener on the `"resize"` event. The window handler triggers `"resize"` with no
+ * arguments, so a listener that declares parameters would only ever see `undefined`. */
+export type ResizeListener = () => void;
 
 /** The event emitter returned by this module. There is exactly one, page-wide. */
 export interface Viewport {
-  on(this: Viewport, name: string, cb: ViewportListener): Viewport;
+  on(this: Viewport, name: "resize", cb: ResizeListener): Viewport;
+  // The conditional name is what keeps `"resize"` out of this overload. A plain
+  // `name: string` signature would also accept the literal `"resize"`, so overload
+  // resolution would fall through to here and re-approve the listeners the overload
+  // above exists to reject.
+  on<Name extends string>(
+    this: Viewport,
+    name: Name extends "resize" ? never : Name,
+    cb: ViewportListener
+  ): Viewport;
   off(this: Viewport, name: string, cb: ViewportListener): Viewport;
   trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport;
 }
