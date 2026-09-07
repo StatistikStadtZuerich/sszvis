@@ -48,10 +48,9 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3";
+import { type Selection, select } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
-import type { AnySelection } from "../types.js";
 
 /** Extra width given to the select element on top of the configured control width. */
 const SELECT_WIDTH_PADDING = 30;
@@ -145,7 +144,7 @@ export default function selectMenu<T extends string = string>(): SelectComponent
  * See test/control/select.test.ts.
  */
 function truncateToWidth(
-  metricsEl: AnySelection,
+  metricsEl: Selection<HTMLDivElement, string, HTMLDivElement, string>,
   maxWidth: number,
   originalString: string
 ): string {

@@ -3,11 +3,12 @@ import { afterEach, assert, beforeEach, describe, expect, test, vi } from "vites
 import move from "../../src/behavior/move.js";
 import { bounds } from "../../src/bounds.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
 
 describe("behavior/move", () => {
   let container: HTMLDivElement;
-  let svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
+  let svg: LayerSelection<SVGGElement, number>;
   let chartBounds: ReturnType<typeof bounds>;
   let xScale: d3.ScaleLinear<number, number>;
   let yScale: d3.ScaleLinear<number, number>;

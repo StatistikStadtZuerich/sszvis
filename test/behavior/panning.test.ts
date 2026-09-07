@@ -3,11 +3,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import panning from "../../src/behavior/panning.js";
 import { bounds } from "../../src/bounds.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
 
 describe("behavior/panning", () => {
   let container: HTMLDivElement;
-  let svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
+  let svg: LayerSelection<SVGGElement, number>;
   let chartBounds: ReturnType<typeof bounds>;
 
   beforeEach(() => {

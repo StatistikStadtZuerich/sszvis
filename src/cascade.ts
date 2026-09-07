@@ -91,7 +91,9 @@ export interface CascadeInstance<T> {
   objectBy<K extends string | number>(accessor: KeyAccessor<T, K>): CascadeInstance<T>;
   arrayBy<K extends string | number>(
     accessor: KeyAccessor<T, K>,
-    sorter?: KeySorter<K>
+    // The grouping stringifies its keys, so a sorter is always handed strings -
+    // whatever K the accessor returns.
+    sorter?: KeySorter<string>
   ): CascadeInstance<T>;
   sort(sorter: ValueSorter<T>): CascadeInstance<T>;
 }
@@ -184,14 +186,13 @@ export function cascade<T = unknown>(): CascadeInstance<T> {
 
   _cascade.arrayBy = <K extends string | number>(
     accessor: KeyAccessor<T, K>,
-    sorter?: KeySorter<K>
+    sorter?: KeySorter<string>
   ): CascadeInstance<T> => {
     keys.push({
       type: "arr",
       func: accessor,
     });
-    // See the note on `sorts`: K is stringified before the sorter is called.
-    if (sorter) sorts[keys.length - 1] = sorter as unknown as KeySorter<string>;
+    if (sorter) sorts[keys.length - 1] = sorter;
     return _cascade;
   };
 

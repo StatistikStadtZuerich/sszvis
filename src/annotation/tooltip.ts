@@ -38,10 +38,10 @@
  *
  */
 
-import { type NumberValue, select } from "d3";
+import { type BaseType, type NumberValue, type Selection, select } from "d3";
 import { type Component, type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
-import type { Accessor, AnySelection, NumberAccessor, StringAccessor } from "../types.js";
+import type { Accessor, LayerSelection, NumberAccessor, StringAccessor } from "../types.js";
 
 // Type definitions for tooltip annotation component
 type Datum<T = unknown> = T;
@@ -55,7 +55,8 @@ interface TooltipData<T = unknown> {
 }
 
 interface TooltipProps<T = unknown> {
-  renderInto: AnySelection;
+  /** The layer the tooltip is rendered into. Measured, so it must hold a real element. */
+  renderInto: LayerSelection<Element, unknown>;
   visible: (d: Datum<T>) => boolean;
   header?: ((d: Datum<T>) => string) | string;
   body?: ((d: Datum<T>) => string | string[][]) | string | string[][];
@@ -66,7 +67,9 @@ interface TooltipProps<T = unknown> {
 }
 
 interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponent<T>> {
-  renderInto(selection?: AnySelection): TooltipComponent<T>;
+  renderInto<G extends Element, D, P extends BaseType, PD>(
+    selection?: Selection<G, D, P, PD>
+  ): TooltipComponent<T>;
   visible(accessor?: Accessor<Datum<T>, boolean>): TooltipComponent<T>;
   header(accessor?: StringAccessor<Datum<T>>): TooltipComponent<T>;
   body(accessor?: StringAccessor<Datum<T>> | ((d: Datum<T>) => string[][])): TooltipComponent<T>;
@@ -98,9 +101,11 @@ export default function <T = unknown>(): TooltipComponent<T> {
     .prop("renderInto")
     .prop("visible", fn.functor)
     .visible(false)
-    .renderSelection((selection: AnySelection) => {
+    .renderSelection((selection: Selection<Element, Datum<T>, BaseType, unknown>) => {
       const props = selection.props<TooltipProps<T>>();
-      const intoBCR = props.renderInto.node().getBoundingClientRect();
+      const intoNode = props.renderInto.node();
+      if (!intoNode) throw new Error("[annotation/tooltip] renderInto is an empty selection");
+      const intoBCR = intoNode.getBoundingClientRect();
 
       const tooltipData: TooltipData<T>[] = [];
       selection.each(function (this: Element, d: Datum<T>) {
@@ -135,7 +140,7 @@ const tooltipRenderer = <T = unknown>(): Component => {
     .dy(1)
     .prop("opacity", fn.functor)
     .opacity(1)
-    .renderSelection((selection: AnySelection<Datum<T>>) => {
+    .renderSelection((selection: Selection<Element, Datum<T>, BaseType, unknown>) => {
       const tooltipData = selection.datum() as TooltipData<T>[];
       const props = selection.props<TooltipProps<T>>();
 

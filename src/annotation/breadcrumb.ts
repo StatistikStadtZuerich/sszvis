@@ -20,11 +20,11 @@
  * @return {sszvis.component}
  */
 
-import type { HierarchyNode } from "d3";
+import type { BaseType, HierarchyNode, Selection } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
-import type { AnySelection, StringAccessor } from "../types.js";
+import type { LayerSelection, StringAccessor } from "../types.js";
 
 // ============================================================================
 // Type Definitions
@@ -45,7 +45,8 @@ export interface BreadcrumbItem<T = unknown> {
  * Internal props structure for the breadcrumb component
  */
 interface BreadcrumbProps<T = unknown> {
-  renderInto: AnySelection;
+  /** The container the breadcrumbs are rendered into. */
+  renderInto: LayerSelection<Element, unknown>;
   items: BreadcrumbItem<T>[];
   label: (item: BreadcrumbItem<T>) => string;
   onClick: (item: BreadcrumbItem<T>, index: number) => void;
@@ -60,8 +61,10 @@ interface BreadcrumbProps<T = unknown> {
  */
 export interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbComponent<T>> {
   /** Set the container to render breadcrumbs into */
-  renderInto(): AnySelection;
-  renderInto(selection: AnySelection): BreadcrumbComponent<T>;
+  renderInto(): LayerSelection<Element, unknown>;
+  renderInto<G extends Element, D, P extends BaseType, PD>(
+    selection: Selection<G, D, P, PD>
+  ): BreadcrumbComponent<T>;
 
   /** Set the array of breadcrumb items */
   items(): BreadcrumbItem<T>[];
@@ -135,7 +138,7 @@ export default function <T = unknown>(): BreadcrumbComponent<T> {
     .separator(" \u203A ")
     .prop("width")
     .width(800)
-    .renderSelection((selection: AnySelection) => {
+    .renderSelection((selection: Selection<Element, unknown, BaseType, unknown>) => {
       const props = selection.props<BreadcrumbProps<T>>();
 
       // Prepend root item to the breadcrumb trail

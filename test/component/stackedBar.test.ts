@@ -196,7 +196,7 @@ describe("component/stackedBar", () => {
     test("should expose every prop the renderer reads", () => {
       for (const component of [stackedBarVertical(), stackedBarHorizontal()]) {
         for (const prop of ["xScale", "width", "yScale", "height", "fill", "stroke"]) {
-          expect(typeof (component as unknown as Record<string, unknown>)[prop]).toBe("function");
+          expect(typeof Reflect.get(component, prop)).toBe("function");
         }
       }
     });
@@ -612,9 +612,7 @@ describe("component/stackedBar", () => {
       // test/component/bar.test.ts), but the transition state is still attached and
       // interrupts any transition already running on those rects. Not configurable from
       // here.
-      expect(
-        (stackedBarVertical() as unknown as Record<string, unknown>).transition
-      ).toBeUndefined();
+      expect(Reflect.get(stackedBarVertical(), "transition")).toBeUndefined();
       const node = render(verticalOf());
       for (const r of rects(node)) {
         expect(Object.keys(r).some((key) => key.startsWith("__transition"))).toBe(true);
@@ -626,9 +624,8 @@ describe("component/stackedBar", () => {
       // forward, so the anchor is always at the top centre of a segment. A stacked chart
       // that wants its tooltip in the middle of a segment cannot ask for it.
       const component = stackedBarVertical();
-      const members = component as unknown as Record<string, unknown>;
-      expect(members.centerTooltip).toBeUndefined();
-      expect(members.tooltipAnchor).toBeUndefined();
+      expect(Reflect.get(component, "centerTooltip")).toBeUndefined();
+      expect(Reflect.get(component, "tooltipAnchor")).toBeUndefined();
     });
 
     test("does not expose the props its JSDoc documents for the data layout", () => {
@@ -642,7 +639,7 @@ describe("component/stackedBar", () => {
       // `orientation` was replaced by the two separate constructors.
       const component = stackedBarVertical();
       for (const prop of ["xAccessor", "yAccessor", "orientation"]) {
-        expect((component as unknown as Record<string, unknown>)[prop]).toBeUndefined();
+        expect(Reflect.get(component, prop)).toBeUndefined();
       }
     });
 

@@ -1,5 +1,4 @@
-import { selection } from "d3";
-import type { AnySelection } from "./types.js";
+import { type BaseType, type Selection, selection } from "d3";
 
 /**
  * d3.selection plugin to simplify creating idempotent groups that are not
@@ -15,13 +14,17 @@ import type { AnySelection } from "./types.js";
 declare module "d3" {
   // biome-ignore lint/correctness/noUnusedVariables: the type parameters must mirror d3's Selection signature for declaration merging to apply
   interface Selection<GElement, Datum, PElement, PDatum> {
-    selectGroup(key: string): AnySelection;
+    /** The group is a <g> whose parent is the element this selection holds. */
+    selectGroup(key: string): Selection<SVGGElement, Datum, GElement, Datum>;
   }
 }
 
-selection.prototype.selectGroup = function (key: string): AnySelection {
+selection.prototype.selectGroup = function <G extends BaseType, D, P extends BaseType, PD>(
+  this: Selection<G, D, P, PD>,
+  key: string
+) {
   return this.selectAll(`[data-d3-selectgroup="${key}"]`)
     .data((d: unknown) => [d])
-    .join("g")
+    .join<SVGGElement>("g")
     .attr("data-d3-selectgroup", key);
 };

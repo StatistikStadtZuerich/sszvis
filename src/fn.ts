@@ -37,21 +37,26 @@ export const isSelection = (val: unknown): val is AnySelection => val instanceof
  * accepts exactly `n` parameters. Any extraneous parameters will not be
  * passed to the supplied function.
  */
-export const arity = <F extends (...args: never[]) => unknown>(
+export const arity = <A extends unknown[], R>(
   n: number,
-  fn: F
-): ((...args: unknown[]) => ReturnType<F>) => {
+  fn: (...args: A) => R
+): ((...args: unknown[]) => R) => {
+  // arity exists to call `fn` with an argument list its own signature does not describe:
+  // extra arguments are dropped and missing ones padded with undefined. No type can say
+  // "callable with a different number of arguments than it declares", so the widened
+  // callable is asserted once here and every use below goes through it.
+  const callWithAnyArgs = fn as (...args: unknown[]) => R;
+
   // NOTE: the original hand-unrolled a switch over 0..10 and returned the function
   // untouched for anything else, so n > 10, negative and non-integer n do no limiting at
   // all. That passthrough is preserved here, quirk and all.
-  if (!Number.isInteger(n) || n < 0 || n > 10)
-    return fn as unknown as (...args: unknown[]) => ReturnType<F>;
+  if (!Number.isInteger(n) || n < 0 || n > 10) return callWithAnyArgs;
 
-  const limited = function (this: unknown, ...args: unknown[]): ReturnType<F> {
+  const limited = function (this: unknown, ...args: unknown[]): R {
     // Build exactly n slots, so the wrapped function sees arguments.length === n whether
     // the caller passed too many or too few.
     const slots = Array.from({ length: n }, (_, i) => args[i]);
-    return (fn as unknown as (...a: unknown[]) => ReturnType<F>).apply(this, slots);
+    return callWithAnyArgs.apply(this, slots);
   };
   // The unrolled version gave each case real named parameters, so .length was n.
   Object.defineProperty(limited, "length", { value: n, configurable: true });

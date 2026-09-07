@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import voronoi, { type VoronoiBounds } from "../../src/behavior/voronoi.js";
 import { bounds } from "../../src/bounds.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
 
 type TestDataPoint = {
@@ -31,7 +32,7 @@ const testData: TestDataPoint[] = [
 
 describe("behavior/voronoi", () => {
   let container: HTMLDivElement;
-  let svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
+  let svg: LayerSelection<SVGGElement, number>;
   let chartBounds: ReturnType<typeof bounds>;
 
   beforeEach(() => {

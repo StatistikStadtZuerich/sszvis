@@ -1,3 +1,4 @@
+import type { BaseType, Selection } from "d3";
 /**
  * Patterns module
  *
@@ -17,13 +18,13 @@
  *
  */
 
-import type { LinearGradientSelection, MaskSelection, PatternSelection } from "./types.js";
-
 /**
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements
  */
-export const heatTableMissingValuePattern = (selection: PatternSelection): void => {
+export const heatTableMissingValuePattern = <D, P extends BaseType, PD>(
+  selection: Selection<SVGPatternElement, D, P, PD>
+): void => {
   const rectFill = "#FAFAFA", // Light grey color directly
     crossStroke = "#A4A4A4",
     crossStrokeWidth = 0.035,
@@ -69,7 +70,9 @@ export const heatTableMissingValuePattern = (selection: PatternSelection): void 
  * The pattern for the map areas which are missing values
  * @param selection A d3 selection of SVG pattern elements
  */
-export const mapMissingValuePattern = (selection: PatternSelection): void => {
+export const mapMissingValuePattern = <D, P extends BaseType, PD>(
+  selection: Selection<SVGPatternElement, D, P, PD>
+): void => {
   const pWidth = 14,
     pHeight = 14,
     fillColor = "#FAFAFA",
@@ -128,7 +131,9 @@ export const mapMissingValuePattern = (selection: PatternSelection): void => {
  * The pattern for Lake Zurich in the map component
  * @param selection A d3 selection of SVG pattern elements
  */
-export const mapLakePattern = (selection: PatternSelection): void => {
+export const mapLakePattern = <D, P extends BaseType, PD>(
+  selection: Selection<SVGPatternElement, D, P, PD>
+): void => {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;
@@ -172,7 +177,9 @@ export const mapLakePattern = (selection: PatternSelection): void => {
  * The gradient used by the alpha fade pattern in the Lake Zurich shape
  * @param selection A d3 selection of SVG linear gradient elements
  */
-export const mapLakeFadeGradient = (selection: LinearGradientSelection): void => {
+export const mapLakeFadeGradient = <D, P extends BaseType, PD>(
+  selection: Selection<SVGLinearGradientElement, D, P, PD>
+): void => {
   selection
     .attr("x1", 0)
     .attr("y1", 0)
@@ -189,7 +196,9 @@ export const mapLakeFadeGradient = (selection: LinearGradientSelection): void =>
  * The gradient alpha fade mask for the Lake Zurich shape
  * @param selection A d3 selection of SVG mask elements
  */
-export const mapLakeGradientMask = (selection: MaskSelection): void => {
+export const mapLakeGradientMask = <D, P extends BaseType, PD>(
+  selection: Selection<SVGMaskElement, D, P, PD>
+): void => {
   selection.attr("maskContentUnits", "objectBoundingBox");
 
   selection
@@ -203,7 +212,9 @@ export const mapLakeGradientMask = (selection: MaskSelection): void => {
  * The pattern for the data area texture
  * @param selection A d3 selection of SVG pattern elements
  */
-export const dataAreaPattern = (selection: PatternSelection): void => {
+export const dataAreaPattern = <D, P extends BaseType, PD>(
+  selection: Selection<SVGPatternElement, D, P, PD>
+): void => {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;

@@ -28,7 +28,7 @@ import * as fn from "../fn.js";
 import { dataAreaPattern } from "../patterns.js";
 import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
 import { defaultTransition } from "../transition.js";
-import type { NumberAccessor, PatternSelection } from "../types.js";
+import type { NumberAccessor } from "../types.js";
 
 // Type definitions for confidence area component
 type Datum<T = unknown> = T;
@@ -79,11 +79,7 @@ export default function <T = unknown>(): ConfidenceAreaComponent<T> {
       const selection = select(this);
       const props = selection.props<ConfidenceAreaProps<T>>();
 
-      const patternSelection: PatternSelection = ensureDefsElement(
-        selection,
-        "pattern",
-        "data-area-pattern"
-      );
+      const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
       dataAreaPattern(patternSelection);
 
       // Layouts

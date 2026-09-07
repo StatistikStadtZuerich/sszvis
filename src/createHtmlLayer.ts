@@ -41,42 +41,50 @@
  * @returns {d3.selection}
  */
 
-import { select } from "d3";
+import { type BaseType, type Selection, select } from "d3";
 import type { BoundsResult } from "./bounds.js";
 import { bounds as mkBounds } from "./bounds.js";
-import * as fn from "./fn.js";
-import type { AnySelection, SelectableElement } from "./types.js";
+import type { LayerSelection, SelectableElement } from "./types.js";
 
 export interface LayerMetadata {
   key?: string;
 }
 
-export function createHtmlLayer(
-  selector: SelectableElement | HTMLElement,
+export function createHtmlLayer<
+  G extends BaseType = BaseType,
+  D = unknown,
+  P extends BaseType = BaseType,
+  PD = unknown,
+>(
+  selector: SelectableElement<G, D, P, PD> | HTMLElement,
   bounds?: BoundsResult,
   metadata: LayerMetadata = {}
-): AnySelection {
+): LayerSelection<HTMLDivElement, number> {
   const { padding } = bounds || mkBounds();
   const key = metadata.key || "default";
   const elementDataKey = `data-sszvis-html-${key}`;
 
-  const root: AnySelection = fn.isSelection(selector)
-    ? selector
-    : // d3's select() has one overload for a selector string and another for a node, and
-      // will not take the union of the two, so narrow rather than cast.
-      typeof selector === "string"
-      ? select(selector)
-      : select(selector);
-  root.classed("sszvis-outer-container", true);
+  // Each branch keeps its own concrete selection type and is rendered by the generic helper
+  // below, rather than being widened into a shared variable first: d3's select() has one
+  // overload for a selector string and another for a node, and Selection is invariant, so no
+  // single type holds all three.
+  const render = <G extends BaseType, D, P extends BaseType, PD>(
+    root: Selection<G, D, P, PD>
+  ): LayerSelection<HTMLDivElement, number> => {
+    root.classed("sszvis-outer-container", true);
+    return root
+      .selectAll<HTMLDivElement, number>(`[data-sszvis-html-layer][${elementDataKey}]`)
+      .data([0])
+      .join<HTMLDivElement>("div")
+      .classed("sszvis-html-layer", true)
+      .attr("data-sszvis-html-layer", "")
+      .attr(elementDataKey, "")
+      .style("position", "absolute")
+      .style("left", `${padding.left}px`)
+      .style("top", `${padding.top}px`);
+  };
 
-  return root
-    .selectAll(`[data-sszvis-html-layer][${elementDataKey}]`)
-    .data([0])
-    .join("div")
-    .classed("sszvis-html-layer", true)
-    .attr("data-sszvis-html-layer", "")
-    .attr(elementDataKey, "")
-    .style("position", "absolute")
-    .style("left", `${padding.left}px`)
-    .style("top", `${padding.top}px`);
+  if (typeof selector === "string") return render(select(selector));
+  if (selector instanceof Element) return render(select(selector));
+  return render(selector);
 }

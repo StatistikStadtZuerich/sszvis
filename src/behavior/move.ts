@@ -193,9 +193,12 @@ export default function <XDomain = number | string, YDomain = number | string>()
 
           win.on("mouseup.sszvis-behavior-move", stopDragging);
           doc.on("mouseout.sszvis-behavior-move", () => {
+            // toElement is a legacy, non-standard alias for relatedTarget and is not in
+            // the DOM types; read it reflectively rather than restating the event's type.
+            const legacyToElement = Reflect.get(args[0] as object, "toElement");
             const from =
               (args[0].relatedTarget as Element | null) ||
-              (args[0] as unknown as { toElement?: Element }).toElement;
+              (legacyToElement instanceof Element ? legacyToElement : null);
             if (!from || from.nodeName === "HTML") {
               stopDragging();
             }

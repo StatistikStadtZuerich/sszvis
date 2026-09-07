@@ -16,11 +16,11 @@
  * @returns {sszvis.component}
  */
 
-import { type NumberValue, select } from "d3";
+import { type BaseType, type NumberValue, type Selection, select } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";
-import type { AnySelection, NumberAccessor } from "../types.js";
+import type { NumberAccessor } from "../types.js";
 import tooltipAnchor from "./tooltipAnchor.js";
 
 // Type definitions for range flag component
@@ -71,7 +71,9 @@ export default function <T = unknown>(): RangeFlagComponent<T> {
 }
 
 function makeFlagDot<T>(classed: string, cx: (d: Datum<T>) => number, cy: (d: Datum<T>) => number) {
-  return (dot: AnySelection) => {
+  // The selection is the one being joined into circles, so its datum is the component's and
+  // its parent parameters are whatever the caller's selection had.
+  return <P extends BaseType, PD>(dot: Selection<BaseType, Datum<T>, P, PD>) => {
     dot
       .join("circle")
       .classed("sszvis-rangeFlag__mark", true)

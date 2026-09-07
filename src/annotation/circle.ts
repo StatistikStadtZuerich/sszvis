@@ -24,7 +24,7 @@ import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { dataAreaPattern } from "../patterns.js";
 import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
-import type { NumberAccessor, PatternSelection, StringAccessor } from "../types.js";
+import type { NumberAccessor, StringAccessor } from "../types.js";
 
 // Type definitions for circle annotation component
 type Datum<T = unknown> = T;
@@ -59,11 +59,7 @@ export default function <T = unknown>(): CircleComponent<T> {
       const selection = select(this);
       const props = selection.props<CircleProps<T>>();
 
-      const patternSelection: PatternSelection = ensureDefsElement(
-        selection,
-        "pattern",
-        "data-area-pattern"
-      );
+      const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
       dataAreaPattern(patternSelection);
 
       const dataArea = selection

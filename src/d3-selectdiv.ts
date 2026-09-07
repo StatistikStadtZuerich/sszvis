@@ -1,5 +1,4 @@
-import { selection } from "d3";
-import type { AnySelection } from "./types.js";
+import { type BaseType, type Selection, selection } from "d3";
 
 /**
  * d3.selection plugin to simplify creating idempotent divs that are not
@@ -15,14 +14,18 @@ import type { AnySelection } from "./types.js";
 declare module "d3" {
   // biome-ignore lint/correctness/noUnusedVariables: the type parameters must mirror d3's Selection signature for declaration merging to apply
   interface Selection<GElement, Datum, PElement, PDatum> {
-    selectDiv(key: string): AnySelection;
+    /** The div's parent is the element this selection holds. */
+    selectDiv(key: string): Selection<HTMLDivElement, Datum, GElement, Datum>;
   }
 }
 
-selection.prototype.selectDiv = function (key: string): AnySelection {
+selection.prototype.selectDiv = function <G extends BaseType, D, P extends BaseType, PD>(
+  this: Selection<G, D, P, PD>,
+  key: string
+) {
   return this.selectAll(`[data-d3-selectdiv="${key}"]`)
     .data((d: unknown) => [d])
-    .join("div")
+    .join<HTMLDivElement>("div")
     .attr("data-d3-selectdiv", key)
     .style("position", "absolute");
 };
