@@ -231,7 +231,9 @@ describe("component/pyramid", () => {
       expect(attrs(node, "right", "x")).toEqual(["0.5", "0.5"]);
     });
 
-    test("should update the geometry when the data changes", () => {
+    test("should update the geometry when the data changes", async () => {
+      // bar animates an update over 300ms, so the destination geometry is only on the DOM
+      // once the transition has run. Reading it synchronously would pin the start values.
       const component = pyramidOf();
       const g = group("update");
       g.datum(testData).call(component as never);
@@ -239,9 +241,11 @@ describe("component/pyramid", () => {
         component as never
       );
       const node = g.node() as SVGGElement;
-      expect(attrs(node, "left", "x")).toEqual(["-99.5"]);
-      expect(attrs(node, "left", "y")).toEqual(["36"]);
-      expect(attrs(node, "right", "width")).toEqual(["5"]);
+      await vi.waitFor(() => {
+        expect(attrs(node, "left", "x")).toEqual(["-99.5"]);
+        expect(attrs(node, "left", "y")).toEqual(["36"]);
+        expect(attrs(node, "right", "width")).toEqual(["5"]);
+      });
     });
   });
 
@@ -538,6 +542,36 @@ describe("component/pyramid", () => {
         expect(await lineD(node, "rightReference")).toBe("M10.5,5ZM30.5,29Z");
       });
     });
+
+    test("should animate the bars and the reference lines in step", async () => {
+      // Both the bars and the outline now transition, so on the tick after an update both
+      // still describe the old geometry and both ease to the new one together. Before bar's
+      // transition was made real the bars snapped to their destination on this tick while
+      // the outline eased, and the reference line visibly detached from them mid-animation.
+      const component = pyramidOf().rightRefAccessor((d: Population) => d.right);
+      const g = group("stepped-transitions");
+      g.datum(testData).call(component as never);
+      const node = g.node() as SVGGElement;
+      expect(await lineD(node, "rightReference")).toBe("M30.5,5L10.5,17");
+
+      g.datum({
+        left,
+        right: [
+          { age: 0, value: 100 },
+          { age: 1, value: 90 },
+        ],
+      }).call(component as never);
+      // On this tick the bars have not jumped ahead...
+      expect(attrs(node, "right", "width")).toEqual(["30", "10"]);
+      // ...and the line still describes the same old geometry.
+      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M30.5,5L10.5,17");
+
+      // Once the transition has run, both have arrived.
+      await vi.waitFor(() => {
+        expect(attrs(node, "right", "width")).toEqual(["100", "90"]);
+        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M100.5,5L90.5,17");
+      });
+    });
   });
 
   describe("required props", () => {
@@ -652,31 +686,6 @@ describe("component/pyramid", () => {
       expect(path.getAttribute("fill")).toBeNull();
       expect(path.getAttribute("stroke")).toBeNull();
       expect(path.getAttribute("stroke-width")).toBeNull();
-    });
-
-    test("the bars jump while the reference lines animate", async () => {
-      // NOTE: bar's transition property is inert (see test/component/bar.test.ts), but the
-      // reference line's transition is real. On a state change the outline eases into
-      // place over 300ms while the bars underneath it snap immediately, so the reference
-      // line visibly detaches from the bars mid-transition. The fix belongs to bar, which
-      // owns the inert transition; this component would need no change of its own.
-      const component = pyramidOf().rightRefAccessor((d: Population) => d.right);
-      const g = group("mixed-transitions");
-      g.datum(testData).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(await lineD(node, "rightReference")).toBe("M30.5,5L10.5,17");
-
-      g.datum({
-        left,
-        right: [
-          { age: 0, value: 100 },
-          { age: 1, value: 90 },
-        ],
-      }).call(component as never);
-      // The bar is already at its new width on this tick...
-      expect(attrs(node, "right", "width")).toEqual(["100", "90"]);
-      // ...while the line still describes the old one.
-      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M30.5,5L10.5,17");
     });
 
     test("puts a negative-width left bar on the wrong side of the spine", () => {
