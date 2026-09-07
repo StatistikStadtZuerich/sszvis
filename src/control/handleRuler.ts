@@ -34,10 +34,6 @@
  * Note: the rule stops 4px above `bottom`, but the label's vertical nudge is decided against the
  * unadjusted `bottom`. A label falling in that 4px band is offset as if it were still on the ruler.
  *
- * Note: a label whose y is above `top` is nudged down by `2 * y` rather than by a constant, so it
- * lands well below its dot - by up to twice the distance to the top of the chart. The same
- * expression appears in sszvis.annotation.ruler.
- *
  * Note: `top` and `bottom` have no defaults; leaving them out writes NaN into the geometry and the
  * ruler silently disappears.
  *
@@ -63,6 +59,8 @@ const HANDLE_MARK_BOTTOM = 0.85;
 const DOT_RADIUS = 3.5;
 /** Horizontal distance between a dot and its label. */
 const LABEL_OFFSET = 10;
+/** Vertical nudge that drops a label's baseline clear of its dot. */
+const LABEL_BASELINE_NUDGE = 5;
 
 /**
  * A half-pixel position accessor as d3 invokes it: the datum plus d3's remaining
@@ -201,7 +199,10 @@ export default function handleRuler<T = unknown>(): HandleRulerComponent<T> {
           const y = crispY(d);
 
           const dx = props.flip(d) ? -LABEL_OFFSET : LABEL_OFFSET;
-          const dy = y < props.top ? 2 * y : y > props.bottom ? 0 : 5;
+          // A constant nudge, whether the dot sits on the ruler or above its top; only a
+          // dot below `bottom` needs none. The same expression lives in
+          // src/annotation/ruler.ts and the two must not drift.
+          const dy = y > props.bottom ? 0 : LABEL_BASELINE_NUDGE;
 
           return translateString(x + dx, y + dy);
         })
