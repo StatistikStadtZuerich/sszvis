@@ -694,24 +694,45 @@ describe("maps/choropleth", () => {
     });
   });
 
-  describe("known quirks", () => {
-    // BUG: width and height have no defaults and are not validated. fitSize([undefined, undefined])
-    // produces a projection whose scale is NaN, so every area is drawn with a path of NaN
-    // coordinates - which the browser drops, leaving a blank map - rather than the component
-    // reporting that it was not given a size.
-    test("draws NaN paths when width and height are left out", () => {
+  describe("required properties", () => {
+    // A map with no size can never render: the projection is fitted to undefined, its scale is
+    // NaN, and every area is drawn with NaN coordinates the browser drops. Reported instead.
+    test("throws when width and height are left out, naming the missing property", () => {
       const collection = geoJson();
       const map = choropleth().features(collection).borders(mesh()).withLake(false);
-      const node = layer().call(map).node() as SVGGElement;
-      expect(areas(node)).toHaveLength(3);
-      for (const d of attrs(node, "d")) expect(d).toContain("NaN");
+      const target = layer();
+      expect(() => target.call(map)).toThrow(
+        "[maps/choropleth] width is required, and must be a finite, non-negative number"
+      );
+      expect(() => target.call(map.width(100))).toThrow(/height is required/);
     });
 
-    // features is required and unguarded: prepareMergedGeoData reads geoJson.features.
-    test("throws when features are missing", () => {
-      expect(() => layer().call(choropleth().width(100).height(100))).toThrow();
+    test("throws for a non-finite or negative size", () => {
+      const map = choropleth().features(geoJson()).borders(mesh()).withLake(false);
+      expect(() => layer().call(map.width(Number.NaN).height(100))).toThrow(/width is required/);
+      expect(() => layer().call(map.width(100).height(-1))).toThrow(/height is required/);
     });
 
+    // Nothing is drawn before the size is validated, so a misconfigured map leaves an empty layer
+    // rather than a half-rendered one.
+    test("draws nothing at all when the size is missing", () => {
+      const target = layer();
+      expect(() =>
+        target.call(choropleth().features(geoJson()).borders(mesh()).withLake(false))
+      ).toThrow();
+      expect(areas(target.node() as SVGGElement)).toHaveLength(0);
+    });
+
+    // features used to fail as a bare TypeError from prepareMergedGeoData, naming neither the
+    // component nor the property; it is reported in the same shape as the size now.
+    test("throws when features are missing, naming the missing property", () => {
+      expect(() => layer().call(choropleth().width(100).height(100))).toThrow(
+        "[maps/choropleth] features is required, and must be a GeoJSON feature collection"
+      );
+    });
+  });
+
+  describe("known quirks", () => {
     // NOTE: withLake defaults to true, so a map with no lake data still gets the lake renderer,
     // which emits the pattern definition and two empty paths. Every non-Zurich map - switzerland
     // included - has to remember .withLake(false) or it carries them.
@@ -748,8 +769,6 @@ describe("maps/choropleth", () => {
     });
 
     // Pins the component's full property surface, so the JSDoc header can be checked against it.
-    // features is the one property whose absence throws; width and height have no default either,
-    // but degrade to NaN paths rather than reporting anything.
     test("exposes every documented property", () => {
       const map = choropleth();
       for (const prop of [

@@ -13,12 +13,11 @@
  * datum[keyName] is a valid map ID which is matched with the available map entities.
  *
  * @property {Number} width                           The width of the map. Used to create the map projection function.
- *                                                    No default and unvalidated: leaving it out fits the projection to
- *                                                    undefined, so every area is drawn with NaN coordinates.
- * @property {Number} height                          The height of the map. Used to create the map projection function.
- *                                                    No default, and fails the same way as width.
+ *                                                    Required: no default, and a missing or non-finite width throws
+ *                                                    before anything is drawn.
+ * @property {Number} height                          The height of the map. Same as width, and validated the same way.
  * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
- *                                                    Required and unguarded: its absence throws, as borders' does.
+ *                                                    Required: its absence throws, as width's and borders' do.
  * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default, and
  *                                                    required in practice: the mesh renderer throws a TypeError naming
  *                                                    its geoJson property if it is left out.
@@ -68,11 +67,11 @@
  * same size are therefore projected independently. The cost is that the bounds calculation is
  * redone on every render; sharing a key would trade that for the wrong fit.
  *
- * Note: features and borders are the two properties whose absence throws - features because
- * prepareMergedGeoData reads geoJson.features, borders because the mesh renderer now validates its
- * own geoJson. width and height have no defaults either, but a missing size degrades silently:
- * fitSize gets undefined, the scale is NaN, and every area carries a path of NaN coordinates that
- * the browser drops, leaving a blank map instead of an error.
+ * Note: width, height, features and borders are all required and all now fail loudly. This
+ * component validates the first three itself, before it renders anything, and the mesh renderer
+ * validates its own geoJson for the fourth. A missing size used to degrade silently - fitSize got
+ * undefined, the scale was NaN, and every area carried a path of NaN coordinates that the browser
+ * dropped, leaving a blank map with nothing in the console.
  *
  * Note: the lake and the anchored shape are each drawn into a group of this component's own, so
  * that turning withLake off, or clearing anchoredShape, removes what the previous render drew
@@ -287,6 +286,36 @@ function entityDatum<T extends object>(bound: unknown): T | undefined {
 }
 
 /**
+ * Reads a required dimension, reporting a missing or nonsensical one rather than fitting the
+ * projection to undefined - which gives it a NaN scale and draws every entity with a path of NaN
+ * coordinates that the browser silently drops, leaving a blank map and nothing in the console.
+ * Thrown before anything is rendered, so a misconfigured map draws nothing at all. The message
+ * follows the raster renderer's.
+ */
+function dimension(value: number | undefined, name: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new Error(
+      `[maps/choropleth] ${name} is required, and must be a finite, non-negative number`
+    );
+  }
+  return value;
+}
+
+/**
+ * Reads the required feature collection. Without it prepareMergedGeoData already threw, on
+ * geoJson.features - a bare TypeError naming neither the component nor the property - so this only
+ * changes what the failure says, and says it in the same shape as the missing-dimension one.
+ */
+function requireFeatures(value: ExtendedFeatureCollection | undefined): ExtendedFeatureCollection {
+  if (value === undefined || value === null || !Array.isArray(value.features)) {
+    throw new Error(
+      "[maps/choropleth] features is required, and must be a GeoJSON feature collection"
+    );
+  }
+  return value;
+}
+
+/**
  * The selectGroup keys the two removable layers are drawn under. A group carries everything its
  * renderer produced - the lake's two paths and its pattern, gradient and mask definitions among
  * them - so removing it removes the layer whole.
@@ -345,12 +374,18 @@ export default function <T extends object = object>(): ChoroplethComponent<T> {
       // No cache key: the bounds cache is keyed on width, height and the key alone, so any key
       // this component could invent would be shared by every choropleth of that size, whatever it
       // is a map of. Without one the projection is fitted to the features actually given.
-      const mapPath = swissMapPath(props.width, props.height, props.features);
+      // Validated before anything is drawn: a map with no size, or none to draw, can never render
+      // correctly, and both used to fail silently or namelessly.
+      const width = dimension(props.width, "width");
+      const height = dimension(props.height, "height");
+      const features = requireFeatures(props.features);
 
-      const mergedData = prepareMergedGeoData(data, props.features, props.keyName);
+      const mapPath = swissMapPath(width, height, features);
+
+      const mergedData = prepareMergedGeoData(data, features, props.keyName);
 
       // Base shape
-      baseRenderer.geoJson(props.features).mergedData(mergedData).mapPath(mapPath);
+      baseRenderer.geoJson(features).mergedData(mergedData).mapPath(mapPath);
 
       // Border mesh
       meshRenderer.geoJson(props.borders).mapPath(mapPath);
@@ -363,7 +398,7 @@ export default function <T extends object = object>(): ChoroplethComponent<T> {
         .fadeOut(props.lakeFadeOut);
 
       // Highlight mesh
-      highlightRenderer.geoJson(props.features).keyName(props.keyName).mapPath(mapPath);
+      highlightRenderer.geoJson(features).keyName(props.keyName).mapPath(mapPath);
 
       // Rendering
 
