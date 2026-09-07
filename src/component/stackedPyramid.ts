@@ -209,14 +209,12 @@
  * removing the accessor itself empties the group. The mirror property writes transform="" on the
  * right side rather than omitting the attribute. Shared with pyramid.
  *
- * Note: the stack join is selectAll("[data-sszvis-stack]"), a descendant selector rather than a
- * child selector, so a stack group nested at any depth below a side's group is captured alongside
- * the direct children. The exit selection then removes a legitimate series group, and the reorder
- * that follows has to sort a selection in which one element is an ancestor of another, so d3 throws
- * a HierarchyRequestError and aborts the whole render rather than just that side. A child selector
- * would make it unreachable. Nothing nests stack groups today, so reaching it needs a caller to
- * have put something of its own inside one. stackedBar's version of the same unscoped selector only
- * re-binds.
+ * Note: the stack join is a child selector, ":scope > [data-sszvis-stack]", so only the groups the
+ * component owns take part in it and a caller may render content of its own - including further
+ * stack groups - inside a series group without the join adopting it. The bars inside each series
+ * group are still joined with an unscoped selectAll(".sszvis-bar") by bar itself, so a planted
+ * rect.sszvis-bar descendant is captured there. stackedBar's copy of the same descendant selector
+ * on the stack groups is unfixed.
  *
  * Note: neither join uses a key function, so on a re-render the stack groups and the rects inside
  * them are matched by index rather than by series. When a series is dropped from anywhere but the
@@ -572,7 +570,10 @@ function stackComponent<T, S extends string | number>(): StackComponent<T, S> {
       const props = selection.props<StackProps<T, S>>();
 
       const stack = selection
-        .selectAll<SVGGElement, StackedPyramidSeries<T, S>>("[data-sszvis-stack]")
+        // A child selector: a stack group nested inside another one belongs to whoever put
+        // it there, and binding it here would remove a real series group and then throw out
+        // of the join's reorder.
+        .selectAll<SVGGElement, StackedPyramidSeries<T, S>>(":scope > [data-sszvis-stack]")
         .data(datum)
         .join("g")
         .attr("data-sszvis-stack", "");
