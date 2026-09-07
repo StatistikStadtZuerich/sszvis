@@ -522,7 +522,7 @@ describe("component/stackedArea", () => {
             .y1((d: Point) => d.y1),
           oneLayer
         )
-      ).toThrow("sszvis.stackedArea - the x property is required, and was not set.");
+      ).toThrow("[stackedArea] the x property is required");
     });
 
     test("should throw when y0 is not set", () => {
@@ -534,7 +534,7 @@ describe("component/stackedArea", () => {
             .y1((d: Point) => d.y1),
           oneLayer
         )
-      ).toThrow("sszvis.stackedArea - the y0 property is required, and was not set.");
+      ).toThrow("[stackedArea] the y0 property is required");
     });
 
     test("should throw when y1 is not set", () => {
@@ -549,7 +549,7 @@ describe("component/stackedArea", () => {
             .y0((d: Point) => d.y0),
           oneLayer
         )
-      ).toThrow("sszvis.stackedArea - the y1 property is required, and was not set.");
+      ).toThrow("[stackedArea] the y1 property is required");
     });
 
     test("should append nothing when a required property is missing", () => {
