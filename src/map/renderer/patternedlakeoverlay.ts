@@ -18,8 +18,8 @@
  *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
  *                                      Never validated, like lakeFeature.
  * @property {String, Function} lakePathColor  The stroke colour of those borders. No default: the stylesheet's grey
- *                                      dotted stroke stands unless this is set, and it is applied only when truthy; see
- *                                      the note below. Not wrapped in fn.functor.
+ *                                      dotted stroke stands unless this is set. A falsy colour - "" - clears the
+ *                                      inline stroke again. Not wrapped in fn.functor.
  * @property {Boolean} fadeOut          Whether to fade the lake out towards the bottom of the shape with a gradient mask.
  *                                      Default true - but choropleth defaults its own lakeFadeOut to false, so the
  *                                      default branch is the one no in-repo chart takes. Turning it off removes an
@@ -59,10 +59,9 @@
  * shape - though where a dropped mesh style leaves the borders invisible, a dropped style here
  * falls back to the stylesheet's grey dotted stroke, so the mistake is even quieter.
  *
- * Note: the colour is applied only when the property is truthy, because it has no default and the
- * guard is what leaves the stylesheet's stroke alone. So a falsy colour is silently ignored rather
- * than reported, and there is no way to clear a colour already set: re-rendering with "" leaves the
- * previous stroke in place, since the guard only skips writing a new one.
+ * Note: the colour is written on every render, and only an unset property leaves the stylesheet's
+ * stroke alone. A falsy colour - "", or an accessor returning undefined - clears the inline stroke
+ * and hands the border back to the stylesheet.
  *
  * Note: the component sets no pointer-events on either path and no fill on the border path, so
  * both come from sszvis.css. Rendered without that stylesheet the border path is a filled black
@@ -117,7 +116,7 @@ type LakeOverlayProps = {
   mapPath: LakePath;
   lakeFeature: GeoPermissibleObjects;
   lakeBounds: GeoPermissibleObjects;
-  /** Undefined until set: this prop has no default, and is applied only when truthy. */
+  /** Undefined until set: this prop has no default, and an unset colour writes no inline style. */
   lakePathColor?: LakePathColor;
   fadeOut: boolean;
 };
@@ -214,7 +213,11 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         .classed("sszvis-map__lakepath", true)
         .attr("d", props.mapPath);
 
-      if (props.lakePathColor) {
+      // An unset colour writes nothing, so the stylesheet's stroke stands; any value that is set -
+      // including a falsy one - is written, so it can clear a colour an earlier render left behind.
+      if (props.lakePathColor === undefined) {
+        lakePath.style("stroke", null);
+      } else {
         lakePath.style("stroke", fn.valueFn(props.lakePathColor));
       }
     });
