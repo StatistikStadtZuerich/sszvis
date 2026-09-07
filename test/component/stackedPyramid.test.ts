@@ -105,6 +105,12 @@ describe("component/stackedPyramid", () => {
   const lines = (node: Element, key: string) => [
     ...(sideGroup(node, key)?.querySelectorAll("path.sszvis-path") ?? []),
   ];
+  /** Two reference points, one per row of the fixture above. */
+  const refPoints = [
+    { row: 0, value: 0 },
+    { row: 1, value: 1 },
+  ];
+
   /** The reference line's `d` is applied through a transition, so it lands a frame later. */
   const lineD = (node: Element, key: string) =>
     vi.waitFor(() => {
@@ -310,7 +316,7 @@ describe("component/stackedPyramid", () => {
           { side: "f", row: 0, series: "a", value: 2 },
           { side: "f", row: 1, series: "a", value: 3 },
         ]);
-        expect(sorted[0][0].map((d) => d.data.row)).toEqual([0, 1, 2]);
+        expect(sorted[0][0].map((d) => d.data?.row)).toEqual([0, 1, 2]);
       });
 
       test("orders the sides the same way, so which side is index 0 depends on the keys", () => {
@@ -725,16 +731,17 @@ describe("component/stackedPyramid", () => {
 
   describe("reference lines", () => {
     /**
-     * A reference series has to be an array of values that barWidth accepts, because the
-     * line generator hands each element to barWidth for x and to barPosition for y. With
-     * the identity barWidth and the row-index barPosition used here, that means row
-     * indices, which give a y that lines up with the bars and an x that is meaningless. No
-     * shape satisfies both - see the quirk below.
+     * A reference series is an array of {row, value} points: barWidth maps the value to x and
+     * barPosition the row to y, the same way round as in the bars, so one series can be
+     * correct in both directions. With the identity barWidth and the 12px-per-row
+     * barPosition used here, {row: 1, value: 1} lands at (1, 12).
      */
+    const refs = (...rows: number[]) => rows.map((row) => ({ row, value: row }));
+
     const withRefs = () =>
       pyramidOf()
-        .leftRefAccessor(() => [0, 1])
-        .rightRefAccessor(() => [0, 1]);
+        .leftRefAccessor(() => refs(0, 1))
+        .rightRefAccessor(() => refs(0, 1));
 
     test("should render no path when no reference accessor is set", () => {
       const node = render(pyramidOf());
@@ -750,7 +757,7 @@ describe("component/stackedPyramid", () => {
     });
 
     test("should render only the configured side", () => {
-      const node = render(pyramidOf().rightRefAccessor(() => [0, 1]));
+      const node = render(pyramidOf().rightRefAccessor(() => refs(0, 1)));
       expect(lines(node, "leftReference").length).toBe(0);
       expect(lines(node, "rightReference").length).toBe(1);
     });
@@ -761,10 +768,34 @@ describe("component/stackedPyramid", () => {
       expect(lines(node, "rightReference")[0].getAttribute("transform")).toBe("");
     });
 
-    test("should draw the path from barWidth and barPosition", async () => {
+    test("should draw x from a point's value and y from its row", async () => {
       const node = render(withRefs());
-      // x = barWidth(d), y = barPosition(d), both called with the reference element itself
+      // x = barWidth(d.value), y = barPosition(d.row)
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
+    });
+
+    test("should trace the bars a reference series describes", async () => {
+      // The outline of the right side's own outer edges: the stacked totals are 70 on row 0
+      // and 3 on row 1, at y = 0 and y = 12. The remaining half-pixel is the spine padding
+      // (see the note below) and the half-bar-height offset is filed separately.
+      const node = render(
+        pyramidOf().rightRefAccessor(() => [
+          { row: 0, value: 70 },
+          { row: 1, value: 3 },
+        ])
+      );
+      expect(await lineD(node, "rightReference")).toBe("M70,0L3,12");
+      const outerEdges = bars(node, "rightStack")
+        .slice(2)
+        .map((b) => Number(b.getAttribute("x")) + Number(b.getAttribute("width")));
+      expect(outerEdges).toEqual([70.5, 3.5]);
+    });
+
+    test("should accept one of the layout's own series as a reference series", async () => {
+      // A slice already carries a `row` and a `value`, so a series needs no mapping.
+      const node = render(pyramidOf().rightRefAccessor((d: Layout) => d[1][1]));
+      // Series "b" of the right side: values 40 on row 0 and 2 on row 1.
+      expect(await lineD(node, "rightReference")).toBe("M40,0L2,12");
     });
 
     test("should inline the line's appearance rather than relying on a stylesheet", () => {
@@ -789,14 +820,14 @@ describe("component/stackedPyramid", () => {
     });
 
     test("should animate the reference line when the data changes", async () => {
-      let ref = [0, 1];
+      let ref = refs(0, 1);
       const component = pyramidOf().rightRefAccessor(() => ref);
       const g = group("ref-animate");
       g.datum(layout()).call(component as never);
       const node = g.node() as SVGGElement;
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
 
-      ref = [2, 3];
+      ref = refs(2, 3);
       g.datum(layout()).call(component as never);
       // Unlike the bars, the line really does transition: the old path is still in place on
       // the tick the re-render happens.
@@ -1009,39 +1040,18 @@ describe("component/stackedPyramid", () => {
       expect(fillArgs.every((args) => args.length === 1)).toBe(true);
     });
 
-    test("the reference line reads barWidth and barPosition off the same element", async () => {
-      // BUG: the line generator is d3.line().x(props.barWidth).y(props.barPosition), so both
-      // props are called with the same reference element. In the bars, though, barWidth is
-      // called with a stacked value and barPosition with a row index, so a reference element
-      // has to be both at once. There is no shape that satisfies both for real data, and
-      // the only stackedPyramid example (docs/population-pyramid/pyramid-stacked.js) sets
-      // neither reference accessor - the reference-line example uses the plain pyramid
-      // instead, where both props read the datum and the problem does not arise.
-      // current: the reference line can only be drawn in a coordinate system the bars do not
-      // use. expected: dedicated accessors for the reference series.
-      const node = render(
-        pyramidOf().rightRefAccessor(() => [10, 20]),
-        layout()
-      );
-      // These are stacked values, so x is right...
-      expect(await lineD(node, "rightReference")).toBe("M10,120L20,240");
-      // ...but barPosition read them as row indices, so y is 10 and 20 rows down, far below
-      // the two rows the chart actually has at y = 0 and y = 12.
-      expect(attrs(node, "rightStack", "y")).toEqual(["0", "12", "0", "12"]);
-    });
-
     test("the reference line ignores the spine padding", async () => {
       // NOTE: the bars are offset outwards by SPINE_PADDING (0.5) but the line is drawn
       // straight from barWidth, so a reference value equal to a bar's outer edge lands half
       // a pixel inside it. The line is the side that agrees with the axis scale - the
       // padding is a deliberate cosmetic gap at the spine. pyramid makes the identical
       // choice.
-      const node = render(pyramidOf().rightRefAccessor(() => [70]));
+      const node = render(pyramidOf().rightRefAccessor(() => [{ row: 0, value: 70 }]));
       const outerEdge =
         Number(attrs(node, "rightStack", "x")[2]) + Number(attrs(node, "rightStack", "width")[2]);
       expect(outerEdge).toBe(70.5);
       // d3.line closes a single-point path with Z
-      expect(await lineD(node, "rightReference")).toBe("M70,840Z");
+      expect(await lineD(node, "rightReference")).toBe("M70,0Z");
     });
 
     test("has no d attribute on the tick the reference line is first rendered", async () => {
@@ -1049,7 +1059,12 @@ describe("component/stackedPyramid", () => {
       // exists with no geometry until the first animation frame. Anything that measures the
       // chart synchronously after render - getBBox, a snapshot, an export to PNG - sees an
       // empty path. Shared with pyramid.
-      const node = render(pyramidOf().rightRefAccessor(() => [0, 1]));
+      const node = render(
+        pyramidOf().rightRefAccessor(() => [
+          { row: 0, value: 0 },
+          { row: 1, value: 1 },
+        ])
+      );
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
     });
@@ -1086,7 +1101,10 @@ describe("component/stackedPyramid", () => {
       // so the join always has exactly one element and the exit selection can never fire.
       // When the reference series goes away the stale path stays in the DOM; only `d` is
       // dropped. The same wrapping caps each side at one reference line. Shared with pyramid.
-      let ref: number[] = [0, 1];
+      let ref = [
+        { row: 0, value: 0 },
+        { row: 1, value: 1 },
+      ];
       const component = pyramidOf().rightRefAccessor(() => ref);
       const g = group("ref-removal");
       g.datum(layout()).call(component as never);
@@ -1105,7 +1123,12 @@ describe("component/stackedPyramid", () => {
       // path string; the browser renders the valid prefix and drops the rest of the line.
       // current: d="MNaN,NaNL1,12". expected: the point is skipped, or coerced to 0.
       // Shared with pyramid.
-      const node = render(pyramidOf().rightRefAccessor(() => [Number.NaN, 1]));
+      const node = render(
+        pyramidOf().rightRefAccessor(() => [
+          { row: Number.NaN, value: Number.NaN },
+          { row: 1, value: 1 },
+        ])
+      );
       expect(await lineD(node, "rightReference")).toBe("MNaN,NaNL1,12");
     });
 
@@ -1115,7 +1138,12 @@ describe("component/stackedPyramid", () => {
       // the values it describes, and the error grows with barHeight. Shared with pyramid.
       // current: the line passes through the bars' top edges. expected: through their
       // mid-height, or as a step path along their outer edges.
-      const node = render(pyramidOf().rightRefAccessor(() => [0, 1]));
+      const node = render(
+        pyramidOf().rightRefAccessor(() => [
+          { row: 0, value: 0 },
+          { row: 1, value: 1 },
+        ])
+      );
       expect(attrs(node, "rightStack", "y")).toEqual(["0", "12", "0", "12"]);
       expect(attrs(node, "rightStack", "height")).toEqual(["10", "10", "10", "10"]);
       // Bar mid-lines are at y = 5 and y = 17, but the line is drawn at 0 and 12.
@@ -1127,14 +1155,20 @@ describe("component/stackedPyramid", () => {
       // reference line's transition is real. On a state change the outline eases into place
       // over 300ms while the bars underneath it snap immediately, so the line visibly
       // detaches from the bars for the length of the transition. Shared with pyramid.
-      let ref = [0, 1];
+      let ref = [
+        { row: 0, value: 0 },
+        { row: 1, value: 1 },
+      ];
       const component = pyramidOf().rightRefAccessor(() => ref);
       const g = group("mixed-transitions");
       g.datum(layout()).call(component as never);
       const node = g.node() as SVGGElement;
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
 
-      ref = [2, 3];
+      ref = [
+        { row: 2, value: 2 },
+        { row: 3, value: 3 },
+      ];
       g.datum(
         layout([
           { side: "f", row: 0, series: "a", value: 10 },
@@ -1174,29 +1208,37 @@ describe("component/stackedPyramid", () => {
       planted.setAttribute("stroke", "#f00");
       sideGroup(node, "rightReference")?.append(planted);
 
-      g.datum(layout()).call(pyramidOf().rightRefAccessor(() => [0, 1]) as never);
+      g.datum(layout()).call(
+        pyramidOf().rightRefAccessor(() => [
+          { row: 0, value: 0 },
+          { row: 1, value: 1 },
+        ]) as never
+      );
       expect(lines(node, "rightReference")).toEqual([planted]);
       expect(planted.getAttribute("stroke")).toBe("#aaa");
     });
 
-    test("forwards the index to barWidth on the reference line but not on the bars", async () => {
-      // NOTE: d3.line calls its x accessor as (d, i, data), so barWidth does receive the
-      // index there - the one place in this component where it does. The same accessor
-      // therefore behaves differently on the line and on the bars, which drop the index and
-      // collapse to 0. Two coordinate systems and now two calling conventions for one prop.
+    test("drops d3's index on the reference line too", async () => {
+      // NOTE: d3.line calls its x accessor as (d, i, data), but the line reads the point's
+      // value out of it and calls barWidth with that alone, so the property has one calling
+      // convention everywhere - and an index-aware accessor sees undefined and yields NaN on
+      // the line just as it does on the bars.
       const node = render(
         pyramidOf()
           .barWidth((v: number, i: number) => v + i)
-          .rightRefAccessor(() => [10, 20])
+          .rightRefAccessor(() => [
+            { row: 0, value: 10 },
+            { row: 1, value: 20 },
+          ])
       );
-      expect(await lineD(node, "rightReference")).toBe("M10,120L21,240");
+      expect(await lineD(node, "rightReference")).toBe("MNaN,0LNaN,12");
       expect(attrs(node, "rightStack", "width")).toEqual(["0", "0", "0", "0"]);
     });
 
     test("gives the right reference line an empty transform attribute", () => {
       // NOTE: the mirror prop writes `transform=""` rather than omitting the attribute.
       // Harmless, but it means the attribute is always present. Shared with pyramid.
-      const node = render(pyramidOf().rightRefAccessor(() => [0, 1]));
+      const node = render(pyramidOf().rightRefAccessor(() => refPoints));
       expect(lines(node, "rightReference")[0].getAttribute("transform")).toBe("");
     });
 
@@ -1206,7 +1248,7 @@ describe("component/stackedPyramid", () => {
       // the one pie, stackedArea and stackedAreaMultiples use for their own paths, so a
       // selector written for one of those components also matches a stackedPyramid
       // reference line.
-      const node = render(pyramidOf().rightRefAccessor(() => [0, 1]));
+      const node = render(pyramidOf().rightRefAccessor(() => refPoints));
       expect(lines(node, "rightReference")[0].getAttribute("class")).toBe("sszvis-path");
     });
 

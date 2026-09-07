@@ -109,8 +109,10 @@
  *                                            leftAccessor.
  * @property {function} [leftRefAccessor]     Reference data for the left side, drawn as a single
  *                                            path outlining the reference series. The elements are
- *                                            handed to barWidth for x and to barPosition for y, so
- *                                            they have to be plain numbers. Optional, but the guard
+ *                                            reference points, {row, value}: barWidth maps the
+ *                                            value to x and barPosition the row to y, the same way
+ *                                            round as in the bars, so a slice of the layout
+ *                                            satisfies the shape unchanged. Optional, but the guard
  *                                            tests whether the accessor was set, not what it
  *                                            returns: an accessor that yields undefined or null for
  *                                            some states throws instead of hiding the line.
@@ -160,15 +162,12 @@
  * it goes stale if a caller rewrites the pair. Shared with stackedBarData. See
  * test/component/stackedPyramid.test.ts.
  *
- * Note: the reference lines cannot be drawn in the coordinate system the bars use. The line
- * generator is d3.line().x(barWidth).y(barPosition), so both props are called with the same
- * reference element, while in the bars barWidth is called with a stacked value and barPosition with
- * a row index. No element satisfies both: a series of stacked values gives an x that is right and a
- * y that is as many rows down as the value is large. d3.line also calls its x accessor as (d, i,
- * data), so barWidth receives the index on the line and nowhere else, which leaves one property
- * with two calling conventions as well as two coordinate systems. The only stackedPyramid example
- * sets neither reference accessor; the reference-line example uses the plain pyramid instead, where
- * both props read the datum and the problem does not arise.
+ * Note: a reference series is an array of {row, value} points, so barWidth maps the value to x and
+ * barPosition the row to y - the same division of labour as in the bars, which is what makes the
+ * outline land in their coordinate system. Neither property receives d3's index, on the line or in
+ * the bars. pyramid's byte-identical lineComponent still takes plain data, since there both
+ * properties read the bar's datum and the question does not arise. The only stackedPyramid example
+ * sets neither reference accessor.
  *
  * Note: two smaller mismatches ride along, both of them shared with pyramid. The bars are pushed
  * outwards by SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn
@@ -430,12 +429,22 @@ type SideAccessor<T, S extends string | number> = (
 ) => StackedPyramidSide<T, S>;
 
 /**
- * Pulls one side's reference series out of the datum bound to the chart layer. The elements
- * are handed to barWidth for x and to barPosition for y, so they have to be plain numbers.
+ * One point of a reference outline. Each half is mapped by the property that owns it in the
+ * bars: barWidth reads the `value`, barPosition the `row`, so the outline is drawn in the same
+ * coordinate system as the bars it describes. A slice satisfies the shape as it stands, so one
+ * of the layout's own series can be handed over as a reference series unchanged.
  */
+export interface StackedPyramidReferencePoint {
+  /** The row the point sits on, in the row domain barPosition is a scale over. */
+  row: string | number;
+  /** The stacked value the point describes, in the domain barWidth is a scale over. */
+  value: number;
+}
+
+/** Pulls one side's reference series out of the datum bound to the chart layer. */
 type ReferenceAccessor<T, S extends string | number> = (
   data: StackedPyramidLayout<T, S>
-) => number[];
+) => StackedPyramidReferencePoint[];
 
 /** A constant or an accessor; either is accepted, since fn.functor normalises both. */
 type PyramidValue<A, R> = R | ((value: A, index: number) => R);
@@ -488,11 +497,11 @@ export interface StackedPyramidComponent<T = unknown, S extends string | number 
   ): StackedPyramidComponent<T, S>;
   leftRefAccessor(): ReferenceAccessor<T, S> | undefined;
   leftRefAccessor<U = StackedPyramidLayout<T, S>>(
-    accessor: (data: U) => number[]
+    accessor: (data: U) => StackedPyramidReferencePoint[]
   ): StackedPyramidComponent<T, S>;
   rightRefAccessor(): ReferenceAccessor<T, S> | undefined;
   rightRefAccessor<U = StackedPyramidLayout<T, S>>(
-    accessor: (data: U) => number[]
+    accessor: (data: U) => StackedPyramidReferencePoint[]
   ): StackedPyramidComponent<T, S>;
 }
 
@@ -662,9 +671,9 @@ interface ReferenceLineComponent extends ComponentBuilder<ReferenceLineComponent
 }
 
 /**
- * Draws one side's reference outline as a single path. The data is one array of points per
- * path, so the datum handed to this component is an array of arrays - in practice always of
- * length one, since each side has at most one reference line.
+ * Draws one side's reference outline as a single path. The data is one array of reference
+ * points per path, so the datum handed to this component is an array of arrays - in practice
+ * always of length one, since each side has at most one reference line.
  */
 function lineComponent(): ReferenceLineComponent {
   return component<ReferenceLineComponent>()
@@ -672,14 +681,18 @@ function lineComponent(): ReferenceLineComponent {
     .prop("barWidth")
     .prop("mirror")
     .mirror(false)
-    .render(function (this: Element, data: number[][]) {
+    .render(function (this: Element, data: StackedPyramidReferencePoint[][]) {
       const selection = select(this);
       const props = selection.props<ReferenceLineProps>();
 
-      const lineGen = d3Line<number>().x(props.barWidth).y(props.barPosition);
+      // Each half of a point is mapped by the property that owns it, so the outline lands in
+      // the coordinate system the bars are drawn in.
+      const lineGen = d3Line<StackedPyramidReferencePoint>()
+        .x((d) => props.barWidth(d.value))
+        .y((d) => props.barPosition(d.row));
 
       const line = selection
-        .selectAll<SVGPathElement, number[]>(".sszvis-path")
+        .selectAll<SVGPathElement, StackedPyramidReferencePoint[]>(".sszvis-path")
         .data(data)
         .join("path")
         .attr("class", "sszvis-path")
