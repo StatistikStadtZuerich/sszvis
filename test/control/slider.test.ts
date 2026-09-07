@@ -40,6 +40,11 @@ describe("control/slider", () => {
     node.querySelector("line.sszvis-control-slider__handleline");
   const handleLabel = (node: Element) =>
     node.querySelector<SVGTextElement>("text.sszvis-control-slider--label");
+  /** How the handle's own label is anchored against the handle box. */
+  const labelAnchor = (node: Element) => [
+    handleLabel(node)?.style.textAnchor,
+    handleLabel(node)?.getAttribute("dx"),
+  ];
   const ticks = (node: Element) => [...node.querySelectorAll("g.tick")];
   const tickLabels = (node: Element) =>
     [...node.querySelectorAll("g.tick text")].map((t) => t.textContent);
@@ -75,17 +80,16 @@ describe("control/slider", () => {
 
   test("should label the major ticks only", () => {
     const node = render(basic());
-    // Ticks are rendered in the order they were configured - all majors, then all
-    // minors - rather than in track order, so the empty labels come last.
-    expect(tickLabels(node)).toEqual(["0", "5", "10", "", ""]);
+    // Ticks are rendered in track order, so the unlabelled minors sit between the majors.
+    expect(tickLabels(node)).toEqual(["0", "", "5", "", "10"]);
   });
 
   test("should render minor ticks shorter than major ticks", () => {
     const node = render(basic());
     const lengths = [...node.querySelectorAll("g.tick line")].map((l) => l.getAttribute("y2"));
-    // majorTickSize is 12; the minor ticks are shortened to 4. Again in configured
-    // order: the three majors first, then the two minors.
-    expect(lengths).toEqual(["12", "12", "12", "4", "4"]);
+    // majorTickSize is 12; the minor ticks are shortened to 4. In track order:
+    // 0, 2.5, 5, 7.5, 10.
+    expect(lengths).toEqual(["12", "4", "12", "4", "12"]);
   });
 
   test("should anchor the first and last major label inside the track", () => {
@@ -176,6 +180,43 @@ describe("control/slider", () => {
     test("should show the current value by default", () => {
       const node = render(basic());
       expect(handleLabel(node)?.textContent).toBe("5");
+    });
+
+    test("should keep a single, correct label across re-renders", () => {
+      const control = basic();
+      const group = d3Select(svg).append("g");
+      group.call(control);
+      group.call(control);
+      group.call(control);
+      const node = group.node() as SVGGElement;
+      expect(node.querySelectorAll("g.sszvis-control-slider__handle").length).toBe(1);
+      expect(node.querySelectorAll("text.sszvis-control-slider--label").length).toBe(1);
+      expect(handleLabel(node)?.textContent).toBe("5");
+    });
+
+    test("should re-label the single handle label after a value change", () => {
+      const group = d3Select(svg).append("g");
+      group.call(basic().value(0));
+      group.call(basic().value(10));
+      const node = group.node() as SVGGElement;
+      expect(
+        [...node.querySelectorAll("text.sszvis-control-slider--label")].map((t) => t.textContent)
+      ).toEqual(["10"]);
+    });
+
+    test("should not adopt a label element that belongs to something else", () => {
+      const group = d3Select(svg).append("g");
+      // a stray label outside the handle group, as another render might leave behind
+      const foreign = group
+        .append("text")
+        .attr("class", "sszvis-control-slider--label")
+        .text("foreign");
+      group.call(basic());
+      const node = group.node() as SVGGElement;
+      expect(foreign.text()).toBe("foreign");
+      const handleGroup = handle(node) as SVGGElement;
+      expect(handleGroup.querySelectorAll("text.sszvis-control-slider--label").length).toBe(1);
+      expect(handleGroup.querySelector("text.sszvis-control-slider--label")?.textContent).toBe("5");
     });
 
     test("should use a label function when one is given", () => {
@@ -279,58 +320,195 @@ describe("control/slider", () => {
     expect(onchange).toHaveBeenCalled();
   });
 
-  describe("known quirks", () => {
-    test("re-rendering appends another handle label every time", () => {
-      // BUG: the handle group is joined idempotently, but `handle.append("text")` runs on
-      // every render, so a slider that re-renders - which it must, since it does not
-      // manage its own state - grows one extra label element per render. Only the first
-      // is ever updated, because the label selection below uses `.data()` without a join,
-      // so the extra copies keep the text they were created with (empty).
-      // current: N labels after N renders. expected: append into the enter selection, or
-      // join the label like the handle box and grip line.
-      const control = basic();
-      const group = d3Select(svg).append("g");
-      group.call(control);
-      group.call(control);
-      group.call(control);
-      const node = group.node() as SVGGElement;
-      expect(node.querySelectorAll("g.sszvis-control-slider__handle").length).toBe(1);
-      expect(node.querySelectorAll("text.sszvis-control-slider--label").length).toBe(3);
-      expect(
-        [...node.querySelectorAll("text.sszvis-control-slider--label")].map((t) => t.textContent)
-      ).toEqual(["5", "", ""]);
-    });
-
-    test("the label is not re-selected after a value change, so only the first copy updates", () => {
-      // BUG (same root cause): `.selectAll(...).data((d) => [d])` without `.join()` only
-      // ever touches elements that already existed, so a re-render with a new value
-      // updates the first label and leaves the accumulated ones blank.
-      const group = d3Select(svg).append("g");
-      group.call(basic().value(0));
-      group.call(basic().value(10));
-      const node = group.node() as SVGGElement;
-      const labels = [...node.querySelectorAll("text.sszvis-control-slider--label")];
-      expect(labels.map((t) => t.textContent)).toEqual(["10", ""]);
-    });
-
-    test("the outer label anchoring follows configuration order, not track order", () => {
-      // BUG: the first and last major labels are anchored "start" and "end" by their
-      // index in the rendered tick selection, which is the order the ticks were
-      // configured in - not their position along the track. Major ticks given out of
-      // order therefore anchor the wrong labels inwards.
-      // current: anchoring by array position. expected: anchor by scale position, or
-      // sort the tick values before rendering.
+  describe("tick label anchoring", () => {
+    test("should anchor by track position, not by configuration order", () => {
       const node = render(basic().majorTicks([10, 0, 5]));
       const anchors = [...node.querySelectorAll<SVGTextElement>("g.tick text")]
         .filter((t) => t.textContent !== "")
         .map((t) => [t.textContent, t.style.textAnchor]);
       expect(anchors).toEqual([
-        ["10", "start"],
-        ["0", "middle"],
-        ["5", "end"],
+        ["0", "start"],
+        ["5", "middle"],
+        ["10", "end"],
       ]);
     });
 
+    test("should centre a lone major label", () => {
+      const node = render(basic().majorTicks([5]));
+      const label = [...node.querySelectorAll<SVGTextElement>("g.tick text")].find(
+        (t) => t.textContent === "5"
+      );
+      expect(label?.style.textAnchor).toBe("middle");
+    });
+
+    test("should anchor both labels inwards when there are only two", () => {
+      const node = render(slider().scale(scale()).value(5).majorTicks([0, 10]));
+      const anchors = [...node.querySelectorAll<SVGTextElement>("g.tick text")]
+        .filter((t) => t.textContent !== "")
+        .map((t) => t.style.textAnchor);
+      expect(anchors).toEqual(["start", "end"]);
+    });
+
+    test("should not throw when there are no major ticks at all", () => {
+      expect(() => render(slider().scale(scale()).value(5).minorTicks([2.5, 7.5]))).not.toThrow();
+      const node = render(slider().scale(scale()).value(5).minorTicks([2.5, 7.5]));
+      expect(tickLabels(node)).toEqual(["", ""]);
+    });
+  });
+
+  describe("value clamping and validation", () => {
+    test("should pin the handle to the end of the track for a value above the domain", () => {
+      const node = render(basic().value(20));
+      expect(handle(node)?.getAttribute("transform")).toBe("translate(294.5,0.5)");
+    });
+
+    test("should pin the handle to the start of the track for a value below the domain", () => {
+      const node = render(basic().value(-20));
+      expect(handle(node)?.getAttribute("transform")).toBe("translate(5.5,0.5)");
+    });
+
+    test("should throw before rendering anything when value is missing", () => {
+      const node = d3Select(svg).append("g");
+      expect(() => node.call(slider().scale(scale()))).toThrow(/value/);
+      const el = node.node() as SVGGElement;
+      expect(el.childElementCount).toBe(0);
+    });
+
+    test("should name the component and the property in that error", () => {
+      const node = d3Select(svg).append("g");
+      expect(() => node.call(slider().scale(scale()))).toThrow(
+        "sszvis.control.slider: the `value` property is required"
+      );
+    });
+  });
+
+  describe("drag round trip", () => {
+    /** Drags to `offset` pixels into the interaction layer and returns the reported x. */
+    const dragTo = (node: SVGGElement, onchange: ReturnType<typeof vi.fn>, offset: number) => {
+      const layer = node.querySelector(
+        "g.sszvis-control-slider--interactionLayer rect"
+      ) as SVGRectElement;
+      const box = layer.getBoundingClientRect();
+      layer.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      layer.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          clientX: box.left + offset,
+          clientY: box.top + 20,
+        })
+      );
+      expect(onchange).toHaveBeenCalled();
+      // the move behaviour calls its handlers as (event, x, y)
+      return onchange.mock.calls.at(-1)?.[1];
+    };
+
+    test("should keep the interaction layer spanning the whole configured range", () => {
+      const node = render(basic());
+      const layer = node.querySelector(
+        "g.sszvis-control-slider--interactionLayer rect"
+      ) as SVGRectElement;
+      expect(layer.getAttribute("x")).toBe("0");
+      expect(layer.getAttribute("width")).toBe("300");
+    });
+
+    test("should report the domain maximum at the pixel its handle is drawn at", () => {
+      const onchange = vi.fn();
+      const node = render(basic().onchange(onchange));
+      // 294.5 is where the handle sits for the domain maximum; clientX is an integer
+      expect(dragTo(node, onchange, 294) as number).toBeCloseTo(10, 1);
+    });
+
+    test("should report the domain minimum at the low end of the track", () => {
+      const onchange = vi.fn();
+      const node = render(basic().onchange(onchange));
+      expect(dragTo(node, onchange, 5) as number).toBe(0);
+    });
+
+    test("should round trip through a time scale at both ends", () => {
+      const domain: [Date, Date] = [new Date(2020, 0, 1), new Date(2020, 0, 31)];
+      const onchange = vi.fn();
+      const node = render(
+        slider()
+          .scale(scaleTime().domain(domain).range([0, 300]))
+          .value(domain[0])
+          .onchange(onchange)
+      );
+      expect(+(dragTo(node, onchange, 5) as Date)).toBe(+domain[0]);
+      const high = dragTo(node, onchange, 294) as Date;
+      // within a pixel of the end, which on a 30-day domain is a couple of hours
+      expect(+domain[1] - +high).toBeLessThan(2 * 60 * 60 * 1000);
+    });
+
+    test("should agree with its own rendering on a reversed scale", () => {
+      const reversed = scaleLinear().domain([0, 10]).range([300, 0]);
+      const onchange = vi.fn();
+      const node = render(slider().scale(reversed).value(0).onchange(onchange));
+      // the handle for value 0 is drawn at the right-hand inset
+      expect(handle(node)?.getAttribute("transform")).toBe("translate(294.5,0.5)");
+      // and pointing there reports 0, not 10
+      expect(dragTo(node, onchange, 294) as number).toBeCloseTo(0, 1);
+      expect(dragTo(node, onchange, 5) as number).toBeCloseTo(10, 1);
+    });
+  });
+
+  describe("reversed range", () => {
+    test("should draw the handle at the right-hand end for the domain minimum", () => {
+      const reversed = scaleLinear().domain([0, 10]).range([300, 0]);
+      const node = render(slider().scale(reversed).value(0).majorTicks([0, 10]));
+      expect(reversed(0)).toBe(300);
+      expect(handle(node)?.getAttribute("transform")).toBe("translate(294.5,0.5)");
+    });
+
+    test("should draw the ticks right to left", () => {
+      const reversed = scaleLinear().domain([0, 10]).range([300, 0]);
+      const node = render(slider().scale(reversed).value(0).majorTicks([0, 10]));
+      const labelled = [...node.querySelectorAll<SVGTextElement>("g.tick text")].filter(
+        (t) => t.textContent !== ""
+      );
+      // in track order: 10 on the left, 0 on the right
+      expect(labelled.map((t) => [t.textContent, t.style.textAnchor])).toEqual([
+        ["10", "start"],
+        ["0", "end"],
+      ]);
+    });
+
+    test("should anchor the handle label into the track, not by domain order", () => {
+      // The anchor comes from the pixel the handle is drawn at. With a descending range the
+      // domain minimum is drawn at the right-hand end, so it has to be anchored "end" and
+      // nudged left; keying off the domain index anchored it "start" and pushed a long
+      // label off the track.
+      const reversed = () => scaleLinear().domain([0, 10]).range([300, 0]);
+      expect(labelAnchor(render(slider().scale(reversed()).value(0)))).toEqual(["end", "5"]);
+      expect(labelAnchor(render(slider().scale(reversed()).value(10)))).toEqual(["start", "-5"]);
+      // and the ascending case is the mirror image of it
+      const ascending = () => scaleLinear().domain([0, 10]).range([0, 300]);
+      expect(labelAnchor(render(slider().scale(ascending()).value(0)))).toEqual(["start", "-5"]);
+      expect(labelAnchor(render(slider().scale(ascending()).value(10)))).toEqual(["end", "5"]);
+      // anything in between stays centred over its handle
+      expect(labelAnchor(render(slider().scale(ascending()).value(5)))).toEqual(["middle", "0"]);
+    });
+
+    test("should anchor an out-of-domain value at the end it is clamped to", () => {
+      // The clamp pins the handle to an end, but the value equals neither bound, so a
+      // domain-keyed anchor centred the label over the edge of the track.
+      const scale = () => scaleLinear().domain([0, 10]).range([0, 300]);
+      expect(labelAnchor(render(slider().scale(scale()).value(-5)))).toEqual(["start", "-5"]);
+      expect(labelAnchor(render(slider().scale(scale()).value(99)))).toEqual(["end", "5"]);
+    });
+
+    test("should keep the direction of a descending time range", () => {
+      const domain: [Date, Date] = [new Date(2020, 0, 1), new Date(2020, 0, 31)];
+      const node = render(
+        slider()
+          .scale(scaleTime().domain(domain).range([300, 0]))
+          .value(domain[0])
+          .majorTicks([domain[0], domain[1]])
+      );
+      expect(handle(node)?.getAttribute("transform")).toBe("translate(294.5,0.5)");
+    });
+  });
+
+  describe("known quirks", () => {
     test("duplicate tick values survive deduplication when they are distinct objects", () => {
       // NOTE: the tick values are deduplicated with fn.set, which also compares by
       // identity, so the same date given once as a major and once as a minor tick is
@@ -353,13 +531,6 @@ describe("control/slider", () => {
       ]);
     });
 
-    test("a value outside the domain places the handle outside the track", () => {
-      // NOTE: the value is not clamped, so a state value beyond the scale's domain draws
-      // the handle past the end of the track rather than pinning it to the end.
-      const node = render(basic().value(20));
-      expect(handle(node)?.getAttribute("transform")).toBe("translate(583.5,0.5)");
-    });
-
     test("the handle label compares against the domain by string, not by identity", () => {
       // NOTE: the anchoring uses fn.stringEqual rather than ===, which is what makes it
       // work for time scales: a value that is a different Date object for the same
@@ -373,76 +544,6 @@ describe("control/slider", () => {
           .value(new Date(2020, 0, 1))
       );
       expect(handleLabel(node)?.style.textAnchor).toBe("start");
-    });
-
-    test("a missing value throws after the control has been half-built", () => {
-      // BUG: unlike `scale`, which is read first and so fails cleanly, `value` is only
-      // needed once the handle is being labelled - by which point the background, the
-      // axis and the handle have all been appended. A slider rendered before its state
-      // exists therefore leaves a broken half-slider on screen.
-      // current: partial DOM plus a TypeError from fn.stringEqual. expected: fail before
-      // rendering, or treat a missing value as "no handle".
-      const node = d3Select(svg).append("g");
-      expect(() => node.call(slider().scale(scale()))).toThrow(TypeError);
-      const el = node.node() as SVGGElement;
-      expect(el.querySelector("g.sszvis-control-slider__backgroundgroup")).toBeTruthy();
-      expect(el.querySelector("g.sszvis-control-slider__handle")).toBeTruthy();
-      expect(el.querySelector("g.sszvis-control-slider--interactionLayer")).toBeNull();
-    });
-
-    test("a reversed range mirrors the control", () => {
-      // BUG: sszvis.scale.range returns the extent of the range sorted ascending, so the
-      // direction of a descending range is thrown away when alteredScale is built. A
-      // slider on a right-to-left scale draws its ticks and handle mirrored, while the
-      // interaction layer still inverts through the original, un-mirrored scale.
-      // current: value 0 draws at the left end of a scale whose range starts at 300.
-      // expected: preserve the range direction when insetting.
-      const reversed = scaleLinear().domain([0, 10]).range([300, 0]);
-      const node = render(slider().scale(reversed).value(0).majorTicks([0, 10]));
-      // props.scale(0) is 300, but the handle is drawn at the left-hand inset instead
-      expect(reversed(0)).toBe(300);
-      expect(handle(node)?.getAttribute("transform")).toBe("translate(5.5,0.5)");
-    });
-
-    test("a single major tick is anchored to its start rather than centred", () => {
-      // BUG: the anchoring branch tests `i === 0` before `i === numTicks - 1`, so the one
-      // and only major label takes the "first label" branch and is anchored "start"
-      // instead of "middle".
-      // current: start. expected: middle when there is only one label.
-      const node = render(basic().majorTicks([5]));
-      const label = [...node.querySelectorAll<SVGTextElement>("g.tick text")].find(
-        (t) => t.textContent === "5"
-      );
-      expect(label?.style.textAnchor).toBe("start");
-    });
-
-    test("the interaction layer inverts through the uninset scale", () => {
-      // BUG: the handle is drawn with `alteredScale`, which is inset by half the handle
-      // width at each end, but the move behaviour is given `props.scale`. Pointing at the
-      // pixel where the handle for the domain maximum is drawn therefore reports a value
-      // short of that maximum, so a drag can never reach either end of the domain.
-      // current: the two scales disagree by up to 5.5px. expected: hand the move
-      // behaviour the same scale the handle is positioned with.
-      const onchange = vi.fn();
-      const node = render(basic().onchange(onchange));
-      const layer = node.querySelector(
-        "g.sszvis-control-slider--interactionLayer rect"
-      ) as SVGRectElement;
-      const box = layer.getBoundingClientRect();
-      layer.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-      layer.dispatchEvent(
-        new MouseEvent("mousemove", {
-          bubbles: true,
-          // 294.5 is where the handle sits for the domain maximum; clientX is an integer
-          clientX: box.left + 294,
-          clientY: box.top + 20,
-        })
-      );
-      expect(onchange).toHaveBeenCalled();
-      // the move behaviour calls its handlers as (event, x, y)
-      const reported = onchange.mock.calls.at(-1)?.[1] as number;
-      expect(reported).toBeLessThan(10);
-      expect(reported).toBeCloseTo(294 / 30, 5);
     });
 
     test("the interaction layer reports a meaningless second argument", () => {
