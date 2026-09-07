@@ -21,6 +21,14 @@ const stackedData = [
 ]
 ```
 
+#### One row per stack cell
+
+`sszvis.stackedBarVerticalData` sums every row that falls into the same (x, series)
+cell. Make sure a cell holds exactly one row, or that summing the rows it does hold is
+meaningful. The `basic` example's source data breaks each share down by age as well, and
+the shares within one age group already sum to 100%, so it filters to a single age group
+rather than adding percentages across them.
+
 #### Caution
 
 Because it uses a [d3 stack](https://d3js.org/d3-shape/stack) under the hood, this component will assign two special values to each data point passed to it: `0`, the baseline value for each point, and `1`, the extent of each point. This assignment will overwrite any existing properties on the data object named `0` or `1`.
