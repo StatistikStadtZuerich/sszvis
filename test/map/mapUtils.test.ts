@@ -1,5 +1,5 @@
 import type { Feature, FeatureCollection, Polygon } from "geojson";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import type { PointProjection } from "../../src/map/mapUtils.js";
 import {
   AGGLOMERATION_2012_KEY,
@@ -416,23 +416,37 @@ describe("map utils", () => {
       expect(getGeoJsonCenter(feature)).toEqual([1, 2]);
     });
 
-    // BUG: the center string is split on "," and mapped through parseFloat with no validation of
-    // either its shape or its numerics, so malformed values become NaN coordinates, and a wrong
-    // number of components becomes a wrongly sized array. Both flow silently into the projection.
-    test("yields NaN coordinates for an unparseable center property", () => {
+    test("warns and falls back to the centroid for an unparseable center property", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const feature = square("a");
       feature.properties = { center: "not,coordinates" };
-      expect(getGeoJsonCenter(feature)).toEqual([Number.NaN, Number.NaN]);
+      const [lon, lat] = getGeoJsonCenter(feature);
+      expect(lon).toBeCloseTo(0.5, 3);
+      expect(lat).toBeCloseTo(0.5, 3);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
     });
 
-    test("yields a wrongly sized array for a center property with too few or too many components", () => {
-      const short = square("a");
-      short.properties = { center: "8.54" };
-      expect(getGeoJsonCenter(short)).toEqual([8.54]);
+    test("warns and falls back for a center with too few or too many components", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      for (const center of ["8.54", "1,2,3"]) {
+        const feature = square("a");
+        feature.properties = { center };
+        const [lon, lat] = getGeoJsonCenter(feature);
+        expect(lon).toBeCloseTo(0.5, 3);
+        expect(lat).toBeCloseTo(0.5, 3);
+      }
+      expect(warn).toHaveBeenCalledTimes(2);
+      warn.mockRestore();
+    });
 
-      const long = square("b");
-      long.properties = { center: "1,2,3" };
-      expect(getGeoJsonCenter(long)).toEqual([1, 2, 3]);
+    test("names the offending feature in the warning", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const feature = square("kreis-7");
+      feature.properties = { center: "nope" };
+      getGeoJsonCenter(feature);
+      expect(warn.mock.calls.flat().join(" ")).toContain("kreis-7");
+      warn.mockRestore();
     });
 
     // BUG: `properties: null` is spec-legal GeoJSON, but the centre has nowhere to be cached, so a
