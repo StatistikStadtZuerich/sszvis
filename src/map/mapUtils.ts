@@ -18,6 +18,7 @@ import {
   type Selection,
 } from "d3";
 import { memoize } from "../fn.js";
+import * as logger from "../logger.js";
 
 export const STADT_KREISE_KEY = "zurichStadtKreise";
 export const STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
@@ -285,7 +286,7 @@ export interface MapFeatureProperties {
   /** An authored centre, as the string "longitude,latitude". */
   center?: string;
   /** Where the computed centre is memoized, on the feature itself. */
-  cachedCenter?: number[];
+  cachedCenter?: GeoPoint;
   [key: string]: unknown;
 }
 
@@ -307,35 +308,49 @@ export type MapFeature = ExtendedFeature<GeoGeometryObjects | null, MapFeaturePr
  * argument, and the cache is never invalidated - changing `center` after the first call has no
  * effect for the lifetime of the feature object.
  *
- * Note: the `center` string is split on "," and mapped through parseFloat with no validation. A
- * value that does not parse becomes NaN coordinates, and a wrong number of components becomes a
- * wrongly sized array; both reach the projection silently.
+ * Note: a `center` that is not exactly two finite numbers is reported with logger.warn and ignored
+ * in favour of the computed centroid, so a typo in the topojson -e output is visible rather than
+ * silently placing marks at NaN. A warning rather than a throw: the value is authored map data that
+ * the rest of the feature can still render without.
  *
  * See test/map/mapUtils.test.ts.
  *
  * @param  {Object} geoJson                 The geoJson object for which you want the center.
- * @return {number[]}                       The geographical coordinates (in the form [lon, lat]) of the centroid
- *                                          (or user-specified center) of the object. Typed as number[] rather
- *                                          than a [lon, lat] tuple because a malformed `center` property is
- *                                          parsed without validation and can yield a shorter or longer array.
+ * @return {GeoPoint}                       The geographical coordinates (in the form [lon, lat]) of the centroid
+ *                                          (or user-specified center) of the object.
  * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
  *                                          but has never been supported here, since the cache is written to
  *                                          the properties object.
  */
-export function getGeoJsonCenter(geoJson: MapFeature): number[] {
+export function getGeoJsonCenter(geoJson: MapFeature): GeoPoint {
   const properties = geoJson.properties;
   if (properties == null) {
     throw new TypeError("getGeoJsonCenter: the feature has no properties object to cache onto");
   }
 
   if (!properties.cachedCenter) {
-    const setCenter = properties.center;
-    properties.cachedCenter = setCenter
-      ? setCenter.split(",").map(Number.parseFloat)
-      : geoCentroid(geoJson);
+    properties.cachedCenter =
+      parseCenter(properties.center, geoJson.id) ?? (geoCentroid(geoJson) as GeoPoint);
   }
 
   return properties.cachedCenter;
+}
+
+/**
+ * An authored "longitude,latitude" centre, or undefined where none was given or it is not exactly
+ * two finite numbers - the malformed case is warned about, naming the offending feature.
+ */
+function parseCenter(center: string | undefined, featureId: unknown): GeoPoint | undefined {
+  if (!center) return undefined;
+  const parsed = center.split(",").map(Number.parseFloat);
+  if (parsed.length === 2 && parsed.every((n) => Number.isFinite(n))) {
+    return [parsed[0], parsed[1]];
+  }
+  logger.warn(
+    `getGeoJsonCenter: ignoring the center property "${center}" of feature ${String(featureId)}, ` +
+      "which is not two finite numbers. Falling back to the computed centroid."
+  );
+  return undefined;
 }
 
 /**
