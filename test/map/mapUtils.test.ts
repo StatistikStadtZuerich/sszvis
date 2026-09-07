@@ -340,6 +340,23 @@ describe("map utils", () => {
       ).toBeUndefined();
     });
 
+    test("never matches data whose key property is missing", () => {
+      const keyless = collection(square("a"), square("b"));
+      for (const feature of keyless.features) {
+        feature.id = undefined;
+      }
+      const merged = prepareMergedGeoData([{ value: 1 }, { value: 2 }], keyless, "geoId");
+      expect(merged).toHaveLength(2);
+      expect(merged.every((d) => d.datum === undefined)).toBe(true);
+    });
+
+    test("never matches a feature with no id against a datum keyed 'undefined'", () => {
+      const keyless = collection(square("a"));
+      keyless.features[0].id = undefined;
+      const merged = prepareMergedGeoData([{ id: "undefined", value: 1 }], keyless, "id");
+      expect(merged[0].datum).toBeUndefined();
+    });
+
     // NOTE: a falsy key name (including the empty string) falls back to the default rather than
     // being used as given.
     test("falls back to the default key name for an empty key name", () => {
