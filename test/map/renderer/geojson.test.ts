@@ -161,6 +161,62 @@ describe("map/renderer/geojson", () => {
       expect(() => render([])).toThrow(TypeError);
     });
 
+    // These pin the exact shape of the grouping so a future rewrite of it cannot drift unnoticed:
+    // the lookup table IS the caller's first datum, and an empty dataset fails the way a seedless
+    // reduce fails.
+    test("uses the caller's first datum as the lookup table itself", () => {
+      const data: Datum[] = [
+        { geoId: "a", value: 1 },
+        { geoId: "b", value: 2 },
+      ];
+      render(data, (c) => c.transitionColor(false));
+      expect(Object.hasOwn(data[0], "b")).toBe(true);
+      expect(Object.getOwnPropertyDescriptor(data[0], "b")?.value).toBe(data[1]);
+      // The single remaining datum was written onto it, not into a fresh object.
+      expect(Object.keys(data[0])).toEqual(["geoId", "value", "b"]);
+    });
+
+    test("fails an empty dataset the way a seedless reduce does", () => {
+      expect(() => render([])).toThrow(
+        new TypeError("Reduce of empty array with no initial value")
+      );
+    });
+
+    // NOTE: a dataset whose first element is undefined does not fail the emptiness check, so it
+    // fails later, when the table is written to - the same place the seedless reduce failed.
+    test("throws when the first datum is undefined", () => {
+      expect(() => render([undefined as unknown as Datum, { geoId: "b", value: 2 }])).toThrow(
+        TypeError
+      );
+    });
+
+    // NOTE: a symbol key stays a symbol key, so it never collides with a string feature id and
+    // the datum is simply never matched.
+    test("never matches a datum keyed by a symbol", () => {
+      const symbolKeyed = { [Symbol("s")]: 1, value: 5 } as unknown as Datum;
+      const node = render([{ geoId: "decoy", value: 0 }, symbolKeyed], (c) =>
+        c.transitionColor(false).dataKeyName("missing").fill("#ff0000")
+      );
+      expect(attrs(node, "fill")).toEqual([
+        "url(#missing-pattern)",
+        "url(#missing-pattern)",
+        "url(#missing-pattern)",
+      ]);
+    });
+
+    // NOTE: `properties` absent behaves like `properties: null` - both crash the merge - but the
+    // message names the value that was read, as the original property access did.
+    test("throws for a feature with no properties at all", () => {
+      const collection = geoJson();
+      collection.features[1].properties = undefined as unknown as null;
+      expect(() =>
+        group()
+          .datum(fullData)
+          .call(mapRendererGeoJson().geoJson(collection).mapPath(mapPathOf(collection)))
+          .node()
+      ).toThrow(/Cannot read properties of undefined/);
+    });
+
     test("matches data to features by the configured key names", () => {
       // The leading entry is a decoy: the reduce above swallows its first element.
       const collection = geoJson();
