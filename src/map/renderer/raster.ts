@@ -266,7 +266,7 @@ function pixelRatio(): number {
 function dimension(value: number | undefined, name: string): number {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
     throw new Error(
-      `[map/renderer/raster] ${name} is required, and must be a finite, non-negative number`
+      `[mapRendererRaster] the ${name} property is required, and must be a finite, non-negative number`
     );
   }
   return value;
@@ -282,7 +282,7 @@ function dimension(value: number | undefined, name: string): number {
  */
 function accessor<F>(value: F | undefined, name: string): F {
   if (typeof value !== "function") {
-    throw new Error(`[map/renderer/raster] ${name} is required, and must be a function`);
+    throw new Error(`[mapRendererRaster] the ${name} property is required, and must be a function`);
   }
   return value;
 }
