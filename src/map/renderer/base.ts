@@ -74,7 +74,7 @@
  * @return {sszvis.component}
  */
 
-import type { BaseType, ExtendedFeatureCollection, GeoPath, GeoProjection, Selection } from "d3";
+import type { ExtendedFeatureCollection, GeoPath, GeoProjection } from "d3";
 import { select } from "d3";
 import tooltipAnchor from "../../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../../d3-component.js";
@@ -82,7 +82,13 @@ import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 import { slowTransition } from "../../transition.js";
-import { type GeoPoint, getGeoJsonCenter, type MergedGeoDatum } from "../mapUtils.js";
+import {
+  type GeoPoint,
+  getGeoJsonCenter,
+  isPaintServer,
+  type MergedGeoDatum,
+  missingPatternId,
+} from "../mapUtils.js";
 
 /**
  * A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. The
@@ -92,42 +98,6 @@ import { type GeoPoint, getGeoJsonCenter, type MergedGeoDatum } from "../mapUtil
  * with undefined throughout, since the layer is drawing geometry rather than encoding values.
  */
 type MapValue<T, R> = R | ((datum: T | undefined) => R);
-
-/**
- * Whether a fill value references a paint server rather than naming a colour. An absent attribute
- * counts as neither: an entering area has no previous fill, and d3's rgb interpolator treats an
- * unparseable start as a constant, so it still reaches its colour on the first tick.
- */
-function isPaintServer(fill: string | null): boolean {
-  return fill?.startsWith("url(") ?? false;
-}
-
-/** Where a layer records the pattern id it was given, so re-renders reuse it. */
-const MISSING_PATTERN_ID_ATTR = "data-sszvis-missing-pattern-id";
-
-let missingPatternCount = 0;
-
-/**
- * The id of this layer's missing-value pattern, assigning one the first time the layer is
- * rendered.
- *
- * Ids are document-global while the pattern definition lives inside each layer's own group, so a
- * fixed id would have two map layers on one page define it twice and every url(#...) reference in
- * the document resolve to whichever definition came first. The assigned id is cached on the layer
- * element rather than counted per render, so re-rendering a layer keeps its own definition.
- *
- * The selection parameters are generic because d3's Selection is invariant in its element
- * parameters - no single non-generic type accepts every selection.
- */
-function missingPatternId<G extends BaseType, D, P extends BaseType, PD>(
-  selection: Selection<G, D, P, PD>
-): string {
-  const assigned = selection.attr(MISSING_PATTERN_ID_ATTR);
-  if (assigned) return assigned;
-  const id = `missing-pattern-${++missingPatternCount}`;
-  selection.attr(MISSING_PATTERN_ID_ATTR, id);
-  return id;
-}
 
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredMapValue<T, R> = (datum?: T) => R;
