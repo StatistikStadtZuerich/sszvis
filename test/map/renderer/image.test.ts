@@ -111,6 +111,15 @@ describe("map/renderer/image", () => {
       expect(image(node)?.style.left).not.toBe("");
     });
 
+    // The rest of what sszvis.css supplied for the class, so the renderer works standalone: block
+    // keeps the image out of inline layout, and none lets the map layers underneath be hovered
+    // through it. user-select is deliberately left to the stylesheet.
+    test("takes itself out of the flow and out of the way of pointer events", () => {
+      const node = render();
+      expect(image(node)?.style.display).toBe("block");
+      expect(image(node)?.style.pointerEvents).toBe("none");
+    });
+
     test("calls the projection once per corner, with the corner coordinates", () => {
       const seen: unknown[] = [];
       const projection = projectionOf();

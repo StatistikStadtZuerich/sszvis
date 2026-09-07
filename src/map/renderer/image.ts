@@ -41,10 +41,14 @@
  * enforces that: called on an SVG selection it appends an SVG-namespaced img, which no browser
  * renders, without complaining.
  *
- * Note: the component writes position: absolute inline alongside left and top, so the offsets it
- * computes are never inert. sszvis.css adds display: block and pointer-events: none for the same
- * class; without the stylesheet the image is still positioned correctly but does take pointer
- * events, so the map layers beneath it cannot be hovered.
+ * Note: the component writes position: absolute, display: block and pointer-events: none inline, so
+ * the offsets it computes are never inert and the image never swallows the hover and click events of
+ * the map layers beneath it. sszvis.css sets the same three declarations for the class, plus
+ * user-select: none, which is left to the stylesheet: it only affects text selection over a
+ * decorative image, not whether the renderer works. So the component no longer needs sszvis.css to
+ * position itself. Being inline styles they beat any author rule short of !important, so a consumer
+ * who wants the image in the document flow or clickable can no longer get there through their own
+ * stylesheet.
  *
  * Note: the projected coordinates are written unshifted, and createHtmlLayer positions the layer
  * itself by the bounds padding - so the image's offset is relative to the layer and the padding is
@@ -222,7 +226,13 @@ export default function (): MapRendererImageComponent {
       image
         .attr("src", srcValue)
         .attr("alt", fn.valueFn(props.alt))
+        // The positioning and event behaviour the component depends on, written inline so it does
+        // not need sszvis.css: absolute makes the offsets below apply at all, block keeps an inline
+        // image from picking up baseline leading, and none lets the map layers underneath be
+        // hovered through it.
         .style("position", "absolute")
+        .style("display", "block")
+        .style("pointer-events", "none")
         .style("left", `${Math.round(topLeft[0])}px`)
         .style("top", `${Math.round(topLeft[1])}px`)
         // Each corner is rounded before the subtraction, so the right and bottom edges land on the
