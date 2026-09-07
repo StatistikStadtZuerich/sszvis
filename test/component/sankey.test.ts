@@ -466,9 +466,7 @@ describe("component/sankey", () => {
       // and a non-function is reported rather than turned into a comparator that claims
       // every pair is already ordered.
       // @ts-expect-error - deliberately passing a constant where a comparator is declared
-      expect(() => render(sankeyOf().linkSort(1), testData)).toThrow(
-        /\[component\/sankey\].*linkSort/
-      );
+      expect(() => render(sankeyOf().linkSort(1), testData)).toThrow(/\[sankey\].*linkSort/);
     });
 
     test("should remove a link's path when the link goes away", () => {
@@ -961,7 +959,7 @@ describe("component/sankey", () => {
             .columnPadding(0),
           testData
         )
-      ).toThrow(/\[component\/sankey\].*nodeThickness/);
+      ).toThrow(/\[sankey\].*nodeThickness/);
     });
 
     test("should throw before creating any element when nodeThickness is missing", () => {
@@ -988,7 +986,7 @@ describe("component/sankey", () => {
             .columnPadding(0),
           testData
         )
-      ).toThrow(/\[component\/sankey\].*nodePadding/);
+      ).toThrow(/\[sankey\].*nodePadding/);
     });
 
     test("should skip a link whose geometry is not finite, and report it", () => {
@@ -1003,7 +1001,7 @@ describe("component/sankey", () => {
       expect(paths.some((d) => d?.includes("NaN"))).toBe(false);
       expect(paths.length).toBe(1);
       expect(anchors(node, "links").length).toBe(1);
-      expect(warn.mock.calls.flat().join(" ")).toContain("[component/sankey]");
+      expect(warn.mock.calls.flat().join(" ")).toContain("[sankey]");
       warn.mockRestore();
     });
 
@@ -1019,7 +1017,7 @@ describe("component/sankey", () => {
       expect(attrs(node, "nodelabels", "text.sszvis-sankey-node-label", "y")[0]).toBe("0");
       expect(attrs(node, "nodelabels", "rect.sszvis-sankey-hitbox", "y")[0]).toBe("-5");
       expect(attrs(node, "nodelabels", "rect.sszvis-sankey-hitbox", "height")[0]).toBe("10");
-      expect(warn.mock.calls.flat().join(" ")).toContain("[component/sankey]");
+      expect(warn.mock.calls.flat().join(" ")).toContain("[sankey]");
       warn.mockRestore();
     });
 
@@ -1041,7 +1039,7 @@ describe("component/sankey", () => {
         // @ts-expect-error - deliberately passing an accessor where a number is declared
         (s: ReturnType<typeof sankeyOf>) => s.linkCurvature(() => 0.5),
       ]) {
-        expect(() => render(apply(sankeyOf()), testData)).toThrow(/\[component\/sankey\]/);
+        expect(() => render(apply(sankeyOf()), testData)).toThrow(/\[sankey\]/);
       }
     });
 

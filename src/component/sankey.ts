@@ -472,11 +472,11 @@ export default function (): SankeyComponent {
         "linkCurvature",
       ] as const) {
         if (typeof props[name] !== "number" || !Number.isFinite(props[name])) {
-          throw new Error(`[component/sankey] the ${name} property must be a number`);
+          throw new Error(`[sankey] the ${name} property must be a number`);
         }
       }
       if (typeof props.linkSort !== "function") {
-        throw new Error("[component/sankey] the linkSort property must be a comparator function");
+        throw new Error("[sankey] the linkSort property must be a comparator function");
       }
 
       const getNodePosition = (node: SankeyNode): number =>
@@ -586,7 +586,7 @@ export default function (): SankeyComponent {
       const drawableLinks = data.links.filter((link) => {
         const points = linkPoints(link);
         if (allFinite([...points, props.sizeScale(link.value)])) return true;
-        logger.warn("[component/sankey] skipping a link with non-finite geometry, id:", link.id);
+        logger.warn("[sankey] skipping a link with non-finite geometry, id:", link.id);
         return false;
       });
 
@@ -665,7 +665,7 @@ export default function (): SankeyComponent {
       // keeps them on top of the zero-height bar the same value produced.
       const guarded = (value: number, node: SankeyNode, what: string): number => {
         if (Number.isFinite(value)) return value;
-        logger.warn(`[component/sankey] non-finite ${what} for node`, node.id);
+        logger.warn(`[sankey] non-finite ${what} for node`, node.id);
         return 0;
       };
       const safeY = (node: SankeyNode): number => guarded(yPosition(node), node, "position");
