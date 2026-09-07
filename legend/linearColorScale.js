@@ -23,7 +23,7 @@ import { error } from '../logger.js';
  *                                              defaults to using the first and last tick values.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
  */
-function linearColorScale () {
+function legendColorLinear() {
   return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat")
   // fn.identity is the documented "no formatting" default. It returns its argument, so it
   // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
@@ -36,23 +36,25 @@ function linearColorScale () {
       return;
     }
     const domain = props.scale.domain();
+    // Equivalent to fn.last(domain), without widening the element type to undefined.
+    const domainMax = domain[domain.length - 1];
     let values = props.displayValues;
     if (values.length === 0 && props.scale.ticks) {
       values = props.scale.ticks(props.segments - 1);
     }
-    // Equivalent to fn.last(domain), without widening the element type to undefined.
-    values.push(domain[domain.length - 1]);
-    // Avoid division by zero
-    const segWidth = values.length > 0 ? props.width / values.length : 0;
+    // Never write into the caller's array, and only extend the ramp to the domain
+    // maximum when the values do not already reach it - scale.ticks() usually does.
+    values = values.length > 0 && values[values.length - 1] === domainMax ? [...values] : [...values, domainMax];
+    const segWidth = props.width / values.length;
     const segHeight = 10;
     const segments = selection.selectAll("rect.sszvis-legend__mark").data(values).join("rect").classed("sszvis-legend__mark", true);
     segments.attr("x", (_d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
     .attr("y", 0).attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
     .attr("height", segHeight).attr("fill", d => props.scale(d));
-    const startEnd = [domain[0], domain[domain.length - 1]];
+    const startEnd = [domain[0], domainMax];
     const labelText = props.labelText || startEnd;
     // rounded end caps for the segments
-    const endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd).join("circle").attr("class", "ssvis-legend--mark");
+    const endCaps = selection.selectAll("circle.sszvis-legend__mark").data(startEnd).join("circle").attr("class", "sszvis-legend__mark");
     endCaps.attr("cx", (_d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => props.scale(d));
     const labels = selection.selectAll(".sszvis-legend__label").data(labelText).join("text").classed("sszvis-legend__label", true);
     const labelPadding = 16;
@@ -61,5 +63,5 @@ function linearColorScale () {
   });
 }
 
-export { linearColorScale as default };
+export { legendColorLinear as default };
 //# sourceMappingURL=linearColorScale.js.map

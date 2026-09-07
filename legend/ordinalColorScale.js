@@ -15,7 +15,9 @@ import translateString from '../svgUtils/translateString.js';
  * @property {Number} columnWidth               The width of the columns of the legend.
  * @property {Number} rows                      The target number of rows for the legend.
  * @property {Number} columns                    The target number of columns for the legend.
- * @property {String} orientation               The orientation (layout order) of the legend. should be either "horizontal" or "vertical". No default.
+ * @property {String} orientation               The orientation (layout order) of the legend. Must be either "horizontal" or "vertical".
+ *                                              Required unless horizontalFloat is true, which uses its own layout; a missing or
+ *                                              unrecognised value throws, because no layout can be computed without it.
  * @property {Boolean} reverse                  Whether to reverse the order that categories appear in the legend. Default false
  * @property {Boolean} rightAlign               Whether to right-align the legend. Default false.
  * @property {Boolean} horizontalFloat          A true value changes the legend layout to the horizontal float version. Default false.
@@ -26,10 +28,6 @@ import translateString from '../svgUtils/translateString.js';
  * element in the domain. The entry consists of a label giving the category, and a circle colored with the category's
  * corresponding color. When props.rightAlign is false (the default), the circle comes before the name. When rightAlign
  * is true, the circle comes afterwards. The layout of these labels is governed by the other parameters.
- *
- * Note: orientation has no default. With neither orientation nor horizontalFloat set, no
- * transform is applied and every entry is drawn at the origin, stacked on top of one
- * another. See test/legend/ordinalColorScale.test.ts.
  *
  * Default Layout:
  *
@@ -100,11 +98,17 @@ function legendColorOrdinal() {
   return component().prop("scale").prop("rowHeight").rowHeight(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).prop("columnWidth").columnWidth(200).prop("rows").rows(3).prop("columns").columns(3).prop("verticallyCentered").verticallyCentered(false).prop("orientation").prop("reverse").reverse(false).prop("rightAlign").rightAlign(false).prop("horizontalFloat").horizontalFloat(false).prop("floatPadding").floatPadding(20).prop("floatWidth").floatWidth(600).render(function () {
     const selection = select(this);
     const props = selection.props();
+    // Thrown before anything is rendered: without an orientation the row/column layout
+    // cannot be computed at all, and the entries would silently stack at the origin.
+    // horizontalFloat brings its own layout and needs no orientation.
+    if (!props.horizontalFloat && props.orientation !== "horizontal" && props.orientation !== "vertical") {
+      throw new Error('[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true');
+    }
     let domain = props.scale.domain();
     if (props.reverse) {
       domain = [...domain].reverse();
     }
-    // Only read within the matching orientation branch below.
+    // Zero under horizontalFloat, which does not read them.
     let rows = 0;
     let cols = 0;
     if (props.orientation === "horizontal") {
@@ -142,17 +146,13 @@ function legendColorOrdinal() {
       });
     } else {
       groups.attr("transform", (_d, i) => {
+        var _props$columnWidth2;
         if (props.orientation === "horizontal") {
           var _props$columnWidth;
           return "".concat(verticalOffset, "translate(").concat(i % cols * ((_props$columnWidth = props.columnWidth) !== null && _props$columnWidth !== void 0 ? _props$columnWidth : 0), ",").concat(Math.floor(i / cols) * props.rowHeight, ")");
         }
-        if (props.orientation === "vertical") {
-          var _props$columnWidth2;
-          return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * ((_props$columnWidth2 = props.columnWidth) !== null && _props$columnWidth2 !== void 0 ? _props$columnWidth2 : 0), ",").concat(i % rows * props.rowHeight, ")");
-        }
-        // No orientation: d3 removes the attribute for a null value, matching the
-        // original implementation's implicit undefined return.
-        return null;
+        // Only "vertical" remains - any other value was rejected above.
+        return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * ((_props$columnWidth2 = props.columnWidth) !== null && _props$columnWidth2 !== void 0 ? _props$columnWidth2 : 0), ",").concat(i % rows * props.rowHeight, ")");
       });
     }
   });

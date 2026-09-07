@@ -8414,7 +8414,9 @@
      * @property {Number} columnWidth               The width of the columns of the legend.
      * @property {Number} rows                      The target number of rows for the legend.
      * @property {Number} columns                    The target number of columns for the legend.
-     * @property {String} orientation               The orientation (layout order) of the legend. should be either "horizontal" or "vertical". No default.
+     * @property {String} orientation               The orientation (layout order) of the legend. Must be either "horizontal" or "vertical".
+     *                                              Required unless horizontalFloat is true, which uses its own layout; a missing or
+     *                                              unrecognised value throws, because no layout can be computed without it.
      * @property {Boolean} reverse                  Whether to reverse the order that categories appear in the legend. Default false
      * @property {Boolean} rightAlign               Whether to right-align the legend. Default false.
      * @property {Boolean} horizontalFloat          A true value changes the legend layout to the horizontal float version. Default false.
@@ -8425,10 +8427,6 @@
      * element in the domain. The entry consists of a label giving the category, and a circle colored with the category's
      * corresponding color. When props.rightAlign is false (the default), the circle comes before the name. When rightAlign
      * is true, the circle comes afterwards. The layout of these labels is governed by the other parameters.
-     *
-     * Note: orientation has no default. With neither orientation nor horizontalFloat set, no
-     * transform is applied and every entry is drawn at the origin, stacked on top of one
-     * another. See test/legend/ordinalColorScale.test.ts.
      *
      * Default Layout:
      *
@@ -8499,11 +8497,17 @@
       return component().prop("scale").prop("rowHeight").rowHeight(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).prop("columnWidth").columnWidth(200).prop("rows").rows(3).prop("columns").columns(3).prop("verticallyCentered").verticallyCentered(false).prop("orientation").prop("reverse").reverse(false).prop("rightAlign").rightAlign(false).prop("horizontalFloat").horizontalFloat(false).prop("floatPadding").floatPadding(20).prop("floatWidth").floatWidth(600).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
+        // Thrown before anything is rendered: without an orientation the row/column layout
+        // cannot be computed at all, and the entries would silently stack at the origin.
+        // horizontalFloat brings its own layout and needs no orientation.
+        if (!props.horizontalFloat && props.orientation !== "horizontal" && props.orientation !== "vertical") {
+          throw new Error('[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true');
+        }
         let domain = props.scale.domain();
         if (props.reverse) {
           domain = [...domain].reverse();
         }
-        // Only read within the matching orientation branch below.
+        // Zero under horizontalFloat, which does not read them.
         let rows = 0;
         let cols = 0;
         if (props.orientation === "horizontal") {
@@ -8541,17 +8545,13 @@
           });
         } else {
           groups.attr("transform", (_d, i) => {
+            var _props$columnWidth2;
             if (props.orientation === "horizontal") {
               var _props$columnWidth;
               return "".concat(verticalOffset, "translate(").concat(i % cols * ((_props$columnWidth = props.columnWidth) !== null && _props$columnWidth !== void 0 ? _props$columnWidth : 0), ",").concat(Math.floor(i / cols) * props.rowHeight, ")");
             }
-            if (props.orientation === "vertical") {
-              var _props$columnWidth2;
-              return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * ((_props$columnWidth2 = props.columnWidth) !== null && _props$columnWidth2 !== void 0 ? _props$columnWidth2 : 0), ",").concat(i % rows * props.rowHeight, ")");
-            }
-            // No orientation: d3 removes the attribute for a null value, matching the
-            // original implementation's implicit undefined return.
-            return null;
+            // Only "vertical" remains - any other value was rejected above.
+            return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * ((_props$columnWidth2 = props.columnWidth) !== null && _props$columnWidth2 !== void 0 ? _props$columnWidth2 : 0), ",").concat(i % rows * props.rowHeight, ")");
           });
         }
       });
@@ -9588,7 +9588,7 @@
      *                                              defaults to using the first and last tick values.
      * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
      */
-    function linearColorScale () {
+    function legendColorLinear() {
       return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat")
       // fn.identity is the documented "no formatting" default. It returns its argument, so it
       // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
@@ -9601,23 +9601,25 @@
           return;
         }
         const domain = props.scale.domain();
+        // Equivalent to fn.last(domain), without widening the element type to undefined.
+        const domainMax = domain[domain.length - 1];
         let values = props.displayValues;
         if (values.length === 0 && props.scale.ticks) {
           values = props.scale.ticks(props.segments - 1);
         }
-        // Equivalent to fn.last(domain), without widening the element type to undefined.
-        values.push(domain[domain.length - 1]);
-        // Avoid division by zero
-        const segWidth = values.length > 0 ? props.width / values.length : 0;
+        // Never write into the caller's array, and only extend the ramp to the domain
+        // maximum when the values do not already reach it - scale.ticks() usually does.
+        values = values.length > 0 && values[values.length - 1] === domainMax ? [...values] : [...values, domainMax];
+        const segWidth = props.width / values.length;
         const segHeight = 10;
         const segments = selection.selectAll("rect.sszvis-legend__mark").data(values).join("rect").classed("sszvis-legend__mark", true);
         segments.attr("x", (_d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("y", 0).attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("height", segHeight).attr("fill", d => props.scale(d));
-        const startEnd = [domain[0], domain[domain.length - 1]];
+        const startEnd = [domain[0], domainMax];
         const labelText = props.labelText || startEnd;
         // rounded end caps for the segments
-        const endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd).join("circle").attr("class", "ssvis-legend--mark");
+        const endCaps = selection.selectAll("circle.sszvis-legend__mark").data(startEnd).join("circle").attr("class", "sszvis-legend__mark");
         endCaps.attr("cx", (_d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => props.scale(d));
         const labels = selection.selectAll(".sszvis-legend__label").data(labelText).join("text").classed("sszvis-legend__label", true);
         const labelPadding = 16;
@@ -12089,7 +12091,7 @@
     exports.layoutSmallMultiples = smallMultiples;
     exports.layoutStackedAreaMultiples = stackedAreaMultiplesLayout;
     exports.legendColorBinned = binnedColorScale;
-    exports.legendColorLinear = linearColorScale;
+    exports.legendColorLinear = legendColorLinear;
     exports.legendColorOrdinal = legendColorOrdinal;
     exports.legendRadius = radius;
     exports.line = line;

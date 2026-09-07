@@ -40,6 +40,6 @@ export interface LinearColorScaleComponent extends ComponentBuilder<LinearColorS
     labelFormat(): LabelFormatter;
     labelFormat(format: LabelFormatter): LinearColorScaleComponent;
 }
-export default function (): LinearColorScaleComponent;
+export default function legendColorLinear(): LinearColorScaleComponent;
 export {};
 //# sourceMappingURL=linearColorScale.d.ts.map
