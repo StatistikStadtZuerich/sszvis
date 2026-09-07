@@ -1,5 +1,6 @@
 import { select } from 'd3';
 import throttle from '../_virtual/index.js';
+import { error } from '../logger.js';
 
 /**
  * Viewport Resize watcher
@@ -26,25 +27,26 @@ import throttle from '../_virtual/index.js';
  *                                      same function twice is de-duplicated: the earlier entry is
  *                                      dropped and the function is appended, so re-registering moves
  *                                      it to the end of the call order. Listeners run in registration
- *                                      order.
+ *                                      order. A listener that is not callable is rejected here, where
+ *                                      the mistake is, rather than on the next resize event.
  *
  * @function {string, function} off     removes a listener by function identity. An unknown event name
  *                                      or an unregistered function is ignored. A single `off` undoes
- *                                      any number of `on` calls for the same function.
+ *                                      any number of `on` calls for the same function. Called with
+ *                                      only an event name it drops every listener for that event,
+ *                                      which is how a host releases listeners it no longer holds a
+ *                                      reference to.
  *
  * @function {string, ...any} trigger   calls every listener registered for the event name, forwarding
  *                                      any further arguments. An event name with no listeners is
  *                                      ignored.
  *
- * Note: the registry is never cleared, so listeners outlive the chart that registered them. A chart
- * that is torn down keeps receiving resize events unless it calls `off` with the exact same function
- * reference; an inline arrow function can never be removed.
+ * Note: the registry is a page-wide singleton, so a chart that is torn down has to release its
+ * listener itself - either with `off(name, cb)`, or with `off(name)` to drop the whole bucket.
  *
- * Note: `trigger` calls the listeners in a bare loop with no error isolation. A throwing listener
- * blocks every listener registered after it and the error escapes `trigger`. Thrown from the window
- * handler it also escapes the throttle before the window is recorded, which leaves throttling
- * disabled for subsequent resize events. `on` accepts anything it is given, so a non-callable
- * listener fails the same way on the next trigger rather than at registration.
+ * Note: `trigger` isolates the listeners from one another. A listener that throws is reported
+ * through `sszvis.logger.error` and the remaining listeners still run, so one broken chart cannot
+ * silence the rest of the page or escape the throttle.
  *
  * Note: `on`, `off` and `trigger` return `this`, so they chain when called as methods on the viewport
  * object but return `undefined` once destructured. The registration itself still works.
@@ -69,6 +71,11 @@ if (globalThis.window !== undefined) {
   }, 500));
 }
 function on(name, cb) {
+  // Registering a non-callable listener can never work, so it is rejected here rather than
+  // left to fail inside `trigger` one resize event later, far from the call that caused it.
+  if (typeof cb !== "function") {
+    throw new TypeError("[sszvis.viewport] The listener for \"".concat(name, "\" must be a function, got ").concat(typeof cb, "."));
+  }
   if (!callbacks[name]) {
     callbacks[name] = [];
   }
@@ -79,7 +86,7 @@ function off(name, cb) {
   if (!callbacks[name]) {
     return this;
   }
-  callbacks[name] = callbacks[name].filter(fn => fn !== cb);
+  callbacks[name] = cb === undefined ? [] : callbacks[name].filter(fn => fn !== cb);
   return this;
 }
 function trigger(name) {
@@ -87,8 +94,15 @@ function trigger(name) {
     for (var _len = arguments.length, evtArgs = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
       evtArgs[_key - 1] = arguments[_key];
     }
-    for (const fn of callbacks[name]) {
-      Reflect.apply(fn, null, evtArgs);
+    // A copy, so that a listener which registers or releases listeners cannot change the
+    // list being iterated. Each call is isolated: one failing chart must not silence the
+    // charts after it, nor let the error escape into the throttled window handler.
+    for (const fn of [...callbacks[name]]) {
+      try {
+        Reflect.apply(fn, null, evtArgs);
+      } catch (error$1) {
+        error("[sszvis.viewport] A \"".concat(name, "\" listener threw:"), error$1);
+      }
     }
   }
   return this;

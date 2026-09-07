@@ -728,10 +728,10 @@ declare function tooltipAnchor<T = unknown>(): TooltipAnchorComponent<T>;
  * directly accessible; instead, an actions object is provided to dispatch actions by
  * calling them as functions.
  *
- * One exception: the render-scheduled flag is only cleared *after* `render` returns, so an
- * action dispatched synchronously from within `render` updates the state but queues no
- * render for it. The new state is not shown until something else - another dispatch, or a
- * resize - triggers the next frame.
+ * An action dispatched synchronously from within `render` queues a *further* frame rather
+ * than coalescing into the one being painted, so the state it produces is rendered. A render
+ * function that dispatches unconditionally would recur forever, so such cascades are cut off
+ * after `MAX_CASCADED_RENDERS` consecutive frames, with a warning.
  *
  * The props are passed as an array, which is spread into the action's arguments.
  */
@@ -758,6 +758,12 @@ interface AppFallback {
     element: SelectableElement;
     src: string;
 }
+/** The handle `app()` returns, so that an app can be torn down. */
+interface AppHandle {
+    /** Releases the app's resize listener and stops any frame that is still queued. Calling it
+     * more than once is harmless; the app renders nothing afterwards. */
+    destroy: () => void;
+}
 interface AppProps<State, Actions extends Record<string, Action<State>>> {
     /** Asynchronously create the initial state and optionally schedule an action. */
     init: (state: Draft<State>) => Promise<Effect | void>;
@@ -775,11 +781,11 @@ interface AppProps<State, Actions extends Record<string, Action<State>>> {
  * a structured approach, this allows us to optimize the render loop and clarifies
  * the relationship between state and actions.
  *
- * Within an app, state is meant to be modified only through actions. Note that this is a
- * convention, not a guarantee: immer's auto-freezing is turned off in this module because
- * d3 mutates state in many places, so the state handed to render is *not* frozen. Mutating
- * it silently succeeds and the change survives into the next action's draft — treat the
- * state in render as read-only.
+ * Within an app, state is modified only through actions. The state object handed to `render`
+ * is frozen, so assigning to it throws instead of silently corrupting the state the next
+ * action drafts from. The freeze is shallow, and immer's own auto-freezing stays off, because
+ * d3 mutates the data objects it is handed in many places; only the top level of the state is
+ * protected.
  *
  * Conceptually, an app works like this:
  *
@@ -794,19 +800,21 @@ interface AppProps<State, Actions extends Record<string, Action<State>>> {
  * `init` must return a promise. An effect returned by `init` or by an action is called with
  * `dispatch`, which takes an action name and an array of props.
  *
- * `app()` returns nothing and never removes its resize listener, so an app lives for the
- * lifetime of the page and cannot be torn down.
+ * `app()` returns a handle whose `destroy()` releases the resize listener and stops any queued
+ * frame, so a host that mounts and unmounts charts can tear an app down instead of leaking one
+ * render loop per mount.
  *
- * Error handling: a rejecting `init`, and an error thrown by an effect returned *by init*,
- * both land in the same catch, where they are re-wrapped with the "[sszvis.app]" prefix and
- * re-thrown. That throw escapes as an unhandled promise rejection, and as a consequence the
- * `fallback` option is never rendered. An effect returned by an *action* runs outside that
- * chain, so its error throws synchronously at the dispatcher's call site instead - a second,
- * inconsistent path.
+ * Error handling: a rejecting `init` is reported through `sszvis.logger.error`, keeping the
+ * original error as the reported error's `cause`, and the `fallback` image - if one is
+ * configured - is rendered in its place. The failure does not escape as an unhandled promise
+ * rejection. An effect - whether it came from `init` or from an action - runs on its own path:
+ * an error it throws is reported as an effect failure and never travels through the `init`
+ * rejection path, so it is not mistaken for a chart that could not be built and does not render
+ * the fallback.
  *
  * @module sszvis/app
  */
-declare const app: <State extends object, Actions extends Record<string, Action<State>> = Record<string, Action<State>>>({ init, render, actions, fallback, }: AppProps<State, Actions>) => void;
+declare const app: <State extends object, Actions extends Record<string, Action<State>> = Record<string, Action<State>>>({ init, render, actions, fallback, }: AppProps<State, Actions>) => AppHandle;
 
 /**
  * Functions related to aspect ratio calculations. An "auto" function is
@@ -7364,25 +7372,26 @@ declare const slowTransition: () => d3_transition.Transition<d3_selection.BaseTy
  *                                      same function twice is de-duplicated: the earlier entry is
  *                                      dropped and the function is appended, so re-registering moves
  *                                      it to the end of the call order. Listeners run in registration
- *                                      order.
+ *                                      order. A listener that is not callable is rejected here, where
+ *                                      the mistake is, rather than on the next resize event.
  *
  * @function {string, function} off     removes a listener by function identity. An unknown event name
  *                                      or an unregistered function is ignored. A single `off` undoes
- *                                      any number of `on` calls for the same function.
+ *                                      any number of `on` calls for the same function. Called with
+ *                                      only an event name it drops every listener for that event,
+ *                                      which is how a host releases listeners it no longer holds a
+ *                                      reference to.
  *
  * @function {string, ...any} trigger   calls every listener registered for the event name, forwarding
  *                                      any further arguments. An event name with no listeners is
  *                                      ignored.
  *
- * Note: the registry is never cleared, so listeners outlive the chart that registered them. A chart
- * that is torn down keeps receiving resize events unless it calls `off` with the exact same function
- * reference; an inline arrow function can never be removed.
+ * Note: the registry is a page-wide singleton, so a chart that is torn down has to release its
+ * listener itself - either with `off(name, cb)`, or with `off(name)` to drop the whole bucket.
  *
- * Note: `trigger` calls the listeners in a bare loop with no error isolation. A throwing listener
- * blocks every listener registered after it and the error escapes `trigger`. Thrown from the window
- * handler it also escapes the throttle before the window is recorded, which leaves throttling
- * disabled for subsequent resize events. `on` accepts anything it is given, so a non-callable
- * listener fails the same way on the next trigger rather than at registration.
+ * Note: `trigger` isolates the listeners from one another. A listener that throws is reported
+ * through `sszvis.logger.error` and the remaining listeners still run, so one broken chart cannot
+ * silence the rest of the page or escape the throttle.
  *
  * Note: `on`, `off` and `trigger` return `this`, so they chain when called as methods on the viewport
  * object but return `undefined` once destructured. The registration itself still works.
@@ -7404,10 +7413,10 @@ type ResizeListener = () => void;
 interface Viewport {
     on(this: Viewport, name: "resize", cb: ResizeListener): Viewport;
     on<Name extends string>(this: Viewport, name: Name extends "resize" ? never : Name, cb: ViewportListener): Viewport;
-    off(this: Viewport, name: string, cb: ViewportListener): Viewport;
+    off(this: Viewport, name: string, cb?: ViewportListener): Viewport;
     trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport;
 }
 declare const viewport: Viewport;
 
 export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$x as annotationCircle, export_default$w as annotationConfidenceArea, export_default$v as annotationConfidenceBar, export_default$t as annotationLine, export_default$s as annotationRangeFlag, export_default$r as annotationRangeRuler, export_default$q as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$l as bar, bounds, export_default$y as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, export_default$a as dimensionsHeatTable, export_default$9 as dimensionsHorizontalBarChart, export_default$5 as dimensionsVerticalBarChart, export_default$k as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$u as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, export_default$8 as layoutPopulationPyramid, export_default$7 as layoutSmallMultiples, export_default$6 as layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, export_default$j as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$o as move, muchDarker, nestedStackedBarsVertical, not, export_default$i as pack, export_default$n as panning, parseDate, parseNumber, parseYear, export_default$h as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, export_default$g as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$f as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, export_default$e as stackedArea, export_default$d as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$c as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$p as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$b as treemap, valueFn, viewport, export_default$m as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
-export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter, Viewport, ViewportListener };
+export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, ValueSorter, Viewport, ViewportListener };

@@ -23,25 +23,26 @@
  *                                      same function twice is de-duplicated: the earlier entry is
  *                                      dropped and the function is appended, so re-registering moves
  *                                      it to the end of the call order. Listeners run in registration
- *                                      order.
+ *                                      order. A listener that is not callable is rejected here, where
+ *                                      the mistake is, rather than on the next resize event.
  *
  * @function {string, function} off     removes a listener by function identity. An unknown event name
  *                                      or an unregistered function is ignored. A single `off` undoes
- *                                      any number of `on` calls for the same function.
+ *                                      any number of `on` calls for the same function. Called with
+ *                                      only an event name it drops every listener for that event,
+ *                                      which is how a host releases listeners it no longer holds a
+ *                                      reference to.
  *
  * @function {string, ...any} trigger   calls every listener registered for the event name, forwarding
  *                                      any further arguments. An event name with no listeners is
  *                                      ignored.
  *
- * Note: the registry is never cleared, so listeners outlive the chart that registered them. A chart
- * that is torn down keeps receiving resize events unless it calls `off` with the exact same function
- * reference; an inline arrow function can never be removed.
+ * Note: the registry is a page-wide singleton, so a chart that is torn down has to release its
+ * listener itself - either with `off(name, cb)`, or with `off(name)` to drop the whole bucket.
  *
- * Note: `trigger` calls the listeners in a bare loop with no error isolation. A throwing listener
- * blocks every listener registered after it and the error escapes `trigger`. Thrown from the window
- * handler it also escapes the throttle before the window is recorded, which leaves throttling
- * disabled for subsequent resize events. `on` accepts anything it is given, so a non-callable
- * listener fails the same way on the next trigger rather than at registration.
+ * Note: `trigger` isolates the listeners from one another. A listener that throws is reported
+ * through `sszvis.logger.error` and the remaining listeners still run, so one broken chart cannot
+ * silence the rest of the page or escape the throttle.
  *
  * Note: `on`, `off` and `trigger` return `this`, so they chain when called as methods on the viewport
  * object but return `undefined` once destructured. The registration itself still works.
@@ -63,7 +64,7 @@ export type ResizeListener = () => void;
 export interface Viewport {
     on(this: Viewport, name: "resize", cb: ResizeListener): Viewport;
     on<Name extends string>(this: Viewport, name: Name extends "resize" ? never : Name, cb: ViewportListener): Viewport;
-    off(this: Viewport, name: string, cb: ViewportListener): Viewport;
+    off(this: Viewport, name: string, cb?: ViewportListener): Viewport;
     trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport;
 }
 export declare const viewport: Viewport;

@@ -6,10 +6,10 @@ import type { SelectableElement } from "./types.js";
  * directly accessible; instead, an actions object is provided to dispatch actions by
  * calling them as functions.
  *
- * One exception: the render-scheduled flag is only cleared *after* `render` returns, so an
- * action dispatched synchronously from within `render` updates the state but queues no
- * render for it. The new state is not shown until something else - another dispatch, or a
- * resize - triggers the next frame.
+ * An action dispatched synchronously from within `render` queues a *further* frame rather
+ * than coalescing into the one being painted, so the state it produces is rendered. A render
+ * function that dispatches unconditionally would recur forever, so such cascades are cut off
+ * after `MAX_CASCADED_RENDERS` consecutive frames, with a warning.
  *
  * The props are passed as an array, which is spread into the action's arguments.
  */
@@ -36,6 +36,12 @@ export interface AppFallback {
     element: SelectableElement;
     src: string;
 }
+/** The handle `app()` returns, so that an app can be torn down. */
+export interface AppHandle {
+    /** Releases the app's resize listener and stops any frame that is still queued. Calling it
+     * more than once is harmless; the app renders nothing afterwards. */
+    destroy: () => void;
+}
 export interface AppProps<State, Actions extends Record<string, Action<State>>> {
     /** Asynchronously create the initial state and optionally schedule an action. */
     init: (state: Draft<State>) => Promise<Effect | void>;
@@ -53,11 +59,11 @@ export interface AppProps<State, Actions extends Record<string, Action<State>>> 
  * a structured approach, this allows us to optimize the render loop and clarifies
  * the relationship between state and actions.
  *
- * Within an app, state is meant to be modified only through actions. Note that this is a
- * convention, not a guarantee: immer's auto-freezing is turned off in this module because
- * d3 mutates state in many places, so the state handed to render is *not* frozen. Mutating
- * it silently succeeds and the change survives into the next action's draft — treat the
- * state in render as read-only.
+ * Within an app, state is modified only through actions. The state object handed to `render`
+ * is frozen, so assigning to it throws instead of silently corrupting the state the next
+ * action drafts from. The freeze is shallow, and immer's own auto-freezing stays off, because
+ * d3 mutates the data objects it is handed in many places; only the top level of the state is
+ * protected.
  *
  * Conceptually, an app works like this:
  *
@@ -72,18 +78,20 @@ export interface AppProps<State, Actions extends Record<string, Action<State>>> 
  * `init` must return a promise. An effect returned by `init` or by an action is called with
  * `dispatch`, which takes an action name and an array of props.
  *
- * `app()` returns nothing and never removes its resize listener, so an app lives for the
- * lifetime of the page and cannot be torn down.
+ * `app()` returns a handle whose `destroy()` releases the resize listener and stops any queued
+ * frame, so a host that mounts and unmounts charts can tear an app down instead of leaking one
+ * render loop per mount.
  *
- * Error handling: a rejecting `init`, and an error thrown by an effect returned *by init*,
- * both land in the same catch, where they are re-wrapped with the "[sszvis.app]" prefix and
- * re-thrown. That throw escapes as an unhandled promise rejection, and as a consequence the
- * `fallback` option is never rendered. An effect returned by an *action* runs outside that
- * chain, so its error throws synchronously at the dispatcher's call site instead - a second,
- * inconsistent path.
+ * Error handling: a rejecting `init` is reported through `sszvis.logger.error`, keeping the
+ * original error as the reported error's `cause`, and the `fallback` image - if one is
+ * configured - is rendered in its place. The failure does not escape as an unhandled promise
+ * rejection. An effect - whether it came from `init` or from an action - runs on its own path:
+ * an error it throws is reported as an effect failure and never travels through the `init`
+ * rejection path, so it is not mistaken for a chart that could not be built and does not render
+ * the fallback.
  *
  * @module sszvis/app
  */
-export declare const app: <State extends object, Actions extends Record<string, Action<State>> = Record<string, Action<State>>>({ init, render, actions, fallback, }: AppProps<State, Actions>) => void;
+export declare const app: <State extends object, Actions extends Record<string, Action<State>> = Record<string, Action<State>>>({ init, render, actions, fallback, }: AppProps<State, Actions>) => AppHandle;
 export {};
 //# sourceMappingURL=app.d.ts.map

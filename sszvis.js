@@ -2767,6 +2767,68 @@
       selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
     };
 
+    /**
+     *
+     * @module sszvis/logger
+     *
+     * A component for logging development messages and errors
+     *
+     * This is a custom logger which accomplishes two goals: 1) to clearly identify log messages
+     * coming from sszvis, and 2) to smooth out cross-browser inconsistencies in the implementation
+     * of various console functions.
+     *
+     * All log messages should be visible in the developer tools Javascript console for your web browser
+     * of choice. For more information on how to access browser developer tools, see the browser documentation.
+     *
+     * The logger provides three log levels. All logging functions can accept any number of arguments of
+     * any type.
+     *
+     * Examples:
+     *
+     * Logging general information:
+     *
+     * sszvis.logger.log('Circle coordinates: ', circle.cx, circle.cy, circle.r);
+     *
+     * Logging a warning:
+     *
+     * sszvis.logger.warn('Configuration options are incompatible: ', props.config1(), props.config2());
+     *
+     * Logging an error:
+     *
+     * sszvis.logger.error('Component X requires the "abc" property');
+     *
+     * @method {any...} log        The basic log level, used for informational purposes
+     * @method {any...} warn       Logs a warning, which identifies a potential, but not critical problem
+     *                             or informs the user about certain implementation issues which may or
+     *                             may not require user attention.
+     * @method {any...} error      Logs an error. This should be used when something has gone wrong in the
+     *                             implementation, or when the API is used in an unsupported manner. An
+     *                             error logged in this way is different from an uncaught exception, in that
+     *                             it does not force an unexpected termination of code execution. Instead,
+     *                             when errors are logged, it is because of a known, and noticed issue, and
+     *                             the error message should provide some information towards resolving the
+     *                             problem, usually by changing the use of the library. The implementation
+     *                             will handle the situation gracefully, and not cause an unexpected termination
+     *                             of execution.
+     */
+    const warn = logger("warn");
+    const error = logger("error");
+    /* Helper functions
+    ----------------------------------------------- */
+    function logger(type) {
+      return function () {
+        var _console;
+        if ((_console = console) !== null && _console !== void 0 && _console[type]) {
+          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+          }
+          for (const msg of args) {
+            console[type](msg);
+          }
+        }
+      };
+    }
+
     function getDefaultExportFromCjs (x) {
     	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
     }
@@ -2825,25 +2887,26 @@
      *                                      same function twice is de-duplicated: the earlier entry is
      *                                      dropped and the function is appended, so re-registering moves
      *                                      it to the end of the call order. Listeners run in registration
-     *                                      order.
+     *                                      order. A listener that is not callable is rejected here, where
+     *                                      the mistake is, rather than on the next resize event.
      *
      * @function {string, function} off     removes a listener by function identity. An unknown event name
      *                                      or an unregistered function is ignored. A single `off` undoes
-     *                                      any number of `on` calls for the same function.
+     *                                      any number of `on` calls for the same function. Called with
+     *                                      only an event name it drops every listener for that event,
+     *                                      which is how a host releases listeners it no longer holds a
+     *                                      reference to.
      *
      * @function {string, ...any} trigger   calls every listener registered for the event name, forwarding
      *                                      any further arguments. An event name with no listeners is
      *                                      ignored.
      *
-     * Note: the registry is never cleared, so listeners outlive the chart that registered them. A chart
-     * that is torn down keeps receiving resize events unless it calls `off` with the exact same function
-     * reference; an inline arrow function can never be removed.
+     * Note: the registry is a page-wide singleton, so a chart that is torn down has to release its
+     * listener itself - either with `off(name, cb)`, or with `off(name)` to drop the whole bucket.
      *
-     * Note: `trigger` calls the listeners in a bare loop with no error isolation. A throwing listener
-     * blocks every listener registered after it and the error escapes `trigger`. Thrown from the window
-     * handler it also escapes the throttle before the window is recorded, which leaves throttling
-     * disabled for subsequent resize events. `on` accepts anything it is given, so a non-callable
-     * listener fails the same way on the next trigger rather than at registration.
+     * Note: `trigger` isolates the listeners from one another. A listener that throws is reported
+     * through `sszvis.logger.error` and the remaining listeners still run, so one broken chart cannot
+     * silence the rest of the page or escape the throttle.
      *
      * Note: `on`, `off` and `trigger` return `this`, so they chain when called as methods on the viewport
      * object but return `undefined` once destructured. The registration itself still works.
@@ -2868,6 +2931,11 @@
       }, 500));
     }
     function on(name, cb) {
+      // Registering a non-callable listener can never work, so it is rejected here rather than
+      // left to fail inside `trigger` one resize event later, far from the call that caused it.
+      if (typeof cb !== "function") {
+        throw new TypeError("[sszvis.viewport] The listener for \"".concat(name, "\" must be a function, got ").concat(typeof cb, "."));
+      }
       if (!callbacks[name]) {
         callbacks[name] = [];
       }
@@ -2878,7 +2946,7 @@
       if (!callbacks[name]) {
         return this;
       }
-      callbacks[name] = callbacks[name].filter(fn => fn !== cb);
+      callbacks[name] = cb === undefined ? [] : callbacks[name].filter(fn => fn !== cb);
       return this;
     }
     function trigger(name) {
@@ -2886,8 +2954,15 @@
         for (var _len = arguments.length, evtArgs = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
           evtArgs[_key - 1] = arguments[_key];
         }
-        for (const fn of callbacks[name]) {
-          Reflect.apply(fn, null, evtArgs);
+        // A copy, so that a listener which registers or releases listeners cannot change the
+        // list being iterated. Each call is isolated: one failing chart must not silence the
+        // charts after it, nor let the error escape into the throttled window handler.
+        for (const fn of [...callbacks[name]]) {
+          try {
+            Reflect.apply(fn, null, evtArgs);
+          } catch (error$1) {
+            error("[sszvis.viewport] A \"".concat(name, "\" listener threw:"), error$1);
+          }
         }
       }
       return this;
@@ -2907,11 +2982,11 @@
      * a structured approach, this allows us to optimize the render loop and clarifies
      * the relationship between state and actions.
      *
-     * Within an app, state is meant to be modified only through actions. Note that this is a
-     * convention, not a guarantee: immer's auto-freezing is turned off in this module because
-     * d3 mutates state in many places, so the state handed to render is *not* frozen. Mutating
-     * it silently succeeds and the change survives into the next action's draft — treat the
-     * state in render as read-only.
+     * Within an app, state is modified only through actions. The state object handed to `render`
+     * is frozen, so assigning to it throws instead of silently corrupting the state the next
+     * action drafts from. The freeze is shallow, and immer's own auto-freezing stays off, because
+     * d3 mutates the data objects it is handed in many places; only the top level of the state is
+     * protected.
      *
      * Conceptually, an app works like this:
      *
@@ -2926,15 +3001,17 @@
      * `init` must return a promise. An effect returned by `init` or by an action is called with
      * `dispatch`, which takes an action name and an array of props.
      *
-     * `app()` returns nothing and never removes its resize listener, so an app lives for the
-     * lifetime of the page and cannot be torn down.
+     * `app()` returns a handle whose `destroy()` releases the resize listener and stops any queued
+     * frame, so a host that mounts and unmounts charts can tear an app down instead of leaking one
+     * render loop per mount.
      *
-     * Error handling: a rejecting `init`, and an error thrown by an effect returned *by init*,
-     * both land in the same catch, where they are re-wrapped with the "[sszvis.app]" prefix and
-     * re-thrown. That throw escapes as an unhandled promise rejection, and as a consequence the
-     * `fallback` option is never rendered. An effect returned by an *action* runs outside that
-     * chain, so its error throws synchronously at the dispatcher's call site instead - a second,
-     * inconsistent path.
+     * Error handling: a rejecting `init` is reported through `sszvis.logger.error`, keeping the
+     * original error as the reported error's `cause`, and the `fallback` image - if one is
+     * configured - is rendered in its place. The failure does not escape as an unhandled promise
+     * rejection. An effect - whether it came from `init` or from an action - runs on its own path:
+     * an error it throws is reported as an effect failure and never travels through the `init`
+     * rejection path, so it is not mistaken for a chart that could not be built and does not render
+     * the fallback.
      *
      * @module sszvis/app
      */
@@ -2946,6 +3023,11 @@
         fallback
       } = _ref;
       let renderScheduled = false;
+      // Whether `render` is on the stack right now, which is what tells a dispatch made from
+      // inside render apart from one that should coalesce into the frame already queued.
+      let rendering = false;
+      let cascadedRenders = 0;
+      let destroyed = false;
       let state;
       invariant(isFunction(init), 'An "init" function returning a Promise must be provided.');
       invariant(isFunction(render), 'A "render" function must be provided.');
@@ -2966,14 +3048,49 @@
         return acc;
       }, {});
       function scheduleUpdate(effect) {
-        if (!renderScheduled) {
-          renderScheduled = true;
-          requestAnimationFrame(() => {
-            render(state, actionDispatchers);
-            renderScheduled = false;
-          });
+        scheduleRender();
+        if (isFunction(effect)) runEffect(effect);
+      }
+      function scheduleRender() {
+        if (destroyed || renderScheduled) return;
+        if (rendering) {
+          // A dispatch made from inside render. Its state cannot be shown by the frame that is
+          // painting, so it needs one of its own - and a render that dispatches unconditionally
+          // would then never stop, which is what this cap is for.
+          if (cascadedRenders >= MAX_CASCADED_RENDERS) {
+            warn("[sszvis.app] Stopped after ".concat(MAX_CASCADED_RENDERS, " renders scheduled from inside \"render\". Dispatch from render only on a condition that eventually becomes false."));
+            return;
+          }
+          cascadedRenders += 1;
+        } else {
+          cascadedRenders = 0;
         }
-        if (isFunction(effect)) effect(dispatch);
+        renderScheduled = true;
+        requestAnimationFrame(() => {
+          // Cleared before render runs, so that a dispatch made from inside render can queue the
+          // frame its state needs instead of being swallowed by a guard that is still closed.
+          renderScheduled = false;
+          if (destroyed) return;
+          rendering = true;
+          try {
+            // Shallow, so that d3 can still mutate the data hanging off the state, but enough to
+            // turn an accidental `state.x = …` in render into a TypeError rather than a change
+            // that survives into the next action's draft.
+            render(Object.freeze(state), actionDispatchers);
+          } finally {
+            rendering = false;
+          }
+        });
+      }
+      /** Effects are the caller's code, run one turn removed from whatever scheduled them, so
+       * their failures are reported on their own rather than attributed to `init` or thrown at
+       * an unrelated dispatcher's call site. */
+      function runEffect(effect) {
+        try {
+          effect(dispatch);
+        } catch (error) {
+          reportError("An effect failed", error);
+        }
       }
       const dispatch = (action, props) => {
         const handler = actionMap[action];
@@ -2992,23 +3109,50 @@
       const initialState = createDraft({});
       init(initialState).then(effect => {
         state = finish(initialState);
-        scheduleUpdate(effect);
+        // An app destroyed while init was still in flight must not register a listener that
+        // nothing will ever release.
+        if (destroyed) return;
+        // Registered before the effect runs: scheduleUpdate calls the effect synchronously,
+        // and an init effect that destroys the app would otherwise release a listener that
+        // is only installed afterwards, leaving it attached for the life of the page.
         viewport.on("resize", scheduleUpdate);
+        scheduleUpdate(effect);
       }).catch(error => {
-        // NOTE: invariant always throws here, so the fallback is never reached. This is
-        // the behaviour of the original implementation, kept as-is.
-        invariant(false, error);
-        fallback && fallbackRender(fallback.element, {
+        // A rejecting init is a runtime failure, not a misconfiguration: the fallback option
+        // exists precisely for it, so it is reported and the fallback rendered rather than
+        // re-thrown into an unhandled rejection nobody can catch.
+        reportError("Initialisation failed", error);
+        // A destroyed app renders nothing afterwards, fallback included - the container may
+        // already belong to a replacement app. The failure is still reported, since it is
+        // real regardless of who is holding the container now.
+        if (!destroyed && fallback) fallbackRender(fallback.element, {
           src: fallback.src
         });
       });
+      return {
+        destroy() {
+          destroyed = true;
+          viewport.off("resize", scheduleUpdate);
+        }
+      };
     };
     // -----------------------------------------------------------------------------
     // Helper functions
+    /** How many frames in a row may be scheduled by a dispatch made from inside `render` before
+     * the cascade is treated as a runaway loop and cut off. */
+    const MAX_CASCADED_RENDERS = 10;
     function invariant(condition, message) {
       if (!condition) {
         throw new Error("[sszvis.app] ".concat(message));
       }
+    }
+    /** Reports a runtime failure without escaping as an unhandled rejection. The original error
+     * is kept as the `cause` so its message and stack are not lost. */
+    function reportError(context, cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      error(new Error("[sszvis.app] ".concat(context, ": ").concat(message), {
+        cause
+      }));
     }
     function isFunction(x) {
       return typeof x === "function";
@@ -3320,68 +3464,6 @@
       const ar = defaultAspectRatios[(bp === null || bp === void 0 ? void 0 : bp.name) || "_"];
       return ar(measurement.width);
     };
-
-    /**
-     *
-     * @module sszvis/logger
-     *
-     * A component for logging development messages and errors
-     *
-     * This is a custom logger which accomplishes two goals: 1) to clearly identify log messages
-     * coming from sszvis, and 2) to smooth out cross-browser inconsistencies in the implementation
-     * of various console functions.
-     *
-     * All log messages should be visible in the developer tools Javascript console for your web browser
-     * of choice. For more information on how to access browser developer tools, see the browser documentation.
-     *
-     * The logger provides three log levels. All logging functions can accept any number of arguments of
-     * any type.
-     *
-     * Examples:
-     *
-     * Logging general information:
-     *
-     * sszvis.logger.log('Circle coordinates: ', circle.cx, circle.cy, circle.r);
-     *
-     * Logging a warning:
-     *
-     * sszvis.logger.warn('Configuration options are incompatible: ', props.config1(), props.config2());
-     *
-     * Logging an error:
-     *
-     * sszvis.logger.error('Component X requires the "abc" property');
-     *
-     * @method {any...} log        The basic log level, used for informational purposes
-     * @method {any...} warn       Logs a warning, which identifies a potential, but not critical problem
-     *                             or informs the user about certain implementation issues which may or
-     *                             may not require user attention.
-     * @method {any...} error      Logs an error. This should be used when something has gone wrong in the
-     *                             implementation, or when the API is used in an unsupported manner. An
-     *                             error logged in this way is different from an uncaught exception, in that
-     *                             it does not force an unexpected termination of code execution. Instead,
-     *                             when errors are logged, it is because of a known, and noticed issue, and
-     *                             the error message should provide some information towards resolving the
-     *                             problem, usually by changing the use of the library. The implementation
-     *                             will handle the situation gracefully, and not cause an unexpected termination
-     *                             of execution.
-     */
-    const warn = logger("warn");
-    const error = logger("error");
-    /* Helper functions
-    ----------------------------------------------- */
-    function logger(type) {
-      return function () {
-        var _console;
-        if ((_console = console) !== null && _console !== void 0 && _console[type]) {
-          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-          }
-          for (const msg of args) {
-            console[type](msg);
-          }
-        }
-      };
-    }
 
     /**
      * Scale utilities
