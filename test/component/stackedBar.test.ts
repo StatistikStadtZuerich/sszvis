@@ -145,6 +145,21 @@ describe("component/stackedBar", () => {
       expect(layout.maxValue).toBe(0);
     });
 
+    test("should keep the data order of integer-like series keys", () => {
+      // The keys are collected from the data rather than from the cascade's objectBy layer,
+      // whose plain object would enumerate "2" before "10" and, because the vertical layout
+      // reverses the keys, stack them the other way round.
+      const numeric: Row[] = [
+        { region: "A", category: "10", value: 1 },
+        { region: "A", category: "2", value: 2 },
+      ];
+      const layout = verticalData(numeric);
+      expect(layout.keys).toEqual(["10", "2"]);
+      expect(layout.map((series) => series[0].series)).toEqual(["10", "2"]);
+      // "2" is the last key, so it sits on the baseline with "10" (value 1) on top of it.
+      expect(pairs(layout)).toEqual([[[2, 3]], [[0, 2]]]);
+    });
+
     test("should stack a series a stack has no row for as zero", () => {
       const sparse = rows.filter((d) => !(d.region === "B" && d.category === "Y"));
       // "Y" is on the baseline of the vertical layout, so stack "B" is only the "X" slice
@@ -555,24 +570,6 @@ describe("component/stackedBar", () => {
   });
 
   describe("known quirks", () => {
-    test("stacks integer-like series keys in numeric order, not data order", () => {
-      // BUG: the series keys come from `Object.keys` of the cascade's objectBy layer, and
-      // JavaScript orders integer-like object keys numerically regardless of insertion
-      // order. A series accessor returning years or numeric codes therefore loses the
-      // caller's ordering, which is also the stacking order: "10" is seen first in the data
-      // but ends up sorted after "2" and, because the vertical layout reverses the keys,
-      // stacked below it.
-      const numeric: Row[] = [
-        { region: "A", category: "10", value: 1 },
-        { region: "A", category: "2", value: 2 },
-      ];
-      const layout = verticalData(numeric);
-      expect(layout.keys).toEqual(["2", "10"]);
-      expect(layout.map((series) => series[0].series)).toEqual(["2", "10"]);
-      // "10" (value 1) sits on the baseline, "2" (value 2) on top of it.
-      expect(pairs(layout)).toEqual([[[1, 3]], [[0, 1]]]);
-    });
-
     test("orders integer-like stacks numerically too", () => {
       // NOTE: the cascade's arrayBy layer iterates the same kind of object, so the stacks
       // are reordered as well. This one is only cosmetic: each slice carries its own stack
