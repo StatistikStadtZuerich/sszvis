@@ -49,15 +49,19 @@ describe("component/stackedAreaMultiples", () => {
   /**
    * An area wired to the test point shape, with the transition left at its default.
    *
-   * Unlike stackedArea, this component writes every visual property to the plain selection
-   * whether the transition is on or off, so there is nothing to disable in order to observe
-   * the output synchronously. See the transition block at the bottom of this file.
+   * An entering band is written synchronously even with the transition on, so a first render
+   * is observable on the same tick. A re-render is not: an updating band eases into its new
+   * geometry and colours over 300ms, so tests that assert the result of a second render use
+   * staticAreaOf. See the transition block at the bottom of this file.
    */
   const areaOf = () =>
     stackedAreaMultiples()
       .x((d: Point) => d.x)
       .y0((d: Point) => d.y0)
       .y1((d: Point) => d.y1);
+
+  /** The same area with the transition off, for assertions over a re-render. */
+  const staticAreaOf = () => areaOf().transition(false);
 
   const paths = (node: Element) => [...node.querySelectorAll("path.sszvis-path")];
   const ds = (node: Element) => paths(node).map((p) => p.getAttribute("d"));
@@ -122,7 +126,7 @@ describe("component/stackedAreaMultiples", () => {
     });
 
     test("should update the geometry when the data changes", () => {
-      const component = areaOf();
+      const component = staticAreaOf();
       const g = group("update");
       g.datum(oneLayer).call(component as never);
       g.datum([
@@ -275,28 +279,25 @@ describe("component/stackedAreaMultiples", () => {
       expect(separated[1]).toBe(stacked[1]);
     });
 
-    describe("known quirks", () => {
-      test("the switch into the separated view snaps, and the switch back eases", async () => {
-        // BUG: the two halves of the toggle the JSDoc's key property exists for behave
-        // differently, because stackedArea routes its attributes through the transition and
-        // this component does not. Going separated, the new geometry is on screen on the same
-        // tick; coming back, the old geometry holds and interpolates over 300ms. The chart
-        // animates in one direction only.
-        // current: an instant jump into the separated view. expected: both directions ease,
-        // as they did before the transition was left unassigned.
-        const g = group("toggle-timing");
-        g.datum(twoLayers).call(stackedView() as never);
-        await settle();
+    test("should ease in both directions", async () => {
+      // The toggle the key property exists for. Both components route an updating band
+      // through the transition, so each switch holds the old geometry and interpolates into
+      // the new one over 300ms. The switch into the separated view used to snap, because
+      // this component created its transition and dropped it.
+      const g = group("toggle-timing");
+      g.datum(twoLayers).call(stackedView() as never);
+      await settle();
 
-        g.datum(twoLayers).call(separatedView() as never);
-        expect(ds(g.node() as SVGGElement)).toEqual([firstSeparated, secondSeparated]);
+      g.datum(twoLayers).call(separatedView() as never);
+      // Still the stacked geometry on the tick of the switch.
+      expect(ds(g.node() as SVGGElement)).toEqual([firstLayerPath, secondLayerPath]);
+      await settle();
+      expect(ds(g.node() as SVGGElement)).toEqual([firstSeparated, secondSeparated]);
 
-        g.datum(twoLayers).call(stackedView() as never);
-        // Still the separated geometry, because the stacked view eases away from it.
-        expect(ds(g.node() as SVGGElement)).toEqual([firstSeparated, secondSeparated]);
-        await settle();
-        expect(ds(g.node() as SVGGElement)).toEqual([firstLayerPath, secondLayerPath]);
-      });
+      g.datum(twoLayers).call(stackedView() as never);
+      expect(ds(g.node() as SVGGElement)).toEqual([firstSeparated, secondSeparated]);
+      await settle();
+      expect(ds(g.node() as SVGGElement)).toEqual([firstLayerPath, secondLayerPath]);
     });
   });
 
@@ -914,7 +915,7 @@ describe("component/stackedAreaMultiples", () => {
         // bug for that reason.
         const g = group("foreign");
         g.append("path").attr("class", "sszvis-path").attr("d", "M1,1").attr("fill", "#0f0");
-        g.datum(oneLayer).call(areaOf() as never);
+        g.datum(oneLayer).call(staticAreaOf() as never);
         const node = g.node() as SVGGElement;
         expect(paths(node).length).toBe(1);
         expect(ds(node)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
@@ -948,87 +949,62 @@ describe("component/stackedAreaMultiples", () => {
       expect(attrs(node, "stroke-width")).toEqual(["3"]);
     });
 
-    describe("known quirks", () => {
-      test("nothing is animated when the transition is enabled", () => {
-        // BUG: the transition is created on its own statement and the return value is
-        // dropped -
-        //   if (props.transition) { paths.transition(defaultTransition()); }
-        //   paths.attr("d", ...)
-        // - so every attribute is written to the plain selection and the transition it
-        // schedules carries no tweens. It did animate until 47f58578 ("perf: change .enter() to
-        // .join() API", Oct 2024), which dropped the `paths =` the transition used to be
-        // assigned back to and left the call as dead code. Its JSDoc sells key as
-        // "particularly important when creating a chart which transitions between stacked and
-        // separated views", and that is the half of the toggle that no longer eases: in
-        // docs/area-chart-stacked/sa-two.js the switch into the separated view snaps, while the
-        // switch back, drawn by stackedArea, still eases. bar carries the same
-        // discarded-transition shape, though it writes its attributes before creating the
-        // transition too, so its elements are never blank.
-        // current: the new geometry is on screen on the same tick. expected: the old
-        // geometry holds and eases to the new one over 300ms.
-        const component = areaOf().fill("#ff0000").strokeWidth(3);
-        const g = group("animated");
-        g.datum(oneLayer).call(component as never);
-        // An entering layer is complete immediately, where stackedArea leaves an empty path.
-        expect(ds(g.node() as SVGGElement)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
-        expect(attrs(g.node() as SVGGElement, "fill")).toEqual(["#ff0000"]);
-        expect(attrs(g.node() as SVGGElement, "stroke-width")).toEqual(["3"]);
+    test("should hold the old geometry and ease into the new one when enabled", async () => {
+      const component = areaOf().fill("#ff0000").strokeWidth(3);
+      const g = group("animated");
+      g.datum(oneLayer).call(component as never);
+      expect(ds(g.node() as SVGGElement)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
 
-        g.datum([
-          [
-            { x: 0, y0: 100, y1: 60 },
-            { x: 10, y0: 110, y1: 70 },
-          ],
-        ]).call(component as never);
-        expect(ds(g.node() as SVGGElement)).toEqual(["M0,60L10,70L10,110L0,100Z"]);
-      });
+      g.datum([
+        [
+          { x: 0, y0: 100, y1: 60 },
+          { x: 10, y0: 110, y1: 70 },
+        ],
+      ]).call(component as never);
+      // The old geometry is still on screen on the tick of the re-render.
+      expect(ds(g.node() as SVGGElement)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
+      await settle();
+      expect(ds(g.node() as SVGGElement)).toEqual(["M0,60L10,70L10,110L0,100Z"]);
+    });
 
-      test("enabling the transition changes nothing about the output", async () => {
-        // NOTE: the same assertion from the caller's side - the property is inert, so the
-        // two settings are indistinguishable in the DOM, before and after the 300ms the
-        // transition would have taken.
-        const on = group("inert-on");
-        const off = group("inert-off");
-        on.datum(oneLayer).call(areaOf().fill("#f00").strokeWidth(3) as never);
-        off.datum(oneLayer).call(areaOf().transition(false).fill("#f00").strokeWidth(3) as never);
-        const snapshot = (g: SVGGElement) => [ds(g), attrs(g, "fill"), attrs(g, "stroke-width")];
-        expect(snapshot(on.node() as SVGGElement)).toEqual(snapshot(off.node() as SVGGElement));
-        await settle();
-        expect(snapshot(on.node() as SVGGElement)).toEqual(snapshot(off.node() as SVGGElement));
-      });
+    test("should write an entering band synchronously even when enabled", async () => {
+      // Entering bands are painted directly rather than through the transition, as bar does,
+      // so a freshly rendered chart is complete on the same tick instead of leaving an empty
+      // path element until the first animation frame - stackedArea's own known quirk.
+      const node = render(areaOf().fill("#ff0000").strokeWidth(3), oneLayer);
+      expect(ds(node)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
+      expect(attrs(node, "fill")).toEqual(["#ff0000"]);
+      expect(attrs(node, "stroke-width")).toEqual(["3"]);
+      await settle();
+      expect(ds(node)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
+    });
 
-      test("the empty transition still cancels an animation another component started", async () => {
-        // BUG: the discarded transition is scheduled all the same, and a d3 transition
-        // interrupts any unnamed transition already running on the same node when it starts.
-        // So the property animates nothing of its own while stopping anything else mid-flight
-        // - here an external tween on the same path, frozen at whatever value the frame it
-        // was cancelled on had reached instead of arriving at 20. With transition disabled no
-        // transition is created and the tween completes.
-        // current: an in-flight animation on an adopted or shared path dies on the next
-        // render. expected: either the transition carries this component's attributes, or no
-        // transition is created at all.
-        const g = group("interrupt");
-        const component = areaOf();
-        g.datum(oneLayer).call(component as never);
-        const animating = paths(g.node() as SVGGElement)[0];
-        select(animating).transition(defaultTransition()).attr("stroke-width", 20);
-        await untilMoved(animating, "stroke-width");
-        g.datum(oneLayer).call(component as never);
-        await settle();
-        const frozen = Number(attrs(g.node() as SVGGElement, "stroke-width")[0]);
-        expect(frozen).toBeGreaterThan(1);
-        expect(frozen).toBeLessThan(20);
+    test("should take over an animation running on the same path", async () => {
+      // The transition now carries this component's own attributes, so interrupting an
+      // in-flight tween on the same node is the transition doing its job: the path lands on
+      // the value this render asked for rather than freezing at whatever frame the
+      // cancellation caught, which is where the dropped transition used to leave it.
+      const g = group("interrupt");
+      const component = areaOf();
+      g.datum(oneLayer).call(component as never);
+      const animating = paths(g.node() as SVGGElement)[0];
+      select(animating).transition(defaultTransition()).attr("stroke-width", 20);
+      await untilMoved(animating, "stroke-width");
+      g.datum(oneLayer).call(component as never);
+      await settle();
+      expect(attrs(g.node() as SVGGElement, "stroke-width")).toEqual(["1"]);
 
-        const g2 = group("interrupt-off");
-        const inert = areaOf().transition(false);
-        g2.datum(oneLayer).call(inert as never);
-        const running = paths(g2.node() as SVGGElement)[0];
-        select(running).transition(defaultTransition()).attr("stroke-width", 20);
-        await untilMoved(running, "stroke-width");
-        g2.datum(oneLayer).call(inert as never);
-        await settle();
-        expect(attrs(g2.node() as SVGGElement, "stroke-width")).toEqual(["20"]);
-      });
+      // With the transition disabled no transition is created at all, so an unrelated tween
+      // on the same path still completes.
+      const g2 = group("interrupt-off");
+      const inert = staticAreaOf();
+      g2.datum(oneLayer).call(inert as never);
+      const running = paths(g2.node() as SVGGElement)[0];
+      select(running).transition(defaultTransition()).attr("stroke-width", 20);
+      await untilMoved(running, "stroke-width");
+      g2.datum(oneLayer).call(inert as never);
+      await settle();
+      expect(attrs(g2.node() as SVGGElement, "stroke-width")).toEqual(["20"]);
     });
   });
 });
