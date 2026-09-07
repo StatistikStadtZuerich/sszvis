@@ -173,17 +173,20 @@ describe("map/renderer/geojson", () => {
       ]);
     });
 
-    // NOTE: `properties` absent behaves like `properties: null` - both crash the merge - but the
-    // message names the value that was read, as the original property access did.
-    test("throws for a feature with no properties at all", () => {
+    test("leaves a feature with no properties at all unmatched", () => {
       const collection = geoJson();
       collection.features[1].properties = undefined as unknown as null;
-      expect(() =>
-        group()
-          .datum(fullData)
-          .call(mapRendererGeoJson().geoJson(collection).mapPath(mapPathOf(collection)))
-          .node()
-      ).toThrow(/Cannot read properties of undefined/);
+      const node = group()
+        .datum(fullData)
+        .call(
+          mapRendererGeoJson()
+            .geoJson(collection)
+            .mapPath(mapPathOf(collection))
+            .fill("#ff0000")
+            .transitionColor(false)
+        )
+        .node() as SVGGElement;
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
     });
 
     test("matches data to features by the configured key names", () => {
@@ -217,42 +220,48 @@ describe("map/renderer/geojson", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: `properties: null` is spec-legal GeoJSON, but the key lookup reads straight through it
-    // with fn.prop, so a valid feature crashes the merge with a bare TypeError.
-    test("throws for a feature with null properties", () => {
+    // `properties: null` is spec-legal GeoJSON (RFC 7946 3.2): the feature is unmatched rather
+    // than crashing the overlay.
+    test("leaves a feature with null properties unmatched", () => {
       const collection = geoJson();
       collection.features[1].properties = null;
-      expect(() =>
-        group()
-          .datum(fullData)
-          .call(mapRendererGeoJson().geoJson(collection).mapPath(mapPathOf(collection)))
-          .node()
-      ).toThrow(TypeError);
+      const node = group()
+        .datum(fullData)
+        .call(
+          mapRendererGeoJson()
+            .geoJson(collection)
+            .mapPath(mapPathOf(collection))
+            .fill("#ff0000")
+            .transitionColor(false)
+        )
+        .node() as SVGGElement;
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
     });
 
-    // NOTE: the anchor's `d.geoJson.properties || (d.geoJson.properties = {})` guard is therefore
-    // unreachable - a feature with null properties has already crashed the merge above.
-    test("crashes before reaching the anchor's null-properties guard", () => {
+    // The anchor's `properties || (properties = {})` guard is reachable now that a feature with
+    // null properties renders, and it gives the centroid cache somewhere to live.
+    test("anchors a feature with null properties through the anchor's own guard", () => {
       const collection = geoJson();
       collection.features[0].properties = null;
-      expect(() =>
-        group()
-          .datum(fullData)
-          .call(mapRendererGeoJson().geoJson(collection).mapPath(mapPathOf(collection)))
-          .node()
-      ).toThrow(TypeError);
-      // Nothing was rendered, so the guard never ran.
-      expect(collection.features[0].properties).toBeNull();
+      const node = group()
+        .datum(fullData)
+        .call(mapRendererGeoJson().geoJson(collection).mapPath(mapPathOf(collection)))
+        .node() as SVGGElement;
+      expect(anchors(node)).toHaveLength(3);
+      // Read back through `at`, so the assignment above does not narrow the type to null.
+      const properties = collection.features.at(0)?.properties;
+      expect(properties).not.toBeNull();
+      expect(properties?.sphericalCentroid).toBeDefined();
     });
 
-    // BUG: a missing key stringifies to "undefined" on both sides of the match, so one datum with
-    // no key becomes the datum for every feature that also lacks one.
-    test("matches keyless data to keyless features under the string undefined", () => {
+    // A datum with no key is skipped rather than filed under the string "undefined", so it does
+    // not become the datum for every keyless feature.
+    test("leaves keyless data and keyless features unmatched", () => {
       const collection = geoJson();
       collection.features[1].properties = {};
       collection.features[2].properties = {};
       const node = group()
-        .datum([{ geoId: "decoy", value: 0 }, { value: 7 } as Datum])
+        .datum([{ value: 7 } as Datum])
         .call(
           mapRendererGeoJson()
             .geoJson(collection)
@@ -261,7 +270,11 @@ describe("map/renderer/geojson", () => {
             .fill((d: Datum) => `rgb(${d.value},0,0)`)
         )
         .node() as SVGGElement;
-      expect(attrs(node, "fill").slice(1)).toEqual(["rgb(7,0,0)", "rgb(7,0,0)"]);
+      expect(attrs(node, "fill")).toEqual([
+        "url(#missing-pattern)",
+        "url(#missing-pattern)",
+        "url(#missing-pattern)",
+      ]);
     });
 
     // NOTE: the lookup table is prototype-less, so a feature keyed after an Object.prototype

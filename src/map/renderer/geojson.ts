@@ -42,13 +42,9 @@
  * datum, unlike the fill and stroke accessors. An accessor written against the datum reads
  * undefined and d3 removes the attribute entirely.
  *
- * Note: the key lookup reads a feature's properties without a guard, so a feature with the
- * spec-legal `properties: null`, or with no properties at all, crashes the merge with a bare
- * TypeError. That also makes the anchor's own `properties || (properties = {})` guard unreachable.
- *
- * Note: lookup keys are stringified, so a missing key on either side becomes the string
- * "undefined" and one keyless datum becomes the datum for every keyless feature. A symbol key stays
- * a symbol and can never be matched by a string id.
+ * Note: lookup keys are stringified, so a numeric and a string id that print the same collide. A
+ * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
+ * key at all is left unmatched.
  *
  * Note: the mouse listeners are bound layer-wide via the [data-event-target] attribute rather than
  * scoped to this component's own class. An overlay drawn into a group that already holds a base
@@ -97,14 +93,15 @@ type GeoJsonValue<T, R> = R | ((datum: T) => R);
 
 /**
  * How a functor-wrapped prop reads back once it is stored: always a function. The parameter is
- * typed as unknown because the data lookup reads through a plain object's prototype chain, so an
- * accessor can be handed something that is not a datum at all.
+ * typed as unknown because the data lookup is keyed at runtime and cannot promise the caller's
+ * datum type.
  */
 type StoredGeoJsonValue<R> = (datum: unknown) => R;
 
 /**
  * A feature paired with whatever the data lookup produced for it. `datum` is unknown rather than
- * the caller's datum type because the lookup reads through a plain object's prototype chain.
+ * the caller's datum type because the lookup is keyed at runtime; it is undefined where the
+ * feature had no matching datum.
  */
 interface MergedFeature {
   geoJson: ExtendedFeature;
@@ -163,15 +160,12 @@ export interface MapRendererGeoJsonComponent<T = unknown>
 }
 
 /**
- * Reads a key off a feature's properties. The JavaScript used fn.prop, which indexes without a
- * guard, so a feature with spec-legal `properties: null` crashed the merge. The message matches
- * what that read produced.
+ * Reads a match key off a feature's properties. RFC 7946 permits a null properties member, and a
+ * feature may simply not carry the configured key, so both cases read as undefined - which the
+ * merge treats as unmatched rather than as the lookup key "undefined".
  */
 function readFeatureKey(properties: GeoJsonProperties, key: string): unknown {
-  if (properties === null || properties === undefined) {
-    throw new TypeError(`Cannot read properties of ${properties} (reading '${key}')`);
-  }
-  return properties[key];
+  return properties === null || properties === undefined ? undefined : properties[key];
 }
 
 /**
@@ -232,14 +226,20 @@ export default function <
       // written to.
       const groupedInputData: Record<string | symbol, unknown> = Object.create(null);
       for (const datum of data) {
-        groupedInputData[toLookupKey(getDataKeyName(datum))] = datum;
+        // A datum with no key is skipped rather than filed under the string "undefined", where it
+        // would have become the datum for every feature that also lacks a key.
+        const key = getDataKeyName(datum);
+        if (key === undefined) continue;
+        groupedInputData[toLookupKey(key)] = datum;
       }
 
-      const mergedData: MergedFeature[] = props.geoJson.features.map((feature) => ({
-        geoJson: feature,
-        datum:
-          groupedInputData[toLookupKey(readFeatureKey(feature.properties, props.geoJsonKeyName))],
-      }));
+      const mergedData: MergedFeature[] = props.geoJson.features.map((feature) => {
+        const key = readFeatureKey(feature.properties, props.geoJsonKeyName);
+        return {
+          geoJson: feature,
+          datum: key === undefined ? undefined : groupedInputData[toLookupKey(key)],
+        };
+      });
 
       function getMapFill(d: MergedFeature): string {
         return fn.defined(d.datum) && props.defined(d.datum)
@@ -295,6 +295,8 @@ export default function <
 
       // the tooltip anchor generator
       const ta = tooltipAnchor<MergedFeature>().position((d) => {
+        // A feature with the spec-legal `properties: null` reaches here now that the merge no
+        // longer crashes on one, and the centroid cache needs somewhere to live.
         if (!d.geoJson.properties) d.geoJson.properties = {};
         const properties: GeoJsonFeatureProperties = d.geoJson.properties;
 
