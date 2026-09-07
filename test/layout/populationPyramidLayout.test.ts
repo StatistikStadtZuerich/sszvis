@@ -84,19 +84,21 @@ describe("populationPyramidLayout", () => {
       expect(layout.maxBarLength).toBe(150);
     });
 
+    test("needs no padding when the pyramid already fills the width", () => {
+      const layout = layoutPopulationPyramid(300, 10);
+      expect(layout.maxBarLength * 2).toBe(300);
+      expect(layout.chartPadding).toBe(0);
+    });
+
     test("caps a half-pyramid at 240px on a wide screen", () => {
       const layout = layoutPopulationPyramid(1000, 20);
       expect(layout.maxBarLength).toBe(240);
       expect(layout.chartPadding).toBe((1000 - 480) / 2);
     });
 
-    test("the cap is four fifths of the portrait max height, halved", () => {
+    test("the cap is half the chart's own maximum height", () => {
       const layout = layoutPopulationPyramid(5000, 20);
-      expect(layout.maxBarLength).toBe((600 * (4 / 5)) / 2);
-      // NOTE: that expression reaches into aspectRatioPortrait.MAX_HEIGHT (600) and
-      // re-derives the 4:5 ratio, which only coincidentally equals this module's own
-      // MAX_HEIGHT of 480. The two constants are unrelated and can drift apart.
-      expect((600 * (4 / 5)) / 2).toBe(MAX_HEIGHT / 2);
+      expect(layout.maxBarLength).toBe(MAX_HEIGHT / 2);
     });
   });
 
@@ -129,17 +131,6 @@ describe("populationPyramidLayout", () => {
   });
 
   describe("known quirks", () => {
-    test("chartPadding is 1, not 0, when the pyramid already fills the width", () => {
-      // BUG: the JSDoc promises 0 when no offset is needed, but the floor is
-      // Math.max(..., 1), so axes and legends are shifted one pixel right of the bars on
-      // every container narrower than 480px.
-      // got: chartPadding 1
-      // want: 0, as documented.
-      const layout = layoutPopulationPyramid(300, 10);
-      expect(layout.maxBarLength * 2).toBe(300);
-      expect(layout.chartPadding).toBe(1);
-    });
-
     test("the total height ignores the 480px cap once the bars hit their 2px floor", () => {
       // NOTE: intended - the 2px floor wins over the height cap, so a pyramid with many age
       // groups grows past the aspect-ratio height. The JSDoc says totalHeight should be the

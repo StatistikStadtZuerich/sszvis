@@ -20,8 +20,9 @@
  *                                              in order to ensure that the axis labels are visible. This can be used as the y-component
  *                                              of a call to sszvis.svgUtils.translateString.
  *                                  barGroupHeight: the combined height of all the bars and their inner padding.
- *                                  totalHeight: barGroupHeight plus the height of the outerPadding. This distance can be used
- *                                               to translate scales below the bars.
+ *                                  totalHeight: barGroupHeight plus the height of the outer padding. Since this layout
+ *                                               has no outer padding, it always equals barGroupHeight; the two are kept
+ *                                               distinct to match the shape of the vertical bar chart layout.
  *                                 }
  *
  * Behaviour notes:

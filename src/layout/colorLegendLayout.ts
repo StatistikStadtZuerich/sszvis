@@ -130,8 +130,8 @@ export function colorLegendLayout(
  * - Horizontal float only when there is one column AND all labels fit on one line.
  * - Each label is padded by 40px.
  * - columnWidth is null for a single column.
- * - legendWidth is columns * widest label, so for a floated legend it under-reports
- *   the actual line width.
+ * - legendWidth is columns * widest label, or the width of the whole line for a floated
+ *   legend, which is laid out on one line rather than in columns.
  * - An empty label list gives a zero legendWidth.
  * - A container of no width degrades to one column, one row per label.
  */
@@ -155,7 +155,8 @@ export function colorLegendDimensions(
     columns,
     rows: isHorizontal ? 1 : Math.ceil(labelCount / columns),
     columnWidth: columns === 1 ? null : maxLabelWidth,
-    legendWidth: columns * maxLabelWidth,
+    // a floated legend is one line of labels, not a column of the widest one
+    legendWidth: isHorizontal ? totalLabelsWidth : columns * maxLabelWidth,
     horizontalFloat: isHorizontal,
     orientation: isHorizontal ? null : "vertical",
   };
