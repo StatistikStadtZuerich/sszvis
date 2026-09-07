@@ -37,21 +37,13 @@
  *                                              with no default. It is called with y0 and y1, again
  *                                              positions in its own domain rather than pixels, and
  *                                              a negative result is clamped to 0, which collapses
- *                                              the ring onto the centre circle. The first thing to
- *                                              call it is the tooltip anchor's position accessor,
- *                                              so an unset scale throws "props.radiusScale is not a
- *                                              function" after the arcs and their transition have
- *                                              already been scheduled, and that transition then
- *                                              re-throws on every frame for 300ms.
+ *                                              the ring onto the centre circle. Leaving it unset
+ *                                              throws before anything is rendered.
  * @property {Number} centerRadius              The radius of the center of the chart. Can be
  *                                              configured with
- *                                              sszvis.layout.sunburst.computeLayout. Required, but
- *                                              it is only ever added to a number, so leaving it out
- *                                              fails silently instead of throwing the way an unset
- *                                              radiusScale does: every radius becomes NaN, the arcs
- *                                              degenerate to "M0,0Z" and every tooltip anchor keeps
- *                                              an unparseable transform, which the browser drops,
- *                                              leaving them all at the group's origin.
+ *                                              sszvis.layout.sunburst.computeLayout. Required;
+ *                                              leaving it unset throws before anything is
+ *                                              rendered.
  * @property {Function} fill                    Function that returns the fill color for the
  *                                              segments in the center of the chart. Note that this
  *                                              will only be called on the centermost segments. The
@@ -59,7 +51,8 @@
  *                                              segments will have their fill determined
  *                                              recursively, by lightening the color of its parent
  *                                              segment. It is called with a node's key string, not
- *                                              with the node. Required, with no default; it takes
+ *                                              with the node. Required - leaving it unset throws
+ *                                              before anything is rendered - and it takes
  *                                              a constant colour or an accessor, since it is
  *                                              wrapped in fn.functor on set.
  *                                              Every ring further out multiplies its parent's
@@ -227,6 +220,19 @@ export default function <T = unknown>(): SunburstComponent<T> {
     .render(function (this: Element, inputData: SunburstData<T>) {
       const selection = select(this);
       const props = selection.props<SunburstProps<T>>();
+
+      // radiusScale, centerRadius and fill are required and have no defaults, and a render
+      // without any one of them cannot come out right - so they are checked here, before a
+      // single element is created. Left unchecked they fail three different ways: fill
+      // throws immediately, radiusScale throws from the tooltip anchor once the arcs and
+      // their transition are already in flight (and then once per frame for the length of
+      // the transition), and centerRadius does not throw at all - it turns every radius
+      // into NaN and renders an empty chart.
+      for (const required of ["radiusScale", "centerRadius", "fill"] as const) {
+        if (props[required] === undefined) {
+          throw new Error(`sszvis.component.sunburst: the "${required}" property is required`);
+        }
+      }
 
       // The angles currently on screen, read off the existing arcs before anything below can
       // overwrite them. A caller who keeps one hierarchy in state and re-sums it hands over
