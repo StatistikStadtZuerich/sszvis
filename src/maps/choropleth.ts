@@ -307,7 +307,12 @@ function dimension(value: number | undefined, name: string): number {
  * changes what the failure says, and says it in the same shape as the missing-dimension one.
  */
 function requireFeatures(value: ExtendedFeatureCollection | undefined): ExtendedFeatureCollection {
-  if (value === undefined || value === null || !Array.isArray(value.features)) {
+  if (
+    value === undefined ||
+    value === null ||
+    value.type !== "FeatureCollection" ||
+    !Array.isArray(value.features)
+  ) {
     throw new Error(
       "[choropleth] the features property is required, and must be a GeoJSON feature collection"
     );
@@ -316,26 +321,36 @@ function requireFeatures(value: ExtendedFeatureCollection | undefined): Extended
 }
 
 /**
- * The selectGroup keys the two removable layers are drawn under. A group carries everything its
- * renderer produced - the lake's two paths and its pattern, gradient and mask definitions among
- * them - so removing it removes the layer whole.
+ * The group keys the two removable layers are drawn under. A group carries everything its renderer
+ * produced - the lake's two paths and its pattern, gradient and mask definitions among them - so
+ * emptying it removes the layer whole.
  */
 const LAKE_GROUP = "lake";
 const SHAPE_GROUP = "anchoredShape";
 
 /**
- * Removes one of those groups, if an earlier render created it. Scoped to the direct children of
- * the map group so that a group of the same name further down - an anchored shape's own, say -
- * is left alone.
+ * The wrapper this component owns for one of those layers, joined against the direct children of
+ * the map group rather than searched for with selectGroup, which matches any descendant: an
+ * anchored shape is arbitrary caller markup and may well contain a group of its own under the same
+ * key.
+ *
+ * The wrapper is created whether or not its layer is drawn, and a disabled layer empties it rather
+ * than removing it. Removing it would give up its place among its siblings - selectGroup and this
+ * helper both append on a miss - so re-enabling the lake would insert it after the highlight mesh
+ * drawn later in the same render, and the lake would then paint over the highlight.
  */
-function removeGroup<G extends BaseType, D, P extends BaseType, PD>(
+function ownGroup<G extends BaseType, D, P extends BaseType, PD>(
   selection: Selection<G, D, P, PD>,
   key: string
-): void {
-  selection.selectAll(`:scope > [data-d3-selectgroup="${key}"]`).remove();
+): Selection<SVGGElement, D, G, D> {
+  return selection
+    .selectAll<SVGGElement, D>(`:scope > [data-d3-selectgroup="${key}"]`)
+    .data((d) => [d])
+    .join("g")
+    .attr("data-d3-selectgroup", key);
 }
 
-export default function <T extends object = object>(): ChoroplethComponent<T> {
+export default function choropleth<T extends object = object>(): ChoroplethComponent<T> {
   const event = dispatch("over", "out", "click");
 
   const baseRenderer = mapRendererBase<T>();
@@ -409,20 +424,22 @@ export default function <T extends object = object>(): ChoroplethComponent<T> {
       // renderer clears its paths for an empty highlight. Each is drawn into a group of this
       // component's own, so switching it off is removing that group - which works for an anchored
       // shape whose markup this component knows nothing about.
+      const lakeGroup = ownGroup(selection, LAKE_GROUP);
       if (props.withLake) {
-        selection.selectGroup(LAKE_GROUP).call(lakeRenderer);
+        lakeGroup.call(lakeRenderer);
       } else {
-        removeGroup(selection, LAKE_GROUP);
+        lakeGroup.selectAll("*").remove();
       }
 
       selection.call(highlightRenderer);
 
+      const shapeGroup = ownGroup(selection, SHAPE_GROUP);
       if (props.anchoredShape) {
         props.anchoredShape.mergedData(mergedData).mapPath(mapPath);
 
-        selection.selectGroup(SHAPE_GROUP).call(props.anchoredShape);
+        shapeGroup.call(props.anchoredShape);
       } else {
-        removeGroup(selection, SHAPE_GROUP);
+        shapeGroup.selectAll("*").remove();
       }
 
       // Event Binding

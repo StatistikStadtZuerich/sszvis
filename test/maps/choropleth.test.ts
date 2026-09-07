@@ -417,6 +417,46 @@ describe("maps/choropleth", () => {
       expect(node.querySelectorAll(`#lake-fade-gradient-${scope}`)).toHaveLength(0);
     });
 
+    // The lake sits under the highlight mesh, and has to stay there across a toggle. The wrapper it
+    // is drawn into is emptied rather than removed for exactly this reason: a removed wrapper would
+    // be re-appended after the highlight on the next render, and the lake would cover it.
+    test("keeps the lake beneath the highlight when withLake is toggled off and on", () => {
+      const collection = geoJson();
+      const target = layer("lake-toggle");
+      const map = choropleth<Datum>()
+        .features(collection)
+        .borders(mesh())
+        .lakeFeatures(lakeFeature())
+        .lakeBorders(lakeBorders())
+        .highlight([fullData[0]])
+        .width(260)
+        .height(260);
+      /** Every direct child of the map group, by what identifies it - wrapper key or class. */
+      const order = (node: Element) =>
+        [...node.children].map(
+          (child) => child.getAttribute("data-d3-selectgroup") ?? child.getAttribute("class")
+        );
+
+      target.datum(fullData).call(map.withLake(true));
+      const before = order(target.node() as SVGGElement);
+
+      target.datum(fullData).call(map.withLake(false));
+      target.datum(fullData).call(map.withLake(true));
+      const node = target.node() as SVGGElement;
+
+      expect(order(node)).toEqual(before);
+      expect(lake(node)).toHaveLength(1);
+
+      // The lake must still be painted before the highlight, which the highlight renderer appends
+      // straight into the map group rather than into a wrapper of its own.
+      const lakeWrapper = node.querySelector(':scope > [data-d3-selectgroup="lake"]') as Element;
+      const highlight = highlights(node)[0];
+      expect(highlight).toBeDefined();
+      expect(
+        lakeWrapper.compareDocumentPosition(highlight) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+    });
+
     test("delegates lakePathColor to the lake renderer", () => {
       const node = render(fullData, (c) => c.lakePathColor("#00ff00"));
       expect(lakePaths(node)[0].style.stroke).toBe("rgb(0, 255, 0)");
@@ -734,6 +774,20 @@ describe("maps/choropleth", () => {
         "[choropleth] the features property is required, and must be a GeoJSON feature collection"
       );
     });
+  });
+
+  // A bare object carrying a features array is not a FeatureCollection, and would otherwise reach
+  // projection fitting and render blank rather than being reported.
+  test("throws when features is not a GeoJSON FeatureCollection", () => {
+    const notACollection = {
+      type: "Feature",
+      features: [],
+    } as unknown as FeatureCollection<Polygon>;
+    expect(() =>
+      layer().call(choropleth().features(notACollection).width(100).height(100))
+    ).toThrow(
+      "[choropleth] the features property is required, and must be a GeoJSON feature collection"
+    );
   });
 
   describe("known quirks", () => {
