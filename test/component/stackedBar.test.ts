@@ -138,12 +138,37 @@ describe("component/stackedBar", () => {
       const layout = verticalData([]);
       expect(layout.length).toBe(0);
       expect(layout.keys).toEqual([]);
-      // NOTE: maxValue is d3.max over an empty array, so it is undefined rather than 0. The
-      // examples feed it straight into a scale domain - docs/bar-chart-vertical-stacked
-      // /basic.js does `domain([0, state.maxStacked])` - where undefined coerces to NaN and
-      // the axis renders NaN ticks. The layout itself is empty, so no bars are drawn either
-      // way; only the axis gives the empty state away.
-      expect(layout.maxValue).toBeUndefined();
+      // d3.max over an empty array is undefined, which the fold coerces to 0. The examples
+      // feed maxValue straight into a scale domain - docs/bar-chart-vertical-stacked
+      // /basic.js does `domain([0, state.maxStacked])` - where undefined would become NaN
+      // and the axis would render NaN ticks.
+      expect(layout.maxValue).toBe(0);
+    });
+
+    test("should sum every row of a stack/series cell", () => {
+      // Data that is not pre-aggregated to one row per (stack, series) pair is stacked to
+      // its true total rather than truncated to its first row.
+      const withDuplicate: Row[] = [...rows, { region: "A", category: "X", value: 90 }];
+      const layout = verticalData(withDuplicate);
+      // Stack "A" now carries 100 of "X" on top of 20 of "Y"; stack "B" is unchanged.
+      expect(pairs(layout)).toEqual([
+        [
+          [20, 120],
+          [25, 40],
+        ],
+        [
+          [0, 20],
+          [0, 25],
+        ],
+      ]);
+      expect(layout.maxValue).toBe(120);
+    });
+
+    test("should sum a cell on the horizontal layout too", () => {
+      const withDuplicate: Row[] = [...rows, { region: "A", category: "X", value: 90 }];
+      const layout = horizontalData(withDuplicate);
+      expect(pairs(layout)[0][0]).toEqual([0, 100]);
+      expect(layout.maxValue).toBe(120);
     });
 
     test("should not mutate the input rows", () => {
@@ -477,17 +502,6 @@ describe("component/stackedBar", () => {
   });
 
   describe("known quirks", () => {
-    test("keeps only the first row of every stack/series pair", () => {
-      // BUG: the stack value is read as `valueAcc(x[key][0])`, i.e. from the first row of
-      // each group only. Data that is not pre-aggregated to one row per (stack, series)
-      // pair is silently truncated rather than summed or reported.
-      // current: the second "A"/"X" row is dropped and the total understates by 90.
-      // expected: the values are summed, or the duplicate is reported.
-      const withDuplicate: Row[] = [...rows, { region: "A", category: "X", value: 90 }];
-      expect(pairs(verticalData(withDuplicate))).toEqual(pairs(verticalData()));
-      expect(verticalData(withDuplicate).maxValue).toBe(40);
-    });
-
     test("throws when a stack is missing one of the series", () => {
       // BUG: the same unguarded reach throws for a sparse data set. Every stack must carry
       // a row for every series key, so a category with no data in one region - a normal
