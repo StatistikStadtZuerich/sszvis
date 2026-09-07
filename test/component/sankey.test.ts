@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import sankey from "../../src/component/sankey.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
@@ -950,15 +950,13 @@ describe("component/sankey", () => {
     test("should throw before creating any element when nodeThickness is missing", () => {
       const g = group("missing-node-thickness");
       expect(() =>
-        g
-          .datum(testData)
-          .call(
-            sankey()
-              .sizeScale((v: number) => v)
-              .columnPosition((i: number) => i * 100)
-              .nodePadding(10)
-              .columnPadding(0) as never
-          )
+        g.datum(testData).call(
+          sankey()
+            .sizeScale((v: number) => v)
+            .columnPosition((i: number) => i * 100)
+            .nodePadding(10)
+            .columnPadding(0) as never
+        )
       ).toThrow();
       expect((g.node() as SVGGElement).childElementCount).toBe(0);
     });
@@ -974,6 +972,38 @@ describe("component/sankey", () => {
           testData
         )
       ).toThrow(/\[component\/sankey\].*nodePadding/);
+    });
+
+    test("should skip a link whose geometry is not finite, and report it", () => {
+      // Coercing the value to 0 would draw a link that is merely wrong instead of one that
+      // is missing, so the link is left out of the document and warned about instead.
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const node = render(
+        sankeyOf().sizeScale((v: number) => (v === 20 ? Number.NaN : v)),
+        testData
+      );
+      const paths = attrs(node, "links", "path.sszvis-link", "d");
+      expect(paths.some((d) => d?.includes("NaN"))).toBe(false);
+      expect(paths.length).toBe(1);
+      expect(anchors(node, "links").length).toBe(1);
+      expect(warn.mock.calls.flat().join(" ")).toContain("[component/sankey]");
+      warn.mockRestore();
+    });
+
+    test("should draw a node label and hit box at zero when the geometry is not finite", () => {
+      // The bars go through bar, which replaces NaN with 0; the labels and hit boxes are
+      // written by hand and now follow the same rule, with a warning, so they stay on top
+      // of the bar rather than vanishing with a NaN coordinate.
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const node = render(
+        sankeyOf().sizeScale((v: number) => (v === 30 ? Number.NaN : v)),
+        testData
+      );
+      expect(attrs(node, "nodelabels", "text.sszvis-sankey-node-label", "y")[0]).toBe("0");
+      expect(attrs(node, "nodelabels", "rect.sszvis-sankey-hitbox", "y")[0]).toBe("-5");
+      expect(attrs(node, "nodelabels", "rect.sszvis-sankey-hitbox", "height")[0]).toBe("10");
+      expect(warn.mock.calls.flat().join(" ")).toContain("[component/sankey]");
+      warn.mockRestore();
     });
 
     describe("known quirks", () => {
@@ -1010,23 +1040,6 @@ describe("component/sankey", () => {
         expect(attrs(curved, "links", "path.sszvis-link", "d")[0]).toBe(
           "M21,10CNaN,10 NaN,10 99,10"
         );
-      });
-
-      test("does not guard the link paths against missing values", () => {
-        // BUG: the nodes go through bar, which guards every geometry value against NaN,
-        // while the link path string is assembled here by hand from the size scale's
-        // output. A scale that returns NaN for one value - a d3 scale fed undefined, a gap
-        // in the data - poisons both the path string and the stroke width, and the browser
-        // silently drops that link while its node still renders.
-        // current: d="M21,NaNC60,NaN 60,NaN 99,NaN" and stroke-width="NaN", nothing logged.
-        // expected: the bad link is reported, since coercing it to 0 would draw a link that
-        // is merely wrong instead of one that is missing.
-        const node = render(
-          sankeyOf().sizeScale((v: number) => (v === 20 ? Number.NaN : v)),
-          testData
-        );
-        expect(attrs(node, "links", "path.sszvis-link", "d")[0]).toContain("NaN");
-        expect(attrs(node, "links", "path.sszvis-link", "stroke-width")[0]).toBe("NaN");
       });
 
       test("throws when a link has no src or tgt reference", () => {
