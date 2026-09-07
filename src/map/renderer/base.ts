@@ -69,7 +69,7 @@
 import type { ExtendedFeatureCollection, GeoPath, GeoProjection } from "d3";
 import { select } from "d3";
 import tooltipAnchor from "../../annotation/tooltipAnchor.js";
-import { type Component, component } from "../../d3-component.js";
+import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
@@ -95,7 +95,8 @@ type BaseProps<T> = {
   transitionColor: boolean;
 };
 
-export interface MapRendererBaseComponent<T = unknown> extends Component {
+export interface MapRendererBaseComponent<T = unknown>
+  extends ComponentBuilder<MapRendererBaseComponent<T>> {
   mergedData(): MergedGeoDatum<T>[];
   mergedData(data: MergedGeoDatum<T>[]): MapRendererBaseComponent<T>;
   /** @deprecated Declared and documented, but the render only ever reads mergedData. */

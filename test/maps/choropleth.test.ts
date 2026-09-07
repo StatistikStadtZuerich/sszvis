@@ -708,14 +708,14 @@ describe("maps/choropleth", () => {
         "lakePathColor",
         "on",
       ]) {
-        expect(typeof map[prop]).toBe("function");
+        expect(typeof (map as unknown as Record<string, unknown>)[prop]).toBe("function");
       }
     });
 
     // NOTE: the lake renderer's own fadeOut property is not delegated - choropleth exposes it as
     // lakeFadeOut instead - so there is no `fadeOut` accessor on the map component.
     test("does not expose the lake renderer's fadeOut under its own name", () => {
-      expect(choropleth().fadeOut).toBeUndefined();
+      expect((choropleth() as unknown as Record<string, unknown>).fadeOut).toBeUndefined();
     });
 
     // NOTE: the four renderers keep no state of their own - their props live on the element they

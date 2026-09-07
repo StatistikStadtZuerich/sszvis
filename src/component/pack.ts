@@ -30,7 +30,7 @@
 import { pack as d3Pack, type HierarchyCircularNode, type HierarchyNode, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { getAccessibleTextColor } from "../color.js";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import { defaultTransition } from "../transition.js";
@@ -65,7 +65,7 @@ type PackProps<T = unknown> = {
 };
 
 // Component interface with proper method overloads
-interface PackComponent<T = unknown> extends Component {
+interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> {
   colorScale(): (key: string) => string;
   colorScale(scale: (key: string) => string): PackComponent<T>;
   transition(): boolean;

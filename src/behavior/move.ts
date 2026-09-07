@@ -55,9 +55,9 @@ import {
   type ScaleTime,
   select,
 } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import { range } from "../scale";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { range } from "../scale.js";
 
 // Type definitions for move behavior component
 type MoveScale<T = number | string> =
@@ -85,7 +85,8 @@ type MoveProps<XDomain, YDomain> = {
 type Domain = number | string;
 type EventHandler = (event: Event, x: number | string | null, y: number | string | null) => void;
 
-export interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Component {
+export interface MoveComponent<XDomain = Domain, YDomain = Domain>
+  extends ComponentBuilder<MoveComponent<XDomain, YDomain>> {
   debug(): boolean;
   debug(value: boolean): MoveComponent<XDomain, YDomain>;
 

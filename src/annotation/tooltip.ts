@@ -39,9 +39,9 @@
  */
 
 import { type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import type { Accessor, AnySelection, NumberAccessor, StringAccessor } from "../types";
+import { type Component, type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import type { Accessor, AnySelection, NumberAccessor, StringAccessor } from "../types.js";
 
 // Type definitions for tooltip annotation component
 type Datum<T = unknown> = T;
@@ -65,7 +65,7 @@ interface TooltipProps<T = unknown> {
   opacity: (d: TooltipData<T>) => NumberValue;
 }
 
-interface TooltipComponent<T = unknown> extends Component {
+interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponent<T>> {
   renderInto(selection?: AnySelection): TooltipComponent<T>;
   visible(accessor?: Accessor<Datum<T>, boolean>): TooltipComponent<T>;
   header(accessor?: StringAccessor<Datum<T>>): TooltipComponent<T>;

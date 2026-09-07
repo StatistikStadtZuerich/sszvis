@@ -24,9 +24,9 @@
  */
 
 import { type AxisDomain, type AxisScale, type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import type { NumberAccessor, StringAccessor } from "../types";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import type { NumberAccessor, StringAccessor } from "../types.js";
 
 // reference line specified in the form y = mx + b
 // user supplies m and b
@@ -47,7 +47,7 @@ interface LineProps<T = unknown> {
   caption?: (d: Datum<T>) => string;
 }
 
-interface LineComponent<T = unknown> extends Component {
+interface LineComponent<T = unknown> extends ComponentBuilder<LineComponent<T>> {
   x1(accessor?: NumberAccessor<Datum<T>>): LineComponent<T>;
   x2(accessor?: NumberAccessor<Datum<T>>): LineComponent<T>;
   y1(accessor?: NumberAccessor<Datum<T>>): LineComponent<T>;

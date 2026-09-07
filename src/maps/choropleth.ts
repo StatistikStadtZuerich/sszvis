@@ -102,7 +102,7 @@ import {
   select,
   type ValueFn,
 } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import {
   GEO_KEY_DEFAULT,
   type MergedGeoDatum,
@@ -119,7 +119,7 @@ import {
  * mapRendererBubble satisfies this, which is the documented use, and so does any other component
  * that carries the pair.
  */
-export interface AnchoredShape<T> extends Component {
+export interface AnchoredShape<T> extends ComponentBuilder<AnchoredShape<T>> {
   mergedData(value: MergedGeoDatum<T>[]): AnchoredShape<T>;
   mapPath(value: GeoPath): AnchoredShape<T>;
 }
@@ -137,12 +137,12 @@ export interface AnchoredShape<T> extends Component {
  * honest fix is to make those props optional in the renderers themselves, which already document
  * that they tolerate a missing shape.
  */
-interface MeshRendererView extends Component {
+interface MeshRendererView extends ComponentBuilder<MeshRendererView> {
   geoJson(value: GeoPermissibleObjects | undefined): MeshRendererView;
   mapPath(value: GeoPath): MeshRendererView;
 }
 
-interface LakeRendererView extends Component {
+interface LakeRendererView extends ComponentBuilder<LakeRendererView> {
   lakeFeature(value: GeoPermissibleObjects | undefined): LakeRendererView;
   lakeBounds(value: GeoPermissibleObjects | undefined): LakeRendererView;
   mapPath(value: GeoPath): LakeRendererView;
@@ -193,7 +193,8 @@ type ChoroplethProps<T> = {
  * are spelled out here rather than inherited because a delegate returns this component for
  * chaining, not the renderer.
  */
-export interface ChoroplethComponent<T extends object = object> extends Component {
+export interface ChoroplethComponent<T extends object = object>
+  extends ComponentBuilder<ChoroplethComponent<T>> {
   width(): number | undefined;
   width(value: number): ChoroplethComponent<T>;
   height(): number | undefined;
@@ -354,10 +355,10 @@ export default function <T extends object = object>(): ChoroplethComponent<T> {
   // its callback type from a *literal* event name, so a plain string collapses the callback to
   // never. Narrowing to "over" | "out" | "click" would type the callback properly but would also
   // reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
-  mapComponent.on = (...args: [string, never]) => {
+  mapComponent.on = ((...args: [string, never]) => {
     const value = event.on.apply(event, args);
     return value === event ? mapComponent : value;
-  };
+  }) as ChoroplethComponent<T>["on"];
 
   return mapComponent;
 }

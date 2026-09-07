@@ -46,7 +46,7 @@
  */
 
 import { select } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 
 /**
@@ -63,7 +63,7 @@ type ButtonGroupProps<T> = {
 };
 
 export interface ButtonGroupComponent<T extends string | number = string | number>
-  extends Component {
+  extends ComponentBuilder<ButtonGroupComponent<T>> {
   values(): T[];
   values(values: T[]): ButtonGroupComponent<T>;
   current(): T;

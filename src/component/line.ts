@@ -70,7 +70,7 @@
  */
 
 import { line as d3Line, select, type ValueFn } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 
@@ -103,7 +103,8 @@ type LineProps<P, L> = {
   transition: boolean;
 };
 
-export interface LineComponent<P = unknown, L = unknown> extends Component {
+export interface LineComponent<P = unknown, L = unknown>
+  extends ComponentBuilder<LineComponent<P, L>> {
   x(): number | PointAccessor<P, number> | undefined;
   x<Q = P>(value: number | PointAccessor<Q, number>): LineComponent<P, L>;
   y(): PointAccessor<P, number> | undefined;

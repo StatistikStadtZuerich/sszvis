@@ -59,7 +59,7 @@
 
 import { type ScaleBand, select } from "d3";
 import { axisX, type SlantDirection } from "../axis.js";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import translateString from "../svgUtils/translateString.js";
 import type { AnySelection } from "../types.js";
@@ -105,7 +105,7 @@ type NestedStackedBarsProps<T, X extends string | number> = {
  * component's generics at the call site.
  */
 export interface NestedStackedBarsVerticalComponent<T = unknown, X extends string | number = string>
-  extends Component {
+  extends ComponentBuilder<NestedStackedBarsVerticalComponent<T, X>> {
   offset(): (datum: NestedStack<T, X>) => number | undefined;
   offset<U = NestedStack<T, X>>(accessor: (datum: U) => number | undefined): this;
   xScale(): ScaleBand<X>;

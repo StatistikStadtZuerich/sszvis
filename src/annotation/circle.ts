@@ -20,11 +20,11 @@
  */
 
 import { type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import { dataAreaPattern } from "../patterns";
-import ensureDefsElement from "../svgUtils/ensureDefsElement";
-import type { NumberAccessor, PatternSelection, StringAccessor } from "../types";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { dataAreaPattern } from "../patterns.js";
+import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
+import type { NumberAccessor, PatternSelection, StringAccessor } from "../types.js";
 
 // Type definitions for circle annotation component
 type Datum<T = unknown> = T;
@@ -38,7 +38,7 @@ interface CircleProps<T = unknown> {
   caption?: (d: Datum<T>) => string;
 }
 
-interface CircleComponent<T = unknown> extends Component {
+interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<T>> {
   x(accessor?: NumberAccessor<Datum<T>>): CircleComponent<T>;
   y(accessor?: NumberAccessor<Datum<T>>): CircleComponent<T>;
   r(accessor?: NumberAccessor<Datum<T>>): CircleComponent<T>;

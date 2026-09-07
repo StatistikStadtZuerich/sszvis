@@ -21,7 +21,7 @@
  */
 
 import type { HierarchyNode } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import type { AnySelection, StringAccessor } from "../types.js";
@@ -58,7 +58,7 @@ interface BreadcrumbProps<T = unknown> {
  * Component interface with method chaining support.
  * Each method returns the component for chaining (setter) or the value (getter).
  */
-export interface BreadcrumbComponent<T = unknown> extends Component {
+export interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbComponent<T>> {
   /** Set the container to render breadcrumbs into */
   renderInto(): AnySelection;
   renderInto(selection: AnySelection): BreadcrumbComponent<T>;

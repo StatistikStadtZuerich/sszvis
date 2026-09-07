@@ -104,7 +104,7 @@
 
 import type { ExtendedFeatureCollection, GeoPath } from "d3";
 import { select } from "d3";
-import { type Component, component } from "../../d3-component.js";
+import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import { GEO_KEY_DEFAULT } from "../mapUtils.js";
 
@@ -146,7 +146,8 @@ type HighlightProps<T> = {
   highlightStrokeWidth: StoredHighlightValue<T, number | null>;
 };
 
-export interface MapRendererHighlightComponent<T = unknown> extends Component {
+export interface MapRendererHighlightComponent<T = unknown>
+  extends ComponentBuilder<MapRendererHighlightComponent<T>> {
   keyName(): string;
   keyName(value: string): MapRendererHighlightComponent<T>;
   geoJson(): ExtendedFeatureCollection | undefined;

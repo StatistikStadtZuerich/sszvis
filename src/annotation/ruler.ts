@@ -31,11 +31,11 @@
  */
 
 import { ascending, type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import { halfPixel } from "../svgUtils/crisp";
-import translateString from "../svgUtils/translateString";
-import type { AnySelection, BooleanAccessor, NumberAccessor, StringAccessor } from "../types";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { halfPixel } from "../svgUtils/crisp.js";
+import translateString from "../svgUtils/translateString.js";
+import type { AnySelection, BooleanAccessor, NumberAccessor, StringAccessor } from "../types.js";
 
 // Type definitions for ruler component
 type Datum<T = unknown> = T;
@@ -52,7 +52,7 @@ interface RulerProps<T = unknown> {
   reduceOverlap: boolean;
 }
 
-interface RulerComponent<T = unknown> extends Component {
+interface RulerComponent<T = unknown> extends ComponentBuilder<RulerComponent<T>> {
   top(value?: number): RulerComponent<T>;
   bottom(value?: number): RulerComponent<T>;
   x(accessor?: NumberAccessor<Datum<T>>): RulerComponent<T>;

@@ -113,7 +113,7 @@
 
 import type { BaseType } from "d3";
 import { select } from "d3";
-import { type Component, component } from "../../d3-component.js";
+import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 
 /** A pixel position, as the position accessor returns one. */
@@ -146,7 +146,8 @@ type RasterProps<T> = {
   opacity: number;
 };
 
-export interface MapRendererRasterComponent<T = unknown> extends Component {
+export interface MapRendererRasterComponent<T = unknown>
+  extends ComponentBuilder<MapRendererRasterComponent<T>> {
   debug(): boolean;
   debug(value: boolean): MapRendererRasterComponent<T>;
   width(): number | undefined;

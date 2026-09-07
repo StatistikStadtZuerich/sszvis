@@ -42,9 +42,9 @@
  */
 
 import { select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import translateString from "../svgUtils/translateString";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import translateString from "../svgUtils/translateString.js";
 
 // Type definitions for tooltip anchor annotation component
 type Datum<T = unknown> = T;
@@ -54,7 +54,7 @@ interface TooltipAnchorProps<T = unknown> {
   debug?: boolean;
 }
 
-interface TooltipAnchorComponent<T = unknown> extends Component {
+interface TooltipAnchorComponent<T = unknown> extends ComponentBuilder<TooltipAnchorComponent<T>> {
   position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
   debug(value?: boolean): TooltipAnchorComponent<T>;
 }

@@ -118,7 +118,7 @@ import {
   select,
 } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
@@ -188,7 +188,7 @@ type SunburstProps<T> = {
  * defaults and are all required for a render to succeed, so their getters report the
  * undefined the props actually hold.
  */
-export interface SunburstComponent<T = unknown> extends Component {
+export interface SunburstComponent<T = unknown> extends ComponentBuilder<SunburstComponent<T>> {
   angleScale(): SunburstScale;
   angleScale(scale: SunburstScale): SunburstComponent<T>;
   radiusScale(): SunburstScale | undefined;

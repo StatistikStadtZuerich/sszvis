@@ -22,11 +22,11 @@
  */
 
 import { type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import { formatNumber } from "../format";
-import { halfPixel } from "../svgUtils/crisp";
-import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { formatNumber } from "../format.js";
+import { halfPixel } from "../svgUtils/crisp.js";
+import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types.js";
 
 // Type definitions for range ruler component
 type Datum<T = unknown> = T;
@@ -43,7 +43,7 @@ interface RangeRulerProps<T = unknown> {
   flip: (d?: Datum<T>) => boolean;
 }
 
-interface RangeRulerComponent<T = unknown> extends Component {
+interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerComponent<T>> {
   x(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;
   y0(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;
   y1(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;

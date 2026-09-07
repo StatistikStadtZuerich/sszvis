@@ -17,11 +17,11 @@
  */
 
 import { type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import { halfPixel } from "../svgUtils/crisp";
-import type { AnySelection, NumberAccessor } from "../types";
-import tooltipAnchor from "./tooltipAnchor";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { halfPixel } from "../svgUtils/crisp.js";
+import type { AnySelection, NumberAccessor } from "../types.js";
+import tooltipAnchor from "./tooltipAnchor.js";
 
 // Type definitions for range flag component
 type Datum<T = unknown> = T;
@@ -32,7 +32,7 @@ interface RangeFlagProps<T = unknown> {
   y1: (d: Datum<T>) => NumberValue;
 }
 
-interface RangeFlagComponent<T = unknown> extends Component {
+interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComponent<T>> {
   x(accessor?: NumberAccessor<Datum<T>>): RangeFlagComponent<T>;
   y0(accessor?: NumberAccessor<Datum<T>>): RangeFlagComponent<T>;
   y1(accessor?: NumberAccessor<Datum<T>>): RangeFlagComponent<T>;

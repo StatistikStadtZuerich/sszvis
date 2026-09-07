@@ -69,7 +69,7 @@
 
 import { select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 
@@ -113,7 +113,7 @@ type DotProps<T> = {
   transition: boolean;
 };
 
-export interface DotComponent<T = unknown> extends Component {
+export interface DotComponent<T = unknown> extends ComponentBuilder<DotComponent<T>> {
   x(): StoredAccessor<T, number>;
   x<U = T>(value: DotValue<U, number>): DotComponent<T>;
   y(): StoredAccessor<T, number>;
