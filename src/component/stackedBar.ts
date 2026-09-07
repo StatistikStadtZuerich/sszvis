@@ -70,11 +70,10 @@
  * one of the series keys stacks that series as zero, and the slice's `data` is undefined, so
  * sparse data needs no padding with explicit zero rows.
  *
- * Note: the series keys come from Object.keys over the grouped data, and JavaScript orders
- * integer-like keys numerically regardless of insertion order. A series accessor returning
- * years or numeric codes therefore loses the caller's ordering, and since the key order is the
- * stacking order, the stack silently changes shape. The stacks themselves are reordered the
- * same way, which is only cosmetic, since each slice is positioned by its own stack value.
+ * Note: the series keys are collected from the data in order of first appearance, so the
+ * stacking order is the caller's. The stacks themselves are ordered by the cascade, which
+ * enumerates integer-like keys numerically regardless of insertion order; that part is only
+ * cosmetic, since each slice is positioned by its own stack value.
  *
  * Note: `keys` and `maxValue` are hung off the returned array rather than wrapped in an object,
  * so any array operation - a spread, a map, a filter, a trip through JSON - drops them, and
@@ -190,8 +189,10 @@ function stackedBarData(order: StackOrder) {
     (data: T[]): StackedBarLayout<T, X> => {
       const rows: CascadeRow<T>[] = cascade<T>().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
-      // Collect all keys ()
-      const keys = fn.set<string, string>(rows.flatMap((row) => Object.keys(row)));
+      // The series keys, and with them the stacking order, come from the data rather than
+      // from the cascade rows: those are plain objects, which enumerate integer-like keys
+      // numerically and would drop the caller's ordering for numeric series.
+      const keys = fn.set(data, (d) => String(seriesAcc(d)));
 
       const stacks = d3Stack<CascadeRow<T>, string>()
         .keys(keys)
