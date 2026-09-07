@@ -425,6 +425,38 @@ describe("component/sunburst", () => {
     });
   });
 
+  describe("required properties", () => {
+    // radiusScale, centerRadius and fill are all required and have no defaults. Each is
+    // checked before a single element is created, so a chart wired up by hand fails the
+    // same way whichever one was forgotten - rather than throwing from the tooltip anchor
+    // after the arcs are in flight (radiusScale), or rendering an empty chart with every
+    // anchor at the origin and no diagnostic at all (centerRadius).
+    const missing = (name: "radiusScale" | "centerRadius" | "fill") => {
+      const component = sunburst();
+      if (name !== "fill") component.fill(() => "#f00");
+      if (name !== "radiusScale") component.radiusScale((v: number) => v * 300);
+      if (name !== "centerRadius") component.centerRadius(10);
+      return component;
+    };
+
+    for (const name of ["radiusScale", "centerRadius", "fill"] as const) {
+      test(`should throw naming ${name} when it was never set`, () => {
+        const g = group(`missing-${name}`);
+        expect(() => g.datum(hierarchyOf()).call(missing(name) as never)).toThrow(
+          `sszvis.component.sunburst: the "${name}" property is required`
+        );
+      });
+
+      test(`should throw before rendering anything when ${name} is missing`, () => {
+        const g = group(`missing-${name}-empty`);
+        expect(() => g.datum(hierarchyOf()).call(missing(name) as never)).toThrow();
+        const node = g.node() as SVGGElement;
+        expect(arcs(node).length).toBe(0);
+        expect(anchorNodes(node).length).toBe(0);
+      });
+    }
+  });
+
   describe("stroke", () => {
     test("should apply a white stroke by default, to separate touching arcs", () => {
       const node = render(sunburstOf(), hierarchyOf());
@@ -745,58 +777,6 @@ describe("component/sunburst", () => {
       await settle();
       g.datum(hierarchyOf()).call(component.fill(() => "#ff0000") as never);
       expect(attrs(g.node() as SVGGElement, "fill")[0]).toBe("rgb(255, 0, 0)");
-    });
-
-    test("requires fill to be set at all", () => {
-      // BUG: fill is required and unchecked, so leaving it out throws `props.fill is not a
-      // function` from inside the render rather than naming the property.
-      const unset = group("unset-fill");
-      expect(() =>
-        unset.datum(hierarchyOf()).call(
-          sunburst()
-            .radiusScale((v: number) => v)
-            .centerRadius(0) as never
-        )
-      ).toThrow(TypeError);
-      unset.selectAll("*").interrupt();
-    });
-
-    test("throws from the tooltip anchor when radiusScale was never set", () => {
-      // BUG: radiusScale is required and unchecked. The first thing to call it is the tooltip
-      // anchor's position accessor, so the render throws after the arcs have already been
-      // joined and a transition has been scheduled on them - and that transition then throws
-      // the same TypeError on every frame for 300ms, from a d3 timer with no caller left to
-      // catch it. Without the interrupt below those become unhandled errors attributed to
-      // whichever test happens to be running when they fire.
-      // current: a TypeError from inside the component, then a burst of unhandled ones.
-      // expected: a logger.warn about the missing property, like the one for malformed data.
-      const g = group("no-radius-scale");
-      expect(() => g.datum(hierarchyOf()).call(sunburst().fill(() => "#f00") as never)).toThrow(
-        TypeError
-      );
-      expect(arcs(g.node() as SVGGElement).length).toBe(5);
-      g.selectAll("*").interrupt();
-    });
-
-    test("positions the anchors at NaN when centerRadius was never set", async () => {
-      // BUG: centerRadius is required too, but it is only ever added to a number, so it fails
-      // silently rather than throwing the way a missing radiusScale does: `undefined + 100` is
-      // NaN, so the arcs degenerate to a point and every anchor keeps an unparseable
-      // transform, which the browser drops - leaving them all at the group's origin, the
-      // centre of the chart under the docs' convention of translating the group there.
-      // current: an empty chart and every tooltip firing from one point, no warning.
-      // expected: a warning, or a default of 0.
-      const node = render(
-        sunburst()
-          .fill(() => "#f00")
-          .radiusScale((v: number) => v * 300),
-        hierarchyOf()
-      );
-      expect(new Set(anchors(node))).toEqual(new Set(["translate(NaN,NaN)"]));
-      const anchor = anchorNodes(node)[0] as SVGRectElement;
-      expect(anchor.transform.baseVal.numberOfItems).toBe(0);
-      await nextFrame();
-      expect(new Set(attrs(node, "d"))).toEqual(new Set(["M0,0Z"]));
     });
 
     test("renders an arc for the root of a hierarchy that did not come from sszvis", () => {
