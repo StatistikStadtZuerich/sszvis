@@ -93,7 +93,7 @@
 
 import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
 import { select } from "d3";
-import { type Component, component } from "../../d3-component.js";
+import { type ComponentBuilder, component } from "../../d3-component.js";
 import { mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 
@@ -128,7 +128,8 @@ type LakeOverlayProps = {
   fadeOut: boolean;
 };
 
-export interface MapRendererPatternedLakeOverlayComponent extends Component {
+export interface MapRendererPatternedLakeOverlayComponent
+  extends ComponentBuilder<MapRendererPatternedLakeOverlayComponent> {
   mapPath(): LakePath | undefined;
   mapPath(value: LakePath): MapRendererPatternedLakeOverlayComponent;
   lakeFeature(): GeoPermissibleObjects | undefined;

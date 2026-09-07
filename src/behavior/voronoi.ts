@@ -42,10 +42,10 @@
  */
 
 import { Delaunay, dispatch, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import * as logger from "../logger";
-import { datumFromPannableElement, elementFromEvent } from "./util";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import * as logger from "../logger.js";
+import { datumFromPannableElement, elementFromEvent } from "./util.js";
 
 // Type definitions for voronoi behavior component
 export type VoronoiBounds = [number, number, number, number]; // [minX, minY, maxX, maxY]
@@ -61,7 +61,7 @@ type VoronoiProps<T = unknown> = {
 
 type VoronoiEventHandler<T = unknown> = (event: Event, datum?: T) => void;
 
-interface VoronoiComponent<T = unknown> extends Component {
+interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponent<T>> {
   x(): NumberAccessor<T>;
   x(accessor: NumberAccessor<T>): VoronoiComponent<T>;
 

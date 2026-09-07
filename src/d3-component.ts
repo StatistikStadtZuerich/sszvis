@@ -7,17 +7,45 @@ export interface ComponentProps {
 export type RenderCallback = (this: any, ...args: any[]) => void;
 export type SelectionRenderCallback = (this: any, ...args: any[]) => void;
 export type PropertySetter<T = any> = (...args: any[]) => T;
-export interface PropertyDelegate {
-  [key: string]: (...args: any[]) => any;
+/**
+ * A delegate is any object exposing the delegated prop as a getter/setter method. Component
+ * interfaces declare their props individually rather than through an index signature, so this
+ * is deliberately structural rather than an indexed type.
+ */
+export type PropertyDelegate = object;
+/** Anything built by `component()` is callable by a d3 selection. */
+export type ComponentCallable = <
+  GElement extends BaseType,
+  Datum,
+  PElement extends BaseType,
+  PDatum,
+>(
+  selection: Selection<GElement, Datum, PElement, PDatum>
+) => void;
+
+/**
+ * The builder half of a component, parameterised by the interface being built.
+ *
+ * `component()` hands back whatever interface it is asked for, but the accessors declared
+ * by `.prop()` only exist once the component is built. Declaring the four builder methods
+ * as returning `C` is what keeps a construction chain typed as the component under
+ * construction: without it the chain degrades to the first undeclared setter and the
+ * declared interface is never checked against what was actually built.
+ *
+ * Every component interface should extend `ComponentBuilder<Self>`.
+ */
+export interface ComponentBuilder<C> extends ComponentCallable {
+  prop<T>(prop: string, setter?: PropertySetter<T>): C;
+  delegate(prop: string, delegate: PropertyDelegate): C;
+  renderSelection(callback: SelectionRenderCallback): C;
+  render(callback: RenderCallback): C;
 }
-export interface Component {
-  <GElement extends BaseType, Datum, PElement extends BaseType, PDatum>(
-    selection: Selection<GElement, Datum, PElement, PDatum>
-  ): void;
-  prop<T>(prop: string, setter?: PropertySetter<T>): Component;
-  delegate(prop: string, delegate: PropertyDelegate): Component;
-  renderSelection(callback: SelectionRenderCallback): Component;
-  render(callback: RenderCallback): Component;
+
+/**
+ * An untyped component. The index signature makes any member resolve, so prefer a
+ * specific interface extending `ComponentBuilder<Self>` over this.
+ */
+export interface Component extends ComponentBuilder<Component> {
   [key: string]: any;
 }
 
@@ -92,7 +120,10 @@ export function component<C extends Component = Component>(): C {
    */
   sszvisComponent.delegate = (prop: string, delegate: PropertyDelegate): Component => {
     (sszvisComponent as any)[prop] = (...args: any[]): any => {
-      const result = delegate[prop].apply(delegate, slice(args));
+      const result = (delegate as Record<string, (...a: any[]) => any>)[prop].apply(
+        delegate,
+        slice(args)
+      );
       return args.length === 0 ? result : sszvisComponent;
     };
     return sszvisComponent as Component;

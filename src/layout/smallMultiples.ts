@@ -73,7 +73,7 @@
  */
 
 import { select } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 
 /**
  * One group of the grid. `values` carries the data for the chart drawn inside the group;
@@ -111,7 +111,7 @@ type SmallMultiplesProps<G> = {
 };
 
 export interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGroup>
-  extends Component {
+  extends ComponentBuilder<SmallMultiplesComponent<G>> {
   /**
    * The six geometry properties have no defaults, so their getters report undefined until the
    * corresponding setter has been called. Reading one before then is what produces the NaN

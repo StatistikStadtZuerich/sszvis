@@ -23,12 +23,12 @@
  */
 
 import { area as d3Area, type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import { dataAreaPattern } from "../patterns";
-import ensureDefsElement from "../svgUtils/ensureDefsElement";
-import { defaultTransition } from "../transition";
-import type { NumberAccessor, PatternSelection } from "../types";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { dataAreaPattern } from "../patterns.js";
+import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
+import { defaultTransition } from "../transition.js";
+import type { NumberAccessor, PatternSelection } from "../types.js";
 
 // Type definitions for confidence area component
 type Datum<T = unknown> = T;
@@ -48,7 +48,8 @@ interface ConfidenceAreaProps<T = unknown> {
   transition: boolean;
 }
 
-interface ConfidenceAreaComponent<T = unknown> extends Component {
+interface ConfidenceAreaComponent<T = unknown>
+  extends ComponentBuilder<ConfidenceAreaComponent<T>> {
   x(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
   y0(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
   y1(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;

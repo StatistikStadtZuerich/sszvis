@@ -92,7 +92,7 @@
  */
 
 import { select } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 
@@ -124,7 +124,8 @@ type OrdinalColorScaleProps<T> = {
   floatWidth: number;
 };
 
-export interface OrdinalColorScaleComponent<T = string> extends Component {
+export interface OrdinalColorScaleComponent<T = string>
+  extends ComponentBuilder<OrdinalColorScaleComponent<T>> {
   scale(): OrdinalColorScale<T>;
   scale(scale: OrdinalColorScale<T>): OrdinalColorScaleComponent<T>;
   rowHeight(): number;

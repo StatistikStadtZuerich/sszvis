@@ -96,7 +96,7 @@
 
 import type { GeoPath, GeoProjection } from "d3";
 import { dispatch, select } from "d3";
-import { type Component, component } from "../../d3-component.js";
+import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import translateString from "../../svgUtils/translateString.js";
 import { defaultTransition } from "../../transition.js";
@@ -121,7 +121,8 @@ type BubbleProps<T> = {
   transition: boolean;
 };
 
-export interface MapRendererBubbleComponent<T = unknown> extends Component {
+export interface MapRendererBubbleComponent<T = unknown>
+  extends ComponentBuilder<MapRendererBubbleComponent<T>> {
   mergedData(): MergedGeoDatum<T>[] | undefined;
   mergedData(value: MergedGeoDatum<T>[]): MapRendererBubbleComponent<T>;
   mapPath(): GeoPath | undefined;
@@ -272,10 +273,10 @@ export default function <T = unknown>(): MapRendererBubbleComponent<T> {
   // collapses the callback to never. Narrowing to "over" | "out" | "click" would type the callback
   // properly but would also reject the namespaced typenames d3 accepts at runtime, such as
   // "over.tooltip".
-  anchoredCirclesComponent.on = (...args: [string, never]) => {
+  anchoredCirclesComponent.on = ((...args: [string, never]) => {
     const value = event.on.apply(event, args);
     return value === event ? anchoredCirclesComponent : value;
-  };
+  }) as MapRendererBubbleComponent<T>["on"];
 
   return anchoredCirclesComponent;
 }

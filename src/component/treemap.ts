@@ -24,16 +24,10 @@
  * @return {sszvis.component}
  */
 
-import {
-  treemap as d3Treemap,
-  type HierarchyNode,
-  type NumberValue,
-  select,
-  treemapSquarify,
-} from "d3";
+import { treemap as d3Treemap, type HierarchyNode, select, treemapSquarify } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { getAccessibleTextColor } from "../color.js";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import { defaultTransition } from "../transition.js";
@@ -69,7 +63,7 @@ type TreemapProps<T = unknown> = {
 };
 
 // Component interface with proper method overloads
-interface TreemapComponent<T = unknown> extends Component {
+interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponent<T>> {
   colorScale(): (key: string) => string;
   colorScale(scale: (key: string) => string): TreemapComponent<T>;
   transition(): boolean;

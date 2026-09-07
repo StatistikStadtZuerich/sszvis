@@ -94,7 +94,7 @@
 
 import type { BaseType, ValueFn } from "d3";
 import { select } from "d3";
-import { type Component, component } from "../../d3-component.js";
+import { type ComponentBuilder, component } from "../../d3-component.js";
 import type { GeoPoint, PointProjection } from "../mapUtils.js";
 
 /**
@@ -118,7 +118,7 @@ type ImageProps = {
   opacity: ImageValue<number>;
 };
 
-export interface MapRendererImageComponent extends Component {
+export interface MapRendererImageComponent extends ComponentBuilder<MapRendererImageComponent> {
   projection(): PointProjection | undefined;
   projection(value: PointProjection): MapRendererImageComponent;
   src(): ImageValue<string> | undefined;

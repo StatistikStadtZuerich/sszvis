@@ -111,12 +111,7 @@ import {
   stackOrderReverse,
 } from "d3";
 import { cascade } from "../cascade.js";
-import {
-  type Component,
-  component,
-  type PropertySetter,
-  type RenderCallback,
-} from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import bar, { type BarComponent } from "./bar.js";
 
@@ -291,21 +286,11 @@ type HorizontalProps<T, X extends string | number> = ColorProps<T, X> & {
 };
 
 /**
- * `component()` hands back whatever interface it is asked for, but the two builder methods
- * it inherits are declared as returning the plain Component, so a component interface has
- * to re-declare them to survive its own construction chain.
- */
-interface StackedBarBuilder<C extends Component> extends Component {
-  prop<V>(prop: string, setter?: PropertySetter<V>): C;
-  render(callback: RenderCallback): C;
-}
-
-/**
  * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
  */
 export interface StackedBarVerticalComponent<T = unknown, X extends string | number = string>
-  extends StackedBarBuilder<StackedBarVerticalComponent<T, X>> {
+  extends ComponentBuilder<StackedBarVerticalComponent<T, X>> {
   xScale(): StackScale<X>;
   xScale<V = X>(scale: (value: V) => number | undefined): StackedBarVerticalComponent<T, X>;
   width(): StoredDimension<T, X>;
@@ -327,7 +312,7 @@ export interface StackedBarVerticalComponent<T = unknown, X extends string | num
 }
 
 export interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string>
-  extends StackedBarBuilder<StackedBarHorizontalComponent<T, X>> {
+  extends ComponentBuilder<StackedBarHorizontalComponent<T, X>> {
   xScale(): ValueScale;
   xScale(scale: ValueScale): StackedBarHorizontalComponent<T, X>;
   width(): StoredDimension<T, X>;

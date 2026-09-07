@@ -21,11 +21,11 @@
  */
 
 import { type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import { dataAreaPattern } from "../patterns";
-import ensureDefsElement from "../svgUtils/ensureDefsElement";
-import type { NumberAccessor, PatternSelection, StringAccessor } from "../types";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { dataAreaPattern } from "../patterns.js";
+import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
+import type { NumberAccessor, PatternSelection, StringAccessor } from "../types.js";
 
 // Type definitions for rectangle annotation component
 type Datum<T = unknown> = T;
@@ -40,7 +40,7 @@ interface RectangleProps<T = unknown> {
   caption?: (d: Datum<T>) => string;
 }
 
-interface RectangleComponent<T = unknown> extends Component {
+interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComponent<T>> {
   x(accessor?: NumberAccessor<Datum<T>>): RectangleComponent<T>;
   y(accessor?: NumberAccessor<Datum<T>>): RectangleComponent<T>;
   width(accessor?: NumberAccessor<Datum<T>>): RectangleComponent<T>;

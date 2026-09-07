@@ -57,7 +57,7 @@
 
 import { range, type ScaleBand, scaleBand, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import translateString from "../svgUtils/translateString.js";
 
@@ -83,7 +83,7 @@ type GroupedBarsProps<T = unknown> = {
 
 // Component interface with proper method overloads
 // Setters use `any` to allow passing more specific datum types without requiring explicit generic parameter
-interface GroupedBarsComponent<T = unknown> extends Component {
+interface GroupedBarsComponent<T = unknown> extends ComponentBuilder<GroupedBarsComponent<T>> {
   groupScale(): (datum: T) => number;
   groupScale<U = T>(scale: (datum: U) => number | undefined): GroupedBarsComponent<T>;
   groupSize(): number;

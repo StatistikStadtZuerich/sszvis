@@ -25,7 +25,7 @@
  */
 
 import { scaleLinear, select } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import { halfPixel } from "../svgUtils/crisp.js";
@@ -55,7 +55,7 @@ interface LabelledBin extends Bin {
   p: number;
 }
 
-export interface BinnedColorScaleComponent extends Component {
+export interface BinnedColorScaleComponent extends ComponentBuilder<BinnedColorScaleComponent> {
   scale(): BinnedColorScale;
   scale(scale: BinnedColorScale): BinnedColorScaleComponent;
   displayValues(): number[];

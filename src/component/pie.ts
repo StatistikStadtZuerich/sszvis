@@ -47,7 +47,7 @@
 
 import { arc, interpolate, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 
@@ -91,7 +91,7 @@ type PieProps<T> = {
  * the caller sets them - both are required, and rendering without them fails, so both
  * getters report the undefined the props actually hold.
  */
-export interface PieComponent<T = PieAngles> extends Component {
+export interface PieComponent<T = PieAngles> extends ComponentBuilder<PieComponent<T>> {
   radius(): number | undefined;
   radius(radius: number): PieComponent<T>;
   fill(): ColorValue<T> | undefined;

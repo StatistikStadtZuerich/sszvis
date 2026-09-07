@@ -56,7 +56,7 @@ import {
 } from "d3";
 import { axisX, type SlantDirection } from "../axis.js";
 import move from "../behavior/move.js";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { range } from "../scale.js";
 import { halfPixel } from "../svgUtils/crisp.js";
@@ -102,7 +102,7 @@ interface SliderProps {
   label: (d: SliderValue) => string;
 }
 
-export interface SliderComponent extends Component {
+export interface SliderComponent extends ComponentBuilder<SliderComponent> {
   scale(): SliderScale;
   scale(scale: SliderScale): SliderComponent;
   value(): SliderValue;

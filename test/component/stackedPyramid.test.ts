@@ -418,7 +418,7 @@ describe("component/stackedPyramid", () => {
         "leftRefAccessor",
         "rightRefAccessor",
       ]) {
-        expect(typeof component[prop]).toBe("function");
+        expect(typeof (component as unknown as Record<string, unknown>)[prop]).toBe("function");
       }
     });
 
@@ -1032,7 +1032,7 @@ describe("component/stackedPyramid", () => {
       // geometry on the plain selection immediately - nothing animates, but the transition
       // state is still attached and interrupts any transition already running on those
       // rects. Not configurable from here. Shared with stackedBar.
-      expect(stackedPyramid().transition).toBeUndefined();
+      expect((stackedPyramid() as unknown as Record<string, unknown>).transition).toBeUndefined();
       const node = render(pyramidOf());
       for (const r of bars(node, "leftStack")) {
         expect(Object.keys(r).some((key) => key.startsWith("__transition"))).toBe(true);

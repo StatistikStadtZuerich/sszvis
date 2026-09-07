@@ -184,7 +184,7 @@
  */
 
 import { area as d3Area, select, type ValueFn } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 
@@ -251,7 +251,8 @@ type StackedAreaMultiplesProps<P, L> = {
   transition: boolean;
 };
 
-export interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends Component {
+export interface StackedAreaMultiplesComponent<P = unknown, L = P[]>
+  extends ComponentBuilder<StackedAreaMultiplesComponent<P, L>> {
   x(): AreaValue<P> | undefined;
   x<Q = P>(value: AreaValue<Q>): StackedAreaMultiplesComponent<P, L>;
   y0(): AreaValue<P> | undefined;

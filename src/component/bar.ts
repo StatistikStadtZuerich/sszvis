@@ -52,7 +52,7 @@
 
 import { select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 
@@ -90,7 +90,7 @@ type BarProps<T> = {
  */
 type BarValue<T, R> = R | ((datum: T, index: number) => R);
 
-export interface BarComponent<T = unknown> extends Component {
+export interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent<T>> {
   x(): ValueAccessor<T>;
   x<U = T>(value: BarValue<U, number>): BarComponent<T>;
   y(): ValueAccessor<T>;

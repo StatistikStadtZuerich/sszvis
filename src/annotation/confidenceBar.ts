@@ -23,8 +23,8 @@
  */
 
 import { type NumberValue, range, scaleBand, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
 
 // Type definitions for confidence bar component
 type Datum<T = unknown> = T & {
@@ -43,7 +43,7 @@ interface ConfidenceBarProps<T = unknown> {
   groupScale: (d: Datum<T>) => number;
 }
 
-interface ConfidenceBarComponent<T = unknown> extends Component {
+interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<ConfidenceBarComponent<T>> {
   x(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
   y(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
   confidenceLow(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;

@@ -92,7 +92,7 @@ import {
 } from "d3";
 import type { GeoJsonProperties } from "geojson";
 import tooltipAnchor from "../../annotation/tooltipAnchor.js";
-import { type Component, component } from "../../d3-component.js";
+import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
@@ -139,7 +139,8 @@ type GeoJsonProps = {
 /** A handler as this component's own event API delivers it. */
 type GeoJsonEventHandler = (datum: unknown) => void;
 
-export interface MapRendererGeoJsonComponent<T = unknown> extends Component {
+export interface MapRendererGeoJsonComponent<T = unknown>
+  extends ComponentBuilder<MapRendererGeoJsonComponent<T>> {
   dataKeyName(): string;
   dataKeyName(value: string): MapRendererGeoJsonComponent<T>;
   geoJsonKeyName(): string;

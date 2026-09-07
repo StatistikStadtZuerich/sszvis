@@ -52,7 +52,7 @@
 
 import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
 import { select } from "d3";
-import { type Component, component } from "../../d3-component.js";
+import { type ComponentBuilder, component } from "../../d3-component.js";
 
 /**
  * A path generator, as this component uses one. A d3.geoPath satisfies this shape, and so does a
@@ -87,7 +87,7 @@ type MeshProps = {
   strokeWidth: MeshValue<number>;
 };
 
-export interface MapRendererMeshComponent extends Component {
+export interface MapRendererMeshComponent extends ComponentBuilder<MapRendererMeshComponent> {
   geoJson(): GeoPermissibleObjects | undefined;
   geoJson(value: GeoPermissibleObjects): MapRendererMeshComponent;
   mapPath(): MeshPath | undefined;

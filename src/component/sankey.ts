@@ -158,7 +158,7 @@
 import { interpolateNumber, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import {
-  type Component,
+  type ComponentBuilder,
   component,
   type PropertySetter,
   type RenderCallback,
@@ -333,7 +333,7 @@ type SankeyProps = {
  * re-declare them to survive its own construction chain. Without this the chain widens to
  * `any` at the first default and nothing in it is checked.
  */
-interface SankeyBuilder extends Component {
+interface SankeyBuilder extends ComponentBuilder<SankeyBuilder> {
   prop<V>(prop: string, setter?: PropertySetter<V>): SankeyComponent;
   render(callback: RenderCallback): SankeyComponent;
 }

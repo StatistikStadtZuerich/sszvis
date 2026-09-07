@@ -251,13 +251,7 @@ import {
   select,
 } from "d3";
 import { cascade } from "../cascade.js";
-import {
-  type Component,
-  component,
-  type PropertySetter,
-  type RenderCallback,
-  type SelectionRenderCallback,
-} from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 import bar, { type BarComponent } from "./bar.js";
@@ -451,20 +445,6 @@ type StackedPyramidProps<T, S extends string | number> = {
   leftRefAccessor?: ReferenceAccessor<T, S>;
   rightRefAccessor?: ReferenceAccessor<T, S>;
 };
-
-/**
- * `component()` hands back whatever interface it is asked for, but the three builder methods
- * it inherits are declared as returning the plain Component, so a component interface has to
- * re-declare them to survive its own construction chain. Without this the chain's type
- * degrades to `any` at the first undeclared setter - `.barFill("#000")` resolves through
- * Component's index signature - and the interface below is then never checked against the
- * component that is actually built.
- */
-interface ComponentBuilder<C extends Component> extends Component {
-  prop<V>(prop: string, setter?: PropertySetter<V>): C;
-  render(callback: RenderCallback): C;
-  renderSelection(callback: SelectionRenderCallback): C;
-}
 
 /**
  * Setters take `<U = ...>` so that a typed accessor can be passed without naming the

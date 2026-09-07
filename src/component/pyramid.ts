@@ -104,7 +104,7 @@
  */
 
 import { line as d3Line, select } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 import bar from "./bar.js";
@@ -156,7 +156,8 @@ type PyramidProps<T, D> = {
  */
 type PyramidValue<D, R> = R | ValueAccessor<D, R>;
 
-export interface PyramidComponent<T = unknown, D = unknown> extends Component {
+export interface PyramidComponent<T = unknown, D = unknown>
+  extends ComponentBuilder<PyramidComponent<T, D>> {
   barHeight(): StoredAccessor<D, number>;
   barHeight<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
   barWidth(): StoredAccessor<D, number>;
@@ -245,7 +246,7 @@ type ReferenceLineProps<D> = {
   mirror: boolean;
 };
 
-interface ReferenceLineComponent<D> extends Component {
+interface ReferenceLineComponent<D> extends ComponentBuilder<ReferenceLineComponent<D>> {
   barPosition(): StoredAccessor<D, number>;
   barPosition(value: StoredAccessor<D, number>): ReferenceLineComponent<D>;
   barWidth(): StoredAccessor<D, number>;

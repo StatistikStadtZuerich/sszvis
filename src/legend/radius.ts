@@ -25,7 +25,7 @@
  */
 
 import { mean, type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { range } from "../scale.js";
 import { halfPixel } from "../svgUtils/crisp.js";
@@ -49,7 +49,7 @@ type RadiusLegendProps = {
   tickValues?: NumberValue[];
 };
 
-export interface RadiusLegendComponent extends Component {
+export interface RadiusLegendComponent extends ComponentBuilder<RadiusLegendComponent> {
   scale(): RadiusScale;
   scale(scale: RadiusScale): RadiusLegendComponent;
   tickFormat(): TickFormatter;

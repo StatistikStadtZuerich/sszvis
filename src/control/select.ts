@@ -49,7 +49,7 @@
  */
 
 import { select } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { AnySelection } from "../types.js";
 
@@ -67,7 +67,8 @@ type SelectProps<T> = {
   change: SelectChangeHandler<T>;
 };
 
-export interface SelectComponent<T extends string = string> extends Component {
+export interface SelectComponent<T extends string = string>
+  extends ComponentBuilder<SelectComponent<T>> {
   values(): T[];
   values(values: T[]): SelectComponent<T>;
   current(): T;

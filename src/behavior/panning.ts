@@ -38,9 +38,9 @@
  */
 
 import { dispatch, select } from "d3";
-import { type Component, component } from "../d3-component";
-import * as fn from "../fn";
-import { datumFromPanEvent } from "./util";
+import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { datumFromPanEvent } from "./util.js";
 
 // Type definitions for panning behavior component
 type PanningProps = {
@@ -49,7 +49,7 @@ type PanningProps = {
 
 type PanEventHandler = (event: Event, ...args: unknown[]) => void;
 
-interface PanningComponent extends Component {
+interface PanningComponent extends ComponentBuilder<PanningComponent> {
   elementSelector(): string;
   elementSelector(selector: string): PanningComponent;
 

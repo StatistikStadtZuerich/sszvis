@@ -62,11 +62,11 @@ import {
   axisRight,
   axisTop,
   type BaseType,
-  type NumberValue,
   type Selection,
   select,
 } from "d3";
-import { type Component, component } from "./d3-component.js";
+import type { ComponentBuilder } from "./d3-component.js";
+import { component } from "./d3-component.js";
 import * as fn from "./fn.js";
 import { formatAxisTimeFormat, formatNumber, formatText } from "./format.js";
 import * as logger from "./logger.js";
@@ -126,8 +126,11 @@ interface BoundingBoxWithNode {
   bounds: BoundingBox;
 }
 
-interface AxisComponent extends Component {
-  scale(scale?: AxisScale<NumberValue>): AxisComponent;
+interface AxisComponent extends ComponentBuilder<AxisComponent> {
+  scale(): AxisScale<AxisDomain>;
+  scale<D extends AxisDomain>(scale: AxisScale<D>): AxisComponent;
+  /** The scale the divergent-axis variant swaps in, stashed on the component itself. */
+  _scale?: AxisScale<AxisDomain> | undefined;
   orient(orientation?: AxisOrientation): AxisComponent;
   ticks(ticks?: number | number[]): AxisComponent;
   tickValues(values?: AxisDomain[]): AxisComponent;

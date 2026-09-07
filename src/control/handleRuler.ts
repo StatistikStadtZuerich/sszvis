@@ -47,7 +47,7 @@
  */
 
 import { type NumberValue, select } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
@@ -86,7 +86,8 @@ interface HandleRulerProps<T> {
   flip: (d: T) => boolean;
 }
 
-export interface HandleRulerComponent<T = unknown> extends Component {
+export interface HandleRulerComponent<T = unknown>
+  extends ComponentBuilder<HandleRulerComponent<T>> {
   x(): (d: T | number) => NumberValue;
   x(accessor: NumberAccessor<T | number>): HandleRulerComponent<T>;
   y(): (d: T) => NumberValue;

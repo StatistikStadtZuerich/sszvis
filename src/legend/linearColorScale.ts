@@ -20,7 +20,7 @@
  */
 
 import { select } from "d3";
-import { type Component, component } from "../d3-component.js";
+import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 
@@ -42,7 +42,7 @@ type LinearColorScaleProps = {
   labelFormat: LabelFormatter;
 };
 
-export interface LinearColorScaleComponent extends Component {
+export interface LinearColorScaleComponent extends ComponentBuilder<LinearColorScaleComponent> {
   scale(): LinearColorScale;
   scale(scale: LinearColorScale): LinearColorScaleComponent;
   displayValues(): number[];
