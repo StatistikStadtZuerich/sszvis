@@ -26,14 +26,11 @@
  *                                                    textures the whole map and the default never rejects anything; see the
  *                                                    note below on features with no datum.
  * @property {String, Function} fill                  A string or function for the fill of the map entities
- * @property {Boolean} transitionColor                Whether to schedule a transition on the fill color of the map entities.
- *                                                    (default: true) The transition does not currently animate anything; see
- *                                                    the note below.
- *
- * Note: the fill is written to the plain selection during the data join and the transition then
- * re-applies the same value, so the color tween interpolates a color onto itself and the final
- * color is already in the DOM before the transition starts. transitionColor changes whether a
- * tween is scheduled, not whether anything animates.
+ * @property {Boolean} transitionColor                Whether to transition the fill color of the map entities.
+ *                                                    (default: true) With it set, the fill is only applied through the
+ *                                                    transition, so a color change fades from the previous color; with it
+ *                                                    unset the fill is written synchronously. An entering entity has no
+ *                                                    previous color, so it takes the final color at the first tick.
  *
  * Note: the scheduled transition keeps d3's defaults of 250ms and easeCubicInOut rather than the
  * intended 500ms easePolyOut. `.transition().call(slowTransition)` returns the original
@@ -143,14 +140,12 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
         .classed("sszvis-map__area", true)
         .classed("sszvis-map__area--entering", true)
         .attr("data-event-target", "")
-        .attr("fill", getMapFill)
         .classed("sszvis-map__area--entering", false);
 
       selection
         .selectAll<Element, MergedGeoDatum<T>>(".sszvis-map__area--undefined")
         .attr("fill", getMapFill);
 
-      // change the fill if necessary
       mapAreas
         .classed(
           "sszvis-map__area--undefined",
@@ -158,6 +153,9 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
         )
         .attr("d", (d) => props.mapPath(d.geoJson));
 
+      // The fill is applied exactly once, so the transition has the previous colour to interpolate
+      // from. Writing it to the plain selection first would put the final colour in the DOM before
+      // the tween started, and the tween would then interpolate that colour onto itself.
       if (props.transitionColor) {
         mapAreas.transition().call(slowTransition).attr("fill", getMapFill);
       } else {
