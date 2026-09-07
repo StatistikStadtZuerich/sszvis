@@ -92,10 +92,10 @@ export interface AppProps<State, Actions extends Record<string, Action<State>>> 
  * Error handling: a rejecting `init` is reported through `sszvis.logger.error`, keeping the
  * original error as the reported error's `cause`, and the `fallback` image - if one is
  * configured - is rendered in its place. The failure does not escape as an unhandled promise
- * rejection. An error thrown by an effect returned *by init* still lands in the same catch and
- * is reported as an initialisation failure; an effect returned by an *action* runs outside that
- * chain, so its error throws synchronously at the dispatcher's call site instead - a second,
- * inconsistent path.
+ * rejection. An effect - whether it came from `init` or from an action - runs on its own path:
+ * an error it throws is reported as an effect failure and never travels through the `init`
+ * rejection path, so it is not mistaken for a chart that could not be built and does not render
+ * the fallback.
  *
  * @module sszvis/app
  */
@@ -146,7 +146,18 @@ export const app = <
         renderScheduled = false;
       });
     }
-    if (isFunction(effect)) effect(dispatch);
+    if (isFunction(effect)) runEffect(effect);
+  }
+
+  /** Effects are the caller's code, run one turn removed from whatever scheduled them, so
+   * their failures are reported on their own rather than attributed to `init` or thrown at
+   * an unrelated dispatcher's call site. */
+  function runEffect(effect: Effect) {
+    try {
+      effect(dispatch);
+    } catch (error) {
+      reportError("An effect failed", error);
+    }
   }
 
   const dispatch: Dispatch = (action, props) => {
