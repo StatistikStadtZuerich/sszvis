@@ -199,6 +199,27 @@ describe("map/renderer/mesh", () => {
     });
   });
 
+  describe("an accessor that resolves to nothing", () => {
+    // The accessor is called with the mesh object rather than a per-entity datum, so a caller's
+    // (d) => colorScale(d.value) resolves to undefined. That used to remove the inline stroke,
+    // and with no stylesheet stroke for .sszvis-map__border the SVG initial value `none` applied:
+    // the borders vanished with no error. The default now stands instead.
+    test("keeps the default border colour when borderColor resolves to nothing", () => {
+      const node = render((c) => c.borderColor(() => undefined));
+      expect(borders(node)[0].style.stroke).toBe("white");
+    });
+
+    test("keeps the default border colour when borderColor resolves to null", () => {
+      const node = render((c) => c.borderColor(() => null));
+      expect(borders(node)[0].style.stroke).toBe("white");
+    });
+
+    test("keeps the default stroke width when strokeWidth resolves to nothing", () => {
+      const node = render((c) => c.strokeWidth(() => undefined));
+      expect(borders(node)[0].style.strokeWidth).toBe("1.25");
+    });
+  });
+
   describe("required properties", () => {
     test("throws naming geoJson when it is missing", () => {
       const layer = group("mesh-no-geojson");
@@ -243,18 +264,6 @@ describe("map/renderer/mesh", () => {
       expect(border.hasAttribute("fill")).toBe(false);
       expect(border.style.fill).toBe("");
       expect(border.style.pointerEvents).toBe("");
-    });
-
-    // BUG: a borderColor function that returns null or undefined removes the inline stroke, and
-    // with no stylesheet stroke the SVG initial value `none` applies - an invisible border, no
-    // error. This is a realistic outcome, since the accessor is called with the mesh object
-    // rather than a datum, so a caller's (d) => colorScale(d.value) yields undefined.
-    test("silently removes the border when borderColor returns undefined", () => {
-      // @ts-expect-error - d3 removes a style whose value is undefined, though its types allow
-      // only null. Returning undefined is what a real accessor written against a datum produces.
-      const node = render((c) => c.borderColor(() => undefined));
-      expect(borders(node)[0].style.stroke).toBe("");
-      expect(borders(node)[0].getAttribute("style") ?? "").not.toContain("stroke:");
     });
 
     // NOTE: an invalid stroke-width is dropped by the CSS parser, so the SVG initial width of 1
