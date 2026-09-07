@@ -243,6 +243,28 @@ describe("component/sunburst", () => {
       expect(keys(node)).toEqual(["A", "B", "A1", "A2", "B1"]);
     });
 
+    test("renders a foreign hierarchy the way a prepared one is rendered", () => {
+      // A plain d3.hierarchy carries none of prepareHierarchyData's tags, so the root is
+      // recognised by having no parent instead: it is left out of the arcs, and every node
+      // still takes its colour from its own top-level ancestor rather than from the root's
+      // key. The caller is warned once for the chart, not once per node.
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const plain = hierarchy<{ key: string; value?: number; children?: unknown[] }>({
+        key: "total",
+        children: [
+          { key: "x", value: 1 },
+          { key: "y", value: 1 },
+        ],
+      }).sum((d) => d.value ?? 0);
+      const node = render(
+        sunburstOf((key) => (key === "x" ? "#ff0000" : "#0000ff")),
+        plain
+      );
+      expect(keys(node)).toEqual(["x", "y"]);
+      expect(attrs(node, "fill")).toEqual(["rgb(255, 0, 0)", "rgb(0, 0, 255)"]);
+      expect(warn).toHaveBeenCalledTimes(1);
+    });
+
     test("should not re-partition a pre-flattened array", () => {
       // Positions come from whatever is on the nodes, so an array can be positioned by hand.
       // Two half-turn arcs, each spanning the full radius.
@@ -777,36 +799,6 @@ describe("component/sunburst", () => {
       await settle();
       g.datum(hierarchyOf()).call(component.fill(() => "#ff0000") as never);
       expect(attrs(g.node() as SVGGElement, "fill")[0]).toBe("rgb(255, 0, 0)");
-    });
-
-    test("renders an arc for the root of a hierarchy that did not come from sszvis", () => {
-      // BUG: both the root check and the colour recursion key off `data._tag`, which only
-      // prepareHierarchyData sets. A plain d3.hierarchy therefore keeps its root in the
-      // flattened array and draws it as a full-circle arc under the first ring, and the colour
-      // of every node is derived from the *root's* key rather than from its own top-level
-      // category - so a chart built this way comes out in a single hue. The component does
-      // warn, once per node, but renders anyway.
-      // current: an extra arc plus single-hue colouring. expected: the same treatment as a
-      // prepared hierarchy, or a refusal to render.
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      const plain = hierarchy<{ key: string; value?: number; children?: unknown[] }>({
-        key: "total",
-        children: [
-          { key: "x", value: 1 },
-          { key: "y", value: 1 },
-        ],
-      }).sum((d) => d.value ?? 0);
-      const node = render(
-        sunburstOf((key) => (key === "total" ? "#808080" : "#ff0000")),
-        plain
-      );
-      expect(keys(node)).toEqual(["total", "x", "y"]);
-      expect(attrs(node, "fill")).toEqual([
-        "rgb(128, 128, 128)",
-        "rgb(147, 147, 147)",
-        "rgb(147, 147, 147)",
-      ]);
-      expect(warn).toHaveBeenCalledTimes(3);
     });
 
     test("washes deep rings out to white, since the lightness is never clamped", () => {

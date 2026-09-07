@@ -72,9 +72,9 @@
  * [1, 1] size, so any layout the caller applied is discarded, the radius scale's domain is always
  * expressed in fractions, and the innermost band belongs to the invisible root: with n layers the
  * first visible ring starts at 1/(n+1), not at 0. An array is passed through untouched, so it can
- * be positioned by hand. Both the root filter and the colour lookup key off the `_tag` that
- * prepareHierarchyData writes, so a plain d3.hierarchy keeps its root as a full-circle arc and
- * takes every colour from the root's key; the component warns once per node and renders anyway.
+ * be positioned by hand. A hierarchy that did not come from prepareHierarchyData carries none of
+ * its `_tag`s; it is rendered the same way - the parentless node is the root either way, and every
+ * colour still comes from a node's own top-level ancestor - with one warning per chart.
  *
  * Note: only x0 and x1 are interpolated, and the geometry exists only from the first animation
  * frame, since `d` is written by the arc tween alone and there is no transition property to opt out
@@ -257,12 +257,23 @@ export default function <T = unknown>(): SunburstComponent<T> {
         // Already computed sunburst data (backwards compatibility)
         nodes = inputData;
       } else {
+        if (inputData.data._tag !== "root") {
+          // A hierarchy that did not come from prepareHierarchyData carries none of its
+          // tags. It is still rendered - the structure is all the layout needs - but the
+          // caller is told once per chart rather than once per node.
+          logger.warn(
+            "Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData"
+          );
+        }
         const root = partition<NodeDatum<T>>()(inputData);
         const flatten = (node: HierarchyRectangularNode<NodeDatum<T>>): SunburstNode<T>[] => [
           node,
           ...(node.children || []).flatMap(flatten),
         ];
-        nodes = flatten(root).filter((d) => d.data._tag !== "root");
+        // The root is the node the layout has no parent for, whether or not it is tagged as
+        // one: it fills the whole circle and would otherwise be drawn as a ring of its own
+        // under the first visible one.
+        nodes = flatten(root).filter((d) => d.parent !== null && d.data._tag !== "root");
       }
 
       // _x0 and _x1 are the destination values for the transition. We set these to the
@@ -285,18 +296,18 @@ export default function <T = unknown>(): SunburstComponent<T> {
       // The key a node's colour is looked up under. Only a root has none, and a root never
       // reaches the recursion below: it is either filtered out of the data, painted
       // transparent by fillColor, or caught by the parent check one level down.
-      const colorKey = (node: SunburstNode<T>): string =>
-        node.data._tag === "root" ? "" : node.data.key;
+      const colorKey = (node: SunburstNode<T>): string => ("key" in node.data ? node.data.key : "");
+
+      // Whether a node is the one the whole chart hangs off: tagged as the root by
+      // prepareHierarchyData, or simply parentless in a hierarchy that came from elsewhere.
+      const isRoot = (node: SunburstNode<T>): boolean =>
+        node.data._tag === "root" || node.parent === null;
 
       // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
       function getColorRecursive(node: SunburstNode<T>): HSLColor {
         if (!node.parent) {
-          // Accounts for incorrectly formatted data which hasn't gone through sszvis.prepareHierarchyData
-          logger.warn(
-            "Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData"
-          );
           return hsl(props.fill(colorKey(node)));
-        } else if (node.parent.data._tag === "root") {
+        } else if (isRoot(node.parent)) {
           // Use the color scale
           return hsl(props.fill(colorKey(node)));
         } else {
@@ -311,7 +322,7 @@ export default function <T = unknown>(): SunburstComponent<T> {
       // is stringified here because the recursion needs the mutable d3 colour object while
       // d3's attr only takes a primitive; setAttribute would have coerced it the same way.
       const fillColor = (node: SunburstNode<T>): string =>
-        node.data._tag === "root" ? "transparent" : String(getColorRecursive(node));
+        isRoot(node) ? "transparent" : String(getColorRecursive(node));
 
       // The four geometry accessors only read positions, so they are declared over the node
       // before its destination angles are stamped on: the tooltip anchors are rendered from
