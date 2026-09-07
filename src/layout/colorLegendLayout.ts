@@ -14,12 +14,17 @@ import {
   measureLegendLabel,
 } from "../measure.js";
 
+/** How the axis labels below the legend are rotated. */
+export type ColorLegendSlant = "horizontal" | "vertical" | "diagonal";
+
+const SLANTS: ColorLegendSlant[] = ["horizontal", "vertical", "diagonal"];
+
 export type ColorLegendLayoutOptions = {
   legendLabels: string[];
   axisLabels?: string[];
-  /** "vertical" and "diagonal" reserve room for rotated labels; anything else, including an
-   * unrecognised value, is treated as horizontal. */
-  slant?: string;
+  /** "vertical" and "diagonal" reserve room for rotated labels, "horizontal" (the default)
+   * reserves a fixed 60px. Any other value throws. */
+  slant?: ColorLegendSlant | null;
 };
 
 export type ColorLegendLayout = {
@@ -52,18 +57,28 @@ const LABEL_PADDING = 40;
  * Behaviour notes:
  * - scaleQual6 is used up to six labels, scaleQual12 above six; colours repeat
  *   silently beyond twelve labels.
- * - axisLabelPadding is 60 for slant "horizontal" (and for any unrecognised slant),
- *   40 + widest axis label for "vertical", and 40 + widest axis label / sqrt(2) for
- *   "diagonal".
+ * - axisLabelPadding is 60 for slant "horizontal", 40 + widest axis label for "vertical",
+ *   and 40 + widest axis label / sqrt(2) for "diagonal". An omitted or null slant is
+ *   horizontal; any other value throws.
+ * - More labels than the chosen colour scale has colours is warned about, because a d3
+ *   ordinal scale recycles its range rather than running out.
  * - A "vertical" or "diagonal" slant with no axisLabels reserves the 40px base padding
  *   and nothing for the labels themselves.
  * - A container that cannot be measured is warned about and treated as having no width.
  * - legendPadding is rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT.
  */
 export function colorLegendLayout(
-  { legendLabels, axisLabels = [], slant = "horizontal" }: ColorLegendLayoutOptions,
+  { legendLabels, axisLabels = [], slant }: ColorLegendLayoutOptions,
   container: MeasurableElement
 ): ColorLegendLayout {
+  // an omitted slant - null included, as the docs examples pass it - is horizontal
+  const resolvedSlant = slant ?? "horizontal";
+  if (!SLANTS.includes(resolvedSlant)) {
+    throw new RangeError(
+      `colorLegendLayout: slant must be one of ${SLANTS.join(", ")}, got ${slant}`
+    );
+  }
+
   const measuredWidth = measureDimensions(container).width;
   if (!measuredWidth) {
     logger.warn(
@@ -78,6 +93,12 @@ export function colorLegendLayout(
       ? scaleQual12().domain(legendLabels)
       : scaleQual6().domain(legendLabels);
 
+  if (legendLabels.length > scale.range().length) {
+    logger.warn(
+      `colorLegendLayout: ${legendLabels.length} labels share the ${scale.range().length} colours of this scale, so some categories are drawn in the same colour`
+    );
+  }
+
   const legend = legendColorOrdinal()
     .scale(scale)
     .horizontalFloat(layout.horizontalFloat)
@@ -85,7 +106,7 @@ export function colorLegendLayout(
     .columnWidth(layout.columnWidth)
     .orientation(layout.orientation);
 
-  const axisLabelPadding = axisLabelHeight(slant, axisLabels);
+  const axisLabelPadding = axisLabelHeight(resolvedSlant, axisLabels);
   const legendPadding = layout.rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;
 
   return {
@@ -143,7 +164,7 @@ export function colorLegendDimensions(
 // -----------------------------------------------------------------------------
 // Helpers
 
-function axisLabelHeight(slant: string, labels: string[]): number {
+function axisLabelHeight(slant: ColorLegendSlant, labels: string[]): number {
   switch (slant) {
     case "vertical": {
       return 40 + (max(labels, measureAxisLabel) ?? 0);

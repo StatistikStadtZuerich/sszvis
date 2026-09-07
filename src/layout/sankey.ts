@@ -5,15 +5,12 @@
  * and layout required by the sankey component.
  *
  * Behaviour notes:
- * - prepareData's source/target/value accessors default to fn.identity, which only matches when
- *   the rows are themselves the id strings; for the object rows this layout is built around, no
- *   link ever matches a node id.
+ * - prepareData's source, target and value accessors are required; a builder missing one throws
+ *   when it is applied.
  * - a link with an unknown source or target id is warned about and dropped, so the returned
  *   links array holds only links.
  * - link ids come from a module-level counter shared across every builder instance, so they
  *   are unique but not stable between renders.
- * - a negative link value clamps away at the node (node.value is Math.max(0, ...)) but stays
- *   on the link, so the link stack runs outside its node.
  * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
  *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
  *   is discarded by the minimum rather than distorting the others.
@@ -54,7 +51,8 @@ export interface SankeyDataPreparation<T = unknown> {
   source(func: (d: T) => string): SankeyDataPreparation<T>;
   /** The id of the link's target node. Must be one of the ids passed to idLists. */
   target(func: (d: T) => string): SankeyDataPreparation<T>;
-  /** The size of the flow. A string is coerced with Number(); anything unparseable becomes 0. */
+  /** The size of the flow. A string is coerced with Number(); an unparseable or negative
+   * value is warned about and the row is dropped. */
   value(func: (d: T) => number | string): SankeyDataPreparation<T>;
   descendingSort(): SankeyDataPreparation<T>;
   ascendingSort(): SankeyDataPreparation<T>;
@@ -107,26 +105,25 @@ const newLinkId = (() => {
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
  *
  * Behaviour notes:
- * - source/target/value default to fn.identity, which only matches when a row is itself the id
- *   string; omitting them makes every link invalid for the usual object rows.
+ * - source, target and value are required accessors; a builder missing one throws when it is
+ *   applied, rather than looking the raw row up as a node id.
  * - a link whose source or target id is not in idLists is warned about and dropped from the
  *   returned links array.
  * - link ids come from a module-level counter shared by every builder instance, so they are
  *   unique but not stable across renders.
  * - a duplicate id warns and keeps only the last column.
- * - a non-numeric value silently becomes 0; a negative value is kept on the link but clamped
- *   away at the node (node.value is Math.max(0, from, to)), so the link stack runs outside
- *   its node.
- * - nothing checks that the two ends of a link are in different columns.
+ * - a row whose value is not a number of zero or more is warned about and dropped.
+ * - a link whose two ends are in the same column is warned about and dropped: a sankey link
+ *   runs between columns.
  * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
  *   or builder(data).
  * - nodes are sorted across all columns at once (descending by default), then offsets are
  *   assigned per column.
  */
 export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
-  let mGetSource: (d: T) => unknown = fn.identity;
-  let mGetTarget: (d: T) => unknown = fn.identity;
-  let mGetValue: (d: T) => unknown = fn.identity;
+  let mGetSource: ((d: T) => unknown) | undefined;
+  let mGetTarget: ((d: T) => unknown) | undefined;
+  let mGetValue: ((d: T) => unknown) | undefined;
   let mColumnIds: string[][] = [];
 
   // Helper functions
@@ -139,6 +136,20 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
   let valueSortFunc = byDescendingValue;
 
   const main = (inputData: T[]): SankeyPreparedData => {
+    const getSource = mGetSource;
+    const getTarget = mGetTarget;
+    const getValue = mGetValue;
+    if (!getSource || !getTarget || !getValue) {
+      const missing = [
+        getSource ? undefined : "source",
+        getTarget ? undefined : "target",
+        getValue ? undefined : "value",
+      ].filter(Boolean);
+      throw new TypeError(
+        `sankeyPrepareData: the ${missing.join(", ")} accessor${missing.length > 1 ? "s are" : " is"} required`
+      );
+    }
+
     const columnIndex = mColumnIds.reduce<Map<unknown, PreparedNode>>(
       (index, columnIdsList, colIndex) => {
         for (const id of columnIdsList) {
@@ -169,9 +180,10 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
     );
 
     const listOfLinks = inputData.flatMap<SankeyLink>((datum) => {
-      const srcId = mGetSource(datum);
-      const tgtId = mGetTarget(datum);
-      const value = Number(mGetValue(datum)) || 0; // Cast this to number
+      const srcId = getSource(datum);
+      const tgtId = getTarget(datum);
+      const rawValue = getValue(datum);
+      const value = Number(rawValue);
 
       const srcNode = columnIndex.get(srcId);
       const tgtNode = columnIndex.get(tgtId);
@@ -183,6 +195,25 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
 
       if (!tgtNode) {
         logger.warn("Found invalid target column id:", tgtId);
+        return [];
+      }
+
+      if (srcNode.columnIndex === tgtNode.columnIndex) {
+        logger.warn(
+          "Found a link whose source and target are in the same column, and dropped it:",
+          srcId,
+          tgtId
+        );
+        return [];
+      }
+
+      if (!Number.isFinite(value) || value < 0) {
+        logger.warn(
+          "Found a link value that is not a number of zero or more, and dropped the link:",
+          rawValue,
+          srcId,
+          tgtId
+        );
         return [];
       }
 
@@ -211,7 +242,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
         const toTotal = sum(node.linksTo, valueAcc);
 
         // For correct visual display, the node's value is the max of the from and to links
-        node.value = Math.max(0, fromTotal, toTotal);
+        node.value = Math.max(fromTotal, toTotal);
 
         totals[node.columnIndex] += node.value;
 

@@ -51,7 +51,7 @@
  * @property {number} cols            the number of columns to generate
  * @property {boolean} showTitle      whether to show a title above each multiple (default: false)
  * @property {function} titleLabel    accessor function to get the title text from the data
- * @property {string} titleAnchor     text-anchor for the title: "start", "middle", or "end" (default: "middle")
+ * @property {string} titleAnchor     text-anchor for the title: "start", "middle", or "end" (default: "middle"). Any other value throws.
  * @property {number} titleY          y-position offset for the title (default: 0)
  *
  * Behaviour notes:
@@ -62,11 +62,10 @@
  * - width, height, rows and cols are required: omitting any of them throws before a group
  *   is created. paddingX and paddingY default to 0, as do the four title properties.
  * - More data than rows * cols does not fit the declared grid, and throws.
- * - A datum without a `values` property binds `undefined` to its inner chart group.
+ * - A datum without a `values` property throws: the inner chart group has nothing to bind.
  * - titleLabel is called after the layout fields have been attached to the datum, so it
  *   sees gx/gy/gw/gh/cx/cy alongside the caller's own fields.
- * - A titleAnchor other than "start"/"end" is positioned as "middle" but is still written
- *   to the text-anchor attribute verbatim.
+ * - titleAnchor must be "start", "middle" or "end"; any other value throws.
  *
  * @return {sszvis.component}
  */
@@ -78,6 +77,11 @@ import { type ComponentBuilder, component } from "../d3-component.js";
  * One group of the grid. `values` carries the data for the chart drawn inside the group;
  * the layout writes its geometry back onto the same object.
  */
+/** Where a multiple's title sits within its unit. */
+export type TitleAnchor = "start" | "middle" | "end";
+
+const TITLE_ANCHORS: TitleAnchor[] = ["start", "middle", "end"];
+
 export type SmallMultipleGroup<V = unknown> = {
   values: V;
   /** x-position of the group within the grid */
@@ -103,7 +107,7 @@ type SmallMultiplesProps<G> = {
   cols: number;
   showTitle: boolean;
   titleLabel: (d: G, i: number) => string;
-  titleAnchor: string;
+  titleAnchor: TitleAnchor;
   titleY: number;
 };
 
@@ -126,10 +130,9 @@ export interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMul
   showTitle(show: boolean): SmallMultiplesComponent<G>;
   titleLabel(): (d: G, i: number) => string;
   titleLabel(accessor: (d: G, i: number) => string): SmallMultiplesComponent<G>;
-  /** "start", "middle" or "end"; any other value is positioned as "middle" but written to
-   * the text-anchor attribute verbatim. */
-  titleAnchor(): string;
-  titleAnchor(anchor: string): SmallMultiplesComponent<G>;
+  /** "start", "middle" or "end"; any other value throws when the layout renders. */
+  titleAnchor(): TitleAnchor;
+  titleAnchor(anchor: TitleAnchor): SmallMultiplesComponent<G>;
   titleY(): number;
   titleY(y: number): SmallMultiplesComponent<G>;
 }
@@ -161,6 +164,18 @@ export default function <
       for (const propName of ["width", "height", "rows", "cols"] as const) {
         if (props[propName] === undefined) {
           throw new TypeError(`smallMultiples: the ${propName} property is required`);
+        }
+      }
+
+      if (props.showTitle && !TITLE_ANCHORS.includes(props.titleAnchor)) {
+        throw new RangeError(
+          `smallMultiples: titleAnchor must be one of ${TITLE_ANCHORS.join(", ")}, got ${props.titleAnchor}`
+        );
+      }
+
+      for (const [index, datum] of data.entries()) {
+        if (!(datum && "values" in datum)) {
+          throw new TypeError(`smallMultiples: group ${index} has no values property`);
         }
       }
 

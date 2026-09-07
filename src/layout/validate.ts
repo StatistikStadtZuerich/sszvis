@@ -23,6 +23,13 @@ export function requireSize(layoutName: string, propName: string, value: number)
   }
 }
 
+/** Throws unless `value` is a finite ratio within `[0, 1]`. */
+export function requireRatio(layoutName: string, propName: string, value: number): void {
+  if (!Number.isFinite(value) || value < 0 || value > 1) {
+    throw new RangeError(`${layoutName}: ${propName} must be a ratio within [0, 1], got ${value}`);
+  }
+}
+
 /** Throws unless `value` is a whole number of zero or more items. */
 export function requireCount(layoutName: string, propName: string, value: number): void {
   if (!Number.isInteger(value) || value < 0) {

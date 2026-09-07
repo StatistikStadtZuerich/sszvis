@@ -259,6 +259,20 @@ describe("layout/smallMultiples", () => {
       expect(multiples(render(grid(), groups(6)))).toHaveLength(6);
     });
 
+    test("rejects a group with no values property", () => {
+      expect(() => render(grid(), [{ name: "no values" }] as unknown as Group[])).toThrow(
+        /group 0 has no values/
+      );
+    });
+
+    test("rejects a titleAnchor it cannot position", () => {
+      const layout = grid()
+        .showTitle(true)
+        .titleAnchor("centre" as unknown as "middle")
+        .titleLabel(() => "t");
+      expect(() => render(layout, groups(6))).toThrow(/titleAnchor/);
+    });
+
     test("defaults the paddings to zero", () => {
       const layout = layoutSmallMultiples<Group>().width(300).height(200).cols(3).rows(2);
       const node = render(layout, groups(6));
@@ -300,36 +314,6 @@ describe("layout/smallMultiples", () => {
         });
       render(layout, groups(2));
       expect(seen[0]).toMatchObject({ name: "group-0", gx: 0, gw: 100, cx: 50 });
-    });
-
-    test("a datum without a values property binds undefined to the chart group", () => {
-      // BUG: the nested chart group is bound to `d.values` with no guard, so a group object
-      // missing that property still gets a chart group - bound to undefined. Whatever chart
-      // the caller renders into it then fails somewhere further downstream instead of here.
-      // got: a g.sszvis-multiple-chart whose datum is undefined
-      // want: an explicit error naming the missing property.
-      const node = render(grid(), [{ name: "no values" }] as unknown as Group[]);
-      expect(multiples(node)).toHaveLength(1);
-      const chart = node.querySelector("g.sszvis-multiple-chart") as SVGGElement & {
-        __data__: unknown;
-      };
-      expect(chart).not.toBeNull();
-      expect(chart.__data__).toBeUndefined();
-    });
-
-    test("an unknown titleAnchor centres the title but is still written to the DOM", () => {
-      // BUG: the x-position falls back to the centre for anything that is not "start" or
-      // "end", but the raw value is still written to the text-anchor attribute, so the two
-      // disagree and the browser applies its own default anchor at a centred x.
-      // got: x 50 with text-anchor "centre"
-      // want: a rejected anchor value.
-      const layout = grid()
-        .showTitle(true)
-        .titleAnchor("centre")
-        .titleLabel(() => "t");
-      const title = render(layout, groups(6)).querySelector(".sszvis-multiple-title");
-      expect(title?.getAttribute("x")).toBe("50");
-      expect(title?.getAttribute("text-anchor")).toBe("centre");
     });
   });
 });

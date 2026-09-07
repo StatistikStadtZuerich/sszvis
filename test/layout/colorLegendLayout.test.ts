@@ -157,6 +157,61 @@ describe("colorLegendLayout", () => {
     });
   });
 
+  describe("rejected and reported options", () => {
+    test("rejects a slant it cannot lay out", () => {
+      const container = document.createElement("div");
+      container.style.width = "800px";
+      document.body.append(container);
+      expect(() =>
+        colorLegendLayout(
+          {
+            legendLabels: FOUR,
+            axisLabels: ["2020"],
+            slant: "sideways" as unknown as "vertical",
+          },
+          container
+        )
+      ).toThrow(/slant/);
+      container.remove();
+    });
+
+    test("treats an omitted or null slant as horizontal", () => {
+      const container = document.createElement("div");
+      container.style.width = "800px";
+      document.body.append(container);
+      const withNull = colorLegendLayout({ legendLabels: FOUR, slant: null }, container);
+      expect(withNull.axisLabelPadding).toBe(60);
+      container.remove();
+    });
+
+    test("warns when there are more labels than the scale has colours", () => {
+      // d3's ordinal scale recycles its range rather than running out, so labels 13 and up
+      // repeat the colours of labels 1 and up
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const many = Array.from({ length: 14 }, (_, i) => `Label ${i}`);
+      const container = document.createElement("div");
+      container.style.width = "800px";
+      document.body.append(container);
+      const layout = colorLegendLayout({ legendLabels: many }, container);
+      const colors = many.map((label) => layout.scale(label));
+      expect(new Set(colors).size).toBe(12);
+      expect(warn).toHaveBeenCalled();
+      container.remove();
+      warn.mockRestore();
+    });
+
+    test("says nothing when the labels fit the scale", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const container = document.createElement("div");
+      container.style.width = "800px";
+      document.body.append(container);
+      colorLegendLayout({ legendLabels: EIGHT }, container);
+      expect(warn).not.toHaveBeenCalled();
+      container.remove();
+      warn.mockRestore();
+    });
+  });
+
   describe("degenerate inputs", () => {
     test("an empty label list gives a zero-width legend", () => {
       const dims = colorLegendDimensions([], 800);
@@ -202,39 +257,6 @@ describe("colorLegendLayout", () => {
   });
 
   describe("known quirks", () => {
-    test("an unknown slant is silently treated as horizontal", () => {
-      // BUG: the switch treats every unrecognised slant as horizontal, so a typo silently
-      // reserves 60px instead of the space the rotated labels need, and the labels are
-      // clipped.
-      // got: axisLabelPadding 60 for slant "sideways"
-      // want: a rejected slant.
-      const container = document.createElement("div");
-      container.style.width = "800px";
-      document.body.append(container);
-      const layout = colorLegendLayout(
-        { legendLabels: FOUR, axisLabels: ["2020"], slant: "sideways" },
-        container
-      );
-      expect(layout.axisLabelPadding).toBe(60);
-      container.remove();
-    });
-
-    test("more than twelve labels reuse colours silently", () => {
-      // BUG: the scale is chosen by label count but its range is not: d3's ordinal scale
-      // recycles its range, so labels 13 and up repeat the colours of labels 1 and up.
-      // got: two labels sharing a colour, with no warning
-      // want: a warning, or a scale that refuses to repeat.
-      const many = Array.from({ length: 14 }, (_, i) => `Label ${i}`);
-      const container = document.createElement("div");
-      container.style.width = "800px";
-      document.body.append(container);
-      const layout = colorLegendLayout({ legendLabels: many }, container);
-      const colors = many.map((label) => layout.scale(label));
-      expect(new Set(colors).size).toBe(12);
-      expect(colors[12]).toBe(colors[0]);
-      container.remove();
-    });
-
     test("the column count is capped at two", () => {
       // NOTE: intended - numCols starts from DEFAULT_COLUMN_COUNT = 2 and only ever counts
       // down. A very wide container with many short labels still gets two columns.
