@@ -513,68 +513,67 @@ describe("component/stackedArea", () => {
   });
 
   describe("required props", () => {
-    describe("known quirks", () => {
-      test("omitting x draws the whole stack at NaN instead of throwing", () => {
-        // BUG: the component always calls d3's setters, so an unset prop arrives as
-        // undefined, and area.x(undefined) resolves to constant(+undefined) - NaN for every
-        // point. The path is written, the browser rejects it, and the chart is simply
-        // empty. No property of this component reports its own absence.
-        // current: "MNaN,..." and nothing on screen. expected: a logged error naming the
-        // missing property and an early return, as src/legend/binnedColorScale.ts does.
-        const node = render(
+    test("should throw when x is not set, naming the component and the property", () => {
+      expect(() =>
+        render(
           stackedArea()
             .transition(false)
             .y0((d: Point) => d.y0)
             .y1((d: Point) => d.y1),
           oneLayer
-        );
-        expect(ds(node)).toEqual(["MNaN,10LNaN,20LNaN,50LNaN,40Z"]);
-        expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBe(0);
-      });
+        )
+      ).toThrow("sszvis.stackedArea - the x property is required, and was not set.");
+    });
 
-      test("omitting y0 pushes the baseline to NaN, keeping only the top line", () => {
-        // BUG: same root cause. The top line is drawn, the baseline is not, and the shape
-        // is dropped by the browser at the first NaN.
-        const node = render(
+    test("should throw when y0 is not set", () => {
+      expect(() =>
+        render(
           stackedArea()
             .transition(false)
             .x((d: Point) => d.x)
             .y1((d: Point) => d.y1),
           oneLayer
-        );
-        // The default missing-value guard now rejects every point, since y0 is NaN for all
-        // of them, so nothing is drawn at all. Still silent. #114 covers the report.
-        expect(ds(node)).toEqual([null]);
-      });
+        )
+      ).toThrow("sszvis.stackedArea - the y0 property is required, and was not set.");
+    });
 
-      test("omitting y1 collapses every area onto its own baseline", () => {
-        // BUG: the worst of the three, because it renders successfully. area.y1(undefined)
-        // is read by d3 as "no upper bound", which makes it fall back to y0 - so the top
-        // line and the baseline coincide and each layer becomes a zero-height sliver. With
-        // the default white stroke the chart looks like a set of line charts, and nothing
-        // hints that the values are missing.
-        const node = render(
+    test("should throw when y1 is not set", () => {
+      // The most damaging of the three before the guard, because it rendered: d3 reads a
+      // null-ish upper bound as no upper bound and falls back to y0, so every layer
+      // collapsed onto its own baseline and the chart looked like a set of line charts.
+      expect(() =>
+        render(
           stackedArea()
             .transition(false)
             .x((d: Point) => d.x)
             .y0((d: Point) => d.y0),
           oneLayer
-        );
-        expect(ds(node)).toEqual(["M0,40L10,50L10,50L0,40Z"]);
-      });
+        )
+      ).toThrow("sszvis.stackedArea - the y1 property is required, and was not set.");
+    });
 
-      test("a component with no props at all still renders a path per layer", () => {
-        // BUG: same root cause as the three above, combined into one silent empty chart. The
-        // DOM says the render succeeded - the paths are there, classed and stroked white,
-        // with no fill written at all - while the geometry is entirely NaN.
-        const node = render(stackedArea().transition(false), twoLayers);
-        expect(paths(node).length).toBe(2);
-        expect(attrs(node, "stroke")).toEqual(["#ffffff", "#ffffff"]);
-        expect(attrs(node, "fill")).toEqual([null, null]);
-        // The geometry is empty rather than NaN now that the missing-value guard runs, but
-        // the paths are still there and still say the render succeeded. #114 covers that.
-        expect(ds(node)).toEqual([null, null]);
-      });
+    test("should append nothing when a required property is missing", () => {
+      // The guard runs before the data join, so a misconfigured chart leaves the group as it
+      // found it rather than filling it with paths whose geometry is entirely NaN.
+      const g = group("unconfigured");
+      expect(() => g.datum(twoLayers).call(stackedArea().transition(false) as never)).toThrow(
+        /property is required/
+      );
+      expect(paths(g.node() as SVGGElement).length).toBe(0);
+    });
+
+    test("should keep the d3 meaning of an explicit null y1", () => {
+      // Only an unset property is caught. A caller who says .y1(null) is asking d3 for "no
+      // upper bound", which makes it fall back to y0 - a zero-height sliver on its baseline.
+      const node = render(
+        stackedArea()
+          .transition(false)
+          .x((d: Point) => d.x)
+          .y0((d: Point) => d.y0)
+          .y1(null),
+        oneLayer
+      );
+      expect(ds(node)).toEqual(["M0,40L10,50L10,50L0,40Z"]);
     });
   });
 
