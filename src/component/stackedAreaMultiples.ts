@@ -90,8 +90,9 @@
  *                                            strokeWidth and key still see the layer object, which
  *                                            is what lets the colour be read off the layer's name.
  * @property {boolean} transition             Whether to transition the layers when their values
- *                                            change. Defaults to true, and animates nothing (see
- *                                            below).
+ *                                            change. Defaults to true. An updating band eases into
+ *                                            its new geometry and colours over 300ms; an entering
+ *                                            band is painted synchronously (see below).
  *
  * Note: a constant dimension is coerced with unary + once, before the data join, exactly as d3's own
  * constant() would - so a numeric string works, while a value that has no numeric form, such as
@@ -108,20 +109,14 @@
  * .join() orders the merged selection, so the paint order follows the data on every render, even
  * when the nodes are reused.
  *
- * Note: transition animates nothing. The transition is created on its own statement and its return
- * value is dropped, so every attribute is written to the plain selection instead. It did animate
- * until 47f58578 ("perf: change .enter() to .join() API", Oct 2024), which dropped the `paths =`
- * the transition used to be assigned back to. As far as output goes the property is inert - the two
- * settings are indistinguishable in the DOM, before and after the 300ms the transition would have
- * taken - but it is not harmless: the transition is still scheduled, and a d3 transition interrupts
- * any unnamed transition already running on the same node when it starts, so a render freezes
- * another component's animation on a shared or adopted path mid-flight. bar carries the same
- * discarded-transition shape, though it writes its attributes before creating the transition, so its
- * elements are never blank. One visible consequence is that the switch into the separated view snaps
- * while the switch back, drawn by stackedArea, eases - the chart animates in one direction only, and
- * it is that switch the key property exists for. The one upside is that a freshly rendered chart is
- * complete on the same tick, with nothing to disable in order to measure it synchronously, where
- * stackedArea leaves an empty path element until the first animation frame.
+ * Note: transition applies to updating bands only. An entering band is painted directly, as bar
+ * does, so a freshly rendered chart is complete on the same tick rather than leaving an empty path
+ * element until the first animation frame, which is what stackedArea does. A band already on screen
+ * holds its old geometry and colours and eases into the new ones over 300ms. Between 47f58578
+ * ("perf: change .enter() to .join() API", Oct 2024) and this fix the transition was created on its
+ * own statement with its return value dropped, so it carried no tweens and every attribute was
+ * written to the plain selection: nothing animated, while the schedule still interrupted whatever
+ * else was animating those nodes.
  *
  * Note: the dimension accessors and defined are called by d3.area with a single point, that point's
  * index within the layer, and the array of points the layer is drawn from. fill, stroke,
@@ -129,6 +124,12 @@
  * layer's index, and d3's group of path nodes, with the node itself as `this`. The style-related
  * accessors therefore receive the layer object rather than a point, the inverse of what the
  * dimensions receive - the same asymmetry documented on line.
+ * That third argument is the group of the half of the join being evaluated, not of the merged
+ * selection: entering and updating bands are styled separately so that an entering one can be
+ * painted synchronously, and d3 leaves a null hole in each half's group for every node belonging
+ * to the other. A render that both reuses and enters bands therefore hands these accessors a
+ * sparse ArrayLike, so an accessor that walks it - rather than reading its own datum, as the
+ * first two arguments give it - has to skip the holes. key has the same caveat, below.
  * key sees a layer and its index too, but its third argument depends on which half of the keyed
  * join is running: the array of incoming layers, or the group of nodes already in the DOM.
  *
@@ -389,24 +390,44 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
         const stroke = fn.valueFn(props.stroke ?? null);
         const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
 
-        const paths = selection
+        // An entering band is painted synchronously, as bar does, so it is complete on the
+        // tick it appears on rather than staying an empty path element until the first
+        // animation frame - which is stackedArea's own quirk and not one worth importing.
+        // Only the bands already on screen are transitioned, so each attribute is written
+        // exactly once per render either way. The two branches are spelled out rather than
+        // sharing a variable, since a d3 transition and a d3 selection have separate types.
+        // The transition used to be created on its own statement with its return value
+        // dropped, which left it carrying no tweens while still interrupting whatever else
+        // was animating these nodes.
+        selection
           .selectAll<SVGPathElement, L>("path.sszvis-path")
           .data(data, props.key)
-          .join("path")
-          .classed("sszvis-path", true);
-
-        // The transition is created and its return value dropped, so it carries no tweens and
-        // every attribute below is written to the plain selection: nothing animates, while the
-        // schedule still interrupts whatever else was animating these nodes.
-        if (props.transition) {
-          paths.transition(defaultTransition());
-        }
-
-        paths
-          .attr("d", pathData)
-          .attr("fill", fill)
-          .attr("stroke", stroke)
-          .attr("stroke-width", strokeWidth);
+          .join(
+            (enter) =>
+              enter
+                .append("path")
+                .classed("sszvis-path", true)
+                .attr("d", pathData)
+                .attr("fill", fill)
+                .attr("stroke", stroke)
+                .attr("stroke-width", strokeWidth),
+            (update) => {
+              if (props.transition) {
+                update
+                  .transition(defaultTransition())
+                  .attr("d", pathData)
+                  .attr("fill", fill)
+                  .attr("stroke", stroke)
+                  .attr("stroke-width", strokeWidth);
+                return update;
+              }
+              return update
+                .attr("d", pathData)
+                .attr("fill", fill)
+                .attr("stroke", stroke)
+                .attr("stroke-width", strokeWidth);
+            }
+          );
       })
   );
 }
