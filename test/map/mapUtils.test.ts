@@ -440,6 +440,34 @@ describe("map utils", () => {
       warn.mockRestore();
     });
 
+    // parseFloat stops at the first character it cannot read, so a typo would have been accepted
+    // as its numeric prefix and silently moved the anchor.
+    test("warns and falls back for a center whose components have trailing junk", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const feature = square("a");
+      feature.properties = { center: "8.54oops,47.37oops" };
+      const [lon, lat] = getGeoJsonCenter(feature);
+      expect(lon).toBeCloseTo(0.5, 3);
+      expect(lat).toBeCloseTo(0.5, 3);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    // An authored empty string is a malformed centre, not an absent property, so it is reported
+    // rather than passed over in silence.
+    test("warns and falls back for an empty or blank center property", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      for (const center of ["", " , "]) {
+        const feature = square("a");
+        feature.properties = { center };
+        const [lon, lat] = getGeoJsonCenter(feature);
+        expect(lon).toBeCloseTo(0.5, 3);
+        expect(lat).toBeCloseTo(0.5, 3);
+      }
+      expect(warn).toHaveBeenCalledTimes(2);
+      warn.mockRestore();
+    });
+
     test("names the offending feature in the warning", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const feature = square("kreis-7");

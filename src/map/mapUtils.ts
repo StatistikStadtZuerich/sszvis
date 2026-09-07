@@ -339,10 +339,18 @@ export function getGeoJsonCenter(geoJson: MapFeature): GeoPoint {
 /**
  * An authored "longitude,latitude" centre, or undefined where none was given or it is not exactly
  * two finite numbers - the malformed case is warned about, naming the offending feature.
+ *
+ * Each token is parsed whole with Number rather than with parseFloat, which stops at the first
+ * character it cannot read: parseFloat("8.54oops") is 8.54, so a typo would pass the finite check
+ * and place the anchor as though the author had written something they did not. Number("") is 0,
+ * so an empty token is rejected before it can become a coordinate - which also means an authored
+ * empty string reaches the warning instead of being treated as an absent property.
  */
 function parseCenter(center: string | undefined, featureId: unknown): GeoPoint | undefined {
-  if (!center) return undefined;
-  const parsed = center.split(",").map(Number.parseFloat);
+  if (center == null) return undefined;
+  const parsed = center
+    .split(",")
+    .map((token) => (token.trim() === "" ? Number.NaN : Number(token)));
   if (parsed.length === 2 && parsed.every((n) => Number.isFinite(n))) {
     return [parsed[0], parsed[1]];
   }
