@@ -102,7 +102,7 @@ export default function <T = unknown>(): ConfidenceAreaComponent<T> {
 
       path.attr("fill", "url(#data-area-pattern)").order();
 
-      const finalPath = props.transition ? path.transition().call(defaultTransition) : path;
+      const finalPath = props.transition ? path.transition(defaultTransition()) : path;
 
       finalPath.attr("d", (d) => area(props.valuesAccessor(d)));
 

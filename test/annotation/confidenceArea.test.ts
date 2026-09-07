@@ -1,4 +1,4 @@
-import { select } from "d3";
+import { easePolyOut, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import confidenceArea from "../../src/annotation/confidenceArea.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
@@ -333,5 +333,29 @@ describe("annotation/confidenceArea", () => {
     chartLayer.call(areaComponentWithTransition);
     const areasWithTransition = chartLayer.selectAll("path.sszvis-area").nodes();
     expect(areasWithTransition.length).toBe(1);
+  });
+
+  test("schedules the default transition's duration and easing", () => {
+    const areaComponent = confidenceArea()
+      .x((d: unknown) => (d as TestDatum).x)
+      .y0((d: unknown) => (d as TestDatum).y0)
+      .y1((d: unknown) => (d as TestDatum).y1)
+      .transition(true);
+
+    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+      .selectGroup("areas")
+      .datum([testData])
+      .call(areaComponent);
+
+    const path = chartLayer.select("path.sszvis-area").node() as Element & {
+      __transition?: Record<string, unknown>;
+    };
+    const scheduled = Object.values(path.__transition ?? {}).filter(
+      (v): v is { duration: number; ease: (t: number) => number } =>
+        typeof v === "object" && v !== null && "duration" in v
+    );
+    expect(scheduled).toHaveLength(1);
+    expect(scheduled[0].duration).toBe(300);
+    expect(scheduled[0].ease).toBe(easePolyOut);
   });
 });
