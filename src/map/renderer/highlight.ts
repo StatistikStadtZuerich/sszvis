@@ -5,19 +5,31 @@
  *
  * A component used internally for rendering the highlight layer of maps.
  * The highlight layer accepts an array of data values to highlight, and renders
- * The map entities associated with those data values using a special stroke.
+ * The map entities associated with those data values using a special stroke. It is the per-entity
+ * counterpart to the mesh renderer, which draws every border as one path with one shared style.
  *
  * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer. It must be a
  *                                                    feature collection: `features` is read unguarded, so a bare Feature
- *                                                    or the single-polyline mesh its sibling renderer takes throws.
- * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+ *                                                    throws. Required only when the highlight array is non-empty, and
+ *                                                    never validated, which is why the getter reports it as possibly
+ *                                                    undefined.
+ * @property {d3.geo.path} mapPath                    A path-generator used to create the path data string for each matched
+ *                                                    feature. A d3.geoPath or a bare generator function is accepted; it is
+ *                                                    called with the matched feature, or with undefined where nothing
+ *                                                    matched, for which a d3.geoPath returns null.
  * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
  *                                                    A falsy keyName is used as given, unlike prepareMergedGeoData, which
- *                                                    falls back to the default.
+ *                                                    falls back to the default - so an empty keyName reads datum[""],
+ *                                                    which is undefined, and matches a keyless feature rather than the
+ *                                                    intended entity.
  * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities
  *                                                    are highlighted. Falsy entries are dropped. Default [].
- * @property {String, Function} highlightStroke       A function for the stroke of the highlighted entities. Default white.
- * @property {Number, Function} highlightStrokeWidth  A function for the stroke width of the highlighted entities. Default 2.
+ * @property {String, Function} highlightStroke       A colour, or an accessor called with the highlighted datum only.
+ *                                                    Default white. Returning null removes the inline style, leaving SVG's
+ *                                                    initial stroke of 'none' - an invisible highlight, with no error.
+ * @property {Number, Function} highlightStrokeWidth  A width, or an accessor called with the highlighted datum only.
+ *                                                    Default 2. Returning null removes the inline style, leaving SVG's
+ *                                                    initial width of 1.
  *
  * Note: an entity id that matches no feature is not reported. The lookup yields undefined, the
  * path generator returns null for it, and d3 removes the attribute - leaving a classed, styled
@@ -25,11 +37,13 @@
  * cannot tell that from the entity being off-screen.
  *
  * Note: the feature lookup keys on feature.id, which GeoJSON does not require, and goes through a
- * plain object literal. So ids are stringified - a numeric data key matches a string feature id,
- * which matters because SSZ geodata uses numeric ids - every feature without an id collapses onto
- * the key "undefined" and the last of them wins, and an id naming an Object.prototype member
- * ("valueOf", "toString", ...) is "found" even though no such feature exists, failing exactly like
- * an unmatched id.
+ * plain object literal. So ids are stringified on both sides - a numeric feature id is matched by
+ * either a numeric or a string data key, which is load-bearing because SSZ geodata uses numeric
+ * ids - every feature without an id collapses onto the key "undefined" and the last of them wins,
+ * where a datum with no key finds it because the datum side stringifies the same way, and an id
+ * naming an Object.prototype member ("valueOf", "toString", ...) is "found" even though no such
+ * feature exists, failing exactly like an unmatched id. A symbol stays a symbol key, so it can
+ * never be matched by a string id.
  *
  * Note: neither geoJson nor mapPath is validated, and once there is something to highlight both
  * are required. A missing geoJson throws while the lookup table is built, before the join runs, so
@@ -39,8 +53,8 @@
  * tolerates having neither.
  *
  * Note: highlight is tested as `.length === 0`, so a non-array without a length - a single datum
- * passed by mistake - skips the early return and then throws on .reduce. A string has a length, so
- * "" clears the layer while any other string throws. An array of only falsy entries is the second,
+ * passed by mistake - skips the early return and then throws a bare TypeError from .reduce. A
+ * string has a length, so "" clears the layer while any other string throws. An array of only falsy entries is the second,
  * distinct way to clear the layer: it merges to nothing and the exit selection removes the paths,
  * but unlike the early return it still reads geoJson and mapPath.
  *
@@ -67,7 +81,8 @@
  *
  * Note: the border selector is unscoped and the join unkeyed, so a second highlight layer rendered
  * into the same group rebinds the first one's paths instead of drawing its own. One highlight layer
- * per group. Being an index join, it also re-purposes surviving elements by position rather than by
+ * per group; choropleth uses exactly one, so the collision is latent, but the renderer is exported
+ * publicly. Being an index join, it also re-purposes surviving elements by position rather than by
  * entity when the highlight array shrinks; the rendered result is still right, because "d" and both
  * styles are reapplied on every render rather than only on enter.
  *

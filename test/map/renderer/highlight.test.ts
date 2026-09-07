@@ -260,6 +260,12 @@ describe("map/renderer/highlight", () => {
       expect(highlights(node)[0].getAttribute("style") ?? "").not.toContain("stroke:");
     });
 
+    // The same for the width: a null removes the style, leaving SVG's initial width of 1.
+    test("silently removes the stroke width when highlightStrokeWidth returns null", () => {
+      const node = render((c) => c.highlight([{ geoId: "a" }]).highlightStrokeWidth(() => null));
+      expect(highlights(node)[0].style.strokeWidth).toBe("");
+    });
+
     // NOTE: both props are written as inline styles rather than attributes, as in the mesh
     // renderer. Nothing in sszvis.css sets stroke or stroke-width for .sszvis-map__highlight, so
     // nothing is being overridden - but a consumer cannot restyle a highlight from their own
@@ -529,6 +535,9 @@ describe("map/renderer/highlight", () => {
       // inside the component rather than a reported one.
       // @ts-expect-error - a bare datum is a caller error
       expect(() => render((c) => c.highlight({ geoId: "a" }))).toThrow(TypeError);
+      // A non-empty string gets past the length check and then has no .reduce.
+      // @ts-expect-error - a string is a caller error
+      expect(() => render((c) => c.highlight("ab"))).toThrow(TypeError);
     });
 
     // NOTE: a falsy keyName is used as given, unlike prepareMergedGeoData in mapUtils, which
