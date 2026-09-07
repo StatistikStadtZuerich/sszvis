@@ -40,7 +40,9 @@
  *                                                    An accessor is called with undefined for a feature no datum matched.
  * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
  *                                                    mesh, for the border color of the map entities. Default white.
- * @property {Number, Function} strokeWidth           The width of the entity borders. Default 1.25.
+ * @property {Number, Function} strokeWidth           The width of the border path stroke, delegated to the mesh
+ *                                                    renderer like borderColor. A number, or a function handed to d3
+ *                                                    and so called with the border mesh. Default 1.25.
  * @property {String, Function} lakePathColor         The color of the entity borders which extend over the lake. No
  *                                                    default: left out, the paths take their stroke from the stylesheet.
  * @property {Boolean} withLake                       Whether or not to show the textured outline of the end of lake Zurich that is within the city. Default true
