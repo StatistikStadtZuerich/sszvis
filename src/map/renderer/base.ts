@@ -145,10 +145,6 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
         .attr("data-event-target", "")
         .classed("sszvis-map__area--entering", false);
 
-      selection
-        .selectAll<Element, MergedGeoDatum<T>>(".sszvis-map__area--undefined")
-        .attr("fill", getMapFill);
-
       mapAreas
         .classed("sszvis-map__area--undefined", (d) => !hasValue(d))
         .attr("d", (d) => props.mapPath(d.geoJson));

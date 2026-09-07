@@ -308,12 +308,9 @@ describe("map/renderer/base", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: the line `selection.selectAll(".sszvis-map__area--undefined").attr("fill", getMapFill)`
-    // is dead. It reads the undefined class *before* this render updates it, so it repaints last
-    // render's undefined set - and every area it could touch is repainted anyway by the join
-    // above and the fill below. Deleting the line fails none of these tests (verified by
-    // mutation), so it is pure overhead plus a misleading read of stale state.
-    test("paints a newly defined area correctly despite the stale-class repaint", () => {
+    // The unconditional fill application covers an area whose defined-ness changed: nothing has to
+    // repaint last render's --undefined set separately.
+    test("repaints an area that was undefined on the previous render", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("stale-fill");
