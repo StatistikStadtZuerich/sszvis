@@ -76,6 +76,9 @@ describe("map/renderer/bubble", () => {
       .flatMap((s) => s.tween.map((t) => t.name));
   };
 
+  /** Waits out a default transition (300ms) so its final values are in the DOM. */
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 450));
+
   /** Renders the bubbles over `data`, returning the group node they drew into. */
   const render = (
     data: Datum[],
@@ -119,10 +122,14 @@ describe("map/renderer/bubble", () => {
     test("takes the radius from the radius accessor, called with the datum", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
-        c.radius((d: Datum) => {
-          seen.push(d);
-          return d.value * 2;
-        })
+        c
+          .radius((d: Datum) => {
+            seen.push(d);
+            return d.value * 2;
+          })
+          // The final radius is written by the transition when one is scheduled, so read it back
+          // without one; the animation itself is pinned under "transition".
+          .transition(false)
       );
       expect(seen).toEqual(expect.arrayContaining(fullData));
       expect(
@@ -133,7 +140,7 @@ describe("map/renderer/bubble", () => {
     });
 
     test("takes a constant radius", () => {
-      const node = render(fullData, (c) => c.radius(7));
+      const node = render(fullData, (c) => c.radius(7).transition(false));
       expect(circles(node).map((circle) => circle.getAttribute("r"))).toEqual(["7", "7", "7"]);
     });
 
@@ -183,7 +190,7 @@ describe("map/renderer/bubble", () => {
     });
 
     test("orders the circles largest first, so smaller ones draw on top", () => {
-      const node = render(fullData, (c) => c.radius((d: Datum) => d.value));
+      const node = render(fullData, (c) => c.radius((d: Datum) => d.value).transition(false));
       expect(circles(node).map((circle) => circle.getAttribute("r"))).toEqual(["3", "2", "1"]);
     });
 
@@ -284,6 +291,28 @@ describe("map/renderer/bubble", () => {
       expect(after).toContain(firstBefore);
       expect(after).toContain(secondBefore);
     });
+
+    // The classes are written once, when the circle enters, so a class a consumer added to it
+    // survives every later render.
+    test("keeps a class a consumer put on a circle", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("bubble-class-clobber");
+      const renderWith = () =>
+        layer
+          .call(
+            mapRendererBubble()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .mapPath(mapPath)
+              .radius(5)
+              .fill("#ff0000")
+              .transition(false)
+          )
+          .node() as SVGGElement;
+      const circle = circles(renderWith())[0];
+      circle.classList.add("consumer-added");
+      expect(circles(renderWith())[0].classList.contains("consumer-added")).toBe(true);
+    });
   });
 
   describe("transition", () => {
@@ -298,14 +327,37 @@ describe("map/renderer/bubble", () => {
       expect(tweenNames(circles(node)[0])).toBeNull();
     });
 
-    // BUG: the radius is written onto the plain selection first and then transitioned to the very
-    // same value, so the tween interpolates a radius onto itself. The final radius is already in
-    // the DOM before the transition starts, so nothing animates - on enter or on update. The same
-    // defect as the base renderer's fill transition.
-    test("writes the final radius immediately, so the tween interpolates it onto itself", () => {
+    // The radius is written exactly once, through the transition, so the tween has the previous
+    // radius - zero for an entering circle - to interpolate from rather than the final value.
+    test("grows an entering circle from zero to its radius", async () => {
       const node = render(fullData, (c) => c.radius(9));
-      expect(circles(node)[0].getAttribute("r")).toBe("9");
+      expect(circles(node)[0].getAttribute("r")).toBe("0");
       expect(tweenNames(circles(node)[0])).toContain("attr.r");
+      await settle();
+      expect(circles(node)[0].getAttribute("r")).toBe("9");
+    });
+
+    test("interpolates an updating circle from its previous radius", async () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("bubble-update-tween");
+      const renderWith = (radius: number) =>
+        layer
+          .call(
+            mapRendererBubble()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .mapPath(mapPath)
+              .radius(radius)
+              .fill("#ff0000")
+          )
+          .node() as SVGGElement;
+      renderWith(4);
+      await settle();
+      const node = renderWith(20);
+      // The old radius is still in the DOM when the tween starts.
+      expect(circles(node)[0].getAttribute("r")).toBe("4");
+      await settle();
+      expect(circles(node)[0].getAttribute("r")).toBe("20");
     });
 
     // Unlike the base and geojson renderers, this component's transition really is the intended
@@ -323,15 +375,8 @@ describe("map/renderer/bubble", () => {
       expect(scheduled[0].duration).toBe(300);
       expect(scheduled[0].ease).toBe(easePolyOut);
     });
-  });
 
-  describe("known quirks", () => {
-    // BUG: the exit selection is read off the merged selection that join() returned, where it does
-    // not exist - so `.exit()` is empty and both exit branches are dead code, the shrink-to-zero
-    // transition and the plain remove alike. join() has already removed the exiting circles
-    // synchronously, so a bubble leaving the data disappears instantly instead of shrinking away,
-    // whatever `transition` says.
-    test("removes a departing circle instantly instead of shrinking it", () => {
+    test("shrinks a departing circle away before removing it", async () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("bubble-exit");
@@ -349,11 +394,38 @@ describe("map/renderer/bubble", () => {
           .node() as SVGGElement;
       renderWith(collection.features);
       expect(circles(renderWith(collection.features))).toHaveLength(3);
+      await settle();
       const node = renderWith([collection.features[0]]);
-      // No exiting circle is left in the DOM to animate.
+      // The two departing circles are still in the DOM, shrinking towards zero.
+      expect(circles(node)).toHaveLength(3);
+      expect(tweenNames(circles(node)[0])).toContain("attr.r");
+      await settle();
       expect(circles(node)).toHaveLength(1);
     });
 
+    test("removes a departing circle at once when the transition is disabled", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("bubble-exit-instant");
+      const renderWith = (features: Feature<Polygon>[]) =>
+        layer
+          .call(
+            mapRendererBubble()
+              .mergedData(
+                features.map((feature) => ({ geoJson: feature, datum: { geoId: "x", value: 1 } }))
+              )
+              .mapPath(mapPath)
+              .radius(5)
+              .fill("#ff0000")
+              .transition(false)
+          )
+          .node() as SVGGElement;
+      renderWith(collection.features);
+      expect(circles(renderWith([collection.features[0]]))).toHaveLength(1);
+    });
+  });
+
+  describe("known quirks", () => {
     // BUG: the mouse listeners are written for d3 v3. Since d3 v6 a listener is called with the
     // event first and the datum second, so `d` here is a PointerEvent and `d.datum` is undefined -
     // every over, out and click handler receives undefined instead of the map entity's datum. The
@@ -560,28 +632,6 @@ describe("map/renderer/bubble", () => {
       expect(() =>
         render([{ geoId: "a", value: 1 }], (c) => c.radius((d: Datum) => d.value))
       ).toThrow(TypeError);
-    });
-
-    // BUG: the class is written with attr rather than classed, so it is replaced wholesale on every
-    // render - any class a consumer added to a circle is destroyed, and there is no way to keep one.
-    test("clobbers any class a consumer put on a circle", () => {
-      const collection = geoJson();
-      const mapPath = mapPathOf(collection);
-      const layer = group("bubble-class-clobber");
-      const renderWith = () =>
-        layer
-          .call(
-            mapRendererBubble()
-              .mergedData(prepareMergedGeoData(fullData, collection))
-              .mapPath(mapPath)
-              .radius(5)
-              .fill("#ff0000")
-              .transition(false)
-          )
-          .node() as SVGGElement;
-      const circle = circles(renderWith())[0];
-      circle.classList.add("consumer-added");
-      expect(circles(renderWith())[0].classList.contains("consumer-added")).toBe(false);
     });
 
     // NOTE: on() forwards to a d3 dispatch, so it inherits its semantics: an unknown event name
