@@ -37,8 +37,6 @@ describe("control/handleRuler", () => {
 
   const ruler = () =>
     handleRuler<Datum>()
-      // x is given as a constant: an accessor function would leave the rule and handle
-      // at NaN, because those elements are not bound to the data. See "known quirks".
       .x(40)
       .y((d: Datum) => d.y)
       .top(20)
@@ -64,6 +62,108 @@ describe("control/handleRuler", () => {
     expect(rule(node)).toBeTruthy();
     expect(handle(node)).toBeTruthy();
     expect(handleMark(node)).toBeTruthy();
+  });
+
+  test("should keep one of each part when rendered again", () => {
+    const control = ruler();
+    const group = d3Select(svg).append("g").datum(data);
+    group.call(control);
+    group.call(control);
+    const node = group.node() as SVGGElement;
+    expect(node.querySelectorAll("g.sszvis-handleRuler__group").length).toBe(1);
+    expect(node.querySelectorAll("line.sszvis-ruler__rule").length).toBe(1);
+    expect(node.querySelectorAll("rect.sszvis-handleRuler__handle").length).toBe(1);
+    expect(node.querySelectorAll("line.sszvis-handleRuler__handle-mark").length).toBe(1);
+  });
+
+  test("should stay idempotent over repeated renders and keep the handle behind the dots", () => {
+    const control = ruler();
+    const group = d3Select(svg).append("g").datum(data);
+    group.call(control);
+    group.call(control);
+    group.call(control);
+    const node = group.node() as SVGGElement;
+    expect(node.querySelectorAll("line.sszvis-ruler__rule").length).toBe(1);
+    expect(node.querySelectorAll("rect.sszvis-handleRuler__handle").length).toBe(1);
+    expect(node.querySelectorAll("line.sszvis-handleRuler__handle-mark").length).toBe(1);
+    expect(node.querySelectorAll("circle.sszvis-ruler__dot").length).toBe(2);
+    expect(node.querySelectorAll("text.sszvis-ruler__label").length).toBe(2);
+    // the static parts stay behind the dots, which the styling assumes
+    const rulerGroup = node.querySelector("g.sszvis-handleRuler__group") as SVGGElement;
+    const classes = [...rulerGroup.children].map((c) => c.getAttribute("class"));
+    expect(classes.lastIndexOf("sszvis-handleRuler__handle")).toBeLessThan(
+      classes.indexOf("sszvis-ruler__dot")
+    );
+    expect(rule(node)?.getAttribute("x1")).toBe("40.5");
+  });
+
+  test("should keep one of each static part when re-rendered with fewer data", () => {
+    const control = ruler();
+    const group = d3Select(svg).append("g").datum(data);
+    group.call(control);
+    group.datum([data[0]]);
+    group.call(control);
+    const node = group.node() as SVGGElement;
+    expect(node.querySelectorAll("circle.sszvis-ruler__dot").length).toBe(1);
+    expect(node.querySelectorAll("text.sszvis-ruler__label").length).toBe(1);
+    expect(node.querySelectorAll("line.sszvis-ruler__rule").length).toBe(1);
+  });
+
+  test("should not adopt a rule that belongs to something else in the container", () => {
+    const group = d3Select(svg).append("g").datum(data);
+    // an annotation ruler's rule, which shares the class but is not inside the handle
+    // ruler's own group
+    const foreign = group.append("line").attr("class", "sszvis-ruler__rule").attr("x1", "999");
+    group.call(ruler());
+    const node = group.node() as SVGGElement;
+    expect(foreign.attr("x1")).toBe("999");
+    const rulerGroup = node.querySelector("g.sszvis-handleRuler__group") as SVGGElement;
+    expect(rulerGroup.querySelectorAll("line.sszvis-ruler__rule").length).toBe(1);
+    expect(rulerGroup.querySelector("line.sszvis-ruler__rule")?.getAttribute("x1")).toBe("40.5");
+  });
+
+  test("should position the rule and handle from an x accessor", () => {
+    const node = render(
+      handleRuler<Datum>()
+        .x((d: Datum) => d.x)
+        .y((d: Datum) => d.y)
+        .top(20)
+        .bottom(200)
+    );
+    expect(rule(node)?.getAttribute("x1")).toBe("40.5");
+    expect(handle(node)?.getAttribute("x")).toBe("35.5");
+    expect(handleMark(node)?.getAttribute("x1")).toBe("40.5");
+    expect(dots(node).map((d) => d.getAttribute("cx"))).toEqual(["40.5", "40.5"]);
+  });
+
+  test("should resolve the ruler group to the first datum when x values differ", () => {
+    // There is only one rule, so it has to come from one datum; the first one wins.
+    const node = render(
+      handleRuler<Datum>()
+        .x((d: Datum) => d.x)
+        .y((d: Datum) => d.y)
+        .top(20)
+        .bottom(200),
+      [
+        { x: 40, y: 60, label: "first" },
+        { x: 100, y: 120, label: "second" },
+      ]
+    );
+    expect(rule(node)?.getAttribute("x1")).toBe("40.5");
+    expect(handle(node)?.getAttribute("x")).toBe("35.5");
+    // the dots still follow their own data
+    expect(dots(node).map((d) => d.getAttribute("cx"))).toEqual(["40.5", "100.5"]);
+  });
+
+  test("should nudge a label above the top by the same constant as one on the ruler", () => {
+    const node = render(ruler(), [{ x: 40, y: 10, label: "high" }]);
+    expect(labels(node)[0]?.getAttribute("transform")).toBe("translate(50.5,15.5)");
+  });
+
+  test("should nudge a label just below the top threshold by that same constant", () => {
+    // The worst case for the old `2 * y` arithmetic, which put this label at 58.5.
+    const node = render(ruler(), [{ x: 40, y: 19, label: "nearly" }]);
+    expect(labels(node)[0]?.getAttribute("transform")).toBe("translate(50.5,24.5)");
   });
 
   test("should draw the rule from the top down to 4px above the bottom, on half pixels", () => {
@@ -200,95 +300,6 @@ describe("control/handleRuler", () => {
   });
 
   describe("known quirks", () => {
-    test("re-rendering appends a second rule, handle and grip mark every time", () => {
-      // BUG: the group is joined idempotently, but the three static children are added
-      // with `group.append(…)` on every render instead of being joined. A component that
-      // re-renders - which is the normal case for an interactive ruler - therefore grows
-      // an extra line, rect and line per render, all stacked on the same coordinates.
-      // current: 3 new elements per render. expected: join them like the dots, or append
-      // them only into the group's enter selection.
-      const control = ruler();
-      const group = d3Select(svg).append("g").datum(data);
-      group.call(control);
-      group.call(control);
-      group.call(control);
-      const node = group.node() as SVGGElement;
-      expect(node.querySelectorAll("g.sszvis-handleRuler__group").length).toBe(1);
-      expect(node.querySelectorAll("line.sszvis-ruler__rule").length).toBe(3);
-      expect(node.querySelectorAll("rect.sszvis-handleRuler__handle").length).toBe(3);
-      expect(node.querySelectorAll("line.sszvis-handleRuler__handle-mark").length).toBe(3);
-      // The dots and labels are joined properly and do not accumulate.
-      expect(node.querySelectorAll("circle.sszvis-ruler__dot").length).toBe(2);
-      expect(node.querySelectorAll("text.sszvis-ruler__label").length).toBe(2);
-      // The visible consequence: the later copies are appended after the dots, so the
-      // handle ends up painted over them.
-      const rulerGroup = node.querySelector("g.sszvis-handleRuler__group") as SVGGElement;
-      const classes = [...rulerGroup.children].map((c) => c.getAttribute("class"));
-      expect(classes.indexOf("sszvis-handleRuler__handle")).toBeLessThan(
-        classes.indexOf("sszvis-ruler__dot")
-      );
-      expect(classes.lastIndexOf("sszvis-handleRuler__handle")).toBeGreaterThan(
-        classes.lastIndexOf("sszvis-ruler__dot")
-      );
-      // Every copy is still updated, so they stack rather than freezing at stale values.
-      expect(
-        [...node.querySelectorAll("line.sszvis-ruler__rule")].map((l) => l.getAttribute("x1"))
-      ).toEqual(["40.5", "40.5", "40.5"]);
-    });
-
-    test("only the static parts leak - dots and labels still shrink with the data", () => {
-      // Pins the boundary of the duplication bug above: the joined selections behave.
-      const control = ruler();
-      const group = d3Select(svg).append("g").datum(data);
-      group.call(control);
-      group.datum([data[0]]);
-      group.call(control);
-      const node = group.node() as SVGGElement;
-      expect(node.querySelectorAll("circle.sszvis-ruler__dot").length).toBe(1);
-      expect(node.querySelectorAll("text.sszvis-ruler__label").length).toBe(1);
-      expect(node.querySelectorAll("line.sszvis-ruler__rule").length).toBe(2);
-    });
-
-    test("an x accessor function leaves the rule and the handle at NaN", () => {
-      // BUG: the rule, the handle and the grip mark are appended into the ruler group,
-      // whose datum is the constant 0 from `.data([0])`. Only the dots are bound to the
-      // real data. An `x` accessor - which the JSDoc explicitly allows - is therefore
-      // called with 0, so those three elements get NaN coordinates and vanish, while the
-      // dots are positioned correctly.
-      // current: only a constant `x` works. expected: either document `x` as a number,
-      // or bind the ruler group to the value the accessor should be applied to.
-      const node = render(
-        handleRuler<Datum>()
-          // @ts-expect-error - the setter now demands an accessor that also handles the group's numeric placeholder datum, which is the type-level half of this fix; the runtime still renders NaN.
-          .x((d: Datum) => d.x)
-          .y((d: Datum) => d.y)
-          .top(20)
-          .bottom(200)
-      );
-      expect(rule(node)?.getAttribute("x1")).toBe("NaN");
-      expect(handle(node)?.getAttribute("x")).toBe("NaN");
-      expect(handleMark(node)?.getAttribute("x1")).toBe("NaN");
-      // the dots and labels, which are bound to the data, are placed correctly - so the
-      // ruler line vanishes while its dots and labels stay behind
-      expect(dots(node).map((d) => d.getAttribute("cx"))).toEqual(["40.5", "40.5"]);
-      expect(labels(node).map((l) => l.getAttribute("transform"))).toEqual([
-        "translate(50.5,65.5)",
-        "translate(50.5,125.5)",
-      ]);
-    });
-
-    test("a label above the top is positioned by doubling its y instead of offsetting it", () => {
-      // BUG: the vertical nudge for a label above props.top is `2 * y`, not an offset
-      // like the other two branches. A dot at y = 10 with top = 20 puts its label at
-      // 10.5 + 21 = 31.5, well below the dot; the displacement grows the closer the dot
-      // sits to `top` and shrinks to nothing at the very top of the chart.
-      // current: dy = 2 * y. expected: a constant nudge, symmetric with the `y > bottom`
-      // branch, or a documented reason for the doubling. src/annotation/ruler.ts carries
-      // the identical expression, so a fix belongs in both.
-      const node = render(ruler(), [{ x: 40, y: 10, label: "high" }]);
-      expect(labels(node)[0]?.getAttribute("transform")).toBe("translate(50.5,31.5)");
-    });
-
     test("labels are written as raw HTML", () => {
       // NOTE: labels are set with `.html(…)`, so markup in a label is parsed rather than
       // escaped. That is deliberate and library-wide - sszvis.modularText returns markup
