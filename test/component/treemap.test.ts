@@ -256,6 +256,35 @@ describe("component/treemap", () => {
       expect(rectangles.size()).toBeGreaterThan(0);
     });
 
+    test("should accept a constant colour as well as an accessor", () => {
+      // colorScale is wrapped in fn.functor on set, so a colour and an accessor returning
+      // that colour agree - the rule every other colour property in the library follows.
+      const hierarchy = () =>
+        prepareHierarchyData<TestDatum>()
+          .layer((d) => d.category)
+          .value((d) => d.value)
+          .calculate(data);
+      const fills = (scale: string | ((key: string) => string)) => {
+        svg
+          .datum(hierarchy())
+          .call(
+            treemap<TestDatum>()
+              .colorScale(scale)
+              .containerWidth(360)
+              .containerHeight(250)
+              .transition(false)
+          );
+        return svg
+          .selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect")
+          .nodes()
+          .map((rect) => rect.getAttribute("fill"));
+      };
+      const constant = fills("#ff0000");
+      expect(constant.length).toBeGreaterThan(0);
+      expect(new Set(constant)).toEqual(new Set(["#ff0000"]));
+      expect(fills(() => "#ff0000")).toEqual(constant);
+    });
+
     test("should apply color scale correctly", () => {
       svg
         .datum(

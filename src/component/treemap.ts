@@ -12,7 +12,8 @@
  * @module sszvis/component/treemap
  * @template T The type of the original flat data objects
  *
- * @property {string, function} colorScale        The fill color accessor for rectangles
+ * @property {string, function} colorScale        The fill color for rectangles: a constant colour
+ *                                                or an accessor taking a node's key
  * @property {boolean} transition                 Whether to animate changes (default true)
  * @property {number, function} containerWidth    The container width (default 800)
  * @property {number, function} containerHeight   The container height (default 600)
@@ -66,7 +67,7 @@ type TreemapProps<T = unknown> = {
 // Component interface with proper method overloads
 interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponent<T>> {
   colorScale(): (key: string) => string;
-  colorScale(scale: (key: string) => string): TreemapComponent<T>;
+  colorScale(scale: string | ((key: string) => string)): TreemapComponent<T>;
   transition(): boolean;
   transition(enabled: boolean): TreemapComponent<T>;
   containerWidth(): number;
@@ -90,7 +91,7 @@ interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponen
  */
 export default function <T = unknown>(): TreemapComponent<T> {
   return component<TreemapComponent<T>>()
-    .prop("colorScale")
+    .prop("colorScale", fn.functor)
     .prop("transition")
     .transition(true)
     .prop("containerWidth")

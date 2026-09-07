@@ -59,10 +59,9 @@
  *                                              segments will have their fill determined
  *                                              recursively, by lightening the color of its parent
  *                                              segment. It is called with a node's key string, not
- *                                              with the node. Required, and it has to be a
- *                                              function: it is neither wrapped in fn.functor nor
- *                                              normalised, so a constant colour throws "props.fill
- *                                              is not a function", and so does leaving it unset.
+ *                                              with the node. Required, with no default; it takes
+ *                                              a constant colour or an accessor, since it is
+ *                                              wrapped in fn.functor on set.
  *                                              Every ring further out multiplies its parent's
  *                                              lightness by 1.15, which is never clamped, so the
  *                                              colours run towards white from the inside out and
@@ -150,10 +149,12 @@ export type SunburstScale = (value: number) => number;
 
 /**
  * fill is called with a node's key, not with the node, and only for the segments of the
- * innermost ring - every ring further out derives its colour from its parent's. It is not
- * wrapped in fn.functor, so a constant colour is not accepted.
+ * innermost ring - every ring further out derives its colour from its parent's.
  */
 export type FillAccessor = (key: string) => string;
+
+/** fill is wrapped in fn.functor on set, so a constant colour is accepted as well. */
+export type FillValue = string | FillAccessor;
 
 /**
  * stroke accepts a constant or an accessor and is not normalised on set - the accessor is
@@ -196,7 +197,7 @@ export interface SunburstComponent<T = unknown> extends ComponentBuilder<Sunburs
   centerRadius(): number | undefined;
   centerRadius(radius: number): SunburstComponent<T>;
   fill(): FillAccessor | undefined;
-  fill(fill: FillAccessor): SunburstComponent<T>;
+  fill(fill: FillValue): SunburstComponent<T>;
   stroke(): StrokeValue<T>;
   stroke<U = T>(stroke: StrokeValue<U>): SunburstComponent<T>;
 }
@@ -220,7 +221,7 @@ export default function <T = unknown>(): SunburstComponent<T> {
     .angleScale(scaleLinear().range([0, 2 * Math.PI]))
     .prop("radiusScale")
     .prop("centerRadius")
-    .prop("fill")
+    .prop("fill", fn.functor)
     .prop("stroke")
     .stroke("white")
     .render(function (this: Element, inputData: SunburstData<T>) {
