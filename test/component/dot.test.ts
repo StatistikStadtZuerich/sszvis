@@ -124,7 +124,9 @@ describe("component/dot", () => {
     });
 
     test("should update the geometry when the data changes", () => {
-      const component = dotOf();
+      // transition is off so that the updated geometry is readable on this tick; the
+      // transitioning case is covered in the transition block.
+      const component = dotOf().transition(false);
       const g = group("update");
       g.datum(testData).call(component as never);
       g.datum([{ x: 99, y: 88, r: 12 }]).call(component as never);
@@ -164,41 +166,58 @@ describe("component/dot", () => {
       ]);
     });
 
+    test("should pass the index to the accessors read for the tooltip anchor", () => {
+      const seen = callLog(testData, false);
+      // The last two calls are the anchor's, and they arrive with the index like the rest.
+      expect(seen.slice(-2)).toEqual([
+        [testData[0], 0],
+        [testData[1], 1],
+      ]);
+    });
+
+    test("should anchor an index-based accessor at the same position as the dot", () => {
+      const node = render(
+        dot()
+          .x((_d: Datum, i: number) => i * 10)
+          .y((_d: Datum, i: number) => i * 5)
+          .radius(3),
+        testData
+      );
+      expect(attrs(node, "cx")).toEqual(["0", "10"]);
+      expect(attrs(node, "cy")).toEqual(["0", "5"]);
+      expect(anchors(node)).toEqual(["translate(0,0)", "translate(10,5)"]);
+    });
+
     describe("known quirks", () => {
-      test("calls every accessor three times per datum on every render", () => {
-        // NOTE: cx/cy/r are applied on the join, applied a second time (see the transition
-        // block below), and read once more to position the tooltip anchor. The second
-        // application runs whether or not transition is set - the property only decides
-        // whether it lands on a transition or on the plain selection - so the count does
-        // not change. Accessors are expected to be cheap and pure; an expensive scale
-        // lookup or an accessor with side effects pays for all three passes.
+      test("calls every geometry accessor three times per datum on every render", () => {
+        // NOTE: cx/cy/r are applied to the entering elements, applied once more so that
+        // updates tween from their previous values, and read a third time to position the
+        // tooltip anchor. The second application lands on the transition when there is one
+        // and on the plain selection otherwise, so the count is the same either way.
+        // Accessors are expected to be cheap and pure; an expensive scale lookup or an
+        // accessor with side effects pays for all three passes.
         expect(callLog(testData, true).length).toBe(6);
         expect(callLog(testData, false).length).toBe(6);
       });
 
-      test("does not pass the index when reading accessors for the tooltip anchor", () => {
-        // BUG: the anchor position is `(d) => [props.x(d), props.y(d)]` - a one-argument
-        // callback, so the index d3 supplies is dropped. An index-based accessor, which
-        // works fine for the circles, returns NaN for the anchor and every tooltip in the
-        // chart collapses onto the origin.
-        // current: anchors at translate(NaN,NaN). expected: the same position as the dot.
-        // bar has the identical defect in its own anchor callbacks.
-        const seen = callLog(testData, false);
-        // The last two calls are the anchor's, and they arrive without an index.
-        expect(seen.slice(-2)).toEqual([
-          [testData[0], undefined],
-          [testData[1], undefined],
-        ]);
-
-        const node = render(
+      test("passes an accessor the datum and the index only, not d3's node list", () => {
+        // NOTE: the documented accessor signature is (datum, index). The geometry is read
+        // through a wrapper that applies the missing-value guard and forwards only those
+        // two, so an accessor cannot reach the group's nodes the way a raw d3 attribute
+        // callback can.
+        const seen: unknown[][] = [];
+        render(
           dot()
-            .x((_d: Datum, i: number) => i * 10)
-            .y((_d: Datum, i: number) => i * 5)
-            .radius(3),
-          testData
+            .x((...args: unknown[]) => {
+              seen.push(args);
+              return 0;
+            })
+            .y(0)
+            .radius(1)
+            .transition(false),
+          [testData[0]]
         );
-        expect(attrs(node, "cx")).toEqual(["0", "10"]);
-        expect(anchors(node)).toEqual(["translate(NaN,NaN)", "translate(NaN,NaN)"]);
+        expect(seen.map((args) => args.length)).toEqual([2, 2, 2]);
       });
     });
   });
@@ -208,56 +227,75 @@ describe("component/dot", () => {
       expect(dot().transition()).toBe(true);
     });
 
-    describe("known quirks", () => {
-      test("throws when x or y is never configured, but only once there is data", () => {
-        // BUG: x and y are declared with fn.functor, so an unset property stays undefined
-        // rather than becoming a functor. The circle attributes survive it - d3 drops an
-        // attribute whose value is undefined - but the tooltip anchor calls props.x(d)
-        // directly and throws. Nothing in the library reports the missing property before
-        // that point, and the failure depends on the data, so an empty first render
-        // succeeds and the same chart throws as soon as data arrives.
-        // current: a TypeError from d3's internals. expected: a named error identifying
-        // the missing property, or a default of 0.
-        expect(() => render(dot().radius(3), [{}])).toThrow(TypeError);
-        expect(() => render(dot().radius(3), [{}])).toThrow(/is not a function/);
-        expect(() => render(dot().radius(3), [])).not.toThrow();
-      });
+    test("should name the component and the property when x is not configured", () => {
+      expect(() => render(dot().y(1).radius(3), [{}])).toThrow("[dot] the x property is required");
+    });
 
-      test("leaves half-rendered elements behind when it throws", () => {
-        // NOTE: the throw above happens after the circles and the anchor rects have been
-        // created, so the group is left holding circles with no position and anchors with
-        // no transform. A caller that catches the error sees a partially updated chart.
-        const g = group("partial");
-        expect(() => g.datum([{}]).call(dot().radius(3) as never)).toThrow();
-        const node = g.node() as SVGGElement;
-        expect(circles(node).length).toBe(1);
-        expect(circles(node)[0].getAttribute("cx")).toBeNull();
-        expect(anchors(node)).toEqual([null]);
-      });
+    test("should name the component and the property when y is not configured", () => {
+      expect(() => render(dot().x(1).radius(3), [{}])).toThrow("[dot] the y property is required");
+    });
 
-      test("radius, fill and stroke are not wrapped by fn.functor, unlike x and y", () => {
-        // NOTE: only x and y are declared with fn.functor. Rendering is unaffected, since
-        // d3 accepts a constant or a function for any attribute, but the getters are
-        // inconsistent: .x() always returns a function while .radius() returns whatever
-        // was set. Anything reading a dot's configuration back has to handle both shapes.
-        const component = dot().x(5).y(6).radius(7).fill("#f00").stroke("#00f");
-        expect(typeof component.x()).toBe("function");
-        expect(component.x()()).toBe(5);
-        expect(typeof component.y()).toBe("function");
-        expect(component.radius()).toBe(7);
-        expect(component.fill()).toBe("#f00");
-        expect(component.stroke()).toBe("#00f");
-      });
+    test("should name the component and the property when radius is not configured", () => {
+      expect(() => render(dot().x(1).y(2), [{}])).toThrow("[dot] the radius property is required");
+    });
 
-      test("renders an invisible circle when radius is not configured", () => {
-        // NOTE: an unset radius means .attr("r", undefined), which removes the attribute.
-        // SVG then defaults r to 0, so the dots are silently invisible rather than
-        // reported as a missing required property. Unlike a missing x or y, this never
-        // throws, because the anchor does not read the radius.
-        const node = render(dot().x(1).y(2), [{}]);
-        expect(circles(node)[0].getAttribute("r")).toBeNull();
-        expect(circles(node).length).toBe(1);
-      });
+    test("should report a missing property before any data arrives", () => {
+      // The failure used to depend on the data - an empty first render succeeded and the
+      // same chart threw as soon as data arrived, which is how it escaped a smoke test.
+      expect(() => render(dot().radius(3), [])).toThrow("[dot] the x property is required");
+      const g = group("empty-then-populated");
+      expect(() => g.datum([]).call(dot().radius(3) as never)).toThrow();
+      expect(() => g.datum([{}]).call(dot().radius(3) as never)).toThrow();
+    });
+
+    test("should leave nothing rendered when a required property is missing", () => {
+      const g = group("partial");
+      expect(() => g.datum([{}]).call(dot().radius(3) as never)).toThrow();
+      const node = g.node() as SVGGElement;
+      expect(circles(node)).toEqual([]);
+      expect(anchors(node)).toEqual([]);
+    });
+
+    test("should read back an unset required property as undefined", () => {
+      // x, y and radius have no default - required() only runs at render - so the getters
+      // return undefined until they are set, which is what their types now say.
+      const component = dot();
+      expect(component.x()).toBeUndefined();
+      expect(component.y()).toBeUndefined();
+      expect(component.radius()).toBeUndefined();
+    });
+
+    test("should wrap every visual property in fn.functor, so the getters agree", () => {
+      const component = dot().x(5).y(6).radius(7).fill("#f00").stroke("#00f");
+      expect(typeof component.x()).toBe("function");
+      expect(component.x()?.()).toBe(5);
+      expect(typeof component.y()).toBe("function");
+      expect(component.y()?.()).toBe(6);
+      expect(typeof component.radius()).toBe("function");
+      expect(component.radius()?.()).toBe(7);
+      expect(typeof component.fill()).toBe("function");
+      expect(component.fill()?.()).toBe("#f00");
+      expect(typeof component.stroke()).toBe("function");
+      expect(component.stroke()?.()).toBe("#00f");
+    });
+
+    test("should render radius, fill and stroke identically as constants or accessors", () => {
+      const constant = render(dotOf().radius(4).fill("#f00").stroke("#00f"), [testData[0]]);
+      const accessor = render(
+        dotOf()
+          .radius(() => 4)
+          .fill(() => "#f00")
+          .stroke(() => "#00f"),
+        [testData[0]]
+      );
+      expect(attrs(constant, "r")).toEqual(attrs(accessor, "r"));
+      expect(attrs(constant, "fill")).toEqual(attrs(accessor, "fill"));
+      expect(attrs(constant, "stroke")).toEqual(attrs(accessor, "stroke"));
+      expect(attrs(accessor, "r")).toEqual(["4"]);
+    });
+
+    test("should still allow a radius of 0, which is how a dot is hidden", () => {
+      expect(attrs(render(dotOf().radius(0), [testData[0]]), "r")).toEqual(["0"]);
     });
   });
 
@@ -287,39 +325,43 @@ describe("component/dot", () => {
       expect(withValue(12.5).cx).toBe("12.5");
     });
 
-    test("should drop the attribute for undefined and null", () => {
-      expect(withValue(undefined)).toEqual({ cx: null, r: null });
-      expect(withValue(null)).toEqual({ cx: null, r: null });
+    test("should replace undefined and null with 0", () => {
+      // The attribute used to be dropped for both, which left the circle on the SVG
+      // default rather than on the guarded 0 that bar writes.
+      expect(withValue(undefined)).toEqual({ cx: "0", r: "0" });
+      expect(withValue(null)).toEqual({ cx: "0", r: "0" });
     });
 
-    describe("known quirks", () => {
-      test("has no missing-value guard at all, unlike the bar component", () => {
-        // BUG: bar composes every geometry accessor with handleMissingVal, which turns NaN
-        // into 0. dot has no equivalent, so a NaN - the usual result of feeding a scale a
-        // value outside its domain, or a null measurement - is written straight into the
-        // attribute. The browser rejects "NaN" and falls back to the attribute's initial
-        // value, so a NaN coordinate parks the dot at the chart's origin while a NaN
-        // radius makes it vanish. Both fail silently.
-        // current: cx="NaN". expected: 0, as in bar, or no circle at all.
-        expect(withValue(Number.NaN)).toEqual({ cx: "NaN", r: "NaN" });
-      });
+    test("should replace NaN with 0, as bar does", () => {
+      // NaN is what a scale returns outside its domain, and what any arithmetic on a null
+      // measurement produces, so this is the common case rather than an exotic one.
+      expect(withValue(Number.NaN)).toEqual({ cx: "0", r: "0" });
+    });
 
-      test("writes non-numeric values into the attributes verbatim", () => {
-        // NOTE: same root cause as above - nothing validates what an accessor returns.
-        // Every one of these is an invalid SVG length, and all of them fail silently.
-        expect(withValue("abc")).toEqual({ cx: "abc", r: "abc" });
-        expect(withValue(Number.POSITIVE_INFINITY)).toEqual({ cx: "Infinity", r: "Infinity" });
-        expect(withValue("")).toEqual({ cx: "", r: "" });
-        expect(withValue(true)).toEqual({ cx: "true", r: "true" });
-      });
+    test("should replace Infinity with 0", () => {
+      // A scale over a zero-width domain produces Infinity, and "Infinity" is not a valid
+      // SVG length.
+      expect(withValue(Number.POSITIVE_INFINITY)).toEqual({ cx: "0", r: "0" });
+      expect(withValue(Number.NEGATIVE_INFINITY)).toEqual({ cx: "0", r: "0" });
+    });
 
-      test("passes a negative radius through, which is an SVG error", () => {
-        // NOTE: a negative r is invalid per the SVG spec and the element is not rendered.
-        // A radius scale with a reversed range, or a `value - baseline` accessor, can
-        // produce one, and nothing here catches it.
-        const node = render(dot().x(1).y(2).radius(-5), [{}]);
-        expect(circles(node)[0].getAttribute("r")).toBe("-5");
-      });
+    test("should replace values that do not coerce to a number with 0", () => {
+      expect(withValue("abc")).toEqual({ cx: "0", r: "0" });
+    });
+
+    test("should normalise values that do coerce to their number", () => {
+      expect(withValue("50")).toEqual({ cx: "50", r: "50" });
+      expect(withValue("")).toEqual({ cx: "0", r: "0" });
+      expect(withValue(true)).toEqual({ cx: "1", r: "1" });
+    });
+
+    test("should clamp a negative radius to 0 while leaving coordinates signed", () => {
+      // A negative r is invalid per the SVG spec and the circle is not rendered at all, so
+      // it is clamped; a negative cx or cy is perfectly valid and is left alone.
+      const node = render(dot().x(-5).y(-6).radius(-5), [{}]);
+      expect(circles(node)[0].getAttribute("r")).toBe("0");
+      expect(circles(node)[0].getAttribute("cx")).toBe("-5");
+      expect(circles(node)[0].getAttribute("cy")).toBe("-6");
     });
   });
 
@@ -337,6 +379,18 @@ describe("component/dot", () => {
       expect(anchor?.getAttribute("height")).toBe("1");
       expect(anchor?.getAttribute("fill")).toBe("none");
       expect(anchor?.getAttribute("stroke")).toBe("none");
+    });
+
+    test("should position the anchor from the guarded geometry", () => {
+      const node = render(
+        dot()
+          .x(() => Number.NaN)
+          // @ts-expect-error - accessor returns undefined on purpose
+          .y(() => undefined)
+          .radius(3),
+        [{}]
+      );
+      expect(anchors(node)).toEqual(["translate(0,0)"]);
     });
 
     test("should position the anchor at the centre of the dot", () => {
@@ -358,21 +412,6 @@ describe("component/dot", () => {
     });
 
     describe("known quirks", () => {
-      test("propagates unguarded coordinates into the transform", () => {
-        // NOTE: the anchor position reads props.x and props.y directly, so the missing
-        // values above reach it too. "translate(NaN,undefined)" is not a valid transform,
-        // so the anchor - and therefore the tooltip - ends up at the origin.
-        const node = render(
-          dot()
-            .x(() => Number.NaN)
-            // @ts-expect-error - accessor returns undefined on purpose
-            .y(() => undefined)
-            .radius(3),
-          [{}]
-        );
-        expect(anchors(node)).toEqual(["translate(NaN,undefined)"]);
-      });
-
       test("still anchors a tooltip to a dot that was hidden with radius 0", () => {
         // NOTE: radius 0 is how the scatterplot-over-time example hides dots outside the
         // selected period. The circle disappears, but its anchor is still created and
@@ -398,48 +437,76 @@ describe("component/dot", () => {
       expect(tweenNames(circles(render(dotOf().transition(false), [testData[0]]))[0])).toBeNull();
     });
 
+    test("should give entering dots their geometry before the transition starts", () => {
+      // The entering elements are positioned on the join, so a fresh render is correct
+      // synchronously - nothing waits for the first animation frame.
+      const node = render(dotOf().transition(true), testData);
+      expect(attrs(node, "cx")).toEqual(["10", "60"]);
+      expect(attrs(node, "cy")).toEqual(["20", "25"]);
+      expect(attrs(node, "r")).toEqual(["4", "8"]);
+    });
+
+    test("should animate the geometry between renders when enabled", async () => {
+      const component = dotOf().transition(true);
+      const g = group("animated");
+      g.datum([{ x: 0, y: 0, r: 1 }]).call(component as never);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "cx")).toEqual(["0"]);
+
+      g.datum([{ x: 500, y: 400, r: 20 }]).call(component as never);
+      // The update tweens from its previous value, so it still holds it on this tick.
+      expect(attrs(node, "cx")).toEqual(["0"]);
+      expect(attrs(node, "cy")).toEqual(["0"]);
+      expect(attrs(node, "r")).toEqual(["1"]);
+
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      expect(attrs(node, "cx")).toEqual(["500"]);
+      expect(attrs(node, "cy")).toEqual(["400"]);
+      expect(attrs(node, "r")).toEqual(["20"]);
+    });
+
+    test("should update the geometry synchronously when disabled", () => {
+      const component = dotOf().transition(false);
+      const g = group("no-transition");
+      g.datum([{ x: 0, y: 0, r: 1 }]).call(component as never);
+      g.datum([{ x: 500, y: 400, r: 20 }]).call(component as never);
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "cx")).toEqual(["500"]);
+      expect(attrs(node, "cy")).toEqual(["400"]);
+      expect(attrs(node, "r")).toEqual(["20"]);
+    });
+
+    test("should schedule one tween per geometry attribute and no more", () => {
+      // The other half of the defect this fixed: callers who never wanted an animation
+      // were paying for tweens that ran from a value to itself. There is now exactly one
+      // tween per geometry attribute, and none at all when the property is off.
+      const node = render(dotOf().fill("#f00").stroke("#00f").transition(true), [testData[0]]);
+      expect(tweenNames(circles(node)[0])).toEqual(["attr.cx", "attr.cy", "attr.r"]);
+
+      const plain = render(dotOf().fill("#f00").transition(false), [testData[0]]);
+      expect(tweenNames(circles(plain)[0])).toBeNull();
+    });
+
+    test("should not transition fill or stroke, so a colour change jumps", () => {
+      // Decided rather than inherited: the colour scales these charts use are categorical,
+      // and interpolating between two category colours reads as a third category. So the
+      // colours are applied to the selection and never appear among the tweens.
+      const component = dotOf();
+      const g = group("colour-jump");
+      g.datum([testData[0]]).call(component.fill("#f00") as never);
+      g.datum([testData[0]]).call(component.fill("#0f0") as never);
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "fill")).toEqual(["#0f0"]);
+      expect(tweenNames(circles(node)[0])).not.toContain("attr.fill");
+    });
+
     describe("known quirks", () => {
-      test("the transition property never animates anything", () => {
-        // BUG: `dots` is reassigned to `dots.transition(...)`, and the next line re-applies
-        // cx/cy/r to it - but the join has already written those same values to the
-        // elements, so every tween runs from a value to itself. The geometry jumps and the
-        // 300ms transition is pure overhead. transition defaults to true, so every
-        // scatterplot in the docs pays for a transition that has never animated.
-        // current: geometry updates synchronously. expected: it eases over 300ms.
-        // The fix is to apply the geometry once: to `dots.transition(...)` when
-        // transitioning, and to `dots` otherwise. bar has the same symptom by a different
-        // route - it discards its transition instead of assigning it back.
-        const component = dotOf().transition(true);
-        const g = group("no-animation");
-        g.datum([{ x: 0, y: 0, r: 1 }]).call(component as never);
-        g.datum([{ x: 500, y: 400, r: 20 }]).call(component as never);
-        const node = g.node() as SVGGElement;
-        // A live transition would still show the old values on this tick.
-        expect(attrs(node, "cx")).toEqual(["500"]);
-        expect(attrs(node, "cy")).toEqual(["400"]);
-        expect(attrs(node, "r")).toEqual(["20"]);
-      });
-
-      test("schedules value-to-value tweens for the geometry and nothing else", () => {
-        // NOTE: the two halves of the bug above, pinned directly. The transition really is
-        // scheduled - three attribute tweens per circle - and the attributes already hold
-        // their final values when it starts, so the tweens interpolate each value to
-        // itself. fill and stroke are applied only on the join and never appear here, so
-        // colour changes will still jump even once the geometry animates.
-        const node = render(dotOf().fill("#f00").stroke("#00f").transition(true), [testData[0]]);
-        const circle = circles(node)[0];
-        expect(tweenNames(circle)).toEqual(["attr.cx", "attr.cy", "attr.r"]);
-        expect(circle.getAttribute("cx")).toBe("10");
-        expect(circle.getAttribute("cy")).toBe("20");
-        expect(circle.getAttribute("r")).toBe("4");
-      });
-
-      test("stacks another schedule on the same circles with every render", () => {
-        // NOTE: each render attaches a fresh schedule to every circle. The pending ones
-        // pile up until they start, at which point d3 cancels the superseded ones and
-        // interrupts anything else the caller had running on those nodes. So a chart that
-        // re-renders on every interaction accrues and then discards transition state for
-        // an animation that never happens.
+      test("a re-render stacks another schedule on the same circles", () => {
+        // NOTE: d3's own semantics rather than a defect of this component - a second
+        // transition on the same node is scheduled alongside the first and supersedes it
+        // once it starts. It does mean a chart that re-renders faster than 300ms replaces
+        // its animation mid-flight rather than continuing it.
         const component = dotOf().transition(true);
         const g = group("interrupt");
         g.datum([testData[0]]).call(component as never);
