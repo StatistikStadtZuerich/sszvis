@@ -347,16 +347,18 @@ export function getGeoJsonCenter(geoJson: MapFeature): GeoPoint {
  * empty string reaches the warning instead of being treated as an absent property.
  */
 function parseCenter(center: unknown, featureId: unknown): GeoPoint | undefined {
-  if (center == null) return undefined;
+  // Only an absent property passes silently. An authored null is a value, and a malformed one, so
+  // it is reported like any other non-string.
+  if (center === undefined) return undefined;
   // Declared a string on MapFeatureProperties, which says what an author should write, but the
   // properties of a loaded map file are runtime data and nothing checks them on the way in. A
   // number or an object would otherwise throw from split() rather than degrading to the centroid,
   // which is what this function exists to guarantee.
   if (typeof center !== "string") {
     logger.warn(
-      `getGeoJsonCenter: ignoring the center property of feature ${String(featureId)}, which is ` +
-        `a ${typeof center} rather than a "longitude,latitude" string. Falling back to the ` +
-        "computed centroid."
+      `getGeoJsonCenter: ignoring the center property of feature ${String(featureId)}, whose ` +
+        `type is ${center === null ? "null" : typeof center} rather than a ` +
+        '"longitude,latitude" string. Falling back to the computed centroid.'
     );
     return undefined;
   }
