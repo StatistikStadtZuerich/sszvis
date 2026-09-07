@@ -370,7 +370,7 @@ describe("map/renderer/image", () => {
     // NOTE: the projected coordinates are written unshifted, and createHtmlLayer positions the
     // layer itself by the bounds padding - so the image's offset is relative to the layer, and the
     // padding is applied exactly once. This is what keeps it aligned with the svg layer, and the
-    // two docs rastermaps depend on it.
+    // four docs rastermaps depend on it.
     test("offsets the image within a padded layer, not within the page", () => {
       const padded = createHtmlLayer(
         "#chart-container",
