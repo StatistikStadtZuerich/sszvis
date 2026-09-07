@@ -4016,18 +4016,20 @@ declare function handleRuler<T = unknown>(): HandleRulerComponent<T>;
  * into a container that already holds the other replaces the other's DOM. This is what makes them
  * interchangeable.
  *
- * Note: `current` is written as the `selected` content attribute, not as the option's `selected`
- * property. Once the user has picked an option the browser stops deriving selectedness from the
- * attribute, so a re-render cannot pull the selection back to `current`.
+ * Note: `current` is written as each option's `selected` DOM property, so it stays authoritative
+ * across re-renders even after the user has picked an option themselves. A value duplicated in
+ * `values` selects the last matching option, because a single-select element holds one selection.
  *
  * Note: the wrapper is styled to `width`, but the select element itself is rendered 30px wider,
  * while labels are measured and trimmed against `width - 40`.
  *
  * Note: label truncation removes one character more than strictly necessary (the ellipsis replaces
- * the second-to-last character as well) and has no fixed point for very small widths - a width whose
- * measuring budget is negative runs the full recursion limit before returning "…". Values must be
- * strings: the measuring code slices the raw value, so a non-string value that needs trimming
- * throws.
+ * the second-to-last character as well). Values are coerced with `String()` before measuring, so
+ * non-string values are trimmed rather than throwing.
+ *
+ * Note: a selection whose stored index no longer resolves to a value - an empty select value, or an
+ * index left behind by a shorter `values` array - is ignored with a warning instead of invoking
+ * `change` with `undefined`.
  *
  * Note: `values` has no default, so rendering before the data is available throws mid-render from
  * d3's data join - after the wrapper and select have been created and styled, leaving an empty,
