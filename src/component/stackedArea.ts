@@ -270,9 +270,7 @@ export default function stackedArea<
       // deliberately not caught: only an unset property is.
       for (const required of ["x", "y0", "y1"] as const) {
         if (props[required] === undefined) {
-          throw new Error(
-            `sszvis.stackedArea - the ${required} property is required, and was not set.`
-          );
+          throw new Error(`[stackedArea] the ${required} property is required`);
         }
       }
 
@@ -295,7 +293,7 @@ export default function stackedArea<
         if (missing && !reported) {
           reported = true;
           logger.warn(
-            "sszvis.stackedArea - a point has a missing y0 or y1 value and was skipped; the area breaks around it."
+            "[stackedArea] a point has a missing y0 or y1 value and was skipped; the area breaks around it."
           );
         }
         return !missing;

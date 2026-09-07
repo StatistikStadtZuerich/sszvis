@@ -326,11 +326,7 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
         // deliberately not caught: only an unset property is.
         for (const required of ["x", "y0", "y1"] as const) {
           if (props[required] === undefined) {
-            throw new Error(
-              "sszvis.stackedAreaMultiples - the " +
-                required +
-                " property is required, and was not set."
-            );
+            throw new Error(`[stackedAreaMultiples] the ${required} property is required`);
           }
         }
 
@@ -353,7 +349,7 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
           if (missing && !reported) {
             reported = true;
             logger.warn(
-              "sszvis.stackedAreaMultiples - a point has a missing y0 or y1 value and was skipped; the band breaks around it."
+              "[stackedAreaMultiples] a point has a missing y0 or y1 value and was skipped; the band breaks around it."
             );
           }
           return !missing;
