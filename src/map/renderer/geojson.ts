@@ -33,11 +33,6 @@
  *                                          Default true. The transition does not currently animate anything; see the
  *                                          note below.
  *
- * Note: the data are grouped with a reduce that has no initial value, so the first datum becomes
- * the lookup table rather than an entry in it. That datum's feature never receives its data and
- * always renders as missing, the remaining data are written as properties onto the caller's first
- * array element, a single-datum dataset matches nothing at all, and an empty dataset throws.
- *
  * Note: the on("over"|"out"|"click") API has never delivered anything. The listeners call
  * event.over(datum) and friends, but d3's dispatch exposes only on, call, apply and copy, so each
  * listener throws a TypeError before any registered handler runs. Both maps in docs/map-extended
@@ -53,9 +48,7 @@
  *
  * Note: lookup keys are stringified, so a missing key on either side becomes the string
  * "undefined" and one keyless datum becomes the datum for every keyless feature. A symbol key stays
- * a symbol and can never be matched by a string id. The lookup table is a plain object, so a
- * feature keyed after an Object.prototype member - "valueOf", say - is handed the inherited
- * function as its datum, which fn.defined accepts and passes to the fill accessor.
+ * a symbol and can never be matched by a string id.
  *
  * Note: the mouse listeners are bound layer-wide via the [data-event-target] attribute rather than
  * scoped to this component's own class. An overlay drawn into a group that already holds a base
@@ -234,16 +227,11 @@ export default function <
       // these entity ids.
       const getDataKeyName = fn.prop(props.dataKeyName);
 
-      // The JavaScript grouped the data with `data.reduce((m, v) => { m[key(v)] = v; return m; })`
-      // and no initial value, so the first datum became the accumulator: it is never an entry of
-      // its own table, the rest of the data are written onto it, and an empty array throws.
-      // Written as an explicit loop here so the table has a type; the behaviour is unchanged.
-      if (data.length === 0) {
-        throw new TypeError("Reduce of empty array with no initial value");
-      }
-      const [firstDatum, ...remainingData] = data;
-      const groupedInputData: Record<string | symbol, unknown> = firstDatum;
-      for (const datum of remainingData) {
+      // A prototype-less table, so a feature keyed after an Object.prototype member - "valueOf",
+      // say - cannot resolve to the inherited function, and so that the caller's data are never
+      // written to.
+      const groupedInputData: Record<string | symbol, unknown> = Object.create(null);
+      for (const datum of data) {
         groupedInputData[toLookupKey(getDataKeyName(datum))] = datum;
       }
 

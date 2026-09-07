@@ -69,14 +69,8 @@ describe("map/renderer/geojson", () => {
     { geoId: "c", value: 3 },
   ];
 
-  /**
-   * Data whose first element is a decoy matching no feature. The grouping reduce swallows its
-   * first element (see the data-matching tests), so a decoy is the only way to give features "a"
-   * and "b" data while leaving "c" genuinely without any - which keeps these expectations valid
-   * once that bug is fixed.
-   */
-  const decoyData: Datum[] = [
-    { geoId: "decoy", value: 0 },
+  /** Data for features "a" and "b" only, leaving "c" genuinely without any datum. */
+  const partialData: Datum[] = [
     { geoId: "a", value: 1 },
     { geoId: "b", value: 2 },
   ];
@@ -126,28 +120,31 @@ describe("map/renderer/geojson", () => {
   });
 
   describe("data matching", () => {
-    // BUG: the grouping reduce is called with no initial value, so the FIRST datum becomes the
-    // accumulator instead of a fresh object. Its own keys are never entries, so the first datum
-    // never matches its feature - that entity always renders as missing - and the remaining data
-    // are written onto it as properties, mutating the caller's array element.
-    test("never matches the first datum, and mutates it", () => {
+    test("matches every datum to its feature, and does not mutate the data", () => {
       const data: Datum[] = [
         { geoId: "a", value: 1 },
         { geoId: "b", value: 2 },
         { geoId: "c", value: 3 },
       ];
       const node = render(data, (c) => c.fill("#ff0000").transitionColor(false));
-      expect(attrs(node, "fill")).toEqual(["url(#missing-pattern)", "#ff0000", "#ff0000"]);
-      // The caller's first datum has been used as the lookup object.
-      expect(data[0]).toHaveProperty("b", data[1]);
-      expect(data[0]).toHaveProperty("c", data[2]);
+      expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
+      // The caller's data are untouched: no lookup keys were written onto the first datum.
+      expect(Object.keys(data[0])).toEqual(["geoId", "value"]);
     });
 
-    // BUG: with a single datum the reduce never runs its callback, so nothing is matched at all.
-    test("matches nothing at all for a single datum", () => {
+    test("matches a single datum to its feature", () => {
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.fill("#ff0000").transitionColor(false)
       );
+      expect(attrs(node, "fill")).toEqual([
+        "#ff0000",
+        "url(#missing-pattern)",
+        "url(#missing-pattern)",
+      ]);
+    });
+
+    test("draws an all-missing overlay for an empty dataset", () => {
+      const node = render([], (c) => c.fill("#ff0000").transitionColor(false));
       expect(attrs(node, "fill")).toEqual([
         "url(#missing-pattern)",
         "url(#missing-pattern)",
@@ -155,36 +152,8 @@ describe("map/renderer/geojson", () => {
       ]);
     });
 
-    // BUG: reduce with no initial value throws on an empty array, so an overlay with no data
-    // crashes the render rather than drawing an all-missing map.
-    test("throws for an empty dataset", () => {
-      expect(() => render([])).toThrow(TypeError);
-    });
-
-    // These pin the exact shape of the grouping so a future rewrite of it cannot drift unnoticed:
-    // the lookup table IS the caller's first datum, and an empty dataset fails the way a seedless
-    // reduce fails.
-    test("uses the caller's first datum as the lookup table itself", () => {
-      const data: Datum[] = [
-        { geoId: "a", value: 1 },
-        { geoId: "b", value: 2 },
-      ];
-      render(data, (c) => c.transitionColor(false));
-      expect(Object.hasOwn(data[0], "b")).toBe(true);
-      expect(Object.getOwnPropertyDescriptor(data[0], "b")?.value).toBe(data[1]);
-      // The single remaining datum was written onto it, not into a fresh object.
-      expect(Object.keys(data[0])).toEqual(["geoId", "value", "b"]);
-    });
-
-    test("fails an empty dataset the way a seedless reduce does", () => {
-      expect(() => render([])).toThrow(
-        new TypeError("Reduce of empty array with no initial value")
-      );
-    });
-
-    // NOTE: a dataset whose first element is undefined does not fail the emptiness check, so it
-    // fails later, when the table is written to - the same place the seedless reduce failed.
-    test("throws when the first datum is undefined", () => {
+    // NOTE: an undefined datum still throws, because the key accessor indexes it directly.
+    test("throws when a datum is undefined", () => {
       expect(() => render([undefined as unknown as Datum, { geoId: "b", value: 2 }])).toThrow(
         TypeError
       );
@@ -194,7 +163,7 @@ describe("map/renderer/geojson", () => {
     // the datum is simply never matched.
     test("never matches a datum keyed by a symbol", () => {
       const symbolKeyed = { [Symbol("s")]: 1, value: 5 } as unknown as Datum;
-      const node = render([{ geoId: "decoy", value: 0 }, symbolKeyed], (c) =>
+      const node = render([symbolKeyed], (c) =>
         c.transitionColor(false).dataKeyName("missing").fill("#ff0000")
       );
       expect(attrs(node, "fill")).toEqual([
@@ -218,14 +187,12 @@ describe("map/renderer/geojson", () => {
     });
 
     test("matches data to features by the configured key names", () => {
-      // The leading entry is a decoy: the reduce above swallows its first element.
       const collection = geoJson();
       for (const [i, feature] of collection.features.entries()) {
         feature.properties = { mapId: `m${i}` };
       }
       const node = group()
         .datum([
-          { code: "unused", value: 0 },
           { code: "m1", value: 2 },
           { code: "m2", value: 3 },
         ])
@@ -297,10 +264,9 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "fill").slice(1)).toEqual(["rgb(7,0,0)", "rgb(7,0,0)"]);
     });
 
-    // BUG: the lookup is a plain object - here, one of the caller's own data objects - so a
-    // feature keyed after an Object.prototype member resolves to the inherited function. fn.defined
-    // accepts it and the fill accessor is called with a function as its datum.
-    test("hands a feature keyed after a prototype member an inherited datum", () => {
+    // NOTE: the lookup table is prototype-less, so a feature keyed after an Object.prototype
+    // member does not resolve to the inherited function - it is simply unmatched.
+    test("does not hand a feature keyed after a prototype member an inherited datum", () => {
       const collection = geoJson();
       collection.features[1].properties = { id: "valueOf" };
       const seen: unknown[] = [];
@@ -317,8 +283,8 @@ describe("map/renderer/geojson", () => {
             })
         )
         .node() as SVGGElement;
-      expect(seen).toContain("function");
-      expect(attrs(node, "fill")[1]).toBe("#ff0000");
+      expect(seen).not.toContain("function");
+      expect(attrs(node, "fill")[1]).toBe("url(#missing-pattern)");
     });
 
     // BUG: the event listeners are bound with a layer-wide selector rather than this component's
@@ -361,7 +327,7 @@ describe("map/renderer/geojson", () => {
       const layer = group("stale-fill");
       const renderWith = (fill: string) =>
         layer
-          .datum(decoyData)
+          .datum(partialData)
           .call(
             mapRendererGeoJson()
               .geoJson(collection)
@@ -398,12 +364,12 @@ describe("map/renderer/geojson", () => {
 
   describe("fill and stroke", () => {
     test("defaults the fill to black", () => {
-      const node = render(decoyData, (c) => c.transitionColor(false));
+      const node = render(partialData, (c) => c.transitionColor(false));
       expect(attrs(node, "fill")).toEqual(["black", "black", "url(#missing-pattern)"]);
     });
 
     test("uses the missing pattern where the defined predicate fails", () => {
-      const node = render(decoyData, (c) =>
+      const node = render(partialData, (c) =>
         c
           .fill("#ff0000")
           .transitionColor(false)
@@ -419,13 +385,13 @@ describe("map/renderer/geojson", () => {
     // Unlike the base renderer, the fill here consults fn.defined as well as props.defined, so a
     // feature with no datum does get the missing-value pattern rather than the ordinary fill.
     test("uses the missing pattern for a feature with no datum", () => {
-      const node = render(decoyData, (c) => c.fill("#ff0000").transitionColor(false));
+      const node = render(partialData, (c) => c.fill("#ff0000").transitionColor(false));
       expect(attrs(node, "fill")[2]).toBe("url(#missing-pattern)");
     });
 
     // NOTE: defined goes through fn.functor, so a constant false textures the whole overlay.
     test("textures every element for a constant false defined", () => {
-      const node = render(decoyData, (c) =>
+      const node = render(partialData, (c) =>
         c.fill("#ff0000").transitionColor(false).defined(false)
       );
       expect(attrs(node, "fill")).toEqual([
@@ -436,7 +402,7 @@ describe("map/renderer/geojson", () => {
     });
 
     test("defaults the stroke to black and the stroke width to 1.25", () => {
-      const node = render(decoyData, (c) => c.transitionColor(false));
+      const node = render(partialData, (c) => c.transitionColor(false));
       expect(attrs(node, "stroke")).toEqual(["black", "black", ""]);
       expect(attrs(node, "stroke-width")).toEqual(["1.25", "1.25", "1.25"]);
     });
@@ -445,14 +411,14 @@ describe("map/renderer/geojson", () => {
     // presentation attribute is ignored and the stylesheet's stroke wins. It is not the same as
     // removing the attribute or asking for no stroke.
     test("sets an empty stroke, not no stroke, for an undefined entity", () => {
-      const node = render(decoyData, (c) => c.transitionColor(false));
+      const node = render(partialData, (c) => c.transitionColor(false));
       const undefinedElement = elements(node)[2];
       expect(undefinedElement.getAttribute("stroke")).toBe("");
       expect(undefinedElement.hasAttribute("stroke")).toBe(true);
     });
 
     test("takes the stroke from an accessor called with the datum", () => {
-      const node = render(decoyData, (c) =>
+      const node = render(partialData, (c) =>
         c.transitionColor(false).stroke((d: Datum) => `rgb(${d.value},0,0)`)
       );
       expect(attrs(node, "stroke").slice(0, 2)).toEqual(["rgb(1,0,0)", "rgb(2,0,0)"]);
@@ -472,7 +438,7 @@ describe("map/renderer/geojson", () => {
       );
       expect(seen[0]).toEqual(["geoJson", "datum"]);
       // Reading the datum through the wrapper works; reading it directly would not.
-      expect(attrs(node, "stroke-width")).toEqual(["9", "2", "3"]);
+      expect(attrs(node, "stroke-width")).toEqual(["1", "2", "3"]);
     });
 
     test("drops the attribute for an accessor written against the datum", () => {
