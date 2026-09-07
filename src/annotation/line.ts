@@ -60,7 +60,7 @@ interface LineComponent<T = unknown> extends ComponentBuilder<LineComponent<T>> 
 }
 
 export default function <T = unknown>(): LineComponent<T> {
-  return component()
+  return component<LineComponent<T>>()
     .prop("x1")
     .prop("x2")
     .prop("y1")

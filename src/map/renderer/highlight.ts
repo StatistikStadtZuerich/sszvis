@@ -183,7 +183,7 @@ const toObject: (value: unknown) => object = Object;
  * with the geojson renderer's own lookup.
  */
 export default function <T = unknown>(): MapRendererHighlightComponent<T> {
-  return component()
+  return component<MapRendererHighlightComponent<T>>()
     .prop("keyName")
     .keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
     .prop("geoJson")

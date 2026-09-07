@@ -124,7 +124,7 @@ export function createBreadcrumbItems<T>(
 // ============================================================================
 
 export default function <T = unknown>(): BreadcrumbComponent<T> {
-  return component()
+  return component<BreadcrumbComponent<T>>()
     .prop("renderInto")
     .prop("items")
     .items([])

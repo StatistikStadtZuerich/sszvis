@@ -200,7 +200,7 @@ function context2d(node: BaseType | null): CanvasRenderingContext2D {
 }
 
 export default function <T = unknown>(): MapRendererRasterComponent<T> {
-  return component()
+  return component<MapRendererRasterComponent<T>>()
     .prop("debug")
     .debug(false)
     .prop("width")

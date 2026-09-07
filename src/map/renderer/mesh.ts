@@ -100,7 +100,7 @@ export interface MapRendererMeshComponent extends ComponentBuilder<MapRendererMe
 }
 
 export default function (): MapRendererMeshComponent {
-  return component()
+  return component<MapRendererMeshComponent>()
     .prop("geoJson")
     .prop("mapPath")
     .prop("borderColor")

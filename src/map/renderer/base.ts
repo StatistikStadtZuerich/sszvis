@@ -114,7 +114,7 @@ export interface MapRendererBaseComponent<T = unknown>
 }
 
 export default function <T = unknown>(): MapRendererBaseComponent<T> {
-  return component()
+  return component<MapRendererBaseComponent<T>>()
     .prop("mergedData")
     .prop("geoJson")
     .prop("mapPath")

@@ -145,7 +145,7 @@ function toAccessor<T, R extends string | number>(
 }
 
 export default function <T = unknown>(): DotComponent<T> {
-  return component()
+  return component<DotComponent<T>>()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
     .prop("radius")

@@ -21,8 +21,8 @@ data visualization library for Statistik Stadt Zürich. Prefer this file over
 | Full build | `npm run build` |
 | Search | `rg "pattern"` — always ripgrep, never grep/find |
 
-CI runs `check`, `type-check`, `test:unit`, and the snapshot suite. All four
-must pass. Publishing additionally runs them before `npm publish`.
+CI runs `check`, `type-check`, `test:unit`, and the snapshot suite; all four must
+pass. Publishing re-runs the first three (not snapshots) before `npm publish`.
 
 Dev environment is Nix + direnv (`nix develop`); npm is the package manager.
 
@@ -133,7 +133,8 @@ export default function dot<T = unknown>(): DotComponent<T> {
 - Pass the interface explicitly to `component<…>()`, and have that interface
   extend `ComponentBuilder<Self>` (see `d3-component.ts`). Without it the
   builder chain degrades and the interface is never checked against what is
-  actually built.
+  actually built. `.prop()` and `.delegate()` take `keyof C`, so a prop name
+  the interface does not declare is a compile error.
 - `.render()` / `.renderSelection()` callbacks are `function` expressions —
   they depend on d3's `this` binding.
 - Read every prop through `props` inside `render`; never re-read a setter.

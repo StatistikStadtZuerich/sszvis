@@ -62,7 +62,7 @@ interface ConfidenceAreaComponent<T = unknown>
 }
 
 export default function <T = unknown>(): ConfidenceAreaComponent<T> {
-  return component()
+  return component<ConfidenceAreaComponent<T>>()
     .prop("x", fn.functor)
     .prop("y0", fn.functor)
     .prop("y1", fn.functor)

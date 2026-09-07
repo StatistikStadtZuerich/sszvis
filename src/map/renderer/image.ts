@@ -145,7 +145,7 @@ function coordinate(projected: [number, number] | null, axis: 0 | 1): number {
 }
 
 export default function (): MapRendererImageComponent {
-  return component()
+  return component<MapRendererImageComponent>()
     .prop("projection")
     .prop("src")
     .prop("geoBounds")

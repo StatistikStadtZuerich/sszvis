@@ -153,7 +153,7 @@ export interface OrdinalColorScaleComponent<T = string>
 }
 
 export function legendColorOrdinal<T = string>(): OrdinalColorScaleComponent<T> {
-  return component()
+  return component<OrdinalColorScaleComponent<T>>()
     .prop("scale")
     .prop("rowHeight")
     .rowHeight(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT)

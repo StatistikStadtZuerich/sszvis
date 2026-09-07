@@ -145,70 +145,76 @@ export interface LineComponent<P = unknown, L = unknown>
 const isMissingVal = (value: unknown): boolean => Number.isNaN(Number(value));
 
 export default function <P = unknown, L = unknown>(): LineComponent<P, L> {
-  return component()
-    .prop("x")
-    .prop("y")
-    .prop("stroke")
-    .prop("strokeWidth")
-    .prop("defined")
-    .prop("key")
-    .key((_datum: unknown, index: number) => index)
-    .prop("valuesAccessor")
-    .valuesAccessor(fn.identity)
-    .prop("transition")
-    .transition(true)
-    .render(function (this: Element, data: L[]) {
-      const selection = select(this);
-      const props = selection.props<LineProps<P, L>>();
+  return (
+    component<LineComponent<P, L>>()
+      .prop("x")
+      .prop("y")
+      .prop("stroke")
+      .prop("strokeWidth")
+      .prop("defined")
+      .prop("key")
+      .key((_datum: unknown, index: number) => index)
+      .prop("valuesAccessor")
+      // The default layer type L is P[], so the values ARE the layer and identity is correct.
+      // A caller who sets a different L must supply a matching accessor; the constraint
+      // cannot express "identity is valid only for the default instantiation".
+      .valuesAccessor(fn.identity as ValuesAccessor<L, P>)
+      .prop("transition")
+      .transition(true)
+      .render(function (this: Element, data: L[]) {
+        const selection = select(this);
+        const props = selection.props<LineProps<P, L>>();
 
-      // Layouts
+        // Layouts
 
-      // d3 has separate overloads for a constant and an accessor, so a constant x is
-      // normalised here. d3 would wrap it in exactly the same way.
-      const xProp = props.x;
-      const x: PointAccessor<P, number> = typeof xProp === "function" ? xProp : () => xProp;
+        // d3 has separate overloads for a constant and an accessor, so a constant x is
+        // normalised here. d3 would wrap it in exactly the same way.
+        const xProp = props.x;
+        const x: PointAccessor<P, number> = typeof xProp === "function" ? xProp : () => xProp;
 
-      // Both dimensions are guarded. Checking only y would let a missing x reach the d
-      // attribute verbatim, and the browser then drops that segment along with every
-      // segment after it, silently truncating the series.
-      const defined: PointAccessor<P, boolean> =
-        props.defined === undefined
-          ? (datum, index, points) =>
-              !isMissingVal(x(datum, index, points)) && !isMissingVal(props.y(datum, index, points))
-          : props.defined;
+        // Both dimensions are guarded. Checking only y would let a missing x reach the d
+        // attribute verbatim, and the browser then drops that segment along with every
+        // segment after it, silently truncating the series.
+        const defined: PointAccessor<P, boolean> =
+          props.defined === undefined
+            ? (datum, index, points) =>
+                !isMissingVal(x(datum, index, points)) &&
+                !isMissingVal(props.y(datum, index, points))
+            : props.defined;
 
-      const line = d3Line<P>().defined(defined).x(x).y(props.y);
+        const line = d3Line<P>().defined(defined).x(x).y(props.y);
 
-      // Rendering
+        // Rendering
 
-      // Declared with `function` so that `this` is still forwarded to valuesAccessor, as
-      // it was when this was built with fn.compose.
-      const pathData: ValueFn<SVGPathElement, L, string | null> = function (datum, index) {
-        return line(props.valuesAccessor.call(this, datum, index));
-      };
-      const stroke = fn.valueFn(props.stroke ?? null);
-      const strokeWidth = fn.valueFn(props.strokeWidth ?? null);
+        // Declared with `function` so that `this` is still forwarded to valuesAccessor, as
+        // it was when this was built with fn.compose.
+        const pathData: ValueFn<SVGPathElement, L, string | null> = function (datum, index) {
+          return line(props.valuesAccessor.call(this, datum, index));
+        };
+        const stroke = fn.valueFn(props.stroke ?? null);
+        const strokeWidth = fn.valueFn(props.strokeWidth ?? null);
 
-      const path = selection
-        .selectAll<SVGPathElement, L>(".sszvis-line")
-        .data(data, props.key)
-        .join("path")
-        .classed("sszvis-line", true)
-        .style("stroke", stroke);
+        const path = selection
+          .selectAll<SVGPathElement, L>(".sszvis-line")
+          .data(data, props.key)
+          .join("path")
+          .classed("sszvis-line", true)
+          .style("stroke", stroke);
 
-      path.order();
+        path.order();
 
-      // The visual properties are applied to the transition when there is one, so the two
-      // branches are spelled out rather than sharing a variable - a d3 transition and a
-      // d3 selection have separate types.
-      if (props.transition) {
-        path
-          .transition(defaultTransition())
-          .attr("d", pathData)
-          .style("stroke", stroke)
-          .style("stroke-width", strokeWidth);
-      } else {
-        path.attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
-      }
-    });
+        // The visual properties are applied to the transition when there is one, so the two
+        // branches are spelled out rather than sharing a variable - a d3 transition and a
+        // d3 selection have separate types.
+        if (props.transition) {
+          path
+            .transition(defaultTransition())
+            .attr("d", pathData)
+            .style("stroke", stroke)
+            .style("stroke-width", strokeWidth);
+        } else {
+          path.attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
+        }
+      })
+  );
 }

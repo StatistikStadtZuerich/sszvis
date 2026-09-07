@@ -89,7 +89,7 @@ interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponen
  * @template T The type of the original flat data objects
  */
 export default function <T = unknown>(): TreemapComponent<T> {
-  return component()
+  return component<TreemapComponent<T>>()
     .prop("colorScale")
     .prop("transition")
     .transition(true)

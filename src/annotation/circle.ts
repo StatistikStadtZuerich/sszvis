@@ -48,7 +48,7 @@ interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<
 }
 
 export default function <T = unknown>(): CircleComponent<T> {
-  return component()
+  return component<CircleComponent<T>>()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
     .prop("r", fn.functor)

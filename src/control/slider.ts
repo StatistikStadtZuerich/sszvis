@@ -126,188 +126,193 @@ function contains(x: AxisDomain, a: AxisDomain[]): boolean {
 }
 
 export default function slider(): SliderComponent {
-  return component()
-    .prop("scale")
-    .prop("value")
-    .prop("onchange")
-    .prop("minorTicks")
-    .minorTicks([])
-    .prop("majorTicks")
-    .majorTicks([])
-    .prop("tickLabels", fn.functor)
-    .prop("slant")
-    .tickLabels(fn.identity)
-    .prop("label", fn.functor)
-    .label(fn.identity)
-    .render(function (this: Element) {
-      const selection = select(this);
-      const props = selection.props<SliderProps>();
+  return (
+    component<SliderComponent>()
+      .prop("scale")
+      .prop("value")
+      .prop("onchange")
+      .prop("minorTicks")
+      .minorTicks([])
+      .prop("majorTicks")
+      .majorTicks([])
+      .prop("tickLabels", fn.functor)
+      .prop("slant")
+      // fn.identity is the documented "no formatting" default. It returns its argument, so it
+      // cannot satisfy a formatter type that promises a string - d3 stringifies the value at
+      // render time, which its own types do not model.
+      .tickLabels(fn.identity as StringAccessor<AxisDomain>)
+      .prop("label", fn.functor)
+      .label(fn.identity as StringAccessor<SliderValue>)
+      .render(function (this: Element) {
+        const selection = select(this);
+        const props = selection.props<SliderProps>();
 
-      const scaleDomain = props.scale.domain();
-      const scaleRange = range(props.scale);
-      const alteredScale = props.scale
-        .copy()
-        .range([scaleRange[0] + HANDLE_SIDE_OFFSET, scaleRange[1] - HANDLE_SIDE_OFFSET]);
+        const scaleDomain = props.scale.domain();
+        const scaleRange = range(props.scale);
+        const alteredScale = props.scale
+          .copy()
+          .range([scaleRange[0] + HANDLE_SIDE_OFFSET, scaleRange[1] - HANDLE_SIDE_OFFSET]);
 
-      // the mostly unchanging bits
-      const bg = selection
-        .selectAll<SVGGElement, number>("g.sszvis-control-slider__backgroundgroup")
-        .data([1])
-        .join("g")
-        .classed("sszvis-control-slider__backgroundgroup", true);
+        // the mostly unchanging bits
+        const bg = selection
+          .selectAll<SVGGElement, number>("g.sszvis-control-slider__backgroundgroup")
+          .data([1])
+          .join("g")
+          .classed("sszvis-control-slider__backgroundgroup", true);
 
-      // create the axis
-      const axis = axisX()
-        .scale(alteredScale)
-        .orient("bottom")
-        .slant(props.slant)
-        .hideBorderTickThreshold(0)
-        .tickSize(MAJOR_TICK_SIZE)
-        .tickPadding(6)
-        .tickValues(fn.set([...props.majorTicks, ...props.minorTicks]))
-        .tickFormat((d) => (contains(d, props.majorTicks) ? props.tickLabels(d) : ""));
+        // create the axis
+        const axis = axisX()
+          .scale(alteredScale)
+          .orient("bottom")
+          .slant(props.slant)
+          .hideBorderTickThreshold(0)
+          .tickSize(MAJOR_TICK_SIZE)
+          .tickPadding(6)
+          .tickValues(fn.set([...props.majorTicks, ...props.minorTicks]))
+          .tickFormat((d) => (contains(d, props.majorTicks) ? props.tickLabels(d) : ""));
 
-      const axisSelection = bg
-        .selectAll<SVGGElement, number>("g.sszvis-axisGroup")
-        .data([1])
-        .join("g")
-        .classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
+        const axisSelection = bg
+          .selectAll<SVGGElement, number>("g.sszvis-axisGroup")
+          .data([1])
+          .join("g")
+          .classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
 
-      axisSelection.attr("transform", translateString(0, AXIS_OFFSET)).call(axis);
+        axisSelection.attr("transform", translateString(0, AXIS_OFFSET)).call(axis);
 
-      // adjust visual aspects of the axis to fit the design
-      axisSelection
-        .selectAll<SVGLineElement, AxisDomain>(".tick line")
-        .filter((d) => !contains(d, props.majorTicks))
-        .attr("y2", MINOR_TICK_SIZE);
+        // adjust visual aspects of the axis to fit the design
+        axisSelection
+          .selectAll<SVGLineElement, AxisDomain>(".tick line")
+          .filter((d) => !contains(d, props.majorTicks))
+          .attr("y2", MINOR_TICK_SIZE);
 
-      const majorAxisText = axisSelection
-        .selectAll<SVGTextElement, AxisDomain>(".tick text")
-        .filter((d) => contains(d, props.majorTicks));
+        const majorAxisText = axisSelection
+          .selectAll<SVGTextElement, AxisDomain>(".tick text")
+          .filter((d) => contains(d, props.majorTicks));
 
-      if (!props.slant || props.slant === "horizontal") {
-        const numTicks = majorAxisText.size();
-        majorAxisText.style("text-anchor", (_d, i) =>
-          i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle"
-        );
-      }
+        if (!props.slant || props.slant === "horizontal") {
+          const numTicks = majorAxisText.size();
+          majorAxisText.style("text-anchor", (_d, i) =>
+            i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle"
+          );
+        }
 
-      if (props.slant === "vertical") {
-        majorAxisText.attr("dx", "-1.8em");
-        majorAxisText.attr("dy", "-1.5em");
-      }
+        if (props.slant === "vertical") {
+          majorAxisText.attr("dx", "-1.8em");
+          majorAxisText.attr("dy", "-1.5em");
+        }
 
-      if (props.slant === "diagonal") {
-        majorAxisText.attr("dx", "-1.6em");
-        majorAxisText.attr("dy", "0.2em");
-      }
+        if (props.slant === "diagonal") {
+          majorAxisText.attr("dx", "-1.6em");
+          majorAxisText.attr("dy", "0.2em");
+        }
 
-      // create the slider background
-      const backgroundSelection = bg
-        .selectAll<SVGGElement, number>("g.sszvis-slider__background")
-        .data([1])
-        .join("g")
-        .classed("sszvis-slider__background", true)
-        .attr("transform", translateString(0, BACKGROUND_OFFSET));
+        // create the slider background
+        const backgroundSelection = bg
+          .selectAll<SVGGElement, number>("g.sszvis-slider__background")
+          .data([1])
+          .join("g")
+          .classed("sszvis-slider__background", true)
+          .attr("transform", translateString(0, BACKGROUND_OFFSET));
 
-      backgroundSelection
-        .selectAll<SVGLineElement, number>(".sszvis-slider__background__bg1")
-        .data([1])
-        .join("line")
-        .classed("sszvis-slider__background__bg1", true)
-        .style("stroke-width", BG_WIDTH)
-        .style("stroke", "#888")
-        .style("stroke-linecap", "round")
-        .attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET))
-        .attr("x2", Math.floor(scaleRange[1] - LINE_END_OFFSET));
+        backgroundSelection
+          .selectAll<SVGLineElement, number>(".sszvis-slider__background__bg1")
+          .data([1])
+          .join("line")
+          .classed("sszvis-slider__background__bg1", true)
+          .style("stroke-width", BG_WIDTH)
+          .style("stroke", "#888")
+          .style("stroke-linecap", "round")
+          .attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET))
+          .attr("x2", Math.floor(scaleRange[1] - LINE_END_OFFSET));
 
-      backgroundSelection
-        .selectAll<SVGLineElement, number>(".sszvis-slider__background__bg2")
-        .data([1])
-        .join("line")
-        .classed("sszvis-slider__background__bg2", true)
-        .style("stroke-width", BG_WIDTH - 1)
-        .style("stroke", "#fff")
-        .style("stroke-linecap", "round")
-        .attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET))
-        .attr("x2", Math.floor(scaleRange[1] - LINE_END_OFFSET));
+        backgroundSelection
+          .selectAll<SVGLineElement, number>(".sszvis-slider__background__bg2")
+          .data([1])
+          .join("line")
+          .classed("sszvis-slider__background__bg2", true)
+          .style("stroke-width", BG_WIDTH - 1)
+          .style("stroke", "#fff")
+          .style("stroke-linecap", "round")
+          .attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET))
+          .attr("x2", Math.floor(scaleRange[1] - LINE_END_OFFSET));
 
-      backgroundSelection
-        .selectAll<SVGLineElement, SliderValue>(".sszvis-slider__backgroundshadow")
-        .data([props.value])
-        .join("line")
-        .attr("class", "sszvis-slider__backgroundshadow")
-        .attr("stroke-width", BG_WIDTH - 1)
-        .style("stroke", "#E0E0E0")
-        .style("stroke-linecap", "round")
-        .attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET))
-        .attr("x2", (d) => Math.floor(alteredScale(d)));
+        backgroundSelection
+          .selectAll<SVGLineElement, SliderValue>(".sszvis-slider__backgroundshadow")
+          .data([props.value])
+          .join("line")
+          .attr("class", "sszvis-slider__backgroundshadow")
+          .attr("stroke-width", BG_WIDTH - 1)
+          .style("stroke", "#E0E0E0")
+          .style("stroke-linecap", "round")
+          .attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET))
+          .attr("x2", (d) => Math.floor(alteredScale(d)));
 
-      // draw the handle and the label
-      const handle = selection
-        .selectAll<SVGGElement, SliderValue>("g.sszvis-control-slider__handle")
-        .data([props.value])
-        .join("g")
-        .classed("sszvis-control-slider__handle", true)
-        .attr("transform", (d) => translateString(halfPixel(alteredScale(d)), 0.5));
+        // draw the handle and the label
+        const handle = selection
+          .selectAll<SVGGElement, SliderValue>("g.sszvis-control-slider__handle")
+          .data([props.value])
+          .join("g")
+          .classed("sszvis-control-slider__handle", true)
+          .attr("transform", (d) => translateString(halfPixel(alteredScale(d)), 0.5));
 
-      handle.append("text").classed("sszvis-control-slider--label", true);
+        handle.append("text").classed("sszvis-control-slider--label", true);
 
-      handle
-        .selectAll<SVGTextElement, SliderValue>(".sszvis-control-slider--label")
-        .data((d) => [d])
-        .text(props.label)
-        .style("text-anchor", (d) =>
-          fn.stringEqual(d, scaleDomain[0])
-            ? "start"
-            : fn.stringEqual(d, scaleDomain[1])
-              ? "end"
-              : "middle"
-        )
-        .attr("dx", (d) =>
-          fn.stringEqual(d, scaleDomain[0])
-            ? -(HANDLE_WIDTH / 2)
-            : fn.stringEqual(d, scaleDomain[1])
-              ? HANDLE_WIDTH / 2
-              : 0
-        );
+        handle
+          .selectAll<SVGTextElement, SliderValue>(".sszvis-control-slider--label")
+          .data((d) => [d])
+          .text(props.label)
+          .style("text-anchor", (d) =>
+            fn.stringEqual(d, scaleDomain[0])
+              ? "start"
+              : fn.stringEqual(d, scaleDomain[1])
+                ? "end"
+                : "middle"
+          )
+          .attr("dx", (d) =>
+            fn.stringEqual(d, scaleDomain[0])
+              ? -(HANDLE_WIDTH / 2)
+              : fn.stringEqual(d, scaleDomain[1])
+                ? HANDLE_WIDTH / 2
+                : 0
+          );
 
-      handle
-        .selectAll<SVGRectElement, number>(".sszvis-control-slider__handlebox")
-        .data([1])
-        .join("rect")
-        .classed("sszvis-control-slider__handlebox", true)
-        .attr("x", -(HANDLE_WIDTH / 2))
-        .attr("y", BACKGROUND_OFFSET - HANDLE_HEIGHT / 2)
-        .attr("width", HANDLE_WIDTH)
-        .attr("height", HANDLE_HEIGHT)
-        .attr("rx", 2)
-        .attr("ry", 2);
+        handle
+          .selectAll<SVGRectElement, number>(".sszvis-control-slider__handlebox")
+          .data([1])
+          .join("rect")
+          .classed("sszvis-control-slider__handlebox", true)
+          .attr("x", -(HANDLE_WIDTH / 2))
+          .attr("y", BACKGROUND_OFFSET - HANDLE_HEIGHT / 2)
+          .attr("width", HANDLE_WIDTH)
+          .attr("height", HANDLE_HEIGHT)
+          .attr("rx", 2)
+          .attr("ry", 2);
 
-      handle
-        .selectAll<SVGLineElement, number>(".sszvis-control-slider__handleline")
-        .data([1])
-        .join("line")
-        .classed("sszvis-control-slider__handleline", true)
-        .attr("y1", BACKGROUND_OFFSET - HANDLE_LINE_DIMENSION)
-        .attr("y2", BACKGROUND_OFFSET + HANDLE_LINE_DIMENSION);
+        handle
+          .selectAll<SVGLineElement, number>(".sszvis-control-slider__handleline")
+          .data([1])
+          .join("line")
+          .classed("sszvis-control-slider__handleline", true)
+          .attr("y1", BACKGROUND_OFFSET - HANDLE_LINE_DIMENSION)
+          .attr("y2", BACKGROUND_OFFSET + HANDLE_LINE_DIMENSION);
 
-      // The original always called .on("drag", props.onchange), including with undefined,
-      // which d3-dispatch treats as removing the listener. The guard is equivalent.
-      const sliderInteraction = move<SliderValue>()
-        .xScale(props.scale)
-        // range goes from the text top (text is 11px tall) to the bottom of the axis
-        .yScale(scaleLinear().range([INTERACTION_TOP, AXIS_OFFSET + MAJOR_TICK_SIZE]))
-        .draggable(true);
+        // The original always called .on("drag", props.onchange), including with undefined,
+        // which d3-dispatch treats as removing the listener. The guard is equivalent.
+        const sliderInteraction = move<SliderValue>()
+          .xScale(props.scale)
+          // range goes from the text top (text is 11px tall) to the bottom of the axis
+          .yScale(scaleLinear().range([INTERACTION_TOP, AXIS_OFFSET + MAJOR_TICK_SIZE]))
+          .draggable(true);
 
-      if (props.onchange) {
-        sliderInteraction.on("drag", props.onchange);
-      }
+        if (props.onchange) {
+          sliderInteraction.on("drag", props.onchange);
+        }
 
-      selection
-        .selectGroup("sliderInteraction")
-        .classed("sszvis-control-slider--interactionLayer", true)
-        .attr("transform", translateString(0, 4))
-        .call(sliderInteraction);
-    });
+        selection
+          .selectGroup("sliderInteraction")
+          .classed("sszvis-control-slider--interactionLayer", true)
+          .attr("transform", translateString(0, 4))
+          .call(sliderInteraction);
+      })
+  );
 }

@@ -79,7 +79,7 @@ export interface SelectComponent<T extends string = string>
 }
 
 export default function selectMenu<T extends string = string>(): SelectComponent<T> {
-  return component()
+  return component<SelectComponent<T>>()
     .prop("values")
     .prop("current")
     .prop("width")

@@ -144,7 +144,7 @@ export interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMul
 export default function <
   G extends SmallMultipleGroup = SmallMultipleGroup,
 >(): SmallMultiplesComponent<G> {
-  return component()
+  return component<SmallMultiplesComponent<G>>()
     .prop("width")
     .prop("height")
     .prop("paddingX")

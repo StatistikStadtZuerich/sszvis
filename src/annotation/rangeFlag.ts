@@ -39,7 +39,7 @@ interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComp
 }
 
 export default function <T = unknown>(): RangeFlagComponent<T> {
-  return component()
+  return component<RangeFlagComponent<T>>()
     .prop("x", fn.functor)
     .prop("y0", fn.functor)
     .prop("y1", fn.functor)

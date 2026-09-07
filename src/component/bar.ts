@@ -123,7 +123,7 @@ function handleMissingVal(v: unknown): unknown {
 }
 
 export default function <T = unknown>(): BarComponent<T> {
-  return component()
+  return component<BarComponent<T>>()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
     .prop("width", fn.functor)
