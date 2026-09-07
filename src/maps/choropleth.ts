@@ -165,6 +165,15 @@ type GeoStyleValue<R extends string | number> =
   | ValueFn<BaseType, GeoPermissibleObjects, R | null>;
 
 /**
+ * The mesh renderer's own shape, which differs from GeoStyleValue in one way: an accessor there may
+ * resolve to undefined as well as null, because the mesh reads either as "keep the default" rather
+ * than passing it to d3. The lake overlay has no such guard, so lakePathColor keeps GeoStyleValue.
+ */
+type MeshStyleValue<R extends string | number> =
+  | R
+  | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
+
+/**
  * A handler as this component's event API delivers it - which is to say, with undefined. See the
  * note on legacyDatum below.
  */
@@ -226,10 +235,10 @@ export interface ChoroplethComponent<T extends object = object>
   transitionColor(): boolean;
   transitionColor(value: boolean): ChoroplethComponent<T>;
   /** Delegated to the mesh renderer. */
-  borderColor(): GeoStyleValue<string>;
-  borderColor(value: GeoStyleValue<string>): ChoroplethComponent<T>;
-  strokeWidth(): GeoStyleValue<number>;
-  strokeWidth(value: GeoStyleValue<number>): ChoroplethComponent<T>;
+  borderColor(): MeshStyleValue<string>;
+  borderColor(value: MeshStyleValue<string>): ChoroplethComponent<T>;
+  strokeWidth(): MeshStyleValue<number>;
+  strokeWidth(value: MeshStyleValue<number>): ChoroplethComponent<T>;
   /** Delegated to the highlight renderer. */
   highlight(): (T | null | undefined)[];
   highlight(value: (T | null | undefined)[]): ChoroplethComponent<T>;
