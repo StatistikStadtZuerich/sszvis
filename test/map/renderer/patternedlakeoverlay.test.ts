@@ -392,12 +392,9 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(1);
       expect(lakeShape(node)).toBe(first);
     });
-  });
 
-  describe("known quirks", () => {
-    // The pattern helpers append their contents rather than joining them, so the component only
-    // calls them on a definition that is still empty - otherwise a map re-rendering on resize would
-    // grow its defs subtree without bound.
+    // The pattern helpers data-join their contents, so a map re-rendering on resize updates its
+    // definitions in place rather than growing its defs subtree without bound.
     test("leaves the pattern, gradient and mask contents untouched on re-render", () => {
       const layer = group("lake-defs-growth");
       const renderWith = () =>
@@ -417,7 +414,9 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "defs > linearGradient > stop")).toHaveLength(2);
       expect(defs(node, "defs > mask > rect")).toHaveLength(1);
     });
+  });
 
+  describe("known quirks", () => {
     // BUG: neither geoJson property is validated, and neither omission is reported. The join is
     // `[props.lakeFeature]`, so exactly one datum is always bound - undefined included - and
     // geoPath(undefined) returns null, which d3 turns into a removed attribute. The result is a

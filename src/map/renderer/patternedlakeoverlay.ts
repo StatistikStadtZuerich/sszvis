@@ -39,15 +39,13 @@
  * and so on - so two maps on one page no longer define the same id twice. Consumers must not rely on
  * the previously fixed ids.
  *
- * Note: the pattern helpers in src/patterns.ts append their contents rather than joining them, so
- * this component may only call them on a definition that is still empty; otherwise the tile would
- * gain another rect and two lines, the gradient another two stops and the mask another rect on every
- * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
- * geojson renderers' "missing-pattern" too.
+ * Note: the pattern helpers in src/patterns.ts are idempotent - they data-join their contents - so
+ * they can be called on every render, and a redraw updates the definition in place rather than
+ * growing it.
  *
  * Note: the mask fades the lake by filling itself with the fade gradient, so the two definitions are
- * only useful together. Both helpers hard-code the old fixed gradient id, so this component rewrites
- * the gradient's id and the mask rect's fill after calling them.
+ * only useful together. Both helpers take the gradient id as a trailing argument, so this overlay's
+ * scoped id is handed to them directly rather than rewritten afterwards.
  *
  * Note: the defs element is created inside the map group rather than at the svg root, and
  * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
@@ -89,7 +87,7 @@
  * @return {sszvis.component}
  */
 
-import type { BaseType, GeoPermissibleObjects, Selection, ValueFn } from "d3";
+import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
 import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
@@ -198,25 +196,6 @@ function overlayScope(group: Element, key: string | undefined): string {
   return generated;
 }
 
-/**
- * Calls one of the pattern helpers, but only on a definition that is still empty. The helpers append
- * their contents rather than joining them, so calling them on every render would grow the definition
- * without bound. The id is rewritten afterwards because mapLakeFadeGradient writes its own fixed one.
- */
-function defineOnce<E extends SVGElement>(
-  definition: Selection<E, number, SVGDefsElement, number>,
-  elementId: string,
-  define: (selection: Selection<E, number, SVGDefsElement, number>) => void
-): Selection<E, number, SVGDefsElement, number> {
-  definition
-    .filter(function (this: E) {
-      return this.childElementCount === 0;
-    })
-    .call(define)
-    .attr("id", elementId);
-  return definition;
-}
-
 export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedLakeOverlayComponent {
   return component<MapRendererPatternedLakeOverlayComponent>()
     .prop("mapPath")
@@ -235,22 +214,18 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
       const gradientId = `lake-fade-gradient-${scope}`;
       const maskId = `lake-fade-mask-${scope}`;
 
-      // the lake texture
-      defineOnce(ensureDefsElement(selection, "pattern", patternId), patternId, mapLakePattern);
+      // the lake texture. The helpers join their contents, so calling them on every render updates
+      // the definition rather than growing it.
+      ensureDefsElement(selection, "pattern", patternId).call(mapLakePattern);
 
       if (props.fadeOut) {
-        // the fade gradient
-        defineOnce(
-          ensureDefsElement(selection, "linearGradient", gradientId),
-          gradientId,
-          mapLakeFadeGradient
+        // the fade gradient, and the mask that fills itself with it - both scoped to this overlay
+        // by the id handed to them.
+        ensureDefsElement(selection, "linearGradient", gradientId).call(
+          mapLakeFadeGradient,
+          gradientId
         );
-
-        // the mask, which uses the fade gradient. The helper hard-codes the old fixed gradient id,
-        // so point its rect at this overlay's gradient instead.
-        defineOnce(ensureDefsElement(selection, "mask", maskId), maskId, mapLakeGradientMask)
-          .selectAll("rect")
-          .attr("fill", `url(#${gradientId})`);
+        ensureDefsElement(selection, "mask", maskId).call(mapLakeGradientMask, gradientId);
       } else {
         // Turning the fade off must undo an existing one, not merely skip writing it.
         selection.selectAll(`linearGradient#${gradientId}, mask#${maskId}`).remove();
