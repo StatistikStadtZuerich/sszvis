@@ -10,16 +10,19 @@
  * line must have a single set of styles which all borders share. To highlight individual borders, use the highlight renderer.
  *
  * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
+ *                                                    Required: omitting it throws a TypeError, which is why the
+ *                                                    getter reports it as possibly undefined.
  * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+ *                                                    Required: omitting it throws a TypeError too.
  * @property {string, function} borderColor           The color of the border path stroke. Default is white
  * @property {number, function} strokeWidth           The width of the border path stroke. Default is 1.25.
  *                                                    An invalid value is dropped by the CSS parser rather than
  *                                                    reported, leaving SVG's initial width of 1.
  *
- * Note: neither geoJson nor mapPath is validated. Omitting either leaves a classed, styled path
- * with no geometry - invisible, silent, and indistinguishable from having no borders to draw. A
- * missing geoJson reaches the path generator as undefined, which returns null; a missing mapPath
- * has d3 remove the attribute without calling anything.
+ * Note: both geoJson and mapPath are required, and omitting either throws a TypeError naming it.
+ * The guard runs before the join, so nothing is appended. This replaces the earlier behaviour, in
+ * which either omission left a classed, styled path with no geometry - invisible, silent, and
+ * indistinguishable from having had no borders to draw.
  *
  * Note: borderColor and strokeWidth are not wrapped in fn.functor, unlike the colour properties of
  * the base, geojson and highlight renderers. An accessor is handed straight to d3 and called with
@@ -73,17 +76,14 @@ type MeshPath = ValueFn<BaseType, GeoPermissibleObjects, string | null>;
 type MeshValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null>;
 
 /**
- * The props as this component's contract describes them, which is deliberately narrower than what
- * the runtime tolerates. geoJson and mapPath are required here even though neither is validated -
- * omitting either leaves a classed, styled path with no geometry rather than raising, which the
- * characterization tests pin, and which is why the component's getters report them as possibly
- * undefined. Widening these two to optional would force the bound datum to include undefined,
- * which no d3 geoPath can be typed against, so the contract is stated here and the runtime
- * behaviour is left to the tests.
+ * The props as they arrive at render time. geoJson and mapPath are required by the component's
+ * contract but optional here, because a caller can omit either: the render guard reports the
+ * omission and narrows both before the join, which is why the getters report them as possibly
+ * undefined.
  */
 type MeshProps = {
-  geoJson: GeoPermissibleObjects;
-  mapPath: MeshPath;
+  geoJson?: GeoPermissibleObjects;
+  mapPath?: MeshPath;
   borderColor: MeshValue<string>;
   strokeWidth: MeshValue<number>;
 };
@@ -111,15 +111,30 @@ export default function (): MapRendererMeshComponent {
       const selection = select(this);
       const props = selection.props<MeshProps>();
 
+      // Validate before the join, so a missing property is reported rather than leaving a
+      // classed, styled path with no geometry behind - invisible, and indistinguishable from
+      // having had no borders to draw.
+      const { geoJson, mapPath } = props;
+      if (geoJson === undefined) {
+        throw new TypeError(
+          "map/renderer/mesh: geoJson is required, since it carries the border geometry to render"
+        );
+      }
+      if (mapPath === undefined) {
+        throw new TypeError(
+          "map/renderer/mesh: mapPath is required, since it turns the geoJson into path data"
+        );
+      }
+
       // add the map borders. These are rendered as one single path element
       const meshLine = selection
         .selectAll(".sszvis-map__border")
-        .data([props.geoJson])
+        .data([geoJson])
         .join("path")
         .classed("sszvis-map__border", true);
 
       meshLine
-        .attr("d", props.mapPath)
+        .attr("d", mapPath)
         .style("stroke", fn.valueFn(props.borderColor))
         .style("stroke-width", fn.valueFn(props.strokeWidth));
     });
