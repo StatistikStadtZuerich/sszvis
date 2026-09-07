@@ -150,6 +150,60 @@ describe("annotation/ruler", () => {
     });
   });
 
+  test("should offset a label above the top by the same constant as one on the ruler", () => {
+    // The label nudge used to be `2 * y` for a dot above `top`, which pushed the label
+    // well below its own dot. src/control/handleRuler.ts carries the same expression.
+    const rulerComponent = annotationRuler()
+      .x((d: unknown) => (d as TestDatum).x)
+      .y((d: unknown) => (d as TestDatum).y)
+      .top(30)
+      .bottom(150)
+      .label((d: unknown) => (d as TestDatum).label);
+
+    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+      .selectGroup("ruler")
+      .datum([{ x: 100, y: 10, label: "high" }])
+      .call(rulerComponent);
+
+    const label = select(chartLayer.selectAll("text.sszvis-ruler__label").nodes()[0]);
+    expect(label.attr("transform")).toBe("translate(110.5,15.5)");
+  });
+
+  test("should offset a label just below the top threshold by that same constant", () => {
+    // The worst case for the old arithmetic: y = 29 with top = 30 landed at 63.5.
+    const rulerComponent = annotationRuler()
+      .x((d: unknown) => (d as TestDatum).x)
+      .y((d: unknown) => (d as TestDatum).y)
+      .top(30)
+      .bottom(150)
+      .label((d: unknown) => (d as TestDatum).label);
+
+    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+      .selectGroup("ruler")
+      .datum([{ x: 100, y: 29, label: "nearly" }])
+      .call(rulerComponent);
+
+    const label = select(chartLayer.selectAll("text.sszvis-ruler__label").nodes()[0]);
+    expect(label.attr("transform")).toBe("translate(110.5,34.5)");
+  });
+
+  test("should drop the offset for a label below the bottom", () => {
+    const rulerComponent = annotationRuler()
+      .x((d: unknown) => (d as TestDatum).x)
+      .y((d: unknown) => (d as TestDatum).y)
+      .top(30)
+      .bottom(150)
+      .label((d: unknown) => (d as TestDatum).label);
+
+    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+      .selectGroup("ruler")
+      .datum([{ x: 100, y: 160, label: "low" }])
+      .call(rulerComponent);
+
+    const label = select(chartLayer.selectAll("text.sszvis-ruler__label").nodes()[0]);
+    expect(label.attr("transform")).toBe("translate(110.5,160.5)");
+  });
+
   test("should flip labels when flip is enabled", () => {
     const rulerComponent = annotationRuler()
       .x((d: unknown) => (d as TestDatum).x)
