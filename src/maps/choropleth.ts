@@ -274,14 +274,21 @@ export interface ChoroplethComponent<T extends object = object>
 }
 
 /**
- * The entity datum behind an event target, read off the value d3 has bound to it. The base
- * renderer binds a merged entry to every area, so the entity's own datum is its `datum` property -
- * undefined where nothing matched. An event target contributed by an anchored shape may carry
- * anything, including an inherited datum, so only a merged entry is unwrapped; anything else is
- * reported as undefined rather than passed on as if it were a datum.
+ * The entity datum behind an event target, read off the value d3 has bound to it. The base renderer
+ * binds a merged entry to every area, so the entity's own datum is its `datum` property - undefined
+ * where nothing matched.
+ *
+ * An event target contributed by an anchored shape carries whatever that shape bound, which may
+ * well be an application object with a `datum` property of its own, or one inherited from an
+ * ancestor. Recognising a merged entry by its shape would hand such a value to the handler as
+ * though it were an entity's datum, so membership is tested by identity against the entries this
+ * render actually produced; anything else is reported as undefined.
  */
-function entityDatum<T extends object>(bound: unknown): T | undefined {
-  if (typeof bound !== "object" || bound === null || !("datum" in bound)) return undefined;
+function entityDatum<T extends object>(
+  bound: unknown,
+  entities: ReadonlySet<unknown>
+): T | undefined {
+  if (!entities.has(bound)) return undefined;
   return (bound as { datum?: T }).datum;
 }
 
@@ -444,17 +451,21 @@ export default function choropleth<T extends object = object>(): ChoroplethCompo
 
       // Event Binding
 
+      // The entries this render bound to the areas, held by identity so an anchored shape's own
+      // event targets cannot be mistaken for them.
+      const entities: ReadonlySet<unknown> = new Set<unknown>(mergedData);
+
       selection
         .selectAll<Element, unknown>("[data-event-target]")
         // d3 calls a listener with the event first and the bound datum second.
         .on("mouseover", function (_event: Event, d: unknown) {
-          event.call("over", this, entityDatum<T>(d));
+          event.call("over", this, entityDatum<T>(d, entities));
         })
         .on("mouseout", function (_event: Event, d: unknown) {
-          event.call("out", this, entityDatum<T>(d));
+          event.call("out", this, entityDatum<T>(d, entities));
         })
         .on("click", function (_event: Event, d: unknown) {
-          event.call("click", this, entityDatum<T>(d));
+          event.call("click", this, entityDatum<T>(d, entities));
         });
     });
 

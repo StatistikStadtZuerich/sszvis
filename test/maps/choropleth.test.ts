@@ -1,3 +1,4 @@
+import { select } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
@@ -730,6 +731,27 @@ describe("maps/choropleth", () => {
         c.anchoredShape(marked).on("click", (d: unknown) => seen.push(d))
       );
       dispatchOn(node.querySelector("circle.shape-target") as Element, "click");
+      expect(seen).toEqual([undefined]);
+    });
+
+    // A merged entry is recognised by identity, not by shape: an anchored shape is free to bind an
+    // ordinary application object, and one that happens to carry a `datum` property must not be
+    // unwrapped and handed over as though it were an entity's datum.
+    test("reports undefined for an anchored target bound to a datum-shaped object", () => {
+      const marked = component<AnchoredShape<Datum>>();
+      marked.prop("mergedData").prop("mapPath");
+      marked.render(function (this: Element) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("data-event-target", "");
+        circle.classList.add("lookalike-target");
+        this.appendChild(circle);
+        select(circle).datum({ datum: { geoId: "a", value: 999 } });
+      });
+      const seen: unknown[] = [];
+      const node = render(fullData, (c) =>
+        c.anchoredShape(marked).on("click", (d: unknown) => seen.push(d))
+      );
+      dispatchOn(node.querySelector("circle.lookalike-target") as Element, "click");
       expect(seen).toEqual([undefined]);
     });
   });
