@@ -295,7 +295,7 @@ function entityDatum<T extends object>(bound: unknown): T | undefined {
 function dimension(value: number | undefined, name: string): number {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
     throw new Error(
-      `[maps/choropleth] ${name} is required, and must be a finite, non-negative number`
+      `[choropleth] the ${name} property is required, and must be a finite, non-negative number`
     );
   }
   return value;
@@ -309,7 +309,7 @@ function dimension(value: number | undefined, name: string): number {
 function requireFeatures(value: ExtendedFeatureCollection | undefined): ExtendedFeatureCollection {
   if (value === undefined || value === null || !Array.isArray(value.features)) {
     throw new Error(
-      "[maps/choropleth] features is required, and must be a GeoJSON feature collection"
+      "[choropleth] the features property is required, and must be a GeoJSON feature collection"
     );
   }
   return value;

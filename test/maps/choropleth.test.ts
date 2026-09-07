@@ -702,15 +702,19 @@ describe("maps/choropleth", () => {
       const map = choropleth().features(collection).borders(mesh()).withLake(false);
       const target = layer();
       expect(() => target.call(map)).toThrow(
-        "[maps/choropleth] width is required, and must be a finite, non-negative number"
+        "[choropleth] the width property is required, and must be a finite, non-negative number"
       );
-      expect(() => target.call(map.width(100))).toThrow(/height is required/);
+      expect(() => target.call(map.width(100))).toThrow(/the height property is required/);
     });
 
     test("throws for a non-finite or negative size", () => {
       const map = choropleth().features(geoJson()).borders(mesh()).withLake(false);
-      expect(() => layer().call(map.width(Number.NaN).height(100))).toThrow(/width is required/);
-      expect(() => layer().call(map.width(100).height(-1))).toThrow(/height is required/);
+      expect(() => layer().call(map.width(Number.NaN).height(100))).toThrow(
+        /the width property is required/
+      );
+      expect(() => layer().call(map.width(100).height(-1))).toThrow(
+        /the height property is required/
+      );
     });
 
     // Nothing is drawn before the size is validated, so a misconfigured map leaves an empty layer
@@ -727,7 +731,7 @@ describe("maps/choropleth", () => {
     // component nor the property; it is reported in the same shape as the size now.
     test("throws when features are missing, naming the missing property", () => {
       expect(() => layer().call(choropleth().width(100).height(100))).toThrow(
-        "[maps/choropleth] features is required, and must be a GeoJSON feature collection"
+        "[choropleth] the features property is required, and must be a GeoJSON feature collection"
       );
     });
   });
