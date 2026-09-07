@@ -3,6 +3,8 @@
  *
  * @module sszvis/map/renderer/bubble
  *
+ * @template T The type of the data values merged onto the map features
+ *
  * Creates circles which are anchored to the positions of map elements. Used in the "bubble chart".
  * You will usually want to pass this component, configured, as the .anchoredShape property of a base
  * map component.
@@ -154,6 +156,9 @@ function keyOf<T>(d: MergedGeoDatum<T>): string {
   return String(d.geoJson.id);
 }
 
+/** Reads the datum off a merged entry, as the JavaScript's module-level accessor did. */
+const datumAcc = fn.prop("datum");
+
 /**
  * What the mouse listeners actually read. They were written for d3 v3, where a listener was called
  * with the datum; since d3 v6 the first argument is the event, so `datum` here is a property of a
@@ -162,15 +167,6 @@ function keyOf<T>(d: MergedGeoDatum<T>): string {
  */
 function legacyDatum(event: Event & { datum?: undefined }): undefined {
   return event.datum;
-}
-
-/**
- * Narrows a centre to the pair d3's projections read. getGeoJsonCenter returns number[], since an
- * unvalidated `center` property can parse to any length; a projection reads only the first two
- * entries, so this makes that explicit without changing what is passed. Follows base.ts.
- */
-function toGeoPoint(center: number[]): GeoPoint {
-  return [center[0], center[1]];
 }
 
 /**
@@ -192,7 +188,10 @@ function anchorPosition(
     // the suite: the message is reconstructed rather than observed.
     throw new TypeError("projection is not a function");
   }
-  const projected = projection(toGeoPoint(getGeoJsonCenter(geoJson)));
+  // The centre is handed over whole rather than narrowed to a pair, as the JavaScript did: an
+  // unvalidated `center` property can parse to any length, and truncating here would change what a
+  // non-d3 projection function that reads past index 1 receives. Follows base.ts.
+  const projected = projection(getGeoJsonCenter(geoJson) as GeoPoint);
   if (projected === null) {
     // The JavaScript indexed this result directly, so a projection that cannot place the point
     // threw from that index; the message is V8's for it.
@@ -219,7 +218,10 @@ export default function <T = unknown>(): MapRendererBubbleComponent<T> {
       const selection = select(this);
       const props = selection.props<BubbleProps<T>>();
 
-      const radiusAcc = (d: MergedGeoDatum<T>) => props.radius(d.datum);
+      // Composed rather than written as an arrow: fn.compose invokes each stage with .call(this),
+      // so a radius accessor written as a function receives d3's circle node as `this`, exactly as
+      // the JavaScript did. An arrow here would call it with `this === undefined`.
+      const radiusAcc = fn.compose(props.radius, datumAcc) as (d: MergedGeoDatum<T>) => number;
 
       const anchoredCircles = selection
         .selectGroup("anchoredCircles")
