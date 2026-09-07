@@ -11,8 +11,10 @@
  *                                      and lower right corners of the image as geographical place markers to align with other map layers.
  *                                      It is called once per corner, with that corner's coordinates. A result it cannot
  *                                      place is not handled; see the notes below.
- * @property {String} src               The source of the image you want to use. This should be ither a URL for an image hosted on the same
+ * @property {String, Function} src      The source of the image you want to use. This should be either a URL for an image hosted on the same
  *                                      server that hosts the page, or a base64-encoded dataURL. For example, the zurich topolayer map module.
+ *                                      A missing src is not reported: d3 removes an attribute set to undefined, so the
+ *                                      image renders fully positioned with no src at all.
  * @property {Array} geoBounds          This should be a 2D array containing the upper-left (north-west) and lower-right (south-east)
  *                                      coordinates of the corresponding corners of the image. The structure expected is:
  *
@@ -23,10 +25,13 @@
  *                                      Note: it is possible that even with precise corner coordinates, some mismatch may still occur. This
  *                                      will happen if the image itself is generated using a different type of map projection than the one used by the
  *                                      projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
- *                                      The two corners are subtracted in the order given, so passing them the other
- *                                      way round leaves the image unsized; see the notes below.
- * @property {Number} opacity           The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
- *                                      Default 1. An invalid value is dropped by the CSS parser rather than reported.
+ *                                      The two corners are subtracted in the order given, so passing the south-east
+ *                                      corner first yields negative widths and heights, which the CSS parser drops -
+ *                                      leaving the image positioned but unsized, with no error.
+ * @property {Number, Function} opacity  The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
+ *                                      Default 1. An invalid value is dropped by the CSS parser rather than reported,
+ *                                      leaving the image fully opaque; 0 renders nothing at all, which is
+ *                                      indistinguishable from a src that failed to load.
  *
  * Note: this component renders an HTML img element, so it belongs in a createHtmlLayer. Nothing
  * enforces that: called on an SVG selection it appends an SVG-namespaced img, which no browser
@@ -56,15 +61,20 @@
  * attribute set to undefined, so the image renders fully positioned and sized with no src.
  *
  * Note: a projection that answers null for a point it cannot place throws a bare TypeError rather
- * than being reported - the JavaScript threw from indexing that null, and the port reproduces the
- * same failure at the same point in the chain - and one that answers a non-finite coordinate
- * produces the string "Infinitypx", which the CSS parser drops, leaving the image unpositioned.
- * Neither is reachable with a d3 projection called this way: clipAngle and clipExtent apply to
- * streams, not to a direct call. A Mercator pole is merely a very large float, so it positions the
- * image tens of thousands of pixels off rather than failing.
+ * than being reported, and it does so late: the src has been written and both corners have already
+ * been projected by the time the coordinates are read, so the failure leaves an img with its src
+ * but no position. The JavaScript threw from indexing that null; the port re-throws a TypeError
+ * carrying the same message from the same point in the chain. A projection that answers a
+ * non-finite coordinate instead produces the string "Infinitypx", which the CSS parser drops,
+ * leaving the image unpositioned. Neither is reachable with a d3 projection called this way:
+ * clipAngle and clipExtent apply to streams, not to a direct call.
  *
- * Note: neither src nor opacity is wrapped in fn.functor, unlike the colour properties of the map
- * renderers - but both are handed straight to d3, which evaluates a function against the bound
+ * Note: a Mercator pole, which is reachable, fails a third way again - log(tan(pi/2)) is merely a
+ * very large float, so a geoBounds latitude of 90 positions and sizes the image tens of thousands
+ * of pixels off rather than failing.
+ *
+ * Note: neither src nor opacity is wrapped in fn.functor, unlike the colour properties of the base,
+ * geojson and highlight renderers - but both are handed straight to d3, which evaluates a function against the bound
  * datum. So an accessor happens to work, called with the join's placeholder 0.
  *
  * Note: the join binds [0] rather than the src, so one image per container is the documented
@@ -73,7 +83,11 @@
  * and lake overlay renderers.
  *
  * Note: no transition is scheduled, so the image jumps to its new position on a resize rather than
- * animating. See test/map/renderer/image.test.ts.
+ * animating. Unlike the base and geojson renderers this component keeps no caches, emits no
+ * missing-value pattern, and adds no tooltip anchors or event targets, so none of that family of
+ * quirks applies here. The same img element is reused across renders, with every attribute and
+ * style reapplied each time.
+ * See test/map/renderer/image.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -119,8 +133,8 @@ export interface MapRendererImageComponent extends Component {
  * Reads one axis of a projected corner. The JavaScript indexed the projection's result directly, so
  * a null result threw from that index; this reproduces the same failure at the same point in the
  * chain, with the message V8 produced for it. Note the strict null check: a projection returning
- * undefined falls through to Math.round, which throws the genuine "of undefined" TypeError, again
- * as the JavaScript did.
+ * undefined falls through to the index on the next line, which throws the genuine "Cannot read
+ * properties of undefined" TypeError, again as the JavaScript did.
  */
 function coordinate(projected: [number, number] | null, axis: 0 | 1): number {
   if (projected === null) {
