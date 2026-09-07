@@ -393,6 +393,27 @@ describe("map/renderer/bubble", () => {
       expect(circles(withoutListener)[0].style.pointerEvents).toBe("none");
     });
 
+    // d3 reads a typename with no type as "this name, on every event type", so on(".tooltip", null)
+    // removes over.tooltip along with the rest. The tally has to follow that, or the circles would
+    // go on intercepting the pointer for a listener that is no longer registered.
+    test("withdraws hit testing when a namespace is removed across every event type", () => {
+      const collection = geoJson();
+      const layer = group("bubble-listener-namespace-wide");
+      const component = mapRendererBubble<Datum>()
+        .mergedData(prepareMergedGeoData(fullData, collection))
+        .mapPath(mapPathOf(collection))
+        .radius(5)
+        .fill("#ff0000");
+
+      component.on("over.tooltip", () => undefined).on("out.tooltip", () => undefined);
+      expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe("");
+
+      component.on(".tooltip", null);
+      expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe(
+        "none"
+      );
+    });
+
     // The classes are written with classed rather than attr, and only when the circle enters, so
     // the component never touches a class a consumer added to it.
     test("keeps a class a consumer put on a circle", () => {
