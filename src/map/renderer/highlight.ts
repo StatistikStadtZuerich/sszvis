@@ -3,6 +3,8 @@
  *
  * @module sszvis/map/renderer/highlight
  *
+ * @template T The type of the data values in the highlight array
+ *
  * A component used internally for rendering the highlight layer of maps.
  * The highlight layer accepts an array of data values to highlight, and renders
  * The map entities associated with those data values using a special stroke. It is the per-entity
@@ -48,7 +50,9 @@
  * Note: neither geoJson nor mapPath is validated, and once there is something to highlight both
  * are required. A missing geoJson throws while the lookup table is built, before the join runs, so
  * nothing is appended; a missing mapPath throws from inside the "d" callback, after the join has
- * appended the element, so it leaves a classed, styled path with no geometry behind. The empty
+ * appended the element, so it leaves a classed path behind - with no geometry, and no inline stroke
+ * styles either, since the throw happens in the "d" callback before either .style() call is
+ * reached. The empty
  * highlight case returns early before either is touched, and is the one configuration that
  * tolerates having neither.
  *
@@ -56,7 +60,8 @@
  * passed by mistake - skips the early return and then throws a bare TypeError from .reduce. A
  * string has a length, so "" clears the layer while any other string throws. An array of only falsy entries is the second,
  * distinct way to clear the layer: it merges to nothing and the exit selection removes the paths,
- * but unlike the early return it still reads geoJson and mapPath.
+ * but unlike the early return it still reads geoJson, to build the lookup table. mapPath is not
+ * read: the join has no elements, so d3 never invokes the "d" callback.
  *
  * Note: nothing deduplicates the highlight array, so highlighting one entity twice draws two
  * stacked paths - harmless while the stroke is opaque, visible with a translucent one.
@@ -97,7 +102,7 @@
  * @return {sszvis.component}
  */
 
-import type { ExtendedFeature, ExtendedFeatureCollection, GeoPath } from "d3";
+import type { ExtendedFeatureCollection, GeoPath } from "d3";
 import { select } from "d3";
 import { type Component, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
@@ -110,16 +115,18 @@ type HighlightValue<T, R> = R | ((datum: T) => R);
 type StoredHighlightValue<T, R> = (datum: T) => R;
 
 /**
- * The path generator as this component calls it: with the feature a highlighted datum was matched
- * to, or with undefined where nothing matched. A d3.geoPath satisfies this at runtime - it returns
- * null for undefined - but not by its types, whose parameter excludes undefined, so the setter
- * accepts either shape and HighlightProps states how the component actually calls it.
+ * The path generator as this component calls it: with whatever the lookup returned. That is the
+ * matched feature, or undefined where nothing matched - but because the lookup is a plain object
+ * literal, an id naming an Object.prototype member yields the inherited value instead, so the
+ * parameter is unknown rather than ExtendedFeature | undefined. See the module note. A d3.geoPath
+ * satisfies this at runtime - it returns null for a non-feature - but not by its types, so the
+ * setter accepts either shape and HighlightProps states how the component actually calls it.
  */
-export type HighlightPath = (feature: ExtendedFeature | undefined) => string | null;
+export type HighlightPath = (feature: unknown) => string | null;
 
-/** A highlighted datum paired with the feature it was matched to, if any. */
+/** A highlighted datum paired with whatever the feature lookup returned for it. */
 interface HighlightedFeature<T> {
-  geoJson: ExtendedFeature | undefined;
+  geoJson: unknown;
   datum: T;
 }
 
@@ -128,7 +135,7 @@ interface HighlightedFeature<T> {
  * what stringifies the keys and lets an id naming an Object.prototype member resolve to the
  * inherited property.
  */
-type FeatureLookup = Record<string | symbol, ExtendedFeature | undefined>;
+type FeatureLookup = Record<string | symbol, unknown>;
 
 type HighlightProps<T> = {
   keyName: string;

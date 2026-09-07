@@ -305,7 +305,8 @@ describe("map/renderer/highlight", () => {
 
     // The second, distinct way the layer clears: an array of only falsy entries merges to nothing
     // and the exit selection removes the paths. Unlike the empty-array early return, this path
-    // still reads geoJson and mapPath, so it needs both.
+    // still reads geoJson - it builds the lookup table before merging - but not mapPath, since the
+    // join has no elements for the "d" callback to run on.
     test("clears previously rendered highlights when every entry is falsy", () => {
       const layer = group("highlight-all-falsy");
       const renderWith = (highlight: (Datum | null | undefined)[]) =>
@@ -319,6 +320,24 @@ describe("map/renderer/highlight", () => {
           .node() as SVGGElement;
       expect(highlights(renderWith([{ geoId: "a" }]))).toHaveLength(1);
       expect(highlights(renderWith([null, undefined]))).toHaveLength(0);
+    });
+
+    // The boundary the test above cannot reach, because it always supplies mapPath: an all-falsy
+    // array needs geoJson but never touches mapPath. Pinned so the documented contract does not
+    // drift back to "needs both".
+    test("clears an all-falsy highlight without a mapPath at all", () => {
+      const layer = group("highlight-all-falsy-no-mappath");
+      layer.call(
+        mapRendererHighlight<Datum>()
+          .geoJson(collection())
+          .mapPath(mapPathOf())
+          .highlight([{ geoId: "a" }])
+      );
+      expect(highlights(layer.node() as SVGGElement)).toHaveLength(1);
+      expect(() =>
+        layer.call(mapRendererHighlight<Datum>().geoJson(collection()).highlight([null, undefined]))
+      ).not.toThrow();
+      expect(highlights(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
     // A string has a length, so it reaches the early return when empty and the reduce when not -
@@ -496,7 +515,9 @@ describe("map/renderer/highlight", () => {
     });
 
     // A missing mapPath throws later, from inside the "d" callback - after the join has already
-    // appended the element - so the throw leaves a classed, styled path with no geometry behind.
+    // appended the element - so the throw leaves a classed path with no geometry behind. The two
+    // .style() calls come after .attr("d") in the chain and are never reached, so the debris has
+    // no inline stroke either.
     test("leaves a half-built path behind when mapPath is missing", () => {
       const layer = group("highlight-no-mappath");
       expect(() =>
@@ -509,6 +530,8 @@ describe("map/renderer/highlight", () => {
       const paths = highlights(layer.node() as SVGGElement);
       expect(paths).toHaveLength(1);
       expect(paths[0].hasAttribute("d")).toBe(false);
+      expect(paths[0].style.stroke).toBe("");
+      expect(paths[0].style.strokeWidth).toBe("");
     });
 
     // NOTE: geoJson.features is read unguarded, so a geoJson which is not a feature collection -
