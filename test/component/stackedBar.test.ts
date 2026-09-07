@@ -569,6 +569,49 @@ describe("component/stackedBar", () => {
     });
   });
 
+  describe("negative values", () => {
+    const negative: Row[] = [
+      { region: "A", category: "X", value: -10 },
+      { region: "A", category: "Y", value: 20 },
+    ];
+
+    test("should draw a negative horizontal value on the other side of the baseline", () => {
+      const node = render(horizontalOf(), horizontalData(negative));
+      // The "X" segment spans [0, -10], so it starts at the scaled -10 and is 10 units wide.
+      expect(attrs(rects(node), "x")[0]).toBe(String(xLinear(-10)));
+      expect(attrs(rects(node), "width")[0]).toBe(String(xLinear(0) - xLinear(-10)));
+    });
+
+    test("should draw a negative vertical value below the top of its stack", () => {
+      const node = render(verticalOf(), verticalData(negative));
+      // The vertical layout stacks "Y" (20) first, so "X" spans [20, 10] and its segment
+      // hangs back down from the top of the stack instead of disappearing.
+      const negativeRect = rects(node)[0];
+      expect(negativeRect.getAttribute("y")).toBe(String(yLinear(20)));
+      expect(negativeRect.getAttribute("height")).toBe(String(yLinear(10) - yLinear(20)));
+    });
+
+    test("should report an extent that covers a negative value", () => {
+      const layout = horizontalData(negative);
+      // d3.stack accumulates in key order: "X" spans [0, -10] and "Y" [-10, 10].
+      expect(layout.minValue).toBe(-10);
+      expect(layout.maxValue).toBe(10);
+      // An all-positive layout has its baseline as the lower bound.
+      expect(horizontalData().minValue).toBe(0);
+    });
+
+    test("should size the bars from a y-scale whose range ascends", () => {
+      // The vertical height is the absolute difference of the two scaled bounds, so a scale
+      // built with an ascending range - unusual in sszvis, where the y-range is inverted -
+      // still produces a valid, positive height.
+      const ascending = scaleLinear().domain([0, 50]).range([0, 300]);
+      const node = render(verticalOf().yScale(ascending));
+      for (const value of attrs(rects(node), "height")) {
+        expect(Number(value)).toBeGreaterThan(0);
+      }
+    });
+  });
+
   describe("known quirks", () => {
     test("orders integer-like stacks numerically too", () => {
       // NOTE: the cascade's arrayBy layer iterates the same kind of object, so the stacks
@@ -614,34 +657,6 @@ describe("component/stackedBar", () => {
       for (const value of [null, undefined, ""]) {
         const node = render(verticalOf().stroke(value));
         expect(new Set(attrs(rects(node), "stroke"))).toEqual(new Set(["#FFFFFF"]));
-      }
-    });
-
-    test("writes a negative width for a negative horizontal value", () => {
-      // BUG: bar guards its geometry against NaN but not against negative sizes, and the
-      // horizontal width is `xScale(d[1]) - xScale(d[0])`, which goes negative as soon as a
-      // value does. The browser rejects the attribute and drops the rect. Clamping the sign
-      // would not be enough: x is `xScale(d[0])`, so the segment would be drawn on the
-      // positive side of the baseline anyway, and maxValue is the max of the upper bounds
-      // only, so the negative extent never reaches the scale domain either.
-      // current: width="-80", nothing rendered. expected: the segment is drawn to the left
-      // of the baseline, and maxValue reports the stack's true extent.
-      const negative: Row[] = [
-        { region: "A", category: "X", value: -10 },
-        { region: "A", category: "Y", value: 20 },
-      ];
-      const node = render(horizontalOf(), horizontalData(negative));
-      expect(attrs(rects(node), "width")[0]?.startsWith("-")).toBe(true);
-    });
-
-    test("writes a negative height when the vertical y-scale range ascends", () => {
-      // NOTE: the vertical height is `yScale(d[0]) - yScale(d[1])`, which assumes the
-      // inverted range every sszvis y-scale uses. A scale built with an ascending range
-      // still positions the bars, but every height comes out negative and nothing renders.
-      const ascending = scaleLinear().domain([0, 50]).range([0, 300]);
-      const node = render(verticalOf().yScale(ascending));
-      for (const value of attrs(rects(node), "height")) {
-        expect(value?.startsWith("-")).toBe(true);
       }
     });
 
