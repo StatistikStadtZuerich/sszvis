@@ -361,6 +361,8 @@ describe("map/renderer/bubble", () => {
         layer.call(
           mapRendererBubble()
             .mergedData(prepareMergedGeoData(fullData, collection))
+            // @ts-expect-error - a bare path function is a caller error; pinned because the
+            // failure comes from inside the transform callback, after the circles exist.
             .mapPath(() => "M0,0")
             .radius(5)
             .fill("#ff0000")
