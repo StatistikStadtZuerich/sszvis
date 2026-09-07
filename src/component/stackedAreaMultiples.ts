@@ -17,25 +17,19 @@
  * @template L The type of one layer, whatever valuesAccessor unwraps into points
  *
  * @property {number, function} x             An accessor for the x-value of a point, or a constant.
- *                                            Should return a value in screen pixels. Required, and
- *                                            its absence is not reported: an unset dimension
- *                                            resolves to a constant NaN, so every coordinate is
- *                                            written as NaN, the browser rejects the path, and the
- *                                            chart is simply empty.
+ *                                            Should return a value in screen pixels. Required:
+ *                                            leaving it unset throws before anything is appended.
  * @property {number, function} y0            An accessor for the lower bound of the band at a
  *                                            point, i.e. the baseline, or a constant. In screen
- *                                            pixels. Required. When it is missing the top line is
- *                                            still written and the baseline arrives as NaN.
+ *                                            pixels. Required, on the same terms as x.
  * @property {number, function} y1            An accessor for the upper bound of the band at a
- *                                            point, or a constant. In screen pixels. Required, and
- *                                            the most damaging of the three to omit because it
- *                                            renders successfully: d3 reads a null-ish upper bound
- *                                            as no upper bound and falls back to y0, so each band
- *                                            collapses onto its own baseline and becomes a
- *                                            zero-height sliver - and with no default stroke to
- *                                            draw it, there is nothing on screen. The code tests
- *                                            `props.y1 == null`, as d3 does, so an explicit null is
- *                                            read as unset too.
+ *                                            point, or a constant. In screen pixels. Required, on
+ *                                            the same terms as x - but only an unset property is
+ *                                            caught. An explicit null keeps its d3 meaning, which
+ *                                            is "no upper bound": d3 then falls back to y0, so each
+ *                                            band collapses onto its own baseline and becomes a
+ *                                            zero-height sliver, and with no default stroke to draw
+ *                                            it there is nothing on screen.
  * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
  *                                            layer. It has no default, and unlike .sszvis-line
  *                                            there is no .sszvis-path rule in the stylesheet to
@@ -172,11 +166,7 @@
  * Note: nothing constrains the geometry, and nothing reports its own absence. A layer with no points
  * yields a path element with no d attribute, a single point yields a closed shape that encloses no
  * area and, with no default stroke, draws nothing at all, and a band whose y1 lies below y0 simply
- * winds the other way. With no props set at all the render still reports success - one correctly
- * classed path per layer, with neither fill nor stroke written and every coordinate NaN - so the DOM
- * looks healthy for a chart that is entirely empty. Binding a datum that is not iterable throws
- * "data is not iterable" out of the reversal, before the join. See
- * test/component/stackedAreaMultiples.test.ts.
+ * winds the other way. See test/component/stackedAreaMultiples.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -334,6 +324,23 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
       .render(function (this: Element, data: L[]) {
         const selection = select(this);
         const props = selection.props<StackedAreaMultiplesProps<P, L>>();
+
+        // x, y0 and y1 are all required, and each used to fail differently and silently: an
+        // unset dimension reached d3 as undefined and resolved to a constant NaN, while an
+        // unset y1 was read by d3 as "no upper bound" and fell back to y0, collapsing every
+        // band onto its own baseline - a chart that renders and is wrong. A missing dimension
+        // is a misconfiguration that can never render, so it throws, and it throws before the
+        // data join, so nothing is appended. An explicit .y1(null) keeps its d3 meaning and is
+        // deliberately not caught: only an unset property is.
+        for (const required of ["x", "y0", "y1"] as const) {
+          if (props[required] === undefined) {
+            throw new Error(
+              "sszvis.stackedAreaMultiples - the " +
+                required +
+                " property is required, and was not set."
+            );
+          }
+        }
 
         // Layouts
 
