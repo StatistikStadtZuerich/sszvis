@@ -252,7 +252,7 @@ describe("map/renderer/geojson", () => {
       // Read back through `at`, so the assignment above does not narrow the type to null.
       const properties = collection.features.at(0)?.properties;
       expect(properties).not.toBeNull();
-      expect(properties?.sphericalCentroid).toBeDefined();
+      expect(properties?.cachedCenter).toBeDefined();
     });
 
     // A datum with no key is skipped rather than filed under the string "undefined", so it does
@@ -352,10 +352,9 @@ describe("map/renderer/geojson", () => {
       expect(attrs(renderWith("#00ff00"), "fill").slice(0, 2)).toEqual(["#00ff00", "#00ff00"]);
     });
 
-    // BUG: an overlay and a base layer over the same features cache their centres under different
-    // keys and from different sources - base honours an authored `center`, this renderer always
-    // computes the spherical centroid - so the same entity's tooltip sits in two places.
-    test("caches a different centre than the base renderer for the same feature", async () => {
+    // Both renderers go through getGeoJsonCenter, so an overlay and a base layer over the same
+    // features share one cache under one key, and the same entity's tooltip sits in one place.
+    test("caches the same centre as the base renderer for the same feature", async () => {
       const mapRendererBase = (await import("../../../src/map/renderer/base.js")).default;
       const collection = geoJson();
       collection.features[0].properties = { id: "a", center: "0.9,0.9" };
@@ -370,7 +369,7 @@ describe("map/renderer/geojson", () => {
 
       const properties = collection.features[0].properties as Record<string, unknown>;
       expect(properties.cachedCenter).toEqual([0.9, 0.9]);
-      expect(properties.sphericalCentroid).not.toEqual([0.9, 0.9]);
+      expect(properties.sphericalCentroid).toBeUndefined();
     });
   });
 
@@ -683,11 +682,11 @@ describe("map/renderer/geojson", () => {
       ]);
     });
 
-    // NOTE: the centroid is cached onto each feature's properties, so rendering mutates the
-    // geojson it was handed - and under a different key than the base renderer's cachedCenter.
-    test("caches a sphericalCentroid onto every feature, and never invalidates it", () => {
+    // NOTE: the centre is cached onto each feature's properties, so rendering mutates the geojson
+    // it was handed - under cachedCenter, the same key the base renderer uses.
+    test("caches a cachedCenter onto every feature, and never invalidates it", () => {
       const collection = geoJson();
-      expect(collection.features[0].properties?.sphericalCentroid).toBeUndefined();
+      expect(collection.features[0].properties?.cachedCenter).toBeUndefined();
 
       const mapPath = mapPathOf(collection);
       const layer = group("centroid-cache");
@@ -699,7 +698,7 @@ describe("map/renderer/geojson", () => {
 
       renderInto();
       for (const feature of collection.features) {
-        expect(feature.properties?.sphericalCentroid).toBeDefined();
+        expect(feature.properties?.cachedCenter).toBeDefined();
       }
 
       // Move the first feature somewhere else entirely and re-render: the anchor does not follow,
@@ -717,10 +716,9 @@ describe("map/renderer/geojson", () => {
       expect(anchors(renderInto())[0].getAttribute("transform")).toBe(before);
     });
 
-    // NOTE: unlike the base renderer, this component ignores an authored `center` property and
-    // always uses the computed spherical centroid, so the two renderers can disagree about where
-    // the same entity's tooltip belongs.
-    test("ignores an authored center property", () => {
+    // An authored `center` is the documented way to nudge a tooltip off a concave shape's true
+    // centroid; it is honoured here exactly as it is by the base renderer.
+    test("honours an authored center property", () => {
       const collection = geoJson();
       collection.features[0].properties = { id: "a", center: "8.5,47.4" };
       const projection = swissMapProjection(100, 100, collection, "geojson-center");
@@ -728,8 +726,11 @@ describe("map/renderer/geojson", () => {
         .datum(fullData)
         .call(mapRendererGeoJson().geoJson(collection).mapPath(geoPath().projection(projection)))
         .node() as SVGGElement;
-      const [x, y] = projection(geoCentroid(square("a"))) as [number, number];
+      const [x, y] = projection([8.5, 47.4]) as [number, number];
       expect(anchors(node)[0].getAttribute("transform")).toBe(`translate(${x},${y})`);
+      expect(anchors(node)[0].getAttribute("transform")).not.toBe(
+        `translate(${(projection(geoCentroid(square("a"))) as [number, number]).join(",")})`
+      );
     });
   });
 });
