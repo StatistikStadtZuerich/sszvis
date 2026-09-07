@@ -61,7 +61,8 @@
  * Note: projection, src and geoBounds are all required and are validated before any element is
  * created, so each way of getting them wrong is reported with a message naming the property, and a
  * misconfigured renderer leaves nothing half-built in the layer. Inverted geoBounds - the likely
- * real-world mistake - are caught by the negative extent they project to.
+ * real-world mistake - are caught by comparing the projected corners before they are rounded, so
+ * an inversion smaller than one pixel is reported rather than collapsing to a zero-size image.
  *
  * Note: a projection that answers a non-finite coordinate is still not reported; it produces the
  * string "Infinitypx", which the CSS parser drops, leaving the image unpositioned. Not reachable
@@ -176,7 +177,7 @@ function corner(
   return projected;
 }
 
-export default function (): MapRendererImageComponent {
+export default function mapRendererImage(): MapRendererImageComponent {
   return component<MapRendererImageComponent>()
     .prop("projection")
     .prop("src")
@@ -197,16 +198,21 @@ export default function (): MapRendererImageComponent {
 
       const topLeft = corner(projection, geoBounds, 0);
       const bottomRight = corner(projection, geoBounds, 1);
-      const width = Math.round(bottomRight[0]) - Math.round(topLeft[0]);
-      const height = Math.round(bottomRight[1]) - Math.round(topLeft[1]);
-      // A negative extent means the corners were passed the other way round - the mistake the
-      // docs examples guard against with an "Expects longitude, latitude" comment. The CSS parser
-      // drops a negative length, so without this the image would render positioned but unsized.
-      if (width < 0 || height < 0) {
+      // Corners the wrong way round are the mistake the docs examples guard against with an
+      // "Expects longitude, latitude" comment. Tested on the unrounded projection, because two
+      // corners inverted by less than a pixel round to the same coordinate: a rounded extent of
+      // zero would render an invisible image rather than report the mistake.
+      if (bottomRight[0] < topLeft[0] || bottomRight[1] < topLeft[1]) {
         throw new Error(
           "[mapRendererImage] the geoBounds property expects the north-west corner first; the corners given project to a negative width or height"
         );
       }
+
+      // Rounded only after the check, so left + width stays the rounded south-east corner and the
+      // edges land on the same pixels as the map layers this is aligned with. The CSS parser drops
+      // a negative length, which is what the check above keeps out of here.
+      const width = Math.round(bottomRight[0]) - Math.round(topLeft[0]);
+      const height = Math.round(bottomRight[1]) - Math.round(topLeft[1]);
 
       // The src identifies the image within its layer, so two renderers with different sources get
       // an element each instead of the second rebinding the first, while re-rendering the same
