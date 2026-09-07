@@ -292,8 +292,8 @@ describe("map/renderer/bubble", () => {
       expect(after).toContain(secondBefore);
     });
 
-    // The classes are written once, when the circle enters, so a class a consumer added to it
-    // survives every later render.
+    // The classes are written with classed rather than attr, and only when the circle enters, so
+    // the component never touches a class a consumer added to it.
     test("keeps a class a consumer put on a circle", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);

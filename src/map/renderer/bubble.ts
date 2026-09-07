@@ -64,9 +64,6 @@
  * Note: the radius accessor is called once per circle for the radius itself and again for each
  * comparison the size sort makes, so it runs several times more often than there are data.
  *
- * Note: the class is written with attr rather than classed, so it is replaced wholesale on every
- * render and any class a consumer added to a circle is destroyed.
- *
  * Note: nothing in sszvis.css styles .sszvis-anchored-circle, so the fill, stroke and stroke width
  * come entirely from the inline styles this component writes - and a consumer cannot restyle them
  * from their own stylesheet, since an inline style beats any author rule short of !important.
@@ -225,7 +222,9 @@ export default function <T = unknown>(): MapRendererBubbleComponent<T> {
           (enter) =>
             enter
               .append("circle")
-              .attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering")
+              // classed, not attr: the component owns these two class names and leaves whatever
+              // else is on the element alone.
+              .classed("sszvis-anchored-circle sszvis-anchored-circle--entering", true)
               // Entering circles start at zero so the radius transition has somewhere to come
               // from; without a starting value the tween would interpolate from null.
               .attr("r", 0),
