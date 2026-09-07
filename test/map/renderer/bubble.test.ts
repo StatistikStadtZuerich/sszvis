@@ -415,6 +415,23 @@ describe("map/renderer/bubble", () => {
     // feature with undefined where nothing matched - so the accessors are called with undefined.
     // That is why the docs examples guard their radius functions with sszvis.defined at all: an
     // unguarded one throws, as the next test shows.
+    // NOTE: the radius accessor is composed with fn.compose, which invokes each stage with
+    // .call(this), so a radius accessor written as a function sees d3's circle node as `this`.
+    // Pinned because writing the composition as an arrow would silently call it with undefined.
+    test("calls a function radius accessor with d3's circle node as this", () => {
+      const seen: unknown[] = [];
+      const node = render(fullData, (c) =>
+        c.radius(function (this: unknown) {
+          seen.push(this);
+          return 5;
+        })
+      );
+      // The accessor is also reached through the sort comparator and the transition, which call it
+      // directly rather than through d3, so `this` is undefined for those. What matters is that
+      // every circle appears: an arrow-composed accessor would never see a node at all.
+      expect(seen).toEqual(expect.arrayContaining(circles(node)));
+    });
+
     test("draws a circle for a feature with no datum, calling the accessors with undefined", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
