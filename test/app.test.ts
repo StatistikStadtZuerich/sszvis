@@ -15,10 +15,7 @@ const nextFrame = () =>
     });
   });
 
-/**
- * Swallows - and records - the unhandled rejections that a failing `init` or a failing
- * effect produces (see the known quirks below).
- */
+/** Swallows - and records - any unhandled rejection, so that a test can assert none escaped. */
 const captureUnhandledRejections = () => {
   const reasons: string[] = [];
   const handler = (event: PromiseRejectionEvent) => {
@@ -33,11 +30,11 @@ const captureUnhandledRejections = () => {
 };
 
 /**
- * Every app whose `init` resolves registers a resize listener on the module-global
- * viewport, and `app` has no teardown of its own (see the known quirks below), so the
- * listeners would outlive the test that created them: a later resize would then also run
- * the renders of every earlier test. Recording what each test registers and unregistering
- * it here keeps the tests independent of their order.
+ * Every app whose `init` resolves registers a resize listener on the module-global viewport.
+ * Most tests here never call the app's own `destroy()`, so the listeners would outlive the
+ * test that created them and a later resize would run the renders of every earlier test.
+ * Recording what each test registers and unregistering it here keeps the tests independent
+ * of their order; the teardown tests below cover `destroy()` itself.
  */
 let registeredResizeListeners: ResizeListener[] = [];
 
@@ -411,7 +408,7 @@ describe("app", () => {
 
     test("keeps a mutation attempt in render out of the next action's draft", async () => {
       const seen: number[] = [];
-      const render = vi.fn((state: { count: number }) => {
+      const render = vi.fn((state: { count: number }, _actions: { bump: () => void }) => {
         seen.push(state.count);
         try {
           state.count = 99;
@@ -530,23 +527,106 @@ describe("app", () => {
     });
   });
 
-  describe("known quirks", () => {
-    // NOTE: app() returns undefined and never unregisters its resize listener, so
-    // every app created on a page keeps re-rendering for the lifetime of the
-    // document (src/app.ts:170). Each app installs its own scheduleUpdate closure, so
-    // viewport's de-duplication by identity (src/viewport/resize.ts:106) does not help.
-    test("keeps rendering after the app is no longer needed", async () => {
+  describe("teardown", () => {
+    test("stops rendering on resize once the app is destroyed", async () => {
       const renderA = vi.fn();
       const renderB = vi.fn();
-      app({ init: async () => {}, render: renderA });
+      const a = app({ init: async () => {}, render: renderA });
       app({ init: async () => {}, render: renderB });
       await nextFrame();
+      a.destroy();
       viewport.trigger("resize");
       await nextFrame();
-      expect(renderA).toHaveBeenCalledTimes(2);
+      expect(renderA).toHaveBeenCalledTimes(1);
       expect(renderB).toHaveBeenCalledTimes(2);
     });
 
+    test("stops a frame that was already queued", async () => {
+      const render = vi.fn();
+      const handle = app({ init: async () => {}, render });
+      handle.destroy();
+      await nextFrame();
+      expect(render).not.toHaveBeenCalled();
+    });
+
+    test("registers no resize listener when destroyed before init resolves", async () => {
+      const render = vi.fn();
+      let resolveInit: () => void = () => {};
+      const handle = app({
+        init: () =>
+          new Promise<void>((resolve) => {
+            resolveInit = resolve;
+          }),
+        render,
+      });
+      handle.destroy();
+      resolveInit();
+      await nextFrame();
+      viewport.trigger("resize");
+      await nextFrame();
+      expect(render).not.toHaveBeenCalled();
+      expect(registeredResizeListeners).toEqual([]);
+    });
+
+    test("renders no fallback when destroyed before a failing init settles", async () => {
+      // A destroyed app renders nothing afterwards, the fallback included: by the time init
+      // rejects the container may already belong to a replacement app. The failure is still
+      // reported, since it happened regardless of who is holding the container now.
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const container = document.createElement("div");
+      container.id = "destroyed-fallback-target";
+      document.body.append(container);
+      let rejectInit: (reason: Error) => void = () => {};
+      const handle = app({
+        init: () =>
+          new Promise<void>((_resolve, reject) => {
+            rejectInit = reject;
+          }),
+        render: () => {},
+        fallback: { element: "#destroyed-fallback-target", src: "fallback.png" },
+      });
+      handle.destroy();
+      rejectInit(new Error("boom"));
+      await nextFrame();
+
+      expect(container.querySelector("img")).toBeNull();
+      expect(error).toHaveBeenCalled();
+      error.mockRestore();
+      container.remove();
+    });
+
+    test("releases the resize listener an init effect's destroy asked to release", async () => {
+      // scheduleUpdate runs the init effect synchronously, so an effect that destroys the
+      // app used to call viewport.off before the listener was installed - and the line
+      // after it installed one nothing would ever remove. The listener is inert once the
+      // app is destroyed, so what is asserted here is that off was handed the very
+      // function on registered, rather than running against an empty registry.
+      const off = vi.spyOn(viewport, "off");
+      const handle: { current?: { destroy: () => void } } = {};
+      handle.current = app({
+        init: async () => () => handle.current?.destroy(),
+        render: () => {},
+      });
+      await nextFrame();
+      expect(registeredResizeListeners).toHaveLength(1);
+      expect(off).toHaveBeenCalledWith("resize", registeredResizeListeners[0]);
+      // The order is the fix: register, then run the effect, so the effect's destroy has a
+      // listener to release. Registering afterwards leaves one attached for good.
+      const on = viewport.on as unknown as { mock: { invocationCallOrder: number[] } };
+      expect(on.mock.invocationCallOrder[0]).toBeLessThan(
+        off.mock.invocationCallOrder[0] as number
+      );
+    });
+
+    test("can be destroyed more than once", async () => {
+      const handle = app({ init: async () => {}, render: () => {} });
+      await nextFrame();
+      handle.destroy();
+      expect(() => handle.destroy()).not.toThrow();
+    });
+  });
+
+  describe("known quirks", () => {
     // NOTE: the original JSDoc typed actions as `(s: Draft, p?: Props) => Effect | void`,
     // a single props argument, but the dispatcher collects all of its arguments into an
     // array and spreads them (src/app.ts:130-137, 159). Dispatching with no arguments is

@@ -49,6 +49,13 @@ export interface AppFallback {
   src: string;
 }
 
+/** The handle `app()` returns, so that an app can be torn down. */
+export interface AppHandle {
+  /** Releases the app's resize listener and stops any frame that is still queued. Calling it
+   * more than once is harmless; the app renders nothing afterwards. */
+  destroy: () => void;
+}
+
 export interface AppProps<State, Actions extends Record<string, Action<State>>> {
   /** Asynchronously create the initial state and optionally schedule an action. */
   init: (state: Draft<State>) => Promise<Effect | void>;
@@ -86,8 +93,9 @@ export interface AppProps<State, Actions extends Record<string, Action<State>>> 
  * `init` must return a promise. An effect returned by `init` or by an action is called with
  * `dispatch`, which takes an action name and an array of props.
  *
- * `app()` returns nothing and never removes its resize listener, so an app lives for the
- * lifetime of the page and cannot be torn down.
+ * `app()` returns a handle whose `destroy()` releases the resize listener and stops any queued
+ * frame, so a host that mounts and unmounts charts can tear an app down instead of leaking one
+ * render loop per mount.
  *
  * Error handling: a rejecting `init` is reported through `sszvis.logger.error`, keeping the
  * original error as the reported error's `cause`, and the `fallback` image - if one is
@@ -113,12 +121,13 @@ export const app = <
   render,
   actions,
   fallback,
-}: AppProps<State, Actions>): void => {
+}: AppProps<State, Actions>): AppHandle => {
   let renderScheduled = false;
   // Whether `render` is on the stack right now, which is what tells a dispatch made from
   // inside render apart from one that should coalesce into the frame already queued.
   let rendering = false;
   let cascadedRenders = 0;
+  let destroyed = false;
   let state: State;
 
   invariant(isFunction(init), 'An "init" function returning a Promise must be provided.');
@@ -148,7 +157,7 @@ export const app = <
   }
 
   function scheduleRender() {
-    if (renderScheduled) return;
+    if (destroyed || renderScheduled) return;
     if (rendering) {
       // A dispatch made from inside render. Its state cannot be shown by the frame that is
       // painting, so it needs one of its own - and a render that dispatches unconditionally
@@ -168,6 +177,7 @@ export const app = <
       // Cleared before render runs, so that a dispatch made from inside render can queue the
       // frame its state needs instead of being swallowed by a guard that is still closed.
       renderScheduled = false;
+      if (destroyed) return;
       rendering = true;
       try {
         // Shallow, so that d3 can still mutate the data hanging off the state, but enough to
@@ -210,16 +220,32 @@ export const app = <
   init(initialState)
     .then((effect) => {
       state = finish(initialState);
-      scheduleUpdate(effect);
+      // An app destroyed while init was still in flight must not register a listener that
+      // nothing will ever release.
+      if (destroyed) return;
+      // Registered before the effect runs: scheduleUpdate calls the effect synchronously,
+      // and an init effect that destroys the app would otherwise release a listener that
+      // is only installed afterwards, leaving it attached for the life of the page.
       viewport.on("resize", scheduleUpdate);
+      scheduleUpdate(effect);
     })
     .catch((error: unknown) => {
       // A rejecting init is a runtime failure, not a misconfiguration: the fallback option
       // exists precisely for it, so it is reported and the fallback rendered rather than
       // re-thrown into an unhandled rejection nobody can catch.
       reportError("Initialisation failed", error);
-      if (fallback) fallbackRender(fallback.element, { src: fallback.src });
+      // A destroyed app renders nothing afterwards, fallback included - the container may
+      // already belong to a replacement app. The failure is still reported, since it is
+      // real regardless of who is holding the container now.
+      if (!destroyed && fallback) fallbackRender(fallback.element, { src: fallback.src });
     });
+
+  return {
+    destroy() {
+      destroyed = true;
+      viewport.off("resize", scheduleUpdate);
+    },
+  };
 };
 
 // -----------------------------------------------------------------------------
