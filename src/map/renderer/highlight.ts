@@ -214,12 +214,7 @@ function warnUnmatched(unmatchedIds: unknown[], keyName: string): void {
   );
 }
 
-/**
- * Normalises a lookup key the way a property access does: a symbol stays a symbol key, everything
- * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
- * with the geojson renderer's own lookup.
- */
-export default function <T = unknown>(): MapRendererHighlightComponent<T> {
+export default function mapRendererHighlight<T = unknown>(): MapRendererHighlightComponent<T> {
   return component<MapRendererHighlightComponent<T>>()
     .prop("keyName")
     .keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
