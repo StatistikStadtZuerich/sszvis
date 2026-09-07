@@ -145,6 +145,59 @@ describe("component/stackedBar", () => {
       expect(layout.maxValue).toBe(0);
     });
 
+    test("should stack a series a stack has no row for as zero", () => {
+      const sparse = rows.filter((d) => !(d.region === "B" && d.category === "Y"));
+      // "Y" is on the baseline of the vertical layout, so stack "B" is only the "X" slice
+      // sitting on a zero-height "Y".
+      expect(pairs(verticalData(sparse))).toEqual([
+        [
+          [20, 30],
+          [0, 15],
+        ],
+        [
+          [0, 20],
+          [0, 0],
+        ],
+      ]);
+      expect(pairs(horizontalData(sparse))).toEqual([
+        [
+          [0, 10],
+          [0, 15],
+        ],
+        [
+          [10, 30],
+          [15, 15],
+        ],
+      ]);
+      // The zero slice has no source row, so its data is undefined; its stack value still
+      // comes from the row the stack does hold.
+      const zero = verticalData(sparse)[1][1];
+      expect(zero.data).toBeUndefined();
+      expect(zero.stack).toBe("B");
+    });
+
+    test("should collect the union of the series keys across sparse stacks", () => {
+      // No stack carries every key here, so the key set can only come from the union.
+      const sparse: Row[] = [
+        { region: "A", category: "X", value: 10 },
+        { region: "B", category: "Y", value: 20 },
+      ];
+      const layout = verticalData(sparse);
+      expect(layout.keys).toEqual(["X", "Y"]);
+      // Stack "A" has only "X", stack "B" only "Y", and the missing half of each stacks
+      // as a zero-height slice.
+      expect(pairs(layout)).toEqual([
+        [
+          [0, 10],
+          [20, 20],
+        ],
+        [
+          [0, 0],
+          [0, 20],
+        ],
+      ]);
+    });
+
     test("should sum every row of a stack/series cell", () => {
       // Data that is not pre-aggregated to one row per (stack, series) pair is stacked to
       // its true total rather than truncated to its first row.
@@ -502,20 +555,6 @@ describe("component/stackedBar", () => {
   });
 
   describe("known quirks", () => {
-    test("throws when a stack is missing one of the series", () => {
-      // BUG: the same unguarded reach throws for a sparse data set. Every stack must carry
-      // a row for every series key, so a category with no data in one region - a normal
-      // shape for real data - fails, and callers have to pad their data with zero rows.
-      // Note the knock-on effect: `keys` is built as a union across all cascade rows, but
-      // any row missing one of those keys throws, so the union can never actually differ
-      // from the key set of the first row.
-      // current: TypeError "Cannot read properties of undefined (reading '0')", naming
-      // neither the stack nor the series. expected: the missing slice is treated as 0.
-      const sparse = rows.filter((d) => !(d.region === "B" && d.category === "Y"));
-      expect(() => verticalData(sparse)).toThrow();
-      expect(() => horizontalData(sparse)).toThrow();
-    });
-
     test("stacks integer-like series keys in numeric order, not data order", () => {
       // BUG: the series keys come from `Object.keys` of the cascade's objectBy layer, and
       // JavaScript orders integer-like object keys numerically regardless of insertion
