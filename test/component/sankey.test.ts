@@ -934,48 +934,49 @@ describe("component/sankey", () => {
       expect(() => render(sankeyOf(), { links: [], columnLengths: [] })).toThrow(TypeError);
     });
 
-    describe("known quirks", () => {
-      test("silently renders invisible nodes when nodeThickness is missing", () => {
-        // BUG: nodeThickness is required but unguarded. Math.max(undefined, 1) is NaN, which
-        // bar's missing-value guard turns into 0, so every node bar is zero-width. The
-        // column labels and hit boxes are not guarded and end up with NaN coordinates in the
-        // DOM instead. Nothing warns.
-        // current: bars width="0", label transform="translate(NaN,-24)", hit box
-        // width="NaN", and every node's tooltip anchor at translate(NaN,...) - so the
-        // tooltips lose their position too. expected: an error naming the missing prop.
-        const node = render(
+    test("should throw when nodeThickness is missing", () => {
+      expect(() =>
+        render(
           sankey()
             .sizeScale((v: number) => v)
             .columnPosition((i: number) => i * 100)
             .nodePadding(10)
             .columnPadding(0),
           testData
-        );
-        expect(attrs(node, "nodes", "rect.sszvis-bar", "width")).toEqual(["0", "0", "0", "0"]);
-        expect(attrs(node, "nodes", "text.sszvis-sankey-column-label", "transform")[0]).toBe(
-          "translate(NaN,-24)"
-        );
-        expect(attrs(node, "nodelabels", "rect.sszvis-sankey-hitbox", "width")[0]).toBe("NaN");
-        expect(anchors(node, "nodes")[0]).toBe("translate(NaN,15)");
-      });
+        )
+      ).toThrow(/\[component\/sankey\].*nodeThickness/);
+    });
 
-      test("silently stacks every node at the top when nodePadding is missing", () => {
-        // BUG: same shape as nodeThickness. undefined * nodeIndex is NaN, so every node's
-        // position floors to NaN and bar's guard turns it into 0: the whole column collapses
-        // onto one row. The hit boxes, which are not guarded, get y="NaN" instead.
-        // current: every bar at y="0". expected: an error naming the missing prop.
-        const node = render(
+    test("should throw before creating any element when nodeThickness is missing", () => {
+      const g = group("missing-node-thickness");
+      expect(() =>
+        g
+          .datum(testData)
+          .call(
+            sankey()
+              .sizeScale((v: number) => v)
+              .columnPosition((i: number) => i * 100)
+              .nodePadding(10)
+              .columnPadding(0) as never
+          )
+      ).toThrow();
+      expect((g.node() as SVGGElement).childElementCount).toBe(0);
+    });
+
+    test("should throw when nodePadding is missing", () => {
+      expect(() =>
+        render(
           sankey()
             .sizeScale((v: number) => v)
             .columnPosition((i: number) => i * 100)
             .nodeThickness(20)
             .columnPadding(0),
           testData
-        );
-        expect(attrs(node, "nodes", "rect.sszvis-bar", "y")).toEqual(["0", "0", "0", "0"]);
-        expect(attrs(node, "nodelabels", "rect.sszvis-sankey-hitbox", "y")[0]).toBe("NaN");
-      });
+        )
+      ).toThrow(/\[component\/sankey\].*nodePadding/);
+    });
 
+    describe("known quirks", () => {
       test("throws when nameLabel is given a constant", () => {
         // NOTE: nameLabel is the only label accessor that must be a function - it is not
         // wrapped in fn.functor, so a string throws "props.nameLabel is not a function".

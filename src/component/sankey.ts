@@ -21,18 +21,16 @@
  *                                                   when unset. It is called with a column index for the column labels as well as for the nodes, so
  *                                                   it is also consulted for columns that hold no node.
  * @property {Number} nodeThickness                  A number for the horizontal thickness of the node bars. Should be configured using a value
- *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required, but omitting it is not
- *                                                   reported: Math.max(undefined, 1) is NaN, which bar's missing-value guard turns into zero-width
- *                                                   bars, while the column labels, the hit boxes and the tooltip anchors keep the NaN. Must be a
- *                                                   plain number - an accessor, which most other properties in this library accept, is used in
- *                                                   arithmetic and yields the same NaN. The bar's width is floored at one pixel but the link starts
- *                                                   and the column label centring read the raw value, so below a thickness of one the two disagree.
+ *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required: leaving it unset throws
+ *                                                   before anything is drawn. Must be a plain number - an accessor, which most other properties in
+ *                                                   this library accept, is rejected the same way. The bar's width is floored at one pixel but the
+ *                                                   link starts and the column label centring read the raw value, so below a thickness of one the
+ *                                                   two disagree.
  * @property {Number} nodePadding                    A number for padding between the nodes. Should be configured using a value returned by the
  *                                                   sszvis.layout.sankey.computeLayout function. It applies between nodes only; the links stacked
  *                                                   inside a node are spaced by the size scale alone and fill it exactly. It also sets how far a
- *                                                   label hit box extends past its node, half of it above and half below. Required, must be a plain
- *                                                   number, and fails as silently as nodeThickness: every node's position becomes NaN, which bar
- *                                                   turns into 0, so the whole column collapses onto one row.
+ *                                                   label hit box extends past its node, half of it above and half below. Required and must be a
+ *                                                   plain number; leaving it unset, or passing an accessor, throws before anything is drawn.
  * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number, for padding at the top of
  *                                                   each column. Used to vertically center the columns. Required despite the functor wrapper: it has
  *                                                   no default, so leaving it unset throws "props.columnPadding is not a function". An accessor is
@@ -449,6 +447,15 @@ export default function (): SankeyComponent {
     .render(function (this: Element, data: SankeyData) {
       const selection = select(this);
       const props = selection.props<SankeyProps>();
+
+      // Checked before anything is drawn: an unset thickness or padding produces NaN
+      // geometry, which bar's missing-value guard turns into an empty-looking chart.
+      if (props.nodeThickness === undefined) {
+        throw new Error("[component/sankey] the nodeThickness property is required");
+      }
+      if (props.nodePadding === undefined) {
+        throw new Error("[component/sankey] the nodePadding property is required");
+      }
 
       const getNodePosition = (node: SankeyNode): number =>
         Math.floor(
