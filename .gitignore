@@ -12,3 +12,7 @@ __diff_output__
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+.reference
+
+.claude/
