@@ -21,10 +21,10 @@
  *                                                    the map entity) and a geoJson property (the geoJson shape for the map entity). This component renders the
  *                                                    geoJson data and uses the datum to get properties of the shape, like fill color and tooltip data.
  * @property {Boolean, Function} defined              A predicate used to determine whether a datum has a defined value. Map
- *                                                    entities that fail it display the missing value texture. It is wrapped
- *                                                    in fn.functor and defaults to the constant true, so a constant false
- *                                                    textures the whole map and the default never rejects anything; see the
- *                                                    note below on features with no datum.
+ *                                                    entities that fail it display the missing value texture, as do entities
+ *                                                    that matched no datum at all - the predicate is only consulted for a
+ *                                                    datum that exists. It is wrapped in fn.functor and defaults to the
+ *                                                    constant true, so a constant false textures the whole map.
  * @property {String, Function} fill                  A string or function for the fill of the map entities
  * @property {Boolean} transitionColor                Whether to transition the fill color of the map entities.
  *                                                    (default: true) With it set, the fill is only applied through the
@@ -36,11 +36,6 @@
  * intended 500ms easePolyOut. `.transition().call(slowTransition)` returns the original
  * transition, while slowTransition ignores its argument and builds a fresh detached transition
  * that is discarded.
- *
- * Note: the fill and the --undefined class use different notions of a missing value. The fill
- * consults props.defined alone, which defaults to a constant true, while the class also consults
- * fn.defined(d.datum). A feature with no datum is therefore classed --undefined but painted with
- * the ordinary fill, and the fill accessor is called with undefined for it.
  *
  * Note: the missing value pattern is written into a defs element inside each map layer with the
  * fixed id "missing-pattern". Two map layers on one page emit two definitions of that id, and
@@ -75,8 +70,9 @@ import { type GeoPoint, getGeoJsonCenter, type MergedGeoDatum } from "../mapUtil
 
 /**
  * A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. The
- * accessor parameter includes undefined because getMapFill passes MergedGeoDatum.datum straight
- * through, and that is undefined for a feature no datum matched.
+ * accessor parameter includes undefined because MergedGeoDatum.datum is optional, so an accessor
+ * written for the wrapper's datum slot type-checks; the render only calls these accessors for a
+ * feature whose datum exists.
  */
 type MapValue<T, R> = R | ((datum: T | undefined) => R);
 
@@ -128,9 +124,16 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
       // render the missing value pattern
       ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
 
+      // One notion of a missing value, shared by the fill and the --undefined class: a feature that
+      // matched no datum is as missing as one the predicate rejects. Short-circuiting also keeps
+      // both accessors from ever being called with undefined.
+      function hasValue(d: MergedGeoDatum<T>): boolean {
+        return fn.defined(d.datum) && props.defined(d.datum);
+      }
+
       // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
       function getMapFill(d: MergedGeoDatum<T>): string {
-        return props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
+        return hasValue(d) ? props.fill(d.datum) : "url(#missing-pattern)";
       }
 
       const mapAreas = selection
@@ -147,10 +150,7 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
         .attr("fill", getMapFill);
 
       mapAreas
-        .classed(
-          "sszvis-map__area--undefined",
-          (d) => !fn.defined(d.datum) || !props.defined(d.datum)
-        )
+        .classed("sszvis-map__area--undefined", (d) => !hasValue(d))
         .attr("d", (d) => props.mapPath(d.geoJson));
 
       // The fill is applied exactly once, so the transition has the previous colour to interpolate

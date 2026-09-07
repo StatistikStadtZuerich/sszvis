@@ -180,9 +180,7 @@ describe("map/renderer/base", () => {
       expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
     });
 
-    // NOTE: `defined` defaults to the constant true, so a feature with no data at all is passed to
-    // the fill accessor as undefined rather than being treated as missing.
-    test("calls the fill accessor with undefined for a feature with no data", () => {
+    test("textures a feature with no data instead of calling the fill accessor", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.transitionColor(false).fill((d?: Datum) => {
@@ -190,8 +188,12 @@ describe("map/renderer/base", () => {
           return d ? "#00ff00" : "#0000ff";
         })
       );
-      expect(seen).toContain(undefined);
-      expect(attrs(node, "fill")).toEqual(["#00ff00", "#0000ff", "#0000ff"]);
+      expect(seen).not.toContain(undefined);
+      expect(attrs(node, "fill")).toEqual([
+        "#00ff00",
+        "url(#missing-pattern)",
+        "url(#missing-pattern)",
+      ]);
     });
   });
 
@@ -332,17 +334,14 @@ describe("map/renderer/base", () => {
       expect(attrs(node, "fill")).toEqual(["#00ff00", "#00ff00", "#00ff00"]);
     });
 
-    // BUG: the two notions of "undefined" disagree. The fill uses props.defined alone, which
-    // defaults to a constant true and so never rejects a missing datum, while the class uses
-    // fn.defined(d.datum) as well. A feature with no data is therefore classed --undefined but
-    // painted with the ordinary fill instead of the missing-value pattern.
-    test("classes a no-datum feature undefined while still painting it the ordinary fill", () => {
+    // The fill and the class agree: whatever is classed --undefined also carries the texture.
+    test("both classes and textures a no-datum feature", () => {
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.transitionColor(false).fill("#ff0000")
       );
       const [, second] = areas(node);
       expect(second.classList.contains("sszvis-map__area--undefined")).toBe(true);
-      expect(second.getAttribute("fill")).toBe("#ff0000");
+      expect(second.getAttribute("fill")).toBe("url(#missing-pattern)");
     });
 
     // NOTE: `defined` goes through fn.functor, so a constant false paints every area with the
