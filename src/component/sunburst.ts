@@ -93,9 +93,9 @@
  *
  * Note: the component keeps no state of its own. It writes x0/x1 (the positions currently on
  * screen) and _x0/_x1 (the positions the running transition is heading for) onto every node it
- * renders, so the data has to be mutable - frozen data throws - and re-rendering the same hierarchy
- * object skips the animation, because the re-partition overwrites the positions the tween was
- * starting from.
+ * renders, so the data has to be mutable - frozen data throws. The on-screen angles are read off
+ * the existing arcs before the re-partition overwrites them, so re-rendering the same hierarchy
+ * object animates the same way a freshly built one does.
  *
  * Note: the tooltip anchors are rendered from the same flattened array as the arcs, so there is one
  * anchor per arc, in the same order. They are positioned from the pre-transition angles and are
@@ -227,6 +227,21 @@ export default function <T = unknown>(): SunburstComponent<T> {
       const selection = select(this);
       const props = selection.props<SunburstProps<T>>();
 
+      // The angles currently on screen, read off the existing arcs before anything below can
+      // overwrite them. A caller who keeps one hierarchy in state and re-sums it hands over
+      // the same node objects the previous render left its x0/x1 on, and the partition
+      // further down replaces those with the new layout - so the handover has to happen
+      // first, or every transition would start where it is meant to end.
+      const onScreen = selection
+        .selectAll<SVGPathElement, SunburstNode<T>>(".sszvis-sunburst-arc")
+        .nodes()
+        .map((element) => {
+          // A path inserted without d3 has no datum at all, which throws here rather than
+          // silently shifting the handover - see test/component/sunburst.test.ts.
+          const d = Reflect.get(element, "__data__") as SunburstNode<T>;
+          return [d.x0, d.x1] as const;
+        });
+
       // NOTE: Determine if we have raw hierarchical data or pre-computed sunburst data
       // @deprecated in v3.4.0
       let nodes: SunburstNode<T>[];
@@ -249,6 +264,16 @@ export default function <T = unknown>(): SunburstComponent<T> {
       // down. Array.from rather than map, because it visits the holes of a sparse array the
       // way a for...of loop does, and so still fails before anything is rendered.
       const data = Array.from(nodes, (d) => Object.assign(d, { _x0: d.x0, _x1: d.x1 }));
+
+      // Put the on-screen angles back, matched to the new data by index, so the tween below
+      // has somewhere to start from. An arc past the previous element count keeps the angles
+      // the partition just gave it and therefore starts at its destination.
+      for (const [i, angles] of onScreen.entries()) {
+        const node = data[i];
+        if (node) {
+          [node.x0, node.x1] = angles;
+        }
+      }
 
       // The key a node's colour is looked up under. Only a root has none, and a root never
       // reaches the recursion below: it is either filtered out of the data, painted
@@ -302,15 +327,6 @@ export default function <T = unknown>(): SunburstComponent<T> {
 
       const arcs = selection
         .selectAll<SVGPathElement, PositionedNode<T>>(".sszvis-sunburst-arc")
-        .each((d, i) => {
-          if (data[i]) {
-            // x0 and x1 are the current/transitioning values
-            // We set these here, in case any datums already exist which have values set
-            data[i].x0 = d.x0;
-            data[i].x1 = d.x1;
-            // The transition tweens from x0 and x1 to _x0 and _x1
-          }
-        })
         .data(data)
         .join("path")
         .attr("class", "sszvis-sunburst-arc");
