@@ -26,8 +26,17 @@ describe("control/buttonGroup", () => {
 
   const wrapper = () => container.querySelector<HTMLDivElement>(".sszvis-control-buttonGroup");
   const buttons = () => [
-    ...container.querySelectorAll<HTMLDivElement>(".sszvis-control-buttonGroup__item"),
+    ...container.querySelectorAll<HTMLButtonElement>(".sszvis-control-buttonGroup__item"),
   ];
+  const checked = () => buttons().map((b) => b.getAttribute("aria-checked"));
+  const tabindexes = () => buttons().map((b) => b.getAttribute("tabindex"));
+
+  /** Dispatches a real, bubbling, cancelable keydown - as a browser would. */
+  const keydown = (el: Element, key: string) => {
+    const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+    el.dispatchEvent(event);
+    return event;
+  };
 
   test("should render a wrapper carrying both the shared and the specific class", () => {
     render(buttonGroup().values(["A", "B"]).current("A"));
@@ -71,6 +80,8 @@ describe("control/buttonGroup", () => {
   test("should mark only the current value as selected", () => {
     render(buttonGroup().values(["A", "B", "C"]).current("B"));
     expect(buttons().map((b) => b.classList.contains("selected"))).toEqual([false, true, false]);
+    // the class is the visual hook; `aria-checked` is what assistive technology reads
+    expect(checked()).toEqual(["false", "true", "false"]);
   });
 
   test("should mark nothing as selected when current matches no value", () => {
@@ -93,6 +104,9 @@ describe("control/buttonGroup", () => {
     sel.call(buttonGroup().values(["A", "B"]).current("A") as never);
     sel.call(buttonGroup().values(["A", "B"]).current("B") as never);
     expect(buttons().map((b) => b.classList.contains("selected"))).toEqual([false, true]);
+    // the accessible state and the tab stop move with it
+    expect(checked()).toEqual(["false", "true"]);
+    expect(tabindexes()).toEqual(["-1", "0"]);
   });
 
   describe("change callback", () => {
@@ -159,6 +173,111 @@ describe("control/buttonGroup", () => {
     expect(container.querySelectorAll(".sszvis-control-buttonGroup").length).toBe(1);
   });
 
+  describe("accessibility", () => {
+    test("should render the options as focusable radios inside a radiogroup", () => {
+      render(buttonGroup().values(["A", "B"]).current("A"));
+      expect(wrapper()?.getAttribute("role")).toBe("radiogroup");
+      const button = buttons()[0];
+      expect(button?.tagName).toBe("BUTTON");
+      // `type="button"` keeps the control from submitting a surrounding form
+      expect(button?.getAttribute("type")).toBe("button");
+      expect(button?.getAttribute("role")).toBe("radio");
+      expect(button?.getAttribute("aria-checked")).toBe("true");
+      button?.focus();
+      expect(document.activeElement).toBe(button);
+    });
+
+    test("should keep exactly one option in the tab order, and it is the current one", () => {
+      render(buttonGroup().values(["A", "B", "C"]).current("B"));
+      expect(tabindexes()).toEqual(["-1", "0", "-1"]);
+    });
+
+    test("should fall back to the first option as the tab stop when current matches nothing", () => {
+      // Otherwise no option would be tabbable and the group would be unreachable, even
+      // though nothing is marked selected.
+      render(buttonGroup().values(["A", "B"]).current("Z"));
+      expect(tabindexes()).toEqual(["0", "-1"]);
+      expect(checked()).toEqual(["false", "false"]);
+    });
+
+    test("should call change on Enter, the same way a click does", () => {
+      const change = vi.fn();
+      render(buttonGroup().values(["A", "B", "C"]).current("A").change(change));
+      const button = buttons()[2];
+      button?.focus();
+      const event = keydown(button as Element, "Enter");
+      expect(change).toHaveBeenCalledTimes(1);
+      expect(change.mock.calls[0][0]).toBe(event);
+      expect(change.mock.calls[0][1]).toBe("C");
+      // the native button activation is suppressed so a keypress fires change exactly once
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    test("should call change on Space, the same way a click does", () => {
+      const change = vi.fn();
+      render(buttonGroup().values(["A", "B", "C"]).current("A").change(change));
+      const button = buttons()[1];
+      button?.focus();
+      const event = keydown(button as Element, " ");
+      expect(change).toHaveBeenCalledTimes(1);
+      expect(change.mock.calls[0][1]).toBe("B");
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    test("should move the selection forwards with ArrowRight and ArrowDown", () => {
+      const change = vi.fn();
+      render(buttonGroup().values(["A", "B", "C"]).current("A").change(change));
+      buttons()[0]?.focus();
+      keydown(buttons()[0] as Element, "ArrowRight");
+      expect(change.mock.calls[0][1]).toBe("B");
+      expect(document.activeElement).toBe(buttons()[1]);
+
+      keydown(buttons()[1] as Element, "ArrowDown");
+      expect(change.mock.calls[1][1]).toBe("C");
+      expect(document.activeElement).toBe(buttons()[2]);
+    });
+
+    test("should move the selection backwards with ArrowLeft and ArrowUp", () => {
+      const change = vi.fn();
+      render(buttonGroup().values(["A", "B", "C"]).current("C").change(change));
+      buttons()[2]?.focus();
+      keydown(buttons()[2] as Element, "ArrowLeft");
+      expect(change.mock.calls[0][1]).toBe("B");
+      expect(document.activeElement).toBe(buttons()[1]);
+
+      keydown(buttons()[1] as Element, "ArrowUp");
+      expect(change.mock.calls[1][1]).toBe("A");
+      expect(document.activeElement).toBe(buttons()[0]);
+    });
+
+    test("should wrap the selection at both ends", () => {
+      const change = vi.fn();
+      render(buttonGroup().values(["A", "B", "C"]).current("A").change(change));
+      keydown(buttons()[0] as Element, "ArrowLeft");
+      expect(change.mock.calls[0][1]).toBe("C");
+      expect(document.activeElement).toBe(buttons()[2]);
+
+      keydown(buttons()[2] as Element, "ArrowRight");
+      expect(change.mock.calls[1][1]).toBe("A");
+      expect(document.activeElement).toBe(buttons()[0]);
+    });
+
+    test("should ignore keys it does not handle", () => {
+      const change = vi.fn();
+      render(buttonGroup().values(["A", "B"]).current("A").change(change));
+      const event = keydown(buttons()[0] as Element, "a");
+      expect(change).not.toHaveBeenCalled();
+      expect(event.defaultPrevented).toBe(false);
+    });
+
+    test("should leave a valid but non-focusable group for an empty value list", () => {
+      render(buttonGroup().values([]).current("A"));
+      expect(wrapper()?.getAttribute("role")).toBe("radiogroup");
+      expect(buttons()).toEqual([]);
+      expect(container.querySelectorAll("[tabindex='0']").length).toBe(0);
+    });
+  });
+
   describe("known quirks", () => {
     test("an empty value list leaves an empty, full-width wrapper", () => {
       // NOTE: with no values the button width is 300 / 0 = Infinity, but no buttons are
@@ -193,6 +312,23 @@ describe("control/buttonGroup", () => {
       expect(buttons().map((b) => b.classList.contains("selected"))).toEqual([true, false, true]);
     });
 
+    test("marks exactly one duplicate as checked, however many carry the class", () => {
+      // The `selected` class is per button and highlights every occurrence, but a
+      // radiogroup exposing two checked radios is contradictory state, so aria-checked is
+      // keyed on the index of `current` instead.
+      render(buttonGroup().values(["A", "B", "A"]).current("A"));
+      expect(buttons().map((b) => b.getAttribute("aria-checked"))).toEqual([
+        "true",
+        "false",
+        "false",
+      ]);
+    });
+
+    test("marks nothing as checked when current matches no value", () => {
+      render(buttonGroup().values(["A", "B"]).current("C"));
+      expect(buttons().map((b) => b.getAttribute("aria-checked"))).toEqual(["false", "false"]);
+    });
+
     test("accepts non-string values, where the select control would crash", () => {
       // NOTE: buttonGroup does no measuring, so labels are produced purely by d3's
       // `.text()` coercion and any value type works. The sibling select control slices
@@ -211,21 +347,6 @@ describe("control/buttonGroup", () => {
       const group = buttonGroup().values(["A", "B"]).current("A");
       const event = new MouseEvent("click");
       expect(group.change()(event, "B")).toBe(event);
-    });
-
-    test("the buttons are plain divs with no accessible role or keyboard access", () => {
-      // BUG: the items are `div`s with a click handler - not `button` elements and with no
-      // role, tabindex, or aria-pressed state. The control is unreachable by keyboard and
-      // announced as plain text by screen readers.
-      // current: <div class="sszvis-control-buttonGroup__item">. expected: real buttons,
-      // or divs with role="radio"/aria-checked inside a role="radiogroup" wrapper.
-      render(buttonGroup().values(["A", "B"]).current("A"));
-      const button = buttons()[0] as HTMLDivElement;
-      expect(button.tagName).toBe("DIV");
-      expect(button.getAttribute("role")).toBeNull();
-      expect(button.getAttribute("tabindex")).toBeNull();
-      expect(button.getAttribute("aria-pressed")).toBeNull();
-      expect(wrapper()?.getAttribute("role")).toBeNull();
     });
   });
 });
