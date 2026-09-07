@@ -320,6 +320,62 @@ describe("map/renderer/base", () => {
       expect(tweenNames(areas(node)[0])).toContain("attr.fill");
     });
 
+    // d3 has no interpolator for a paint-server reference, so a colour-to-texture tween would
+    // interpolate the numbers embedded in the two strings and spend its run pointing at patterns
+    // that do not exist - "url(#missing-pattern255)" - painting nothing at all. Such a change is
+    // applied synchronously instead, so the texture is in the DOM at once and no tween is
+    // scheduled for it.
+    test("applies a change to the missing texture synchronously, without a tween", async () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("defined-to-missing");
+      const renderWith = (definedValue: boolean, transition: boolean) =>
+        layer
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .geoJson(collection)
+              .mapPath(mapPath)
+              .transitionColor(transition)
+              .defined(definedValue)
+              .fill("#ff0000")
+          )
+          .node() as SVGGElement;
+
+      renderWith(true, false);
+      const node = renderWith(false, true);
+      const textured = missingFill(node);
+      expect(attrs(node, "fill")).toEqual([textured, textured, textured]);
+      expect(tweenNames(areas(node)[0]) ?? []).not.toContain("attr.fill");
+
+      // And it stays put rather than being walked back by a tween that started anyway.
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      expect(attrs(node, "fill")).toEqual([textured, textured, textured]);
+    });
+
+    // The reverse direction is the same: leaving the texture cannot be interpolated either.
+    test("applies a change away from the missing texture synchronously", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("missing-to-defined");
+      const renderWith = (definedValue: boolean, transition: boolean) =>
+        layer
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .geoJson(collection)
+              .mapPath(mapPath)
+              .transitionColor(transition)
+              .defined(definedValue)
+              .fill("#00ff00")
+          )
+          .node() as SVGGElement;
+
+      renderWith(false, false);
+      const node = renderWith(true, true);
+      expect(attrs(node, "fill")).toEqual(["#00ff00", "#00ff00", "#00ff00"]);
+    });
+
     // BUG: `.transition().call(slowTransition)` does not apply the slow transition. d3's
     // transition.call(f) invokes f(transition) and returns the original, but slowTransition
     // ignores its argument and builds a fresh detached transition, which is discarded. The
