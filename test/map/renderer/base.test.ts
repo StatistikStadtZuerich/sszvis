@@ -144,16 +144,19 @@ describe("map/renderer/base", () => {
     });
   });
 
+  // The fill is only applied through the transition when transitionColor is on, so these tests
+  // read the attribute synchronously with the transition disabled. The transition itself is
+  // covered by the transitionColor block below.
   describe("fill", () => {
     test("defaults to black", () => {
-      const node = render(fullData);
+      const node = render(fullData, (c) => c.transitionColor(false));
       expect(attrs(node, "fill")).toEqual(["black", "black", "black"]);
     });
 
     test("takes the fill from the accessor, called with the datum", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
-        c.fill((d: Datum | undefined) => {
+        c.transitionColor(false).fill((d: Datum | undefined) => {
           seen.push(d);
           return `rgb(${d?.value}, 0, 0)`;
         })
@@ -163,13 +166,16 @@ describe("map/renderer/base", () => {
     });
 
     test("accepts a constant fill", () => {
-      const node = render(fullData, (c) => c.fill("#ff0000"));
+      const node = render(fullData, (c) => c.transitionColor(false).fill("#ff0000"));
       expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
     });
 
     test("uses the missing value pattern where the defined predicate fails", () => {
       const node = render(fullData, (c) =>
-        c.fill("#ff0000").defined((d: Datum | undefined) => d?.value !== 2)
+        c
+          .transitionColor(false)
+          .fill("#ff0000")
+          .defined((d: Datum | undefined) => d?.value !== 2)
       );
       expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
     });
@@ -179,7 +185,7 @@ describe("map/renderer/base", () => {
     test("calls the fill accessor with undefined for a feature with no data", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
-        c.fill((d?: Datum) => {
+        c.transitionColor(false).fill((d?: Datum) => {
           seen.push(d);
           return d ? "#00ff00" : "#0000ff";
         })
@@ -240,12 +246,41 @@ describe("map/renderer/base", () => {
       expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
     });
 
-    // BUG: the fill is written onto the plain selection first and then transitioned to the very
-    // same value, so the tween interpolates a colour onto itself. The final colour is already in
-    // the DOM before the transition starts, which means the colour transition never animates
-    // anything - on enter or on update - and transitionColor is decorative.
-    test("writes the final fill immediately, so the transition interpolates a colour onto itself", () => {
+    test("leaves the final fill out of the DOM, so the tween has somewhere to start", () => {
       const node = render(fullData, (c) => c.fill("#ff0000"));
+      expect(attrs(node, "fill")).toEqual([null, null, null]);
+      expect(tweenNames(areas(node)[0])).toContain("attr.fill");
+    });
+
+    // An entering area has no previous fill to interpolate from, and d3's rgb interpolator treats
+    // an unparseable start as a constant, so the first tick writes the final colour outright
+    // rather than fading in from the SVG default. The attribute is only absent for the frame
+    // between the render and that first tick.
+    test("puts the final fill on an entering area at the first tick", async () => {
+      const node = render(fullData, (c) => c.fill("#ff0000"));
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      expect(attrs(node, "fill")).toEqual(["rgb(255, 0, 0)", "rgb(255, 0, 0)", "rgb(255, 0, 0)"]);
+    });
+
+    test("animates from the previous colour rather than onto the new one", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("colour-transition");
+      const renderWith = (fill: string, transition: boolean) =>
+        layer
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .geoJson(collection)
+              .mapPath(mapPath)
+              .transitionColor(transition)
+              .fill(fill)
+          )
+          .node() as SVGGElement;
+
+      renderWith("#ff0000", false);
+      const node = renderWith("#00ff00", true);
+      // The old colour is still in the DOM, so the tween interpolates red to green.
       expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
       expect(tweenNames(areas(node)[0])).toContain("attr.fill");
     });
@@ -302,7 +337,9 @@ describe("map/renderer/base", () => {
     // fn.defined(d.datum) as well. A feature with no data is therefore classed --undefined but
     // painted with the ordinary fill instead of the missing-value pattern.
     test("classes a no-datum feature undefined while still painting it the ordinary fill", () => {
-      const node = render([{ geoId: "a", value: 1 }], (c) => c.fill("#ff0000"));
+      const node = render([{ geoId: "a", value: 1 }], (c) =>
+        c.transitionColor(false).fill("#ff0000")
+      );
       const [, second] = areas(node);
       expect(second.classList.contains("sszvis-map__area--undefined")).toBe(true);
       expect(second.getAttribute("fill")).toBe("#ff0000");
@@ -311,7 +348,7 @@ describe("map/renderer/base", () => {
     // NOTE: `defined` goes through fn.functor, so a constant false paints every area with the
     // missing-value pattern regardless of the data.
     test("paints every area with the pattern for a constant false defined", () => {
-      const node = render(fullData, (c) => c.defined(false).fill("#ff0000"));
+      const node = render(fullData, (c) => c.transitionColor(false).defined(false).fill("#ff0000"));
       expect(attrs(node, "fill")).toEqual([
         "url(#missing-pattern)",
         "url(#missing-pattern)",
