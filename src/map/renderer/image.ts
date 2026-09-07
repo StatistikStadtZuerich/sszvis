@@ -70,13 +70,13 @@
  * catch it either.
  *
  * Note: neither src nor opacity is wrapped in fn.functor, unlike the colour properties of the base,
- * geojson and highlight renderers - but both are handed straight to d3, which evaluates a function against the bound
- * datum. So an accessor happens to work, called with the join's placeholder 0.
+ * geojson and highlight renderers - but an accessor works all the same, called with the join's
+ * placeholder datum 0. opacity is handed to d3, which evaluates it; src is resolved by the
+ * component itself, because the resolved value identifies the element.
  *
- * Note: the join binds [0] rather than the src, so one image per container is the documented
- * limit - and the selector is unscoped, so a second image renderer in the same layer replaces the
- * first one's src and position instead of adding its own. The same defect as the mesh, highlight
- * and lake overlay renderers.
+ * Note: the src identifies the image within its layer, so two renderers with different sources
+ * each own an element and stack, while re-rendering the same source reuses the element it drew
+ * before. The element carries the source in a data-sszvis-image-src attribute for that purpose.
  *
  * Note: no transition is scheduled, so the image jumps to its new position on a resize rather than
  * animating. Unlike the base and geojson renderers this component keeps no caches, emits no
@@ -95,10 +95,13 @@ import * as fn from "../../fn.js";
 import type { GeoPoint, PointProjection } from "../mapUtils.js";
 
 /**
- * A constant or an accessor. Neither src nor opacity is wrapped in fn.functor, so a function is
- * handed straight to d3 and evaluated against the join's placeholder datum, 0.
+ * A constant or an accessor. Neither src nor opacity is wrapped in fn.functor; an accessor is
+ * evaluated against the join's placeholder datum, 0.
  */
 type ImageValue<R extends string | number> = R | ValueFn<BaseType, number, R>;
+
+/** Marks which image in a layer belongs to which source, so the join can find its own element. */
+const SRC_KEY = "data-sszvis-image-src";
 
 /**
  * The props as they are read at runtime. projection, src and geoBounds are required, but the
@@ -124,6 +127,15 @@ export interface MapRendererImageComponent extends ComponentBuilder<MapRendererI
   opacity(value: ImageValue<number>): MapRendererImageComponent;
   alt(): ImageValue<string>;
   alt(value: ImageValue<string>): MapRendererImageComponent;
+}
+
+/**
+ * Resolves a property that may be a constant or an accessor. d3 would evaluate an accessor against
+ * the bound datum; this calls it the same way, with the join's placeholder datum 0, so that the
+ * resolved value is available before the join needs it.
+ */
+function resolve<R extends string | number>(value: ImageValue<R>): R {
+  return typeof value === "function" ? value.call(null, 0, 0, []) : value;
 }
 
 /** Reports a required property the caller left unset, naming it. */
@@ -185,14 +197,23 @@ export default function (): MapRendererImageComponent {
         );
       }
 
+      // The src identifies the image within its layer, so two renderers with different sources get
+      // an element each instead of the second rebinding the first, while re-rendering the same
+      // source keeps reusing the element it drew before. Filtering rather than building a selector
+      // avoids having to escape a src into an attribute selector.
+      const srcValue = resolve(src);
       const image = selection
-        .selectAll(".sszvis-map__image")
+        .selectAll<Element, number>(".sszvis-map__image")
+        .filter(function () {
+          return this.getAttribute(SRC_KEY) === srcValue;
+        })
         .data([0])
         .join("img")
-        .classed("sszvis-map__image", true);
+        .classed("sszvis-map__image", true)
+        .attr(SRC_KEY, srcValue);
 
       image
-        .attr("src", fn.valueFn(src))
+        .attr("src", srcValue)
         .attr("alt", fn.valueFn(props.alt))
         .style("position", "absolute")
         .style("left", `${Math.round(topLeft[0])}px`)
