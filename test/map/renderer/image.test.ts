@@ -115,8 +115,8 @@ describe("map/renderer/image", () => {
 
   describe("known quirks", () => {
     // BUG: the image carries no alt attribute and no role, and the component offers no property
-    // for one, so a topographic layer is announced by screen readers as an unlabelled image. Every
-    // docs example - three of them - ships this.
+    // for one, so a topographic layer is announced by screen readers as an unlabelled image. All
+    // six docs examples ship this.
     test("renders no alt text and offers no way to supply one", () => {
       const node = render();
       expect(image(node)?.hasAttribute("alt")).toBe(false);
@@ -206,6 +206,29 @@ describe("map/renderer/image", () => {
       ).toThrow(TypeError);
     });
 
+    // Both corners are projected, and the src is written, before the coordinates are read - so the
+    // throw above leaves an img that has its src but no position. Pinned because it is the kind of
+    // ordering a port could quietly change by validating the corners up front.
+    test("writes the src and projects both corners before failing on a null result", () => {
+      const target = layer("image-null-projection");
+      let calls = 0;
+      expect(() =>
+        target.call(
+          mapRendererImage()
+            .projection(() => {
+              calls += 1;
+              return null;
+            })
+            .src(SRC)
+            .geoBounds(GEO_BOUNDS)
+        )
+      ).toThrow(TypeError);
+      expect(calls).toBe(2);
+      const node = target.node() as HTMLElement;
+      expect(image(node)?.getAttribute("src")).toBe(SRC);
+      expect(image(node)?.style.left).toBe("");
+    });
+
     // NOTE: a Mercator projection does not reject a pole; log(tan(pi/2)) is merely a very large
     // float, so a geoBounds latitude of 90 yields an enormous finite offset and the image is
     // positioned and sized tens of thousands of pixels off. Silently off-screen, not reported -
@@ -283,6 +306,7 @@ describe("map/renderer/image", () => {
     // NOTE: an invalid opacity is dropped by the CSS parser rather than reported, leaving the
     // image fully opaque. A string is a caller error; pinned because it fails silently.
     test("falls back to fully opaque for an invalid opacity", () => {
+      // @ts-expect-error - a string is a caller error
       expect(image(render((c) => c.opacity("abc")))?.style.opacity).toBe("");
     });
 
