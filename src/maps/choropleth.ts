@@ -63,11 +63,10 @@
  *                                                    A handler is called with the datum of the entity the event happened
  *                                                    on; see the note below.
  *
- * Note: the projection cache key is the literal string "zurichStadtfeatures" for every choropleth
- * on the page, whatever it is a map of - and it names no map id in src/map/mapUtils.ts.
- * swissMapProjection memoizes on width, height and that string alone, so two maps of different
- * areas rendered at the same size share the projection fitted to whichever rendered first, and the
- * second is projected outside its destination box.
+ * Note: no projection cache key is passed, so swissMapProjection skips its bounds cache and fits
+ * the projection to the features this map was given. Two maps of different areas rendered at the
+ * same size are therefore projected independently. The cost is that the bounds calculation is
+ * redone on every render; sharing a key would trade that for the wrong fit.
  *
  * Note: features and borders are the two properties whose absence throws - features because
  * prepareMergedGeoData reads geoJson.features, borders because the mesh renderer now validates its
@@ -321,15 +320,11 @@ export default function <T extends object = object>(): ChoroplethComponent<T> {
       const selection = select(this);
       const props = selection.props<ChoroplethProps<T>>();
 
-      // create a map path generator function
-      // Note: the cache key is the same literal string for every choropleth on the page, whatever
-      // it is a map of. Transcribed as it stands; see the module note.
-      const mapPath = swissMapPath(
-        props.width,
-        props.height,
-        props.features,
-        "zurichStadtfeatures"
-      );
+      // create a map path generator function.
+      // No cache key: the bounds cache is keyed on width, height and the key alone, so any key
+      // this component could invent would be shared by every choropleth of that size, whatever it
+      // is a map of. Without one the projection is fitted to the features actually given.
+      const mapPath = swissMapPath(props.width, props.height, props.features);
 
       const mergedData = prepareMergedGeoData(data, props.features, props.keyName);
 
