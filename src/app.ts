@@ -13,10 +13,10 @@ setAutoFreeze(false);
  * directly accessible; instead, an actions object is provided to dispatch actions by
  * calling them as functions.
  *
- * One exception: the render-scheduled flag is only cleared *after* `render` returns, so an
- * action dispatched synchronously from within `render` updates the state but queues no
- * render for it. The new state is not shown until something else - another dispatch, or a
- * resize - triggers the next frame.
+ * An action dispatched synchronously from within `render` queues a *further* frame rather
+ * than coalescing into the one being painted, so the state it produces is rendered. A render
+ * function that dispatches unconditionally would recur forever, so such cascades are cut off
+ * after `MAX_CASCADED_RENDERS` consecutive frames, with a warning.
  *
  * The props are passed as an array, which is spread into the action's arguments.
  */
@@ -115,6 +115,10 @@ export const app = <
   fallback,
 }: AppProps<State, Actions>): void => {
   let renderScheduled = false;
+  // Whether `render` is on the stack right now, which is what tells a dispatch made from
+  // inside render apart from one that should coalesce into the frame already queued.
+  let rendering = false;
+  let cascadedRenders = 0;
   let state: State;
 
   invariant(isFunction(init), 'An "init" function returning a Promise must be provided.');
@@ -139,17 +143,41 @@ export const app = <
   }, {}) as ActionDispatchers<Actions>;
 
   function scheduleUpdate(effect?: Effect | void) {
-    if (!renderScheduled) {
-      renderScheduled = true;
-      requestAnimationFrame(() => {
+    scheduleRender();
+    if (isFunction(effect)) runEffect(effect);
+  }
+
+  function scheduleRender() {
+    if (renderScheduled) return;
+    if (rendering) {
+      // A dispatch made from inside render. Its state cannot be shown by the frame that is
+      // painting, so it needs one of its own - and a render that dispatches unconditionally
+      // would then never stop, which is what this cap is for.
+      if (cascadedRenders >= MAX_CASCADED_RENDERS) {
+        logger.warn(
+          `[sszvis.app] Stopped after ${MAX_CASCADED_RENDERS} renders scheduled from inside "render". Dispatch from render only on a condition that eventually becomes false.`
+        );
+        return;
+      }
+      cascadedRenders += 1;
+    } else {
+      cascadedRenders = 0;
+    }
+    renderScheduled = true;
+    requestAnimationFrame(() => {
+      // Cleared before render runs, so that a dispatch made from inside render can queue the
+      // frame its state needs instead of being swallowed by a guard that is still closed.
+      renderScheduled = false;
+      rendering = true;
+      try {
         // Shallow, so that d3 can still mutate the data hanging off the state, but enough to
         // turn an accidental `state.x = …` in render into a TypeError rather than a change
         // that survives into the next action's draft.
         render(Object.freeze(state), actionDispatchers);
-        renderScheduled = false;
-      });
-    }
-    if (isFunction(effect)) runEffect(effect);
+      } finally {
+        rendering = false;
+      }
+    });
   }
 
   /** Effects are the caller's code, run one turn removed from whatever scheduled them, so
@@ -196,6 +224,10 @@ export const app = <
 
 // -----------------------------------------------------------------------------
 // Helper functions
+
+/** How many frames in a row may be scheduled by a dispatch made from inside `render` before
+ * the cascade is treated as a runaway loop and cut off. */
+const MAX_CASCADED_RENDERS = 10;
 
 function invariant(condition: boolean, message: string | Error): void {
   if (!condition) {
