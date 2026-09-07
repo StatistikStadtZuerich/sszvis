@@ -156,46 +156,37 @@ describe("map/renderer/image", () => {
     });
   });
 
-  describe("known quirks", () => {
-    // BUG: neither geoBounds nor projection is validated. A missing geoBounds throws a bare
-    // TypeError from indexing undefined, and a missing projection throws from calling it - both
-    // before any attribute is written, so the failure names neither property.
-    test("throws when geoBounds is missing", () => {
-      expect(() => layer().call(mapRendererImage().projection(projectionOf()).src(SRC))).toThrow(
-        TypeError
-      );
-    });
-
-    test("throws when the projection is missing", () => {
+  describe("validation", () => {
+    test("reports a missing projection", () => {
       expect(() => layer().call(mapRendererImage().src(SRC).geoBounds(GEO_BOUNDS))).toThrow(
-        TypeError
+        /projection/
       );
     });
 
-    // NOTE: the img element is appended before the corners are projected, so a throw from the
-    // projection leaves a classed, empty img in the layer. Unlike the map renderers this one has
-    // no geometry to lose, but the element is still there on the next render.
-    test("leaves a classed img behind when the projection throws", () => {
-      const target = layer("image-throwing-projection");
+    test("reports a missing src", () => {
       expect(() =>
-        target.call(
-          mapRendererImage()
-            .projection(() => {
-              throw new Error("nope");
-            })
-            .src(SRC)
-            .geoBounds(GEO_BOUNDS)
-        )
-      ).toThrow();
-      expect(image(target.node() as HTMLElement)).not.toBeNull();
-      expect(image(target.node() as HTMLElement)?.hasAttribute("src")).toBe(false);
+        layer().call(mapRendererImage().projection(projectionOf()).geoBounds(GEO_BOUNDS))
+      ).toThrow(/src/);
     });
 
-    // NOTE: the projection's return value is indexed without a guard, so a projection that
-    // answers null for a point it cannot place throws a bare TypeError. d3's own projections
-    // return a point for every input when called directly - clipAngle and clipExtent apply to
-    // streams, not to this call form - so this only bites a caller-supplied projection.
-    test("throws when the projection returns null for a corner", () => {
+    test("reports a missing geoBounds", () => {
+      expect(() => layer().call(mapRendererImage().projection(projectionOf()).src(SRC))).toThrow(
+        /geoBounds/
+      );
+    });
+
+    test("reports inverted geoBounds instead of silently unsizing the image", () => {
+      expect(() =>
+        layer().call(
+          mapRendererImage()
+            .projection(projectionOf())
+            .src(SRC)
+            .geoBounds([GEO_BOUNDS[1], GEO_BOUNDS[0]])
+        )
+      ).toThrow(/geoBounds/);
+    });
+
+    test("reports a corner the projection cannot place, naming it", () => {
       expect(() =>
         layer().call(
           mapRendererImage()
@@ -203,32 +194,17 @@ describe("map/renderer/image", () => {
             .src(SRC)
             .geoBounds(GEO_BOUNDS)
         )
-      ).toThrow(TypeError);
+      ).toThrow(/north-west corner/);
     });
 
-    // Both corners are projected, and the src is written, before the coordinates are read - so the
-    // throw above leaves an img that has its src but no position. Pinned because it is the kind of
-    // ordering a port could quietly change by validating the corners up front.
-    test("writes the src and projects both corners before failing on a null result", () => {
-      const target = layer("image-null-projection");
-      let calls = 0;
-      expect(() =>
-        target.call(
-          mapRendererImage()
-            .projection(() => {
-              calls += 1;
-              return null;
-            })
-            .src(SRC)
-            .geoBounds(GEO_BOUNDS)
-        )
-      ).toThrow(TypeError);
-      expect(calls).toBe(2);
-      const node = target.node() as HTMLElement;
-      expect(image(node)?.getAttribute("src")).toBe(SRC);
-      expect(image(node)?.style.left).toBe("");
+    test("builds nothing when a property is missing", () => {
+      const target = layer("image-unvalidated");
+      expect(() => target.call(mapRendererImage().projection(projectionOf()).src(SRC))).toThrow();
+      expect(image(target.node() as HTMLElement)).toBeNull();
     });
+  });
 
+  describe("known quirks", () => {
     // NOTE: a Mercator projection does not reject a pole; log(tan(pi/2)) is merely a very large
     // float, so a geoBounds latitude of 90 yields an enormous finite offset and the image is
     // positioned and sized tens of thousands of pixels off. Silently off-screen, not reported -
@@ -314,35 +290,6 @@ describe("map/renderer/image", () => {
     // failed to load.
     test("renders an invisible image for a zero opacity", () => {
       expect(image(render((c) => c.opacity(0)))?.style.opacity).toBe("0");
-    });
-
-    // BUG: a missing src is not reported. d3 removes an attribute set to undefined, so the
-    // component renders a fully positioned, correctly sized img with no src at all - which the
-    // browser shows as a broken image, or as nothing, depending on the layout.
-    test("renders a positioned img with no src when src is missing", () => {
-      const node = layer()
-        .call(mapRendererImage().projection(projectionOf()).geoBounds(GEO_BOUNDS))
-        .node() as HTMLElement;
-      expect(image(node)?.hasAttribute("src")).toBe(false);
-      expect(image(node)?.style.left).not.toBe("");
-    });
-
-    // BUG: the corners are subtracted in the order given, so passing the south-east corner first -
-    // the mistake the docs examples guard against with an "Expects longitude, latitude" comment -
-    // yields negative widths and heights. The CSS parser drops those, so the image is positioned
-    // but unsized, with no error.
-    test("silently unsizes the image when geoBounds is inverted", () => {
-      const node = layer()
-        .call(
-          mapRendererImage()
-            .projection(projectionOf())
-            .src(SRC)
-            .geoBounds([GEO_BOUNDS[1], GEO_BOUNDS[0]])
-        )
-        .node() as HTMLElement;
-      expect(image(node)?.style.width).toBe("");
-      expect(image(node)?.style.height).toBe("");
-      expect(image(node)?.style.left).not.toBe("");
     });
 
     // NOTE: neither src nor opacity is wrapped in fn.functor, unlike the colour props of the map

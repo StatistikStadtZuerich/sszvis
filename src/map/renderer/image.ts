@@ -9,12 +9,11 @@
  *
  * @property {Function} projection      The map projection function used to position the image in pixels. Uses the upper left
  *                                      and lower right corners of the image as geographical place markers to align with other map layers.
- *                                      It is called once per corner, with that corner's coordinates. A result it cannot
- *                                      place is not handled; see the notes below.
+ *                                      It is called once per corner, with that corner's coordinates. A corner it answers
+ *                                      null or undefined for is reported, naming the corner.
  * @property {String, Function} src      The source of the image you want to use. This should be either a URL for an image hosted on the same
  *                                      server that hosts the page, or a base64-encoded dataURL. For example, the zurich topolayer map module.
- *                                      A missing src is not reported: d3 removes an attribute set to undefined, so the
- *                                      image renders fully positioned with no src at all.
+ *                                      Required: a missing src is reported rather than rendering an image with none.
  * @property {Array} geoBounds          This should be a 2D array containing the upper-left (north-west) and lower-right (south-east)
  *                                      coordinates of the corresponding corners of the image. The structure expected is:
  *
@@ -25,9 +24,8 @@
  *                                      Note: it is possible that even with precise corner coordinates, some mismatch may still occur. This
  *                                      will happen if the image itself is generated using a different type of map projection than the one used by the
  *                                      projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
- *                                      The two corners are subtracted in the order given, so passing the south-east
- *                                      corner first yields negative widths and heights, which the CSS parser drops -
- *                                      leaving the image positioned but unsized, with no error.
+ *                                      Required, and the order matters: corners the wrong way round project to a
+ *                                      negative width or height, which is reported rather than silently dropped.
  * @property {Number, Function} opacity  The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
  *                                      Default 1. An invalid value is dropped by the CSS parser rather than reported,
  *                                      leaving the image fully opaque; 0 renders nothing at all, which is
@@ -56,24 +54,20 @@
  * the rounded south-east corner and the image's edges land on the same pixels as the map layers it
  * is aligned with.
  *
- * Note: neither geoBounds nor projection is validated. A missing geoBounds throws a bare TypeError
- * from indexing undefined, and a missing projection throws from calling it - both before any
- * attribute is written, though the img element has already been appended by then, so a throw
- * leaves a classed, empty img in the layer. A missing src is not reported at all: d3 removes an
- * attribute set to undefined, so the image renders fully positioned and sized with no src.
+ * Note: projection, src and geoBounds are all required and are validated before any element is
+ * created, so each way of getting them wrong is reported with a message naming the property, and a
+ * misconfigured renderer leaves nothing half-built in the layer. Inverted geoBounds - the likely
+ * real-world mistake - are caught by the negative extent they project to.
  *
- * Note: a projection that answers null for a point it cannot place throws a bare TypeError rather
- * than being reported, and it does so late: the src has been written and both corners have already
- * been projected by the time the coordinates are read, so the failure leaves an img with its src
- * but no position. The JavaScript threw from indexing that null; the port re-throws a TypeError
- * carrying the same message from the same point in the chain. A projection that answers a
- * non-finite coordinate instead produces the string "Infinitypx", which the CSS parser drops,
- * leaving the image unpositioned. Neither is reachable with a d3 projection called this way:
- * clipAngle and clipExtent apply to streams, not to a direct call.
+ * Note: a projection that answers a non-finite coordinate is still not reported; it produces the
+ * string "Infinitypx", which the CSS parser drops, leaving the image unpositioned. Not reachable
+ * with a d3 projection called this way: clipAngle and clipExtent apply to streams, not to a direct
+ * call.
  *
  * Note: a Mercator pole, which is reachable, fails a third way again - log(tan(pi/2)) is merely a
  * very large float, so a geoBounds latitude of 90 positions and sizes the image tens of thousands
- * of pixels off rather than failing.
+ * of pixels off rather than failing - the extent stays positive, so the geoBounds check does not
+ * catch it either.
  *
  * Note: neither src nor opacity is wrapped in fn.functor, unlike the colour properties of the base,
  * geojson and highlight renderers - but both are handed straight to d3, which evaluates a function against the bound
@@ -107,17 +101,14 @@ import type { GeoPoint, PointProjection } from "../mapUtils.js";
 type ImageValue<R extends string | number> = R | ValueFn<BaseType, number, R>;
 
 /**
- * The props as this component's contract describes them, which is deliberately narrower than what
- * the runtime tolerates: projection, src and geoBounds are required here even though none is
- * validated. Omitting the projection or the bounds throws a bare TypeError, and omitting the src
- * renders an image with no src at all; the characterization tests pin both, which is why the
- * getters report all three as possibly undefined. Following the same split as
- * src/map/renderer/mesh.ts.
+ * The props as they are read at runtime. projection, src and geoBounds are required, but the
+ * builder cannot enforce that, so they are optional here and validated in render - which is what
+ * lets the errors name the property at fault. Following the same split as src/map/renderer/mesh.ts.
  */
 type ImageProps = {
-  projection: PointProjection;
-  src: ImageValue<string>;
-  geoBounds: [GeoPoint, GeoPoint];
+  projection?: PointProjection;
+  src?: ImageValue<string>;
+  geoBounds?: [GeoPoint, GeoPoint];
   opacity: ImageValue<number>;
   alt: ImageValue<string>;
 };
@@ -135,18 +126,31 @@ export interface MapRendererImageComponent extends ComponentBuilder<MapRendererI
   alt(value: ImageValue<string>): MapRendererImageComponent;
 }
 
-/**
- * Reads one axis of a projected corner. The JavaScript indexed the projection's result directly, so
- * a null result threw from that index; this reproduces the same failure at the same point in the
- * chain, with the message V8 produced for it. Note the strict null check: a projection returning
- * undefined falls through to the index on the next line, which throws the genuine "Cannot read
- * properties of undefined" TypeError, again as the JavaScript did.
- */
-function coordinate(projected: [number, number] | null, axis: 0 | 1): number {
-  if (projected === null) {
-    throw new TypeError(`Cannot read properties of null (reading '${axis}')`);
+/** Reports a required property the caller left unset, naming it. */
+function required<T>(value: T | undefined, name: string): T {
+  if (value === undefined) {
+    throw new Error(`[mapRendererImage] the ${name} property is required`);
   }
-  return projected[axis];
+  return value;
+}
+
+/**
+ * Projects one corner of the image, reporting a projection that cannot place it rather than
+ * throwing a bare TypeError from indexing null.
+ */
+function corner(
+  projection: PointProjection,
+  geoBounds: [GeoPoint, GeoPoint],
+  which: 0 | 1
+): [number, number] {
+  const projected = projection(geoBounds[which]);
+  if (projected == null) {
+    const name = which === 0 ? "north-west" : "south-east";
+    throw new Error(
+      `[mapRendererImage] the projection could not place the ${name} corner of geoBounds`
+    );
+  }
+  return projected;
 }
 
 export default function (): MapRendererImageComponent {
@@ -162,37 +166,41 @@ export default function (): MapRendererImageComponent {
       const selection = select(this);
       const props = selection.props<ImageProps>();
 
+      // Everything the render depends on is validated before any element is created, so a
+      // misconfigured renderer leaves nothing half-built behind in the layer.
+      const projection = required(props.projection, "projection");
+      const src = required(props.src, "src");
+      const geoBounds = required(props.geoBounds, "geoBounds");
+
+      const topLeft = corner(projection, geoBounds, 0);
+      const bottomRight = corner(projection, geoBounds, 1);
+      const width = Math.round(bottomRight[0]) - Math.round(topLeft[0]);
+      const height = Math.round(bottomRight[1]) - Math.round(topLeft[1]);
+      // A negative extent means the corners were passed the other way round - the mistake the
+      // docs examples guard against with an "Expects longitude, latitude" comment. The CSS parser
+      // drops a negative length, so without this the image would render positioned but unsized.
+      if (width < 0 || height < 0) {
+        throw new Error(
+          "[mapRendererImage] the geoBounds property expects the north-west corner first; the corners given project to a negative width or height"
+        );
+      }
+
       const image = selection
         .selectAll(".sszvis-map__image")
-        .data([0]) // At the moment, 1 image per container
+        .data([0])
         .join("img")
         .classed("sszvis-map__image", true);
 
-      // Both corners are projected before anything is written, and the coordinates are read only
-      // as each style is applied, so the two failure modes land in different places - exactly as
-      // the JavaScript did. A projection that *throws* does so here, before .attr("src", ...) is
-      // reached, leaving the image element joined but with no src at all. A projection that
-      // *returns null* gets this far, so the src is written and only the first coordinate read
-      // fails. See test/map/renderer/image.test.ts.
-      const topLeft = props.projection(props.geoBounds[0]);
-      const bottomRight = props.projection(props.geoBounds[1]);
-
       image
-        .attr("src", fn.valueFn(props.src))
+        .attr("src", fn.valueFn(src))
         .attr("alt", fn.valueFn(props.alt))
         .style("position", "absolute")
-        .style("left", `${Math.round(coordinate(topLeft, 0))}px`)
-        .style("top", `${Math.round(coordinate(topLeft, 1))}px`)
+        .style("left", `${Math.round(topLeft[0])}px`)
+        .style("top", `${Math.round(topLeft[1])}px`)
         // Each corner is rounded before the subtraction, so the right and bottom edges land on the
         // same pixels as the projected south-east corner rather than a pixel either side of it.
-        .style(
-          "width",
-          `${Math.round(coordinate(bottomRight, 0)) - Math.round(coordinate(topLeft, 0))}px`
-        )
-        .style(
-          "height",
-          `${Math.round(coordinate(bottomRight, 1)) - Math.round(coordinate(topLeft, 1))}px`
-        )
+        .style("width", `${width}px`)
+        .style("height", `${height}px`)
         .style("opacity", fn.valueFn(props.opacity));
     });
 }
