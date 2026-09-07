@@ -49,6 +49,10 @@
  *                                                   the tick stays centred on the column - and horizontally only; the vertical position is fixed. A
  *                                                   function is applied by d3 rather than by the renderer, so it receives the label's datum, that
  *                                                   column's node count, followed by the column index.
+ * @property {Number, Function} columnLabelOpacity  A value for the opacity of the column labels, or a function taking a column index and returning
+ *                                                   one. Default 1. Use it to fade the column headers out while a hover label occupies the same
+ *                                                   space; labelOpacity does the same for the node labels. Like columnLabel, an accessor is called
+ *                                                   with the column index alone.
  * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default
  *                                                   0.5, which puts both control points at the horizontal midpoint. Never clamped: at 1 the control
  *                                                   points swap ends, which still keeps the curve inside the column gap as a pronounced S, and above
@@ -76,9 +80,8 @@
  *                                                   flipped in very narrow screen layouts, when you want the labels to appear on the opposite side of
  *                                                   the columns they refer to. The hit boxes follow the switch as well.
  * @property {Number, Function} labelOpacity         A value for the opacity of the node labels, or a function over a node returning one. Default 1.
- *                                                   Despite what this property used to claim, it is applied to the node labels: the column labels
- *                                                   never receive an opacity at all, and no property hides them. Use it to fade the node names out
- *                                                   when they would overlap with user-triggered hover labels.
+ *                                                   It applies to the node labels only; columnLabelOpacity covers the column labels. Use it to fade
+ *                                                   the node names out when they would overlap with user-triggered hover labels.
  * @property {Number} labelHitBoxSize                A number for the width of the transparent 'hit boxes' drawn over the labels. This should
  *                                                   basically be equal to the width of the widest label. For performance reasons, it doesn't make
  *                                                   sense to calculate this value at run time while the component is rendered. Far better is to
@@ -307,6 +310,7 @@ type SankeyProps = {
   columnPadding: ColumnAccessor<number>;
   columnLabel: ColumnAccessor<string>;
   columnLabelOffset: ColumnLabelOffset;
+  columnLabelOpacity: ColumnAccessor<number>;
   linkCurvature: number;
   /**
    * Handed to bar, whose fill accepts an accessor returning undefined, so this one keeps the
@@ -355,6 +359,8 @@ export interface SankeyComponent extends SankeyBuilder {
   columnLabel(value: ColumnValue<string>): SankeyComponent;
   columnLabelOffset(): ColumnLabelOffset;
   columnLabelOffset(value: ColumnLabelOffsetValue): SankeyComponent;
+  columnLabelOpacity(): ColumnAccessor<number>;
+  columnLabelOpacity(value: ColumnValue<number>): SankeyComponent;
   linkCurvature(): number;
   linkCurvature(curvature: number): SankeyComponent;
   nodeColor(): StoredAccessor<SankeyNode, string | undefined> | undefined;
@@ -429,6 +435,8 @@ export default function (): SankeyComponent {
     .columnLabel("")
     .prop("columnLabelOffset", fn.functor)
     .columnLabelOffset(0)
+    .prop("columnLabelOpacity", fn.functor)
+    .columnLabelOpacity(1)
     .prop("linkCurvature")
     .linkCurvature(0.5)
     .prop("nodeColor", fn.functor)
@@ -507,7 +515,8 @@ export default function (): SankeyComponent {
         .attr("transform", (d, i) =>
           translateString(columnLabelX(i) + props.columnLabelOffset(d, i), COLUMN_LABEL_Y)
         )
-        .text((_d, i) => props.columnLabel(i));
+        .text((_d, i) => props.columnLabel(i))
+        .style("opacity", (_d, i) => props.columnLabelOpacity(i));
 
       const columnLabelTicks = barGroup
         .selectAll<SVGLineElement, number>(".sszvis-sankey-column-label-tick")

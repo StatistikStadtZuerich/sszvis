@@ -638,14 +638,9 @@ describe("component/sankey", () => {
       ).toEqual(["1", "1", "0.5", "0.5"]);
     });
 
-    test("should apply labelOpacity to the node labels, not to the column labels", () => {
-      // BUG: labelOpacity is documented as "the opacity of the column labels ... to hide
-      // them when they would overlap with user-triggered hover labels", but it is applied to
-      // the node labels and the column labels never receive an opacity at all. Anyone
-      // following the documentation to fade the column headers out on hover fades the node
-      // names instead, and cannot touch the headers.
-      // current: the node labels carry the opacity. expected: the column labels do, per the
-      // documentation - or the documentation says "node labels".
+    test("should apply labelOpacity to the node labels and not to the column labels", () => {
+      // labelOpacity covers the node labels; columnLabelOpacity covers the column labels,
+      // so each set of labels can be faded on its own.
       const node = render(sankeyOf().columnLabel("Total").labelOpacity(0.25), testData);
       expect(
         all<SVGTextElement>(node, "nodelabels", "text.sszvis-sankey-node-label").map(
@@ -656,7 +651,42 @@ describe("component/sankey", () => {
         all<SVGTextElement>(node, "nodes", "text.sszvis-sankey-column-label").map(
           (l) => l.style.opacity
         )
-      ).toEqual(["", ""]);
+      ).toEqual(["1", "1"]);
+    });
+
+    test("should fade the column labels through columnLabelOpacity", () => {
+      const constant = render(sankeyOf().columnLabel("Total").columnLabelOpacity(0.25), testData);
+      expect(
+        all<SVGTextElement>(constant, "nodes", "text.sszvis-sankey-column-label").map(
+          (l) => l.style.opacity
+        )
+      ).toEqual(["0.25", "0.25"]);
+      // The node labels are left alone
+      expect(
+        all<SVGTextElement>(constant, "nodelabels", "text.sszvis-sankey-node-label")[0].style
+          .opacity
+      ).toBe("1");
+
+      const accessor = render(
+        sankeyOf()
+          .columnLabel("Total")
+          .columnLabelOpacity((i: number) => (i === 0 ? 1 : 0)),
+        testData
+      );
+      expect(
+        all<SVGTextElement>(accessor, "nodes", "text.sszvis-sankey-column-label").map(
+          (l) => l.style.opacity
+        )
+      ).toEqual(["1", "0"]);
+    });
+
+    test("should default columnLabelOpacity to 1", () => {
+      const node = render(sankeyOf().columnLabel("Total"), testData);
+      expect(
+        all<SVGTextElement>(node, "nodes", "text.sszvis-sankey-column-label").map(
+          (l) => l.style.opacity
+        )
+      ).toEqual(["1", "1"]);
     });
   });
 
