@@ -27,7 +27,8 @@
  *                                          asked for a stroke at all; see the note below.
  * @property {Number, Function} strokeWidth The thickness of the strokes of the shapes. A number, or a function
  *                                          returning a number, called with the datum as the fill and stroke
- *                                          accessors are. Default 1.25.
+ *                                          accessors are. Default 1.25. Undefined entities are not asked for a
+ *                                          stroke width; they carry no stroke-width attribute.
  * @property {Boolean} transitionColor      Whether to schedule a transition on the fill color of the geojson entities.
  *                                          Default true. The transition does not currently animate anything; see the
  *                                          note below.
