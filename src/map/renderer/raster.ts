@@ -33,6 +33,9 @@
  *                                   the notes below.
  *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
  *                                   CanvasPattern at runtime, which this contract deliberately excludes.
+ * @property {String} key          Identifies this raster within its layer. Default "raster". Two rasters in
+ *                                   one layer need distinct keys to coexist; two sharing a key share one
+ *                                   canvas, and since each render clears it, the last one wins.
  * @property {String} alt            An accessible description of what the raster shows. Default "", which
  *                                   marks the canvas decorative so assistive technology skips it
  *                                   deliberately. A non-empty value is written as an aria-label with
@@ -97,10 +100,12 @@
  * createHtmlLayer offsets the layer by the bounds padding, so cell positions are layer-relative and
  * the padding is applied exactly once.
  *
- * Note: the selector is unscoped and the join binds a placeholder, so a second raster renderer in
- * the same layer redraws the first one's canvas instead of adding its own. The same defect as the
- * mesh, highlight, lake overlay and image renderers. The canvas is appended to the layer, so it
- * stacks over whatever the layer already holds, which is what rastermap-bins relies on.
+ * Note: the canvas is scoped to the layer's own children and identified by the key prop, so two
+ * rasters can coexist in one layer as long as their keys differ - the same convention as the mesh
+ * renderer's key. Two rasters sharing a key share one canvas, which is what makes a re-render reuse
+ * its element, so the constraint is one raster per key per layer rather than one per layer. The
+ * canvas is appended to the layer, so it stacks over whatever the layer already holds, which is
+ * what rastermap-bins relies on.
  *
  * Note: nothing ties this component to an HTML layer. Called on an SVG selection the join creates an
  * SVG-namespaced canvas, which has no getContext, so it throws - where the image renderer silently
@@ -125,6 +130,17 @@ import type { BaseType } from "d3";
 import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
+
+/**
+ * Marks the canvas a raster owns, so a second raster in the same layer draws its own rather than
+ * clearing and redrawing this one. Read back through d3's filter rather than an attribute selector,
+ * which would have to escape an arbitrary caller-supplied key. The same convention as the mesh
+ * renderer's data-mesh-key.
+ */
+const KEY_ATTRIBUTE = "data-raster-key";
+
+/** The default key, so a caller who never asks for a second raster need not name the first. */
+const DEFAULT_KEY = "raster";
 
 /** A pixel position, as the position accessor returns one. */
 type Position = [number, number];
@@ -152,6 +168,7 @@ type RasterProps<T> = {
   position: (datum: T) => Position | null;
   cellSide: number;
   fill: StoredRasterFill<T>;
+  key: string;
   alt: string;
   opacity: number;
 };
@@ -170,6 +187,8 @@ export interface MapRendererRasterComponent<T = unknown>
   cellSide(value: number): MapRendererRasterComponent<T>;
   fill(): StoredRasterFill<T> | undefined;
   fill<U = T>(value: RasterFill<U>): MapRendererRasterComponent<T>;
+  key(): string;
+  key(value: string): MapRendererRasterComponent<T>;
   alt(): string;
   alt(value: string): MapRendererRasterComponent<T>;
   opacity(): number;
@@ -264,6 +283,8 @@ export default function <T = unknown>(): MapRendererRasterComponent<T> {
     .prop("cellSide")
     .cellSide(2)
     .prop("fill", fn.functor)
+    .prop("key")
+    .key(DEFAULT_KEY)
     .prop("alt")
     .alt("")
     .prop("opacity")
@@ -278,10 +299,14 @@ export default function <T = unknown>(): MapRendererRasterComponent<T> {
       const height = Math.ceil(dimension(props.height, "height"));
 
       const canvas = selection
-        .selectAll(".sszvis-map__rasterimage")
+        .selectAll<Element, number>(":scope > canvas.sszvis-map__rasterimage")
+        .filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE) === props.key;
+        })
         .data([0])
         .join("canvas")
-        .classed("sszvis-map__rasterimage", true);
+        .classed("sszvis-map__rasterimage", true)
+        .attr(KEY_ATTRIBUTE, props.key);
 
       // The bitmap is in device pixels while the element is laid out in CSS pixels, so the cells
       // are as sharp as the SVG layers over them on a high-DPI display.
