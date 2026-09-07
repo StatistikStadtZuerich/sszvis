@@ -1,0 +1,229 @@
+/**
+ * raster renderer component
+ *
+ * @module  sszvis/map/renderer/raster
+ *
+ * Used for rendering a raster layer within a map (can also be used in other contexts, but the map usage
+ * is the most straightforward). Requires a width and a height for the raster layer, a function which
+ * returns raster positions, and one which returns fill colors.
+ *
+ * Unlike the other map renderers this one draws into a canvas inside an HTML layer, and it takes its
+ * data from the layer's datum rather than from a property.
+ *
+ * @property {Boolean} debug         Whether to activate debug mode, which shows a red square over the whole
+ *                                   canvas, for testing alignment with other map layers. Default false. See
+ *                                   the note below: it is not purely additive.
+ * @property {Number} width          The width of the canvas. Required, and unvalidated; a fractional value is
+ *                                   truncated to whole pixels. See the notes below.
+ * @property {Number} height         The height of the canvas. Required and unvalidated, like the width.
+ * @property {Function} position     A function which takes a datum and returns a position for the corresponding
+ *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
+ *                                   index, no array - unlike a d3 accessor.
+ * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2. A
+ *                                   fractional side antialiases; see the notes below.
+ * @property {Function} fill         The fill function. Takes a datum and should return a fill color for the datum's pixel.
+ *                                   Wrapped in fn.functor, so a constant colour is accepted too. It has no
+ *                                   default, and an invalid colour is not reported; see the notes below.
+ *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
+ *                                   CanvasPattern at runtime, which this contract deliberately excludes.
+ * @property {Number} opacity        The opacity of the canvas. Defaults to 1. It is a style on the canvas, so it
+ *                                   fades the whole layer rather than the individual cells, and 0 still draws
+ *                                   every one of them.
+ *
+ * Note: the bitmap is sized in CSS pixels - the width and height attributes are the layer dimensions,
+ * with no devicePixelRatio factor and no compensating style width - so on a display with a device
+ * pixel ratio above 1 the bitmap is stretched across more device pixels than it has, and the cells
+ * come out soft while the SVG layers over them stay sharp.
+ *
+ * Note: a fractional width or height is truncated to a whole-pixel bitmap. Every docs caller passes
+ * bounds.innerWidth, which is routinely fractional, so a raster layer is typically up to a pixel
+ * narrower and shorter than the SVG layers it has to line up with.
+ *
+ * Note: the visible clearing between renders comes from writing the width attribute, which resets
+ * the bitmap per spec, rather than from the clearRect call. When width and height are missing the
+ * attributes are removed, the canvas falls back to its intrinsic 300x150, clearRect is called with
+ * NaN and silently does nothing - so nothing clears at all and each render's cells pile up on the
+ * previous ones. A change of dimensions resizes the existing canvas rather than replacing it.
+ *
+ * Note: fillStyle is stateful, and an invalid colour is ignored by the canvas API rather than
+ * reported - so a cell whose fill does not parse is drawn in whatever colour was last set. That is
+ * the previous cell's colour, which makes a broken colour scale look like a working one, or, in
+ * debug mode, the debug red at 20% alpha, which reads as data. Debug mode is therefore not purely
+ * additive.
+ *
+ * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
+ * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
+ * nothing. Neither position nor fill is validated either, and each throws a bare TypeError from
+ * being called, naming neither property - but only for non-empty data, so an empty dataset hides
+ * the misconfiguration entirely. The canvas has already been created by the time any of these
+ * throw.
+ *
+ * Note: a non-finite position is dropped by the canvas API rather than reported, so a datum the
+ * projection could not place leaves a hole in the raster with no indication; a null position throws
+ * instead - the JavaScript threw from indexing that null, and the port re-throws a TypeError
+ * carrying the same message from the same point in the loop. A zero cellSide draws nothing at all, and a negative one is
+ * indistinguishable from its positive counterpart, since the half-side offset and the width negate
+ * each other. A fractional cellSide puts the cell edges on half pixels, so they antialias rather
+ * than tiling exactly - and pixelsFromGeoDistance returns a float.
+ *
+ * Note: the component writes no position, so the canvas is only positioned because sszvis.css sets
+ * position: absolute on the class - the same dependency as the image renderer, along with
+ * display: block and pointer-events: none. The positions themselves are written unshifted, and
+ * createHtmlLayer offsets the layer by the bounds padding, so cell positions are layer-relative and
+ * the padding is applied exactly once.
+ *
+ * Note: the selector is unscoped and the join binds a placeholder, so a second raster renderer in
+ * the same layer redraws the first one's canvas instead of adding its own. The same defect as the
+ * mesh, highlight, lake overlay and image renderers. The canvas is appended to the layer, so it
+ * stacks over whatever the layer already holds, which is what rastermap-bins relies on.
+ *
+ * Note: nothing ties this component to an HTML layer. Called on an SVG selection the join creates an
+ * SVG-namespaced canvas, which has no getContext, so it throws - where the image renderer silently
+ * appends an unrenderable img instead. The port checks for that method rather than for an
+ * HTMLCanvasElement, so a canvas belonging to another realm still draws.
+ *
+ * Note: no transition is scheduled - a canvas cannot be transitioned by d3 anyway - so the raster
+ * repaints in full on every render, one fillStyle write and one fillRect per datum.
+ * See test/map/renderer/raster.test.ts.
+ *
+ * @return {sszvis.component}
+ */
+
+import type { BaseType } from "d3";
+import { select } from "d3";
+import { type Component, component } from "../../d3-component.js";
+import * as fn from "../../fn.js";
+
+/** A pixel position, as the position accessor returns one. */
+type Position = [number, number];
+
+/**
+ * A constant or an accessor; both are accepted, since fill is wrapped by fn.functor. The result is
+ * assigned to fillStyle, which ignores a value it cannot parse.
+ */
+type RasterFill<T> = string | ((datum: T) => string);
+
+/** How a functor-wrapped prop reads back once it is stored: always a function. */
+type StoredRasterFill<T> = (datum: T) => string;
+
+/**
+ * The props as this component's contract describes them, which is deliberately narrower than what
+ * the runtime tolerates: width, height, position and fill are required here even though none is
+ * validated. Missing dimensions leave the canvas at its intrinsic size and stop it clearing, and a
+ * missing accessor throws when the data are non-empty; the characterization tests pin both, which
+ * is why the getters report all four as possibly undefined. Following the same split as
+ * src/map/renderer/mesh.ts.
+ */
+type RasterProps<T> = {
+  debug: boolean;
+  width: number;
+  height: number;
+  position: (datum: T) => Position | null;
+  cellSide: number;
+  fill: StoredRasterFill<T>;
+  opacity: number;
+};
+
+export interface MapRendererRasterComponent<T = unknown> extends Component {
+  debug(): boolean;
+  debug(value: boolean): MapRendererRasterComponent<T>;
+  width(): number | undefined;
+  width(value: number): MapRendererRasterComponent<T>;
+  height(): number | undefined;
+  height(value: number): MapRendererRasterComponent<T>;
+  position(): ((datum: T) => Position | null) | undefined;
+  position<U = T>(value: (datum: U) => Position | null): MapRendererRasterComponent<T>;
+  cellSide(): number;
+  cellSide(value: number): MapRendererRasterComponent<T>;
+  fill(): StoredRasterFill<T> | undefined;
+  fill<U = T>(value: RasterFill<U>): MapRendererRasterComponent<T>;
+  opacity(): number;
+  opacity(value: number): MapRendererRasterComponent<T>;
+}
+
+/**
+ * Reads one axis of a position. The JavaScript indexed the accessor's result directly, so a null
+ * result threw from that index; this reproduces the same failure with the message V8 produced for
+ * it. Note the strict null check: an accessor returning undefined falls through to the index on the
+ * next line, which throws the genuine "Cannot read properties of undefined" TypeError, again as the
+ * JavaScript did. A non-finite coordinate passes through untouched, since fillRect is what drops
+ * it.
+ */
+function coordinate(position: Position | null, axis: 0 | 1): number {
+  if (position === null) {
+    throw new TypeError(`Cannot read properties of null (reading '${axis}')`);
+  }
+  return position[axis];
+}
+
+/**
+ * Reads the drawing context, throwing as the JavaScript did when there is none. That happens when
+ * the join created an SVG-namespaced canvas, which has no getContext at all - the message is the
+ * one that call produced. The check is for the method rather than `instanceof HTMLCanvasElement`,
+ * which would also reject a canvas belonging to another realm - an iframe's document - where the
+ * JavaScript drew quite happily.
+ */
+function context2d(node: BaseType | null): CanvasRenderingContext2D {
+  if (node === null || !("getContext" in node) || typeof node.getContext !== "function") {
+    throw new TypeError("canvas.node(...).getContext is not a function");
+  }
+  const ctx = node.getContext("2d");
+  if (ctx === null) {
+    // A 2d context is only refused when one of another kind was already taken on this element,
+    // which cannot happen here; the JavaScript would have thrown on the next line instead.
+    throw new TypeError("Cannot read properties of null (reading 'clearRect')");
+  }
+  return ctx;
+}
+
+export default function <T = unknown>(): MapRendererRasterComponent<T> {
+  return component()
+    .prop("debug")
+    .debug(false)
+    .prop("width")
+    .prop("height")
+    .prop("position")
+    .prop("cellSide")
+    .cellSide(2)
+    .prop("fill", fn.functor)
+    .prop("opacity")
+    .opacity(1)
+    .render(function (this: Element, data: T[]) {
+      const selection = select(this);
+      const props = selection.props<RasterProps<T>>();
+
+      const canvas = selection
+        .selectAll(".sszvis-map__rasterimage")
+        .data([0])
+        .join("canvas")
+        .classed("sszvis-map__rasterimage", true);
+
+      canvas
+        .attr("width", props.width)
+        .attr("height", props.height)
+        .style("opacity", props.opacity);
+
+      const ctx = context2d(canvas.node());
+
+      ctx.clearRect(0, 0, props.width, props.height);
+
+      if (props.debug) {
+        // Displays a rectangle that fills the canvas.
+        // Useful for checking alignment with other render layers.
+        ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
+        ctx.fillRect(0, 0, props.width, props.height);
+      }
+
+      const halfSide = props.cellSide / 2;
+      for (const datum of data) {
+        const position = props.position(datum);
+        ctx.fillStyle = props.fill(datum);
+        ctx.fillRect(
+          coordinate(position, 0) - halfSide,
+          coordinate(position, 1) - halfSide,
+          props.cellSide,
+          props.cellSide
+        );
+      }
+    });
+}
