@@ -199,6 +199,64 @@ describe("map/renderer/mesh", () => {
     });
   });
 
+  describe("more than one mesh in a layer", () => {
+    // The selector used to be unscoped and the join unkeyed, so a second mesh rebound and
+    // restyled the first one's path instead of drawing its own. Each mesh now owns the path
+    // carrying its own key, so two border sets - administrative boundaries and lake outlines,
+    // say - coexist in one group.
+    test("two meshes with distinct keys draw two paths", () => {
+      const layer = group("two-meshes");
+      layer.call(
+        mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key("admin").borderColor("#ff0000")
+      );
+      const first = borders(layer.node() as SVGGElement)[0];
+      layer.call(
+        mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key("lakes").borderColor("#00ff00")
+      );
+      const after = borders(layer.node() as SVGGElement);
+      expect(after).toHaveLength(2);
+      expect(after[0]).toBe(first);
+      expect(after.map((b) => b.style.stroke)).toEqual(["rgb(255, 0, 0)", "rgb(0, 255, 0)"]);
+    });
+
+    test("re-rendering one key reuses that key's path and leaves the other alone", () => {
+      const layer = group("two-meshes-rerender");
+      const draw = (key: string, color: string) =>
+        layer.call(
+          mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key(key).borderColor(color)
+        );
+      draw("admin", "#ff0000");
+      draw("lakes", "#00ff00");
+      const before = borders(layer.node() as SVGGElement);
+      draw("admin", "#0000ff");
+      const after = borders(layer.node() as SVGGElement);
+      expect(after).toEqual(before);
+      expect(after.map((b) => b.style.stroke)).toEqual(["rgb(0, 0, 255)", "rgb(0, 255, 0)"]);
+    });
+
+    // Two meshes sharing a key are still one path: the key is what identifies a mesh, and the
+    // default key is what makes a re-render reuse its element.
+    test("two meshes sharing a key still share one path", () => {
+      const layer = group("two-meshes-same-key");
+      layer.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#ff0000"));
+      layer.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#00ff00"));
+      const after = borders(layer.node() as SVGGElement);
+      expect(after).toHaveLength(1);
+      expect(after[0].style.stroke).toBe("rgb(0, 255, 0)");
+    });
+
+    // The selector is scoped to the layer's own children, so a mesh in a nested group is not
+    // rebound by an outer one.
+    test("does not rebind a mesh nested in a child group", () => {
+      const layer = group("nested-mesh");
+      const inner = layer.append("g");
+      inner.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#ff0000"));
+      layer.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#00ff00"));
+      expect(borders(layer.node() as SVGGElement)).toHaveLength(2);
+      expect(borders(inner.node() as SVGGElement)[0].style.stroke).toBe("rgb(255, 0, 0)");
+    });
+  });
+
   describe("an accessor that resolves to nothing", () => {
     // The accessor is called with the mesh object rather than a per-entity datum, so a caller's
     // (d) => colorScale(d.value) resolves to undefined. That used to remove the inline stroke,
@@ -288,20 +346,6 @@ describe("map/renderer/mesh", () => {
       expect(
         (borders(node)[0] as Element & { __transition?: unknown }).__transition
       ).toBeUndefined();
-    });
-
-    // BUG: the border selector is unscoped and unkeyed, so a second mesh rendered into the same
-    // group rebinds and restyles the first one's path instead of adding its own. choropleth uses
-    // a single mesh, so this is latent - but the renderer is exported publicly.
-    test("a second mesh in one group restyles the first instead of adding its own", () => {
-      const layer = group("two-meshes");
-      layer.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#ff0000"));
-      const first = borders(layer.node() as SVGGElement)[0];
-      layer.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#00ff00"));
-      const after = borders(layer.node() as SVGGElement);
-      expect(after).toHaveLength(1);
-      expect(after[0]).toBe(first);
-      expect(after[0].style.stroke).toBe("rgb(0, 255, 0)");
     });
 
     // The path data is reapplied on every render rather than only on enter, so a geoJson mutated

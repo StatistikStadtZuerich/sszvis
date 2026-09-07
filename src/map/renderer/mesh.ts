@@ -14,6 +14,9 @@
  *                                                    getter reports it as possibly undefined.
  * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
  *                                                    Required: omitting it throws a TypeError too.
+ * @property {string} key                             Identifies this mesh within its layer. Default "border". Two
+ *                                                    meshes in one group need distinct keys to coexist; two sharing a
+ *                                                    key share one path, the last render winning.
  * @property {string, function} borderColor           The color of the border path stroke. Default is white
  * @property {number, function} strokeWidth           The width of the border path stroke. Default is 1.25.
  *                                                    An invalid value is dropped by the CSS parser rather than
@@ -40,9 +43,11 @@
  * without that stylesheet, the mesh is a filled black shape covering the map, and it swallows the
  * base layer's hover and click events rather than letting them through.
  *
- * Note: the border selector is unscoped and the join unkeyed, so a second mesh rendered into the
- * same group rebinds and restyles the first one's path instead of drawing its own. One mesh per
- * layer.
+ * Note: the border path is scoped to the rendering group's own children and identified by the key
+ * property, so a mesh only ever rebinds the path it drew itself. Two meshes in one group therefore
+ * coexist as long as they have distinct keys - administrative boundaries and lake outlines, say.
+ * Two meshes sharing a key are still one path, which is what makes a re-render reuse its element,
+ * so the constraint is one mesh per key per layer rather than one mesh per layer.
  *
  * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
  * caches, emits no missing-value pattern, and adds no tooltip anchors or event targets - so none
@@ -76,7 +81,15 @@ type MeshValue<R extends string | number> =
   | R
   | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
 
+/**
+ * Marks the path a mesh owns, so a second mesh in the same group draws its own rather than
+ * rebinding this one. Read back through d3's filter rather than an attribute selector, which
+ * would have to escape an arbitrary caller-supplied key.
+ */
+const KEY_ATTRIBUTE = "data-mesh-key";
+
 /** The defaults, named here because they are also the fallback for an accessor that resolves to nothing. */
+const DEFAULT_KEY = "border";
 const DEFAULT_BORDER_COLOR = "white";
 const DEFAULT_STROKE_WIDTH = 1.25;
 
@@ -107,6 +120,7 @@ const withDefault = <R extends string | number>(
 type MeshProps = {
   geoJson?: GeoPermissibleObjects;
   mapPath?: MeshPath;
+  key: string;
   borderColor: MeshValue<string>;
   strokeWidth: MeshValue<number>;
 };
@@ -116,6 +130,8 @@ export interface MapRendererMeshComponent extends ComponentBuilder<MapRendererMe
   geoJson(value: GeoPermissibleObjects): MapRendererMeshComponent;
   mapPath(): MeshPath | undefined;
   mapPath(value: MeshPath): MapRendererMeshComponent;
+  key(): string;
+  key(value: string): MapRendererMeshComponent;
   borderColor(): MeshValue<string>;
   borderColor(value: MeshValue<string>): MapRendererMeshComponent;
   strokeWidth(): MeshValue<number>;
@@ -126,6 +142,8 @@ export default function (): MapRendererMeshComponent {
   return component<MapRendererMeshComponent>()
     .prop("geoJson")
     .prop("mapPath")
+    .prop("key")
+    .key(DEFAULT_KEY)
     .prop("borderColor")
     .borderColor(DEFAULT_BORDER_COLOR) // A function or string for the color of all borders. Note: all borders have the same color
     .prop("strokeWidth")
@@ -149,12 +167,18 @@ export default function (): MapRendererMeshComponent {
         );
       }
 
-      // add the map borders. These are rendered as one single path element
+      // add the map borders. These are rendered as one single path element, the one carrying this
+      // mesh's key: the selector is scoped to this group's own children so a nested mesh is left
+      // alone, and the key filter is what lets two meshes share a group.
       const meshLine = selection
-        .selectAll(".sszvis-map__border")
+        .selectAll<SVGPathElement, GeoPermissibleObjects>(":scope > path.sszvis-map__border")
+        .filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE) === props.key;
+        })
         .data([geoJson])
         .join("path")
-        .classed("sszvis-map__border", true);
+        .classed("sszvis-map__border", true)
+        .attr(KEY_ATTRIBUTE, props.key);
 
       meshLine
         .attr("d", mapPath)
