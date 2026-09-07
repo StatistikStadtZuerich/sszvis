@@ -1,4 +1,4 @@
-import { geoCentroid, geoPath } from "d3";
+import { easePolyOut, geoCentroid, geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
@@ -537,11 +537,7 @@ describe("map/renderer/geojson", () => {
 
     // The fill is applied exactly once, through the transition, so the tween has the previous
     // colour to start from rather than the value it is about to write.
-    //
-    // NOTE: the transition still keeps d3's defaults - 250ms, easeCubicInOut - because
-    // `.call(slowTransition)` discards the transition slowTransition builds. That is the one
-    // fill-transition quirk this renderer still shares with the base renderer.
-    test("leaves the final fill out of the DOM and schedules d3's default transition", () => {
+    test("leaves the final fill out of the DOM and schedules the slow transition", () => {
       const node = render(fullData, (c) => c.fill("#ff0000"));
       expect(attrs(node, "fill")).toEqual([null, null, null]);
       const schedules = (elements(node)[0] as Element & { __transition?: Record<string, unknown> })
@@ -550,8 +546,8 @@ describe("map/renderer/geojson", () => {
         (v): v is { duration: number; ease: (t: number) => number } =>
           typeof v === "object" && v !== null && "duration" in v
       );
-      expect(scheduled[0].duration).toBe(250);
-      expect(scheduled[0].ease.name).toBe("cubicInOut");
+      expect(scheduled[0].duration).toBe(500);
+      expect(scheduled[0].ease).toBe(easePolyOut);
     });
 
     // d3 has no interpolator for a paint-server reference, so a colour-to-texture tween would

@@ -1,4 +1,4 @@
-import { geoCentroid, geoPath } from "d3";
+import { easePolyOut, geoCentroid, geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
@@ -376,13 +376,7 @@ describe("map/renderer/base", () => {
       expect(attrs(node, "fill")).toEqual(["#00ff00", "#00ff00", "#00ff00"]);
     });
 
-    // BUG: `.transition().call(slowTransition)` does not apply the slow transition. d3's
-    // transition.call(f) invokes f(transition) and returns the original, but slowTransition
-    // ignores its argument and builds a fresh detached transition, which is discarded. The
-    // scheduled transition therefore keeps d3's defaults - 250ms and easeCubicInOut - rather than
-    // the intended 500ms easePolyOut. src/transition.ts documents this exact `.call(...)` idiom
-    // as the way to apply the attributes, so the idiom itself is the bug.
-    test("schedules d3's default duration and easing, not the slow transition's", () => {
+    test("schedules the slow transition's duration and easing", () => {
       const node = render(fullData);
       const schedules = (areas(node)[0] as Element & { __transition?: Record<string, unknown> })
         .__transition;
@@ -391,8 +385,8 @@ describe("map/renderer/base", () => {
           typeof v === "object" && v !== null && "duration" in v
       );
       expect(scheduled).toHaveLength(1);
-      expect(scheduled[0].duration).toBe(250);
-      expect(scheduled[0].ease.name).toBe("cubicInOut");
+      expect(scheduled[0].duration).toBe(500);
+      expect(scheduled[0].ease).toBe(easePolyOut);
     });
   });
 

@@ -40,10 +40,7 @@
  *                                                    the missing value texture takes its fill synchronously either way,
  *                                                    since a paint-server reference cannot be interpolated.
  *
- * Note: the scheduled transition keeps d3's defaults of 250ms and easeCubicInOut rather than the
- * intended 500ms easePolyOut. `.transition().call(slowTransition)` returns the original
- * transition, while slowTransition ignores its argument and builds a fresh detached transition
- * that is discarded.
+ * Note: the fill transition runs for 500ms with easePolyOut, the slow transition's timing.
  *
  * Note: "missing" only means something relative to a dataset, so a layer where no entity has a
  * datum is taken to be drawing geometry rather than encoding values - it keeps the caller's fill,
@@ -196,7 +193,7 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
         const tweenable = function (this: SVGPathElement, d: MergedGeoDatum<T>): boolean {
           return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
         };
-        mapAreas.filter(tweenable).transition().call(slowTransition).attr("fill", getMapFill);
+        mapAreas.filter(tweenable).transition(slowTransition()).attr("fill", getMapFill);
         mapAreas
           .filter(function (this: SVGPathElement, d: MergedGeoDatum<T>) {
             return !tweenable.call(this, d);

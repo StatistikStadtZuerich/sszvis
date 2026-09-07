@@ -249,7 +249,7 @@ export default function mapRendererGeoJson<
         const tweenable = function (this: SVGPathElement, d: MergedFeature): boolean {
           return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
         };
-        geoElements.filter(tweenable).transition().call(slowTransition).attr("fill", getMapFill);
+        geoElements.filter(tweenable).transition(slowTransition()).attr("fill", getMapFill);
         geoElements
           .filter(function (this: SVGPathElement, d: MergedFeature) {
             return !tweenable.call(this, d);
