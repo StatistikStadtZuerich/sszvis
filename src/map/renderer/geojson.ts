@@ -54,10 +54,9 @@
  * that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
  * element so re-renders reuse it. The id is not part of the public API; do not select on it.
  *
- * Note: two quirks remain, shared with the base renderer. The slowTransition call is a no-op that
- * leaves d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut, and the
- * data join has no key function, so it is an index join: reordering the features repaints the
- * existing nodes in place instead of moving them.
+ * Note: one quirk remains, shared with the base renderer. The data join has no key function, so it
+ * is an index join: reordering the features repaints the existing nodes in place instead of moving
+ * them.
  *
  * See test/map/renderer/geojson.test.ts.
  *

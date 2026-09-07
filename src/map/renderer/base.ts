@@ -126,7 +126,7 @@ export interface MapRendererBaseComponent<T = unknown>
   transitionColor(enabled: boolean): MapRendererBaseComponent<T>;
 }
 
-export default function <T = unknown>(): MapRendererBaseComponent<T> {
+export default function mapRendererBase<T = unknown>(): MapRendererBaseComponent<T> {
   return component<MapRendererBaseComponent<T>>()
     .prop("mergedData")
     .prop("geoJson")
