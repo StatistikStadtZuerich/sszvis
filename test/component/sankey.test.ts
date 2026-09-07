@@ -461,14 +461,14 @@ describe("component/sankey", () => {
       expect(linkAttrs(node, "stroke-width")).toEqual(["5", "5", "10", "20"]);
     });
 
-    test("should accept a linkSort that is not a comparator at all", () => {
-      // NOTE: linkSort is wrapped in fn.functor, which is meaningless for a comparator: a
-      // number is turned into a function returning that number, so d3 is handed a
-      // "comparator" that claims every pair is already in order. Nothing warns, and the
-      // paths simply end up in whatever order the sort algorithm settles on.
+    test("should throw when linkSort is not a comparator", () => {
+      // A comparator can never be a constant, so the property is not wrapped in fn.functor
+      // and a non-function is reported rather than turned into a comparator that claims
+      // every pair is already ordered.
       // @ts-expect-error - deliberately passing a constant where a comparator is declared
-      const node = render(sankeyOf().linkSort(1), testData);
-      expect(all(node, "links", "path.sszvis-link").length).toBe(4);
+      expect(() => render(sankeyOf().linkSort(1), testData)).toThrow(
+        /\[component\/sankey\].*linkSort/
+      );
     });
 
     test("should remove a link's path when the link goes away", () => {
@@ -1023,42 +1023,46 @@ describe("component/sankey", () => {
       warn.mockRestore();
     });
 
-    describe("known quirks", () => {
-      test("throws when nameLabel is given a constant", () => {
-        // NOTE: nameLabel is the only label accessor that must be a function - it is not
-        // wrapped in fn.functor, so a string throws "props.nameLabel is not a function".
-        // Its JSDoc does document it as {Function} where columnLabel and linkLabel are
-        // {String, Function}, so the code matches its own documentation; it is the odd one
-        // out against the library's idiom rather than a defect.
-        // @ts-expect-error - deliberately passing a constant where a function is declared
-        expect(() => render(sankeyOf().nameLabel("Total"), testData)).toThrow(TypeError);
-      });
+    test("should accept a constant nameLabel as well as an accessor", () => {
+      const node = render(sankeyOf().nameLabel("Total"), testData);
+      expect(
+        all(node, "nodelabels", "text.sszvis-sankey-node-label").map((l) => l.textContent)
+      ).toEqual(["Total", "Total", "Total", "Total"]);
+    });
 
-      test("silently collapses the nodes when nodeThickness is given a function", () => {
-        // BUG: the mirror image of nameLabel. nodeThickness, nodePadding, labelHitBoxSize
-        // and linkCurvature are plain numbers, so an accessor - the shape most other
-        // properties in this library accept - is used in arithmetic and yields NaN, which
-        // bar's guard turns into a zero-width bar and the unguarded paths turn into NaN
-        // geometry.
-        // current: bars width="0" and no warning. expected: either support the accessor or
-        // report the type.
-        const node = render(
+    test("should throw when a numeric property is given an accessor", () => {
+      for (const apply of [
+        // @ts-expect-error - deliberately passing an accessor where a number is declared
+        (s: ReturnType<typeof sankeyOf>) => s.nodeThickness(() => 20),
+        // @ts-expect-error - deliberately passing an accessor where a number is declared
+        (s: ReturnType<typeof sankeyOf>) => s.nodePadding(() => 10),
+        // @ts-expect-error - deliberately passing an accessor where a number is declared
+        (s: ReturnType<typeof sankeyOf>) => s.labelHitBoxSize(() => 50),
+        // @ts-expect-error - deliberately passing an accessor where a number is declared
+        (s: ReturnType<typeof sankeyOf>) => s.linkCurvature(() => 0.5),
+      ]) {
+        expect(() => render(apply(sankeyOf()), testData)).toThrow(/\[component\/sankey\]/);
+      }
+    });
+
+    test("should name the property it rejects", () => {
+      expect(() =>
+        render(
           // @ts-expect-error - deliberately passing an accessor where a number is declared
-          sankeyOf().nodeThickness(() => 20),
+          sankeyOf().labelHitBoxSize(() => 50),
           testData
-        );
-        expect(attrs(node, "nodes", "rect.sszvis-bar", "width")).toEqual(["0", "0", "0", "0"]);
-
-        const curved = render(
+        )
+      ).toThrow(/labelHitBoxSize/);
+      expect(() =>
+        render(
           // @ts-expect-error - deliberately passing an accessor where a number is declared
           sankeyOf().linkCurvature(() => 0.5),
           testData
-        );
-        expect(attrs(curved, "links", "path.sszvis-link", "d")[0]).toBe(
-          "M21,10CNaN,10 NaN,10 99,10"
-        );
-      });
+        )
+      ).toThrow(/linkCurvature/);
+    });
 
+    describe("known quirks", () => {
       test("throws when a link has no src or tgt reference", () => {
         // NOTE: a link's geometry is read off the node objects it points at, not off
         // data.nodes, so a node missing from data.nodes changes nothing about its links -
