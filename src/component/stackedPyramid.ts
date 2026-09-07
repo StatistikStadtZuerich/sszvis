@@ -20,7 +20,8 @@
  * data[side][series][row], and the caller picks the two sides positionally. Every slice carries
  * five properties beyond its pair: its `series` key, its `side` as the side accessor returned it,
  * its `row`, its own `value`, and its `data`, narrowed from the whole grouped row to the single
- * source row the slice was computed from. d3's own `key` and `index` are carried across onto each
+ * source row the slice was computed from - or undefined, where the row carries no value for that
+ * series and the slice is a zero-width pad. d3's own `key` and `index` are carried across onto each
  * series. The largest stacked total across both sides is attached to the returned array as
  * `maxValue`, which is what the horizontal scale's domain is built from. The rows passed in are not
  * modified.
@@ -120,13 +121,13 @@
  * @property {function} [rightRefAccessor]    Reference data for the right side. Same as
  *                                            leftRefAccessor.
  *
- * Note: a side's series keys are read off that side's first row alone, with Object.keys, so a
- * series absent from the first row is dropped from the whole side and its values appear neither in
- * the chart nor in maxValue - stackedBarData takes the union of the keys across every row instead.
- * The stack value is then read as x[key][0] with no guard, so a later row that is missing one of
- * the first row's keys dies on an undefined cell with a TypeError. Between them the two mean every
- * row of a side has to carry every series and the first row decides which, so callers with sparse
- * data have to pad it with zero rows.
+ * Note: a side's series keys are the union of the series across every row of that side, in the
+ * order the rows first mention them, and that order is the stacking order. A row that carries no
+ * value for one of them contributes a zero slice whose `data` is undefined - the alternative would
+ * be to drop the row from the layer entirely, which d3.stack does not offer. Sparse data therefore
+ * needs no padding rows. Such a slice is zero-width, so nothing of it is painted and barFill is
+ * not called for it: an accessor written over the source row never sees an undefined datum, and
+ * does not have to guard for one.
  *
  * Note: a slice's `row` is the position of its row within the side, not the value the row accessor
  * returned, and that index is what the component feeds to barPosition. It lines up with the data
@@ -267,12 +268,23 @@ const rowAcc = fn.prop("row");
 type CascadeRow<T> = Record<string, T[]>;
 
 /**
+ * The first source row of a cascade row, i.e. of whichever series that row happens to carry.
+ * A cascade row exists only because a source row landed in it, so there is always one.
+ */
+function firstCell<T>(row: CascadeRow<T>): T {
+  return Object.values(row)[0][0];
+}
+
+/**
  * One slice of a stack: the [y0, y1] point d3.stack produced, with `data` narrowed from the
  * whole cascade row to the single row the slice was computed from, and tagged with the
  * series, the side and the row it belongs to. It is d3's own SeriesPoint, which is why it is
- * an Array rather than a two-element tuple.
+ * an Array rather than a two-element tuple. `data` is undefined on a padding slice, i.e.
+ * where a row of the side carries no value for the series.
  */
-export type StackedPyramidSlice<T, S extends string | number = string> = SeriesPoint<T> & {
+export type StackedPyramidSlice<T, S extends string | number = string> = SeriesPoint<
+  T | undefined
+> & {
   /** The series key the slice belongs to. */
   series: string;
   /** The side the slice belongs to, as the side accessor returned it. */
@@ -342,15 +354,17 @@ export function stackedPyramidData<T, S extends string | number = string>(
       .apply(data);
 
     const sides = grouped.map((rows) => {
-      // Only the first row of the side is consulted, so a series that is absent from it is
-      // dropped from the whole side, and a later row missing one of these keys throws below.
-      const keys = Object.keys(rows[0]);
-      const side = sideAcc(rows[0][keys[0]][0]);
+      // The union of the series across every row of the side, so a series that appears in
+      // only some of the rows still gets a layer. The key order is the stacking order, and
+      // it follows the order the rows first mention each series in.
+      const keys = fn.set<string, string>(rows.flatMap((row) => Object.keys(row)));
+      const side = sideAcc(firstCell(rows[0]));
 
       const stacks = d3Stack<CascadeRow<T>, string>()
         .keys(keys)
-        // Only the first datum of each cell is read, and the read is unguarded.
-        .value((x, key) => valueAcc(x[key][0]))(rows);
+        // Only the first datum of each cell is read; a cell the row has no datum for
+        // contributes zero.
+        .value((x, key) => (x[key] === undefined ? 0 : valueAcc(x[key][0])))(rows);
 
       // Simplify the 'data' property. The slices themselves are the objects d3 created,
       // rewritten in place, so a caller holding one sees the new shape. The series arrays are
@@ -358,14 +372,16 @@ export function stackedPyramidData<T, S extends string | number = string>(
       // series - have to be carried across by hand.
       return stacks.map((stack, i) => {
         const slices = stack.map((d, row) => {
-          const datum = d.data[keys[i]][0];
+          // A row the side's series is absent from has no source row to point at, so the
+          // padding slice carries no data and a zero value.
+          const datum = d.data[keys[i]]?.[0];
           return Object.assign(d, {
             data: datum,
             series: keys[i],
             side,
             // The row's position within the side, not the value the row accessor returned.
             row,
-            value: valueAcc(datum),
+            value: datum === undefined ? 0 : valueAcc(datum),
           });
         });
         return Object.assign(slices, { key: stack.key, index: stack.index });
