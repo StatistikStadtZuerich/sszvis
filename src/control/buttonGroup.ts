@@ -34,8 +34,13 @@
  * Note: selectedness is computed per button with no notion of uniqueness, so a value repeated in
  * `values` renders twice and both copies are highlighted when they equal `current`.
  *
- * Note: the buttons are plain divs with a click handler. They carry no role, tabindex or pressed
- * state, so the control cannot be operated by keyboard.
+ * Note: the options are real `button` elements carrying `role="radio"` inside a `role="radiogroup"`
+ * wrapper, and are operable from the keyboard. Enter and Space activate the focused option; Left/Up
+ * and Right/Down move the selection and wrap at the ends. A roving `tabindex` keeps exactly one
+ * option in the tab order - the current one, or the first option when `current` matches no value, so
+ * the group stays reachable either way. Arrow keys call `change` immediately, the same as a click,
+ * which is the standard radio-group behaviour; the component still holds no state of its own. The
+ * `selected` class is kept as the visual hook alongside `aria-checked`.
  *
  * Note: `values` has no default, so rendering before the data is available throws while computing
  * the button width - before any DOM is created, so no partial control is left behind.
