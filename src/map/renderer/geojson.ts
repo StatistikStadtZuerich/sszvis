@@ -45,12 +45,19 @@
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
  * attribute or asking for no stroke.
  *
- * Note: this renderer shares four quirks with the base renderer, documented at length in
- * src/map/renderer/base.ts: the fill transition interpolates a colour onto itself, the
- * slowTransition call is a no-op that leaves d3's 250ms easeCubicInOut defaults in place of the
- * intended 500ms easePolyOut, the stale-class fill repaint is dead, and the data join is an index
- * join with no key function. The missing value pattern is likewise emitted per layer under the
- * fixed id "missing-pattern", so two map layers on one page define that id twice.
+ * Note: this renderer still carries four quirks that the base renderer has since been fixed of.
+ * The fill is written onto the plain selection during the data join and then transitioned to the
+ * same value, so the colour tween interpolates a colour onto itself and nothing animates. The
+ * stale-class fill repaint is dead: it reads the classes left by the previous render. The missing
+ * value pattern is emitted per layer under the fixed id "missing-pattern", so two map layers on
+ * one page define that id twice and every url(#missing-pattern) reference in the document resolves
+ * to whichever comes first. And the fill and the --undefined class use different notions of a
+ * missing value, so a feature with no datum is classed --undefined but painted the ordinary fill.
+ * See src/map/renderer/base.ts for how each was resolved there.
+ *
+ * Note: one quirk the base renderer still shares - the slowTransition call is a no-op that leaves
+ * d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut. The data join is
+ * likewise an index join with no key function in both.
  * See test/map/renderer/geojson.test.ts.
  *
  * @return {sszvis.component}
@@ -213,6 +220,12 @@ export default function mapRendererGeoJson<
         return fn.defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
       }
 
+      // Guarded like fill and stroke: an unmatched feature is not asked for a stroke width, and
+      // returning null removes the attribute rather than handing the accessor undefined.
+      function getMapStrokeWidth(d: MergedFeature): number | null {
+        return fn.defined(d.datum) && props.defined(d.datum) ? props.strokeWidth(d.datum) : null;
+      }
+
       const geoElements = selection
         .selectAll<SVGPathElement, MergedFeature>(".sszvis-map__geojsonelement")
         .data(mergedData)
@@ -238,9 +251,7 @@ export default function mapRendererGeoJson<
         geoElements.attr("fill", getMapFill);
       }
 
-      geoElements
-        .attr("stroke", getMapStroke)
-        .attr("stroke-width", (d) => props.strokeWidth(d.datum));
+      geoElements.attr("stroke", getMapStroke).attr("stroke-width", getMapStrokeWidth);
 
       // d3 v6 and later call a listener with (event, datum), and the datum here is the merged
       // { geoJson, datum } wrapper - the handler is given the entity's own datum.
