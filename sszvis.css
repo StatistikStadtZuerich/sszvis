@@ -306,6 +306,20 @@
   text-align: center;
   vertical-align: middle;
   transition: all 0.3s;
+  /* The items are `button` elements; neutralise the user agent's own button styles so the
+     row still reads as one flush segmented control. */
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  border-radius: 0;
+}
+
+.sszvis-control-buttonGroup__item:focus-visible {
+  outline: 2px solid #070250;
+  outline-offset: 2px;
+  /* Lift the focused item so its outline is not painted over by its neighbours' borders. */
+  position: relative;
+  z-index: 1;
 }
 
 .sszvis-control-buttonGroup__item:hover,

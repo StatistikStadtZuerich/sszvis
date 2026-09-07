@@ -38,8 +38,13 @@ import { identity } from '../fn.js';
  * Note: selectedness is computed per button with no notion of uniqueness, so a value repeated in
  * `values` renders twice and both copies are highlighted when they equal `current`.
  *
- * Note: the buttons are plain divs with a click handler. They carry no role, tabindex or pressed
- * state, so the control cannot be operated by keyboard.
+ * Note: the options are real `button` elements carrying `role="radio"` inside a `role="radiogroup"`
+ * wrapper, and are operable from the keyboard. Enter and Space activate the focused option; Left/Up
+ * and Right/Down move the selection and wrap at the ends. A roving `tabindex` keeps exactly one
+ * option in the tab order - the current one, or the first option when `current` matches no value, so
+ * the group stays reachable either way. Arrow keys call `change` immediately, the same as a click,
+ * which is the standard radio-group behaviour; the component still holds no state of its own. The
+ * `selected` class is kept as the visual hook alongside `aria-checked`.
  *
  * Note: `values` has no default, so rendering before the data is available throws while computing
  * the button width - before any DOM is created, so no partial control is left behind.
@@ -53,10 +58,46 @@ function buttonGroup() {
     const selection = select(this);
     const props = selection.props();
     const buttonWidth = props.width / props.values.length;
-    const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true);
+    const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true).attr("role", "radiogroup");
     container.style("width", "".concat(props.width, "px"));
-    const buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values).join("div").classed("sszvis-control-buttonGroup__item", true);
-    buttons.style("width", "".concat(buttonWidth, "px")).classed("selected", d => d === props.current).text(d => d).on("click", props.change);
+    const buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values).join("button").classed("sszvis-control-buttonGroup__item", true).attr("type", "button").attr("role", "radio");
+    // Roving tabindex: exactly one option is in the tab order. That is the current one, or
+    // the first option when `current` matches no value, so the group stays reachable.
+    const currentIndex = props.values.indexOf(props.current);
+    const rovingIndex = currentIndex === -1 ? 0 : currentIndex;
+    const nodes = buttons.nodes();
+    /** Moves the selection by `step` options, wrapping at both ends. */
+    const move = (event, from, step) => {
+      var _nodes$to;
+      const to = (from + step + nodes.length) % nodes.length;
+      event.preventDefault();
+      (_nodes$to = nodes[to]) === null || _nodes$to === void 0 || _nodes$to.focus();
+      props.change(event, props.values[to]);
+    };
+    buttons.style("width", "".concat(buttonWidth, "px")).classed("selected", d => d === props.current)
+    // Keyed on the index, not on the value: duplicate values are supported, and a
+    // radiogroup with two checked radios is contradictory state for assistive
+    // technology. The legacy `selected` class still highlights every occurrence.
+    .attr("aria-checked", (_d, i) => i === currentIndex ? "true" : "false").attr("tabindex", (_d, i) => i === rovingIndex ? 0 : -1).text(d => d).on("click", props.change).on("keydown", function (event, d) {
+      const index = nodes.indexOf(this);
+      switch (event.key) {
+        case "Enter":
+        case " ":
+          // The native button would activate on its own, but calling `change` here and
+          // suppressing that activation keeps a keypress and a click on one code path.
+          event.preventDefault();
+          props.change(event, d);
+          break;
+        case "ArrowRight":
+        case "ArrowDown":
+          move(event, index, 1);
+          break;
+        case "ArrowLeft":
+        case "ArrowUp":
+          move(event, index, -1);
+          break;
+      }
+    });
   });
 }
 
