@@ -278,11 +278,13 @@ function dimension(value: number | undefined, name: string): number {
  * a missing one raised a bare TypeError naming nothing - and only when the data were non-empty, so
  * an empty dataset (the state every chart is in before its data load) hid the misconfiguration
  * entirely. A constant fill is already a function by the time it is read, since the prop is wrapped
- * in fn.functor on the way in.
+ * in fn.functor on the way in - which is why `accepts` describes the public contract rather than
+ * the stored value: telling a consumer who omitted `fill` that it "must be a function" would deny
+ * the colour string the component in fact accepts.
  */
-function accessor<F>(value: F | undefined, name: string): F {
+function accessor<F>(value: F | undefined, name: string, accepts: string): F {
   if (typeof value !== "function") {
-    throw new Error(`[mapRendererRaster] the ${name} property is required, and must be a function`);
+    throw new Error(`[mapRendererRaster] the ${name} property is required, and must be ${accepts}`);
   }
   return value;
 }
@@ -313,8 +315,8 @@ export default function mapRendererRaster<T = unknown>(): MapRendererRasterCompo
       const height = Math.ceil(dimension(props.height, "height"));
       // Validated here rather than where they are called, so a misconfigured raster is reported
       // before anything is created and whether or not there are data to draw.
-      const position = accessor(props.position, "position");
-      const fill = accessor(props.fill, "fill");
+      const position = accessor(props.position, "position", "a function");
+      const fill = accessor(props.fill, "fill", "a color string or an accessor returning one");
 
       const canvas = selection
         .selectAll<Element, number>(":scope > canvas.sszvis-map__rasterimage")
