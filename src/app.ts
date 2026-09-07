@@ -67,11 +67,11 @@ export interface AppProps<State, Actions extends Record<string, Action<State>>> 
  * a structured approach, this allows us to optimize the render loop and clarifies
  * the relationship between state and actions.
  *
- * Within an app, state is meant to be modified only through actions. Note that this is a
- * convention, not a guarantee: immer's auto-freezing is turned off in this module because
- * d3 mutates state in many places, so the state handed to render is *not* frozen. Mutating
- * it silently succeeds and the change survives into the next action's draft — treat the
- * state in render as read-only.
+ * Within an app, state is modified only through actions. The state object handed to `render`
+ * is frozen, so assigning to it throws instead of silently corrupting the state the next
+ * action drafts from. The freeze is shallow, and immer's own auto-freezing stays off, because
+ * d3 mutates the data objects it is handed in many places; only the top level of the state is
+ * protected.
  *
  * Conceptually, an app works like this:
  *
@@ -142,7 +142,10 @@ export const app = <
     if (!renderScheduled) {
       renderScheduled = true;
       requestAnimationFrame(() => {
-        render(state, actionDispatchers);
+        // Shallow, so that d3 can still mutate the data hanging off the state, but enough to
+        // turn an accidental `state.x = …` in render into a TypeError rather than a change
+        // that survives into the next action's draft.
+        render(Object.freeze(state), actionDispatchers);
         renderScheduled = false;
       });
     }

@@ -387,31 +387,75 @@ describe("app", () => {
     });
   });
 
-  describe("known quirks", () => {
-    // BUG: the module calls immer's setAutoFreeze(false) at import time (src/app.ts:7),
-    // so the finished state is never frozen and the immutability the module originally
-    // promised does not hold. The mutation also persists: the next action drafts from the
-    // same object (src/app.ts:153), so render can corrupt application state.
-    // got:  a mutation inside render silently succeeds and survives into the next action
-    // want: mutating the state passed to render throws
-    test("state passed to render is mutable, despite the documented guarantee", async () => {
-      let mutated: unknown;
+  describe("state in render", () => {
+    test("throws when render assigns to the state it was given", async () => {
+      let thrown: unknown;
       const done = new Promise<void>((resolve) => {
         app<{ count: number }>({
           init: async (state) => {
             state.count = 0;
           },
           render: (state) => {
-            state.count = 99;
-            mutated = state.count;
+            try {
+              state.count = 99;
+            } catch (error) {
+              thrown = error;
+            }
             resolve();
           },
         });
       });
       await done;
-      expect(mutated).toBe(99);
+      expect(thrown).toBeInstanceOf(TypeError);
     });
 
+    test("keeps a mutation attempt in render out of the next action's draft", async () => {
+      const seen: number[] = [];
+      const render = vi.fn((state: { count: number }) => {
+        seen.push(state.count);
+        try {
+          state.count = 99;
+        } catch {
+          // The assignment is the point; swallowing keeps this render function usable.
+        }
+      });
+      app<{ count: number }>({
+        init: async (state) => {
+          state.count = 0;
+        },
+        actions: {
+          bump: (state) => {
+            state.count += 1;
+          },
+        },
+        render: render as never,
+      });
+      await nextFrame();
+      render.mock.calls[0][1].bump();
+      await nextFrame();
+      expect(seen).toEqual([0, 1]);
+    });
+
+    test("leaves the data hanging off the state mutable, as d3 requires", async () => {
+      let mutated: unknown;
+      const done = new Promise<void>((resolve) => {
+        app<{ data: { value: number }[] }>({
+          init: async (state) => {
+            state.data = [{ value: 1 }];
+          },
+          render: (state) => {
+            state.data[0].value = 2;
+            mutated = state.data[0].value;
+            resolve();
+          },
+        });
+      });
+      await done;
+      expect(mutated).toBe(2);
+    });
+  });
+
+  describe("known quirks", () => {
     // NOTE: app() returns undefined and never unregisters its resize listener, so
     // every app created on a page keeps re-rendering for the lifetime of the
     // document (src/app.ts:170). Each app installs its own scheduleUpdate closure, so
