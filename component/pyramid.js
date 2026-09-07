@@ -1,6 +1,7 @@
 import { select, line } from 'd3';
 import { component } from '../d3-component.js';
 import { functor } from '../fn.js';
+import { warn } from '../logger.js';
 import { defaultTransition } from '../transition.js';
 import bar from './bar.js';
 
@@ -35,22 +36,16 @@ import bar from './bar.js';
  * @property {string, function} [barFill]          The color of a bar. Defaults to #000 and applies to both
  *                                                 sides; a per-datum accessor is the usual way to colour the
  *                                                 two sides differently.
- * @property {number, function} barHeight          The height of a bar. Required, but omitting it is not
- *                                                 reported: the value reaches bar's missing-value guard as
- *                                                 undefined and becomes 0, so the chart renders an empty axis
- *                                                 frame with no bars and no warning.
- * @property {number, function} barWidth           The width of a bar. Required, and the only bar dimension
- *                                                 whose absence throws, because the component computes the
- *                                                 left bar's x itself as -SPINE_PADDING - barWidth(d). That
- *                                                 call also passes the datum alone, without d3's index and
- *                                                 group arguments, so an index-aware accessor yields NaN,
- *                                                 which bar's guard turns into 0: the left bars collapse onto
- *                                                 the spine at their full width. For the same reason a missing
- *                                                 value puts a left bar at x=0 rather than at the spine's
- *                                                 -0.5, half a pixel away from where the right side puts it.
- * @property {number, function} barPosition        The vertical position of a bar, i.e. its top edge. Required,
- *                                                 and like barHeight it fails silently: every bar is drawn at
- *                                                 y=0 when it is missing.
+ * @property {number, function} barHeight          The height of a bar, in pixels. Required: an unset
+ *                                                 property throws "[pyramid] the barHeight property is
+ *                                                 required" before anything is rendered.
+ * @property {number, function} barWidth           The width of a bar, in pixels. Required, same error
+ *                                                 shape as barHeight. The component computes the left
+ *                                                 bar's x itself, as -SPINE_PADDING - barWidth(d, i),
+ *                                                 forwarding d3's index so an index-aware accessor
+ *                                                 positions the mirrored bars as it sizes them.
+ * @property {number, function} barPosition        The vertical position of a bar, i.e. its top edge, in
+ *                                                 pixels. Required, same error shape as barHeight.
  * @property {Array<Number>} [tooltipAnchor]       The anchor position for the tooltips. Uses sszvis.component.bar.tooltipAnchor
  *                                                 under the hood to optionally reposition the tooltip anchors in the pyramid chart.
  *                                                 Default value is [0.5, 0.5], which centers tooltips on the bars.
@@ -59,46 +54,39 @@ import bar from './bar.js';
  *                                                 any x other than 0.5 lands on visually opposite sides of the
  *                                                 pyramid. An array with fewer than two entries yields a NaN
  *                                                 coordinate, as documented on bar.
- * @property {function}         leftAccessor       Data for the left side. Required: an unset accessor throws
- *                                                 "props.leftAccessor is not a function" from the renderer,
- *                                                 and an accessor that returns undefined or null throws from
- *                                                 d3's data join instead, with a message that names neither
- *                                                 the property nor the component.
+ * @property {function}         leftAccessor       Data for the left side. Required, same error shape as
+ *                                                 barHeight. An accessor that returns undefined or null
+ *                                                 still throws from d3's data join, since a side with no
+ *                                                 data is a broken chart rather than an empty one.
  * @property {function}         rightAccessor      Data for the right side. Same requirements as leftAccessor.
  * @property {function}         [leftRefAccessor]  Reference data for the left side, drawn as a single path
- *                                                 outlining the reference series. Optional, but the guard
- *                                                 tests whether the accessor was set, not what it returns: an
- *                                                 accessor that yields undefined or null for some states
- *                                                 throws instead of hiding the line. Returning an empty array
- *                                                 does hide it, though the classed path element stays in the
- *                                                 DOM with no d attribute, where CSS and hit tests can still
- *                                                 find it.
+ *                                                 outlining the reference series. Optional in both senses:
+ *                                                 the accessor may be unset, and an accessor that returns
+ *                                                 no data for some state renders no line for that state.
+ *                                                 undefined and null are warned about, since they violate
+ *                                                 the accessor's contract; an empty array is treated as a
+ *                                                 legitimately empty series and passes silently.
  * @property {function}         [rightRefAccessor] Reference data for the right side. Same as leftRefAccessor.
  *
- * Note: the reference lines and the bars are drawn in slightly different coordinate
- * systems. The bars are pushed outwards by SPINE_PADDING, a deliberate cosmetic gap at the
- * spine, while the line is drawn straight from barWidth and so agrees with the axis scale.
- * A reference value equal to a bar value therefore lands half a pixel inside that bar's
- * outer edge, symmetrically on both sides. The line also takes its y from barPosition alone
- * and never accounts for barHeight, so the outline runs along the bars' top edges rather
- * than their mid-lines, half a bar height above the values it describes.
+ * Note: a reference point sits at the outer edge of the bar it describes, vertically
+ * centred on it: x is SPINE_PADDING + barWidth, matching the bar's own outer edge, and y is
+ * barPosition + barHeight / 2, the bar's mid-line. Both sides share the same generator; the
+ * left one is mirrored with a scale(-1, 1) transform.
  *
- * Note: a reference line's d attribute is only ever written through a transition, so a
- * freshly rendered path carries no geometry until the first animation frame. Entering lines
- * snap into place, because d3 has no previous d to interpolate from; only updates animate.
- * The bars underneath do not animate at all - bar's transition property is inert - so on a
- * state change the outline eases towards its new position while the bars jump, and the two
- * visibly detach for the length of the transition.
+ * Note: an entering reference path gets its d attribute synchronously, so getBBox, snapshots
+ * and PNG exports see real geometry on the tick it is rendered. Updates are additionally
+ * written through a transition, so a change of data eases into place. The bars underneath do
+ * not animate at all - bar's transition property is inert - so on a state change the outline
+ * eases towards its new position while the bars jump, and the two visibly detach for the
+ * length of the transition. Fixing that belongs to bar.
  *
- * Note: the reference datum is wrapped in an array, one array of points per path, so each
- * side is capped at a single line. While a reference accessor is set the join therefore
- * always has exactly one element and the exit selection can never fire: once a line has
- * been rendered its path element stays in the DOM even after the reference data goes away,
- * with only its d attribute dropped. Only removing the accessor itself empties the group.
+ * Note: a reference series with no points renders no path at all, and a path already in the
+ * DOM is removed when its series goes away. Each side is still capped at a single line, since
+ * the series is wrapped in a one-element array before the join.
  *
- * Note: bar guards every geometry value against NaN, but the reference line hands barWidth
- * and barPosition straight to d3.line. One missing value poisons the path string, and the
- * browser renders the valid prefix and drops the rest of the outline.
+ * Note: the reference line skips points whose barWidth or barPosition is not a finite number,
+ * so a gap in the reference series breaks the outline at the gap rather than truncating it,
+ * the way bar's own missing-value guard keeps the bars drawable.
  *
  * Note: the reference line's appearance comes entirely from the
  * .sszvis-pyramid__referenceline rule in sszvis.css - the component sets only the class.
@@ -111,23 +99,55 @@ import bar from './bar.js';
 /* Constants
 ----------------------------------------------- */
 const SPINE_PADDING = 0.5;
+/** Properties with no sensible fallback: without any one of them nothing can be drawn. */
+const REQUIRED_PROPS = ["barHeight", "barWidth", "barPosition", "leftAccessor", "rightAccessor"];
 /* Module
 ----------------------------------------------- */
-function pyramid () {
+function pyramid() {
   return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
     const selection = select(this);
     const props = selection.props();
+    // Validation, before any element exists: none of these can render correctly when
+    // unset, and two of the three bar dimensions used to fail silently by reaching bar's
+    // missing-value guard as undefined.
+    for (const name of REQUIRED_PROPS) {
+      if (props[name] === undefined) {
+        throw new Error("[pyramid] the ".concat(name, " property is required"));
+      }
+    }
     // Components
-    const leftBar = bar().x(d => -SPINE_PADDING - props.barWidth(d)).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
+    const leftBar = bar()
+    // Forwards d3's index, so an index-aware barWidth positions the mirrored bars the
+    // same way it sizes them.
+    .x((d, i) => -SPINE_PADDING - props.barWidth(d, i)).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
     const rightBar = bar().x(SPINE_PADDING).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
-    const leftLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
-    const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
+    const leftLine = lineComponent().barPosition(props.barPosition).barHeight(props.barHeight).barWidth(props.barWidth).mirror(true);
+    const rightLine = lineComponent().barPosition(props.barPosition).barHeight(props.barHeight).barWidth(props.barWidth);
     // Rendering
     selection.selectGroup("left").datum(props.leftAccessor(data)).call(leftBar);
     selection.selectGroup("right").datum(props.rightAccessor(data)).call(rightBar);
-    selection.selectGroup("leftReference").datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : []).call(leftLine);
-    selection.selectGroup("rightReference").datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : []).call(rightLine);
+    selection.selectGroup("leftReference").datum(referenceSeries(props.leftRefAccessor, data, "leftRefAccessor")).call(leftLine);
+    selection.selectGroup("rightReference").datum(referenceSeries(props.rightRefAccessor, data, "rightRefAccessor")).call(rightLine);
   });
+}
+/**
+ * Resolves one side's reference series into the array-of-series the line component joins on:
+ * one entry when there is something to draw, none otherwise. A series with no points
+ * therefore removes its path rather than leaving an empty one behind.
+ *
+ * An accessor returning undefined or null breaks its contract, so it is warned about - but it
+ * is warned about rather than thrown on, because it is data-driven: an accessor indexing into
+ * a cascaded object hits it as soon as one category is missing from one state, and that must
+ * not take the chart down. An empty array is a legitimately empty series and passes silently.
+ */
+function referenceSeries(accessor, data, name) {
+  if (accessor === undefined) return [];
+  const series = accessor(data);
+  if (!Array.isArray(series)) {
+    warn("[pyramid] ".concat(name, " returned ").concat(String(series), " rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series."));
+    return [];
+  }
+  return series.length === 0 ? [] : [series];
 }
 /**
  * Draws one side's reference outline as a single path. The data is one array of points per
@@ -135,13 +155,27 @@ function pyramid () {
  * of length one, since each side has at most one reference line.
  */
 function lineComponent() {
-  return component().prop("barPosition").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
+  return component().prop("barPosition").prop("barHeight").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-    const lineGen = line().x(props.barWidth).y(props.barPosition);
-    const line$1 = selection.selectAll(".sszvis-pyramid__referenceline").data(data).join("path").attr("class", "sszvis-pyramid__referenceline");
+    // The reference point is the outer edge of the bar it describes, vertically centred on
+    // it - the same corner-plus-half-height the bars themselves occupy.
+    const pointX = (d, i) => SPINE_PADDING + props.barWidth(d, i);
+    const pointY = (d, i) => props.barPosition(d, i) + props.barHeight(d, i) / 2;
+    const lineGen = line()
+    // A point whose geometry is not a finite number is skipped, which breaks the outline
+    // at the gap instead of poisoning the path string from there on.
+    .defined((d, i) => isDrawable(pointX(d, i)) && isDrawable(pointY(d, i))).x(pointX).y(pointY);
+    const line$1 = selection.selectAll(".sszvis-pyramid__referenceline").data(data).join(enter => enter.append("path").attr("class", "sszvis-pyramid__referenceline")
+    // Entering paths get their geometry synchronously: a transition alone would
+    // leave getBBox, snapshots and PNG exports looking at an empty path.
+    .attr("d", lineGen));
     line$1.attr("transform", props.mirror ? "scale(-1, 1)" : "").transition(defaultTransition()).attr("d", lineGen);
   });
+}
+/** Whether a computed coordinate can be written into a path string at all. */
+function isDrawable(value) {
+  return Number.isFinite(Number(value));
 }
 
 export { pyramid as default };

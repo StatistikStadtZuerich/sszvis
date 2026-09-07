@@ -2,6 +2,7 @@ import { select, interpolateNumber } from 'd3';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
 import { functor, identity } from '../fn.js';
+import { warn } from '../logger.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
 import bar from './bar.js';
@@ -29,18 +30,16 @@ import bar from './bar.js';
  *                                                   when unset. It is called with a column index for the column labels as well as for the nodes, so
  *                                                   it is also consulted for columns that hold no node.
  * @property {Number} nodeThickness                  A number for the horizontal thickness of the node bars. Should be configured using a value
- *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required, but omitting it is not
- *                                                   reported: Math.max(undefined, 1) is NaN, which bar's missing-value guard turns into zero-width
- *                                                   bars, while the column labels, the hit boxes and the tooltip anchors keep the NaN. Must be a
- *                                                   plain number - an accessor, which most other properties in this library accept, is used in
- *                                                   arithmetic and yields the same NaN. The bar's width is floored at one pixel but the link starts
- *                                                   and the column label centring read the raw value, so below a thickness of one the two disagree.
+ *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required: leaving it unset throws
+ *                                                   before anything is drawn. Must be a plain number - an accessor, which most other properties in
+ *                                                   this library accept, is rejected the same way. The bar's width is floored at one pixel but the
+ *                                                   link starts and the column label centring read the raw value, so below a thickness of one the
+ *                                                   two disagree.
  * @property {Number} nodePadding                    A number for padding between the nodes. Should be configured using a value returned by the
  *                                                   sszvis.layout.sankey.computeLayout function. It applies between nodes only; the links stacked
  *                                                   inside a node are spaced by the size scale alone and fill it exactly. It also sets how far a
- *                                                   label hit box extends past its node, half of it above and half below. Required, must be a plain
- *                                                   number, and fails as silently as nodeThickness: every node's position becomes NaN, which bar
- *                                                   turns into 0, so the whole column collapses onto one row.
+ *                                                   label hit box extends past its node, half of it above and half below. Required and must be a
+ *                                                   plain number; leaving it unset, or passing an accessor, throws before anything is drawn.
  * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number, for padding at the top of
  *                                                   each column. Used to vertically center the columns. Required despite the functor wrapper: it has
  *                                                   no default, so leaving it unset throws "props.columnPadding is not a function". An accessor is
@@ -59,23 +58,27 @@ import bar from './bar.js';
  *                                                   the tick stays centred on the column - and horizontally only; the vertical position is fixed. A
  *                                                   function is applied by d3 rather than by the renderer, so it receives the label's datum, that
  *                                                   column's node count, followed by the column index.
+ * @property {Number, Function} columnLabelOpacity  A value for the opacity of the column labels, or a function taking a column index and returning
+ *                                                   one. Default 1. Use it to fade the column headers out while a hover label occupies the same
+ *                                                   space; labelOpacity does the same for the node labels. Like columnLabel, an accessor is called
+ *                                                   with the column index alone.
  * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default
  *                                                   0.5, which puts both control points at the horizontal midpoint. Never clamped: at 1 the control
  *                                                   points swap ends, which still keeps the curve inside the column gap as a pronounced S, and above
  *                                                   1 they leave the gap altogether and the curve swings out past both columns. Must be a plain
- *                                                   number, like nodeThickness; an accessor yields NaN control points and the browser drops the path.
+ *                                                   number, like nodeThickness; an accessor is reported before anything is drawn.
  * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color. Optional:
  *                                                   when unset no fill attribute is written and the bars fall back to the stylesheet.
  * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color. Optional, as
  *                                                   nodeColor: unset leaves the stroke attribute off the paths.
  * @property {Function} linkSort                     A function determining how to sort the links, which are rendered stacked on top of each other.
  *                                                   The comparator is handed to d3's selection.sort, which orders the elements ascending, so the
- *                                                   comparator's largest link is the last one in the document and paints over all the others. The
- *                                                   default comparator is ascending by value, so the thickest links paint over the thinnest, undoing
- *                                                   in the DOM the descending order sszvis.layout.sankey.prepareData put the array in for the
- *                                                   opposite reason. Reverse it to keep the thin links on top. The property is wrapped in fn.functor,
- *                                                   so a value that is not a function is silently turned into a comparator claiming every pair is
- *                                                   already ordered. The sort reorders elements only; the data array, and with it the link tooltip
+ *                                                   comparator's largest link is the last one in the document and paints over all the others. A
+ *                                                   value that is not a function is reported, since a comparator can never be a constant. The
+ *                                                   default comparator is descending by value, so the thinnest links paint over the thickest and a
+ *                                                   thin link is never hidden by a thick one it crosses. This matches the descending order
+ *                                                   sszvis.layout.sankey.prepareData puts the array in. The sort reorders elements only; the data
+ *                                                   array, and with it the link tooltip
  *                                                   anchors, keeps its original order.
  * @property {String, Function} labelSide            A function determining the position of labels for the nodes. Should take a column index and
  *                                                   return a side ('left' or 'right'). Default is always 'left'. A function receives the column index
@@ -86,20 +89,19 @@ import bar from './bar.js';
  *                                                   flipped in very narrow screen layouts, when you want the labels to appear on the opposite side of
  *                                                   the columns they refer to. The hit boxes follow the switch as well.
  * @property {Number, Function} labelOpacity         A value for the opacity of the node labels, or a function over a node returning one. Default 1.
- *                                                   Despite what this property used to claim, it is applied to the node labels: the column labels
- *                                                   never receive an opacity at all, and no property hides them. Use it to fade the node names out
- *                                                   when they would overlap with user-triggered hover labels.
+ *                                                   It applies to the node labels only; columnLabelOpacity covers the column labels. Use it to fade
+ *                                                   the node names out when they would overlap with user-triggered hover labels.
  * @property {Number} labelHitBoxSize                A number for the width of the transparent 'hit boxes' drawn over the labels. This should
  *                                                   basically be equal to the width of the widest label. For performance reasons, it doesn't make
  *                                                   sense to calculate this value at run time while the component is rendered. Far better is to
  *                                                   position the chart so that the labels are visible, find the value of the widest label, and use
- *                                                   that. Default 0, which leaves a box exactly as wide as a node. Must be a plain number: the width
+ *                                                   that. Default 0, which leaves a box exactly as wide as a node. Must be a plain number, and an
+ *                                                   accessor is reported: the width
  *                                                   is computed once, from labelHitBoxSize plus nodeThickness, so every box is the same width
  *                                                   whatever its own label says. The boxes are appended after the labels and so paint over them,
  *                                                   which is what lets them catch the pointer.
- * @property {Function} nameLabel                    A function which takes the id of a node and should return the label for that node. Defaults to
- *                                                   using the id directly. The only label accessor that has to be a function: it is not wrapped in
- *                                                   fn.functor, so a constant throws "props.nameLabel is not a function".
+ * @property {String, Function} nameLabel           A string, or a function which takes the id of a node and returns the label for that node.
+ *                                                   Defaults to using the id directly.
  * @property {Array} linkSourceLabels                An array containing the data for links which should have labels on their 'source' end, that is
  *                                                   the end of the link which is connected to the source node. These data values should match the
  *                                                   values returned by sszvis.layout.sankey.prepareData. For performance reasons, you need to give
@@ -129,12 +131,11 @@ import bar from './bar.js';
  * never quite touch the bars. It is a local constant, deliberately not a property, and it
  * does not scale with the chart.
  *
- * Note: only the node bars are guarded against missing values. They are drawn by bar, which
- * replaces NaN with 0, while the link paths, the labels and the hit boxes are written here
- * by hand from the same numbers. A size scale that returns NaN for one value - a d3 scale
- * fed undefined, a gap in the data - therefore gives that node a bar of zero height and its
- * links a d and a stroke-width of NaN, which the browser drops entirely: the node renders
- * and the link disappears. Nothing is logged either way.
+ * Note: a size scale that returns NaN for one value - a d3 scale fed undefined, a gap in the
+ * data - is reported. The node bars are guarded by bar, which replaces NaN with 0, and the
+ * node labels and hit boxes follow the same rule with a warning. A link whose geometry is
+ * not finite cannot be drawn correctly at all, so it is warned about and left out of the
+ * document rather than drawn wrong.
  *
  * Note: a node's box is snapped to whole pixels, the position floored and the height ceiled,
  * so neighbouring nodes never leave a sub-pixel gap between them. The link geometry is not
@@ -174,14 +175,30 @@ const linkPathString = (x0, x1, x2, x3, y0, y1) => "M".concat(x0, ",").concat(y0
 const linkBounds = (x0, x1, y0, y1) => [x0, x1, y0, y1];
 /** The links are keyed on their id, so a redrawn link keeps its path element. */
 const idAcc = link => link.id;
+/** True when every number is a real, drawable coordinate. */
+function allFinite(values) {
+  return values.every(v => Number.isFinite(v));
+}
 /* Module
 ----------------------------------------------- */
 function sankey () {
-  return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort", functor).linkSort((a, b) => a.value - b.value) // Ascending, so the thickest links paint on top
-  .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel").nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
+  return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("columnLabelOpacity", functor).columnLabelOpacity(1).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort").linkSort((a, b) => b.value - a.value) // Descending, so the thinnest links paint on top
+  .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel", functor).nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
     var _props$linkColor, _props$linkLabel, _props$linkLabel2;
     const selection = select(this);
     const props = selection.props();
+    // Checked before anything is drawn. These four are used directly in arithmetic, so
+    // an unset value or an accessor - the shape most other properties in this library
+    // accept - produces NaN geometry, which bar's missing-value guard turns into an
+    // empty-looking chart rather than an error.
+    for (const name of ["nodeThickness", "nodePadding", "labelHitBoxSize", "linkCurvature"]) {
+      if (typeof props[name] !== "number" || !Number.isFinite(props[name])) {
+        throw new Error("[sankey] the ".concat(name, " property must be a number"));
+      }
+    }
+    if (typeof props.linkSort !== "function") {
+      throw new Error("[sankey] the linkSort property must be a comparator function");
+    }
     const getNodePosition = node => Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
     const xPosition = node => props.columnPosition(node.columnIndex);
     const yPosition = node => getNodePosition(node);
@@ -198,7 +215,7 @@ function sankey () {
     const columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
     // One number for each column
     .data(data.columnLengths).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
-    columnLabels.attr("transform", (d, i) => translateString(columnLabelX(i) + props.columnLabelOffset(d, i), COLUMN_LABEL_Y)).text((_d, i) => props.columnLabel(i));
+    columnLabels.attr("transform", (d, i) => translateString(columnLabelX(i) + props.columnLabelOffset(d, i), COLUMN_LABEL_Y)).text((_d, i) => props.columnLabel(i)).style("opacity", (_d, i) => props.columnLabelOpacity(i));
     const columnLabelTicks = barGroup.selectAll(".sszvis-sankey-column-label-tick").data(data.columnLengths).join("line").attr("class", "sszvis-sankey-column-label-tick");
     columnLabelTicks.attr("x1", (_d, i) => halfPixel(columnLabelX(i))).attr("x2", (_d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(COLUMN_LABEL_Y + 8)).attr("y2", halfPixel(COLUMN_LABEL_Y + 12));
     // Draw the links
@@ -221,11 +238,19 @@ function sankey () {
       return linkBounds(points[0], points[1], points[2], points[3]);
     };
     const linkThickness = link => Math.max(props.sizeScale(link.value), 1);
-    // Render the links
+    // Render the links. A link whose geometry is not finite - a size scale with a gap in
+    // its domain - cannot be drawn at all: coercing it to zero would draw a link that is
+    // merely wrong instead of one that is missing, so it is reported and left out.
+    const drawableLinks = data.links.filter(link => {
+      const points = linkPoints(link);
+      if (allFinite([...points, props.sizeScale(link.value)])) return true;
+      warn("[sankey] skipping a link with non-finite geometry, id:", link.id);
+      return false;
+    });
     const linksGroup = selection.selectGroup("links");
-    const linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc).join("path").attr("class", "sszvis-link");
+    const linksElems = linksGroup.selectAll(".sszvis-link").data(drawableLinks, idAcc).join("path").attr("class", "sszvis-link");
     linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", (_props$linkColor = props.linkColor) !== null && _props$linkColor !== void 0 ? _props$linkColor : null).sort(props.linkSort);
-    linksGroup.datum(data.links);
+    linksGroup.datum(drawableLinks);
     const linkTooltipAnchor = tooltipAnchor().position(link => {
       const bbox = linkBoundingBox(link);
       return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
@@ -253,11 +278,21 @@ function sankey () {
       }
       return side;
     };
+    // The labels and the hit boxes are written by hand, so they need the guard bar
+    // applies to the bars: a non-finite coordinate is reported and drawn at zero, which
+    // keeps them on top of the zero-height bar the same value produced.
+    const guarded = (value, node, what) => {
+      if (Number.isFinite(value)) return value;
+      warn("[sankey] non-finite ".concat(what, " for node"), node.id);
+      return 0;
+    };
+    const safeY = node => guarded(yPosition(node), node, "position");
+    const safeExtent = node => guarded(yExtent(node), node, "height");
     const nodeLabelsGroup = selection.selectGroup("nodelabels");
     const barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
-    barLabels.text(node => props.nameLabel(node.id)).attr("text-align", "middle").attr("text-anchor", node => getLabelSide(node.columnIndex) === "left" ? "end" : "start").attr("x", node => getLabelSide(node.columnIndex) === "left" ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6).attr("y", node => yPosition(node) + yExtent(node) / 2).style("opacity", props.labelOpacity);
+    barLabels.text(node => props.nameLabel(node.id)).attr("text-anchor", node => getLabelSide(node.columnIndex) === "left" ? "end" : "start").attr("x", node => getLabelSide(node.columnIndex) === "left" ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6).attr("y", node => safeY(node) + safeExtent(node) / 2).style("opacity", props.labelOpacity);
     const barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes).join("rect").attr("class", "sszvis-sankey-hitbox");
-    barLabelHitBoxes.attr("fill", "transparent").attr("x", node => xPosition(node) + (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)).attr("y", node => yPosition(node) - props.nodePadding / 2).attr("width", props.labelHitBoxSize + props.nodeThickness).attr("height", node => yExtent(node) + props.nodePadding);
+    barLabelHitBoxes.attr("fill", "transparent").attr("x", node => xPosition(node) + (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)).attr("y", node => safeY(node) - props.nodePadding / 2).attr("width", props.labelHitBoxSize + props.nodeThickness).attr("height", node => safeExtent(node) + props.nodePadding);
   });
 }
 

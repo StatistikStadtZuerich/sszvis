@@ -39,19 +39,23 @@
  *                                      chart, a linear scale over the stacked values, used for
  *                                      both the top edge and the height of every segment; on a
  *                                      horizontal chart, a band scale over the stack values.
- *                                      Also not defaulted, and also throws when unset.
+ *                                      Also not defaulted, and also throws by name when unset.
  * @property {number, function} width   Required by the vertical orientation, which sizes its
  *                                      bars with it - usually xScale.bandwidth(). The
  *                                      horizontal orientation computes its width from xScale
  *                                      and never reads the property. Omitting it on a vertical
- *                                      chart is not reported: every bar gets width 0.
+ *                                      chart throws.
  * @property {number, function} height  Required by the horizontal orientation, and ignored by
  *                                      the vertical one, which computes its height from yScale.
- *                                      Fails just as silently when omitted on a horizontal
- *                                      chart: every bar gets height 0.
+ *                                      Omitting it on a horizontal chart throws, just as the
+ *                                      vertical orientation does for width.
  * @property {string, function} fill    Optional. A constant or an accessor over a slice. When
  *                                      unset, no fill attribute is written at all and the
- *                                      rectangles fall back to the SVG/CSS default.
+ *                                      rectangles fall back to the SVG/CSS default. An accessor
+ *                                      is not called for a slice the stack carries no row for:
+ *                                      that slice is zero-sized, so its fill would never be
+ *                                      painted, and an accessor reading `d.data` would be
+ *                                      handed undefined. Such a slice gets no fill attribute.
  * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
  *                                      unset, a 1px #FFFFFF stroke separates the segments -
  *                                      centred on the bar edge, so it overpaints half a pixel
@@ -64,31 +68,31 @@
  * order, so the last key sits on the baseline; the horizontal one keeps the key order, so the
  * first key does.
  *
- * Note: the value of a cell is read from its first row only, so data that is not already
- * aggregated to one row per (stack, series) pair is silently truncated rather than summed. The
- * same unguarded read throws when a stack is missing one of the series keys, so every stack has
- * to carry a row for every series - callers with sparse data have to pad it with zero rows.
+ * Note: a cell's value is the sum of every row the accessors placed in it, so data that is not
+ * already aggregated to one row per (stack, series) pair stacks to its true total. The slice's
+ * `data` property still points at the first row of the cell. A stack that carries no row for
+ * one of the series keys stacks that series as zero, and the slice's `data` is undefined, so
+ * sparse data needs no padding with explicit zero rows.
  *
- * Note: the series keys come from Object.keys over the grouped data, and JavaScript orders
- * integer-like keys numerically regardless of insertion order. A series accessor returning
- * years or numeric codes therefore loses the caller's ordering, and since the key order is the
- * stacking order, the stack silently changes shape. The stacks themselves are reordered the
- * same way, which is only cosmetic, since each slice is positioned by its own stack value.
+ * Note: the series keys are collected from the data in order of first appearance, so the
+ * stacking order is the caller's. The stacks themselves are ordered by the cascade, which
+ * enumerates integer-like keys numerically regardless of insertion order; that part is only
+ * cosmetic, since each slice is positioned by its own stack value.
  *
- * Note: `keys` and `maxValue` are hung off the returned array rather than wrapped in an object,
- * so any array operation - a spread, a map, a filter, a trip through JSON - drops them, and
- * `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array. `maxValue`
- * is the maximum of the upper bounds only, so it is not the extent of the data when a value is
- * negative, and it is undefined rather than 0 for an empty layout, which turns into a NaN axis
- * when it is fed straight into a scale domain the way the examples do.
+ * Note: `keys`, `maxValue` and `minValue` are hung off the returned array rather than wrapped in
+ * an object, so any array operation - a spread, a map, a filter, a trip through JSON - drops
+ * them, and `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array.
+ * `maxValue` and `minValue` are the extent of the stacked bounds, so a negative value is
+ * included in them.
  *
- * Note: a negative value produces a negative rect width on a horizontal chart, which the
- * browser rejects, so the segment is simply not drawn. Neither orientation supports values
- * below the baseline.
+ * Note: a negative value is drawn on the other side of the baseline: both orientations take
+ * the lower of the two scaled bounds as the segment's origin and the absolute difference as
+ * its size. The layout reports the extent as `minValue` and `maxValue`, so the value scale's
+ * domain has to be built from both to make room for it.
  *
- * Note: the four scale and size properties are required but neither defaulted nor validated.
- * Two of them fail silently as zero-size bars, and the two scales throw a low-level TypeError
- * that names neither the property nor the component.
+ * Note: the scale and size properties each orientation reads are required and are validated
+ * before anything is drawn: a chart built without one throws an error naming the component and
+ * the missing property, rather than rendering zero-size bars or failing inside a helper.
  *
  * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
  * selector and no key function, so any pre-existing stack below the target group, at any depth,
@@ -104,11 +108,12 @@ import { type SeriesPoint } from "d3";
 import { type ComponentBuilder } from "../d3-component.js";
 /**
  * One slice of a stack: the [y0, y1] point d3.stack produces, with `data` narrowed from the
- * whole cascade row to the single datum the slice was computed from, and tagged with the
- * series and the stack it belongs to. It is d3's own SeriesPoint, which is why it is an
- * Array rather than a two-element tuple.
+ * whole cascade row to the first datum of the cell the slice was computed from, and tagged
+ * with the series and the stack it belongs to. It is d3's own SeriesPoint, which is why it is
+ * an Array rather than a two-element tuple. `data` is undefined when the stack carries no row
+ * for that series at all, which stacks as zero.
  */
-export type StackedBarSlice<T, X extends string | number = string> = SeriesPoint<T> & {
+export type StackedBarSlice<T, X extends string | number = string> = SeriesPoint<T | undefined> & {
     /** The series key the slice belongs to. */
     series: string;
     /** The stack the slice belongs to, as the stack accessor returned it. */
@@ -132,7 +137,10 @@ export type StackedBarSeries<T, X extends string | number = string> = StackedBar
  */
 export type StackedBarLayout<T, X extends string | number = string> = Omit<StackedBarSeries<T, X>[], "keys"> & {
     keys: string[];
-    maxValue: number | undefined;
+    /** The largest of the two bounds over every slice - zero when there are no slices. */
+    maxValue: number;
+    /** The smallest of the two bounds over every slice - negative when a value is. */
+    minValue: number;
 };
 export declare const stackedBarHorizontalData: <T, X extends string | number = string>(_stackAcc: (datum: T) => X, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number) => (data: T[]) => StackedBarLayout<T, X>;
 export declare const stackedBarVerticalData: <T, X extends string | number = string>(_stackAcc: (datum: T) => X, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number) => (data: T[]) => StackedBarLayout<T, X>;

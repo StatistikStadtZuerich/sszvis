@@ -21,18 +21,16 @@
  *                                                   when unset. It is called with a column index for the column labels as well as for the nodes, so
  *                                                   it is also consulted for columns that hold no node.
  * @property {Number} nodeThickness                  A number for the horizontal thickness of the node bars. Should be configured using a value
- *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required, but omitting it is not
- *                                                   reported: Math.max(undefined, 1) is NaN, which bar's missing-value guard turns into zero-width
- *                                                   bars, while the column labels, the hit boxes and the tooltip anchors keep the NaN. Must be a
- *                                                   plain number - an accessor, which most other properties in this library accept, is used in
- *                                                   arithmetic and yields the same NaN. The bar's width is floored at one pixel but the link starts
- *                                                   and the column label centring read the raw value, so below a thickness of one the two disagree.
+ *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required: leaving it unset throws
+ *                                                   before anything is drawn. Must be a plain number - an accessor, which most other properties in
+ *                                                   this library accept, is rejected the same way. The bar's width is floored at one pixel but the
+ *                                                   link starts and the column label centring read the raw value, so below a thickness of one the
+ *                                                   two disagree.
  * @property {Number} nodePadding                    A number for padding between the nodes. Should be configured using a value returned by the
  *                                                   sszvis.layout.sankey.computeLayout function. It applies between nodes only; the links stacked
  *                                                   inside a node are spaced by the size scale alone and fill it exactly. It also sets how far a
- *                                                   label hit box extends past its node, half of it above and half below. Required, must be a plain
- *                                                   number, and fails as silently as nodeThickness: every node's position becomes NaN, which bar
- *                                                   turns into 0, so the whole column collapses onto one row.
+ *                                                   label hit box extends past its node, half of it above and half below. Required and must be a
+ *                                                   plain number; leaving it unset, or passing an accessor, throws before anything is drawn.
  * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number, for padding at the top of
  *                                                   each column. Used to vertically center the columns. Required despite the functor wrapper: it has
  *                                                   no default, so leaving it unset throws "props.columnPadding is not a function". An accessor is
@@ -51,23 +49,27 @@
  *                                                   the tick stays centred on the column - and horizontally only; the vertical position is fixed. A
  *                                                   function is applied by d3 rather than by the renderer, so it receives the label's datum, that
  *                                                   column's node count, followed by the column index.
+ * @property {Number, Function} columnLabelOpacity  A value for the opacity of the column labels, or a function taking a column index and returning
+ *                                                   one. Default 1. Use it to fade the column headers out while a hover label occupies the same
+ *                                                   space; labelOpacity does the same for the node labels. Like columnLabel, an accessor is called
+ *                                                   with the column index alone.
  * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default
  *                                                   0.5, which puts both control points at the horizontal midpoint. Never clamped: at 1 the control
  *                                                   points swap ends, which still keeps the curve inside the column gap as a pronounced S, and above
  *                                                   1 they leave the gap altogether and the curve swings out past both columns. Must be a plain
- *                                                   number, like nodeThickness; an accessor yields NaN control points and the browser drops the path.
+ *                                                   number, like nodeThickness; an accessor is reported before anything is drawn.
  * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color. Optional:
  *                                                   when unset no fill attribute is written and the bars fall back to the stylesheet.
  * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color. Optional, as
  *                                                   nodeColor: unset leaves the stroke attribute off the paths.
  * @property {Function} linkSort                     A function determining how to sort the links, which are rendered stacked on top of each other.
  *                                                   The comparator is handed to d3's selection.sort, which orders the elements ascending, so the
- *                                                   comparator's largest link is the last one in the document and paints over all the others. The
- *                                                   default comparator is ascending by value, so the thickest links paint over the thinnest, undoing
- *                                                   in the DOM the descending order sszvis.layout.sankey.prepareData put the array in for the
- *                                                   opposite reason. Reverse it to keep the thin links on top. The property is wrapped in fn.functor,
- *                                                   so a value that is not a function is silently turned into a comparator claiming every pair is
- *                                                   already ordered. The sort reorders elements only; the data array, and with it the link tooltip
+ *                                                   comparator's largest link is the last one in the document and paints over all the others. A
+ *                                                   value that is not a function is reported, since a comparator can never be a constant. The
+ *                                                   default comparator is descending by value, so the thinnest links paint over the thickest and a
+ *                                                   thin link is never hidden by a thick one it crosses. This matches the descending order
+ *                                                   sszvis.layout.sankey.prepareData puts the array in. The sort reorders elements only; the data
+ *                                                   array, and with it the link tooltip
  *                                                   anchors, keeps its original order.
  * @property {String, Function} labelSide            A function determining the position of labels for the nodes. Should take a column index and
  *                                                   return a side ('left' or 'right'). Default is always 'left'. A function receives the column index
@@ -78,20 +80,19 @@
  *                                                   flipped in very narrow screen layouts, when you want the labels to appear on the opposite side of
  *                                                   the columns they refer to. The hit boxes follow the switch as well.
  * @property {Number, Function} labelOpacity         A value for the opacity of the node labels, or a function over a node returning one. Default 1.
- *                                                   Despite what this property used to claim, it is applied to the node labels: the column labels
- *                                                   never receive an opacity at all, and no property hides them. Use it to fade the node names out
- *                                                   when they would overlap with user-triggered hover labels.
+ *                                                   It applies to the node labels only; columnLabelOpacity covers the column labels. Use it to fade
+ *                                                   the node names out when they would overlap with user-triggered hover labels.
  * @property {Number} labelHitBoxSize                A number for the width of the transparent 'hit boxes' drawn over the labels. This should
  *                                                   basically be equal to the width of the widest label. For performance reasons, it doesn't make
  *                                                   sense to calculate this value at run time while the component is rendered. Far better is to
  *                                                   position the chart so that the labels are visible, find the value of the widest label, and use
- *                                                   that. Default 0, which leaves a box exactly as wide as a node. Must be a plain number: the width
+ *                                                   that. Default 0, which leaves a box exactly as wide as a node. Must be a plain number, and an
+ *                                                   accessor is reported: the width
  *                                                   is computed once, from labelHitBoxSize plus nodeThickness, so every box is the same width
  *                                                   whatever its own label says. The boxes are appended after the labels and so paint over them,
  *                                                   which is what lets them catch the pointer.
- * @property {Function} nameLabel                    A function which takes the id of a node and should return the label for that node. Defaults to
- *                                                   using the id directly. The only label accessor that has to be a function: it is not wrapped in
- *                                                   fn.functor, so a constant throws "props.nameLabel is not a function".
+ * @property {String, Function} nameLabel           A string, or a function which takes the id of a node and returns the label for that node.
+ *                                                   Defaults to using the id directly.
  * @property {Array} linkSourceLabels                An array containing the data for links which should have labels on their 'source' end, that is
  *                                                   the end of the link which is connected to the source node. These data values should match the
  *                                                   values returned by sszvis.layout.sankey.prepareData. For performance reasons, you need to give
@@ -121,12 +122,11 @@
  * never quite touch the bars. It is a local constant, deliberately not a property, and it
  * does not scale with the chart.
  *
- * Note: only the node bars are guarded against missing values. They are drawn by bar, which
- * replaces NaN with 0, while the link paths, the labels and the hit boxes are written here
- * by hand from the same numbers. A size scale that returns NaN for one value - a d3 scale
- * fed undefined, a gap in the data - therefore gives that node a bar of zero height and its
- * links a d and a stroke-width of NaN, which the browser drops entirely: the node renders
- * and the link disappears. Nothing is logged either way.
+ * Note: a size scale that returns NaN for one value - a d3 scale fed undefined, a gap in the
+ * data - is reported. The node bars are guarded by bar, which replaces NaN with 0, and the
+ * node labels and hit boxes follow the same rule with a warning. A link whose geometry is
+ * not finite cannot be drawn correctly at all, so it is warned about and left out of the
+ * document rather than drawn wrong.
  *
  * Note: a node's box is snapped to whole pixels, the position floored and the height ceiled,
  * so neighbouring nodes never leave a sub-pixel gap between them. The link geometry is not
@@ -299,6 +299,8 @@ export interface SankeyComponent extends SankeyBuilder {
     columnLabel(value: ColumnValue<string>): SankeyComponent;
     columnLabelOffset(): ColumnLabelOffset;
     columnLabelOffset(value: ColumnLabelOffsetValue): SankeyComponent;
+    columnLabelOpacity(): ColumnAccessor<number>;
+    columnLabelOpacity(value: ColumnValue<number>): SankeyComponent;
     linkCurvature(): number;
     linkCurvature(curvature: number): SankeyComponent;
     nodeColor(): StoredAccessor<SankeyNode, string | undefined> | undefined;
@@ -316,7 +318,7 @@ export interface SankeyComponent extends SankeyBuilder {
     labelHitBoxSize(): number;
     labelHitBoxSize(size: number): SankeyComponent;
     nameLabel(): (id: string) => string;
-    nameLabel(accessor: (id: string) => string): SankeyComponent;
+    nameLabel(value: string | ((id: string) => string)): SankeyComponent;
     linkSourceLabels(): SankeyLink[];
     linkSourceLabels(links: SankeyLink[]): SankeyComponent;
     linkTargetLabels(): SankeyLink[];

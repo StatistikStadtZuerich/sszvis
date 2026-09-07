@@ -20,7 +20,8 @@
  * data[side][series][row], and the caller picks the two sides positionally. Every slice carries
  * five properties beyond its pair: its `series` key, its `side` as the side accessor returned it,
  * its `row`, its own `value`, and its `data`, narrowed from the whole grouped row to the single
- * source row the slice was computed from. d3's own `key` and `index` are carried across onto each
+ * source row the slice was computed from - or undefined, where the row carries no value for that
+ * series and the slice is a zero-width pad. d3's own `key` and `index` are carried across onto each
  * series. The largest stacked total across both sides is attached to the returned array as
  * `maxValue`, which is what the horizontal scale's domain is built from. The rows passed in are not
  * modified.
@@ -55,33 +56,32 @@
  *                                            empty axis frame with no bars and no warning. Of the
  *                                            three required dimensions only this one fails
  *                                            silently. Shared with pyramid.
- * @property {number, function} barWidth      The width of a bar. Required, and an unset prop throws
- *                                            a TypeError from the component's own closure, because
- *                                            the component computes both the x and the width of
- *                                            every bar itself. It is called with one of the numbers
- *                                            out of a slice's [y0, y1] pair rather than with the
- *                                            slice, so it has to be a scale over stacked values and
- *                                            not an accessor over data - pyramid calls the same
- *                                            property with the bar's datum, and an accessor written
- *                                            for pyramid reads properties off a number here and
- *                                            yields NaN, which bar's guard turns into 0. It is also
- *                                            called without d3's index and group, so an index-aware
- *                                            or node-aware accessor collapses every width and every
- *                                            x to 0 on both sides; pyramid has the same omission on
- *                                            its left side only. A constant is accepted and is
- *                                            worse than an error: the width is computed as
- *                                            barWidth(d[1]) - barWidth(d[0]), so a constant
- *                                            subtracts itself and every segment disappears while
- *                                            still being positioned at the constant offset.
+ * @property {number, function} barWidth      The width of a bar. Required: an unset prop throws a
+ *                                            named TypeError before anything is drawn, because the
+ *                                            component computes both the x and the width of every
+ *                                            bar itself. A function is a scale over stacked values,
+ *                                            called with one of the numbers out of a slice's [y0,
+ *                                            y1] pair rather than with the slice - pyramid calls
+ *                                            the same property with the bar's datum, and an
+ *                                            accessor written for pyramid reads properties off a
+ *                                            number here and yields NaN, which bar's guard turns
+ *                                            into 0. It is called without d3's index and group, so
+ *                                            an index-aware or node-aware accessor collapses every
+ *                                            width and every x to 0 on both sides; pyramid has the
+ *                                            same omission on its left side only. A number is the
+ *                                            constant width of every segment, measured from the
+ *                                            spine outwards, and is the one dimension not run
+ *                                            through fn.functor, so that a constant stays
+ *                                            distinguishable from a scale.
  * @property {number, function} barPosition   The vertical position of a bar, i.e. its top edge.
  *                                            Required, and an unset prop throws too, but from
  *                                            inside fn.compose ("Cannot read properties of
  *                                            undefined (reading 'call')") rather than from the
  *                                            component's own closure the way barWidth does. Both
  *                                            surface while bar is applying its attributes. It is
- *                                            called with the slice's `row`, which is that row's
- *                                            index within its side and not the value the row
- *                                            accessor returned, and with nothing else, so an
+ *                                            called with the slice's `row`, i.e. the value the
+ *                                            layout's row accessor returned, so it is a scale over
+ *                                            the row domain. It is called with nothing else, so an
  *                                            index-aware accessor yields NaN and bar's guard
  *                                            flattens it to 0.
  * @property {Array<number>} [tooltipAnchor]  The anchor position for the tooltips. Uses
@@ -109,8 +109,10 @@
  *                                            leftAccessor.
  * @property {function} [leftRefAccessor]     Reference data for the left side, drawn as a single
  *                                            path outlining the reference series. The elements are
- *                                            handed to barWidth for x and to barPosition for y, so
- *                                            they have to be plain numbers. Optional, but the guard
+ *                                            reference points, {row, value}: barWidth maps the
+ *                                            value to x and barPosition the row to y, the same way
+ *                                            round as in the bars, so a slice of the layout
+ *                                            satisfies the shape unchanged. Optional, but the guard
  *                                            tests whether the accessor was set, not what it
  *                                            returns: an accessor that yields undefined or null for
  *                                            some states throws instead of hiding the line.
@@ -120,28 +122,23 @@
  * @property {function} [rightRefAccessor]    Reference data for the right side. Same as
  *                                            leftRefAccessor.
  *
- * Note: a side's series keys are read off that side's first row alone, with Object.keys, so a
- * series absent from the first row is dropped from the whole side and its values appear neither in
- * the chart nor in maxValue - stackedBarData takes the union of the keys across every row instead.
- * The stack value is then read as x[key][0] with no guard, so a later row that is missing one of
- * the first row's keys dies on an undefined cell with a TypeError. Between them the two mean every
- * row of a side has to carry every series and the first row decides which, so callers with sparse
- * data have to pad it with zero rows.
- *
- * Note: a slice's `row` is the position of its row within the side, not the value the row accessor
- * returned, and that index is what the component feeds to barPosition. It lines up with the data
- * only when the row values happen to be a dense zero-based range, which is what
- * docs/population-pyramid/pyramid-stacked.js relies on: it builds its position scale over
- * d3.range(0, 101) and its ages happen to run from 0 to 100. The source row still knows its real
- * value; only the tag on the slice is an index.
+ * Note: a side's series keys are the union of the series across every row of that side, in the
+ * order the rows first mention them, and that order is the stacking order. A row that carries no
+ * value for one of them contributes a zero slice whose `data` is undefined - the alternative would
+ * be to drop the row from the layer entirely, which d3.stack does not offer. Sparse data therefore
+ * needs no padding rows. Such a slice is zero-width, so nothing of it is painted and barFill is
+ * not called for it: an accessor written over the source row never sees an undefined datum, and
+ * does not have to guard for one.
  *
  * Note: the cascade groups on String(key) - for the sides, the rows and the series alike - so keys
  * that differ only in type merge, and the number 1 and the string "1" land in the same cell where
  * only the first of them is stacked. The ordering follows from the same coercion: JavaScript
  * iterates array-index keys in ascending numeric order regardless of insertion order, so dense
- * non-negative integer rows sort themselves, which is what makes the index-as-position quirk above
- * survivable, while negative, fractional or plain string rows fall back to insertion order and are
- * laid out in whatever order the input happened to be in. The sides are ordered the same way and
+ * non-negative integer rows sort themselves, while negative, fractional or plain string rows fall
+ * back to insertion order and are laid out in whatever order the input happened to be in. Since
+ * barPosition receives the row's own value that ordering is cosmetic for the bars - it decides only
+ * which slice is drawn first - but a `row` that is a string comes back as the accessor returned it,
+ * not as the cascade's stringified key. The sides are ordered the same way and
  * picked positionally, so a dataset whose first row is male puts men on the left and silently
  * mirrors the chart. For the series the key order is the stacking order, so a series accessor
  * returning years or numeric codes restacks the chart in ascending numeric order, and the `series`
@@ -158,23 +155,19 @@
  *
  * Note: `maxValue` is hung off the returned array rather than wrapped in an object, so any array
  * operation - a spread, a map, a filter, a trip through JSON - drops it. It is the maximum of the
- * upper bounds only, so it is not the extent of the data when a value is negative, and it is
- * undefined rather than 0 for an empty layout, where it coerces to NaN in the scale domain the
- * examples feed it into, so the scale maps every value to NaN and the axis draws its domain line
- * with no ticks at all. A slice's `value` is a convenience of the same kind:
+ * upper bounds only, so it is not the extent of the data when a value is negative. An empty layout
+ * reports 0, so a scale domain built from it stays valid. A slice's `value` is a convenience of the
+ * same kind:
  * the component never reads it, and it duplicates d[1] - d[0] as it stood when the layout ran, so
  * it goes stale if a caller rewrites the pair. Shared with stackedBarData. See
  * test/component/stackedPyramid.test.ts.
  *
- * Note: the reference lines cannot be drawn in the coordinate system the bars use. The line
- * generator is d3.line().x(barWidth).y(barPosition), so both props are called with the same
- * reference element, while in the bars barWidth is called with a stacked value and barPosition with
- * a row index. No element satisfies both: a series of stacked values gives an x that is right and a
- * y that is as many rows down as the value is large. d3.line also calls its x accessor as (d, i,
- * data), so barWidth receives the index on the line and nowhere else, which leaves one property
- * with two calling conventions as well as two coordinate systems. The only stackedPyramid example
- * sets neither reference accessor; the reference-line example uses the plain pyramid instead, where
- * both props read the datum and the problem does not arise.
+ * Note: a reference series is an array of {row, value} points, so barWidth maps the value to x and
+ * barPosition the row to y - the same division of labour as in the bars, which is what makes the
+ * outline land in their coordinate system. Neither property receives d3's index, on the line or in
+ * the bars. pyramid's byte-identical lineComponent still takes plain data, since there both
+ * properties read the bar's datum and the question does not arise. The only stackedPyramid example
+ * sets neither reference accessor.
  *
  * Note: two smaller mismatches ride along, both of them shared with pyramid. The bars are pushed
  * outwards by SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn
@@ -210,14 +203,12 @@
  * removing the accessor itself empties the group. The mirror property writes transform="" on the
  * right side rather than omitting the attribute. Shared with pyramid.
  *
- * Note: the stack join is selectAll("[data-sszvis-stack]"), a descendant selector rather than a
- * child selector, so a stack group nested at any depth below a side's group is captured alongside
- * the direct children. The exit selection then removes a legitimate series group, and the reorder
- * that follows has to sort a selection in which one element is an ancestor of another, so d3 throws
- * a HierarchyRequestError and aborts the whole render rather than just that side. A child selector
- * would make it unreachable. Nothing nests stack groups today, so reaching it needs a caller to
- * have put something of its own inside one. stackedBar's version of the same unscoped selector only
- * re-binds.
+ * Note: the stack join is a child selector, ":scope > [data-sszvis-stack]", so only the groups the
+ * component owns take part in it and a caller may render content of its own - including further
+ * stack groups - inside a series group without the join adopting it. The bars inside each series
+ * group are still joined with an unscoped selectAll(".sszvis-bar") by bar itself, so a planted
+ * rect.sszvis-bar descendant is captured there. stackedBar's copy of the same descendant selector
+ * on the stack groups is unfixed.
  *
  * Note: neither join uses a key function, so on a re-render the stack groups and the rects inside
  * them are matched by index rather than by series. When a series is dropped from anywhere but the
@@ -247,15 +238,16 @@ import { type ComponentBuilder } from "../d3-component.js";
  * One slice of a stack: the [y0, y1] point d3.stack produced, with `data` narrowed from the
  * whole cascade row to the single row the slice was computed from, and tagged with the
  * series, the side and the row it belongs to. It is d3's own SeriesPoint, which is why it is
- * an Array rather than a two-element tuple.
+ * an Array rather than a two-element tuple. `data` is undefined on a padding slice, i.e.
+ * where a row of the side carries no value for the series.
  */
-export type StackedPyramidSlice<T, S extends string | number = string> = SeriesPoint<T> & {
+export type StackedPyramidSlice<T, S extends string | number = string> = SeriesPoint<T | undefined> & {
     /** The series key the slice belongs to. */
     series: string;
     /** The side the slice belongs to, as the side accessor returned it. */
     side: S;
-    /** The position of the slice's row within its side - an index, not the row's own value. */
-    row: number;
+    /** The row the slice belongs to, as the row accessor returned it. */
+    row: string | number;
     /** The slice's own value, i.e. d[1] - d[0] as it was when the layout ran. */
     value: number;
 };
@@ -271,7 +263,7 @@ export type StackedPyramidSide<T, S extends string | number = string> = StackedP
  * them hung off the array itself rather than wrapped in an object.
  */
 export type StackedPyramidLayout<T, S extends string | number = string> = StackedPyramidSide<T, S>[] & {
-    maxValue: number | undefined;
+    maxValue: number;
 };
 /**
  * This function prepares the data for the stackedPyramid component
@@ -286,38 +278,53 @@ export type StackedPyramidLayout<T, S extends string | number = string> = Stacke
  * The combination of each distinct (side,row,series) triplet MUST appear only once
  * in the data. This function makes no effort to normalize the data if that's not the case.
  */
-export declare function stackedPyramidData<T, S extends string | number = string>(sideAcc: (datum: T) => S, _rowAcc: (datum: T) => string | number, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number): (data: T[]) => StackedPyramidLayout<T, S>;
+export declare function stackedPyramidData<T, S extends string | number = string>(sideAcc: (datum: T) => S, rowValueAcc: (datum: T) => string | number, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number): (data: T[]) => StackedPyramidLayout<T, S>;
 /**
- * How barWidth reads back once it is stored. It is wrapped by fn.functor on set, so it is
- * always a function by the time the renderer reads it, and the component calls it with one of
- * the numbers out of a slice's [y0, y1] pair - never with the slice itself. Both parameters
- * are optional because a constant becomes a functor that ignores its arguments, and because
+ * A barWidth scale: a function from one of the numbers out of a slice's [y0, y1] pair - never
+ * from the slice itself - to a distance from the spine. Both parameters are optional because
  * the component passes neither d3's index nor its group.
  */
-type StoredWidth = (value?: number, index?: number) => number;
+type WidthScale = (value?: number, index?: number) => number;
 /**
- * How barPosition reads back. In the bars it is called with a slice's row index; on a
- * reference line d3.line calls it with the reference element itself, which is why a reference
- * series has to be an array of numbers.
+ * How barWidth reads back. It is the one dimension that is not run through fn.functor, because
+ * a constant and a scale mean different things here: the component computes both the x and the
+ * width of every bar itself, so a constant is the width of a segment while a scale maps a
+ * stacked value to a distance from the spine.
  */
-type StoredPosition = (value?: number, index?: number) => number;
+type StoredWidth = number | WidthScale;
+/**
+ * How barPosition reads back. It is called with a row - the value the layout's row accessor
+ * returned - both for the bars and for the points of a reference line, so one position scale
+ * over the row domain serves both.
+ */
+type StoredPosition = (value?: string | number, index?: number) => number;
 /** How barHeight reads back: unlike the other two dimensions it is handed straight to bar. */
 type StoredHeight<T, S extends string | number> = (slice?: StackedPyramidSlice<T, S>, index?: number) => number;
-/** How barFill reads back. It is composed with the slice's `data`, so it reads a source row. */
-type StoredFill<T> = (datum?: T, index?: number) => string | undefined;
+/** How barFill reads back. It is called with the slice's `data`, so it reads a source row. */
+type StoredFill<T> = (datum: T, index?: number) => string | undefined;
 /** Pulls one side's series out of the datum bound to the chart layer. */
 type SideAccessor<T, S extends string | number> = (data: StackedPyramidLayout<T, S>) => StackedPyramidSide<T, S>;
 /**
- * Pulls one side's reference series out of the datum bound to the chart layer. The elements
- * are handed to barWidth for x and to barPosition for y, so they have to be plain numbers.
+ * One point of a reference outline. Each half is mapped by the property that owns it in the
+ * bars: barWidth reads the `value`, barPosition the `row`, so the outline is drawn in the same
+ * coordinate system as the bars it describes. A slice satisfies the shape as it stands, so one
+ * of the layout's own series can be handed over as a reference series unchanged.
  */
-type ReferenceAccessor<T, S extends string | number> = (data: StackedPyramidLayout<T, S>) => number[];
+export interface StackedPyramidReferencePoint {
+    /** The row the point sits on, in the row domain barPosition is a scale over. */
+    row: string | number;
+    /** The stacked value the point describes, in the domain barWidth is a scale over. */
+    value: number;
+}
+/** Pulls one side's reference series out of the datum bound to the chart layer. */
+type ReferenceAccessor<T, S extends string | number> = (data: StackedPyramidLayout<T, S>) => StackedPyramidReferencePoint[];
 /** A constant or an accessor; either is accepted, since fn.functor normalises both. */
 type PyramidValue<A, R> = R | ((value: A, index: number) => R);
 /**
- * A constant or an accessor over a slice's source row. barFill is composed with the slice's
- * `data`, and fn.compose forwards d3's index only to the innermost function, so unlike bar's
- * own fill this one is called with the datum alone.
+ * A constant or an accessor over a slice's source row. barFill is called with the slice's `data`
+ * and with nothing else, so unlike bar's own fill it receives no index. A padding slice - one
+ * standing for a series the row has no observation for - is zero-width, so the accessor is not
+ * called for it and never has to handle a missing row.
  */
 type FillValue<U> = string | undefined | ((datum: U) => string | undefined);
 /**
@@ -330,7 +337,7 @@ export interface StackedPyramidComponent<T = unknown, S extends string | number 
     barWidth(): StoredWidth;
     barWidth(value: PyramidValue<number, number>): StackedPyramidComponent<T, S>;
     barPosition(): StoredPosition;
-    barPosition(value: PyramidValue<number, number>): StackedPyramidComponent<T, S>;
+    barPosition<U = string | number>(value: PyramidValue<U, number>): StackedPyramidComponent<T, S>;
     barFill(): StoredFill<T>;
     barFill<U = T>(value: FillValue<U>): StackedPyramidComponent<T, S>;
     tooltipAnchor(): (number | string)[];
@@ -340,9 +347,9 @@ export interface StackedPyramidComponent<T = unknown, S extends string | number 
     rightAccessor(): SideAccessor<T, S>;
     rightAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidSide<T, S>): StackedPyramidComponent<T, S>;
     leftRefAccessor(): ReferenceAccessor<T, S> | undefined;
-    leftRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => number[]): StackedPyramidComponent<T, S>;
+    leftRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidReferencePoint[]): StackedPyramidComponent<T, S>;
     rightRefAccessor(): ReferenceAccessor<T, S> | undefined;
-    rightRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => number[]): StackedPyramidComponent<T, S>;
+    rightRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidReferencePoint[]): StackedPyramidComponent<T, S>;
 }
 export declare function stackedPyramid<T = unknown, S extends string | number = string>(): StackedPyramidComponent<T, S>;
 export {};
