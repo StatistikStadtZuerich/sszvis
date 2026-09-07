@@ -29,8 +29,9 @@
  * @property {Number, Function} strokeWidth         The stroke width of the circles. Can be a function. Default 1.
  *                                                  Documented nowhere else: docs/map-signature/README.md omits it.
  * @property {Boolean} transition                   Whether or not to transition the sizes of the circles when data
- *                                                  changes. Default true - but it never actually animates a radius, and
- *                                                  never affects a departing circle; see the notes below.
+ *                                                  changes. Default true. An entering circle grows from zero, an
+ *                                                  updating one interpolates to its new radius, and a departing one
+ *                                                  shrinks to zero before it is removed.
  *
  * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are all
  * required in practice, and each fails differently when left out.
@@ -54,17 +55,14 @@
  * Note: the circles are sorted by radius descending, so the largest paint first and smaller ones sit
  * on top of them. That is a DOM reordering, so the rendered order does not follow mergedData.
  *
- * Note: the exit selection is read off the merged selection that join() returned, where it does not
- * exist - so both exit branches are dead code, the shrink-to-zero transition and the plain remove
- * alike. join() has already removed the departing circles synchronously, so a bubble leaving the
- * data disappears instantly rather than shrinking away, whatever `transition` says.
+ * Note: the exit selection is handled inside join()'s third argument, since join() removes the
+ * departing nodes itself and returns only the merged enter+update selection.
  *
  * Note: the join is keyed on geoJson.id, falling back to the feature's position in the merged data
  * for a feature without one, so a keyless collection keeps its circles across renders too.
  *
- * Note: the radius accessor is called for every circle twice over - once for the attribute and once
- * for the transition - and again for each comparison the size sort makes, so it runs several times
- * more often than there are data.
+ * Note: the radius accessor is called once per circle for the radius itself and again for each
+ * comparison the size sort makes, so it runs several times more often than there are data.
  *
  * Note: the class is written with attr rather than classed, so it is replaced wholesale on every
  * render and any class a consumer added to a circle is destroyed.
@@ -73,16 +71,14 @@
  * come entirely from the inline styles this component writes - and a consumer cannot restyle them
  * from their own stylesheet, since an inline style beats any author rule short of !important.
  *
- * Note: this renderer shares four quirks with the base renderer, documented at length in
- * src/map/renderer/base.ts: the radius transition interpolates a value onto itself, so nothing
- * animates on enter or on update; the --entering modifier is added and removed within the same
- * render, so it is never observable and offers no enter-only styling hook; the anchor positions go
- * through getGeoJsonCenter, which caches a centre onto every feature's properties and never
- * invalidates it, so moving a feature's geometry leaves its bubble behind; and mapPath must be a
- * real d3.geoPath, since the positions read mapPath.projection(). Unlike base, though, the
- * transition itself is the intended one - defaultTransition() is passed as `t` to .transition(t)
- * rather than through the no-op `.transition().call(slowTransition)` pattern - so its 300ms and
- * easePolyOut survive.
+ * Note: this renderer shares three quirks with the base renderer, documented at length in
+ * src/map/renderer/base.ts: the --entering modifier is added and removed within the same render, so
+ * it is never observable and offers no enter-only styling hook; the anchor positions go through
+ * getGeoJsonCenter, which caches a centre onto every feature's properties and never invalidates it,
+ * so moving a feature's geometry leaves its bubble behind; and mapPath must be a real d3.geoPath,
+ * since the positions read mapPath.projection(). Unlike base, though, the transition itself is the
+ * intended one - defaultTransition() is passed to .transition(t) rather than through the no-op
+ * `.transition().call(slowTransition)` pattern - so its 300ms and easePolyOut survive.
  *
  * Note: this component adds no tooltip anchors of its own; a bubble map's tooltips are anchored by
  * the base renderer underneath it.
@@ -225,9 +221,23 @@ export default function <T = unknown>(): MapRendererBubbleComponent<T> {
         .selectGroup("anchoredCircles")
         .selectAll<SVGCircleElement, MergedGeoDatum<T>>(".sszvis-anchored-circle")
         .data(props.mergedData, keyOf)
-        .join("circle")
-        .attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering")
-        .attr("r", radiusAcc)
+        .join(
+          (enter) =>
+            enter
+              .append("circle")
+              .attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering")
+              // Entering circles start at zero so the radius transition has somewhere to come
+              // from; without a starting value the tween would interpolate from null.
+              .attr("r", 0),
+          (update) => update,
+          // The exit selection has to be handled here: join() removes the departing nodes itself
+          // and returns only the merged enter+update selection, so an .exit() read off its result
+          // is always empty.
+          (exit) =>
+            props.transition
+              ? exit.transition(defaultTransition()).attr("r", 0).remove()
+              : exit.remove()
+        )
         .on("mouseover", function (e: Event & { datum?: undefined }) {
           event.call("over", this, legacyDatum(e));
         })
@@ -255,16 +265,13 @@ export default function <T = unknown>(): MapRendererBubbleComponent<T> {
       // Remove the --entering modifier from the updating circles
       anchoredCircles.classed("sszvis-anchored-circle--entering", false);
 
+      // The radius is written exactly once, so the transition has the previous value - zero for an
+      // entering circle - to interpolate from. Writing it to the plain selection first would put
+      // the final radius in the DOM before the tween started, and the tween would then interpolate
+      // that radius onto itself.
       if (props.transition) {
-        const t = defaultTransition();
-        // Note: join() has already removed the exiting nodes and returns the merged selection, so
-        // this exit selection is empty and the shrink-away transition never runs. Kept as the
-        // JavaScript had it; see the module note.
-        anchoredCircles.exit().transition(t).attr("r", 0).remove();
-
-        anchoredCircles.transition(t).attr("r", radiusAcc);
+        anchoredCircles.transition(defaultTransition()).attr("r", radiusAcc);
       } else {
-        anchoredCircles.exit().remove();
         anchoredCircles.attr("r", radiusAcc);
       }
     });
