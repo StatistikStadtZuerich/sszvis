@@ -107,7 +107,7 @@ describe("maps/choropleth", () => {
    */
   const nextSize = () => 100 + ++size;
 
-  type Choropleth<T extends Record<string, unknown>> = ReturnType<typeof choropleth<T>>;
+  type Choropleth<T extends object> = ReturnType<typeof choropleth<T>>;
   type Configure = (c: Choropleth<Datum>) => Choropleth<Datum>;
 
   /** Renders a choropleth over `data`, returning the layer group it drew into. */
@@ -261,6 +261,38 @@ describe("maps/choropleth", () => {
         })
       );
       expect(distinct(seen)).toEqual([{ geoId: "a", value: 1 }, undefined]);
+    });
+
+    // An interface has no implicit index signature, so it does not satisfy Record<string,
+    // unknown>. The component is constrained to `object`, matching prepareMergedGeoData, so an
+    // ordinary consumer model can be named as its datum type.
+    test("accepts an interface-shaped datum", () => {
+      interface Kreis {
+        geoId: string;
+        value: number;
+      }
+      const collection = geoJson();
+      const seen: (Kreis | undefined)[] = [];
+      const node = layer()
+        .datum<Kreis[]>([{ geoId: "b", value: 7 }])
+        .call(
+          choropleth<Kreis>()
+            .features(collection)
+            .borders(mesh())
+            .width(135)
+            .height(135)
+            .withLake(false)
+            .transitionColor(false)
+            .highlight([{ geoId: "b", value: 7 }])
+            .fill((d?: Kreis) => {
+              seen.push(d);
+              return d ? "#ff0000" : "#0000ff";
+            })
+        )
+        .node() as SVGGElement;
+      expect(attrs(node, "fill")).toEqual(["#0000ff", "#ff0000", "#0000ff"]);
+      expect(distinct(seen)).toEqual([undefined, { geoId: "b", value: 7 }]);
+      expect(highlights(node)).toHaveLength(1);
     });
   });
 
@@ -649,13 +681,10 @@ describe("maps/choropleth", () => {
       expect(second).toBe(1);
     });
 
-    // NOTE: the JSDoc documents width, height, keyName, highlight, highlightStroke, defined, fill,
-    // borderColor, withLake, anchoredShape and transitionColor, but the component also carries
-    // features, borders, lakeFeatures, lakeBorders, lakeFadeOut, strokeWidth, highlightStrokeWidth
-    // and lakePathColor. features is the one property with no default whose absence throws;
-    // width and height have none either, but degrade to NaN paths. This test pins the full
-    // surface so the JSDoc can be checked against it.
-    test("exposes every documented and undocumented property", () => {
+    // Pins the component's full property surface, so the JSDoc header can be checked against it.
+    // features is the one property whose absence throws; width and height have no default either,
+    // but degrade to NaN paths rather than reporting anything.
+    test("exposes every documented property", () => {
       const map = choropleth();
       for (const prop of [
         "width",

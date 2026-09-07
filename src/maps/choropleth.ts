@@ -35,12 +35,13 @@
  * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
  *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
  *                                                    Defaults to a constant true, so nothing is textured unless it is set.
- * @property {String, Function} fill                  A string or function for the fill of the map entities. An accessor is
- *                                                    called with undefined for a feature no datum matched.
+ * @property {String, Function} fill                  A string or function for the fill of the map entities. Default black.
+ *                                                    An accessor is called with undefined for a feature no datum matched.
  * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
- *                                                    mesh, for the border color of the map entities.
+ *                                                    mesh, for the border color of the map entities. Default white.
  * @property {Number, Function} strokeWidth           The width of the entity borders. Default 1.25.
- * @property {String, Function} lakePathColor         The color of the entity borders which extend over the lake
+ * @property {String, Function} lakePathColor         The color of the entity borders which extend over the lake. No
+ *                                                    default: left out, the paths take their stroke from the stylesheet.
  * @property {Boolean} withLake                       Whether or not to show the textured outline of the end of lake Zurich that is within the city. Default true
  * @property {AnchoredShape} anchoredShape            A shape to anchor to the base map elements of this map - a component
  *                                                    carrying mergedData and mapPath properties, which this component sets
@@ -167,10 +168,6 @@ type GeoStyleValue<R extends string | number> =
 export type ChoroplethEventHandler = (datum: undefined) => void;
 
 /**
- * The datum type is constrained to Record<string, unknown> rather than to object because
- * prepareMergedGeoData indexes a datum by the key name, so an interface without an index signature
- * cannot be named as T even though it works at runtime.
- *
  * The props as the render reads them. features is typed as present because a render only succeeds
  * with it; width and height are too, since the projection is built from them unguarded - a caller
  * who leaves any of the three out gets the failure pinned in test/maps/choropleth.test.ts rather
@@ -196,8 +193,7 @@ type ChoroplethProps<T> = {
  * are spelled out here rather than inherited because a delegate returns this component for
  * chaining, not the renderer.
  */
-export interface ChoroplethComponent<T extends Record<string, unknown> = Record<string, unknown>>
-  extends Component {
+export interface ChoroplethComponent<T extends object = object> extends Component {
   width(): number | undefined;
   width(value: number): ChoroplethComponent<T>;
   height(): number | undefined;
@@ -260,9 +256,7 @@ function legacyDatum(event: Event & { datum?: undefined }): undefined {
   return event.datum;
 }
 
-export default function <
-  T extends Record<string, unknown> = Record<string, unknown>,
->(): ChoroplethComponent<T> {
+export default function <T extends object = object>(): ChoroplethComponent<T> {
   const event = dispatch("over", "out", "click");
 
   const baseRenderer = mapRendererBase<T>();
