@@ -282,7 +282,7 @@
  * @module sszvis/control/buttonGrup
  */
 .sszvis-control-buttonGroup {
-  display: inline-block;
+  display: inline-flex;
   position: absolute;
   user-select: none;
   -moz-user-select: none;
@@ -297,14 +297,13 @@
   box-sizing: border-box;
   color: #0f05a0;
   cursor: pointer;
-  display: table-cell;
+  display: inline-block;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-family: var(--stzh-font);
   font-size: 12px;
   line-height: normal;
   padding: 9px 12px;
   text-align: center;
-  vertical-align: middle;
   transition: all 0.3s;
   /* The items are `button` elements; neutralise the user agent's own button styles so the
      row still reads as one flush segmented control. */
