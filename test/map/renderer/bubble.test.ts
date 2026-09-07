@@ -414,6 +414,30 @@ describe("map/renderer/bubble", () => {
       );
     });
 
+    // Two more of d3's typename rules, verified against d3 itself rather than assumed: "over." is
+    // the same registration as "over", and an empty or whitespace-only typename list does nothing.
+    test.each([
+      ["a dotted form of the same typename", "over.", "none", "dotted"],
+      ["an empty typename list", "", "", "empty"],
+      ["a whitespace-only typename list", "   ", "", "blank"],
+    ])("follows d3 when a handler is removed with %s", (_label, removeWith, expected, key) => {
+      const collection = geoJson();
+      const layer = group(`bubble-typename-${key}`);
+      const component = mapRendererBubble<Datum>()
+        .mergedData(prepareMergedGeoData(fullData, collection))
+        .mapPath(mapPathOf(collection))
+        .radius(5)
+        .fill("#ff0000");
+
+      component.on("over", () => undefined);
+      expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe("");
+
+      component.on(removeWith, null);
+      expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe(
+        expected
+      );
+    });
+
     // The classes are written with classed rather than attr, and only when the circle enters, so
     // the component never touches a class a consumer added to it.
     test("keeps a class a consumer put on a circle", () => {
