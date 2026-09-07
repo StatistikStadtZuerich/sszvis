@@ -1,5 +1,5 @@
 import { type ScaleBand, type ScaleLinear, scaleBand, scaleLinear } from "d3";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   type StackedBarLayout,
   type StackedBarSlice,
@@ -512,24 +512,28 @@ describe("component/stackedBar", () => {
       expect(rects(node).length).toBe(2);
     });
 
-    test("should pick up a changed scale", () => {
+    test("should pick up a changed scale", async () => {
+      // bar animates the update, so the rescaled geometry arrives with the transition.
       const component = verticalOf();
       const g = group("rescale");
       g.datum(verticalData()).call(component as never);
       yLinear.range([150, 0]);
       g.datum(verticalData()).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(attrs(rects(stacks(node)[0]), "y")).toEqual([
-        String(yLinear(30)),
-        String(yLinear(40)),
-      ]);
+      await vi.waitFor(() => {
+        expect(attrs(rects(stacks(node)[0]), "y")).toEqual([
+          String(yLinear(30)),
+          String(yLinear(40)),
+        ]);
+      });
     });
 
-    test("should re-bind the surviving nodes by index rather than by series", () => {
+    test("should re-bind the surviving nodes by index rather than by series", async () => {
       // NOTE: neither join uses a key function, so the groups and the rects are matched by
       // index. Dropping the first series re-binds the second onto the <g> and the rects
       // that used to hold the first - the DOM nodes survive and change meaning, which is
-      // invisible to a test that only counts them.
+      // invisible to a test that only counts them. Because bar's transition really runs,
+      // the surviving rect now eases from the old series' geometry to the new one.
       const component = verticalOf();
       const g = group("rebind");
       g.datum(verticalData()).call(component as never);
@@ -544,7 +548,9 @@ describe("component/stackedBar", () => {
       expect(stacks(node)[0]).toBe(firstStack);
       expect(rects(firstStack)[0]).toBe(firstRect);
       // The same rect now carries series "Y", alone on the baseline and spanning [0, 20].
-      expect(firstRect.getAttribute("y")).toBe(String(yLinear(20)));
+      await vi.waitFor(() => {
+        expect(firstRect.getAttribute("y")).toBe(String(yLinear(20)));
+      });
     });
 
     test("should not keep a stale tooltip anchor per rect", () => {
