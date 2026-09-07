@@ -361,10 +361,10 @@ describe("component/sankey", () => {
       // The vertical level is the node's position plus the link's offset within the node
       // plus half the link's own thickness.
       expect(linkAttrs(node, "d")).toEqual([
+        "M21,10C60,10 60,10 99,10",
+        "M21,25C60,25 60,40 99,40",
         "M21,42.5C60,42.5 60,22.5 99,22.5",
         "M21,47.5C60,47.5 60,47.5 99,47.5",
-        "M21,25C60,25 60,40 99,40",
-        "M21,10C60,10 60,10 99,10",
       ]);
     });
 
@@ -383,8 +383,8 @@ describe("component/sankey", () => {
       const data = makeData();
       data.links[0].value = 0;
       const node = render(sankeyOf(), data);
-      // The zeroed link sorts first, since the default sort is by ascending value
-      expect(attrs(node, "links", "path.sszvis-link", "stroke-width")[0]).toBe("1");
+      // The zeroed link sorts last, since the default sort is by descending value
+      expect(attrs(node, "links", "path.sszvis-link", "stroke-width")[3]).toBe("1");
     });
 
     test("should never fill the paths", () => {
@@ -404,12 +404,12 @@ describe("component/sankey", () => {
         sankeyOf().linkColor((l: Link) => (l.value > 5 ? "#f00" : "#00f")),
         testData
       );
-      // DOM order after the default sort is by ascending value: 5, 5, 10, 20
+      // DOM order after the default sort is by descending value: 20, 10, 5, 5
       expect(attrs(accessor, "links", "path.sszvis-link", "stroke")).toEqual([
-        "#00f",
-        "#00f",
         "#f00",
         "#f00",
+        "#00f",
+        "#00f",
       ]);
     });
 
@@ -421,13 +421,13 @@ describe("component/sankey", () => {
     test("should flatten the curve as linkCurvature approaches zero", () => {
       const node = render(sankeyOf().linkCurvature(0), testData);
       // Both control points collapse onto the end points, giving a straight-ish diagonal
-      expect(linkAttrs(node, "d")[2]).toBe("M21,25C21,25 99,40 99,40");
+      expect(linkAttrs(node, "d")[1]).toBe("M21,25C21,25 99,40 99,40");
     });
 
     test("should place the control points symmetrically for the default curvature", () => {
       const node = render(sankeyOf(), testData);
       // 0.5 puts both control points at the horizontal midpoint
-      expect(linkAttrs(node, "d")[2]).toBe("M21,25C60,25 60,40 99,40");
+      expect(linkAttrs(node, "d")[1]).toBe("M21,25C60,25 60,40 99,40");
     });
 
     test("should key the links by id, so a changed link list keeps matching elements", () => {
@@ -436,7 +436,7 @@ describe("component/sankey", () => {
       const data = makeData();
       g.datum(data).call(component as never);
       const node = g.node() as SVGGElement;
-      const first = all(node, "links", "path.sszvis-link")[3];
+      const first = all(node, "links", "path.sszvis-link")[0];
 
       // Drop the two smallest links; the largest keeps its element because the join is keyed
       g.datum({ ...data, links: [data.links[0], data.links[1]] }).call(component as never);
@@ -444,28 +444,21 @@ describe("component/sankey", () => {
       expect(all(node, "links", "path.sszvis-link")).toContain(first);
     });
 
-    test("should sort the paths by ascending value, so the thickest link is drawn last", () => {
-      // BUG: the default linkSort is (a, b) => a.value - b.value, which d3's
-      // selection.sort applies as an ascending sort. The thickest link therefore ends up
-      // last in document order and paints over all the thinner ones - the opposite of what
-      // the component claims in two places: the JSDoc for linkSort ("larger, thicker links
-      // are below smaller, thinner ones") and the inline comment on the default itself
-      // ("Default sorts in descending order of value"). It also undoes, in the DOM, the
-      // descending sort layout.sankey.prepareData applied for exactly this reason ("smaller
-      // links will render on top of larger links"). selection.sort reorders the elements
-      // only; the data array stays descending, which is why the link tooltip anchors below
-      // end up in a different order from the paths.
-      // current: ascending, thick links on top. expected: thin links on top, per the docs.
+    test("should sort the paths by descending value, so the thinnest link is drawn last", () => {
+      // The default comparator is descending by value, so the thickest link is first in
+      // document order and every thinner link it crosses paints on top of it and stays
+      // visible. This matches the descending order layout.sankey.prepareData puts the
+      // array in ("smaller links will render on top of larger links").
       const node = render(sankeyOf(), testData);
-      expect(linkAttrs(node, "stroke-width")).toEqual(["5", "5", "10", "20"]);
+      expect(linkAttrs(node, "stroke-width")).toEqual(["20", "10", "5", "5"]);
     });
 
     test("should sort the paths with a custom linkSort", () => {
       const node = render(
-        sankeyOf().linkSort((a: Link, b: Link) => b.value - a.value),
+        sankeyOf().linkSort((a: Link, b: Link) => a.value - b.value),
         testData
       );
-      expect(linkAttrs(node, "stroke-width")).toEqual(["20", "10", "5", "5"]);
+      expect(linkAttrs(node, "stroke-width")).toEqual(["5", "5", "10", "20"]);
     });
 
     test("should accept a linkSort that is not a comparator at all", () => {
@@ -528,14 +521,14 @@ describe("component/sankey", () => {
 
     test("should keep the link anchors in data order while the paths are sorted", () => {
       // NOTE: the anchors are joined after the paths have been reordered, and against the
-      // unsorted data.links array, so anchor order and path order diverge. Nothing reads
-      // the anchors positionally, so this is only surprising when debugging the DOM.
+      // unsorted data.links array, so anchor order and path order can diverge. Nothing
+      // reads the anchors positionally, so this is only surprising when debugging the DOM.
       const node = render(sankeyOf(), testData);
       expect(attrs(node, "links", "path.sszvis-link", "stroke-width")).toEqual([
-        "5",
-        "5",
-        "10",
         "20",
+        "10",
+        "5",
+        "5",
       ]);
       expect(anchors(node, "links")[0]).toBe("translate(60,10)");
     });
@@ -1013,7 +1006,7 @@ describe("component/sankey", () => {
           sankeyOf().linkCurvature(() => 0.5),
           testData
         );
-        expect(attrs(curved, "links", "path.sszvis-link", "d")[3]).toBe(
+        expect(attrs(curved, "links", "path.sszvis-link", "d")[0]).toBe(
           "M21,10CNaN,10 NaN,10 99,10"
         );
       });
@@ -1031,8 +1024,8 @@ describe("component/sankey", () => {
           sankeyOf().sizeScale((v: number) => (v === 20 ? Number.NaN : v)),
           testData
         );
-        expect(attrs(node, "links", "path.sszvis-link", "d")[3]).toContain("NaN");
-        expect(attrs(node, "links", "path.sszvis-link", "stroke-width")[3]).toBe("NaN");
+        expect(attrs(node, "links", "path.sszvis-link", "d")[0]).toContain("NaN");
+        expect(attrs(node, "links", "path.sszvis-link", "stroke-width")[0]).toBe("NaN");
       });
 
       test("throws when a link has no src or tgt reference", () => {
@@ -1057,16 +1050,16 @@ describe("component/sankey", () => {
       // as a pronounced S. Above 1 the control points leave the gap altogether and the
       // curve swings out past both columns.
       const node = render(sankeyOf().linkCurvature(1), testData);
-      expect(attrs(node, "links", "path.sszvis-link", "d")[2]).toBe("M21,25C99,25 21,40 99,40");
+      expect(attrs(node, "links", "path.sszvis-link", "d")[1]).toBe("M21,25C99,25 21,40 99,40");
       const beyond = render(sankeyOf().linkCurvature(2), testData);
-      expect(attrs(beyond, "links", "path.sszvis-link", "d")[2]).toBe("M21,25C177,25 -57,40 99,40");
+      expect(attrs(beyond, "links", "path.sszvis-link", "d")[1]).toBe("M21,25C177,25 -57,40 99,40");
     });
 
     test("keeps a one pixel gap between nodes and links that cannot be configured", () => {
       // NOTE: linkPadding is a local constant, deliberately so per its comment. It means
       // the links never quite touch the nodes, and the gap does not scale with the chart.
       const node = render(sankeyOf(), testData);
-      const d = attrs(node, "links", "path.sszvis-link", "d")[3] ?? "";
+      const d = attrs(node, "links", "path.sszvis-link", "d")[0] ?? "";
       // The source node's right edge is at 0 + 20, the curve starts at 21
       expect(d.startsWith("M21,")).toBe(true);
       // The target node's left edge is at 100, the curve ends at 99
@@ -1082,7 +1075,7 @@ describe("component/sankey", () => {
       // and computeLayout always returns 20, so this is a note rather than a bug.
       const node = render(sankeyOf().nodeThickness(0), testData);
       expect(attrs(node, "nodes", "rect.sszvis-bar", "width")[0]).toBe("1");
-      expect(attrs(node, "links", "path.sszvis-link", "d")[3]?.startsWith("M1,")).toBe(true);
+      expect(attrs(node, "links", "path.sszvis-link", "d")[0]?.startsWith("M1,")).toBe(true);
     });
 
     test("centres the column labels on nodeThickness rather than on the drawn bar", () => {
@@ -1120,10 +1113,10 @@ describe("component/sankey", () => {
       expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[0]).toBe("32");
       // Its second link is centred at 26.25 and 10.5 thick, so it ends at 31.5 - half a
       // pixel above the bar it hangs off
-      expect(attrs(node, "links", "path.sszvis-link", "d")[2]).toBe(
+      expect(attrs(node, "links", "path.sszvis-link", "d")[1]).toBe(
         "M21,26.25C60,26.25 60,41.25 99,41.25"
       );
-      expect(attrs(node, "links", "path.sszvis-link", "stroke-width")[2]).toBe("10.5");
+      expect(attrs(node, "links", "path.sszvis-link", "stroke-width")[1]).toBe("10.5");
     });
 
     test("works with the data and layout the layout module computes", () => {
