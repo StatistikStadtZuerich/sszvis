@@ -57,7 +57,7 @@
         "noDoubleEquals": "error",
         "noEvolvingTypes": "error",
         // The only sanctioned `any` is the $IntentionalAny alias in types.ts, which carries
-        // the single ignore comment for this rule. See TYPESCRIPT.md.
+        // the single ignore comment for this rule. See AGENTS.md.
         "noExplicitAny": "error",
         "noArrayIndexKey": "warn",
         "noDebugger": "error",

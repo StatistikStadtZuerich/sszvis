@@ -283,10 +283,8 @@ export default function <P = unknown, L extends Iterable<P> = P[]>(): StackedAre
       const fill = fn.valueFn(props.fill ?? null);
       // The white hairline separating two touching layers. Applied with a truthiness check
       // rather than an undefined one, so a null or empty stroke is replaced by it too.
-      const stroke = fn.valueFn((props.stroke || "#ffffff") ?? null);
-      const strokeWidth = fn.valueFn(
-        props.strokeWidth === undefined ? 1 : (props.strokeWidth ?? null)
-      );
+      const stroke = fn.valueFn(props.stroke || "#ffffff");
+      const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
 
       const paths = selection
         .selectAll<SVGPathElement, L>("path.sszvis-path")
