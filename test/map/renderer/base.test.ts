@@ -3,7 +3,11 @@ import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
-import { prepareMergedGeoData, swissMapPath } from "../../../src/map/mapUtils.js";
+import {
+  prepareMergedGeoData,
+  swissMapPath,
+  swissMapProjection,
+} from "../../../src/map/mapUtils.js";
 import mapRendererBase from "../../../src/map/renderer/base.js";
 
 type Datum = { geoId: string; value: number | null };
@@ -401,6 +405,7 @@ describe("map/renderer/base", () => {
             mapRendererBase()
               .mergedData(prepareMergedGeoData(fullData, collection))
               .geoJson(collection)
+              // @ts-expect-error - a bare path function is what the JSDoc's {d3.geo.path} allows
               .mapPath(() => "M0,0Z")
           )
           .node()
@@ -430,7 +435,9 @@ describe("map/renderer/base", () => {
 
     test("positions each anchor at the projected centre of its feature", () => {
       const collection = geoJson();
-      const mapPath = mapPathOf(collection);
+      const mapPath = geoPath().projection(
+        swissMapProjection(100, 100, collection, "anchor-position")
+      );
       const node = group()
         .call(
           mapRendererBase()
@@ -439,7 +446,7 @@ describe("map/renderer/base", () => {
             .mapPath(mapPath)
         )
         .node() as SVGGElement;
-      const projection = mapPath.projection();
+      const projection = swissMapProjection(100, 100, collection, "anchor-position");
       // Computed independently of the component, which writes its own cachedCenter.
       const expected = geoJson().features.map((f) => {
         const [x, y] = projection(geoCentroid(f)) as [number, number];
