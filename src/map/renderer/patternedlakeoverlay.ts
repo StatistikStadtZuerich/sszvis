@@ -31,15 +31,15 @@
  * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
  * geojson renderers' "missing-pattern" too.
  *
- * Note: the mask fades the lake by filling itself with url(#lake-fade-gradient), so the two
- * definitions are only useful together. The gradient helper writes that id a second time onto the
- * element ensureDefsElement had already identified - a harmless redundancy, and the only place two
- * code paths write the same id.
+ * Note: the definition ids are scoped per overlay - "lake-pattern-1", "lake-fade-gradient-1",
+ * "lake-fade-mask-1" and so on - so two maps on one page no longer define the same id twice.
+ * Consumers must not rely on the previously fixed ids. The scope is generated once per group and
+ * remembered on the group as data-sszvis-lake-overlay, so re-rendering - even from a freshly
+ * constructed component, which is how the docs examples are written - reuses the same definitions.
  *
- * Note: all three definitions use fixed ids - "lake-pattern", "lake-fade-gradient" and
- * "lake-fade-mask" - so two maps on one page define each of them twice, and every url(#...)
- * reference in the document resolves to whichever comes first. The same defect as the base and
- * geojson renderers' "missing-pattern".
+ * Note: the mask fades the lake by filling itself with the fade gradient, so the two definitions are
+ * only useful together. Both helpers hard-code the old fixed gradient id, so this component rewrites
+ * the gradient's id and the mask rect's fill after calling them.
  *
  * Note: the defs element is created inside the map group rather than at the svg root, and
  * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
@@ -135,6 +135,25 @@ export interface MapRendererPatternedLakeOverlayComponent
   fadeOut(value: boolean): MapRendererPatternedLakeOverlayComponent;
 }
 
+/** Records the scope generated for a group, mirroring d3-selectgroup's data-d3-selectgroup. */
+const SCOPE_ATTRIBUTE = "data-sszvis-lake-overlay";
+
+let generatedScopes = 0;
+
+/**
+ * The scope every definition id is qualified with. It is generated once per group and remembered on
+ * the group itself, so a re-render - even from a freshly constructed component, which is how the
+ * docs examples are written - reuses the definitions it created, while a second map on the page gets
+ * its own.
+ */
+function overlayScope(group: Element): string {
+  const recorded = group.getAttribute(SCOPE_ATTRIBUTE);
+  if (recorded !== null) return recorded;
+  const generated = String(++generatedScopes);
+  group.setAttribute(SCOPE_ATTRIBUTE, generated);
+  return generated;
+}
+
 /**
  * Calls one of the pattern helpers, but only on a definition that is still empty. The helpers append
  * their contents rather than joining them, so calling them on every render would grow the definition
@@ -166,30 +185,30 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
       const selection = select(this);
       const props = selection.props<LakeOverlayProps>();
 
+      const scope = overlayScope(this);
+      const patternId = `lake-pattern-${scope}`;
+      const gradientId = `lake-fade-gradient-${scope}`;
+      const maskId = `lake-fade-mask-${scope}`;
+
       // the lake texture
-      defineOnce(
-        ensureDefsElement(selection, "pattern", "lake-pattern"),
-        "lake-pattern",
-        mapLakePattern
-      );
+      defineOnce(ensureDefsElement(selection, "pattern", patternId), patternId, mapLakePattern);
 
       if (props.fadeOut) {
         // the fade gradient
         defineOnce(
-          ensureDefsElement(selection, "linearGradient", "lake-fade-gradient"),
-          "lake-fade-gradient",
+          ensureDefsElement(selection, "linearGradient", gradientId),
+          gradientId,
           mapLakeFadeGradient
         );
 
-        // the mask, which uses the fade gradient
-        defineOnce(
-          ensureDefsElement(selection, "mask", "lake-fade-mask"),
-          "lake-fade-mask",
-          mapLakeGradientMask
-        );
+        // the mask, which uses the fade gradient. The helper hard-codes the old fixed gradient id,
+        // so point its rect at this overlay's gradient instead.
+        defineOnce(ensureDefsElement(selection, "mask", maskId), maskId, mapLakeGradientMask)
+          .selectAll("rect")
+          .attr("fill", `url(#${gradientId})`);
       } else {
         // Turning the fade off must undo an existing one, not merely skip writing it.
-        selection.selectAll("linearGradient#lake-fade-gradient, mask#lake-fade-mask").remove();
+        selection.selectAll(`linearGradient#${gradientId}, mask#${maskId}`).remove();
       }
 
       // generate the Lake Zurich path
@@ -199,10 +218,10 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         .join("path")
         .classed("sszvis-map__lakezurich", true)
         .attr("d", props.mapPath)
-        .attr("fill", "url(#lake-pattern)");
+        .attr("fill", `url(#${patternId})`);
 
       // this mask applies the fade effect
-      zurichSee.attr("mask", props.fadeOut ? "url(#lake-fade-mask)" : null);
+      zurichSee.attr("mask", props.fadeOut ? `url(#${maskId})` : null);
 
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
