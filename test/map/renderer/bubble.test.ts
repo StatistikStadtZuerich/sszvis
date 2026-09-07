@@ -360,9 +360,8 @@ describe("map/renderer/bubble", () => {
       expect(circles(node)[0].getAttribute("r")).toBe("20");
     });
 
-    // Unlike the base and geojson renderers, this component's transition really is the intended
-    // one: defaultTransition() is passed as `t` to .transition(t) rather than through the no-op
-    // `.transition().call(slowTransition)` pattern, so its 300ms and easePolyOut survive.
+    // defaultTransition() is passed as `t` straight to .transition(t), so its 300ms and
+    // easePolyOut reach the schedule.
     test("uses the default transition's 300ms and polynomial ease", () => {
       const node = render(fullData);
       const schedules = (circles(node)[0] as Element & { __transition?: Record<string, unknown> })
