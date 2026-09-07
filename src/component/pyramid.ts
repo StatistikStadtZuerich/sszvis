@@ -93,6 +93,7 @@
 import { line as d3Line, select } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
 import bar from "./bar.js";
 
@@ -268,9 +269,9 @@ function referenceSeries<T, D>(
 ): D[][] {
   if (accessor === undefined) return [];
   const series = accessor(data);
-  if (series == null) {
-    console.warn(
-      `sszvis.pyramid: ${name} returned ${String(series)} rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series.`
+  if (!Array.isArray(series)) {
+    logger.warn(
+      `[pyramid] ${name} returned ${String(series)} rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series.`
     );
     return [];
   }
