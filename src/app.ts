@@ -1,5 +1,6 @@
 import { createDraft, type Draft, finishDraft, setAutoFreeze } from "immer";
 import { fallbackRender } from "./fallback.js";
+import * as logger from "./logger.js";
 import type { SelectableElement } from "./types.js";
 import { viewport } from "./viewport/resize.js";
 
@@ -88,10 +89,11 @@ export interface AppProps<State, Actions extends Record<string, Action<State>>> 
  * `app()` returns nothing and never removes its resize listener, so an app lives for the
  * lifetime of the page and cannot be torn down.
  *
- * Error handling: a rejecting `init`, and an error thrown by an effect returned *by init*,
- * both land in the same catch, where they are re-wrapped with the "[sszvis.app]" prefix and
- * re-thrown. That throw escapes as an unhandled promise rejection, and as a consequence the
- * `fallback` option is never rendered. An effect returned by an *action* runs outside that
+ * Error handling: a rejecting `init` is reported through `sszvis.logger.error`, keeping the
+ * original error as the reported error's `cause`, and the `fallback` image - if one is
+ * configured - is rendered in its place. The failure does not escape as an unhandled promise
+ * rejection. An error thrown by an effect returned *by init* still lands in the same catch and
+ * is reported as an initialisation failure; an effect returned by an *action* runs outside that
  * chain, so its error throws synchronously at the dispatcher's call site instead - a second,
  * inconsistent path.
  *
@@ -169,11 +171,12 @@ export const app = <
       scheduleUpdate(effect);
       viewport.on("resize", scheduleUpdate);
     })
-    .catch((error) => {
-      // NOTE: invariant always throws here, so the fallback is never reached. This is
-      // the behaviour of the original implementation, kept as-is.
-      invariant(false, error);
-      fallback && fallbackRender(fallback.element, { src: fallback.src });
+    .catch((error: unknown) => {
+      // A rejecting init is a runtime failure, not a misconfiguration: the fallback option
+      // exists precisely for it, so it is reported and the fallback rendered rather than
+      // re-thrown into an unhandled rejection nobody can catch.
+      reportError("Initialisation failed", error);
+      if (fallback) fallbackRender(fallback.element, { src: fallback.src });
     });
 };
 
@@ -184,6 +187,13 @@ function invariant(condition: boolean, message: string | Error): void {
   if (!condition) {
     throw new Error(`[sszvis.app] ${message}`);
   }
+}
+
+/** Reports a runtime failure without escaping as an unhandled rejection. The original error
+ * is kept as the `cause` so its message and stack are not lost. */
+function reportError(context: string, cause: unknown): void {
+  const message = cause instanceof Error ? cause.message : String(cause);
+  logger.error(new Error(`[sszvis.app] ${context}: ${message}`, { cause }));
 }
 
 function isFunction(x: unknown): x is (...args: never[]) => unknown {

@@ -279,6 +279,57 @@ describe("app", () => {
     });
   });
 
+  describe("a failing init", () => {
+    test("renders the fallback image", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const container = document.createElement("div");
+      container.id = "fallback-target";
+      document.body.append(container);
+      const render = vi.fn();
+
+      app({
+        init: () => Promise.reject(new Error("boom")),
+        render,
+        fallback: { element: "#fallback-target", src: "fallback.png" },
+      });
+      await nextFrame();
+
+      const image = container.querySelector("img");
+      expect(image?.getAttribute("class")).toBe("sszvis-fallback-image");
+      expect(image?.getAttribute("src")).toBe("fallback.png");
+      expect(render).not.toHaveBeenCalled();
+    });
+
+    test("does not escape as an unhandled rejection", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const { reasons, restore } = captureUnhandledRejections();
+      app({ init: () => Promise.reject(new Error("boom")), render: () => {} });
+      await nextFrame();
+      restore();
+      expect(reasons).toEqual([]);
+    });
+
+    test("reports an error that keeps the original message and cause", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const cause = new Error("no data");
+      app({ init: () => Promise.reject(cause), render: () => {} });
+      await nextFrame();
+
+      const reported = error.mock.calls.at(0)?.[0] as Error;
+      expect(reported.message).toBe("[sszvis.app] Initialisation failed: no data");
+      expect(reported.cause).toBe(cause);
+    });
+
+    test("reports the failure even when no fallback is configured", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const render = vi.fn();
+      app({ init: () => Promise.reject(new Error("boom")), render });
+      await nextFrame();
+      expect(render).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("known quirks", () => {
     // BUG: the module calls immer's setAutoFreeze(false) at import time (src/app.ts:7),
     // so the finished state is never frozen and the immutability the module originally
@@ -304,42 +355,16 @@ describe("app", () => {
       expect(mutated).toBe(99);
     });
 
-    // BUG: when init rejects, the catch handler calls invariant(false, error)
-    // (src/app.ts:175), which throws before the fallback on the next line can run
-    // (src/app.ts:176). The fallback is therefore dead code, and the throw escapes as an
-    // unhandled promise rejection, so nothing observable reports the failure.
-    // got:  no fallback image, an unhandled rejection
-    // want: the fallback image is rendered and the failure is reported
-    test("does not render the fallback when init rejects", async () => {
-      const { restore } = captureUnhandledRejections();
-      const container = document.createElement("div");
-      container.id = "fallback-target";
-      document.body.append(container);
-      const render = vi.fn();
-
-      app({
-        init: () => Promise.reject(new Error("boom")),
-        render,
-        fallback: { element: "#fallback-target", src: "fallback.png" },
-      });
-      await nextFrame();
-
-      expect(container.querySelector("img")).toBeNull();
-      expect(render).not.toHaveBeenCalled();
-      restore();
-    });
-
-    // BUG: an effect runs inside scheduleUpdate (src/app.ts:147), which the init promise
-    // chain calls (src/app.ts:169), so an error thrown by the effect - for instance by
-    // dispatching an action that was never defined - lands in the catch meant for init
-    // failures (src/app.ts:172). It is re-wrapped there, giving a double-prefixed message
-    // with no indication that init itself succeeded, and that second throw escapes as an
-    // unhandled rejection instead of reaching the fallback. The render scheduled just
-    // before the effect ran still happens, so the app is left half-alive.
-    // got:  effect errors are misreported as init errors and the fallback is skipped
-    // want: effect errors surface on their own, and a fallback is rendered
-    test("swallows an effect error into the init failure path", async () => {
-      const { reasons, restore } = captureUnhandledRejections();
+    // BUG: an effect runs inside scheduleUpdate (src/app.ts), which the init promise chain
+    // calls, so an error thrown by the effect - for instance by dispatching an action that
+    // was never defined - lands in the catch meant for init failures. It is reported as an
+    // initialisation failure, with no indication that init itself succeeded, and the
+    // fallback meant for an unbuildable chart is rendered over a chart that did build. The
+    // render scheduled just before the effect ran still happens.
+    // got:  effect errors are misreported as init errors
+    // want: effect errors surface on their own
+    test("reports an effect error as an init failure", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
       const container = document.createElement("div");
       container.id = "effect-fallback-target";
       document.body.append(container);
@@ -353,12 +378,11 @@ describe("app", () => {
         fallback: { element: "#effect-fallback-target", src: "fallback.png" },
       });
       await nextFrame();
-      restore();
 
-      expect(container.querySelector("img")).toBeNull();
+      expect(container.querySelector("img")).not.toBeNull();
       expect(render).toHaveBeenCalledTimes(1);
-      expect(reasons.join()).toContain(
-        '[sszvis.app] Error: [sszvis.app] Action "missing" is not defined'
+      expect((error.mock.calls.at(0)?.[0] as Error).message).toContain(
+        '[sszvis.app] Initialisation failed: [sszvis.app] Action "missing" is not defined'
       );
     });
 
