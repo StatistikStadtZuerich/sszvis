@@ -88,6 +88,10 @@ describe("component/stackedPyramid", () => {
   const stacks = (node: Element, key: string) => [
     ...(sideGroup(node, key)?.querySelectorAll("[data-sszvis-stack]") ?? []),
   ];
+  /** Only the stack groups the component owns, i.e. the direct children of a side's group. */
+  const ownStacks = (node: Element, key: string) => [
+    ...(sideGroup(node, key)?.querySelectorAll(":scope > [data-sszvis-stack]") ?? []),
+  ];
   const bars = (node: Element, key: string) => [
     ...(sideGroup(node, key)?.querySelectorAll("rect.sszvis-bar") ?? []),
   ];
@@ -1129,30 +1133,53 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "leftStack", "width")).toEqual(["20", "15"]);
     });
 
-    test("captures nested stack groups and then crashes on them", () => {
-      // BUG: selectAll("[data-sszvis-stack]") is unscoped, so a stack group nested at any
-      // depth below a side's group is captured by the join alongside the direct children.
-      // The exit selection then removes a legitimate series group, and the reorder that
-      // follows has to sort a selection in which one element is an ancestor of another, so
-      // it throws a HierarchyRequestError from d3 and aborts the whole render rather than
-      // just that side. stackedBar's version of the same unscoped selector only re-binds;
-      // this one destroys a group and then crashes, which is why it is a bug here and a
-      // note there. A child selector - ":scope > [data-sszvis-stack]" - would make it
-      // unreachable. Nothing nests stack groups today, so this needs a caller to have put
-      // something of its own inside one.
-      // current: HierarchyRequestError from d3's join. expected: only direct children take
-      // part in the join.
+  });
+
+  describe("nested stack groups", () => {
+    /** Renders once, plants a stack group `depth` levels inside the first series group. */
+    const plant = (key: string, side: string, depth: number) => {
       const component = pyramidOf();
-      const g = group("descendant");
+      const g = group(key);
       g.datum(layout()).call(component as never);
       const node = g.node() as SVGGElement;
 
-      const planted = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      planted.setAttribute("data-sszvis-stack", "");
-      stacks(node, "leftStack")[0].append(planted);
-      expect(stacks(node, "leftStack").length).toBe(3);
+      let parent: Element = ownStacks(node, side)[0];
+      for (let i = 0; i < depth; i++) {
+        const nested = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        nested.setAttribute("data-sszvis-stack", "");
+        parent.append(nested);
+        parent = nested;
+      }
+      const planted = parent;
 
-      expect(() => g.datum(layout()).call(component as never)).toThrow(DOMException);
+      return { g, node, component, planted };
+    };
+
+    test("should ignore a stack group nested inside a series group", () => {
+      // The join is a child selector, so a caller may render content of its own - including
+      // further stack groups - inside a series group without the component adopting it.
+      const { g, node, component, planted } = plant("descendant-left", "leftStack", 1);
+      expect(ownStacks(node, "leftStack").length).toBe(2);
+
+      expect(() => g.datum(layout()).call(component as never)).not.toThrow();
+      expect(ownStacks(node, "leftStack").length).toBe(2);
+      expect(planted.parentNode).toBe(ownStacks(node, "leftStack")[0]);
+    });
+
+    test("should ignore a nested stack group on the right side too", () => {
+      const { g, node, component, planted } = plant("descendant-right", "rightStack", 1);
+
+      expect(() => g.datum(layout()).call(component as never)).not.toThrow();
+      expect(ownStacks(node, "rightStack").length).toBe(2);
+      expect(planted.parentNode).toBe(ownStacks(node, "rightStack")[0]);
+    });
+
+    test("should ignore a stack group nested two levels deep", () => {
+      const { g, node, component, planted } = plant("descendant-deep", "leftStack", 2);
+
+      expect(() => g.datum(layout()).call(component as never)).not.toThrow();
+      expect(ownStacks(node, "leftStack").length).toBe(2);
+      expect(planted.isConnected).toBe(true);
     });
   });
 });
