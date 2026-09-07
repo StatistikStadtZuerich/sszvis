@@ -470,23 +470,43 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // NOTE: two unkeyed overlays in one group still share one scope, so the second rebinds the
     // first one's paths. Distinct keys are what separates them - see "scoping" above.
-    // The key is not only stamped on the paths, it is interpolated into the three definition
-    // ids and then back into "#id" selectors and url(#id) references, unescaped. A quote
-    // makes that selector unparseable and the render throws from inside ensureDefsElement;
-    // a space is worse-behaved rather than louder, since "#lake-pattern-a b" is a valid
-    // selector that simply matches nothing. The path join itself is safe - it reads
-    // data-lake-key back through getAttribute in a filter. See #258.
-    test("throws for a key that cannot be spelled in an id selector", () => {
-      const layer = group("awkward-key");
-      const renderWith = () =>
+    // The key is stamped on the paths and also interpolated into the three definition ids, which
+    // are matched back by id and referenced as url(#id) - so it is validated at the prop boundary
+    // rather than reaching a selector it cannot be spelled in. See #258.
+    const renderKeyed = (groupName: string, key: string) => {
+      const layer = group(groupName);
+      return () =>
         layer.call(
           mapRendererPatternedLakeOverlay()
-            .key('a"b')
+            .key(key)
             .mapPath(mapPathOf())
             .lakeFeature(lake())
             .lakeBounds(bounds())
         );
-      expect(renderWith).toThrow(/not a valid selector/);
+    };
+
+    // A quote used to make the id selector unparseable and throw from inside ensureDefsElement,
+    // which named neither the property nor the cause.
+    test("rejects a key that cannot be spelled in an id, naming the property", () => {
+      expect(renderKeyed("quoted-key", 'a"b')).toThrow(
+        /\[mapRendererPatternedLakeOverlay\] the key property/
+      );
+    });
+
+    // A space was the worse case: "#lake-pattern-a b" is a valid selector that simply matches
+    // nothing, so every render appended another definition and the url(#...) reference was inert.
+    test("rejects a key containing a space, which used to fail silently", () => {
+      expect(renderKeyed("spaced-key", "a b")).toThrow(
+        /\[mapRendererPatternedLakeOverlay\] the key property/
+      );
+    });
+
+    // Generated scopes are bare decimals, so requiring a leading letter is what keeps an explicit
+    // key from ever landing on the scope an unkeyed overlay would generate.
+    test("rejects a key that would collide with a generated scope", () => {
+      expect(renderKeyed("numeric-key", "1")).toThrow(
+        /\[mapRendererPatternedLakeOverlay\] the key property/
+      );
     });
 
     test("shares one scope between two unkeyed overlays in a group", () => {

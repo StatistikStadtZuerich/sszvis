@@ -29,7 +29,11 @@
  *                                      generated on first render and remembered on the group as
  *                                      data-lake-key - so re-rendering, even with a freshly constructed
  *                                      component, reuses the same elements, while a second map on the page gets its
- *                                      own. A caller-supplied key must be unique within the document.
+ *                                      own. A caller-supplied key must be unique within the document, must start
+ *                                      with a letter and may use only letters, digits, hyphens and underscores -
+ *                                      it is written into the definition ids, so a url(#...) reference has to be
+ *                                      able to name it. Anything else throws. The leading letter also keeps caller
+ *                                      keys apart from the generated scopes, which are bare decimals.
  *
  * Note: the definition ids are scoped - "lake-pattern-1", "lake-fade-gradient-1", "lake-fade-mask-1"
  * and so on - so two maps on one page no longer define the same id twice. Consumers must not rely on
@@ -152,13 +156,41 @@ const KEY_ATTRIBUTE = "data-lake-key";
 let generatedScopes = 0;
 
 /**
+ * A caller-supplied key has to be spellable both as an id selector and as a url(#...) fragment,
+ * because the scope is interpolated into the three definition ids and matched back by id. Letters,
+ * digits, hyphens and underscores qualify; a leading letter is required, which is what keeps
+ * caller keys disjoint from the generated scopes below.
+ */
+const KEY_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
+
+/**
+ * Rejects a key that cannot be spelled in an id. Without this a key such as "a b" builds the valid
+ * but unmatchable selector "pattern#lake-pattern-a b", so every render appends another definition
+ * and the url(#...) reference is inert, while a quote makes the selector unparseable and throws
+ * from inside ensureDefsElement. Both were silent or obscure; this names the property instead.
+ */
+function requireSpellableKey(key: string): string {
+  if (!KEY_PATTERN.test(key)) {
+    throw new Error(
+      `[mapRendererPatternedLakeOverlay] the key property must start with a letter and use only letters, digits, hyphens and underscores; got "${key}". The key is written into this overlay's definition ids, which a url(#...) reference has to be able to name.`
+    );
+  }
+  return key;
+}
+
+/**
  * The scope every definition id and both path selectors are qualified with. A caller-supplied key
  * wins; otherwise a scope is generated once per group and remembered on the group itself, so a
  * re-render - even from a freshly constructed component, which is how the docs examples are written
  * - reuses the same definitions and paths, while a second map on the page gets its own.
+ *
+ * Generated scopes are bare decimals and caller keys must begin with a letter, so the two can
+ * never collide: without that, `.key("1")` on one map and the first unkeyed overlay on another
+ * would share the scope "1" and so share document-global definition ids - the very cross-map
+ * reference this scoping exists to prevent.
  */
 function overlayScope(group: Element, key: string | undefined): string {
-  if (key !== undefined) return key;
+  if (key !== undefined) return requireSpellableKey(key);
   const recorded = group.getAttribute(KEY_ATTRIBUTE);
   if (recorded !== null) return recorded;
   const generated = String(++generatedScopes);
