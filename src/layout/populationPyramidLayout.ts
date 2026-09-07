@@ -38,12 +38,13 @@
  * - maxBarLength is capped at 240 (= aspectRatioPortrait.MAX_HEIGHT * 4/5 / 2), which only
  *   coincidentally equals this module's own MAX_HEIGHT / 2 and can drift if either constant changes.
  * - chartPadding is floored at 1.
- * - numBars === 0 gives an Infinity barHeight, a NaN totalHeight, and no positions.
- * - A zero or negative spaceWidth is not validated. Both produce 2px bars and a 1px
- *   chartPadding; maxBarLength is 0 for a zero width and negative for a negative one.
+ * - A zero spaceWidth or a pyramid with no bars is a chart with nothing to draw, and every
+ *   dimension comes back 0.
+ * - A negative spaceWidth, or a negative or fractional bar count, throws.
  */
 
 import { aspectRatioPortrait } from "../aspectRatio.js";
+import { requireCount, requireSize } from "./validate.js";
 
 export type PopulationPyramidLayout = {
   barHeight: number;
@@ -54,7 +55,23 @@ export type PopulationPyramidLayout = {
   chartPadding: number;
 };
 
-export default function (spaceWidth: number, numBars: number): PopulationPyramidLayout {
+export default function layoutPopulationPyramid(
+  spaceWidth: number,
+  numBars: number
+): PopulationPyramidLayout {
+  requireSize("layoutPopulationPyramid", "spaceWidth", spaceWidth);
+  requireCount("layoutPopulationPyramid", "numBars", numBars);
+  if (spaceWidth === 0 || numBars === 0) {
+    return {
+      barHeight: 0,
+      padding: 0,
+      totalHeight: 0,
+      positions: [],
+      maxBarLength: 0,
+      chartPadding: 0,
+    };
+  }
+
   const MAX_HEIGHT = 480; // Chart no taller than this
   const MIN_BAR_HEIGHT = 2; // Bars no shorter than this
   const defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);

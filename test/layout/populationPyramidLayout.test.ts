@@ -100,6 +100,34 @@ describe("populationPyramidLayout", () => {
     });
   });
 
+  describe("degenerate inputs", () => {
+    const EMPTY = {
+      barHeight: 0,
+      padding: 0,
+      totalHeight: 0,
+      positions: [],
+      maxBarLength: 0,
+      chartPadding: 0,
+    };
+
+    test("a pyramid with no bars has no dimensions to report", () => {
+      expect(layoutPopulationPyramid(600, 0)).toEqual(EMPTY);
+    });
+
+    test("a container of no width has no dimensions to report", () => {
+      expect(layoutPopulationPyramid(0, 10)).toEqual(EMPTY);
+    });
+
+    test("rejects a negative width", () => {
+      expect(() => layoutPopulationPyramid(-200, 10)).toThrow(/spaceWidth/);
+    });
+
+    test("rejects a bar count that is not a whole number of bars", () => {
+      expect(() => layoutPopulationPyramid(600, 2.5)).toThrow(/numBars/);
+      expect(() => layoutPopulationPyramid(600, -1)).toThrow(/numBars/);
+    });
+  });
+
   describe("known quirks", () => {
     test("chartPadding is 1, not 0, when the pyramid already fills the width", () => {
       // BUG: the JSDoc promises 0 when no offset is needed, but the floor is
@@ -119,40 +147,6 @@ describe("populationPyramidLayout", () => {
       const layout = layoutPopulationPyramid(300, 500);
       expect(layout.totalHeight).toBe(500 * MIN_BAR_HEIGHT + 499);
       expect(layout.totalHeight).toBeGreaterThan(MAX_HEIGHT);
-    });
-
-    test("zero bars yields a NaN height and no positions", () => {
-      // BUG: numBars = 0 divides by zero, so the bar height is Infinity (clamped up from
-      // nothing) and totalHeight is 0 * Infinity = NaN. The loop then never runs.
-      // got: { barHeight: Infinity, totalHeight: NaN, positions: [] }
-      // want: a zero-height layout, or an explicit error.
-      const layout = layoutPopulationPyramid(600, 0);
-      expect(layout.barHeight).toBe(Number.POSITIVE_INFINITY);
-      expect(layout.totalHeight).toBeNaN();
-      expect(layout.positions).toEqual([]);
-    });
-
-    test("a zero width still produces 2px bars and a 1px chart padding", () => {
-      // BUG: a container measured before layout gives a height of 0, but the 2px bar floor
-      // and the 1px padding floor mean the layout reports a positive height for a chart
-      // with no room at all.
-      // got: { barHeight: 2, totalHeight: 29, maxBarLength: 0, chartPadding: 1 }
-      // want: a zero-sized layout.
-      const layout = layoutPopulationPyramid(0, 10);
-      expect(layout.barHeight).toBe(MIN_BAR_HEIGHT);
-      expect(layout.totalHeight).toBe(29);
-      expect(layout.maxBarLength).toBe(0);
-      expect(layout.chartPadding).toBe(1);
-    });
-
-    test("a negative width gives negative bar lengths but a positive chartPadding", () => {
-      // BUG: no input validation. maxBarLength follows the negative width while
-      // chartPadding is floored at 1, so the two disagree about which way the chart runs.
-      // got: { maxBarLength: -100, chartPadding: 1 }
-      // want: the width clamped at 0, or an explicit error.
-      const layout = layoutPopulationPyramid(-200, 10);
-      expect(layout.maxBarLength).toBe(-100);
-      expect(layout.chartPadding).toBe(1);
     });
 
     test("the positions array is built by a loop rather than counted", () => {

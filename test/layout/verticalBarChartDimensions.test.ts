@@ -96,6 +96,43 @@ describe("verticalBarChartDimensions", () => {
     });
   });
 
+  describe("degenerate inputs", () => {
+    test("zero bars have no dimensions to report", () => {
+      const dim = dimensionsVerticalBarChart(500, 0);
+      expect(dim).toEqual({
+        barWidth: 0,
+        padWidth: 0,
+        padRatio: 0,
+        outerRatio: 0,
+        barGroupWidth: 0,
+        // the requested width is still reported back
+        totalWidth: 500,
+      });
+    });
+
+    test("a zero width has no dimensions to report", () => {
+      // a container measured before its first paint reports a width of 0
+      const dim = dimensionsVerticalBarChart(0, 10);
+      expect(dim).toEqual({
+        barWidth: 0,
+        padWidth: 0,
+        padRatio: 0,
+        outerRatio: 0,
+        barGroupWidth: 0,
+        totalWidth: 0,
+      });
+    });
+
+    test("rejects a negative width", () => {
+      expect(() => dimensionsVerticalBarChart(-200, 10)).toThrow(/width/);
+    });
+
+    test("rejects a bar count that is not a whole number of bars", () => {
+      expect(() => dimensionsVerticalBarChart(500, -3)).toThrow(/numBars/);
+      expect(() => dimensionsVerticalBarChart(500, 2.5)).toThrow(/numBars/);
+    });
+  });
+
   describe("known quirks", () => {
     test("clamped padding is not compensated for, so the bars can overflow the width", () => {
       // NOTE: intended - the JSDoc states the computed layout is not guaranteed to fit
@@ -127,51 +164,6 @@ describe("verticalBarChartDimensions", () => {
       expect(dim.barWidth).toBe(30);
       expect(dim.padWidth).toBeCloseTo(30 * (0.3 / 0.7), 9);
       expect(dim.barGroupWidth).toBe(30);
-    });
-
-    test("zero bars yields NaN for nearly every computed dimension", () => {
-      // BUG: numBars = 0 makes numPads = -1, so the bar width evaluates to 0 / 0. Callers
-      // get an all-NaN layout instead of an empty layout or a thrown error.
-      // got: { barWidth: NaN, padRatio: NaN, barGroupWidth: NaN, padWidth: 2 }
-      // want: a guard - either zeroed dimensions or an explicit error.
-      const dim = dimensionsVerticalBarChart(500, 0);
-      expect(dim.barWidth).toBeNaN();
-      expect(dim.padRatio).toBeNaN();
-      expect(dim.outerRatio).toBeNaN();
-      expect(dim.barGroupWidth).toBeNaN();
-      // padWidth is the one exception: the negative target padding is clamped up to the
-      // 2px minimum, so it looks valid while every dimension around it is NaN
-      expect(dim.padWidth).toBe(MIN_PADDING);
-      // totalWidth is passed straight through and stays valid
-      expect(dim.totalWidth).toBe(500);
-    });
-
-    test("a negative width produces a negative layout rather than an error", () => {
-      // BUG: no input validation. A negative width (e.g. from a container measured before
-      // layout) yields negative bar widths, which silently render as invalid SVG rects.
-      // got: barWidth < 0 and, once the padding is clamped up to 2px, a padRatio outside the
-      //      [0, 1) range a d3 band scale accepts - on either side of it, depending on how
-      //      negative the width is
-      // want: clamp the width at 0, or throw.
-      const dim = dimensionsVerticalBarChart(-200, 10);
-      expect(dim.barWidth).toBeLessThan(0);
-      expect(dim.padRatio).toBeLessThan(0);
-      // a small negative width lands on the other side of the range instead
-      expect(dimensionsVerticalBarChart(-1, 10).padRatio).toBeGreaterThan(1);
-    });
-
-    test("a zero width yields a padRatio of exactly 1", () => {
-      // BUG: a container measured before layout reports width 0. The target padding then
-      // collapses to 0 and is clamped up to MIN_PADDING while barWidth stays 0, so
-      // padRatio is 1 - a value d3 band scales reject, and barGroupWidth is positive
-      // despite there being no space at all.
-      // got: { barWidth: 0, padWidth: 2, padRatio: 1, barGroupWidth: 18 }
-      // want: a zero-width layout, or an explicit guard.
-      const dim = dimensionsVerticalBarChart(0, 10);
-      expect(dim.barWidth).toBe(0);
-      expect(dim.padWidth).toBe(MIN_PADDING);
-      expect(dim.padRatio).toBe(1);
-      expect(dim.barGroupWidth).toBe(MIN_PADDING * 9);
     });
 
     test("padRatio drifts away from the 0.3 target once the padding is clamped", () => {

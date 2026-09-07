@@ -6,6 +6,7 @@ import {
   legendColorOrdinal,
   type OrdinalColorScaleComponent,
 } from "../legend/ordinalColorScale.js";
+import * as logger from "../logger.js";
 import {
   type MeasurableElement,
   measureAxisLabel,
@@ -54,16 +55,23 @@ const LABEL_PADDING = 40;
  * - axisLabelPadding is 60 for slant "horizontal" (and for any unrecognised slant),
  *   40 + widest axis label for "vertical", and 40 + widest axis label / sqrt(2) for
  *   "diagonal".
- * - A "vertical" or "diagonal" slant with no axisLabels gives NaN, which propagates
- *   into bottomPadding and thus into sszvis.bounds().
+ * - A "vertical" or "diagonal" slant with no axisLabels reserves the 40px base padding
+ *   and nothing for the labels themselves.
+ * - A container that cannot be measured is warned about and treated as having no width.
  * - legendPadding is rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT.
  */
 export function colorLegendLayout(
   { legendLabels, axisLabels = [], slant = "horizontal" }: ColorLegendLayoutOptions,
   container: MeasurableElement
 ): ColorLegendLayout {
-  // an unmeasurable container yields undefined; NaN keeps every comparison below false
-  const containerWidth = measureDimensions(container).width ?? Number.NaN;
+  const measuredWidth = measureDimensions(container).width;
+  if (!measuredWidth) {
+    logger.warn(
+      "colorLegendLayout could not measure its container, and is laying the legend out as if it had no width:",
+      container
+    );
+  }
+  const containerWidth = measuredWidth ?? 0;
   const layout = colorLegendDimensions(legendLabels, containerWidth);
   const scale =
     legendLabels.length > 6
@@ -103,17 +111,16 @@ export function colorLegendLayout(
  * - columnWidth is null for a single column.
  * - legendWidth is columns * widest label, so for a floated legend it under-reports
  *   the actual line width.
- * - An empty label list gives legendWidth NaN.
- * - An unmeasurable container (width 0 or undefined) silently degrades to one
- *   column, one row per label.
+ * - An empty label list gives a zero legendWidth.
+ * - A container of no width degrades to one column, one row per label.
  */
 export function colorLegendDimensions(
   labels: string[],
   containerWidth: number
 ): ColorLegendDimensions {
   const labelCount = labels.length;
-  // d3.max is undefined for an empty label list; NaN propagates the same way
-  const maxLabelWidth = max(labels, labelWidth) ?? Number.NaN;
+  // an empty legend has no labels to be as wide as
+  const maxLabelWidth = max(labels, labelWidth) ?? 0;
   const totalLabelsWidth = sum(labels, labelWidth);
 
   // Use a single column for four or fewer items
@@ -139,10 +146,10 @@ export function colorLegendDimensions(
 function axisLabelHeight(slant: string, labels: string[]): number {
   switch (slant) {
     case "vertical": {
-      return 40 + (max(labels, measureAxisLabel) ?? Number.NaN);
+      return 40 + (max(labels, measureAxisLabel) ?? 0);
     }
     case "diagonal": {
-      return 40 + Math.sqrt(2 * ((max(labels, measureAxisLabel) ?? Number.NaN) / 2) ** 2);
+      return 40 + Math.sqrt(2 * ((max(labels, measureAxisLabel) ?? 0) / 2) ** 2);
     }
     default: {
       return 60;

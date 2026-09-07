@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { colorLegendDimensions, colorLegendLayout } from "../../src/layout/colorLegendLayout.js";
 import { DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT } from "../../src/legend/ordinalColorScale.js";
 import { measureAxisLabel, measureLegendLabel } from "../../src/measure.js";
@@ -157,54 +157,51 @@ describe("colorLegendLayout", () => {
     });
   });
 
-  describe("known quirks", () => {
-    test("an empty label list gives a NaN legend width", () => {
-      // BUG: d3.max of an empty array is undefined, and `columns * undefined` is NaN. An
-      // empty legend is what a filtered-to-nothing series produces.
-      // got: { legendWidth: NaN, columnWidth: null, rows: 1 }
-      // want: a zero-width legend.
+  describe("degenerate inputs", () => {
+    test("an empty label list gives a zero-width legend", () => {
       const dims = colorLegendDimensions([], 800);
-      expect(dims.legendWidth).toBeNaN();
+      expect(dims.legendWidth).toBe(0);
       expect(dims.rows).toBe(1);
       expect(dims.horizontalFloat).toBe(true);
     });
 
-    test("a vertical or diagonal slant with no axis labels gives a NaN padding", () => {
-      // BUG: axisLabels defaults to [], and d3.max([]) is undefined, so the padding is
-      // 40 + undefined = NaN. That NaN flows straight into bottomPadding and then into
-      // sszvis.bounds(), which is what the return value is documented to be used for.
-      // got: bottomPadding NaN
-      // want: the 40px base padding, or an explicit error.
+    test("a vertical or diagonal slant with no axis labels reserves only the base padding", () => {
       const container = document.createElement("div");
       container.style.width = "800px";
       document.body.append(container);
       const layout = colorLegendLayout({ legendLabels: FOUR, slant: "vertical" }, container);
-      expect(layout.axisLabelPadding).toBeNaN();
-      expect(layout.bottomPadding).toBeNaN();
+      expect(layout.axisLabelPadding).toBe(40);
+      expect(layout.bottomPadding).toBe(40 + layout.legendPadding);
       container.remove();
     });
 
-    test("an unmeasurable container falls back to a single vertical column", () => {
-      // BUG: a detached container measures 0 and a missing one measures undefined; neither
-      // is detected. The legend silently becomes a one-column vertical list with one row per
-      // label, whatever width the container really has once it is in the document.
-      // got: { columns: 1, rows: 8, horizontalFloat: false }
-      // want: a measurement failure that is visible to the caller.
+    test("warns when the container cannot be measured", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const detached = document.createElement("div");
+      colorLegendLayout({ legendLabels: EIGHT }, detached);
+      expect(warn).toHaveBeenCalled();
+
+      warn.mockClear();
+      colorLegendLayout({ legendLabels: EIGHT }, "#no-such-container");
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    test("lays an unmeasurable container out as a single vertical column", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const detached = document.createElement("div");
       const layout = colorLegendLayout({ legendLabels: EIGHT }, detached);
       expect(layout.legendPadding).toBe(EIGHT.length * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT);
-      // a detached element measures 0
       expect(colorLegendDimensions(EIGHT, 0)).toMatchObject({
         columns: 1,
         rows: 8,
         horizontalFloat: false,
       });
-      // a missing selector measures undefined, and every comparison against it is false
-      const missing = colorLegendLayout({ legendLabels: EIGHT }, "#no-such-container");
-      expect(missing.legendPadding).toBe(EIGHT.length * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT);
-      expect(missing.legendWidth).toBe(maxLabelWidth(EIGHT));
+      warn.mockRestore();
     });
+  });
 
+  describe("known quirks", () => {
     test("an unknown slant is silently treated as horizontal", () => {
       // BUG: the switch treats every unrecognised slant as horizontal, so a typo silently
       // reserves 60px instead of the space the rotated labels need, and the labels are

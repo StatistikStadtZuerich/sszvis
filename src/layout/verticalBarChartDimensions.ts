@@ -30,13 +30,12 @@
  *   still feeds padRatio. When the single bar would be wider than the 48px cap, the padding
  *   recompute additionally divides by zero and the resulting Infinity is masked by the 100px
  *   clamp; a narrower single bar skips that branch and keeps its finite target padding.
- * - numBars === 0 yields NaN for barWidth, padRatio, outerRatio, and barGroupWidth (0/0), while
- *   padWidth still clamps to the 2px minimum.
- * - width === 0 gives barWidth 0 and padRatio exactly 1 (outside the [0, 1) range band scales expect).
- * - Negative width produces a negative barWidth and a padRatio outside the [0, 1) range band
- *   scales accept - above 1 for small negative widths (width -1 gives 1.04) and below 0 for
- *   larger ones (width -200 gives -0.16). There is no input validation.
+ * - A zero width or a zero bar count is a chart with nothing to draw, and every dimension
+ *   comes back 0 (totalWidth still reports the width that was asked for).
+ * - A negative width, or a negative or fractional bar count, throws.
  */
+
+import { requireCount, requireSize } from "./validate.js";
 
 export type VerticalBarChartDimensions = {
   barWidth: number;
@@ -47,7 +46,23 @@ export type VerticalBarChartDimensions = {
   totalWidth: number;
 };
 
-export default function (width: number, numBars: number): VerticalBarChartDimensions {
+export default function dimensionsVerticalBarChart(
+  width: number,
+  numBars: number
+): VerticalBarChartDimensions {
+  requireSize("dimensionsVerticalBarChart", "width", width);
+  requireCount("dimensionsVerticalBarChart", "numBars", numBars);
+  if (width === 0 || numBars === 0) {
+    return {
+      barWidth: 0,
+      padWidth: 0,
+      padRatio: 0,
+      outerRatio: 0,
+      barGroupWidth: 0,
+      totalWidth: width,
+    };
+  }
+
   const MAX_BAR_WIDTH = 48, // the maximum width of a bar
     MIN_PADDING = 2, // the minimum padding value
     MAX_PADDING = 100, // the maximum padding value

@@ -229,6 +229,36 @@ describe("layout/smallMultiples", () => {
     });
   });
 
+  describe("required properties", () => {
+    test("rejects a layout that is missing a geometry property", () => {
+      for (const missing of ["width", "height", "rows", "cols"] as const) {
+        const layout = layoutSmallMultiples<Group>().paddingX(10).paddingY(10);
+        if (missing !== "width") layout.width(320);
+        if (missing !== "height") layout.height(210);
+        if (missing !== "rows") layout.rows(2);
+        if (missing !== "cols") layout.cols(3);
+        expect(() => render(layout, groups(2))).toThrow(new RegExp(missing));
+      }
+    });
+
+    test("draws nothing at all when a required property is missing", () => {
+      const layout = layoutSmallMultiples<Group>().width(320).height(210).paddingX(10);
+      const selection = createSvgLayer("#chart-container", undefined, {
+        key: "multiples-required",
+      }).selectGroup("multiples");
+      expect(() => selection.datum(groups(2)).call(layout as never)).toThrow();
+      expect(multiples(selection.node() as SVGGElement)).toHaveLength(0);
+    });
+
+    test("defaults the paddings to zero", () => {
+      const layout = layoutSmallMultiples<Group>().width(300).height(200).cols(3).rows(2);
+      const node = render(layout, groups(6));
+      const datum = (multiples(node)[0] as SVGGElement & { __data__: Group }).__data__;
+      expect(datum.gw).toBe(100);
+      expect(datum.gh).toBe(100);
+    });
+  });
+
   describe("known quirks", () => {
     test("writes its layout back onto the bound data objects", () => {
       // NOTE: intended and documented - the component attaches gx/gy/gw/gh/cx/cy to each
@@ -271,27 +301,6 @@ describe("layout/smallMultiples", () => {
       const node = render(grid(), groups(8));
       expect(multiples(node)).toHaveLength(8);
       expect(transformOf(multiples(node)[6] as Element)).toBe("translate(0,220)");
-    });
-
-    test("a missing rows or cols property produces NaN positions", () => {
-      // BUG: neither property has a default and neither is validated, so leaving one out
-      // silently produces NaN geometry and groups the browser cannot place.
-      // got: transform "translate(NaN,NaN)"
-      // want: an explicit error, or a sensible default.
-      const layout = layoutSmallMultiples<Group>().width(320).height(210).paddingX(10).paddingY(10);
-      const node = render(layout, groups(2));
-      expect(transformOf(multiples(node)[0] as Element)).toBe("translate(NaN,NaN)");
-    });
-
-    test("a missing paddingX or paddingY also yields NaN, unlike the title props", () => {
-      // BUG: showTitle, titleLabel, titleAnchor and titleY all have defaults, but the four
-      // geometry properties this component cannot work without have none.
-      // got: NaN geometry
-      // want: paddingX and paddingY defaulting to 0.
-      const layout = layoutSmallMultiples<Group>().width(320).height(210).cols(3).rows(2);
-      const node = render(layout, groups(2));
-      const datum = (multiples(node)[0] as SVGGElement & { __data__: Group }).__data__;
-      expect(datum.gw).toBeNaN();
     });
 
     test("a datum without a values property binds undefined to the chart group", () => {

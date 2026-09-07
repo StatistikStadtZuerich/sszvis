@@ -13,6 +13,7 @@
 
 import { type HierarchyNode, type HierarchyRectangularNode, max, min, partition } from "d3";
 import { type NodeDatum, prepareHierarchyData } from "./hierarchy.js";
+import { requireCount, requireSize } from "./validate.js";
 
 /**
  * A node of the prepared hierarchy after d3.partition has written its positions onto it.
@@ -103,11 +104,17 @@ const MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *   chart overflows (centerRadius + ringWidth * numLayers can exceed chartWidth / 2, which
  *   is exactly the outer radius the sunburst component draws, per docs/sunburst/basic.js),
  *   and a shallow one leaves empty space.
- * - numLayers === 0 divides by zero and the resulting Infinity is masked by the 60px cap.
- * - A negative numLayers or a zero/negative chartWidth is not validated (the 10px floor
- *   hides the negative ring width).
+ * - A zero chartWidth or a hierarchy with no layers is a chart with nothing to draw, and
+ *   every dimension comes back 0.
+ * - A negative chartWidth, or a negative or fractional layer count, throws.
  */
 export const computeLayout = (numLayers: number, chartWidth: number): SunburstLayout => {
+  requireCount("sunburstLayout", "numLayers", numLayers);
+  requireSize("sunburstLayout", "chartWidth", chartWidth);
+  if (numLayers === 0 || chartWidth === 0) {
+    return { centerRadius: 0, numLayers, ringWidth: 0 };
+  }
+
   // Diameter of the center circle is one-third the width
   const halfWidth = chartWidth / 2;
   const centerRadius = halfWidth / 3;
@@ -132,12 +139,8 @@ export const computeLayout = (numLayers: number, chartWidth: number): SunburstLa
  * Behaviour notes:
  * - Returns [min y0, max y1] taken independently of each other.
  * - d3.min/max skip undefined and NaN nodes.
- * - An empty array gives [undefined, undefined], which produces a NaN radius when used as
- *   a scale domain.
+ * - An empty array gives [0, 0], which is a usable, if empty, scale domain.
  */
 export const getRadiusExtent = (
   formattedData: { y0?: number | undefined; y1?: number | undefined }[]
-): [number | undefined, number | undefined] => [
-  min(formattedData, (d) => d.y0),
-  max(formattedData, (d) => d.y1),
-];
+): [number, number] => [min(formattedData, (d) => d.y0) ?? 0, max(formattedData, (d) => d.y1) ?? 0];

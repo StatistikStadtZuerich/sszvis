@@ -59,9 +59,8 @@
  * - gx/gy are grid-absolute; cx/cy are unit-relative and identical for every multiple,
  *   since each group is translated to its own gx/gy.
  * - The layout writes gx/gy/gw/gh/cx/cy back onto the bound data objects.
- * - width, height, rows, cols, paddingX and paddingY have no defaults; omitting any of
- *   them silently produces NaN geometry. Only the four title properties (showTitle,
- *   titleLabel, titleAnchor, titleY) have defaults.
+ * - width, height, rows and cols are required: omitting any of them throws before a group
+ *   is created. paddingX and paddingY default to 0, as do the four title properties.
  * - More data than rows * cols overflows the declared height rather than erroring.
  * - A datum without a `values` property binds `undefined` to its inner chart group.
  * - titleLabel is called after the layout fields have been attached to the datum, so it
@@ -96,8 +95,6 @@ export type SmallMultipleGroup<V = unknown> = {
 };
 
 type SmallMultiplesProps<G> = {
-  // the six geometry props are read straight out of the props object, which holds undefined
-  // for any of them the caller never set; that is what yields the documented NaN geometry
   width: number;
   height: number;
   paddingX: number;
@@ -112,18 +109,14 @@ type SmallMultiplesProps<G> = {
 
 export interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGroup>
   extends ComponentBuilder<SmallMultiplesComponent<G>> {
-  /**
-   * The six geometry properties have no defaults, so their getters report undefined until the
-   * corresponding setter has been called. Reading one before then is what produces the NaN
-   * geometry described in the module's behaviour notes.
-   */
+  /** width, height, rows and cols are required; their getters report undefined until set. */
   width(): number | undefined;
   width(width: number): SmallMultiplesComponent<G>;
   height(): number | undefined;
   height(height: number): SmallMultiplesComponent<G>;
-  paddingX(): number | undefined;
+  paddingX(): number;
   paddingX(padding: number): SmallMultiplesComponent<G>;
-  paddingY(): number | undefined;
+  paddingY(): number;
   paddingY(padding: number): SmallMultiplesComponent<G>;
   rows(): number | undefined;
   rows(rows: number): SmallMultiplesComponent<G>;
@@ -148,7 +141,9 @@ export default function <
     .prop("width")
     .prop("height")
     .prop("paddingX")
+    .paddingX(0)
     .prop("paddingY")
+    .paddingY(0)
     .prop("rows")
     .prop("cols")
     .prop("showTitle")
@@ -162,6 +157,12 @@ export default function <
     .render(function (this: Element, data: G[]) {
       const selection = select<Element, unknown>(this);
       const props = selection.props<SmallMultiplesProps<G>>();
+
+      for (const propName of ["width", "height", "rows", "cols"] as const) {
+        if (props[propName] === undefined) {
+          throw new TypeError(`smallMultiples: the ${propName} property is required`);
+        }
+      }
 
       const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
       const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
