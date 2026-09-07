@@ -119,10 +119,10 @@ export default function legendColorLinear(): LinearColorScaleComponent {
 
         // rounded end caps for the segments
         const endCaps = selection
-          .selectAll("circle.ssvis-legend--mark")
+          .selectAll("circle.sszvis-legend__mark")
           .data(startEnd)
           .join("circle")
-          .attr("class", "ssvis-legend--mark");
+          .attr("class", "sszvis-legend__mark");
 
         endCaps
           .attr("cx", (_d, i) => i * props.width)
