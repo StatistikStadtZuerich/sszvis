@@ -577,28 +577,42 @@ describe("map/renderer/bubble", () => {
     });
   });
 
-  describe("known quirks", () => {
-    // BUG: the mouse listeners are written for d3 v3. Since d3 v6 a listener is called with the
-    // event first and the datum second, so `d` here is a PointerEvent and `d.datum` is undefined -
-    // every over, out and click handler receives undefined instead of the map entity's datum. The
-    // dispatch itself works, unlike the geojson renderer's, so the handler does fire.
-    test("delivers undefined to an over handler instead of the datum", () => {
+  describe("events", () => {
+    // The circles carry pointer-events: none, so these handlers cannot be reached by a real
+    // pointer; the events have to be dispatched on a circle directly, as they are here.
+    test("delivers the hovered entity's datum to an over handler", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) => c.on("over", (datum: unknown) => seen.push(datum)));
       circles(node)[0].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
-      expect(seen).toEqual([undefined]);
+      expect(seen).toEqual([{ geoId: "a", value: 1 }]);
     });
 
-    test("delivers undefined to out and click handlers too", () => {
+    test("delivers the datum to out and click handlers too", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
         c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d))
       );
       circles(node)[0].dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
       circles(node)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      expect(seen).toEqual([undefined, undefined]);
+      expect(seen).toEqual([
+        { geoId: "a", value: 1 },
+        { geoId: "a", value: 1 },
+      ]);
     });
 
+    // prepareMergedGeoData pairs every feature with undefined where nothing matched, so a circle
+    // for a feature with no data hands its handler undefined.
+    test("delivers undefined for a circle whose feature matched no datum", () => {
+      const seen: unknown[] = [];
+      const node = render([{ geoId: "a", value: 1 }], (c) =>
+        c.on("over", (d: unknown) => seen.push(d))
+      );
+      circles(node)[1].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      expect(seen).toEqual([undefined]);
+    });
+  });
+
+  describe("known quirks", () => {
     test("returns the component from on() so it can be chained", () => {
       const component = mapRendererBubble();
       expect(component.on("over", () => undefined)).toBe(component);

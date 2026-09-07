@@ -520,28 +520,35 @@ describe("maps/choropleth", () => {
     const dispatchOn = (node: Element, type: string) =>
       node.dispatchEvent(new MouseEvent(type, { bubbles: true }));
 
-    // BUG: the mouse listeners are written for d3 v3, where a listener was called with the datum
-    // first. Since d3 v6 it is called with the event first, so `d` here is a PointerEvent and
-    // `d.datum` is undefined - every over, out and click handler is told which event happened but
-    // not which map entity it happened on. The same defect as the bubble renderer's own handlers,
-    // and it is what breaks the tooltips in the three examples that bind handlers at all:
+    // The handlers are what the docs examples drive their tooltips from -
     // docs/map-standard/cml-quartier-years.js, docs/map-extended/quartiere-neubau.js and
-    // docs/map-extended/topolayer-statquart-neubau.js.
-    test("delivers undefined to an over handler instead of the hovered entity's datum", () => {
+    // docs/map-extended/topolayer-statquart-neubau.js all pass this argument to selectHovered.
+    test("delivers the hovered entity's datum to an over handler", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) => c.on("over", (d: unknown) => seen.push(d)));
       dispatchOn(areas(node)[0], "mouseover");
-      expect(seen).toEqual([undefined]);
+      expect(seen).toEqual([fullData[0]]);
     });
 
-    test("delivers undefined to out and click handlers too", () => {
+    test("delivers the datum to out and click handlers too", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
         c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d))
       );
-      dispatchOn(areas(node)[0], "mouseout");
-      dispatchOn(areas(node)[0], "click");
-      expect(seen).toEqual([undefined, undefined]);
+      dispatchOn(areas(node)[1], "mouseout");
+      dispatchOn(areas(node)[1], "click");
+      expect(seen).toEqual([fullData[1], fullData[1]]);
+    });
+
+    // An entity that matched no datum has none to deliver, so its handler is called with
+    // undefined rather than with a stand-in.
+    test("delivers undefined for an entity that matched no datum", () => {
+      const seen: unknown[] = [];
+      const node = render([{ geoId: "a", value: 1 }], (c) =>
+        c.on("over", (d: unknown) => seen.push(d))
+      );
+      dispatchOn(areas(node)[1], "mouseover");
+      expect(seen).toEqual([undefined]);
     });
 
     test("fires the handler once per event target hovered", () => {
@@ -562,6 +569,9 @@ describe("maps/choropleth", () => {
       expect(() => choropleth().on("hover", () => undefined)).toThrow();
     });
 
+    // NOTE: an event target an anchored shape contributed carries no merged entry, so a handler
+    // bound through this component is called with undefined for it. The shape's own dispatch is
+    // where its data live.
     test("binds an anchored shape's own event targets, since it renders before the binding", () => {
       const marked = component<AnchoredShape<Datum>>();
       marked.prop("mergedData").prop("mapPath");
