@@ -268,32 +268,42 @@ describe("component/stackedPyramid", () => {
       expect(sides[0].map((series) => series.key)).toEqual(["b", "c", "a"]);
     });
 
-    describe("known quirks", () => {
-      test("numbers the rows by position rather than by the row accessor's value", () => {
-        // BUG: `d.row = row` is the index of the row within the side, not the value the row
-        // accessor returned, and that index is what the component feeds to barPosition. It
-        // only lines up with the data when the row values happen to be a dense 0-based
-        // range, which is what the population pyramid example relies on: it builds its
-        // position scale over d3.range(0, 101) and its ages happen to be 0...100.
-        // current: rows valued 40 and 80 are numbered 0 and 1. expected: 40 and 80, or a
-        // documented contract that barPosition receives an index.
-        const sides = layout([
-          { side: "f", row: 40, series: "a", value: 1 },
-          { side: "f", row: 80, series: "a", value: 2 },
-        ]);
-        expect(sides[0][0].map((d) => d.row)).toEqual([0, 1]);
-        // The source row still knows its real value; only the tag on the slice is an index.
-        expect(sides[0][0].map((d) => d.data?.row)).toEqual([40, 80]);
-      });
+    test("should tag every slice with the value the row accessor returned", () => {
+      // The row is the accessor's own value, not the slice's position within the side, so a
+      // position scale can be built over the row domain.
+      const sides = layout([
+        { side: "f", row: 40, series: "a", value: 1 },
+        { side: "f", row: 80, series: "a", value: 2 },
+      ]);
+      expect(sides[0][0].map((d) => d.row)).toEqual([40, 80]);
+      expect(sides[0][0].map((d) => d.data?.row)).toEqual([40, 80]);
+    });
 
+    test("should tag a row whose value is not an array-index key with that value", () => {
+      // Rows that are not array-index keys - negatives, floats, plain strings - enumerate in
+      // insertion order rather than sorting themselves, so they are laid out in the order the
+      // input happened to be in. Their `row` is still the accessor's own value, and a string
+      // row comes back as a string rather than as the cascade's stringified key.
+      const negatives = layout([
+        { side: "f", row: 5, series: "a", value: 1 },
+        { side: "f", row: -3, series: "a", value: 2 },
+      ]);
+      expect(negatives[0][0].map((d) => d.row)).toEqual([5, -3]);
+
+      const strings = layout([
+        { side: "f", row: "60+" as unknown as number, series: "a", value: 1 },
+        { side: "f", row: "0-59" as unknown as number, series: "a", value: 2 },
+      ]);
+      expect(strings[0][0].map((d) => d.row)).toEqual(["60+", "0-59"]);
+    });
+
+    describe("known quirks", () => {
       test("orders the rows by their stringified keys, not by the order they arrive in", () => {
         // NOTE: the cascade groups the rows into a plain object keyed by String(row), and
         // JavaScript iterates array-index keys in ascending numeric order regardless of
-        // insertion order. Dense non-negative integer rows therefore sort themselves, which
-        // is what makes the index-as-position quirk above survivable. Row values that are
-        // not array-index keys - negatives, floats, plain strings - fall back to insertion
-        // order and are laid out in whatever order the input happened to be in, which this
-        // test does not cover.
+        // insertion order, so dense non-negative integer rows sort themselves. Row values
+        // that are not array-index keys - negatives, floats, plain strings - fall back to
+        // insertion order and are laid out in whatever order the input happened to be in.
         const sorted = layout([
           { side: "f", row: 2, series: "a", value: 1 },
           { side: "f", row: 0, series: "a", value: 2 },
@@ -541,10 +551,25 @@ describe("component/stackedPyramid", () => {
       expect(Number(attrs(node, "rightStack", "x")[2])).toBe(30.5);
     });
 
-    test("should take the vertical position from barPosition and the row index", () => {
+    test("should take the vertical position from barPosition and the slice's row", () => {
       const node = render(pyramidOf());
       expect(attrs(node, "leftStack", "y")).toEqual(["0", "12", "0", "12"]);
       expect(attrs(node, "rightStack", "y")).toEqual(["0", "12", "0", "12"]);
+    });
+
+    test("should position sparse rows from their own values, not their order", () => {
+      // barPosition is a scale over the row domain, so rows valued 40 and 80 land 40 and 80
+      // rows down rather than at the top of the chart.
+      const node = render(
+        pyramidOf(),
+        layout([
+          { side: "f", row: 40, series: "a", value: 1 },
+          { side: "f", row: 80, series: "a", value: 2 },
+          { side: "m", row: 40, series: "a", value: 3 },
+        ])
+      );
+      expect(attrs(node, "leftStack", "y")).toEqual(["480", "960"]);
+      expect(attrs(node, "rightStack", "y")).toEqual(["480"]);
     });
 
     test("should take the height from barHeight", () => {

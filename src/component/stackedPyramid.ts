@@ -80,9 +80,9 @@
  *                                            undefined (reading 'call')") rather than from the
  *                                            component's own closure the way barWidth does. Both
  *                                            surface while bar is applying its attributes. It is
- *                                            called with the slice's `row`, which is that row's
- *                                            index within its side and not the value the row
- *                                            accessor returned, and with nothing else, so an
+ *                                            called with the slice's `row`, i.e. the value the
+ *                                            layout's row accessor returned, so it is a scale over
+ *                                            the row domain. It is called with nothing else, so an
  *                                            index-aware accessor yields NaN and bar's guard
  *                                            flattens it to 0.
  * @property {Array<number>} [tooltipAnchor]  The anchor position for the tooltips. Uses
@@ -129,20 +129,15 @@
  * not called for it: an accessor written over the source row never sees an undefined datum, and
  * does not have to guard for one.
  *
- * Note: a slice's `row` is the position of its row within the side, not the value the row accessor
- * returned, and that index is what the component feeds to barPosition. It lines up with the data
- * only when the row values happen to be a dense zero-based range, which is what
- * docs/population-pyramid/pyramid-stacked.js relies on: it builds its position scale over
- * d3.range(0, 101) and its ages happen to run from 0 to 100. The source row still knows its real
- * value; only the tag on the slice is an index.
- *
  * Note: the cascade groups on String(key) - for the sides, the rows and the series alike - so keys
  * that differ only in type merge, and the number 1 and the string "1" land in the same cell where
  * only the first of them is stacked. The ordering follows from the same coercion: JavaScript
  * iterates array-index keys in ascending numeric order regardless of insertion order, so dense
- * non-negative integer rows sort themselves, which is what makes the index-as-position quirk above
- * survivable, while negative, fractional or plain string rows fall back to insertion order and are
- * laid out in whatever order the input happened to be in. The sides are ordered the same way and
+ * non-negative integer rows sort themselves, while negative, fractional or plain string rows fall
+ * back to insertion order and are laid out in whatever order the input happened to be in. Since
+ * barPosition receives the row's own value that ordering is cosmetic for the bars - it decides only
+ * which slice is drawn first - but a `row` that is a string comes back as the accessor returned it,
+ * not as the cascade's stringified key. The sides are ordered the same way and
  * picked positionally, so a dataset whose first row is male puts men on the left and silently
  * mirrors the chart. For the series the key order is the stacking order, so a series accessor
  * returning years or numeric codes restacks the chart in ascending numeric order, and the `series`
@@ -289,8 +284,8 @@ export type StackedPyramidSlice<T, S extends string | number = string> = SeriesP
   series: string;
   /** The side the slice belongs to, as the side accessor returned it. */
   side: S;
-  /** The position of the slice's row within its side - an index, not the row's own value. */
-  row: number;
+  /** The row the slice belongs to, as the row accessor returned it. */
+  row: string | number;
   /** The slice's own value, i.e. d[1] - d[0] as it was when the layout ran. */
   value: number;
 };
@@ -342,14 +337,14 @@ export function stackedPyramidData<T, S extends string | number = string>(
   // cascade stringifies its keys, so a numeric row or series accessor - an age, a year, a
   // category code - groups the same way a string one does. The series keys are read back off
   // the cascade row with Object.keys, which is why `series` stays a string.
-  _rowAcc: (datum: T) => string | number,
+  rowValueAcc: (datum: T) => string | number,
   seriesAcc: (datum: T) => string | number,
   valueAcc: (datum: T) => number
 ) {
   return (data: T[]): StackedPyramidLayout<T, S> => {
     const grouped: CascadeRow<T>[][] = cascade<T>()
       .arrayBy(sideAcc)
-      .arrayBy(_rowAcc)
+      .arrayBy(rowValueAcc)
       .objectBy(seriesAcc)
       .apply(data);
 
@@ -371,7 +366,7 @@ export function stackedPyramidData<T, S extends string | number = string>(
       // rebuilt, so d3's own `key` and `index` - the only two properties it hangs off a
       // series - have to be carried across by hand.
       return stacks.map((stack, i) => {
-        const slices = stack.map((d, row) => {
+        const slices = stack.map((d) => {
           // A row the side's series is absent from has no source row to point at, so the
           // padding slice carries no data and a zero value.
           const datum = d.data[keys[i]]?.[0];
@@ -379,8 +374,9 @@ export function stackedPyramidData<T, S extends string | number = string>(
             data: datum,
             series: keys[i],
             side,
-            // The row's position within the side, not the value the row accessor returned.
-            row,
+            // The value the row accessor returned, read off whichever series the cascade
+            // row does carry - a padding slice has no source row of its own.
+            row: rowValueAcc(firstCell(d.data)),
             value: datum === undefined ? 0 : valueAcc(datum),
           });
         });
@@ -409,11 +405,11 @@ export function stackedPyramidData<T, S extends string | number = string>(
 type StoredWidth = (value?: number, index?: number) => number;
 
 /**
- * How barPosition reads back. In the bars it is called with a slice's row index; on a
- * reference line d3.line calls it with the reference element itself, which is why a reference
- * series has to be an array of numbers.
+ * How barPosition reads back. It is called with a row - the value the layout's row accessor
+ * returned - both for the bars and for the points of a reference line, so one position scale
+ * over the row domain serves both.
  */
-type StoredPosition = (value?: number, index?: number) => number;
+type StoredPosition = (value?: string | number, index?: number) => number;
 
 /** How barHeight reads back: unlike the other two dimensions it is handed straight to bar. */
 type StoredHeight<T, S extends string | number> = (
@@ -472,7 +468,9 @@ export interface StackedPyramidComponent<T = unknown, S extends string | number 
   barWidth(): StoredWidth;
   barWidth(value: PyramidValue<number, number>): StackedPyramidComponent<T, S>;
   barPosition(): StoredPosition;
-  barPosition(value: PyramidValue<number, number>): StackedPyramidComponent<T, S>;
+  barPosition<U = string | number>(
+    value: PyramidValue<U, number>
+  ): StackedPyramidComponent<T, S>;
   barFill(): StoredFill<T>;
   barFill<U = T>(value: FillValue<U>): StackedPyramidComponent<T, S>;
   tooltipAnchor(): (number | string)[];
