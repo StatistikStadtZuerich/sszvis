@@ -219,40 +219,56 @@ describe("component/stackedPyramid", () => {
       expect(sides.maxValue).toBe(9);
     });
 
+    test("should take a side's series keys from the union across all of its rows", () => {
+      // A series that appears in only some of a side's rows still gets its own layer, and
+      // its values reach both the chart and maxValue.
+      const sides = layout([
+        { side: "f", row: 0, series: "a", value: 1 },
+        { side: "f", row: 1, series: "a", value: 2 },
+        { side: "f", row: 1, series: "b", value: 3 },
+      ]);
+      expect(sides[0].length).toBe(2);
+      expect(sides[0].map((series) => series.key)).toEqual(["a", "b"]);
+      expect(sides.maxValue).toBe(5);
+    });
+
+    test("should contribute zero for a row that carries no value for a series", () => {
+      const sides = layout([
+        { side: "f", row: 0, series: "a", value: 1 },
+        { side: "f", row: 0, series: "b", value: 2 },
+        { side: "f", row: 1, series: "a", value: 3 },
+      ]);
+      expect(pairs(sides[0])).toEqual([
+        [
+          [0, 1],
+          [0, 3],
+        ],
+        [
+          [1, 3],
+          // Row 1 has no "b", so its slice is an empty pad on top of the "a" value.
+          [3, 3],
+        ],
+      ]);
+      // A padding slice has no source row to point at, and its own value is 0.
+      expect(sides[0][1][1].data).toBeUndefined();
+      expect(sides[0][1][1].value).toBe(0);
+      expect(sides[0][1][1].series).toBe("b");
+      expect(sides[0][1][1].side).toBe("f");
+    });
+
+    test("should stack a side's series in the order its rows first mention them", () => {
+      // The key order is the stacking order, and the union preserves the order of first
+      // mention rather than the order of any single row.
+      const sides = layout([
+        { side: "f", row: 0, series: "b", value: 1 },
+        { side: "f", row: 1, series: "c", value: 2 },
+        { side: "f", row: 1, series: "b", value: 3 },
+        { side: "f", row: 2, series: "a", value: 4 },
+      ]);
+      expect(sides[0].map((series) => series.key)).toEqual(["b", "c", "a"]);
+    });
+
     describe("known quirks", () => {
-      test("takes the series keys from each side's first row only", () => {
-        // BUG: `keys` is Object.keys(rows[0]) rather than the union across rows, so a series
-        // that is absent from the first row of a side is dropped from that whole side.
-        // stackedBarData takes the union of the keys across every row - though its own
-        // unguarded cell read then throws on the sparse data that survives.
-        // current: side "f" has one series and its "b" values are silently discarded.
-        // expected: the union of the side's series keys, with the missing cell contributing 0.
-        const sides = layout([
-          { side: "f", row: 0, series: "a", value: 1 },
-          { side: "f", row: 1, series: "a", value: 2 },
-          { side: "f", row: 1, series: "b", value: 3 },
-        ]);
-        expect(sides[0].length).toBe(1);
-        expect(sides[0].map((series) => series.key)).toEqual(["a"]);
-        // The 3 is nowhere in the layout, so it is missing from maxValue too.
-        expect(sides.maxValue).toBe(2);
-      });
-
-      test("throws when a later row is missing a series the first row has", () => {
-        // BUG: the stack value accessor reads x[key][0] unguarded, so a row that does not
-        // carry every key of the first row dies on an undefined cell. Together with the
-        // quirk above this means every row of a side has to carry every series, and the
-        // first row decides which - callers with sparse data have to pad it with zero rows.
-        // current: TypeError. expected: the missing cell contributes 0.
-        expect(() =>
-          layout([
-            { side: "f", row: 0, series: "a", value: 1 },
-            { side: "f", row: 0, series: "b", value: 2 },
-            { side: "f", row: 1, series: "a", value: 3 },
-          ])
-        ).toThrow(TypeError);
-      });
-
       test("numbers the rows by position rather than by the row accessor's value", () => {
         // BUG: `d.row = row` is the index of the row within the side, not the value the row
         // accessor returned, and that index is what the component feeds to barPosition. It
@@ -267,7 +283,7 @@ describe("component/stackedPyramid", () => {
         ]);
         expect(sides[0][0].map((d) => d.row)).toEqual([0, 1]);
         // The source row still knows its real value; only the tag on the slice is an index.
-        expect(sides[0][0].map((d) => d.data.row)).toEqual([40, 80]);
+        expect(sides[0][0].map((d) => d.data?.row)).toEqual([40, 80]);
       });
 
       test("orders the rows by their stringified keys, not by the order they arrive in", () => {
@@ -459,6 +475,22 @@ describe("component/stackedPyramid", () => {
       expect(stacks(node, "leftStack").length).toBe(2);
       expect(stacks(node, "rightStack").length).toBe(2);
       expect(stacks(node, "leftStack")[0].tagName).toBe("g");
+    });
+
+    test("should render a group for a series only some of a side's rows carry", () => {
+      const node = render(
+        pyramidOf(),
+        layout([
+          { side: "f", row: 0, series: "a", value: 1 },
+          { side: "f", row: 1, series: "a", value: 2 },
+          { side: "f", row: 1, series: "b", value: 3 },
+          { side: "m", row: 0, series: "a", value: 4 },
+        ])
+      );
+      expect(stacks(node, "leftStack").length).toBe(2);
+      // The recovered series is drawn: its row-1 slice runs from 2 to 5, its row-0 pad is
+      // empty.
+      expect(attrs(node, "leftStack", "width")).toEqual(["1", "2", "0", "3"]);
     });
 
     test("should mark the stack groups with a data attribute rather than a class", () => {
