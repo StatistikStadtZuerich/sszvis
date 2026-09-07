@@ -22,19 +22,14 @@
  *                                      the note below. Not wrapped in fn.functor.
  * @property {Boolean} fadeOut          Whether to fade the lake out towards the bottom of the shape with a gradient mask.
  *                                      Default true - but choropleth defaults its own lakeFadeOut to false, so the
- *                                      default branch is the one no in-repo chart takes. Turning it off does not undo
- *                                      an existing fade; see the note below.
+ *                                      default branch is the one no in-repo chart takes. Turning it off removes an
+ *                                      existing fade again.
  *
  * Note: the pattern helpers in src/patterns.ts append their contents rather than joining them, so
  * this component may only call them on a definition that is still empty; otherwise the tile would
  * gain another rect and two lines, the gradient another two stops and the mask another rect on every
  * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
  * geojson renderers' "missing-pattern" too.
- *
- * Note: disabling fadeOut after a render with it enabled leaves both the mask attribute on the
- * lake shape and the gradient and mask definitions in the defs, because the disabled branch only
- * skips writing them. choropleth re-applies fadeOut on every render, so a chart that toggles its
- * lakeFadeOut stays faded after the toggle.
  *
  * Note: the mask fades the lake by filling itself with url(#lake-fade-gradient), so the two
  * definitions are only useful together. The gradient helper writes that id a second time onto the
@@ -193,6 +188,9 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
           "lake-fade-mask",
           mapLakeGradientMask
         );
+      } else {
+        // Turning the fade off must undo an existing one, not merely skip writing it.
+        selection.selectAll("linearGradient#lake-fade-gradient, mask#lake-fade-mask").remove();
       }
 
       // generate the Lake Zurich path
@@ -204,10 +202,8 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         .attr("d", props.mapPath)
         .attr("fill", "url(#lake-pattern)");
 
-      if (props.fadeOut) {
-        // this mask applies the fade effect
-        zurichSee.attr("mask", "url(#lake-fade-mask)");
-      }
+      // this mask applies the fade effect
+      zurichSee.attr("mask", props.fadeOut ? "url(#lake-fade-mask)" : null);
 
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
