@@ -148,12 +148,7 @@ function readFeatureKey(properties: GeoJsonProperties, key: string): unknown {
   return properties === null || properties === undefined ? undefined : properties[key];
 }
 
-/**
- * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
- * symbols with the same description remain distinct and can never be matched by a string id.
- * Everything else stringifies, which is how a missing key becomes the string "undefined".
- */
-export default function <
+export default function mapRendererGeoJson<
   T extends Record<string, unknown> = Record<string, unknown>,
 >(): MapRendererGeoJsonComponent<T> {
   const event = dispatch("over", "out", "click");
