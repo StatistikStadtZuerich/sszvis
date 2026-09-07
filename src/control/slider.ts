@@ -148,7 +148,7 @@ export default function slider(): SliderComponent {
         // half-built control on screen. Thrown before anything is appended, and named, so
         // the caller is not left reading a TypeError out of fn.stringEqual.
         if (props.value == null) {
-          throw new Error("sszvis.control.slider: the `value` property is required");
+          throw new Error("[sszvis.control.slider] the `value` property is required");
         }
 
         const scaleRange = range(props.scale);

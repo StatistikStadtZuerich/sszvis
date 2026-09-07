@@ -377,7 +377,7 @@ describe("control/slider", () => {
     test("should name the component and the property in that error", () => {
       const node = d3Select(svg).append("g");
       expect(() => node.call(slider().scale(scale()))).toThrow(
-        "sszvis.control.slider: the `value` property is required"
+        "[sszvis.control.slider] the `value` property is required"
       );
     });
   });
