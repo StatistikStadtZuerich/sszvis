@@ -165,6 +165,20 @@ describe("viewport/resize", () => {
       expect(calls).toBe(1);
       expect(error).toHaveBeenCalled();
     });
+
+    test("should reject a listener that is not callable, at registration", () => {
+      const later = vi.fn();
+      // @ts-expect-error - the types already reject this; the throw is the runtime half of
+      // the same guard, for JavaScript callers and dynamically built listeners.
+      expect(() => listen("resize", undefined)).toThrow(TypeError);
+      // @ts-expect-error - see above.
+      expect(() => listen("resize", undefined)).toThrow(
+        '[sszvis.viewport] The listener for "resize" must be a function, got undefined.'
+      );
+      listen("resize", later);
+      viewport.trigger("resize");
+      expect(later).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("known quirks", () => {
@@ -230,24 +244,6 @@ describe("viewport/resize", () => {
       viewport.trigger("resize");
       viewport.trigger("resize");
       expect(cb).toHaveBeenCalledTimes(2);
-    });
-
-    test("registering a non-function listener fails on the next trigger", () => {
-      // BUG: `on` appends whatever it is given without checking that it is callable, so a
-      // typo such as `viewport.on("resize", myChart.render())` corrupts the registry and
-      // the failure only surfaces on the next resize, far away from its cause. Error
-      // isolation now keeps it from taking the other listeners down with it, but the
-      // registration itself is still accepted.
-      // current: a reported TypeError on the next trigger. expected: reject it in `on`.
-      const error = vi.spyOn(console, "error").mockImplementation(() => {});
-      const later = vi.fn();
-      // @ts-expect-error - the test helper's own `Listener` signature rejects this; the
-      // module accepts it at runtime, which is the half of the fix that types cannot do.
-      listen("resize", undefined);
-      listen("resize", later);
-      expect(() => viewport.trigger("resize")).not.toThrow();
-      expect(error.mock.calls.flat().join()).toContain("TypeError");
-      expect(later).toHaveBeenCalledTimes(1);
     });
 
     test("the chainable functions only work when called as methods", () => {
