@@ -330,6 +330,63 @@ describe("app", () => {
     });
   });
 
+  describe("a failing effect", () => {
+    test("is reported as an effect failure, not an init failure", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      app({
+        init: async () => (dispatch) => {
+          dispatch("missing", []);
+        },
+        render: () => {},
+      });
+      await nextFrame();
+
+      const reported = error.mock.calls.at(0)?.[0] as Error;
+      expect(reported.message).toBe(
+        '[sszvis.app] An effect failed: [sszvis.app] Action "missing" is not defined, add it to "actions".'
+      );
+    });
+
+    test("does not render the fallback, since the chart itself was built", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const container = document.createElement("div");
+      container.id = "effect-fallback-target";
+      document.body.append(container);
+
+      const render = vi.fn();
+      app({
+        init: async () => (dispatch) => {
+          dispatch("missing", []);
+        },
+        render,
+        fallback: { element: "#effect-fallback-target", src: "fallback.png" },
+      });
+      await nextFrame();
+
+      expect(container.querySelector("img")).toBeNull();
+      expect(render).toHaveBeenCalledTimes(1);
+    });
+
+    test("takes the same path when the effect came from an action", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const render = vi.fn();
+      app({
+        init: async () => {},
+        render,
+        actions: {
+          start: () => (dispatch) => {
+            dispatch("missing", []);
+          },
+        },
+      });
+      await nextFrame();
+      expect(() => render.mock.calls[0][1].start()).not.toThrow();
+
+      const reported = error.mock.calls.at(0)?.[0] as Error;
+      expect(reported.message).toContain("[sszvis.app] An effect failed:");
+    });
+  });
+
   describe("known quirks", () => {
     // BUG: the module calls immer's setAutoFreeze(false) at import time (src/app.ts:7),
     // so the finished state is never frozen and the immutability the module originally
@@ -353,37 +410,6 @@ describe("app", () => {
       });
       await done;
       expect(mutated).toBe(99);
-    });
-
-    // BUG: an effect runs inside scheduleUpdate (src/app.ts), which the init promise chain
-    // calls, so an error thrown by the effect - for instance by dispatching an action that
-    // was never defined - lands in the catch meant for init failures. It is reported as an
-    // initialisation failure, with no indication that init itself succeeded, and the
-    // fallback meant for an unbuildable chart is rendered over a chart that did build. The
-    // render scheduled just before the effect ran still happens.
-    // got:  effect errors are misreported as init errors
-    // want: effect errors surface on their own
-    test("reports an effect error as an init failure", async () => {
-      const error = vi.spyOn(console, "error").mockImplementation(() => {});
-      const container = document.createElement("div");
-      container.id = "effect-fallback-target";
-      document.body.append(container);
-
-      const render = vi.fn();
-      app({
-        init: async () => (dispatch) => {
-          dispatch("missing", []);
-        },
-        render,
-        fallback: { element: "#effect-fallback-target", src: "fallback.png" },
-      });
-      await nextFrame();
-
-      expect(container.querySelector("img")).not.toBeNull();
-      expect(render).toHaveBeenCalledTimes(1);
-      expect((error.mock.calls.at(0)?.[0] as Error).message).toContain(
-        '[sszvis.app] Initialisation failed: [sszvis.app] Action "missing" is not defined'
-      );
     });
 
     // NOTE: app() returns undefined and never unregisters its resize listener, so
