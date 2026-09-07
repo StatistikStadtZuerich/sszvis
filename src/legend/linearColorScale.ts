@@ -57,7 +57,7 @@ export interface LinearColorScaleComponent extends ComponentBuilder<LinearColorS
   labelFormat(format: LabelFormatter): LinearColorScaleComponent;
 }
 
-export default function (): LinearColorScaleComponent {
+export default function legendColorLinear(): LinearColorScaleComponent {
   return (
     component<LinearColorScaleComponent>()
       .prop("scale")
@@ -84,15 +84,21 @@ export default function (): LinearColorScaleComponent {
 
         const domain = props.scale.domain();
 
+        // Equivalent to fn.last(domain), without widening the element type to undefined.
+        const domainMax = domain[domain.length - 1];
+
         let values = props.displayValues;
         if (values.length === 0 && props.scale.ticks) {
           values = props.scale.ticks(props.segments - 1);
         }
-        // Equivalent to fn.last(domain), without widening the element type to undefined.
-        values.push(domain[domain.length - 1]);
+        // Never write into the caller's array, and only extend the ramp to the domain
+        // maximum when the values do not already reach it - scale.ticks() usually does.
+        values =
+          values.length > 0 && values[values.length - 1] === domainMax
+            ? [...values]
+            : [...values, domainMax];
 
-        // Avoid division by zero
-        const segWidth = values.length > 0 ? props.width / values.length : 0;
+        const segWidth = props.width / values.length;
         const segHeight = 10;
 
         const segments = selection
@@ -108,7 +114,7 @@ export default function (): LinearColorScaleComponent {
           .attr("height", segHeight)
           .attr("fill", (d) => props.scale(d));
 
-        const startEnd = [domain[0], domain[domain.length - 1]];
+        const startEnd = [domain[0], domainMax];
         const labelText = props.labelText || startEnd;
 
         // rounded end caps for the segments
