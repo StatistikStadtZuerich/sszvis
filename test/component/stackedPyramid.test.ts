@@ -1,3 +1,4 @@
+import { scaleLinear } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   type StackedPyramidLayout,
@@ -452,7 +453,9 @@ describe("component/stackedPyramid", () => {
 
     test("should default barFill to black and tooltipAnchor to the centre", () => {
       const component = stackedPyramid();
-      expect(component.barFill()()).toBe("#000");
+      // The datum is required now that barFill is only called for a slice that has one; a
+      // constant default ignores it.
+      expect(component.barFill()({})).toBe("#000");
       expect(component.tooltipAnchor()).toEqual([0.5, 0.5]);
     });
   });
@@ -872,26 +875,85 @@ describe("component/stackedPyramid", () => {
     });
   });
 
-  describe("known quirks", () => {
-    test("collapses every bar to zero width when barWidth is a constant", () => {
-      // BUG: the width is computed as barWidth(d[1]) - barWidth(d[0]), so a constant - which
-      // fn.functor turns into a function ignoring its argument - subtracts the constant from
-      // itself and every segment disappears. pyramid accepts a constant barWidth happily,
-      // and every other bar dimension here still does, so the asymmetry is silent.
-      // current: width="0" for every segment. expected: a constant width, or an error.
-      const node = render(
-        stackedPyramid()
-          .barHeight(10)
-          .barWidth(20)
-          .barPosition(0)
-          .leftAccessor((d: Layout) => d[0])
-          .rightAccessor((d: Layout) => d[1])
-      );
-      expect(attrs(node, "rightStack", "width")).toEqual(["0", "0", "0", "0"]);
-      // The bars are still positioned, so they sit invisibly at the constant offset.
-      expect(attrs(node, "rightStack", "x")).toEqual(["20.5", "20.5", "20.5", "20.5"]);
+  describe("a constant barWidth", () => {
+    const constantOf = () =>
+      stackedPyramid()
+        .barHeight(10)
+        .barWidth(20)
+        .barPosition(0)
+        .leftAccessor((d: Layout) => d[0])
+        .rightAccessor((d: Layout) => d[1]);
+
+    test("should draw every segment at that width", () => {
+      // A constant is a segment width rather than a scale over stacked values, so it is used
+      // directly instead of being subtracted from itself.
+      const node = render(constantOf());
+      expect(attrs(node, "rightStack", "width")).toEqual(["20", "20", "20", "20"]);
+      expect(attrs(node, "rightStack", "x")).toEqual(["0.5", "0.5", "0.5", "0.5"]);
     });
 
+    test("should mirror the constant across the spine", () => {
+      const node = render(constantOf());
+      expect(attrs(node, "leftStack", "width")).toEqual(["20", "20", "20", "20"]);
+      expect(attrs(node, "leftStack", "x")).toEqual(["-20.5", "-20.5", "-20.5", "-20.5"]);
+    });
+
+    test("should not call barFill for a padding slice", () => {
+      // The slice is zero-width, so its fill is never painted - and an accessor written over
+      // the source row would be handed an undefined datum and throw, which is exactly what a
+      // sparse layout used to do through the docs examples' `colorScale(cAcc(d.data))`.
+      const seen: unknown[] = [];
+      const node = render(
+        constantOf().barFill((d: Row) => {
+          seen.push(d);
+          return d.series === "a" ? "#f00" : "#00f";
+        }),
+        layout([
+          { side: "f", row: 0, series: "a", value: 1 },
+          { side: "f", row: 0, series: "b", value: 2 },
+          { side: "f", row: 1, series: "a", value: 3 },
+          { side: "m", row: 0, series: "a", value: 4 },
+          { side: "m", row: 0, series: "b", value: 5 },
+          { side: "m", row: 1, series: "a", value: 6 },
+          { side: "m", row: 1, series: "b", value: 7 },
+        ])
+      );
+      expect(seen).not.toContain(undefined);
+      // the padding slice is left with no fill attribute rather than a colour
+      expect(attrs(node, "leftStack", "fill")).toEqual(["#f00", "#f00", "#00f", null]);
+    });
+
+    test("should keep a padding slice at zero width", () => {
+      // A row with no observation for a series is padded with a synthetic slice whose two
+      // bounds are equal. The scale branch draws that as nothing for free; a constant width
+      // has to be told, or the missing series renders as a full-width bar.
+      const node = render(
+        constantOf(),
+        layout([
+          { side: "f", row: 0, series: "a", value: 1 },
+          { side: "f", row: 0, series: "b", value: 2 },
+          { side: "f", row: 1, series: "a", value: 3 },
+          { side: "m", row: 0, series: "a", value: 4 },
+          { side: "m", row: 0, series: "b", value: 5 },
+          { side: "m", row: 1, series: "a", value: 6 },
+          { side: "m", row: 1, series: "b", value: 7 },
+        ])
+      );
+      // Row 1 of the left side has no "b", so its second slice is padding.
+      expect(attrs(node, "leftStack", "width")).toEqual(["20", "20", "20", "0"]);
+      expect(attrs(node, "rightStack", "width")).toEqual(["20", "20", "20", "20"]);
+    });
+
+    test("should read a d3 scale as a scale over the stacked values", () => {
+      // The supported shape, pinned next to the constant: the segment runs between the two
+      // numbers of the slice's pair, so a bar's width is the scaled length of its own value.
+      const node = render(constantOf().barWidth(scaleLinear().domain([0, 70]).range([0, 140])));
+      expect(attrs(node, "rightStack", "width")).toEqual(["60", "2", "80", "4"]);
+      expect(attrs(node, "rightStack", "x")).toEqual(["0.5", "0.5", "60.5", "2.5"]);
+    });
+  });
+
+  describe("known quirks", () => {
     test("calls barWidth with a stacked value rather than with the datum", () => {
       // NOTE: pyramid calls barWidth with the bar's datum; here it is called with the
       // numbers out of the [y0, y1] pair, so barWidth has to be a scale over values, not an
@@ -1189,7 +1251,6 @@ describe("component/stackedPyramid", () => {
       expect(stacks(node, "leftStack")[0]).toBe(firstStack);
       expect(attrs(node, "leftStack", "width")).toEqual(["20", "15"]);
     });
-
   });
 
   describe("nested stack groups", () => {

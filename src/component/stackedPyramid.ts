@@ -56,24 +56,23 @@
  *                                            empty axis frame with no bars and no warning. Of the
  *                                            three required dimensions only this one fails
  *                                            silently. Shared with pyramid.
- * @property {number, function} barWidth      The width of a bar. Required, and an unset prop throws
- *                                            a TypeError from the component's own closure, because
- *                                            the component computes both the x and the width of
- *                                            every bar itself. It is called with one of the numbers
- *                                            out of a slice's [y0, y1] pair rather than with the
- *                                            slice, so it has to be a scale over stacked values and
- *                                            not an accessor over data - pyramid calls the same
- *                                            property with the bar's datum, and an accessor written
- *                                            for pyramid reads properties off a number here and
- *                                            yields NaN, which bar's guard turns into 0. It is also
- *                                            called without d3's index and group, so an index-aware
- *                                            or node-aware accessor collapses every width and every
- *                                            x to 0 on both sides; pyramid has the same omission on
- *                                            its left side only. A constant is accepted and is
- *                                            worse than an error: the width is computed as
- *                                            barWidth(d[1]) - barWidth(d[0]), so a constant
- *                                            subtracts itself and every segment disappears while
- *                                            still being positioned at the constant offset.
+ * @property {number, function} barWidth      The width of a bar. Required: an unset prop throws a
+ *                                            named TypeError before anything is drawn, because the
+ *                                            component computes both the x and the width of every
+ *                                            bar itself. A function is a scale over stacked values,
+ *                                            called with one of the numbers out of a slice's [y0,
+ *                                            y1] pair rather than with the slice - pyramid calls
+ *                                            the same property with the bar's datum, and an
+ *                                            accessor written for pyramid reads properties off a
+ *                                            number here and yields NaN, which bar's guard turns
+ *                                            into 0. It is called without d3's index and group, so
+ *                                            an index-aware or node-aware accessor collapses every
+ *                                            width and every x to 0 on both sides; pyramid has the
+ *                                            same omission on its left side only. A number is the
+ *                                            constant width of every segment, measured from the
+ *                                            spine outwards, and is the one dimension not run
+ *                                            through fn.functor, so that a constant stays
+ *                                            distinguishable from a scale.
  * @property {number, function} barPosition   The vertical position of a bar, i.e. its top edge.
  *                                            Required, and an unset prop throws too, but from
  *                                            inside fn.compose ("Cannot read properties of
@@ -253,7 +252,6 @@ import bar, { type BarComponent } from "./bar.js";
 ----------------------------------------------- */
 const SPINE_PADDING = 0.5;
 
-const dataAcc = fn.prop("data");
 const rowAcc = fn.prop("row");
 
 /* Types
@@ -396,13 +394,19 @@ export function stackedPyramidData<T, S extends string | number = string>(
 ----------------------------------------------- */
 
 /**
- * How barWidth reads back once it is stored. It is wrapped by fn.functor on set, so it is
- * always a function by the time the renderer reads it, and the component calls it with one of
- * the numbers out of a slice's [y0, y1] pair - never with the slice itself. Both parameters
- * are optional because a constant becomes a functor that ignores its arguments, and because
+ * A barWidth scale: a function from one of the numbers out of a slice's [y0, y1] pair - never
+ * from the slice itself - to a distance from the spine. Both parameters are optional because
  * the component passes neither d3's index nor its group.
  */
-type StoredWidth = (value?: number, index?: number) => number;
+type WidthScale = (value?: number, index?: number) => number;
+
+/**
+ * How barWidth reads back. It is the one dimension that is not run through fn.functor, because
+ * a constant and a scale mean different things here: the component computes both the x and the
+ * width of every bar itself, so a constant is the width of a segment while a scale maps a
+ * stacked value to a distance from the spine.
+ */
+type StoredWidth = number | WidthScale;
 
 /**
  * How barPosition reads back. It is called with a row - the value the layout's row accessor
@@ -417,8 +421,8 @@ type StoredHeight<T, S extends string | number> = (
   index?: number
 ) => number;
 
-/** How barFill reads back. It is composed with the slice's `data`, so it reads a source row. */
-type StoredFill<T> = (datum?: T, index?: number) => string | undefined;
+/** How barFill reads back. It is called with the slice's `data`, so it reads a source row. */
+type StoredFill<T> = (datum: T, index?: number) => string | undefined;
 
 /** Pulls one side's series out of the datum bound to the chart layer. */
 type SideAccessor<T, S extends string | number> = (
@@ -437,9 +441,10 @@ type ReferenceAccessor<T, S extends string | number> = (
 type PyramidValue<A, R> = R | ((value: A, index: number) => R);
 
 /**
- * A constant or an accessor over a slice's source row. barFill is composed with the slice's
- * `data`, and fn.compose forwards d3's index only to the innermost function, so unlike bar's
- * own fill this one is called with the datum alone.
+ * A constant or an accessor over a slice's source row. barFill is called with the slice's `data`
+ * and with nothing else, so unlike bar's own fill it receives no index. A padding slice - one
+ * standing for a series the row has no observation for - is zero-width, so the accessor is not
+ * called for it and never has to handle a missing row.
  */
 type FillValue<U> = string | undefined | ((datum: U) => string | undefined);
 
@@ -468,9 +473,7 @@ export interface StackedPyramidComponent<T = unknown, S extends string | number 
   barWidth(): StoredWidth;
   barWidth(value: PyramidValue<number, number>): StackedPyramidComponent<T, S>;
   barPosition(): StoredPosition;
-  barPosition<U = string | number>(
-    value: PyramidValue<U, number>
-  ): StackedPyramidComponent<T, S>;
+  barPosition<U = string | number>(value: PyramidValue<U, number>): StackedPyramidComponent<T, S>;
   barFill(): StoredFill<T>;
   barFill<U = T>(value: FillValue<U>): StackedPyramidComponent<T, S>;
   tooltipAnchor(): (number | string)[];
@@ -499,67 +502,112 @@ export function stackedPyramid<
   T = unknown,
   S extends string | number = string,
 >(): StackedPyramidComponent<T, S> {
-  return component<StackedPyramidComponent<T, S>>()
-    .prop("barHeight", fn.functor)
-    .prop("barWidth", fn.functor)
-    .prop("barPosition", fn.functor)
-    .prop("barFill", fn.functor)
-    .barFill("#000")
-    .prop("tooltipAnchor")
-    .tooltipAnchor([0.5, 0.5])
-    .prop("leftAccessor")
-    .prop("rightAccessor")
-    .prop("leftRefAccessor")
-    .prop("rightRefAccessor")
-    .render(function (this: Element, data: StackedPyramidLayout<T, S>) {
-      const selection = select(this);
-      const props = selection.props<StackedPyramidProps<T, S>>();
+  return (
+    component<StackedPyramidComponent<T, S>>()
+      .prop("barHeight", fn.functor)
+      // Deliberately not fn.functor: see StoredWidth.
+      .prop("barWidth")
+      .prop("barPosition", fn.functor)
+      .prop("barFill", fn.functor)
+      .barFill("#000")
+      .prop("tooltipAnchor")
+      .tooltipAnchor([0.5, 0.5])
+      .prop("leftAccessor")
+      .prop("rightAccessor")
+      .prop("leftRefAccessor")
+      .prop("rightRefAccessor")
+      .render(function (this: Element, data: StackedPyramidLayout<T, S>) {
+        const selection = select(this);
+        const props = selection.props<StackedPyramidProps<T, S>>();
 
-      // Components
+        const barWidth = props.barWidth;
+        if (barWidth === undefined) {
+          // A misconfiguration that can never render: thrown before any element is created,
+          // because the component computes both the x and the width of every bar from it.
+          throw new TypeError(
+            "[sszvis.stackedPyramid] the barWidth property is required: pass a scale over the " +
+              "stacked values, or a number for a constant segment width."
+          );
+        }
 
-      const leftBar = bar<StackedPyramidSlice<T, S>>()
-        .x((d) => -SPINE_PADDING - props.barWidth(d[1]))
-        .y(fn.compose(props.barPosition, rowAcc))
-        .height(props.barHeight)
-        .width((d) => props.barWidth(d[1]) - props.barWidth(d[0]))
-        .fill(fn.compose(props.barFill, dataAcc))
-        .tooltipAnchor(props.tooltipAnchor);
+        // A constant barWidth is a segment width rather than a scale, so it is used directly
+        // instead of being subtracted from itself, which would collapse every bar to zero.
+        const widthScale = typeof barWidth === "function" ? barWidth : null;
+        const constantWidth = typeof barWidth === "function" ? 0 : barWidth;
+        /** The edge of a segment nearer the spine, measured outwards from it. */
+        const innerEdge = (d: StackedPyramidSlice<T, S>) => (widthScale ? widthScale(d[0]) : 0);
+        /** The edge of a segment further from the spine. */
+        const outerEdge = (d: StackedPyramidSlice<T, S>) =>
+          widthScale ? widthScale(d[1]) : constantWidth;
+        // A constant barWidth still has to respect the synthetic padding a sparse row is
+        // filled with: that slice stands for a series the row has no observation for, so it
+        // is a zero-width pad rather than a full-width bar. The scale branch gets this for
+        // free, since a pad's two bounds are equal. A genuine zero-valued observation keeps
+        // the fixed width, which is the point of constant mode.
+        const segmentWidth = (d: StackedPyramidSlice<T, S>) =>
+          widthScale
+            ? widthScale(d[1]) - widthScale(d[0])
+            : d.data === undefined
+              ? 0
+              : constantWidth;
 
-      const rightBar = bar<StackedPyramidSlice<T, S>>()
-        .x((d) => SPINE_PADDING + props.barWidth(d[0]))
-        .y(fn.compose(props.barPosition, rowAcc))
-        .height(props.barHeight)
-        .width((d) => props.barWidth(d[1]) - props.barWidth(d[0]))
-        .fill(fn.compose(props.barFill, dataAcc))
-        .tooltipAnchor(props.tooltipAnchor);
+        // A padding slice stands for a series this row has no observation for. It is drawn
+        // zero-wide, so its fill is never visible - and calling barFill for it would hand a
+        // row-shaped accessor an undefined datum, which is what used to throw. Skipped
+        // rather than widened, so the public accessor contract stays honest.
+        const barFillOf = (d: StackedPyramidSlice<T, S>) =>
+          d.data === undefined ? undefined : props.barFill(d.data);
 
-      const leftStack = stackComponent<T, S>().stackElement(leftBar);
+        // Components
 
-      const rightStack = stackComponent<T, S>().stackElement(rightBar);
+        const leftBar = bar<StackedPyramidSlice<T, S>>()
+          .x((d) => -SPINE_PADDING - outerEdge(d))
+          .y(fn.compose(props.barPosition, rowAcc))
+          .height(props.barHeight)
+          .width(segmentWidth)
+          .fill(barFillOf)
+          .tooltipAnchor(props.tooltipAnchor);
 
-      const leftLine = lineComponent()
-        .barPosition(props.barPosition)
-        .barWidth(props.barWidth)
-        .mirror(true);
+        const rightBar = bar<StackedPyramidSlice<T, S>>()
+          .x((d) => SPINE_PADDING + innerEdge(d))
+          .y(fn.compose(props.barPosition, rowAcc))
+          .height(props.barHeight)
+          .width(segmentWidth)
+          .fill(barFillOf)
+          .tooltipAnchor(props.tooltipAnchor);
 
-      const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
+        const leftStack = stackComponent<T, S>().stackElement(leftBar);
 
-      // Rendering
+        const rightStack = stackComponent<T, S>().stackElement(rightBar);
 
-      selection.selectGroup("leftStack").datum(props.leftAccessor(data)).call(leftStack);
+        // The line reads a reference point's value through the same scale, or parks it at the
+        // constant when barWidth is one.
+        const referenceWidth: WidthScale = widthScale ?? (() => constantWidth);
 
-      selection.selectGroup("rightStack").datum(props.rightAccessor(data)).call(rightStack);
+        const leftLine = lineComponent()
+          .barPosition(props.barPosition)
+          .barWidth(referenceWidth)
+          .mirror(true);
 
-      selection
-        .selectGroup("leftReference")
-        .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
-        .call(leftLine);
+        const rightLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth);
 
-      selection
-        .selectGroup("rightReference")
-        .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
-        .call(rightLine);
-    });
+        // Rendering
+
+        selection.selectGroup("leftStack").datum(props.leftAccessor(data)).call(leftStack);
+
+        selection.selectGroup("rightStack").datum(props.rightAccessor(data)).call(rightStack);
+
+        selection
+          .selectGroup("leftReference")
+          .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
+          .call(leftLine);
+
+        selection
+          .selectGroup("rightReference")
+          .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
+          .call(rightLine);
+      })
+  );
 }
 
 type StackProps<T, S extends string | number> = {
@@ -600,15 +648,15 @@ function stackComponent<T, S extends string | number>(): StackComponent<T, S> {
 
 type ReferenceLineProps = {
   barPosition: StoredPosition;
-  barWidth: StoredWidth;
+  barWidth: WidthScale;
   mirror: boolean;
 };
 
 interface ReferenceLineComponent extends ComponentBuilder<ReferenceLineComponent> {
   barPosition(): StoredPosition;
   barPosition(value: StoredPosition): ReferenceLineComponent;
-  barWidth(): StoredWidth;
-  barWidth(value: StoredWidth): ReferenceLineComponent;
+  barWidth(): WidthScale;
+  barWidth(value: WidthScale): ReferenceLineComponent;
   mirror(): boolean;
   mirror(value: boolean): ReferenceLineComponent;
 }
