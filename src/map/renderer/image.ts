@@ -171,8 +171,11 @@ export default function (): MapRendererImageComponent {
         .classed("sszvis-map__image", true);
 
       // Both corners are projected before anything is written, and the coordinates are read only
-      // as each style is applied - so a projection that fails does so after the src has been
-      // written and after both corners have been asked for, exactly as the JavaScript did.
+      // as each style is applied, so the two failure modes land in different places - exactly as
+      // the JavaScript did. A projection that *throws* does so here, before .attr("src", ...) is
+      // reached, leaving the image element joined but with no src at all. A projection that
+      // *returns null* gets this far, so the src is written and only the first coordinate read
+      // fails. See test/map/renderer/image.test.ts.
       const topLeft = props.projection(props.geoBounds[0]);
       const bottomRight = props.projection(props.geoBounds[1]);
 
