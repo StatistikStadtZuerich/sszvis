@@ -147,11 +147,28 @@ export default function slider(): SliderComponent {
         const selection = select(this);
         const props = selection.props<SliderProps>();
 
-        const scaleDomain = props.scale.domain();
+        // `value` is only dereferenced further down, once the handle is being labelled, so
+        // without this guard a slider rendered before its state exists would leave a
+        // half-built control on screen. Thrown before anything is appended, and named, so
+        // the caller is not left reading a TypeError out of fn.stringEqual.
+        if (props.value == null) {
+          throw new Error("sszvis.control.slider: the `value` property is required");
+        }
+
         const scaleRange = range(props.scale);
+        // Inset each end of the configured range towards the middle rather than rebuilding
+        // it from the sorted extent, so that a descending range keeps its direction.
+        const [rangeStart, rangeEnd] = props.scale.range() as [number, number];
+        const rangeSign = rangeStart <= rangeEnd ? 1 : -1;
+        // Clamped so that a value outside the domain pins the handle to the end of the
+        // track, and so that a drag past either end reports that end of the domain.
         const alteredScale = props.scale
           .copy()
-          .range([scaleRange[0] + HANDLE_SIDE_OFFSET, scaleRange[1] - HANDLE_SIDE_OFFSET]);
+          .range([
+            rangeStart + rangeSign * HANDLE_SIDE_OFFSET,
+            rangeEnd - rangeSign * HANDLE_SIDE_OFFSET,
+          ])
+          .clamp(true);
 
         // the mostly unchanging bits
         const bg = selection
@@ -244,10 +261,34 @@ export default function slider(): SliderComponent {
           .attr("stroke-width", BG_WIDTH - 1)
           .style("stroke", "#E0E0E0")
           .style("stroke-linecap", "round")
-          .attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET))
-          .attr("x2", (d) => Math.floor(alteredScale(d)));
+          // The fill runs from the end of the track the domain minimum sits at, which is
+          // the right-hand end for a descending range.
+          .attr(
+            "x1",
+            rangeSign === 1
+              ? Math.ceil(rangeStart + LINE_END_OFFSET)
+              : Math.floor(rangeStart - LINE_END_OFFSET)
+          )
+          .attr("x2", (d) =>
+            rangeSign === 1 ? Math.floor(alteredScale(d)) : Math.ceil(alteredScale(d))
+          );
 
         // draw the handle and the label
+        /**
+         * Which end of the track the handle sits at: -1 at the low-pixel end, 1 at the
+         * high-pixel end, 0 anywhere in between. Compared with a sub-pixel tolerance,
+         * since the drawn position is a rounded copy of the inset range.
+         */
+        const handleSide = (d: SliderValue) => {
+          const x = alteredScale(d);
+          const [insetStart, insetEnd] = alteredScale.range() as [number, number];
+          const low = Math.min(insetStart, insetEnd);
+          const high = Math.max(insetStart, insetEnd);
+          if (x <= low + 1) return -1;
+          if (x >= high - 1) return 1;
+          return 0;
+        };
+
         const handle = selection
           .selectAll<SVGGElement, SliderValue>("g.sszvis-control-slider__handle")
           .data([props.value])
@@ -261,20 +302,17 @@ export default function slider(): SliderComponent {
           .join("text")
           .classed("sszvis-control-slider--label", true)
           .text(props.label)
-          .style("text-anchor", (d) =>
-            fn.stringEqual(d, scaleDomain[0])
-              ? "start"
-              : fn.stringEqual(d, scaleDomain[1])
-                ? "end"
-                : "middle"
-          )
-          .attr("dx", (d) =>
-            fn.stringEqual(d, scaleDomain[0])
-              ? -(HANDLE_WIDTH / 2)
-              : fn.stringEqual(d, scaleDomain[1])
-                ? HANDLE_WIDTH / 2
-                : 0
-          );
+          // Anchored from the pixel the handle is drawn at, not from the value's position
+          // in the domain. A descending range draws the domain's first value at the right-hand end,
+          // where a domain-keyed "start" anchor sends a long label - a date, typically -
+          // off the track instead of tucking it inside; and a value outside the domain is
+          // clamped to an end without equalling either bound, so it would be centred over
+          // an edge. Both fall out of asking which end of the track the handle is at.
+          .style("text-anchor", (d) => {
+            const side = handleSide(d);
+            return side === 0 ? "middle" : side < 0 ? "start" : "end";
+          })
+          .attr("dx", (d) => handleSide(d) * (HANDLE_WIDTH / 2));
 
         handle
           .selectAll<SVGRectElement, number>(".sszvis-control-slider__handlebox")
