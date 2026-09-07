@@ -341,7 +341,11 @@ function interpolatedDivergentColorScale(
   if (!scale.range()) return scale;
   const length = scale.range().length;
 
-  (scale as any).domain = function (dom?: number[]): number[] | ScaleLinear<LabColor, LabColor> {
+  // d3 types the scale's own .domain as read-only from the outside; this replaces it in
+  // place, which is the whole point of these two wrappers.
+  (scale as unknown as { domain: unknown }).domain = function (
+    dom?: number[]
+  ): number[] | ScaleLinear<LabColor, LabColor> {
     if (!dom) return nativeDomain.call(this, []);
     const xDomain: number[] = [];
     for (let i = 0; i < length; i++) {
@@ -370,7 +374,11 @@ function interpolatedColorScale(
 ): ScaleLinear<LabColor, LabColor> {
   const nativeDomain = scale.domain;
 
-  (scale as any).domain = function (dom?: number[]): number[] | ScaleLinear<LabColor, LabColor> {
+  // d3 types the scale's own .domain as read-only from the outside; this replaces it in
+  // place, which is the whole point of these two wrappers.
+  (scale as unknown as { domain: unknown }).domain = function (
+    dom?: number[]
+  ): number[] | ScaleLinear<LabColor, LabColor> {
     if (arguments.length === 1 && dom && dom.length === 2) {
       const threeDomain = [dom[0], mean(dom) || 0, dom[1]];
       return nativeDomain.call(this, threeDomain);

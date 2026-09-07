@@ -20,7 +20,7 @@ describe("d3-component", () => {
 
     test("should bind setter context to component", () => {
       let contextCheck: unknown = null;
-      const comp = component().prop("test", function (this: any, value) {
+      const comp = component().prop("test", function (this: unknown, value) {
         contextCheck = this;
         return value;
       });
@@ -38,7 +38,7 @@ describe("d3-component", () => {
 
     test("should pass correct context to render function", () => {
       let renderContext: unknown = null;
-      const renderFn = function (this: any) {
+      const renderFn = function (this: unknown) {
         renderContext = this;
       };
       const selection = select(document.createElement("div")).call(component().render(renderFn));
@@ -48,7 +48,7 @@ describe("d3-component", () => {
     test("should receive data in render function", () => {
       const testData = [{ value: 42 }];
       let receivedData: unknown = null;
-      const renderFn = (data: any) => {
+      const renderFn = (data: unknown) => {
         receivedData = data;
       };
       select(document.createElement("div")).data(testData).call(component().render(renderFn));

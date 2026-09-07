@@ -49,6 +49,7 @@
  * @method responsiveProps.prop
  */
 
+import type { PartialBreakpoint } from "./breakpoint.js";
 import {
   breakpointCreateSpec,
   breakpointDefaultSpec,
@@ -81,7 +82,8 @@ export interface ResponsivePropsInstance {
   (measurements: Measurement): Record<string, unknown>;
   prop<T>(propName: string, propSpec: ResponsivePropValue<T>): ResponsivePropsInstance;
   breakpoints(): Breakpoint[];
-  breakpoints(bps: Breakpoint[]): ResponsivePropsInstance;
+  /** Takes partial definitions - breakpointCreateSpec parses each into a full Breakpoint. */
+  breakpoints(bps: PartialBreakpoint[]): ResponsivePropsInstance;
 }
 
 /* Exported module
@@ -228,7 +230,9 @@ export function responsiveProps(): ResponsivePropsInstance {
    *   { name: 'large', width: 700 }
    * ])
    */
-  const breakpoints: ResponsivePropsInstance["breakpoints"] = ((...args: [] | [Breakpoint[]]) => {
+  const breakpoints: ResponsivePropsInstance["breakpoints"] = ((
+    ...args: [] | [PartialBreakpoint[]]
+  ) => {
     if (args.length === 0) {
       return breakpointSpec;
     }

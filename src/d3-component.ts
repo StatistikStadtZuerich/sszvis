@@ -1,12 +1,25 @@
 import { type BaseType, selection as d3Selection, type Selection } from "d3";
-import type { AnySelection } from "./types.js";
+import type { $IntentionalAny, AnySelection } from "./types.js";
 
+/**
+ * The props bag a component accumulates through `.prop()`. Its keys are only known at
+ * runtime, from the calls the factory made, so the values cannot be typed here - each
+ * component's own interface is what states them.
+ */
 export interface ComponentProps {
-  [key: string]: any;
+  [key: string]: $IntentionalAny;
 }
-export type RenderCallback = (this: any, ...args: any[]) => void;
-export type SelectionRenderCallback = (this: any, ...args: any[]) => void;
-export type PropertySetter<T = any> = (...args: any[]) => T;
+
+/**
+ * Render callbacks are invoked by d3 with `this` bound to the node or selection being
+ * rendered, and receive whatever arguments d3 passes at that point. Components narrow both
+ * at their own declaration site, e.g. `function (this: SVGGElement, data: Datum[])`.
+ */
+export type RenderCallback = (this: $IntentionalAny, ...args: $IntentionalAny[]) => void;
+export type SelectionRenderCallback = (this: $IntentionalAny, ...args: $IntentionalAny[]) => void;
+
+/** A prop setter receives whatever the component's own interface declares for that prop. */
+export type PropertySetter<T = $IntentionalAny> = (...args: $IntentionalAny[]) => T;
 /**
  * A delegate is any object exposing the delegated prop as a getter/setter method. Component
  * interfaces declare their props individually rather than through an index signature, so this
@@ -46,7 +59,9 @@ export interface ComponentBuilder<C> extends ComponentCallable {
  * specific interface extending `ComponentBuilder<Self>` over this.
  */
 export interface Component extends ComponentBuilder<Component> {
-  [key: string]: any;
+  // The escape hatch itself: this is what makes an unnamed component resolve any member.
+  // A component that declares its own interface no longer inherits it.
+  [key: string]: $IntentionalAny;
 }
 
 /**
@@ -87,11 +102,14 @@ export function component<C extends Component = Component>(): C {
    */
   function sszvisComponent(selection: AnySelection): void {
     if (selectionRenderer) {
-      (selection as any).props = (): ComponentProps => clone(props);
+      // Attach the props reader d3's Selection prototype is augmented with below.
+      (selection as unknown as { props: () => ComponentProps }).props = (): ComponentProps =>
+        clone(props);
       selectionRenderer.apply(selection, slice(arguments));
     }
     selection.each(function () {
-      (this as any).__props__ = clone(props);
+      // Stash the props on the node itself, where selection.props() reads them back.
+      (this as unknown as { __props__: ComponentProps }).__props__ = clone(props);
       renderer.apply(this, slice(arguments));
     });
   }
@@ -105,9 +123,13 @@ export function component<C extends Component = Component>(): C {
    * @return {sszvis.component}
    */
   sszvisComponent.prop = <T>(prop: string, setter: PropertySetter<T> = identity): Component => {
-    (sszvisComponent as any)[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(
-      sszvisComponent
-    );
+    // The accessor is created from a runtime prop name, so it cannot be assigned through
+    // a statically known key.
+    (sszvisComponent as unknown as ComponentProps)[prop] = accessor(
+      props,
+      prop,
+      setter.bind(sszvisComponent)
+    ).bind(sszvisComponent);
     return sszvisComponent as Component;
   };
 
@@ -119,11 +141,13 @@ export function component<C extends Component = Component>(): C {
    * @return {sszvis.component}
    */
   sszvisComponent.delegate = (prop: string, delegate: PropertyDelegate): Component => {
-    (sszvisComponent as any)[prop] = (...args: any[]): any => {
-      const result = (delegate as Record<string, (...a: any[]) => any>)[prop].apply(
-        delegate,
-        slice(args)
-      );
+    // Same as in prop(): a runtime prop name on both the component and the delegate.
+    (sszvisComponent as unknown as ComponentProps)[prop] = (
+      ...args: $IntentionalAny[]
+    ): $IntentionalAny => {
+      const result = (delegate as Record<string, (...a: $IntentionalAny[]) => $IntentionalAny>)[
+        prop
+      ].apply(delegate, slice(args));
       return args.length === 0 ? result : sszvisComponent;
     };
     return sszvisComponent as Component;
@@ -184,9 +208,11 @@ d3Selection.prototype.props = function (): ComponentProps {
   // getting props.
   if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
   if (this.size() !== 1) throw new Error("only one group is supported");
-  if ((this as any)._groups[0].length !== 1) throw new Error("only one node is supported");
+  // _groups is d3's internal selection storage and is not part of its public types.
+  const groups = (this as unknown as { _groups: { __props__?: ComponentProps }[][] })._groups;
+  if (groups[0].length !== 1) throw new Error("only one node is supported");
 
-  const group = (this as any)._groups[0];
+  const group = groups[0];
   const node = group[0];
   return node.__props__ || {};
 };
@@ -201,7 +227,9 @@ d3Selection.prototype.props = function (): ComponentProps {
  * @return {Function} The accessor function
  */
 function accessor(props: ComponentProps, prop: string, setter: PropertySetter = identity) {
-  return function (this: Component, ...args: any[]): any {
+  // Getter when called with no arguments, setter otherwise - the two return different
+  // things, and the prop's own declaration in the component interface states which.
+  return function (this: Component, ...args: $IntentionalAny[]): $IntentionalAny {
     if (args.length === 0) return props[prop];
 
     props[prop] = setter.apply(null, args);
@@ -213,7 +241,7 @@ function identity<T>(d: T): T {
   return d;
 }
 
-function slice(arrayLike: ArrayLike<any>): any[] {
+function slice(arrayLike: ArrayLike<$IntentionalAny>): $IntentionalAny[] {
   return Array.prototype.slice.call(arrayLike);
 }
 

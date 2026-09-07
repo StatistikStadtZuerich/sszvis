@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { responsiveProps } from "../src/responsiveProps.js";
+import type { Measurement } from "../src/types.js";
 
 describe("responsiveProps", () => {
   const testBreakpoints = [
@@ -28,7 +29,7 @@ describe("responsiveProps", () => {
       const rProps = responsiveProps().prop("test", {
         _: "fallback",
       });
-      const result = rProps("invalid" as any);
+      const result = rProps("invalid" as unknown as Measurement);
       // BUG: There's a bug in the library where fallback values aren't properly returned
       expect(result.test).toBeUndefined();
     });
@@ -36,26 +37,22 @@ describe("responsiveProps", () => {
 
   describe("breakpoints configuration", () => {
     test("should set custom breakpoints", () => {
-      const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
-        .prop("size", {
-          small: "small-size",
-          medium: "medium-size",
-          large: "large-size",
-          _: "default-size",
-        });
+      const rProps = responsiveProps().breakpoints(testBreakpoints).prop("size", {
+        small: "small-size",
+        medium: "medium-size",
+        large: "large-size",
+        _: "default-size",
+      });
       expect(typeof rProps.breakpoints).toBe("function");
     });
 
     test("should use custom breakpoints for property selection", () => {
-      const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
-        .prop("layout", {
-          small: "mobile",
-          medium: "tablet",
-          large: "desktop",
-          _: "wide",
-        });
+      const rProps = responsiveProps().breakpoints(testBreakpoints).prop("layout", {
+        small: "mobile",
+        medium: "tablet",
+        large: "desktop",
+        _: "wide",
+      });
       const smallResult = rProps({ width: 300, screenWidth: 1024, screenHeight: 768 });
       expect(smallResult.layout).toBe("mobile");
       const mediumResult = rProps({ width: 600, screenWidth: 1024, screenHeight: 768 });
@@ -69,21 +66,19 @@ describe("responsiveProps", () => {
 
   describe("prop configuration", () => {
     test("should define properties with static values", () => {
-      const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
-        .prop("color", {
-          small: "red",
-          medium: "blue",
-          large: "green",
-          _: "black",
-        });
+      const rProps = responsiveProps().breakpoints(testBreakpoints).prop("color", {
+        small: "red",
+        medium: "blue",
+        large: "green",
+        _: "black",
+      });
       const result = rProps({ width: 600, screenWidth: 1024, screenHeight: 768 });
       expect(result.color).toBe("blue");
     });
 
     test("should define properties with function values", () => {
       const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
+        .breakpoints(testBreakpoints)
         .prop("height", {
           small: (w) => w / 2,
           medium: (w) => w / 3,
@@ -96,7 +91,7 @@ describe("responsiveProps", () => {
 
     test("should handle mixed static and function values", () => {
       const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
+        .breakpoints(testBreakpoints)
         .prop("margin", {
           small: 10,
           medium: (w) => w * 0.05,
@@ -109,7 +104,7 @@ describe("responsiveProps", () => {
 
     test("should support multiple properties", () => {
       const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
+        .breakpoints(testBreakpoints)
         .prop("columns", {
           small: 1,
           medium: 2,
@@ -130,38 +125,32 @@ describe("responsiveProps", () => {
 
   describe("breakpoint matching logic", () => {
     test("should use fallback for undefined breakpoints", () => {
-      const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
-        .prop("spacing", {
-          small: 5,
-          // medium intentionally omitted
-          large: 15,
-          _: 20,
-        });
+      const rProps = responsiveProps().breakpoints(testBreakpoints).prop("spacing", {
+        small: 5,
+        // medium intentionally omitted
+        large: 15,
+        _: 20,
+      });
       const mediumResult = rProps({ width: 600, screenWidth: 1024, screenHeight: 768 });
       expect(mediumResult.spacing).toBe(15); // Should use next available breakpoint (large)
     });
 
     test("should always require fallback case", () => {
-      const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
-        .prop("test", {
-          small: "small-val",
-          _: "fallback-val", // Always required
-        });
+      const rProps = responsiveProps().breakpoints(testBreakpoints).prop("test", {
+        small: "small-val",
+        _: "fallback-val", // Always required
+      });
       const result = rProps({ width: 1500, screenWidth: 1600, screenHeight: 900 });
       expect(result.test).toBe("fallback-val");
     });
 
     test("should handle edge case at breakpoint boundaries", () => {
-      const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
-        .prop("size", {
-          small: "S",
-          medium: "M",
-          large: "L",
-          _: "XL",
-        });
+      const rProps = responsiveProps().breakpoints(testBreakpoints).prop("size", {
+        small: "S",
+        medium: "M",
+        large: "L",
+        _: "XL",
+      });
       const exactMedium = rProps({ width: 800, screenWidth: 1024, screenHeight: 768 });
       expect(exactMedium.size).toBe("M");
       const overMedium = rProps({ width: 801, screenWidth: 1024, screenHeight: 768 });
@@ -172,7 +161,7 @@ describe("responsiveProps", () => {
   describe("method chaining", () => {
     test("should support method chaining", () => {
       const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
+        .breakpoints(testBreakpoints)
         .prop("prop1", { _: "value1" })
         .prop("prop2", { _: "value2" });
       expect(typeof rProps).toBe("function");
@@ -183,7 +172,7 @@ describe("responsiveProps", () => {
 
     test("should return responsiveProps instance from configuration methods", () => {
       const rProps = responsiveProps();
-      const afterBreakpoints = rProps.breakpoints(testBreakpoints as any);
+      const afterBreakpoints = rProps.breakpoints(testBreakpoints);
       expect(afterBreakpoints).toBe(rProps);
       const afterProp = rProps.prop("test", { _: "test" });
       expect(afterProp).toBe(rProps);
@@ -194,8 +183,8 @@ describe("responsiveProps", () => {
     test("should consider both width and screen dimensions", () => {
       const rProps = responsiveProps()
         .breakpoints([
-          { name: "mobile", width: 600, screenWidth: 768 } as any,
-          { name: "desktop", width: 1000, screenWidth: 1200 } as any,
+          { name: "mobile", width: 600, screenWidth: 768 },
+          { name: "desktop", width: 1000, screenWidth: 1200 },
         ])
         .prop("display", {
           mobile: "mobile-view",
@@ -214,7 +203,7 @@ describe("responsiveProps", () => {
       const rProps = responsiveProps().prop("test", {
         _: "fallback",
       });
-      const result = rProps(undefined as any);
+      const result = rProps(undefined as unknown as Measurement);
       // BUG: Library bug - fallback not properly returned
       expect(result.test).toBeUndefined();
     });
@@ -223,7 +212,7 @@ describe("responsiveProps", () => {
       const rProps = responsiveProps().prop("test", {
         _: "fallback",
       });
-      const result = rProps({ someOtherProp: 100 } as any);
+      const result = rProps({ someOtherProp: 100 } as unknown as Measurement);
       // BUG: Library bug - fallback not properly returned
       expect(result.test).toBeUndefined();
     });
@@ -239,7 +228,7 @@ describe("responsiveProps", () => {
   describe("real-world usage patterns", () => {
     test("should handle aspect ratio calculations", () => {
       const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
+        .breakpoints(testBreakpoints)
         .prop("height", {
           small: (w) => w / (4 / 3), // 4:3 aspect ratio
           medium: (w) => w / (16 / 9), // 16:9 aspect ratio
@@ -252,7 +241,7 @@ describe("responsiveProps", () => {
 
     test("should handle complex responsive configurations", () => {
       const rProps = responsiveProps()
-        .breakpoints(testBreakpoints as any)
+        .breakpoints(testBreakpoints)
         .prop("orientation", {
           small: "vertical",
           medium: "horizontal",

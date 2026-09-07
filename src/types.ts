@@ -7,6 +7,17 @@
 import type { NumberValue, Selection } from "d3";
 
 /**
+ * The one sanctioned `any` in this codebase. Use it where a type genuinely cannot be
+ * expressed - d3 internals, variadic combinators, the untyped component core - and always
+ * with a comment saying which. Everywhere else, prefer `unknown` and narrow.
+ *
+ * Named with a `$` so it is obvious at a glance and greppable: `rg '\$IntentionalAny'`
+ * lists every remaining escape hatch.
+ */
+// biome-ignore lint/suspicious/noExplicitAny: the alias exists so that every other `any` can be banned
+export type $IntentionalAny = any;
+
+/**
  * Generic type for SVG element selections with sensible defaults
  */
 export type SVGElementSelection<T extends SVGElement> = Selection<T, unknown, null, undefined>;
@@ -14,7 +25,14 @@ export type SVGElementSelection<T extends SVGElement> = Selection<T, unknown, nu
 /**
  * Generic selection type with default parameters
  */
-export type AnySelection<T = any> = Selection<any, T, any, any>;
+export type AnySelection<T = $IntentionalAny> = Selection<
+  // d3 selections are invariant in their element and parent-datum parameters, so anything
+  // narrower here stops the many selections this alias stands in for assigning to it.
+  $IntentionalAny,
+  T,
+  $IntentionalAny,
+  $IntentionalAny
+>;
 
 /**
  * Type for elements that can be selected - CSS selector string or d3 selection
@@ -49,7 +67,8 @@ export interface Measurement {
   width: number;
   screenHeight: number;
   screenWidth?: number;
-  bounds?: any;
+  /** A bounds object, when the measurement came from one. Shape varies by caller. */
+  bounds?: $IntentionalAny;
 }
 
 /**
