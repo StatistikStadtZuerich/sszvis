@@ -65,6 +65,28 @@ describe("stackedAreaMultiplesLayout", () => {
     });
   });
 
+  describe("degenerate inputs", () => {
+    const EMPTY = { range: [], bandHeight: 0, padHeight: 0 };
+
+    test("a zero height has no band to lay out", () => {
+      // the step would be 0, so the baseline loop could never reach the bottom of the chart
+      expect(layoutStackedAreaMultiples(0, 5)).toEqual(EMPTY);
+    });
+
+    test("zero stacks have no band to lay out", () => {
+      // the step would be negative, so the baselines would march upwards without bound
+      expect(layoutStackedAreaMultiples(300, 0)).toEqual(EMPTY);
+    });
+
+    test("a padding ratio larger than the stack count has no band to lay out", () => {
+      expect(layoutStackedAreaMultiples(300, 3, 4)).toEqual(EMPTY);
+    });
+
+    test("a negative height has no band to lay out", () => {
+      expect(layoutStackedAreaMultiples(-300, 3)).toEqual(EMPTY);
+    });
+  });
+
   describe("known quirks", () => {
     test("the loop terminates on an absolute 1px tolerance, so small charts get extra bands", () => {
       // BUG: the baseline loop runs `while (level - height < 1)`. The 1 is an absolute pixel
@@ -112,34 +134,6 @@ describe("stackedAreaMultiplesLayout", () => {
       expect(layout.bandHeight).toBe(675);
     });
 
-    // BUG: these two inputs make the baseline loop run forever, freezing the browser tab.
-    // The loop needs a step that is <= 0 AND a first baseline that is already inside the
-    // chart, so `level` never grows past `height + 1`:
-    //   height 0          -> step 0, bandHeight 0, and level stays at 0
-    //   num < pct < 1     -> step negative and bandHeight negative, so level decreases
-    //                        without bound. num 0 with the 0.1 default is this case.
-    // A pct above 1 escapes it: the negative step is multiplied by a negative (1 - pct), so
-    // the first baseline lands below the chart and the loop never runs at all - see the two
-    // tests below.
-    // want: a guard that returns an empty layout instead of looping.
-    // These stay skipped because running them hangs the test runner rather than failing it.
-    test.skip("a zero height loops forever", () => {
-      layoutStackedAreaMultiples(0, 5);
-    });
-
-    test.skip("zero stacks loops forever", () => {
-      layoutStackedAreaMultiples(300, 0);
-    });
-
-    test("a pct above num does not hang, it returns an empty range", () => {
-      // NOTE: the neighbouring input that looks like it should hang but does not. step is
-      // -300, but bandHeight is step * (1 - 4) = 900, which fails the loop condition
-      // immediately.
-      const layout = layoutStackedAreaMultiples(300, 3, 4);
-      expect(layout.range).toEqual([]);
-      expect(layout.bandHeight).toBe(900);
-    });
-
     test("a pct equal to num emits a single -Infinity baseline", () => {
       // BUG: step is Infinity here, and bandHeight is Infinity * (1 - 3) = -Infinity, which
       // passes the loop condition once before `level += step` makes it NaN and stops the
@@ -164,13 +158,5 @@ describe("stackedAreaMultiplesLayout", () => {
       }
     });
 
-    test("a negative height produces an empty range rather than hanging", () => {
-      // NOTE: the step is negative here too, but the first baseline already fails the loop
-      // condition, so the layout escapes the infinite loop that a zero height falls into.
-      // The returned bandHeight is still negative and unusable.
-      const layout = layoutStackedAreaMultiples(-300, 3);
-      expect(layout.range).toEqual([]);
-      expect(layout.bandHeight).toBeLessThan(0);
-    });
   });
 });

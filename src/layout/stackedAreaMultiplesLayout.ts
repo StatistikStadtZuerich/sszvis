@@ -33,10 +33,8 @@
  *   back empty; with a pct above 1 the first baseline is -Infinity and the range holds that one
  *   unusable value.
  * - 0.1 < num < 1 also yields an empty range (the first baseline already sits below the chart).
- * - A zero height, or num < pct < 1, makes both the step and the first baseline non-positive, and
- *   the baseline loop then runs forever (WARNING: no guard). A pct above 1 escapes this, because
- *   the negative step is multiplied by a negative (1 - pct) and the loop never starts.
- * - A negative height returns an empty range with a negative, unusable bandHeight.
+ * - A step that is not strictly positive - a zero or negative height, or a num at or below pct -
+ *   describes no band at all, and the layout comes back empty rather than looping forever.
  */
 
 export type StackedAreaMultiplesLayout = {
@@ -45,10 +43,22 @@ export type StackedAreaMultiplesLayout = {
   padHeight: number;
 };
 
-export default function (height: number, num: number, pct?: number): StackedAreaMultiplesLayout {
+/** Nothing can be drawn: no baselines, and no band or padding to report. */
+const EMPTY_LAYOUT: StackedAreaMultiplesLayout = { range: [], bandHeight: 0, padHeight: 0 };
+
+export default function layoutStackedAreaMultiples(
+  height: number,
+  num: number,
+  pct?: number
+): StackedAreaMultiplesLayout {
   const padRatio = pct || 0.1;
-  const step = height / (num - padRatio),
-    bandHeight = step * (1 - padRatio),
+  const step = height / (num - padRatio);
+  // A non-positive step never reaches the bottom of the chart, so the baseline loop below
+  // would never terminate. An infinite one - num and pct both 0, or both 1, either of
+  // which divides by zero - overshoots on the first iteration and yields NaN geometry.
+  // There is no layout to describe in either case.
+  if (!(step > 0) || !Number.isFinite(step)) return { ...EMPTY_LAYOUT };
+  const bandHeight = step * (1 - padRatio),
     range: number[] = [];
   let level = bandHeight; // count from the top, and start at the bottom of the first band
   while (level - height < 1) {
