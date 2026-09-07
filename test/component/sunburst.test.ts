@@ -189,7 +189,7 @@ describe("component/sunburst", () => {
       g.datum(hierarchyOf()).call(component as never);
       const node = g.node() as SVGGElement;
       expect(arcs(node).length).toBe(5);
-      expect(anchorNodes(node).length).toBe(6);
+      expect(anchorNodes(node).length).toBe(5);
     });
 
     test("should remove arcs when the data shrinks", () => {
@@ -289,7 +289,7 @@ describe("component/sunburst", () => {
       // through the anchor, which sits on the arc's bisector: half a turn starting at zero
       // bisects at 3 o'clock, so the anchor is due right of the centre.
       const node = render(sunburstOf(), hierarchyOf());
-      const [x, y] = points(node)[1];
+      const [x, y] = points(node)[0];
       expect(x).toBeCloseTo(160, 6);
       expect(y).toBeCloseTo(0, 6);
     });
@@ -300,7 +300,7 @@ describe("component/sunburst", () => {
         sunburstOf().angleScale(scaleLinear().range([0, Math.PI])),
         hierarchyOf()
       );
-      const [x, y] = points(node)[1];
+      const [x, y] = points(node)[0];
       expect(x).toBeCloseTo(160 * Math.cos(-Math.PI / 4), 6);
       expect(y).toBeCloseTo(160 * Math.sin(-Math.PI / 4), 6);
     });
@@ -340,9 +340,9 @@ describe("component/sunburst", () => {
     test("should place the anchor halfway through the ring", () => {
       const node = render(sunburstOf(), hierarchyOf());
       // depth 1 spans 110 to 210, so its anchor sits at 160 from the centre.
-      expect(Math.hypot(...points(node)[1])).toBeCloseTo(160, 6);
+      expect(Math.hypot(...points(node)[0])).toBeCloseTo(160, 6);
       // depth 2 spans 210 to 310.
-      expect(Math.hypot(...points(node)[3])).toBeCloseTo(260, 6);
+      expect(Math.hypot(...points(node)[1])).toBeCloseTo(260, 6);
     });
 
     test("should clamp a negative radius to the centre radius", () => {
@@ -352,7 +352,7 @@ describe("component/sunburst", () => {
         sunburstOf().radiusScale(() => -100),
         hierarchyOf()
       );
-      expect(Math.hypot(...points(node)[1])).toBeCloseTo(10, 6);
+      expect(Math.hypot(...points(node)[0])).toBeCloseTo(10, 6);
     });
   });
 
@@ -458,7 +458,7 @@ describe("component/sunburst", () => {
     test("should place the anchor on the arc's bisector, midway through its ring", () => {
       // B covers the second half of the circle, so it bisects at 9 o'clock, 160 out.
       const node = render(sunburstOf(), hierarchyOf());
-      const [x, y] = points(node)[2];
+      const [x, y] = points(node)[3];
       expect(x).toBeCloseTo(-160, 6);
       expect(y).toBeCloseTo(0, 6);
     });
@@ -474,12 +474,30 @@ describe("component/sunburst", () => {
       g.datum(hierarchyOf()).call(component as never);
       g.datum(hierarchyOf([{ cat: "A", sub: "A1", value: 1 }])).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(anchorNodes(node).length).toBe(3);
+      expect(anchorNodes(node).length).toBe(2);
     });
 
     test("should match the arcs one to one for a pre-flattened array", () => {
       const flattened = [...hierarchyOf()].filter((d) => d.data._tag !== "root");
       const node = render(sunburstOf(), flattened);
+      expect(anchorKeys(node)).toEqual(keys(node));
+    });
+
+    test("should render one anchor per arc, and none for the invisible root", () => {
+      // The anchors are joined to the same flattened array as the arcs, which drops the
+      // root - so no anchor describes a node that has no arc. Rendering them from the
+      // group's datum instead would hand d3 the hierarchy, which it iterates into every
+      // descendant including the root.
+      const node = render(sunburstOf(), hierarchyOf());
+      expect(anchorNodes(node).length).toBe(arcs(node).length);
+      for (const anchor of anchorNodes(node)) {
+        expect(datumOf(anchor).data._tag).not.toBe("root");
+        expect(datumOf(anchor).data.key).toBeDefined();
+      }
+    });
+
+    test("should order the anchors the way the arcs are ordered", () => {
+      const node = render(sunburstOf(), hierarchyOf());
       expect(anchorKeys(node)).toEqual(keys(node));
     });
   });
@@ -614,41 +632,6 @@ describe("component/sunburst", () => {
       expect(attrs(node, "d")).toEqual([null, null, null, null, null]);
       await nextFrame();
       for (const d of attrs(node, "d")) expect(d).not.toBeNull();
-    });
-
-    test("gives the root its own tooltip anchor, with no arc and no key", () => {
-      // BUG: the arcs are joined to the flattened array, which drops the root, but the
-      // anchors are joined to whatever datum is bound to the group - the hierarchy root.
-      // d3 turns that into an array by iterating it, and a d3 hierarchy node iterates over
-      // itself and all its descendants, so the root gets an anchor too. It sits in the
-      // middle of the empty innermost ring, and the docs' pattern of selecting
-      // `[data-tooltip-anchor]` binds a tooltip to it as well. In the docs example that
-      // tooltip never becomes visible, because visibility there is driven by the panning
-      // behaviour over `.sszvis-sunburst-arc` and the root has no arc - but any caller who
-      // drives visibility off the anchors themselves gets a tooltip for a node whose data
-      // has no `key` at all.
-      // current: 6 anchors for 5 arcs, the first one being the root. expected: one anchor per
-      // rendered arc.
-      const node = render(sunburstOf(), hierarchyOf());
-      expect(arcs(node).length).toBe(5);
-      expect(anchorNodes(node).length).toBe(6);
-      const root = datumOf(anchorNodes(node)[0]);
-      expect(root.data._tag).toBe("root");
-      expect(root.data.key).toBeUndefined();
-      expect(root.depth).toBe(0);
-    });
-
-    test("orders the anchors breadth first while the arcs are depth first", () => {
-      // BUG: the same root cause as the anchor above, not a second defect - the anchors are
-      // iterated off the hierarchy, which yields breadth first, while the arcs are flattened
-      // depth first. So anchor i and arc i are different nodes. Nothing in sszvis pairs the
-      // two lists by index today, since each anchor carries its own datum, which makes this
-      // latent rather than active; it does mean any index-based zip of the two is wrong.
-      // current: anchors [root, A, B, A1, A2, B1] against arcs [A, A1, A2, B, B1].
-      // expected: the same order in both.
-      const node = render(sunburstOf(), hierarchyOf());
-      expect(keys(node)).toEqual(["A", "A1", "A2", "B", "B1"]);
-      expect(anchorKeys(node)).toEqual([undefined, "A", "B", "A1", "A2", "B1"]);
     });
 
     test("leaves the tooltip anchors one render behind the arcs", async () => {
