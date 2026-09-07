@@ -60,8 +60,11 @@
  * Note: the exit selection is handled inside join()'s third argument, since join() removes the
  * departing nodes itself and returns only the merged enter+update selection.
  *
- * Note: the join is keyed on geoJson.id, falling back to the feature's position in the merged data
- * for a feature without one, so a keyless collection keeps its circles across renders too.
+ * Note: the join is keyed on geoJson.id. A feature without one is given an identity of its own,
+ * held against the feature object, so a keyless collection keeps its circles across renders too.
+ * The identity is the object, not its contents: a caller who rebuilds equivalent feature objects
+ * between renders gets fresh circles rather than the previous ones, and should author ids if it
+ * needs the circles to persist.
  *
  * Note: the radius accessor is called once per circle for the radius itself and again for each
  * comparison the size sort makes, so it runs several times more often than there are data.
@@ -146,9 +149,6 @@ export interface MapRendererBubbleComponent<T = unknown>
  * Held against the feature object, which is the same object from one render to the next for a
  * given collection, and weakly so a discarded collection is still collectable.
  */
-/** The events this component dispatches, and the ones its hit testing depends on. */
-const BUBBLE_EVENTS = ["over", "out", "click"] as const;
-
 const anonymousKeys = new WeakMap<object, string>();
 let anonymousCount = 0;
 
@@ -218,9 +218,15 @@ function anchorPosition(
 export default function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T> {
   const event = dispatch("over", "out", "click");
 
-  /** Whether a consumer registered any of this component's three handlers. */
-  const hasListeners = () =>
-    BUBBLE_EVENTS.some((name) => event.on(name) !== undefined && event.on(name) !== null);
+  /**
+   * The typenames a consumer registered, tallied in on() below because d3's dispatch cannot be
+   * asked what it holds: dispatch.on("over") reports only the handler registered under the bare
+   * name, and returns undefined for one registered as "over.tooltip".
+   */
+  const registered = new Set<string>();
+
+  /** Whether any of this component's handlers is registered, under any namespace. */
+  const hasListeners = () => registered.size > 0;
 
   const anchoredCirclesComponent = component<MapRendererBubbleComponent<T>>()
     .prop("mergedData")
@@ -316,7 +322,16 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
   // "over.tooltip".
   anchoredCirclesComponent.on = ((...args: [string, never]) => {
     const value = event.on.apply(event, args);
-    return value === event ? anchoredCirclesComponent : value;
+    if (value !== event) return value;
+
+    // A setter call, and d3 validated the typenames by returning the dispatch. It accepts a
+    // space-separated list of them, and a null handler removes rather than registers.
+    const [typenames, handler] = args;
+    for (const typename of String(typenames).trim().split(/\s+/)) {
+      if (handler == null) registered.delete(typename);
+      else registered.add(typename);
+    }
+    return anchoredCirclesComponent;
   }) as MapRendererBubbleComponent<T>["on"];
 
   return anchoredCirclesComponent;
