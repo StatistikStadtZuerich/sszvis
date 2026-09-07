@@ -71,7 +71,11 @@ describe("map/renderer/highlight", () => {
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__highlight"),
   ];
 
-  /** Captures the console warnings a render emits, restoring console.warn afterwards. */
+  /**
+   * Captures the warnings a render emits, restoring console.warn afterwards. The renderer warns
+   * through sszvis.logger, which delegates to console.warn - spying on the console rather than on
+   * the logger keeps this pinned to what a consumer actually sees.
+   */
   const captureWarnings = () => {
     const warnings: string[] = [];
     const spy = vi.spyOn(console, "warn").mockImplementation((...args: unknown[]) => {

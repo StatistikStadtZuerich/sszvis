@@ -37,8 +37,8 @@
  *                                                    Default 2. Returning null removes the inline style, leaving SVG's
  *                                                    initial width of 1.
  *
- * Note: an entity id that matches no feature is dropped from the join and reported with a single
- * console warning per render, naming every unmatched id. It is a warning rather than a throw
+ * Note: an entity id that matches no feature is dropped from the join and reported through
+ * sszvis.logger.warn once per render, naming every unmatched id. It is a warning rather than a throw
  * because a highlight normally tracks a transient hover or selection, and an id can legitimately
  * go stale between two renders - crashing a chart mid-interaction would be worse than the missing
  * highlight. Nothing is appended for an unmatched id, so the renderer no longer leaves a classed,
@@ -113,6 +113,7 @@ import type { ExtendedFeature, ExtendedFeatureCollection, GeoPath } from "d3";
 import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
+import * as logger from "../../logger.js";
 import { GEO_KEY_DEFAULT, toLookupKey } from "../mapUtils.js";
 
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
@@ -205,12 +206,15 @@ const toObject: (value: unknown) => object = Object;
  * rather than once per entry. A warning rather than a throw, because a highlight normally tracks a
  * transient hover or selection - throwing would take a whole chart down mid-interaction over an id
  * that may simply have gone stale between two renders.
+ *
+ * Goes through sszvis.logger rather than console directly, like every other diagnostic in the
+ * library, so warnings stay identifiable as sszvis's and can be silenced in one place.
  */
 function warnUnmatched(unmatchedIds: unknown[], keyName: string): void {
   if (unmatchedIds.length === 0) return;
   const ids = unmatchedIds.map((id) => String(id)).join(", ");
-  console.warn(
-    `sszvis.mapRendererHighlight: no map entity has the ${keyName} ${ids}; nothing was highlighted for it. Check that the highlight ids match the geoJson feature ids, including their format ("01" and "1" are different entities).`
+  logger.warn(
+    `[mapRendererHighlight] no map entity has the ${keyName} ${ids}; nothing was highlighted for it. Check that the highlight ids match the geoJson feature ids, including their format ("01" and "1" are different entities).`
   );
 }
 
