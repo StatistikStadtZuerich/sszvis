@@ -39,16 +39,16 @@
  *                                      chart, a linear scale over the stacked values, used for
  *                                      both the top edge and the height of every segment; on a
  *                                      horizontal chart, a band scale over the stack values.
- *                                      Also not defaulted, and also throws when unset.
+ *                                      Also not defaulted, and also throws by name when unset.
  * @property {number, function} width   Required by the vertical orientation, which sizes its
  *                                      bars with it - usually xScale.bandwidth(). The
  *                                      horizontal orientation computes its width from xScale
  *                                      and never reads the property. Omitting it on a vertical
- *                                      chart is not reported: every bar gets width 0.
+ *                                      chart throws.
  * @property {number, function} height  Required by the horizontal orientation, and ignored by
  *                                      the vertical one, which computes its height from yScale.
- *                                      Fails just as silently when omitted on a horizontal
- *                                      chart: every bar gets height 0.
+ *                                      Omitting it on a horizontal chart throws, just as the
+ *                                      vertical orientation does for width.
  * @property {string, function} fill    Optional. A constant or an accessor over a slice. When
  *                                      unset, no fill attribute is written at all and the
  *                                      rectangles fall back to the SVG/CSS default.
@@ -86,9 +86,9 @@
  * its size. The layout reports the extent as `minValue` and `maxValue`, so the value scale's
  * domain has to be built from both to make room for it.
  *
- * Note: the four scale and size properties are required but neither defaulted nor validated.
- * Two of them fail silently as zero-size bars, and the two scales throw a low-level TypeError
- * that names neither the property nor the component.
+ * Note: the scale and size properties each orientation reads are required and are validated
+ * before anything is drawn: a chart built without one throws an error naming the component and
+ * the missing property, rather than rendering zero-size bars or failing inside a helper.
  *
  * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
  * selector and no key function, so any pre-existing stack below the target group, at any depth,
@@ -351,6 +351,20 @@ export interface StackedBarHorizontalComponent<T = unknown, X extends string | n
 }
 
 /**
+ * Throws for any of the named props the caller never set. The two orientations need
+ * different ones, and each silently ignores the other's, so the message names the component
+ * as well as the property. Called before anything is drawn, so a misconfigured chart renders
+ * nothing rather than a grid of zero-size bars.
+ */
+function requireProps(name: string, props: object, required: string[]): void {
+  for (const prop of required) {
+    if (Reflect.get(props, prop) === undefined) {
+      throw new Error(`sszvis.${name}: the "${prop}" property is required, but was not set`);
+    }
+  }
+}
+
+/**
  * Joins one group per series and draws that series' slices with the bar component. This is
  * everything the two orientations have in common; they differ only in how the four bar
  * dimensions are derived from the props.
@@ -383,6 +397,7 @@ export function stackedBarHorizontal<
     .render(function (this: Element, data: StackedBarSeries<T, X>[]) {
       const selection = select(this);
       const props = selection.props<HorizontalProps<T, X>>();
+      requireProps("stackedBarHorizontal", props, ["xScale", "yScale", "height"]);
 
       const barGen = bar<StackedBarSlice<T, X>>()
         // The lower of the two scaled bounds, so a segment whose value is negative is drawn
@@ -412,6 +427,7 @@ export function stackedBarVertical<
     .render(function (this: Element, data: StackedBarSeries<T, X>[]) {
       const selection = select(this);
       const props = selection.props<VerticalProps<T, X>>();
+      requireProps("stackedBarVertical", props, ["xScale", "yScale", "width"]);
 
       const barGen = bar<StackedBarSlice<T, X>>()
         .x(fn.compose(props.xScale, stackAcc))

@@ -539,33 +539,37 @@ describe("component/stackedBar", () => {
   });
 
   describe("missing props", () => {
-    test("should collapse the bars to zero width when width is unset on a vertical chart", () => {
-      // BUG: `width` is required by the vertical orientation but is neither defaulted nor
-      // validated. fn.functor boxes the missing value into a constant function returning
-      // undefined, which bar's missing-value guard turns into 0.
-      // current: width="0" for every rect, no warning. expected: an error naming the prop.
-      const node = render(stackedBarVertical().xScale(xBand).yScale(yLinear));
-      expect(rects(node).length).toBe(4);
-      expect(new Set(attrs(rects(node), "width"))).toEqual(new Set(["0"]));
+    test("should throw when width is unset on a vertical chart", () => {
+      expect(() => render(stackedBarVertical().xScale(xBand).yScale(yLinear))).toThrow(
+        'sszvis.stackedBarVertical: the "width" property is required, but was not set'
+      );
     });
 
-    test("should collapse the bars to zero height when height is unset on a horizontal chart", () => {
-      // BUG: same silent failure on the other orientation.
-      // current: height="0" for every rect, no warning. expected: an error naming the prop.
-      const node = render(stackedBarHorizontal().xScale(xLinear).yScale(yBand), horizontalData());
-      expect(rects(node).length).toBe(4);
-      expect(new Set(attrs(rects(node), "height"))).toEqual(new Set(["0"]));
+    test("should throw when height is unset on a horizontal chart", () => {
+      expect(() =>
+        render(stackedBarHorizontal().xScale(xLinear).yScale(yBand), horizontalData())
+      ).toThrow('sszvis.stackedBarHorizontal: the "height" property is required, but was not set');
+    });
+
+    test("should draw nothing at all when a required prop is missing", () => {
+      const g = group("missing-width");
+      expect(() =>
+        g.datum(verticalData()).call(stackedBarVertical().xScale(xBand) as never)
+      ).toThrow();
+      expect(rects(g.node() as SVGGElement).length).toBe(0);
+      expect(stacks(g.node() as SVGGElement).length).toBe(0);
     });
 
     test("should throw when the x-scale is unset", () => {
-      // NOTE: the scales are the only props whose absence is reported at all, and only
-      // because fn.compose calls undefined - "Cannot read properties of undefined (reading
-      // 'call')" names neither the prop nor the component.
-      expect(() => render(stackedBarVertical().width(10).yScale(yLinear))).toThrow();
+      expect(() => render(stackedBarVertical().width(10).yScale(yLinear))).toThrow(
+        'sszvis.stackedBarVertical: the "xScale" property is required, but was not set'
+      );
     });
 
     test("should throw when the y-scale is unset", () => {
-      expect(() => render(stackedBarVertical().xScale(xBand).width(10))).toThrow();
+      expect(() => render(stackedBarVertical().xScale(xBand).width(10))).toThrow(
+        'sszvis.stackedBarVertical: the "yScale" property is required, but was not set'
+      );
     });
   });
 
@@ -641,10 +645,11 @@ describe("component/stackedBar", () => {
       // NOTE: d3.stack sets `d.data` to the whole cascade row - an object of every series
       // in that stack - and the layout overwrites it with the single row the slice came
       // from. Convenient for tooltips, but it means the slice can no longer reach its
-      // sibling series, and the value is a live reference into the caller's data.
+      // sibling series, and the value is a live reference into the caller's data. It is
+      // typed as optional because a stack that carries no row for a series has none.
       const layout = verticalData();
       expect(layout[0][0].data).toBe(rows[0]);
-      expect(layout[0][0].data.category).toBe("X");
+      expect(layout[0][0].data?.category).toBe("X");
     });
 
     test("falls back to the white separator stroke for every falsy value", () => {
