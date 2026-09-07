@@ -35,7 +35,10 @@
  *                                                    (default: true) With it set, the fill is only applied through the
  *                                                    transition, so a color change fades from the previous color; with it
  *                                                    unset the fill is written synchronously. An entering entity has no
- *                                                    previous color, so it takes the final color at the first tick.
+ *                                                    previous color, so it takes the final color at the first tick. Only a
+ *                                                    color-to-color change is transitioned; an entity entering or leaving
+ *                                                    the missing value texture takes its fill synchronously either way,
+ *                                                    since a paint-server reference cannot be interpolated.
  *
  * Note: the scheduled transition keeps d3's defaults of 250ms and easeCubicInOut rather than the
  * intended 500ms easePolyOut. `.transition().call(slowTransition)` returns the original
@@ -89,6 +92,15 @@ import { type GeoPoint, getGeoJsonCenter, type MergedGeoDatum } from "../mapUtil
  * with undefined throughout, since the layer is drawing geometry rather than encoding values.
  */
 type MapValue<T, R> = R | ((datum: T | undefined) => R);
+
+/**
+ * Whether a fill value references a paint server rather than naming a colour. An absent attribute
+ * counts as neither: an entering area has no previous fill, and d3's rgb interpolator treats an
+ * unparseable start as a constant, so it still reaches its colour on the first tick.
+ */
+function isPaintServer(fill: string | null): boolean {
+  return fill?.startsWith("url(") ?? false;
+}
 
 /** Where a layer records the pattern id it was given, so re-renders reuse it. */
 const MISSING_PATTERN_ID_ATTR = "data-sszvis-missing-pattern-id";
@@ -186,7 +198,9 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
       }
 
       const mapAreas = selection
-        .selectAll(".sszvis-map__area")
+        // Typed to the element the join creates, so the fill filters below can read the fill
+        // currently in the DOM without narrowing d3's nullable BaseType at every call.
+        .selectAll<SVGPathElement, MergedGeoDatum<T>>(".sszvis-map__area")
         .data(props.mergedData)
         .join("path")
         .classed("sszvis-map__area", true)
@@ -201,8 +215,23 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
       // The fill is applied exactly once, so the transition has the previous colour to interpolate
       // from. Writing it to the plain selection first would put the final colour in the DOM before
       // the tween started, and the tween would then interpolate that colour onto itself.
+      //
+      // Only a colour-to-colour change can be tweened. d3 has no interpolator for a paint-server
+      // reference, so it falls back to interpolating the numbers embedded in the two strings: the
+      // "-1" of "url(#missing-pattern-1)" pairs with a colour's channels and the tween spends its
+      // whole run pointing at patterns that do not exist - "url(#missing-pattern255)" - which paint
+      // nothing, so the area vanishes until the transition lands. An area entering or leaving the
+      // missing-value texture therefore takes its fill synchronously.
       if (props.transitionColor) {
-        mapAreas.transition().call(slowTransition).attr("fill", getMapFill);
+        const tweenable = function (this: SVGPathElement, d: MergedGeoDatum<T>): boolean {
+          return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
+        };
+        mapAreas.filter(tweenable).transition().call(slowTransition).attr("fill", getMapFill);
+        mapAreas
+          .filter(function (this: SVGPathElement, d: MergedGeoDatum<T>) {
+            return !tweenable.call(this, d);
+          })
+          .attr("fill", getMapFill);
       } else {
         mapAreas.attr("fill", getMapFill);
       }
