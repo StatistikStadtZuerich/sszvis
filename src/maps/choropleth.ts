@@ -74,11 +74,10 @@
  * fitSize gets undefined, the scale is NaN, and every area carries a path of NaN coordinates that
  * the browser drops, leaving a blank map instead of an error.
  *
- * Note: the lake and the anchored shape are not removed once drawn. Turning withLake off, or
- * clearing anchoredShape, only stops the renderer being called; the lake, its border path, the
- * pattern definition and the shape's own elements stay in the DOM from the previous render. The
- * highlight is the exception - the highlight renderer removes its paths for an empty highlight
- * array - which is what makes the other two read as oversights rather than as house style.
+ * Note: the lake and the anchored shape are each drawn into a group of this component's own, so
+ * that turning withLake off, or clearing anchoredShape, removes what the previous render drew
+ * rather than merely skipping the renderer. Every layer that can be switched off therefore clears
+ * itself: the highlight through its own renderer, these two through their groups.
  *
  * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
  * renderer's own default of true, so the fade mask and its gradient are not created unless the
@@ -113,10 +112,12 @@ import {
   type ExtendedFeatureCollection,
   type GeoPath,
   type GeoPermissibleObjects,
+  type Selection,
   select,
   type ValueFn,
 } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
+import "../d3-selectgroup.js";
 import {
   GEO_KEY_DEFAULT,
   type MergedGeoDatum,
@@ -285,6 +286,26 @@ function entityDatum<T extends object>(bound: unknown): T | undefined {
   return (bound as { datum?: T }).datum;
 }
 
+/**
+ * The selectGroup keys the two removable layers are drawn under. A group carries everything its
+ * renderer produced - the lake's two paths and its pattern, gradient and mask definitions among
+ * them - so removing it removes the layer whole.
+ */
+const LAKE_GROUP = "lake";
+const SHAPE_GROUP = "anchoredShape";
+
+/**
+ * Removes one of those groups, if an earlier render created it. Scoped to the direct children of
+ * the map group so that a group of the same name further down - an anchored shape's own, say -
+ * is left alone.
+ */
+function removeGroup<G extends BaseType, D, P extends BaseType, PD>(
+  selection: Selection<G, D, P, PD>,
+  key: string
+): void {
+  selection.selectAll(`:scope > [data-d3-selectgroup="${key}"]`).remove();
+}
+
 export default function <T extends object = object>(): ChoroplethComponent<T> {
   const event = dispatch("over", "out", "click");
 
@@ -348,8 +369,15 @@ export default function <T extends object = object>(): ChoroplethComponent<T> {
 
       selection.call(baseRenderer).call(meshRenderer);
 
+      // The lake and the anchored shape are both optional, and both have to be removable: a render
+      // that switches one off must undo what an earlier render drew, the way the highlight
+      // renderer clears its paths for an empty highlight. Each is drawn into a group of this
+      // component's own, so switching it off is removing that group - which works for an anchored
+      // shape whose markup this component knows nothing about.
       if (props.withLake) {
-        selection.call(lakeRenderer);
+        selection.selectGroup(LAKE_GROUP).call(lakeRenderer);
+      } else {
+        removeGroup(selection, LAKE_GROUP);
       }
 
       selection.call(highlightRenderer);
@@ -357,7 +385,9 @@ export default function <T extends object = object>(): ChoroplethComponent<T> {
       if (props.anchoredShape) {
         props.anchoredShape.mergedData(mergedData).mapPath(mapPath);
 
-        selection.call(props.anchoredShape);
+        selection.selectGroup(SHAPE_GROUP).call(props.anchoredShape);
+      } else {
+        removeGroup(selection, SHAPE_GROUP);
       }
 
       // Event Binding
