@@ -17,8 +17,7 @@
  *                                                    undefined.
  * @property {d3.geo.path} mapPath                    A path-generator used to create the path data string for each matched
  *                                                    feature. A d3.geoPath or a bare generator function is accepted; it is
- *                                                    called with the matched feature, or with undefined where nothing
- *                                                    matched, for which a d3.geoPath returns null.
+ *                                                    called only with features that were actually matched.
  * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
  *                                                    A falsy keyName is used as given, unlike prepareMergedGeoData, which
  *                                                    falls back to the default - so an empty keyName reads datum[""],
@@ -32,10 +31,12 @@
  *                                                    Default 2. Returning null removes the inline style, leaving SVG's
  *                                                    initial width of 1.
  *
- * Note: an entity id that matches no feature is not reported. The lookup yields undefined, the
- * path generator returns null for it, and d3 removes the attribute - leaving a classed, styled
- * path with no geometry. A caller highlighting a stale or misspelled id sees nothing happen and
- * cannot tell that from the entity being off-screen.
+ * Note: an entity id that matches no feature is dropped from the join and reported with a single
+ * console warning per render, naming every unmatched id. It is a warning rather than a throw
+ * because a highlight normally tracks a transient hover or selection, and an id can legitimately
+ * go stale between two renders - crashing a chart mid-interaction would be worse than the missing
+ * highlight. Nothing is appended for an unmatched id, so the renderer no longer leaves a classed,
+ * fully styled path with no geometry behind.
  *
  * Note: the feature lookup keys on feature.id, which GeoJSON does not require, and goes through a
  * Map. Ids are still stringified on both sides - a numeric feature id is matched by either a
@@ -113,16 +114,15 @@ type HighlightValue<T, R> = R | ((datum: T) => R);
 type StoredHighlightValue<T, R> = (datum: T) => R;
 
 /**
- * The path generator as this component calls it: with the matched feature, or with undefined where
- * nothing matched. A d3.geoPath satisfies this at runtime - it returns null for a non-feature - but
- * not by its types, so the setter accepts either shape and HighlightProps states how the component
- * actually calls it.
+ * The path generator as this component calls it: with a matched feature only, since unmatched ids
+ * are dropped before the join. A d3.geoPath satisfies this at runtime but not by its types, so the
+ * setter accepts either shape and HighlightProps states how the component actually calls it.
  */
 export type HighlightPath = (feature: unknown) => string | null;
 
-/** A highlighted datum paired with the feature the lookup matched it to, if any. */
+/** A highlighted datum paired with the feature the lookup matched it to. */
 interface HighlightedFeature<T> {
-  geoJson: ExtendedFeature | undefined;
+  geoJson: ExtendedFeature;
   datum: T;
 }
 
@@ -174,6 +174,20 @@ function readEntityKey(datum: unknown, keyName: string): unknown {
 const toObject: (value: unknown) => object = Object;
 
 /**
+ * Reports the highlight ids no map entity answers to: once per render, with every unmatched id,
+ * rather than once per entry. A warning rather than a throw, because a highlight normally tracks a
+ * transient hover or selection - throwing would take a whole chart down mid-interaction over an id
+ * that may simply have gone stale between two renders.
+ */
+function warnUnmatched(unmatchedIds: unknown[], keyName: string): void {
+  if (unmatchedIds.length === 0) return;
+  const ids = unmatchedIds.map((id) => String(id)).join(", ");
+  console.warn(
+    `sszvis.mapRendererHighlight: no map entity has the ${keyName} ${ids}; nothing was highlighted for it. Check that the highlight ids match the geoJson feature ids, including their format ("01" and "1" are different entities).`
+  );
+}
+
+/**
  * Normalises a lookup key the way a property access does: a symbol stays a symbol key, everything
  * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
  * with the geojson renderer's own lookup.
@@ -213,17 +227,22 @@ export default function <T = unknown>(): MapRendererHighlightComponent<T> {
         return m;
       }, new Map());
 
-      // merge the highlight data
+      // merge the highlight data, collecting the ids no map entity answers to
+      const unmatchedIds: unknown[] = [];
       const mergedHighlight = props.highlight.reduce<HighlightedFeature<T>[]>((m, v) => {
         if (v) {
           const entityId = readEntityKey(v, props.keyName);
-          m.push({
-            geoJson: entityId == null ? undefined : groupedMapData.get(toLookupKey(entityId)),
-            datum: v,
-          });
+          const feature = entityId == null ? undefined : groupedMapData.get(toLookupKey(entityId));
+          if (feature === undefined) {
+            unmatchedIds.push(entityId);
+          } else {
+            m.push({ geoJson: feature, datum: v });
+          }
         }
         return m;
       }, []);
+
+      warnUnmatched(unmatchedIds, props.keyName);
 
       highlightBorders
         .data(mergedHighlight)

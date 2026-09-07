@@ -1,6 +1,6 @@
 import { geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
 import { swissMapProjection } from "../../../src/map/mapUtils.js";
@@ -40,6 +40,7 @@ describe("map/renderer/highlight", () => {
   let container: HTMLDivElement;
   let layerKey = 0;
   let pathKey = 0;
+  const warnedSpies: { mockRestore: () => void }[] = [];
 
   beforeEach(() => {
     container = document.createElement("div");
@@ -49,6 +50,8 @@ describe("map/renderer/highlight", () => {
 
   afterEach(() => {
     container?.parentNode?.removeChild(container);
+    for (const spy of warnedSpies) spy.mockRestore();
+    warnedSpies.length = 0;
   });
 
   const group = (key?: string) =>
@@ -67,6 +70,16 @@ describe("map/renderer/highlight", () => {
   const highlights = (node: Element) => [
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__highlight"),
   ];
+
+  /** Captures the console warnings a render emits, restoring console.warn afterwards. */
+  const captureWarnings = () => {
+    const warnings: string[] = [];
+    const spy = vi.spyOn(console, "warn").mockImplementation((...args: unknown[]) => {
+      warnings.push(args.map(String).join(" "));
+    });
+    warnedSpies.push(spy);
+    return warnings;
+  };
 
   /**
    * A mapPath that records what it is called with, so a test can tell "matched nothing" from
@@ -295,6 +308,56 @@ describe("map/renderer/highlight", () => {
   });
 
   describe("entity matching", () => {
+    // An id no feature answers to is dropped rather than drawn: it used to leave a classed, fully
+    // styled path with no "d" behind, which is invisible and indistinguishable from a legitimately
+    // off-screen entity.
+    test("appends nothing for an id that matches no feature", () => {
+      captureWarnings();
+      const node = render((c) => c.highlight([{ geoId: "nope" }]));
+      expect(highlights(node)).toHaveLength(0);
+    });
+
+    test("reports an unmatched id, naming the id and the keyName", () => {
+      const warnings = captureWarnings();
+      render((c) => c.highlight([{ geoId: "nope" }]));
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain("nope");
+      expect(warnings[0]).toContain("geoId");
+    });
+
+    // Reported once per render with every unmatched id, not once per entry, so a chart re-rendering
+    // on every mouse move does not flood the console per datum.
+    test("reports every unmatched id in a single warning per render", () => {
+      const warnings = captureWarnings();
+      render((c) => c.highlight([{ geoId: "nope" }, { geoId: "a" }, { geoId: "also-nope" }]));
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain("nope");
+      expect(warnings[0]).toContain("also-nope");
+    });
+
+    test("stays silent when every id matches", () => {
+      const warnings = captureWarnings();
+      render((c) => c.highlight([{ geoId: "a" }, { geoId: "b" }]));
+      expect(warnings).toEqual([]);
+    });
+
+    // The matched entities still render; an unmatched neighbour does not take them down with it.
+    test("still highlights the matched entities alongside an unmatched id", () => {
+      captureWarnings();
+      const features = collection();
+      const mapPath = mapPathOf();
+      const node = group()
+        .call(
+          mapRendererHighlight<Datum>()
+            .geoJson(features)
+            .mapPath(mapPath)
+            .highlight([{ geoId: "nope" }, { geoId: "a" }])
+        )
+        .node() as SVGGElement;
+      expect(highlights(node)).toHaveLength(1);
+      expect(highlights(node)[0].getAttribute("d")).toBe(mapPath(features.features[0]));
+    });
+
     // The lookup goes through a Map holding only the ids the geoJson actually supplies, so a
     // feature without an id is not addressable and a datum naming no entity matches nothing.
     // Previously every keyless feature collapsed onto the single key "undefined" and the last of
@@ -304,25 +367,30 @@ describe("map/renderer/highlight", () => {
         type: "FeatureCollection",
         features: [square(undefined), square(undefined, 2)],
       };
+      captureWarnings();
       const seen = seenFeatures();
-      group().call(
-        mapRendererHighlight<Datum>().geoJson(features).mapPath(seen.mapPath).highlight([{}])
-      );
-      expect(seen.features).toEqual([undefined]);
+      const node = group()
+        .call(mapRendererHighlight<Datum>().geoJson(features).mapPath(seen.mapPath).highlight([{}]))
+        .node() as SVGGElement;
+      expect(highlights(node)).toHaveLength(0);
+      expect(seen.features).toEqual([]);
     });
 
     // A Map holds no inherited keys, so an id naming an Object.prototype member is absent like any
     // other id the geoJson does not supply. A plain object literal handed the inherited function
     // to the path generator instead, which is observable in what mapPath is called with.
     test("treats an id naming an Object.prototype member as unmatched", () => {
+      captureWarnings();
       const seen = seenFeatures();
-      render((c) => c.mapPath(seen.mapPath).highlight([{ geoId: "valueOf" }]));
-      expect(seen.features).toEqual([undefined]);
+      const node = render((c) => c.mapPath(seen.mapPath).highlight([{ geoId: "valueOf" }]));
+      expect(highlights(node)).toHaveLength(0);
+      expect(seen.features).toEqual([]);
     });
 
     // "__proto__" is the sharper case: assigning it on a plain object literal replaces that
     // object's prototype instead of creating an entry, which corrupts every later lookup.
     test("treats an id of __proto__ as unmatched without disturbing other lookups", () => {
+      captureWarnings();
       const features = collection();
       const seen = seenFeatures();
       group().call(
@@ -331,7 +399,7 @@ describe("map/renderer/highlight", () => {
           .mapPath(seen.mapPath)
           .highlight([{ geoId: "__proto__" }, { geoId: "a" }, { geoId: "nope" }])
       );
-      expect(seen.features).toEqual([undefined, features.features[0], undefined]);
+      expect(seen.features).toEqual([features.features[0]]);
     });
 
     // NOTE: lookup keys are stringified on both sides, so a numeric feature id matches both a
@@ -355,17 +423,6 @@ describe("map/renderer/highlight", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: an entity id that matches no feature is not reported. The lookup yields undefined,
-    // geoPath(undefined) returns null, and d3 removes the attribute - leaving a classed, styled
-    // path with no geometry. A caller highlighting a typo'd or stale id sees nothing happen, and
-    // cannot tell that from "the entity is off-screen".
-    test("renders a styled but empty path for an id that matches no feature", () => {
-      const node = render((c) => c.highlight([{ geoId: "nope" }]));
-      expect(highlights(node)).toHaveLength(1);
-      expect(highlights(node)[0].hasAttribute("d")).toBe(false);
-      expect(highlights(node)[0].style.stroke).toBe("white");
-    });
-
     // NOTE: falsy entries are dropped by the merge, so a sparse or partially-cleared highlight
     // array is tolerated. Note the asymmetry with the empty case: dropping every entry still
     // renders the join with zero data rather than taking the early return, which is unobservable
@@ -596,11 +653,12 @@ describe("map/renderer/highlight", () => {
 
     // NOTE: a falsy keyName is used as given, unlike prepareMergedGeoData in mapUtils, which
     // falls back to GEO_KEY_DEFAULT. Here an empty keyName reads datum[""], which is undefined,
-    // and so matches a keyless feature rather than the intended entity.
+    // so nothing matches - now reported rather than silently drawn as an empty path.
     test("uses an empty keyName as given rather than falling back to geoId", () => {
+      const warnings = captureWarnings();
       const node = render((c) => c.keyName("").highlight([{ geoId: "a" }]));
-      expect(highlights(node)).toHaveLength(1);
-      expect(highlights(node)[0].hasAttribute("d")).toBe(false);
+      expect(highlights(node)).toHaveLength(0);
+      expect(warnings).toHaveLength(1);
     });
 
     // NOTE: the render callback returns early with `true` in the empty case and undefined
