@@ -47,10 +47,12 @@
  * throws, a namespaced name such as "over.tooltip" is accepted, and null removes a handler.
  *
  * Note: the circles are drawn into a group appended after the base layer's areas, so they paint on
- * top of them. They are decoration rather than a hit area, so they carry pointer-events: none and
- * let the pointer through to the area beneath - which is what keeps the base layer's handlers, and
- * so choropleth's tooltips, working over the middle of a bubble. The corollary is that this
- * component's own over, out and click handlers are not reachable from a real pointer.
+ * top of them. Where no handler is registered on this component they are decoration rather than a
+ * hit area, so they carry pointer-events: none and let the pointer through to the area beneath -
+ * which is what keeps the base layer's handlers, and so choropleth's tooltips, working over the
+ * middle of a bubble. Registering over, out or click restores hit testing on the circles, since a
+ * consumer who wants those handlers is asking for the bubbles to be the target; the base layer's
+ * handlers are then shadowed over each bubble, as they were before this note was written.
  *
  * Note: the circles are sorted by radius descending, so the largest paint first and smaller ones sit
  * on top of them. That is a DOM reordering, so the rendered order does not follow mergedData.
@@ -136,14 +138,37 @@ export interface MapRendererBubbleComponent<T = unknown>
 }
 
 /**
- * The join key: the feature id, which GeoJSON does not require. A feature without one falls back to
- * its position in the merged data, so a keyless collection still keeps each circle across renders
- * instead of collapsing every feature onto the key "undefined". The "#" prefix keeps the fallback
- * from colliding with a real numeric id. d3 appends "" to whatever this returns, so an id is
- * stringified either way; String() only makes that explicit for the type.
+ * A stable identity for a feature carrying no id. It cannot be the feature's position: d3 computes
+ * an existing node's key from the selection that node is in, and this component sorts that
+ * selection by radius, so a positional key means something different on the next render. Two
+ * keyless features would then keep their elements but exchange which feature each one stands for.
+ *
+ * Held against the feature object, which is the same object from one render to the next for a
+ * given collection, and weakly so a discarded collection is still collectable.
  */
-function keyOf<T>(d: MergedGeoDatum<T>, index: number): string {
-  return d.geoJson.id == null ? `#${index}` : String(d.geoJson.id);
+/** The events this component dispatches, and the ones its hit testing depends on. */
+const BUBBLE_EVENTS = ["over", "out", "click"] as const;
+
+const anonymousKeys = new WeakMap<object, string>();
+let anonymousCount = 0;
+
+function anonymousKey(feature: object): string {
+  const existing = anonymousKeys.get(feature);
+  if (existing !== undefined) return existing;
+  const key = `anonymous:${++anonymousCount}`;
+  anonymousKeys.set(feature, key);
+  return key;
+}
+
+/**
+ * The join key: the feature id, which GeoJSON does not require. A feature without one falls back to
+ * an identity of its own, so a keyless collection still keeps each circle across renders instead of
+ * collapsing every feature onto the key "undefined". The two namespaces are disjoint, so no real id
+ * - not even the string "anonymous:1" - can be read as a fallback key. d3 appends "" to whatever
+ * this returns, so an id is stringified either way; String() only makes that explicit for the type.
+ */
+function keyOf<T>(d: MergedGeoDatum<T>): string {
+  return d.geoJson.id == null ? anonymousKey(d.geoJson) : `id:${String(d.geoJson.id)}`;
 }
 
 /** Reads the datum off a merged entry, as the JavaScript's module-level accessor did. */
@@ -190,8 +215,12 @@ function anchorPosition(
   return projected;
 }
 
-export default function <T = unknown>(): MapRendererBubbleComponent<T> {
+export default function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T> {
   const event = dispatch("over", "out", "click");
+
+  /** Whether a consumer registered any of this component's three handlers. */
+  const hasListeners = () =>
+    BUBBLE_EVENTS.some((name) => event.on(name) !== undefined && event.on(name) !== null);
 
   const anchoredCirclesComponent = component<MapRendererBubbleComponent<T>>()
     .prop("mergedData")
@@ -252,12 +281,18 @@ export default function <T = unknown>(): MapRendererBubbleComponent<T> {
         .style("fill", (d) => props.fill(d.datum))
         .style("stroke", (d) => props.strokeColor(d.datum))
         .style("stroke-width", (d) => props.strokeWidth(d.datum))
-        // The circles paint over the base layer's areas, which carry the map's event targets. They
-        // are decoration, not a hit area, so they let the pointer through to the area beneath -
-        // the same way the mesh and lake overlay layers stay out of the way. Without this the
-        // middle of every bubble is a dead zone: choropleth binds its handlers to
-        // [data-event-target], which a circle is not.
-        .style("pointer-events", "none")
+        // The circles paint over the base layer's areas, which carry the map's event targets. Where
+        // this component has no listeners of its own they are decoration, not a hit area, so they
+        // let the pointer through to the area beneath - the same way the mesh and lake overlay
+        // layers stay out of the way. Without that the middle of every bubble is a dead zone:
+        // choropleth binds its handlers to [data-event-target], which a circle is not.
+        //
+        // A consumer who registered over/out/click on the bubbles themselves is asking for exactly
+        // that hit area, though, so it is left in place for them rather than silently withdrawing
+        // the public on() API. Removing the property restores the inherited default.
+        // Written through a value function because d3 types style() as accepting either a value or
+        // null, never a union of the two.
+        .style("pointer-events", () => (hasListeners() ? null : "none"))
         .sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
 
       // Remove the --entering modifier from the updating circles
