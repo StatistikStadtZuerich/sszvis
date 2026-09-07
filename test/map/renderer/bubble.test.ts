@@ -1,4 +1,4 @@
-import { geoCentroid } from "d3";
+import { easePolyOut, geoCentroid } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
@@ -246,7 +246,7 @@ describe("map/renderer/bubble", () => {
       );
       expect(scheduled).toHaveLength(1);
       expect(scheduled[0].duration).toBe(300);
-      expect(scheduled[0].ease.name).not.toBe("cubicInOut");
+      expect(scheduled[0].ease).toBe(easePolyOut);
     });
   });
 
@@ -584,6 +584,28 @@ describe("map/renderer/bubble", () => {
       expect(component.fill()).toBeUndefined();
       expect(component.mergedData()).toBeUndefined();
       expect(component.mapPath()).toBeUndefined();
+    });
+
+    // NOTE: the projection's result is indexed without a guard, so a projection that answers null
+    // for a point it cannot place throws rather than reporting that the entity is off the
+    // projection. d3's own projections return a point for every input when called directly, so
+    // this needs a caller-supplied one - but choropleth builds the path generator itself, which is
+    // what keeps it out of reach in practice.
+    test("throws when the projection cannot place a feature's centre", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      // @ts-expect-error - a bare function is all the renderer calls, though d3 types the setter
+      // as taking a full projection.
+      mapPath.projection(() => null);
+      expect(() =>
+        group().call(
+          mapRendererBubble()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .mapPath(mapPath)
+            .radius(5)
+            .fill("#ff0000")
+        )
+      ).toThrow(TypeError);
     });
 
     // NOTE: this component adds no tooltip anchors of its own. A bubble map's tooltips are
