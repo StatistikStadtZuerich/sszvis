@@ -15,7 +15,7 @@
  * @property {Boolean} debug         Whether to activate debug mode, which shows a red square over the whole
  *                                   canvas, for testing alignment with other map layers. Default false.
  * @property {Number} width          The width of the canvas, in CSS pixels. Required: a missing, non-finite
- *                                   or negative width throws. A fractional value is truncated to whole
+ *                                   or negative width throws. A fractional value is rounded up to whole
  *                                   pixels; see the notes below.
  * @property {Number} height         The height of the canvas. Required and validated like the width.
  * @property {Function} position     A function which takes a datum and returns a position for the corresponding
@@ -43,10 +43,11 @@
  * pixel ratio above 1 the bitmap is stretched across more device pixels than it has, and the cells
  * come out soft while the SVG layers over them stay sharp.
  *
- * Note: a fractional width or height is truncated to a whole-pixel bitmap. Every docs caller passes
- * bounds.innerWidth, which is routinely fractional, so a raster layer is typically up to a pixel
- * narrower and shorter than the SVG layers it has to line up with. The attribute itself keeps the
- * fractional value, so the markup reads 20.5 while the bitmap is 20.
+ * Note: a fractional width or height is rounded up, since the bitmap is a whole number of pixels.
+ * Every docs caller passes bounds.innerWidth, which is routinely fractional, so a raster layer
+ * would otherwise be up to a pixel narrower and shorter than the SVG layers it has to line up with,
+ * leaving a hairline gap at the right and bottom edges that shifts as the chart is resized. Rounding
+ * up covers those edges instead, at the cost of up to a pixel of overhang.
  *
  * Note: the visible clearing between renders comes from writing the width attribute, which resets
  * the bitmap per spec; the clearRect call is belt and braces. Both dimensions are validated before
@@ -246,8 +247,11 @@ export default function <T = unknown>(): MapRendererRasterComponent<T> {
     .render(function (this: Element, data: T[]) {
       const selection = select(this);
       const props = selection.props<RasterProps<T>>();
-      const width = dimension(props.width, "width");
-      const height = dimension(props.height, "height");
+      // The bitmap is a whole number of pixels, and every caller passes a bounds dimension, which
+      // is routinely fractional - so round up, to cover the layers the raster has to line up with
+      // rather than falling a hairline short of them at the right and bottom edges.
+      const width = Math.ceil(dimension(props.width, "width"));
+      const height = Math.ceil(dimension(props.height, "height"));
 
       const canvas = selection
         .selectAll(".sszvis-map__rasterimage")
