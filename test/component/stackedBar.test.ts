@@ -541,14 +541,14 @@ describe("component/stackedBar", () => {
   describe("missing props", () => {
     test("should throw when width is unset on a vertical chart", () => {
       expect(() => render(stackedBarVertical().xScale(xBand).yScale(yLinear))).toThrow(
-        'sszvis.stackedBarVertical: the "width" property is required, but was not set'
+        "[stackedBarVertical] the width property is required"
       );
     });
 
     test("should throw when height is unset on a horizontal chart", () => {
       expect(() =>
         render(stackedBarHorizontal().xScale(xLinear).yScale(yBand), horizontalData())
-      ).toThrow('sszvis.stackedBarHorizontal: the "height" property is required, but was not set');
+      ).toThrow("[stackedBarHorizontal] the height property is required");
     });
 
     test("should draw nothing at all when a required prop is missing", () => {
@@ -562,13 +562,13 @@ describe("component/stackedBar", () => {
 
     test("should throw when the x-scale is unset", () => {
       expect(() => render(stackedBarVertical().width(10).yScale(yLinear))).toThrow(
-        'sszvis.stackedBarVertical: the "xScale" property is required, but was not set'
+        "[stackedBarVertical] the xScale property is required"
       );
     });
 
     test("should throw when the y-scale is unset", () => {
       expect(() => render(stackedBarVertical().xScale(xBand).width(10))).toThrow(
-        'sszvis.stackedBarVertical: the "yScale" property is required, but was not set'
+        "[stackedBarVertical] the yScale property is required"
       );
     });
   });

@@ -359,7 +359,7 @@ export interface StackedBarHorizontalComponent<T = unknown, X extends string | n
 function requireProps(name: string, props: object, required: string[]): void {
   for (const prop of required) {
     if (Reflect.get(props, prop) === undefined) {
-      throw new Error(`sszvis.${name}: the "${prop}" property is required, but was not set`);
+      throw new Error(`[${name}] the ${prop} property is required`);
     }
   }
 }
