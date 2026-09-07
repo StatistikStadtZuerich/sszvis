@@ -1,4 +1,4 @@
-import { easePolyOut, geoCentroid } from "d3";
+import { easePolyOut, geoCentroid, select } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
@@ -78,6 +78,10 @@ describe("map/renderer/bubble", () => {
 
   /** Waits out a default transition (300ms) so its final values are in the DOM. */
   const settle = () => new Promise((resolve) => setTimeout(resolve, 450));
+
+  /** The merged datum a circle is bound to, which identifies the feature it stands for. */
+  const datumOf = (circle: Element) =>
+    select(circle).datum() as { geoJson: Feature<Polygon>; datum: Datum };
 
   /** Renders the bubbles over `data`, returning the group node they drew into. */
   const render = (
@@ -258,8 +262,9 @@ describe("map/renderer/bubble", () => {
       expect(hit.closest("[data-event-target]")).not.toBeNull();
     });
 
-    // The join falls back to the feature's index when it has no id, so keyless features keep their
-    // own elements across renders instead of all colliding on the key "undefined".
+    // The join falls back to an identity held against the feature when it has no id, so keyless
+    // features keep their own elements across renders instead of all colliding on the key
+    // "undefined".
     test("keeps every circle across renders when the features have no ids", () => {
       const collection: FeatureCollection<Polygon> = {
         type: "FeatureCollection",
@@ -290,6 +295,82 @@ describe("map/renderer/bubble", () => {
       expect(after).toHaveLength(2);
       expect(after).toContain(firstBefore);
       expect(after).toContain(secondBefore);
+    });
+
+    // The fallback key cannot be the feature's position. d3 keys existing nodes by walking the
+    // selection they are in, and this component sorts that selection by radius, so a positional
+    // fallback describes a different feature on the next render: the elements survive, but the two
+    // keyless features swap which one each stands for. Radii differ here, and are swapped between
+    // renders, so a positional key would produce exactly that exchange.
+    test("keeps each keyless circle bound to its own feature when the sort order changes", () => {
+      const first = { ...square("a"), id: undefined };
+      const second = { ...square("b", 2), id: undefined };
+      const collection: FeatureCollection<Polygon> = {
+        type: "FeatureCollection",
+        features: [first, second],
+      };
+      const layer = group("bubble-keyless-identity");
+      const renderWith = (radii: Map<Feature<Polygon>, number>) =>
+        layer
+          .call(
+            mapRendererBubble<Datum>()
+              .mergedData(
+                collection.features.map((feature) => ({
+                  geoJson: feature,
+                  datum: { geoId: String(radii.get(feature)), value: 1 },
+                }))
+              )
+              .mapPath(mapPathOf(collection))
+              .radius((d: Datum) => Number(d.geoId))
+              .fill("#ff0000")
+              .transition(false)
+          )
+          .node() as SVGGElement;
+
+      renderWith(
+        new Map([
+          [first, 4],
+          [second, 8],
+        ])
+      );
+      const elementOf = (node: SVGGElement, feature: Feature<Polygon>) =>
+        circles(node).find((circle) => datumOf(circle).geoJson === feature);
+      const before = layer.node() as SVGGElement;
+      const firstElement = elementOf(before, first);
+      const secondElement = elementOf(before, second);
+      expect(firstElement).toBeDefined();
+      expect(secondElement).toBeDefined();
+      expect(firstElement).not.toBe(secondElement);
+
+      // Swapping the radii reverses the sorted DOM order.
+      const node = renderWith(
+        new Map([
+          [first, 8],
+          [second, 4],
+        ])
+      );
+      expect(circles(node)).toHaveLength(2);
+      expect(elementOf(node, first)).toBe(firstElement);
+      expect(elementOf(node, second)).toBe(secondElement);
+    });
+
+    // The circles stay out of the pointer's way only while nothing is listening to them. A consumer
+    // who registered the component's own handlers is asking for the circles to be a hit area, and
+    // the public on() API keeps working for them.
+    test("restores hit testing on the circles when a listener is registered", () => {
+      const collection = geoJson();
+      const layer = group("bubble-listener-hit");
+      const node = layer
+        .call(
+          mapRendererBubble<Datum>()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .mapPath(mapPathOf(collection))
+            .radius(5)
+            .fill("#ff0000")
+            .on("click", () => undefined)
+        )
+        .node() as SVGGElement;
+      expect(circles(node)[0].style.pointerEvents).toBe("");
     });
 
     // The classes are written with classed rather than attr, and only when the circle enters, so
@@ -395,9 +476,16 @@ describe("map/renderer/bubble", () => {
       expect(circles(renderWith(collection.features))).toHaveLength(3);
       await settle();
       const node = renderWith([collection.features[0]]);
-      // The two departing circles are still in the DOM, shrinking towards zero.
+      // The two departing circles are still in the DOM, shrinking towards zero. They have to be
+      // picked out by the feature they are bound to: they outlive the render that removed them, so
+      // reading circles(node)[0] would inspect the retained circle and pass on its update tween
+      // even if the exit transition were dropped.
+      const departing = circles(node).filter(
+        (circle) => datumOf(circle).geoJson !== collection.features[0]
+      );
       expect(circles(node)).toHaveLength(3);
-      expect(tweenNames(circles(node)[0])).toContain("attr.r");
+      expect(departing).toHaveLength(2);
+      for (const circle of departing) expect(tweenNames(circle)).toContain("attr.r");
       await settle();
       expect(circles(node)).toHaveLength(1);
     });
