@@ -67,6 +67,10 @@ describe("map/renderer/base", () => {
   const areas = (node: Element) => [...node.querySelectorAll("path.sszvis-map__area")];
   const attrs = (node: Element, attr: string) => areas(node).map((a) => a.getAttribute(attr));
   const anchors = (node: Element) => [...node.querySelectorAll("[data-tooltip-anchor]")];
+  /** The id the layer generated for its own missing-value pattern. */
+  const missingId = (node: Element) => node.querySelector("defs > pattern")?.getAttribute("id");
+  /** That pattern as a fill reference, which is what the areas carry. */
+  const missingFill = (node: Element) => `url(#${missingId(node)})`;
 
   /** The names of the tweens d3 scheduled on a node, e.g. ["attr.fill"]. */
   const tweenNames = (node: Element) => {
@@ -133,7 +137,8 @@ describe("map/renderer/base", () => {
     test("adds the missing value pattern to the layer's defs once", () => {
       const node = render(fullData);
       const root = node.ownerSVGElement as SVGSVGElement;
-      expect(root.querySelectorAll("defs #missing-pattern")).toHaveLength(1);
+      expect(root.querySelectorAll("defs > pattern")).toHaveLength(1);
+      expect(root.querySelectorAll(`#${missingId(node)}`)).toHaveLength(1);
     });
 
     // NOTE: the entering class is added and removed in the same chain, so it is never observable
@@ -177,7 +182,7 @@ describe("map/renderer/base", () => {
           .fill("#ff0000")
           .defined((d: Datum | undefined) => d?.value !== 2)
       );
-      expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
+      expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), "#ff0000"]);
     });
 
     test("textures a feature with no data instead of calling the fill accessor", () => {
@@ -189,11 +194,7 @@ describe("map/renderer/base", () => {
         })
       );
       expect(seen).not.toContain(undefined);
-      expect(attrs(node, "fill")).toEqual([
-        "#00ff00",
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
-      ]);
+      expect(attrs(node, "fill")).toEqual(["#00ff00", missingFill(node), missingFill(node)]);
     });
   });
 
@@ -338,7 +339,7 @@ describe("map/renderer/base", () => {
       );
       const [, second] = areas(node);
       expect(second.classList.contains("sszvis-map__area--undefined")).toBe(true);
-      expect(second.getAttribute("fill")).toBe("url(#missing-pattern)");
+      expect(second.getAttribute("fill")).toBe(missingFill(node));
     });
 
     // NOTE: `defined` goes through fn.functor, so a constant false paints every area with the
@@ -346,9 +347,9 @@ describe("map/renderer/base", () => {
     test("paints every area with the pattern for a constant false defined", () => {
       const node = render(fullData, (c) => c.transitionColor(false).defined(false).fill("#ff0000"));
       expect(attrs(node, "fill")).toEqual([
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
-        "url(#missing-pattern)",
+        missingFill(node),
+        missingFill(node),
+        missingFill(node),
       ]);
     });
 
@@ -419,13 +420,35 @@ describe("map/renderer/base", () => {
       expect(seen).toContainEqual([1, 2, 3]);
     });
 
-    // BUG: the missing-value pattern is written into a defs element inside each map layer's own
-    // group, with a fixed id. Two map layers on one page emit two #missing-pattern definitions,
-    // and every url(#missing-pattern) reference in the document resolves to whichever comes first.
-    test("emits a duplicate missing-pattern id for every map layer on the page", () => {
-      render(fullData, (c) => c, "layer-one");
-      render(fullData, (c) => c, "layer-two");
-      expect(document.querySelectorAll("#missing-pattern").length).toBeGreaterThan(1);
+    // Ids are document-global, so each layer defines its pattern under an id of its own and
+    // references that id in the fill rather than a fixed one.
+    test("gives every map layer on the page its own missing-pattern id", () => {
+      const one = render(fullData, (c) => c, "layer-one");
+      const two = render(fullData, (c) => c, "layer-two");
+      const ids = [one, two].map(missingId);
+      expect(new Set(ids).size).toBe(2);
+      for (const id of ids) {
+        expect(document.querySelectorAll(`#${id}`)).toHaveLength(1);
+      }
+    });
+
+    test("keeps a layer's pattern id across re-renders", () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("pattern-id-reuse");
+      const renderWith = () =>
+        layer
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .geoJson(collection)
+              .mapPath(mapPath)
+          )
+          .node() as SVGGElement;
+
+      const first = missingId(renderWith());
+      expect(missingId(renderWith())).toBe(first);
+      expect(document.querySelectorAll("defs > pattern")).toHaveLength(1);
     });
 
     // NOTE: the data join has no key function, so it is an index join - reordering mergedData
