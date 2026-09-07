@@ -437,28 +437,25 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "stroke").slice(0, 2)).toEqual(["rgb(1,0,0)", "rgb(2,0,0)"]);
     });
 
-    // BUG: strokeWidth is handed straight to d3 as `.attr("stroke-width", props.strokeWidth)`,
-    // so its accessor is called with the *merged* datum - { geoJson, datum } - while fill and
-    // stroke are called with the datum itself. An accessor written like the documented fill and
-    // stroke accessors reads undefined off the wrapper, and d3 then removes the attribute.
-    test("calls the strokeWidth accessor with the merged datum, not the datum", () => {
-      const seen: string[][] = [];
+    test("takes the stroke width from an accessor called with the datum", () => {
+      const seen: unknown[] = [];
       const node = render(fullData, (c) =>
-        c.transitionColor(false).strokeWidth((d: { datum?: Datum }) => {
-          seen.push(Object.keys(d));
-          return d.datum?.value ?? 9;
+        c.transitionColor(false).strokeWidth((d: Datum) => {
+          seen.push(d);
+          return d.value;
         })
       );
-      expect(seen[0]).toEqual(["geoJson", "datum"]);
-      // Reading the datum through the wrapper works; reading it directly would not.
+      expect(seen[0]).toEqual({ geoId: "a", value: 1 });
       expect(attrs(node, "stroke-width")).toEqual(["1", "2", "3"]);
     });
 
-    test("drops the attribute for an accessor written against the datum", () => {
-      const node = render(fullData, (c) =>
-        c.transitionColor(false).strokeWidth((d: Datum) => d.value)
+    // An unmatched feature has no datum, so the accessor is called with undefined - as fill and
+    // stroke accessors are, though those are only reached through the defined check.
+    test("calls the stroke width accessor with undefined for an unmatched feature", () => {
+      const node = render(partialData, (c) =>
+        c.transitionColor(false).strokeWidth((d?: Datum) => d?.value ?? 9)
       );
-      expect(attrs(node, "stroke-width")).toEqual([null, null, null]);
+      expect(attrs(node, "stroke-width")).toEqual(["1", "2", "9"]);
     });
   });
 
