@@ -419,11 +419,11 @@ export default function choropleth<T extends object = object>(): ChoroplethCompo
 
       selection.call(baseRenderer).call(meshRenderer);
 
-      // The lake and the anchored shape are both optional, and both have to be removable: a render
-      // that switches one off must undo what an earlier render drew, the way the highlight
-      // renderer clears its paths for an empty highlight. Each is drawn into a group of this
-      // component's own, so switching it off is removing that group - which works for an anchored
-      // shape whose markup this component knows nothing about.
+      // The lake and the anchored shape are both optional, and a render that switches one off must
+      // undo what an earlier render drew, the way the highlight renderer clears its paths for an
+      // empty highlight. Each is drawn into a group of this component's own, so switching it off is
+      // emptying that group - which works for an anchored shape whose markup this component knows
+      // nothing about. The group itself stays, to hold its place among its siblings; see ownGroup.
       const lakeGroup = ownGroup(selection, LAKE_GROUP);
       if (props.withLake) {
         lakeGroup.call(lakeRenderer);

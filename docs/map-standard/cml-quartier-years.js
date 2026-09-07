@@ -173,9 +173,16 @@ const actions = {
     actions.changeYear(mostRecentDate);
   },
 
-  // called when moving over map entities with the mouse. Highlights certain entities
+  // called when panning over map entities, which hands the handler the event and the merged map
+  // entity the pointer is over.
   changeMapEntity(e, d) {
-    state.highlightEntity = d.datum;
+    actions.highlightMapEntity(d.datum);
+  },
+
+  // called when hovering a map entity through the choropleth's own over handler, which hands the
+  // handler that entity's datum directly.
+  highlightMapEntity(datum) {
+    state.highlightEntity = datum;
 
     actions.setHighlights();
   },
@@ -417,7 +424,7 @@ function render(state) {
 
   map.call(interactionLayer);
 
-  choroplethMap.on("over", actions.changeMapEntity).on("out", actions.resetMapEntity);
+  choroplethMap.on("over", actions.highlightMapEntity).on("out", actions.resetMapEntity);
 
   // add the hover behavior for the line chart, including top padding so that
   // the area around the slide bar handle is responsive to mouse events.
