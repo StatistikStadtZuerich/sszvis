@@ -41,10 +41,6 @@
  * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
  * key at all is left unmatched.
  *
- * Note: the mouse listeners are bound layer-wide via the [data-event-target] attribute rather than
- * scoped to this component's own class. An overlay drawn into a group that already holds a base
- * layer rebinds that layer's areas to this component's handlers and merged data.
- *
  * Note: rendering caches a sphericalCentroid onto every feature's properties and never invalidates
  * it, so moving a feature's geometry leaves its anchor behind. Unlike the base renderer it ignores
  * an authored `center` property and caches under a different key, so the two renderers disagree
@@ -272,8 +268,7 @@ export default function <
       // The JavaScript read `.datum` off each listener's first parameter. d3 v6 and later call a
       // listener with (event, datum), so that read was always of the DOM event and always
       // undefined; the emit below throws before the value is used either way.
-      selection
-        .selectAll("[data-event-target]")
+      geoElements
         .on("mouseover", () => {
           emitLegacy("over");
         })

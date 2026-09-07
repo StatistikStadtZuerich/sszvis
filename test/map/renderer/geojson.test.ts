@@ -300,10 +300,9 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "fill")[1]).toBe("url(#missing-pattern)");
     });
 
-    // BUG: the event listeners are bound with a layer-wide selector rather than this component's
-    // own class, so an overlay rendered into a group that already holds a base layer rebinds the
-    // base layer's areas to its own handlers and its own merged data.
-    test("binds its handlers to every event target in the layer, not just its own", () => {
+    // The listeners are bound to this component's own elements, so a base layer's areas in the
+    // same group keep whatever was attached to them.
+    test("binds its handlers only to its own elements", () => {
       const collection = geoJson();
       const layer = group("shared-targets");
       const foreign = layer
@@ -318,7 +317,7 @@ describe("map/renderer/geojson", () => {
         .node();
 
       const listeners = (foreign as Element & { __on?: { type: string }[] }).__on ?? [];
-      expect(listeners.map((l) => l.type).sort()).toEqual(["click", "mouseout", "mouseover"]);
+      expect(listeners).toEqual([]);
     });
 
     test("throws for a geojson with no features", () => {
