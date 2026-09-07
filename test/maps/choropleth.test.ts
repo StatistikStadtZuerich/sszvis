@@ -148,7 +148,8 @@ describe("maps/choropleth", () => {
    * The scope the lake overlay generated for this group, which qualifies its three definition ids.
    * Read back rather than hardcoded, since the generated scope is a global counter.
    */
-  const lakeScope = (node: Element) => node.getAttribute("data-lake-key");
+  const lakeScope = (node: Element) =>
+    node.querySelector('[data-d3-selectgroup="lake"]')?.getAttribute("data-lake-key") ?? null;
   const highlights = (node: Element) => [
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__highlight"),
   ];
@@ -422,6 +423,47 @@ describe("maps/choropleth", () => {
     });
   });
 
+  // The lake is drawn into a group of the component's own, so turning it off removes everything
+  // the renderer drew - both paths and the definitions it emitted - rather than leaving the
+  // texture over the map. docs/map-standard/statistische-zonen.js documents withLake(false) as
+  // the way to reveal the lake zones underneath.
+  test("removes a previously rendered lake when withLake is turned off", () => {
+    const collection = geoJson();
+    const target = layer("lake-toggle");
+    const map = choropleth()
+      .features(collection)
+      .borders(mesh())
+      .lakeFeatures(lakeFeature())
+      .lakeBorders(lakeBorders())
+      .width(180)
+      .height(180);
+    const drawn = target.call(map.withLake(true)).node() as SVGGElement;
+    const scope = lakeScope(drawn);
+    const root = drawn.ownerSVGElement as SVGSVGElement;
+    expect(root.querySelectorAll(`#lake-pattern-${scope}`)).toHaveLength(1);
+    const node = target.call(map.withLake(false)).node() as SVGGElement;
+    expect(lake(node)).toHaveLength(0);
+    expect(lakePaths(node)).toHaveLength(0);
+    expect(root.querySelectorAll(`#lake-pattern-${scope}`)).toHaveLength(0);
+  });
+
+  test("draws the lake again when withLake is turned back on", () => {
+    const collection = geoJson();
+    const target = layer("lake-retoggle");
+    const map = choropleth()
+      .features(collection)
+      .borders(mesh())
+      .lakeFeatures(lakeFeature())
+      .lakeBorders(lakeBorders())
+      .width(185)
+      .height(185);
+    target.call(map.withLake(true));
+    target.call(map.withLake(false));
+    const node = target.call(map.withLake(true)).node() as SVGGElement;
+    expect(lake(node)).toHaveLength(1);
+    expect(lakePaths(node)).toHaveLength(1);
+  });
+
   describe("highlight", () => {
     test("renders no highlight path by default", () => {
       const node = render(fullData);
@@ -537,6 +579,29 @@ describe("maps/choropleth", () => {
       expect((calls[0].mergedData as { datum: Datum | undefined }[]).map((d) => d.datum)).toEqual(
         fullData
       );
+    });
+
+    // The shape is drawn into a group of the component's own, so clearing the property removes
+    // whatever it drew - which is the only way to clear markup this component knows nothing about.
+    test("removes a previously rendered anchored shape when it is cleared", () => {
+      const collection = geoJson();
+      const target = layer("shape-toggle");
+      const shape = component<AnchoredShape<Datum>>();
+      shape.prop("mergedData").prop("mapPath");
+      shape.render(function (this: Element) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.classList.add("anchored-marker");
+        this.appendChild(circle);
+      });
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .withLake(false)
+        .width(190)
+        .height(190);
+      target.call(map.anchoredShape(shape));
+      const node = target.call(map.anchoredShape(null)).node() as SVGGElement;
+      expect(node.querySelectorAll("circle.anchored-marker")).toHaveLength(0);
     });
 
     test("renders nothing extra when no anchored shape is set", () => {
@@ -661,50 +726,6 @@ describe("maps/choropleth", () => {
       expect(root.querySelectorAll(`#lake-pattern-${lakeScope(node)}`)).toHaveLength(1);
     });
 
-    // BUG: turning the lake off after it has been drawn does not remove it. The render only skips
-    // calling the lake renderer, and nothing ever removes what a previous render left behind, so
-    // the lake, its border path and the pattern definition stay in the DOM. The
-    // statistische-zonen example notes .withLake(false) as the way to reveal the lake zones
-    // underneath; toggling it at runtime leaves the texture over them.
-    test("leaves a previously rendered lake in place when withLake is turned off", () => {
-      const collection = geoJson();
-      const target = layer("lake-toggle");
-      const map = choropleth()
-        .features(collection)
-        .borders(mesh())
-        .lakeFeatures(lakeFeature())
-        .lakeBorders(lakeBorders())
-        .width(180)
-        .height(180);
-      target.call(map.withLake(true));
-      const node = target.call(map.withLake(false)).node() as SVGGElement;
-      expect(lake(node)).toHaveLength(1);
-      expect(lakePaths(node)).toHaveLength(1);
-    });
-
-    // BUG: the same for the anchored shape. Clearing anchoredShape only stops the component being
-    // called; the circles it drew are still there.
-    test("leaves a previously rendered anchored shape in place when it is cleared", () => {
-      const collection = geoJson();
-      const target = layer("shape-toggle");
-      const shape = component<AnchoredShape<Datum>>();
-      shape.prop("mergedData").prop("mapPath");
-      shape.render(function (this: Element) {
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.classList.add("anchored-marker");
-        this.appendChild(circle);
-      });
-      const map = choropleth()
-        .features(collection)
-        .borders(mesh())
-        .withLake(false)
-        .width(190)
-        .height(190);
-      target.call(map.anchoredShape(shape));
-      const node = target.call(map.anchoredShape(null)).node() as SVGGElement;
-      expect(node.querySelectorAll("circle.anchored-marker")).toHaveLength(1);
-    });
-
     // NOTE: the handlers are bound with selectAll("[data-event-target]"), which is scoped to the
     // rendered group but is otherwise indiscriminate: any descendant carrying the attribute is
     // bound, and the previous render's listeners are replaced rather than added to.
@@ -798,10 +819,9 @@ describe("maps/choropleth", () => {
       expect(clicks).toBe(2);
     });
 
-    // NOTE: the highlight is the one layer that is cleared when its input goes away - the
-    // highlight renderer removes its paths for an empty highlight array - which is what makes the
-    // lake and anchored-shape leftovers above read as oversights rather than as house style.
-    test("clears the highlight when it is emptied, unlike the lake and the anchored shape", () => {
+    // NOTE: every layer that can be switched off clears itself - the highlight through its own
+    // renderer, the lake and the anchored shape through the groups the component draws them into.
+    test("clears the highlight when it is emptied, as the lake and the anchored shape are", () => {
       const collection = geoJson();
       const target = layer("highlight-toggle");
       const map = choropleth()
