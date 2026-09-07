@@ -37,36 +37,28 @@
  *                                              with no default. It is called with y0 and y1, again
  *                                              positions in its own domain rather than pixels, and
  *                                              a negative result is clamped to 0, which collapses
- *                                              the ring onto the centre circle. The first thing to
- *                                              call it is the tooltip anchor's position accessor,
- *                                              so an unset scale throws "props.radiusScale is not a
- *                                              function" after the arcs and their transition have
- *                                              already been scheduled, and that transition then
- *                                              re-throws on every frame for 300ms.
+ *                                              the ring onto the centre circle. Leaving it unset
+ *                                              throws before anything is rendered.
  * @property {Number} centerRadius              The radius of the center of the chart. Can be
  *                                              configured with
- *                                              sszvis.layout.sunburst.computeLayout. Required, but
- *                                              it is only ever added to a number, so leaving it out
- *                                              fails silently instead of throwing the way an unset
- *                                              radiusScale does: every radius becomes NaN, the arcs
- *                                              degenerate to "M0,0Z" and every tooltip anchor keeps
- *                                              an unparseable transform, which the browser drops,
- *                                              leaving them all at the group's origin.
- * @property {Function} fill                    Function that returns the fill color for the
+ *                                              sszvis.layout.sunburst.computeLayout. Required;
+ *                                              leaving it unset throws before anything is
+ *                                              rendered.
+ * @property {Color, Function} fill             Function that returns the fill color for the
  *                                              segments in the center of the chart. Note that this
  *                                              will only be called on the centermost segments. The
  *                                              segments which are subcategories of these center
  *                                              segments will have their fill determined
  *                                              recursively, by lightening the color of its parent
  *                                              segment. It is called with a node's key string, not
- *                                              with the node. Required, and it has to be a
- *                                              function: it is neither wrapped in fn.functor nor
- *                                              normalised, so a constant colour throws "props.fill
- *                                              is not a function", and so does leaving it unset.
- *                                              Every ring further out multiplies its parent's
- *                                              lightness by 1.15, which is never clamped, so the
- *                                              colours run towards white from the inside out and
- *                                              saturate. Siblings therefore share a colour, since
+ *                                              with the node. Required - leaving it unset throws
+ *                                              before anything is rendered - and it takes
+ *                                              a constant colour or an accessor, since it is
+ *                                              wrapped in fn.functor on set.
+ *                                              Every ring further out closes 15% of the gap
+ *                                              between its parent's lightness and white, so the
+ *                                              colours run lighter from the inside out without ever
+ *                                              saturating. Siblings therefore share a colour, since
  *                                              it depends only on the top-level ancestor's key and
  *                                              on the depth.
  * @property {Color, Function} stroke           The stroke color of the segments. Defaults to white.
@@ -80,28 +72,26 @@
  * [1, 1] size, so any layout the caller applied is discarded, the radius scale's domain is always
  * expressed in fractions, and the innermost band belongs to the invisible root: with n layers the
  * first visible ring starts at 1/(n+1), not at 0. An array is passed through untouched, so it can
- * be positioned by hand. Both the root filter and the colour lookup key off the `_tag` that
- * prepareHierarchyData writes, so a plain d3.hierarchy keeps its root as a full-circle arc and
- * takes every colour from the root's key; the component warns once per node and renders anyway.
+ * be positioned by hand. A hierarchy that did not come from prepareHierarchyData carries none of
+ * its `_tag`s; it is rendered the same way - the parentless node is the root either way, and every
+ * colour still comes from a node's own top-level ancestor - with one warning per chart.
  *
- * Note: only x0 and x1 are interpolated, and the geometry exists only from the first animation
- * frame, since `d` is written by the arc tween alone and there is no transition property to opt out
- * of - a chart serialised on the render tick is blank. The radii and the colours are not
- * interpolated at all and snap to their new values. The angle handover matches the old arcs by
- * index, so an arc that did not exist a render ago starts at its destination, and exits are removed
- * with no transition.
+ * Note: the angles, the radii and the colours are all interpolated, but the geometry exists only
+ * from the first animation frame, since `d` is written by the arc tween alone and there is no
+ * transition property to opt out of - a chart serialised on the render tick is blank. The handover
+ * matches the old arcs by index, so an arc that did not exist a render ago starts at its
+ * destination and is painted outright, and exits are removed with no transition.
  *
  * Note: the component keeps no state of its own. It writes x0/x1 (the positions currently on
- * screen) and _x0/_x1 (the positions the running transition is heading for) onto every node it
- * renders, so the data has to be mutable - frozen data throws - and re-rendering the same hierarchy
- * object skips the animation, because the re-partition overwrites the positions the tween was
- * starting from.
+ * screen), r0/r1 (the radii currently on screen, in pixels) and _x0/_x1 (the positions the running
+ * transition is heading for) onto every node it renders, so the data has to be mutable - frozen data throws. The on-screen angles are read off
+ * the existing arcs before the re-partition overwrites them, so re-rendering the same hierarchy
+ * object animates the same way a freshly built one does.
  *
- * Note: the tooltip anchors are rendered from the datum bound to the group rather than from the
- * flattened array, so a hierarchy gets one anchor per node including the root, which has no arc and
- * no key, and in breadth-first order while the arcs are depth-first. They are positioned from the
- * pre-transition angles and are never repositioned when the transition ends, so after an update
- * they describe the previous layout. See test/component/sunburst.test.ts.
+ * Note: the tooltip anchors are rendered from the same flattened array as the arcs, so there is one
+ * anchor per arc, in the same order. They are positioned from the pre-transition angles and are
+ * never repositioned when the transition ends, so after an update they describe the previous
+ * layout. See test/component/sunburst.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -119,11 +109,20 @@ import type { NodeDatum } from "../layout/hierarchy.js";
 export type SunburstNode<T = unknown> = HierarchyRectangularNode<NodeDatum<T>> & {
     _x0?: number;
     _x1?: number;
+    r0?: number;
+    r1?: number;
 };
-/** The same node once the render has stamped its destination angles onto it. */
+/**
+ * The same node once the render has stamped its destination angles and its current radii
+ * onto it. r0 and r1 are pixels rather than positions in the radius scale's domain, because
+ * the scale itself can change between two renders and the arcs have to ease from the radii
+ * that are on screen rather than from the old scale's reading of them.
+ */
 export type PositionedNode<T = unknown> = SunburstNode<T> & {
     _x0: number;
     _x1: number;
+    r0: number;
+    r1: number;
 };
 /**
  * Both scales are only ever called, never inspected, so this is all the component needs. A
@@ -133,10 +132,11 @@ export type PositionedNode<T = unknown> = SunburstNode<T> & {
 export type SunburstScale = (value: number) => number;
 /**
  * fill is called with a node's key, not with the node, and only for the segments of the
- * innermost ring - every ring further out derives its colour from its parent's. It is not
- * wrapped in fn.functor, so a constant colour is not accepted.
+ * innermost ring - every ring further out derives its colour from its parent's.
  */
 export type FillAccessor = (key: string) => string;
+/** fill is wrapped in fn.functor on set, so a constant colour is accepted as well. */
+export type FillValue = string | FillAccessor;
 /**
  * stroke accepts a constant or an accessor and is not normalised on set - the accessor is
  * handed to d3 as it stands, so it is called with d3's receiver and arguments. Returning
@@ -158,7 +158,7 @@ export interface SunburstComponent<T = unknown> extends ComponentBuilder<Sunburs
     centerRadius(): number | undefined;
     centerRadius(radius: number): SunburstComponent<T>;
     fill(): FillAccessor | undefined;
-    fill(fill: FillAccessor): SunburstComponent<T>;
+    fill(fill: FillValue): SunburstComponent<T>;
     stroke(): StrokeValue<T>;
     stroke<U = T>(stroke: StrokeValue<U>): SunburstComponent<T>;
 }

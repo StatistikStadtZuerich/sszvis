@@ -12,7 +12,8 @@
  * @module sszvis/component/pack
  * @template T The type of the original flat data objects
  *
- * @property {string, function} colorScale        The fill color accessor for circles
+ * @property {string, function} colorScale        The fill color for circles: a constant colour
+ *                                                or an accessor taking a node's key
  * @property {boolean} transition                 Whether to animate changes (default true)
  * @property {number, function} containerWidth    The container width (default 800)
  * @property {number, function} containerHeight   The container height (default 600)
@@ -42,7 +43,7 @@ export type PackLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
 export type PackClickHandler<T = unknown> = (event: MouseEvent, node: PackLayout<T>) => void;
 interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> {
     colorScale(): (key: string) => string;
-    colorScale(scale: (key: string) => string): PackComponent<T>;
+    colorScale(scale: string | ((key: string) => string)): PackComponent<T>;
     transition(): boolean;
     transition(enabled: boolean): PackComponent<T>;
     containerWidth(): number;

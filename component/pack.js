@@ -20,7 +20,8 @@ import { defaultTransition } from '../transition.js';
  * @module sszvis/component/pack
  * @template T The type of the original flat data objects
  *
- * @property {string, function} colorScale        The fill color accessor for circles
+ * @property {string, function} colorScale        The fill color for circles: a constant colour
+ *                                                or an accessor taking a node's key
  * @property {boolean} transition                 Whether to animate changes (default true)
  * @property {number, function} containerWidth    The container width (default 800)
  * @property {number, function} containerHeight   The container height (default 600)
@@ -40,7 +41,7 @@ import { defaultTransition } from '../transition.js';
  * @template T The type of the original flat data objects
  */
 function pack () {
-  return component().prop("colorScale").prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
+  return component().prop("colorScale", functor).prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
   .prop("containerHeight").containerHeight(600) // Default height
   .prop("showLabels").showLabels(false) // Default disabled
   .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("minRadius").minRadius(20).prop("circleStroke").circleStroke("#ffffff").prop("circleStrokeWidth").circleStrokeWidth(1).prop("radiusScale", functor).prop("onClick").render(function (inputData) {

@@ -1,7 +1,7 @@
 import { scaleLinear, select, partition, arc, interpolate, hsl } from 'd3';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
-import { valueFn } from '../fn.js';
+import { functor, valueFn } from '../fn.js';
 import { warn } from '../logger.js';
 import { defaultTransition } from '../transition.js';
 
@@ -44,36 +44,28 @@ import { defaultTransition } from '../transition.js';
  *                                              with no default. It is called with y0 and y1, again
  *                                              positions in its own domain rather than pixels, and
  *                                              a negative result is clamped to 0, which collapses
- *                                              the ring onto the centre circle. The first thing to
- *                                              call it is the tooltip anchor's position accessor,
- *                                              so an unset scale throws "props.radiusScale is not a
- *                                              function" after the arcs and their transition have
- *                                              already been scheduled, and that transition then
- *                                              re-throws on every frame for 300ms.
+ *                                              the ring onto the centre circle. Leaving it unset
+ *                                              throws before anything is rendered.
  * @property {Number} centerRadius              The radius of the center of the chart. Can be
  *                                              configured with
- *                                              sszvis.layout.sunburst.computeLayout. Required, but
- *                                              it is only ever added to a number, so leaving it out
- *                                              fails silently instead of throwing the way an unset
- *                                              radiusScale does: every radius becomes NaN, the arcs
- *                                              degenerate to "M0,0Z" and every tooltip anchor keeps
- *                                              an unparseable transform, which the browser drops,
- *                                              leaving them all at the group's origin.
- * @property {Function} fill                    Function that returns the fill color for the
+ *                                              sszvis.layout.sunburst.computeLayout. Required;
+ *                                              leaving it unset throws before anything is
+ *                                              rendered.
+ * @property {Color, Function} fill             Function that returns the fill color for the
  *                                              segments in the center of the chart. Note that this
  *                                              will only be called on the centermost segments. The
  *                                              segments which are subcategories of these center
  *                                              segments will have their fill determined
  *                                              recursively, by lightening the color of its parent
  *                                              segment. It is called with a node's key string, not
- *                                              with the node. Required, and it has to be a
- *                                              function: it is neither wrapped in fn.functor nor
- *                                              normalised, so a constant colour throws "props.fill
- *                                              is not a function", and so does leaving it unset.
- *                                              Every ring further out multiplies its parent's
- *                                              lightness by 1.15, which is never clamped, so the
- *                                              colours run towards white from the inside out and
- *                                              saturate. Siblings therefore share a colour, since
+ *                                              with the node. Required - leaving it unset throws
+ *                                              before anything is rendered - and it takes
+ *                                              a constant colour or an accessor, since it is
+ *                                              wrapped in fn.functor on set.
+ *                                              Every ring further out closes 15% of the gap
+ *                                              between its parent's lightness and white, so the
+ *                                              colours run lighter from the inside out without ever
+ *                                              saturating. Siblings therefore share a colour, since
  *                                              it depends only on the top-level ancestor's key and
  *                                              on the depth.
  * @property {Color, Function} stroke           The stroke color of the segments. Defaults to white.
@@ -87,28 +79,26 @@ import { defaultTransition } from '../transition.js';
  * [1, 1] size, so any layout the caller applied is discarded, the radius scale's domain is always
  * expressed in fractions, and the innermost band belongs to the invisible root: with n layers the
  * first visible ring starts at 1/(n+1), not at 0. An array is passed through untouched, so it can
- * be positioned by hand. Both the root filter and the colour lookup key off the `_tag` that
- * prepareHierarchyData writes, so a plain d3.hierarchy keeps its root as a full-circle arc and
- * takes every colour from the root's key; the component warns once per node and renders anyway.
+ * be positioned by hand. A hierarchy that did not come from prepareHierarchyData carries none of
+ * its `_tag`s; it is rendered the same way - the parentless node is the root either way, and every
+ * colour still comes from a node's own top-level ancestor - with one warning per chart.
  *
- * Note: only x0 and x1 are interpolated, and the geometry exists only from the first animation
- * frame, since `d` is written by the arc tween alone and there is no transition property to opt out
- * of - a chart serialised on the render tick is blank. The radii and the colours are not
- * interpolated at all and snap to their new values. The angle handover matches the old arcs by
- * index, so an arc that did not exist a render ago starts at its destination, and exits are removed
- * with no transition.
+ * Note: the angles, the radii and the colours are all interpolated, but the geometry exists only
+ * from the first animation frame, since `d` is written by the arc tween alone and there is no
+ * transition property to opt out of - a chart serialised on the render tick is blank. The handover
+ * matches the old arcs by index, so an arc that did not exist a render ago starts at its
+ * destination and is painted outright, and exits are removed with no transition.
  *
  * Note: the component keeps no state of its own. It writes x0/x1 (the positions currently on
- * screen) and _x0/_x1 (the positions the running transition is heading for) onto every node it
- * renders, so the data has to be mutable - frozen data throws - and re-rendering the same hierarchy
- * object skips the animation, because the re-partition overwrites the positions the tween was
- * starting from.
+ * screen), r0/r1 (the radii currently on screen, in pixels) and _x0/_x1 (the positions the running
+ * transition is heading for) onto every node it renders, so the data has to be mutable - frozen data throws. The on-screen angles are read off
+ * the existing arcs before the re-partition overwrites them, so re-rendering the same hierarchy
+ * object animates the same way a freshly built one does.
  *
- * Note: the tooltip anchors are rendered from the datum bound to the group rather than from the
- * flattened array, so a hierarchy gets one anchor per node including the root, which has no arc and
- * no key, and in breadth-first order while the arcs are depth-first. They are positioned from the
- * pre-transition angles and are never repositioned when the transition ends, so after an update
- * they describe the previous layout. See test/component/sunburst.test.ts.
+ * Note: the tooltip anchors are rendered from the same flattened array as the arcs, so there is one
+ * anchor per arc, in the same order. They are positioned from the pre-transition angles and are
+ * never repositioned when the transition ends, so after an update they describe the previous
+ * layout. See test/component/sunburst.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -118,9 +108,37 @@ function sunburst () {
   // are declared to return the generic Component type, since the accessors they install only
   // exist at runtime, so the typed instance has to come from the factory itself.
   const sunburstComponent = component();
-  sunburstComponent.prop("angleScale").angleScale(scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (inputData) {
+  sunburstComponent.prop("angleScale").angleScale(scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill", functor).prop("stroke").stroke("white").render(function (inputData) {
     const selection = select(this);
     const props = selection.props();
+    // radiusScale, centerRadius and fill are required and have no defaults, and a render
+    // without any one of them cannot come out right - so they are checked here, before a
+    // single element is created. Left unchecked they fail three different ways: fill
+    // throws immediately, radiusScale throws from the tooltip anchor once the arcs and
+    // their transition are already in flight (and then once per frame for the length of
+    // the transition), and centerRadius does not throw at all - it turns every radius
+    // into NaN and renders an empty chart.
+    for (const required of ["radiusScale", "centerRadius", "fill"]) {
+      if (props[required] === undefined) {
+        throw new Error("[sunburst] the ".concat(required, " property is required"));
+      }
+    }
+    // The angles currently on screen, read off the existing arcs before anything below can
+    // overwrite them. A caller who keeps one hierarchy in state and re-sums it hands over
+    // the same node objects the previous render left its x0/x1 on, and the partition
+    // further down replaces those with the new layout - so the handover has to happen
+    // first, or every transition would start where it is meant to end.
+    const onScreen = selection.selectAll(".sszvis-sunburst-arc").nodes().map(element => {
+      // A path inserted without d3 has no datum at all, which throws here rather than
+      // silently shifting the handover - see test/component/sunburst.test.ts.
+      const d = Reflect.get(element, "__data__");
+      return {
+        angles: [d.x0, d.x1],
+        // Absent until a render has drawn this arc once, in which case it starts at
+        // whatever radii this render computes for it.
+        radii: d.r0 === undefined || d.r1 === undefined ? undefined : [d.r0, d.r1]
+      };
+    });
     // NOTE: Determine if we have raw hierarchical data or pre-computed sunburst data
     // @deprecated in v3.4.0
     let nodes;
@@ -128,69 +146,102 @@ function sunburst () {
       // Already computed sunburst data (backwards compatibility)
       nodes = inputData;
     } else {
+      if (inputData.data._tag !== "root") {
+        // A hierarchy that did not come from prepareHierarchyData carries none of its
+        // tags. It is still rendered - the structure is all the layout needs - but the
+        // caller is told once per chart rather than once per node.
+        warn("Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData");
+      }
       const root = partition()(inputData);
       const flatten = node => [node, ...(node.children || []).flatMap(flatten)];
-      nodes = flatten(root).filter(d => d.data._tag !== "root");
+      // The root is the node the layout has no parent for, whether or not it is tagged as
+      // one: it fills the whole circle and would otherwise be drawn as a ring of its own
+      // under the first visible one.
+      nodes = flatten(root).filter(d => d.parent !== null && d.data._tag !== "root");
     }
+    // The geometry accessors read positions off a node, so they are declared before the
+    // destination values are stamped on. The two radius accessors return pixels, and are
+    // the destination of the radius half of the transition.
+    const startAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
+    const endAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
+    const innerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y0));
+    const outerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y1));
     // _x0 and _x1 are the destination values for the transition. We set these to the
-    // computed x0 and x1. Object.assign writes them onto the node the caller handed over
-    // and hands back that same node typed as carrying them, so no cast is needed further
-    // down. Array.from rather than map, because it visits the holes of a sparse array the
-    // way a for...of loop does, and so still fails before anything is rendered.
+    // computed x0 and x1, and r0/r1 to the destination radii, which the handover below
+    // replaces wherever an arc is already on screen. Object.assign writes them onto the
+    // node the caller handed over and hands back that same node typed as carrying them, so
+    // no cast is needed further down. Array.from rather than map, because it visits the
+    // holes of a sparse array the way a for...of loop does, and so still fails before
+    // anything is rendered.
     const data = Array.from(nodes, d => Object.assign(d, {
       _x0: d.x0,
-      _x1: d.x1
+      _x1: d.x1,
+      r0: innerRadius(d),
+      r1: outerRadius(d)
     }));
+    // Put the on-screen geometry back, matched to the new data by index, so the tween
+    // below has somewhere to start from. An arc past the previous element count keeps what
+    // this render gave it and therefore starts at its destination.
+    for (const [i, previous] of onScreen.entries()) {
+      const node = data[i];
+      if (node) {
+        [node.x0, node.x1] = previous.angles;
+        if (previous.radii) [node.r0, node.r1] = previous.radii;
+      }
+    }
     // The key a node's colour is looked up under. Only a root has none, and a root never
     // reaches the recursion below: it is either filtered out of the data, painted
     // transparent by fillColor, or caught by the parent check one level down.
-    const colorKey = node => node.data._tag === "root" ? "" : node.data.key;
+    const colorKey = node => "key" in node.data ? node.data.key : "";
+    // Whether a node is the one the whole chart hangs off: tagged as the root by
+    // prepareHierarchyData, or simply parentless in a hierarchy that came from elsewhere.
+    const isRoot = node => node.data._tag === "root" || node.parent === null;
     // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
     function getColorRecursive(node) {
       if (!node.parent) {
-        // Accounts for incorrectly formatted data which hasn't gone through sszvis.prepareHierarchyData
-        warn("Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData");
         return hsl(props.fill(colorKey(node)));
-      } else if (node.parent.data._tag === "root") {
+      } else if (isRoot(node.parent)) {
         // Use the color scale
         return hsl(props.fill(colorKey(node)));
       } else {
         // Recurse up the tree and adjust the lightness value
+        // Lighten by 15% of what is left between the parent's lightness and white,
+        // rather than by 15% of the lightness itself. Both give the same step from a
+        // mid-tone, but this one can never reach white, so a deep ring stays
+        // distinguishable from the one inside it however light the base colour is.
         const pColor = getColorRecursive(node.parent);
-        pColor.l *= 1.15;
+        pColor.l += (1 - pColor.l) * 0.15;
         return pColor;
       }
     }
     // Center node (if the data were prepared using sszvis.prepareHierarchyData). The colour
     // is stringified here because the recursion needs the mutable d3 colour object while
     // d3's attr only takes a primitive; setAttribute would have coerced it the same way.
-    const fillColor = node => node.data._tag === "root" ? "transparent" : String(getColorRecursive(node));
-    // The four geometry accessors only read positions, so they are declared over the node
-    // before its destination angles are stamped on: the tooltip anchors are rendered from
-    // the datum bound to the group, which for a hierarchy is every node including the root,
-    // and those never go through the data array above.
-    const startAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
-    const endAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
-    const innerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y0));
-    const outerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y1));
-    const arcGen = arc().startAngle(startAngle).endAngle(endAngle).innerRadius(innerRadius).outerRadius(outerRadius);
-    const arcs = selection.selectAll(".sszvis-sunburst-arc").each((d, i) => {
-      if (data[i]) {
-        // x0 and x1 are the current/transitioning values
-        // We set these here, in case any datums already exist which have values set
-        data[i].x0 = d.x0;
-        data[i].x1 = d.x1;
-        // The transition tweens from x0 and x1 to _x0 and _x1
-      }
-    }).data(data).join("path").attr("class", "sszvis-sunburst-arc");
-    arcs.attr("stroke", valueFn(props.stroke)).attr("fill", fillColor);
-    arcs.transition(defaultTransition()).attrTween("d", d => {
+    const fillColor = node => isRoot(node) ? "transparent" : String(getColorRecursive(node));
+    const arcGen = arc().startAngle(startAngle).endAngle(endAngle)
+    // The radii the arc is drawn at right now, which the tween walks towards the
+    // destination ones. Reading props here instead would put a changed radius scale on
+    // screen in full on the first frame, while the angles were still moving.
+    .innerRadius(d => d.r0).outerRadius(d => d.r1);
+    const arcs = selection.selectAll(".sszvis-sunburst-arc").data(data).join(enter =>
+    // An entering arc has no colour to ease from, so it is painted outright; every
+    // other attribute change goes through the transition below.
+    enter.append("path").attr("class", "sszvis-sunburst-arc").attr("stroke", valueFn(props.stroke)).attr("fill", fillColor));
+    // One transition for the whole arc: scheduling a second one on the same elements would
+    // cancel this one.
+    const arcTransition = arcs.transition(defaultTransition());
+    arcTransition.attr("stroke", valueFn(props.stroke)).attr("fill", fillColor);
+    arcTransition.attrTween("d", d => {
       const x0Interp = interpolate(d.x0, d._x0);
       const x1Interp = interpolate(d.x1, d._x1);
+      const r0Interp = interpolate(d.r0, innerRadius(d));
+      const r1Interp = interpolate(d.r1, outerRadius(d));
       return t => {
         var _arcGen;
         d.x0 = x0Interp(t);
         d.x1 = x1Interp(t);
+        d.r0 = r0Interp(t);
+        d.r1 = r1Interp(t);
         // arc returns null only for an empty path buffer, and every branch of it writes at
         // least a moveTo - even for NaN radii, which come out as "M0,0Z" - so this is
         // unreachable.
@@ -205,7 +256,12 @@ function sunburst () {
       const r = (innerRadius(d) + outerRadius(d)) / 2;
       return [Math.cos(a) * r, Math.sin(a) * r];
     });
-    selection.call(arcTooltipAnchor);
+    // Rebind the group to the flattened array before rendering the anchors, the way pie
+    // does. Without it the anchors are joined to whatever datum the caller bound - for a
+    // hierarchy that is the root node, which d3 iterates into every descendant, so the
+    // root gains an anchor of its own and the anchors come out breadth first while the
+    // arcs are depth first.
+    selection.datum(data).call(arcTooltipAnchor);
   });
   return sunburstComponent;
 }
