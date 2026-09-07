@@ -259,7 +259,11 @@ export function prepareMergedGeoData<Datum extends object>(
  * feature id. Everything else stringifies, which is how a missing key becomes the string
  * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
  */
-function toLookupKey(value: unknown): string | symbol {
+/**
+ * The key a feature id or datum value is looked up under. Symbols pass through; everything
+ * else is stringified, so numeric and string ids that print the same collide deliberately.
+ */
+export function toLookupKey(value: unknown): string | symbol {
   return typeof value === "symbol" ? value : String(value);
 }
 

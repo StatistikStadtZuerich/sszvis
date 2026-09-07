@@ -106,7 +106,7 @@ import type { ExtendedFeatureCollection, GeoPath } from "d3";
 import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
-import { GEO_KEY_DEFAULT } from "../mapUtils.js";
+import { GEO_KEY_DEFAULT, toLookupKey } from "../mapUtils.js";
 
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
 type HighlightValue<T, R> = R | ((datum: T) => R);
@@ -182,10 +182,6 @@ const toObject: (value: unknown) => object = Object;
  * else stringifies - which is how a missing id becomes the string "undefined". Shared in substance
  * with the geojson renderer's own lookup.
  */
-function toLookupKey(value: unknown): string | symbol {
-  return typeof value === "symbol" ? value : String(value);
-}
-
 export default function <T = unknown>(): MapRendererHighlightComponent<T> {
   return component()
     .prop("keyName")

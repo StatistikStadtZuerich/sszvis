@@ -94,6 +94,7 @@
 import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
 import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
+import * as fn from "../../fn.js";
 import { mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 
@@ -140,19 +141,6 @@ export interface MapRendererPatternedLakeOverlayComponent
   lakePathColor(value: LakePathColor): MapRendererPatternedLakeOverlayComponent;
   fadeOut(): boolean;
   fadeOut(value: boolean): MapRendererPatternedLakeOverlayComponent;
-}
-
-/**
- * Normalises the colour prop into the single accessor shape d3's overloads can resolve. An accessor
- * is passed through untouched, so it keeps receiving d3's arguments and node context; a constant
- * becomes a function returning it, which d3 applies identically - both paths end in the same
- * setProperty call. The same idiom as src/map/renderer/mesh.ts, minus its nullish fallback: this
- * prop has no default, and the caller only reaches here once it is truthy.
- */
-function toStyleValue(
-  value: LakePathColor
-): ValueFn<BaseType, GeoPermissibleObjects, string | null> {
-  return typeof value === "function" ? value : () => value;
 }
 
 export default function (): MapRendererPatternedLakeOverlayComponent {
@@ -204,7 +192,7 @@ export default function (): MapRendererPatternedLakeOverlayComponent {
         .attr("d", props.mapPath);
 
       if (props.lakePathColor) {
-        lakePath.style("stroke", toStyleValue(props.lakePathColor));
+        lakePath.style("stroke", fn.valueFn(props.lakePathColor));
       }
     });
 }

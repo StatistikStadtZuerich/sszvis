@@ -119,6 +119,7 @@ import {
 } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
+import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
@@ -315,7 +316,7 @@ export default function <T = unknown>(): SunburstComponent<T> {
         .join("path")
         .attr("class", "sszvis-sunburst-arc");
 
-      arcs.attr("stroke", strokeAccessor(props.stroke)).attr("fill", fillColor);
+      arcs.attr("stroke", fn.valueFn(props.stroke)).attr("fill", fillColor);
 
       arcs.transition(defaultTransition()).attrTween("d", (d) => {
         const x0Interp = interpolate(d.x0, d._x0);
@@ -345,14 +346,4 @@ export default function <T = unknown>(): SunburstComponent<T> {
     });
 
   return sunburstComponent;
-}
-
-/**
- * Resolves the stroke property to the accessor d3 needs, since its attr overloads do not take
- * the constant-or-accessor union. An accessor is returned as it stands rather than wrapped, so
- * d3 still calls it with the element as its receiver and with the index and group arguments;
- * a constant becomes an accessor returning it, which d3 reads the same way as the constant.
- */
-function strokeAccessor<T>(value: StrokeValue<T>): StrokeAccessor<T> {
-  return typeof value === "function" ? value : () => value;
 }

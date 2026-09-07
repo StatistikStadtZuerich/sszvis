@@ -30,6 +30,7 @@ import { getAccessibleTextColor } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
+import { nodeColor } from "../layout/hierarchy.js";
 import { defaultTransition } from "../transition.js";
 import type { StringAccessor } from "../types.js";
 
@@ -150,19 +151,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
         .attr("width", (d) => d.x1 - d.x0)
         .attr("height", (d) => d.y1 - d.y0)
         .attr("fill", (d) => {
-          if ("rootKey" in d.data && d.data.rootKey) {
-            return props.colorScale(d.data.rootKey);
-          }
-          const ancestors = d.ancestors();
-          const topLevelCategory = ancestors.find(
-            (_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root"
-          );
-          if (topLevelCategory && "key" in topLevelCategory.data) {
-            return props.colorScale(topLevelCategory.data.key);
-          } else if ("key" in d.data) {
-            return props.colorScale(d.data.key);
-          }
-          return "#cccccc"; // Default fill if no key found
+          return nodeColor(d, props.colorScale);
         })
         .attr("stroke", "#ffffff")
         .attr("stroke-width", 1)
@@ -212,19 +201,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
           calculateLabelPosition(d, props.labelPosition || "top-left").y;
         const labelFillAcc = (d: TreemapLayout<T>) => {
           const bgColor = () => {
-            if ("rootKey" in d.data && d.data.rootKey) {
-              return props.colorScale(d.data.rootKey);
-            }
-            const ancestors = d.ancestors();
-            const topLevelCategory = ancestors.find(
-              (_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root"
-            );
-            if (topLevelCategory && "key" in topLevelCategory.data) {
-              return props.colorScale(topLevelCategory.data.key);
-            } else if ("key" in d.data) {
-              return props.colorScale(d.data.key);
-            }
-            return "#cccccc"; // Default fill if no key found
+            return nodeColor(d, props.colorScale);
           };
           return getAccessibleTextColor(bgColor());
         };
