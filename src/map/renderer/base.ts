@@ -3,6 +3,8 @@
  *
  * @module sszvis/map/renderer/base
  *
+ * @template T The type of the data values merged onto the map features
+ *
  * A component used internally for rendering the base layer of maps.
  * These map entities have a color fill, which is possibly a pattern that represents
  * missing values. They are also event targets. If your map has nothing else, it should have a
@@ -74,8 +76,12 @@ import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 import { slowTransition } from "../../transition.js";
 import { type GeoPoint, getGeoJsonCenter, type MergedGeoDatum } from "../mapUtils.js";
 
-/** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
-type MapValue<T, R> = R | ((datum: T) => R);
+/**
+ * A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. The
+ * accessor parameter includes undefined because getMapFill passes MergedGeoDatum.datum straight
+ * through, and that is undefined for a feature no datum matched.
+ */
+type MapValue<T, R> = R | ((datum: T | undefined) => R);
 
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredMapValue<T, R> = (datum?: T) => R;
@@ -104,16 +110,6 @@ export interface MapRendererBaseComponent<T = unknown> extends Component {
   fill<U = T>(value: MapValue<U, string>): MapRendererBaseComponent<T>;
   transitionColor(): boolean;
   transitionColor(enabled: boolean): MapRendererBaseComponent<T>;
-}
-
-/**
- * Narrows a centre to the pair d3's projections read. getGeoJsonCenter returns number[], since an
- * unvalidated `center` property can parse to any length; a projection reads only the first two
- * entries, so this makes that explicit without changing what is passed. Components past the second
- * are dropped, which only matters for a non-d3 projection function that reads past index 1.
- */
-function toGeoPoint(center: number[]): GeoPoint {
-  return [center[0], center[1]];
 }
 
 export default function <T = unknown>(): MapRendererBaseComponent<T> {
@@ -181,11 +177,17 @@ export default function <T = unknown>(): MapRendererBaseComponent<T> {
             "map/renderer/base: mapPath must be a d3.geoPath with a projection, since the tooltip anchors are positioned with it"
           );
         }
-        const point = projection(toGeoPoint(getGeoJsonCenter(d.geoJson)));
+        // The centre is handed over whole rather than narrowed to a pair. getGeoJsonCenter returns
+        // number[] because an unvalidated `center` property can parse to any length, and the
+        // JavaScript passed whatever it produced straight to the projection; truncating here would
+        // change what a non-d3 projection function that reads past index 1 receives.
+        const point = projection(getGeoJsonCenter(d.geoJson) as GeoPoint);
         // Only a hand-written projection can return null here: d3's own projections clip in the
-        // stream, not in the point call, and return a pair - of NaN, for a malformed centre. The
-        // NaN pair keeps such a point on the same transform path the malformed-centre case takes.
-        return point ?? [Number.NaN, Number.NaN];
+        // stream, not in the point call, and return a pair - of NaN, for a malformed centre. A null
+        // is passed on rather than replaced, as the JavaScript did: tooltipAnchor spreads it into
+        // translateString and renders transform="translate(undefined,undefined)". Substituting a
+        // NaN pair here would put a different attribute value in the DOM for the same input.
+        return point as [number, number];
       });
 
       const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);

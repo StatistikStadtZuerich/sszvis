@@ -153,9 +153,9 @@ describe("map/renderer/base", () => {
     test("takes the fill from the accessor, called with the datum", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
-        c.fill((d: Datum) => {
+        c.fill((d: Datum | undefined) => {
           seen.push(d);
-          return `rgb(${d.value}, 0, 0)`;
+          return `rgb(${d?.value}, 0, 0)`;
         })
       );
       expect(attrs(node, "fill")).toEqual(["rgb(1, 0, 0)", "rgb(2, 0, 0)", "rgb(3, 0, 0)"]);
@@ -168,7 +168,9 @@ describe("map/renderer/base", () => {
     });
 
     test("uses the missing value pattern where the defined predicate fails", () => {
-      const node = render(fullData, (c) => c.fill("#ff0000").defined((d: Datum) => d.value !== 2));
+      const node = render(fullData, (c) =>
+        c.fill("#ff0000").defined((d: Datum | undefined) => d?.value !== 2)
+      );
       expect(attrs(node, "fill")).toEqual(["#ff0000", "url(#missing-pattern)", "#ff0000"]);
     });
 
@@ -198,7 +200,7 @@ describe("map/renderer/base", () => {
     });
 
     test("marks areas that fail the defined predicate", () => {
-      const node = render(fullData, (c) => c.defined((d: Datum) => d.value !== 2));
+      const node = render(fullData, (c) => c.defined((d: Datum | undefined) => d?.value !== 2));
       expect(areas(node).map((a) => a.classList.contains("sszvis-map__area--undefined"))).toEqual([
         false,
         true,
@@ -334,6 +336,54 @@ describe("map/renderer/base", () => {
         )
         .node() as SVGGElement;
       expect(anchors(node).map((a) => a.getAttribute("transform"))).toContain("translate(NaN,NaN)");
+    });
+
+    /** A mapPath whose projection reports what it was handed, and where it sent it. */
+    const spyPath = (project: (point: number[]) => [number, number] | null, seen: unknown[]) =>
+      Object.assign(() => "M0,0Z", {
+        projection: () => (point: number[]) => {
+          seen.push(point);
+          return project(point);
+        },
+      }) as unknown as ReturnType<typeof mapPathOf>;
+
+    // NOTE: a projection returning null is only reachable with a hand-written one - d3's own clip
+    // in the stream and return a NaN pair - and the null is passed straight to tooltipAnchor,
+    // which spreads it into translateString. Pinned because substituting a NaN pair here would
+    // change the attribute this writes.
+    test("emits an undefined transform for an anchor whose projection returns null", () => {
+      const collection = geoJson();
+      const node = group()
+        .call(
+          mapRendererBase()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .geoJson(collection)
+            .mapPath(spyPath(() => null, []))
+        )
+        .node() as SVGGElement;
+      expect(anchors(node).map((a) => a.getAttribute("transform"))).toEqual([
+        "translate(undefined,undefined)",
+        "translate(undefined,undefined)",
+        "translate(undefined,undefined)",
+      ]);
+    });
+
+    // NOTE: getGeoJsonCenter returns whatever the unvalidated `center` property parsed to, and the
+    // whole array reaches the projection. d3's projections read only the first two entries, but a
+    // hand-written one can read further, so the extra components must not be trimmed on the way.
+    test("hands the projection the whole centre array, extra components included", () => {
+      const collection = geoJson();
+      collection.features[1].properties = { center: "1,2,3" };
+      const seen: unknown[] = [];
+      group()
+        .call(
+          mapRendererBase()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            .geoJson(collection)
+            .mapPath(spyPath(() => [0, 0], seen))
+        )
+        .node();
+      expect(seen).toContainEqual([1, 2, 3]);
     });
 
     // BUG: the missing-value pattern is written into a defs element inside each map layer's own
