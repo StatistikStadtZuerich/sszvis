@@ -435,6 +435,24 @@ describe("component/stackedBar", () => {
       expect(attrs(rects(node), "fill")).toEqual(["#f00", "#f00", "#0f0", "#0f0"]);
     });
 
+    test("should not call a fill accessor for a slice with no source row", () => {
+      // The sparse slice stacks as zero, so nothing of it is painted. Calling the accessor
+      // for it would hand `d.data === undefined` to a row-reading accessor - the shape every
+      // docs example uses, e.g. `fill((d) => cScale(cAcc(d.data)))` - and throw.
+      const sparse = rows.filter((d) => !(d.region === "B" && d.category === "Y"));
+      const seen: unknown[] = [];
+      const node = render(
+        verticalOf().fill((d: Slice) => {
+          seen.push(d.data);
+          return (d.data as Row).category === "X" ? "#f00" : "#0f0";
+        }),
+        verticalData(sparse)
+      );
+      expect(seen).not.toContain(undefined);
+      // the zero slice is left with no fill attribute rather than a colour
+      expect(attrs(rects(node), "fill")).toEqual(["#f00", "#f00", "#0f0", null]);
+    });
+
     test("should accept a constant fill", () => {
       const node = render(verticalOf().fill("#123456"));
       expect(new Set(attrs(rects(node), "fill"))).toEqual(new Set(["#123456"]));
