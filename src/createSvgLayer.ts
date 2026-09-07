@@ -42,7 +42,13 @@ export function createSvgLayer(
   const title = metadata.title || "";
   const description = metadata.description || "";
 
-  const root: AnySelection = fn.isSelection(selector) ? selector : select(selector as any);
+  const root: AnySelection = fn.isSelection(selector)
+    ? selector
+    : // d3's select() has one overload for a selector string and another for a node, and
+      // will not take the union of the two, so narrow rather than cast.
+      typeof selector === "string"
+      ? select(selector)
+      : select(selector);
   const svg = root
     .selectAll(`svg[${elementDataKey}]`)
     .data([0])

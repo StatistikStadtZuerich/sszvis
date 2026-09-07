@@ -79,8 +79,15 @@ interface KeySpec<T> {
   func: KeyAccessor<T>;
 }
 
+/**
+ * The shape a cascade builds: arrayBy nests an array, objectBy an object, and the innermost
+ * level holds the grouped data. Which of the three a given level is only becomes known from
+ * the chain the caller built, so `apply` asks for the expected result type.
+ */
+export type CascadeResult<T> = T[] | CascadeResult<T>[] | { [key: string]: CascadeResult<T> };
+
 export interface CascadeInstance<T> {
-  apply(data: T[]): any;
+  apply<R = CascadeResult<T>>(data: T[]): R;
   objectBy<K extends string | number>(accessor: KeyAccessor<T, K>): CascadeInstance<T>;
   arrayBy<K extends string | number>(
     accessor: KeyAccessor<T, K>,
@@ -120,13 +127,15 @@ function arrEach<T>(arr: T[], func: (value: T, index: number) => void): void {
   }
 }
 
-export function cascade<T = any>(): CascadeInstance<T> {
+export function cascade<T = unknown>(): CascadeInstance<T> {
   const _cascade = {} as CascadeInstance<T>;
   const keys: KeySpec<T>[] = [];
-  const sorts: (KeySorter<any> | undefined)[] = [];
+  // Stored as a string sorter: the grouping stringifies its keys, so that is what a
+  // sorter is handed at runtime whatever K the caller declared.
+  const sorts: (KeySorter<string> | undefined)[] = [];
   let valuesSort: ValueSorter<T> | undefined;
 
-  function make(data: T[], depth: number): any {
+  function make(data: T[], depth: number): CascadeResult<T> {
     if (depth >= keys.length) {
       if (valuesSort) data.sort(valuesSort);
       return data;
@@ -138,13 +147,15 @@ export function cascade<T = any>(): CascadeInstance<T> {
     const grouped = groupBy(data, key.func);
 
     if (key.type === "obj") {
-      const obj: Record<string, any> = {};
+      const obj: Record<string, CascadeResult<T>> = {};
       groupEach(grouped, (value, k) => {
         obj[k] = make(value, nextDepth);
       });
       return obj;
-    } else if (key.type === "arr") {
-      const arr: any[] = [];
+    }
+
+    {
+      const arr: CascadeResult<T>[] = [];
       if (sorter) {
         const groupKeys = Object.keys(grouped).sort(sorter);
         arrEach(groupKeys, (k) => {
@@ -159,7 +170,7 @@ export function cascade<T = any>(): CascadeInstance<T> {
     }
   }
 
-  _cascade.apply = (data: T[]): any => make(data, 0);
+  _cascade.apply = <R = CascadeResult<T>>(data: T[]): R => make(data, 0) as R;
 
   _cascade.objectBy = <K extends string | number>(
     accessor: KeyAccessor<T, K>
@@ -179,7 +190,8 @@ export function cascade<T = any>(): CascadeInstance<T> {
       type: "arr",
       func: accessor,
     });
-    if (sorter) sorts[keys.length - 1] = sorter;
+    // See the note on `sorts`: K is stringified before the sorter is called.
+    if (sorter) sorts[keys.length - 1] = sorter as unknown as KeySorter<string>;
     return _cascade;
   };
 

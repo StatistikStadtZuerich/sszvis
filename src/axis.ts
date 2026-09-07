@@ -596,7 +596,8 @@ export const axisX = () =>
     .tickSizeInner(4)
     .tickSizeOuter(6.5)
     .tickPadding(6)
-    .tickFormat(fn.arity(1, formatNumber));
+    // The x-axis is numeric; arity(1, ...) drops the index d3 passes as a second argument.
+    .tickFormat(fn.arity(1, formatNumber) as (d: AxisDomain) => string);
 
 axisX.time = () =>
   axisX()
