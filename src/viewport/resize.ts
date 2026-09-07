@@ -23,7 +23,8 @@
  *                                      same function twice is de-duplicated: the earlier entry is
  *                                      dropped and the function is appended, so re-registering moves
  *                                      it to the end of the call order. Listeners run in registration
- *                                      order.
+ *                                      order. A listener that is not callable is rejected here, where
+ *                                      the mistake is, rather than on the next resize event.
  *
  * @function {string, function} off     removes a listener by function identity. An unknown event name
  *                                      or an unregistered function is ignored. A single `off` undoes
@@ -39,8 +40,7 @@
  *
  * Note: `trigger` isolates the listeners from one another. A listener that throws is reported
  * through `sszvis.logger.error` and the remaining listeners still run, so one broken chart cannot
- * silence the rest of the page or escape the throttle. `on` accepts anything it is given, so a
- * non-callable listener still fails on the next trigger rather than at registration.
+ * silence the rest of the page or escape the throttle.
  *
  * Note: `on`, `off` and `trigger` return `this`, so they chain when called as methods on the viewport
  * object but return `undefined` once destructured. The registration itself still works.
@@ -100,6 +100,13 @@ if (globalThis.window !== undefined) {
 }
 
 function on(this: Viewport, name: string, cb: ViewportListener): Viewport {
+  // Registering a non-callable listener can never work, so it is rejected here rather than
+  // left to fail inside `trigger` one resize event later, far from the call that caused it.
+  if (typeof cb !== "function") {
+    throw new TypeError(
+      `[sszvis.viewport] The listener for "${name}" must be a function, got ${typeof cb}.`
+    );
+  }
   if (!callbacks[name]) {
     callbacks[name] = [];
   }
