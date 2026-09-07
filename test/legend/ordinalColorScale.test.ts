@@ -201,8 +201,10 @@ describe("legend/ordinalColorScale", () => {
     const mockEntryWidth = (width: number) =>
       vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ width } as DOMRect);
 
-    test("should pack entries left to right and wrap at floatWidth", () => {
+    test("should pack entries left to right and wrap at floatWidth, without an orientation", () => {
       mockEntryWidth(50);
+      // no orientation is set: the float layout needs none, and the required-orientation
+      // guard must not reject it
       const node = render(
         legendColorOrdinal().scale(scale()).horizontalFloat(true).floatWidth(200)
       );
@@ -278,19 +280,26 @@ describe("legend/ordinalColorScale", () => {
     expect(node.querySelectorAll("text.sszvis-legend__label").length).toBe(5);
   });
 
-  describe("known quirks", () => {
-    test("omits the transform entirely when no orientation is set", () => {
-      // BUG: `orientation` has no default, and rows/cols are only computed for the
-      // "horizontal" and "vertical" cases. With neither set (and horizontalFloat off) the
-      // transform callback falls through and returns undefined, so d3 removes the
-      // attribute and every entry is drawn at the origin, stacked on top of one another.
-      // The layout silently produces an unreadable legend instead of warning.
-      // current: transform absent on all entries. expected: a default layout, or a
-      // logger.warn like the other components use for missing required props.
-      const node = render(legendColorOrdinal().scale(scale()));
-      expect(transforms(node)).toEqual([null, null, null, null, null]);
-    });
+  test("should throw a named error when no orientation is set", () => {
+    const group = layer("ordinal-no-orientation");
+    expect(() => group.call(legendColorOrdinal().scale(scale()))).toThrowError(
+      '[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true'
+    );
+    // thrown before anything is rendered
+    expect(entries(group.node() as SVGGElement).length).toBe(0);
+  });
 
+  test("should throw when orientation is set to an unrecognised value", () => {
+    const group = layer("ordinal-bad-orientation");
+    const legend = legendColorOrdinal().scale(scale());
+    // a runtime value the type system would reject
+    (legend.orientation as (o: string) => unknown)("diagonal");
+    expect(() => group.call(legend)).toThrowError(
+      '[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true'
+    );
+  });
+
+  describe("known quirks", () => {
     test("does not clamp the layout to the number of entries", () => {
       // NOTE: intended - the JSDoc calls these "the target number of columns", not a
       // bound on content, so asking for more columns than entries spreads them along one
