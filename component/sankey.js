@@ -157,9 +157,8 @@ import bar from './bar.js';
  * a hover handler.
  *
  * Note: the component never sets bar's transition property, so it keeps bar's default of
- * true - and that transition does not animate anything, so the nodes jump straight to their
- * new geometry. It is not free either: a d3 transition is still created and discarded on
- * every node rect on every render. See test/component/sankey.test.ts.
+ * true and the node rects ease to their new geometry over bar's transition. A caller cannot
+ * turn that off, since the property is not forwarded. See test/component/sankey.test.ts.
  *
  * @return {sszvis.component}
  */

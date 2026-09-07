@@ -187,9 +187,8 @@ import bar from './bar.js';
  * rendered path carries no geometry until the first animation frame and anything that measures the
  * chart synchronously - getBBox, a snapshot, an export to PNG - sees an empty path. Entering lines
  * then snap into place, because d3 has no previous d to interpolate from; only updates animate. The
- * bars underneath do not animate at all - bar's transition property is inert - so on a state change
- * the outline eases towards its new position while the bars jump, and the two visibly detach for
- * the length of the transition. bar also guards every geometry value against NaN while the line
+ * bars underneath animate over the same duration, so the outline and the bars it describes stay
+ * together for the length of the transition. bar also guards every geometry value against NaN while the line
  * hands barWidth and barPosition straight to d3.line, so one missing value poisons the path string
  * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
  * with pyramid.

@@ -25,13 +25,11 @@
  * @template P The type of one point along a line
  * @template L The type of the datum for a whole line
  *
- * @property {number, function} x       An accessor function for getting the x-value of the line, or a
- *                                       constant. Required: omitting it draws nothing at all, with no
- *                                       warning, because every point then reads as missing.
- * @property {function} y                An accessor function for getting the y-value of the line. Required,
- *                                       and unlike x it must be a function, because the default defined
- *                                       predicate calls it. Omitting it throws a TypeError rather than a
- *                                       named missing-property error.
+ * @property {number, function} x       An accessor function for getting the x-value of the line, in
+ *                                       pixels, or a constant. Becomes a functor. Required: leaving it
+ *                                       unset throws before anything is rendered.
+ * @property {number, function} y        An accessor function for getting the y-value of the line, in
+ *                                       pixels, or a constant. Becomes a functor. Required, like x.
  * @property {function} [defined]        A per-point predicate handed to d3.line, deciding whether a point is
  *                                       drawn. Defaults to skipping points whose x or y is missing. It
  *                                       replaces that default rather than composing with it, so setting it
@@ -75,6 +73,12 @@ import { type ComponentBuilder } from "../d3-component.js";
  */
 type PointAccessor<P, R> = (datum: P, index: number, points: P[]) => R;
 /**
+ * How x and y read back once they are stored. Every parameter is optional because a constant
+ * handed to either of them becomes a functor that ignores its arguments; one of these is
+ * still assignable to a setter, so a value read from a getter can be handed straight back.
+ */
+type StoredPointAccessor<P, R> = (datum?: P, index?: number, points?: P[]) => R;
+/**
  * Style accessors are handed to the d3 selection, which calls them with the datum for a
  * whole line and that line's index within the outer array - not with a single point.
  */
@@ -84,10 +88,10 @@ type StyleValue<L, R> = R | LineAccessor<L, R>;
 /** Pulls the array of points to draw out of one line's datum. */
 type ValuesAccessor<L, P> = (datum: L, index: number) => P[];
 export interface LineComponent<P = unknown, L = unknown> extends ComponentBuilder<LineComponent<P, L>> {
-    x(): number | PointAccessor<P, number> | undefined;
+    x(): StoredPointAccessor<P, number> | undefined;
     x<Q = P>(value: number | PointAccessor<Q, number>): LineComponent<P, L>;
-    y(): PointAccessor<P, number> | undefined;
-    y<Q = P>(accessor: PointAccessor<Q, number>): LineComponent<P, L>;
+    y(): StoredPointAccessor<P, number> | undefined;
+    y<Q = P>(value: number | PointAccessor<Q, number>): LineComponent<P, L>;
     defined(): PointAccessor<P, boolean> | undefined;
     defined<Q = P>(predicate: PointAccessor<Q, boolean>): LineComponent<P, L>;
     key(): LineAccessor<L, string | number>;
@@ -101,6 +105,6 @@ export interface LineComponent<P = unknown, L = unknown> extends ComponentBuilde
     transition(): boolean;
     transition(enabled: boolean): LineComponent<P, L>;
 }
-export default function <P = unknown, L = unknown>(): LineComponent<P, L>;
+export default function line<P = unknown, L = unknown>(): LineComponent<P, L>;
 export {};
 //# sourceMappingURL=line.d.ts.map

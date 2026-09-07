@@ -75,10 +75,9 @@ import bar from './bar.js';
  *
  * Note: an entering reference path gets its d attribute synchronously, so getBBox, snapshots
  * and PNG exports see real geometry on the tick it is rendered. Updates are additionally
- * written through a transition, so a change of data eases into place. The bars underneath do
- * not animate at all - bar's transition property is inert - so on a state change the outline
- * eases towards its new position while the bars jump, and the two visibly detach for the
- * length of the transition. Fixing that belongs to bar.
+ * written through a transition, so a change of data eases into place. The bars underneath
+ * animate over the same duration, so the outline and the bars it describes stay together for
+ * the length of the transition.
  *
  * Note: a reference series with no points renders no path at all, and a path already in the
  * DOM is removed when its series goes away. Each side is still capped at a single line, since

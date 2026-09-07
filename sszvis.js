@@ -5242,50 +5242,73 @@
      *                                            would be [1, 0.5], and the lower right corner [1, 1]. Used by, for example,
      *                                            the pyramid chart. Entries beyond the first two are ignored, and an array
      *                                            with fewer than two entries produces a NaN coordinate rather than a warning.
-     * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
-     *                                            are changed.
+     * @property {boolean} transition             Whether or not to transition the geometry of the bar component when it
+     *                                            changes. Defaults to true, and eases over 300ms.
      *
-     * Note: the transition property does not currently animate anything - the geometry is
-     * re-applied to the plain selection immediately after the transition is created, so the
-     * values always jump. It is not free either: the discarded transition still attaches d3
-     * transition state to every bar, which interrupts any transition already running on them.
+     * Note: entering bars receive their geometry on the join, before the transition starts, so they
+     * appear in place rather than animating up from nothing. Only updates animate. fill and stroke are
+     * deliberately not transitioned - a colour change jumps - because the colour scales these charts
+     * use are categorical and interpolating between two category colours reads as a third category.
+     *
+     * Note: the geometry accessors are guarded: x, y, width and height must be finite numbers, so NaN,
+     * Infinity, undefined, null and anything that does not coerce to a finite number all become 0. A
+     * value that does coerce is normalised to its number, so a numeric string is written as a number.
      * See test/component/bar.test.ts.
      *
      * @return {sszvis.component}
      */
     /**
-     * Replaces NaN values with 0.
+     * Coerces a geometry value to a finite number, substituting 0 for anything else.
      *
-     * Equivalent to the global isNaN, which coerces its argument first. Note that this only
-     * catches NaN and undefined: null, Infinity, booleans and numeric strings all coerce to a
-     * number and pass through untouched. See test/component/bar.test.ts.
+     * Coercion first, so a numeric string still works; the finiteness check then catches NaN
+     * and Infinity as well as the values that do not coerce at all. Shared in substance with
+     * dot's guard - the two components are expected to agree, and there is no home for the
+     * helper short of a new module.
      */
-    function handleMissingVal(v) {
-      return Number.isNaN(Number(v)) ? 0 : v;
+    function toFinite$1(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : 0;
     }
-    function bar () {
+    function bar() {
       return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("fill", functor).prop("stroke", functor).prop("centerTooltip").prop("tooltipAnchor").prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-        const xAcc = compose(handleMissingVal, props.x);
-        const yAcc = compose(handleMissingVal, props.y);
-        const wAcc = compose(handleMissingVal, props.width);
-        const hAcc = compose(handleMissingVal, props.height);
-        const bars = selection.selectAll(".sszvis-bar").data(data).join("rect").classed("sszvis-bar", true).attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc).attr("fill", props.fill).attr("stroke", props.stroke);
+        const xAt = (datum, index) => toFinite$1(props.x(datum, index));
+        const yAt = (datum, index) => toFinite$1(props.y(datum, index));
+        const wAt = (datum, index) => toFinite$1(props.width(datum, index));
+        const hAt = (datum, index) => toFinite$1(props.height(datum, index));
+        const fillAt = (datum, index) => {
+          var _props$fill, _props$fill2;
+          return (_props$fill = (_props$fill2 = props.fill) === null || _props$fill2 === void 0 ? void 0 : _props$fill2.call(props, datum, index)) !== null && _props$fill !== void 0 ? _props$fill : null;
+        };
+        const strokeAt = (datum, index) => {
+          var _props$stroke, _props$stroke2;
+          return (_props$stroke = (_props$stroke2 = props.stroke) === null || _props$stroke2 === void 0 ? void 0 : _props$stroke2.call(props, datum, index)) !== null && _props$stroke !== void 0 ? _props$stroke : null;
+        };
+        // Entering bars are given their geometry on the join, so they are in place before any
+        // transition starts. The geometry is then applied exactly once more - to the transition
+        // when there is one, and to the plain selection otherwise - so an update tweens from its
+        // previous value instead of from the value it already holds.
+        const bars = selection.selectAll(".sszvis-bar").data(data).join(enter => enter.append("rect").classed("sszvis-bar", true).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt)).attr("fill", fillAt).attr("stroke", strokeAt);
         if (props.transition) {
-          bars.transition(defaultTransition());
+          bars.transition(defaultTransition()).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+        } else {
+          bars.attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
         }
-        bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
         // Tooltip anchors
         let tooltipPosition;
         if (props.centerTooltip) {
-          tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+          tooltipPosition = (d, i) => [xAt(d, i) + wAt(d, i) / 2, yAt(d, i) + hAt(d, i) / 2];
         } else if (props.tooltipAnchor) {
           const uv = props.tooltipAnchor.map(value => Number.parseFloat(String(value)));
-          tooltipPosition = d => [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
+          tooltipPosition = (d, i) => [xAt(d, i) + uv[0] * wAt(d, i), yAt(d, i) + uv[1] * hAt(d, i)];
         } else {
-          tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d)];
+          tooltipPosition = (d, i) => [xAt(d, i) + wAt(d, i) / 2, yAt(d, i)];
         }
+        // tooltipAnchor declares its position accessor as taking the datum alone, but d3 calls it
+        // with the index too and the anchors must line up with the bars - so the index is read here
+        // and the narrower declaration is widened. The cast encodes that gap; the real fix is in
+        // tooltipAnchor's own signature.
         const ta = tooltipAnchor().position(tooltipPosition);
         selection.call(ta);
       });
@@ -5307,86 +5330,107 @@
      *
      * @template T The type of the data values bound to the dots
      *
-     * @property {number, function} x               An accessor function or number for the x-position of the dots.
-     *                                              Becomes a functor. Required: see the note on missing properties below.
-     * @property {number, function} y               An accessor function or number for the y-position of the dots.
-     *                                              Becomes a functor. Required, like x.
-     * @property {number, function} radius          An accessor function or number for the radius of the dots.
-     *                                              Not wrapped in fn.functor, so the getter returns whatever was
-     *                                              set rather than a function. When it is left unset no r attribute
-     *                                              is written, SVG defaults r to 0, and the dots are invisible -
-     *                                              silently, since only x and y are checked. A radius of 0 is also
-     *                                              how docs/scatterplot-over-time hides dots outside the selected
-     *                                              period.
+     * @property {number, function} x               An accessor function or number for the x-position of the dots,
+     *                                              in pixels. Becomes a functor. Required: leaving it unset throws
+     *                                              before anything is rendered.
+     * @property {number, function} y               An accessor function or number for the y-position of the dots,
+     *                                              in pixels. Becomes a functor. Required, like x.
+     * @property {number, function} radius          An accessor function or number for the radius of the dots, in
+     *                                              pixels. Becomes a functor. Required, like x and y - an unwritten
+     *                                              r attribute would default to 0 and render a full set of
+     *                                              invisible dots. A radius of 0 is still explicitly allowed, and
+     *                                              is how docs/scatterplot-over-time hides dots outside the
+     *                                              selected period.
      * @property {string, function} stroke          An accessor function or string for the stroke color of the dots.
-     *                                              Not wrapped in fn.functor. When unset, no stroke attribute is
-     *                                              written and the circles fall back to the SVG and CSS defaults.
+     *                                              Becomes a functor. When unset, no stroke attribute is written
+     *                                              and the circles fall back to the SVG and CSS defaults.
      * @property {string, function} fill            An accessor function or string for the fill color of the dots.
      *                                              Same as stroke.
-     * @property {boolean} transition               Whether or not to transition the visual values of the dot
-     *                                              component, when they are changed. Defaults to true.
+     * @property {boolean} transition               Whether or not to transition the geometry of the dot component
+     *                                              when it changes. Defaults to true, and eases over 300ms.
      *
-     * Note: x and y are required, and their absence is not reported as such. The circle attributes
-     * survive an unset property, because d3 drops an attribute whose value is undefined, but the
-     * tooltip anchor calls the accessor directly and throws a TypeError from d3's internals that
-     * names neither the property nor the component. The failure depends on the data, so an empty
-     * first render succeeds and the same chart throws as soon as data arrives. It also happens
-     * after the circles and the anchor rects have been created, so a caller that catches it is
-     * left with a partially updated chart.
+     * Note: the geometry accessors are guarded, in the same spirit as bar's guard: cx, cy and r must be
+     * finite numbers, so NaN - the usual result of feeding a scale a value outside its domain - along
+     * with Infinity, undefined, null and anything that does not coerce to a finite number all become 0.
+     * A negative radius is clamped to 0, since a negative r is an SVG error and would drop the circle
+     * altogether. The guard means a bad value parks one dot at the origin rather than removing it
+     * silently. fill and stroke are not guarded; an accessor may return null or undefined there to leave
+     * the attribute off.
      *
-     * Note: the transition property does not currently animate anything - the data join writes the
-     * geometry to the elements first and the transition then re-applies the same values, so every
-     * tween runs from a value to itself and the geometry always jumps. It is not free either: each
-     * render schedules three attribute tweens on every circle, and those schedules accumulate until
-     * they start, at which point d3 cancels the superseded ones and interrupts any transition
-     * already running on those nodes. fill and stroke are applied only on the join and are never
-     * transitioned, so color changes jump whatever this property is set to.
+     * Note: entering dots receive their geometry on the join, before the transition starts, so they
+     * appear in place rather than animating in from nothing. Only updates animate. fill and stroke are
+     * deliberately not transitioned - a colour change jumps - because the colour scales these charts
+     * use are categorical and interpolating between two category colours reads as a third category.
      *
-     * Note: unlike bar, dot has no missing-value guard. Whatever an accessor returns is written into
-     * the attribute verbatim, so a NaN coordinate - the usual result of feeding a scale a value
-     * outside its domain - produces an invalid attribute that the browser ignores, leaving the dot
-     * at the origin, while a NaN or negative radius makes the circle disappear. Strings, booleans
-     * and Infinity are written unchanged too, and all of it fails silently. undefined and null are
-     * the exception: d3 removes the attribute for them.
-     *
-     * Note: the tooltip anchor reads its position as props.x(d) and props.y(d), without d3's index
-     * argument, so an accessor that uses the index positions the circles correctly but yields
-     * translate(NaN,NaN) for every anchor. The anchor ignores the radius, and is created and
-     * positioned even for a dot hidden with radius 0, which leaves a live tooltip target on an
-     * invisible dot. x and y are read three times per datum on every render - twice for the circle
-     * and once for the anchor - and radius twice, so accessors should be cheap and free of side
-     * effects. See test/component/dot.test.ts.
+     * Note: x, y and radius are read twice per datum on every render - once for the circle and once for
+     * the tooltip anchor - plus a third time when transitioning, so accessors should be cheap and free
+     * of side effects. The anchor ignores the radius, and is created and positioned even for a dot
+     * hidden with radius 0, which leaves a live tooltip target on an invisible dot. See
+     * test/component/dot.test.ts.
      *
      * @return {sszvis.component}
      */
     /**
-     * Normalises a property that was stored without fn.functor into an accessor, so that the
-     * renderer has a single shape to hand to d3. An accessor is passed through untouched, so
-     * it still receives d3's arguments and node context. The stored value itself is never
-     * modified, which is what keeps the getters returning whatever was set.
+     * Reports a required property the caller left unset, naming both the component and the
+     * property. Called before the data join, so a failed configuration leaves no half-rendered
+     * circles or anchors behind, and fails on the first render rather than on the first render
+     * that happens to have data.
      */
-    function toAccessor(value) {
-      // An accessor is handed to d3 untouched, so it keeps receiving d3's arguments and node
-      // context. Its result is narrowed from `R | null | undefined` to `R | null` only because
-      // d3's own attr typings omit undefined; d3 removes the attribute for either one, so the
-      // two are interchangeable at this boundary.
-      return typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
+    function required$4(value, name) {
+      if (value === undefined) {
+        throw new Error("[dot] the ".concat(name, " property is required"));
+      }
+      return value;
     }
-    function dot () {
-      return component().prop("x", functor).prop("y", functor).prop("radius").prop("stroke").prop("fill").prop("transition").transition(true).render(function (data) {
+    /**
+     * Coerces a geometry value to a finite number, substituting 0 for anything else.
+     *
+     * Coercion first, so a numeric string still works; the finiteness check then catches NaN
+     * and Infinity as well as the values that do not coerce at all. Shared in substance with
+     * bar's guard - the two components are expected to agree, and there is no home for the
+     * helper short of a new module.
+     */
+    function toFinite(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : 0;
+    }
+    function dot() {
+      return component().prop("x", functor).prop("y", functor).prop("radius", functor).prop("stroke", functor).prop("fill", functor).prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-        const radius = toAccessor(props.radius);
-        const stroke = toAccessor(props.stroke);
-        const fill = toAccessor(props.fill);
-        const dots = selection.selectAll(".sszvis-circle").data(data).join("circle").classed("sszvis-circle", true).attr("cx", props.x).attr("cy", props.y).attr("r", radius).attr("stroke", stroke).attr("fill", fill);
+        const xProp = required$4(props.x, "x");
+        const yProp = required$4(props.y, "y");
+        const radiusProp = required$4(props.radius, "radius");
+        const xAt = (datum, index) => toFinite(xProp(datum, index));
+        const yAt = (datum, index) => toFinite(yProp(datum, index));
+        // A negative r is invalid per the SVG spec and drops the circle, so it is clamped
+        // rather than passed on.
+        const rAt = (datum, index) => Math.max(0, toFinite(radiusProp(datum, index)));
+        const strokeAt = (datum, index) => {
+          var _props$stroke, _props$stroke2;
+          return (_props$stroke = (_props$stroke2 = props.stroke) === null || _props$stroke2 === void 0 ? void 0 : _props$stroke2.call(props, datum, index)) !== null && _props$stroke !== void 0 ? _props$stroke : null;
+        };
+        const fillAt = (datum, index) => {
+          var _props$fill, _props$fill2;
+          return (_props$fill = (_props$fill2 = props.fill) === null || _props$fill2 === void 0 ? void 0 : _props$fill2.call(props, datum, index)) !== null && _props$fill !== void 0 ? _props$fill : null;
+        };
+        // Entering circles are given their geometry on the join, so they are in place before
+        // any transition starts. The geometry is then applied exactly once more - to the
+        // transition when there is one, and to the plain selection otherwise - so an update
+        // tweens from its previous value instead of from the value it already holds.
+        const dots = selection.selectAll(".sszvis-circle").data(data).join(enter => enter.append("circle").classed("sszvis-circle", true).attr("cx", xAt).attr("cy", yAt).attr("r", rAt)).attr("stroke", strokeAt).attr("fill", fillAt);
         if (props.transition) {
-          dots.transition(defaultTransition()).attr("cx", props.x).attr("cy", props.y).attr("r", radius);
+          dots.transition(defaultTransition()).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
         } else {
-          dots.attr("cx", props.x).attr("cy", props.y).attr("r", radius);
+          dots.attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
         }
         // Tooltip anchors
-        const ta = tooltipAnchor().position(d => [props.x(d), props.y(d)]);
+        const anchorPosition = (datum, index) => [xAt(datum, index), yAt(datum, index)];
+        // tooltipAnchor declares its position accessor as taking the datum alone, but d3 calls
+        // it with the index too and the anchors must line up with the circles - so the index is
+        // read here and the narrower declaration is widened. The cast encodes that gap; the real
+        // fix is in tooltipAnchor's own signature.
+        const ta = tooltipAnchor().position(anchorPosition);
         selection.call(ta);
       });
     }
@@ -5620,13 +5664,11 @@
      * @template P The type of one point along a line
      * @template L The type of the datum for a whole line
      *
-     * @property {number, function} x       An accessor function for getting the x-value of the line, or a
-     *                                       constant. Required: omitting it draws nothing at all, with no
-     *                                       warning, because every point then reads as missing.
-     * @property {function} y                An accessor function for getting the y-value of the line. Required,
-     *                                       and unlike x it must be a function, because the default defined
-     *                                       predicate calls it. Omitting it throws a TypeError rather than a
-     *                                       named missing-property error.
+     * @property {number, function} x       An accessor function for getting the x-value of the line, in
+     *                                       pixels, or a constant. Becomes a functor. Required: leaving it
+     *                                       unset throws before anything is rendered.
+     * @property {number, function} y        An accessor function for getting the y-value of the line, in
+     *                                       pixels, or a constant. Becomes a functor. Required, like x.
      * @property {function} [defined]        A per-point predicate handed to d3.line, deciding whether a point is
      *                                       drawn. Defaults to skipping points whose x or y is missing. It
      *                                       replaces that default rather than composing with it, so setting it
@@ -5683,8 +5725,19 @@
      * immediately applies unary + to the value, which throws the identical TypeError.
      */
     const isMissingVal$2 = value => Number.isNaN(Number(value));
-    function line () {
-      return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
+    /**
+     * Reports a required property the caller left unset, naming both the component and the
+     * property. Called before the data join, so a missing accessor is reported by name instead of
+     * arriving as a TypeError from d3's internals (a missing y) or as an empty path (a missing x).
+     */
+    function required$3(value, name) {
+      if (value === undefined) {
+        throw new Error("[line] the ".concat(name, " property is required"));
+      }
+      return value;
+    }
+    function line() {
+      return component().prop("x", functor).prop("y", functor).prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
       // The default layer type L is P[], so the values ARE the layer and identity is correct.
       // A caller who sets a different L must supply a matching accessor; the constraint
       // cannot express "identity is valid only for the default instantiation".
@@ -5693,15 +5746,17 @@
         const selection = d3.select(this);
         const props = selection.props();
         // Layouts
-        // d3 has separate overloads for a constant and an accessor, so a constant x is
-        // normalised here. d3 would wrap it in exactly the same way.
-        const xProp = props.x;
-        const x = typeof xProp === "function" ? xProp : () => xProp;
+        // Both properties are wrapped by fn.functor on set, so a constant reads back as a
+        // function and needs no normalising here - but an unset property is still undefined,
+        // and is reported by name before anything is rendered.
+        const x = required$3(props.x, "x");
+        const y = required$3(props.y, "y");
         // Both dimensions are guarded. Checking only y would let a missing x reach the d
         // attribute verbatim, and the browser then drops that segment along with every
-        // segment after it, silently truncating the series.
-        const defined = props.defined === undefined ? (datum, index, points) => !isMissingVal$2(x(datum, index, points)) && !isMissingVal$2(props.y(datum, index, points)) : props.defined;
-        const line = d3.line().defined(defined).x(x).y(props.y);
+        // segment after it, silently truncating the series. An explicitly set predicate
+        // replaces this one rather than composing with it.
+        const defined = props.defined === undefined ? (datum, index, points) => !isMissingVal$2(x(datum, index, points)) && !isMissingVal$2(y(datum, index, points)) : props.defined;
+        const line = d3.line().defined(defined).x(x).y(y);
         // Rendering
         // Declared with `function` so that `this` is still forwarded to valuesAccessor, as
         // it was when this was built with fn.compose.
@@ -5823,9 +5878,8 @@
      * selector and no key function, so any pre-existing stack below the target group, at any depth,
      * is captured and re-bound, and surviving groups and rects are matched by index rather than by
      * series. The component also forwards neither bar's `transition` property nor its tooltip
-     * anchor properties, so every render attaches a transition that is immediately discarded, and
-     * the tooltip anchor is always at the top centre of a segment. See
-     * test/component/stackedBar.test.ts.
+     * anchor properties, so a caller cannot turn the segment animation off, and the tooltip anchor
+     * is always at the top centre of a segment. See test/component/stackedBar.test.ts.
      *
      * @return {sszvis.component}
      */
@@ -6564,10 +6618,9 @@
      *
      * Note: an entering reference path gets its d attribute synchronously, so getBBox, snapshots
      * and PNG exports see real geometry on the tick it is rendered. Updates are additionally
-     * written through a transition, so a change of data eases into place. The bars underneath do
-     * not animate at all - bar's transition property is inert - so on a state change the outline
-     * eases towards its new position while the bars jump, and the two visibly detach for the
-     * length of the transition. Fixing that belongs to bar.
+     * written through a transition, so a change of data eases into place. The bars underneath
+     * animate over the same duration, so the outline and the bars it describes stay together for
+     * the length of the transition.
      *
      * Note: a reference series with no points renders no path at all, and a path already in the
      * DOM is removed when its series goes away. Each side is still capped at a single line, since
@@ -6817,9 +6870,8 @@
      * a hover handler.
      *
      * Note: the component never sets bar's transition property, so it keeps bar's default of
-     * true - and that transition does not animate anything, so the nodes jump straight to their
-     * new geometry. It is not free either: a d3 transition is still created and discarded on
-     * every node rect on every render. See test/component/sankey.test.ts.
+     * true and the node rects ease to their new geometry over bar's transition. A caller cannot
+     * turn that off, since the property is not forwarded. See test/component/sankey.test.ts.
      *
      * @return {sszvis.component}
      */
@@ -7638,9 +7690,8 @@
      * rendered path carries no geometry until the first animation frame and anything that measures the
      * chart synchronously - getBBox, a snapshot, an export to PNG - sees an empty path. Entering lines
      * then snap into place, because d3 has no previous d to interpolate from; only updates animate. The
-     * bars underneath do not animate at all - bar's transition property is inert - so on a state change
-     * the outline eases towards its new position while the bars jump, and the two visibly detach for
-     * the length of the transition. bar also guards every geometry value against NaN while the line
+     * bars underneath animate over the same duration, so the outline and the bars it describes stay
+     * together for the length of the transition. bar also guards every geometry value against NaN while the line
      * hands barWidth and barPosition straight to d3.line, so one missing value poisons the path string
      * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
      * with pyramid.

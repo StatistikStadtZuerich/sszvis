@@ -291,7 +291,7 @@ interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbCo
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$p<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$m<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -323,7 +323,7 @@ interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$o<T = unknown>(): CircleComponent<T>;
+declare function export_default$l<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -363,7 +363,7 @@ interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<Confiden
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$n<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function export_default$k<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -403,7 +403,7 @@ interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<Confidenc
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$m<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$j<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -429,7 +429,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$l<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$i<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -468,7 +468,7 @@ interface LineComponent$1<T = unknown> extends ComponentBuilder<LineComponent$1<
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent$1<T>;
 }
-declare function export_default$k<T = unknown>(): LineComponent$1<T>;
+declare function export_default$h<T = unknown>(): LineComponent$1<T>;
 
 /**
  * Range Flag annotation
@@ -494,7 +494,7 @@ interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComp
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$j<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$g<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -531,7 +531,7 @@ interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerCo
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$i<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$f<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -565,7 +565,7 @@ interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComp
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$h<T = unknown>(): RectangleComponent<T>;
+declare function export_default$e<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -670,7 +670,7 @@ interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponen
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$g<T = unknown>(): TooltipComponent<T>;
+declare function export_default$d<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -1046,7 +1046,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBui
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$f<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$c<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -1096,7 +1096,7 @@ interface PanningComponent extends ComponentBuilder<PanningComponent> {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$e(): PanningComponent;
+declare function export_default$b(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -1158,7 +1158,7 @@ interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponen
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default$d<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$a<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -1593,13 +1593,17 @@ declare const getAccessibleTextColor: (backgroundColor: string | null) => string
  *                                            would be [1, 0.5], and the lower right corner [1, 1]. Used by, for example,
  *                                            the pyramid chart. Entries beyond the first two are ignored, and an array
  *                                            with fewer than two entries produces a NaN coordinate rather than a warning.
- * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
- *                                            are changed.
+ * @property {boolean} transition             Whether or not to transition the geometry of the bar component when it
+ *                                            changes. Defaults to true, and eases over 300ms.
  *
- * Note: the transition property does not currently animate anything - the geometry is
- * re-applied to the plain selection immediately after the transition is created, so the
- * values always jump. It is not free either: the discarded transition still attaches d3
- * transition state to every bar, which interrupts any transition already running on them.
+ * Note: entering bars receive their geometry on the join, before the transition starts, so they
+ * appear in place rather than animating up from nothing. Only updates animate. fill and stroke are
+ * deliberately not transitioned - a colour change jumps - because the colour scales these charts
+ * use are categorical and interpolating between two category colours reads as a third category.
+ *
+ * Note: the geometry accessors are guarded: x, y, width and height must be finite numbers, so NaN,
+ * Infinity, undefined, null and anything that does not coerce to a finite number all become 0. A
+ * value that does coerce is normalised to its number, so a numeric string is written as a number.
  * See test/component/bar.test.ts.
  *
  * @return {sszvis.component}
@@ -1608,16 +1612,15 @@ declare const getAccessibleTextColor: (backgroundColor: string | null) => string
 /**
  * Every visual property is wrapped by fn.functor on set, so it is always stored as a
  * function by the time the renderer reads it. The result stays `unknown` because the
- * missing-value guard passes anything that coerces to a number straight through, a numeric
- * string or a boolean included.
+ * geometry guard accepts anything and coerces it, a numeric string or a boolean included.
  */
 type ValueAccessor$2<T> = (datum?: T, index?: number) => unknown;
 /**
- * fill and stroke resolve to a colour, or to nothing when the property was never set -
- * fn.functor then yields undefined, which d3 treats exactly like null and removes the
- * attribute for.
+ * fill and stroke resolve to a colour, or to nothing - either because the accessor returned
+ * nothing, or because the property was never set at all, in which case the prop itself is
+ * undefined. d3 removes the attribute for null and undefined alike.
  */
-type ColorAccessor$2<T> = (datum?: T, index?: number) => string | null;
+type ColorAccessor$2<T> = (datum?: T, index?: number) => string | null | undefined;
 /**
  * A constant or an accessor over the component's datum type; either is accepted, since
  * fn.functor normalises both. d3 hands an accessor the datum and its index, and declaring
@@ -1633,9 +1636,9 @@ interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent<T>> {
     width<U = T>(value: BarValue<U, number>): BarComponent<T>;
     height(): ValueAccessor$2<T>;
     height<U = T>(value: BarValue<U, number>): BarComponent<T>;
-    fill(): ColorAccessor$2<T>;
+    fill(): ColorAccessor$2<T> | undefined;
     fill<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
-    stroke(): ColorAccessor$2<T>;
+    stroke(): ColorAccessor$2<T> | undefined;
     stroke<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
     centerTooltip(): boolean | undefined;
     centerTooltip(center: boolean): BarComponent<T>;
@@ -1644,7 +1647,7 @@ interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent<T>> {
     transition(): boolean;
     transition(enabled: boolean): BarComponent<T>;
 }
-declare function export_default$c<T = unknown>(): BarComponent<T>;
+declare function bar<T = unknown>(): BarComponent<T>;
 
 /**
  * Dot component
@@ -1662,55 +1665,43 @@ declare function export_default$c<T = unknown>(): BarComponent<T>;
  *
  * @template T The type of the data values bound to the dots
  *
- * @property {number, function} x               An accessor function or number for the x-position of the dots.
- *                                              Becomes a functor. Required: see the note on missing properties below.
- * @property {number, function} y               An accessor function or number for the y-position of the dots.
- *                                              Becomes a functor. Required, like x.
- * @property {number, function} radius          An accessor function or number for the radius of the dots.
- *                                              Not wrapped in fn.functor, so the getter returns whatever was
- *                                              set rather than a function. When it is left unset no r attribute
- *                                              is written, SVG defaults r to 0, and the dots are invisible -
- *                                              silently, since only x and y are checked. A radius of 0 is also
- *                                              how docs/scatterplot-over-time hides dots outside the selected
- *                                              period.
+ * @property {number, function} x               An accessor function or number for the x-position of the dots,
+ *                                              in pixels. Becomes a functor. Required: leaving it unset throws
+ *                                              before anything is rendered.
+ * @property {number, function} y               An accessor function or number for the y-position of the dots,
+ *                                              in pixels. Becomes a functor. Required, like x.
+ * @property {number, function} radius          An accessor function or number for the radius of the dots, in
+ *                                              pixels. Becomes a functor. Required, like x and y - an unwritten
+ *                                              r attribute would default to 0 and render a full set of
+ *                                              invisible dots. A radius of 0 is still explicitly allowed, and
+ *                                              is how docs/scatterplot-over-time hides dots outside the
+ *                                              selected period.
  * @property {string, function} stroke          An accessor function or string for the stroke color of the dots.
- *                                              Not wrapped in fn.functor. When unset, no stroke attribute is
- *                                              written and the circles fall back to the SVG and CSS defaults.
+ *                                              Becomes a functor. When unset, no stroke attribute is written
+ *                                              and the circles fall back to the SVG and CSS defaults.
  * @property {string, function} fill            An accessor function or string for the fill color of the dots.
  *                                              Same as stroke.
- * @property {boolean} transition               Whether or not to transition the visual values of the dot
- *                                              component, when they are changed. Defaults to true.
+ * @property {boolean} transition               Whether or not to transition the geometry of the dot component
+ *                                              when it changes. Defaults to true, and eases over 300ms.
  *
- * Note: x and y are required, and their absence is not reported as such. The circle attributes
- * survive an unset property, because d3 drops an attribute whose value is undefined, but the
- * tooltip anchor calls the accessor directly and throws a TypeError from d3's internals that
- * names neither the property nor the component. The failure depends on the data, so an empty
- * first render succeeds and the same chart throws as soon as data arrives. It also happens
- * after the circles and the anchor rects have been created, so a caller that catches it is
- * left with a partially updated chart.
+ * Note: the geometry accessors are guarded, in the same spirit as bar's guard: cx, cy and r must be
+ * finite numbers, so NaN - the usual result of feeding a scale a value outside its domain - along
+ * with Infinity, undefined, null and anything that does not coerce to a finite number all become 0.
+ * A negative radius is clamped to 0, since a negative r is an SVG error and would drop the circle
+ * altogether. The guard means a bad value parks one dot at the origin rather than removing it
+ * silently. fill and stroke are not guarded; an accessor may return null or undefined there to leave
+ * the attribute off.
  *
- * Note: the transition property does not currently animate anything - the data join writes the
- * geometry to the elements first and the transition then re-applies the same values, so every
- * tween runs from a value to itself and the geometry always jumps. It is not free either: each
- * render schedules three attribute tweens on every circle, and those schedules accumulate until
- * they start, at which point d3 cancels the superseded ones and interrupts any transition
- * already running on those nodes. fill and stroke are applied only on the join and are never
- * transitioned, so color changes jump whatever this property is set to.
+ * Note: entering dots receive their geometry on the join, before the transition starts, so they
+ * appear in place rather than animating in from nothing. Only updates animate. fill and stroke are
+ * deliberately not transitioned - a colour change jumps - because the colour scales these charts
+ * use are categorical and interpolating between two category colours reads as a third category.
  *
- * Note: unlike bar, dot has no missing-value guard. Whatever an accessor returns is written into
- * the attribute verbatim, so a NaN coordinate - the usual result of feeding a scale a value
- * outside its domain - produces an invalid attribute that the browser ignores, leaving the dot
- * at the origin, while a NaN or negative radius makes the circle disappear. Strings, booleans
- * and Infinity are written unchanged too, and all of it fails silently. undefined and null are
- * the exception: d3 removes the attribute for them.
- *
- * Note: the tooltip anchor reads its position as props.x(d) and props.y(d), without d3's index
- * argument, so an accessor that uses the index positions the circles correctly but yields
- * translate(NaN,NaN) for every anchor. The anchor ignores the radius, and is created and
- * positioned even for a dot hidden with radius 0, which leaves a live tooltip target on an
- * invisible dot. x and y are read three times per datum on every render - twice for the circle
- * and once for the anchor - and radius twice, so accessors should be cheap and free of side
- * effects. See test/component/dot.test.ts.
+ * Note: x, y and radius are read twice per datum on every render - once for the circle and once for
+ * the tooltip anchor - plus a third time when transitioning, so accessors should be cheap and free
+ * of side effects. The anchor ignores the radius, and is created and positioned even for a dot
+ * hidden with radius 0, which leaves a live tooltip target on an invisible dot. See
+ * test/component/dot.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -1722,40 +1713,33 @@ declare function export_default$c<T = unknown>(): BarComponent<T>;
 type ValueAccessor$1<T, R> = (datum: T, index: number) => R;
 /**
  * How an accessor reads back once it is stored. Both parameters are optional because a
- * constant handed to x or y becomes a functor that ignores its arguments, and because the
- * tooltip anchor below calls x and y with the datum alone. One of these is still assignable
- * to a setter, so a value read from a getter can be handed straight back.
+ * constant handed to any of these properties becomes a functor that ignores its arguments.
+ * One of these is still assignable to a setter, so a value read from a getter can be handed
+ * straight back.
  */
 type StoredAccessor$2<T, R> = (datum?: T, index?: number) => R;
 /**
- * A constant or an accessor; either is accepted for every visual property. x and y are
- * wrapped by fn.functor on set, so a constant handed to them is stored as a function.
+ * A constant or an accessor; either is accepted for every visual property, since every one
+ * of them is wrapped by fn.functor on set.
  */
 type DotValue<T, R> = R | ValueAccessor$1<T, R>;
-/**
- * radius, stroke and fill are declared without fn.functor, so they are stored exactly as
- * they were set: either a constant or an accessor. An accessor may resolve to null or
- * undefined to leave the attribute off, which is how d3 reads both, so the alias is
- * nullish-aware and the setters accept every value the getters can report.
- */
-type RawValue<T, R> = DotValue<T, R | null | undefined>;
-/** The getter counterpart of RawValue: the constant or the accessor that was set. */
-type StoredRawValue<T, R> = R | null | undefined | StoredAccessor$2<T, R | null | undefined>;
+/** A colour accessor may resolve to nothing, which leaves the attribute off. */
+type ColorValue$1<T> = DotValue<T, string | null | undefined>;
 interface DotComponent<T = unknown> extends ComponentBuilder<DotComponent<T>> {
-    x(): StoredAccessor$2<T, number>;
+    x(): StoredAccessor$2<T, number> | undefined;
     x<U = T>(value: DotValue<U, number>): DotComponent<T>;
-    y(): StoredAccessor$2<T, number>;
+    y(): StoredAccessor$2<T, number> | undefined;
     y<U = T>(value: DotValue<U, number>): DotComponent<T>;
-    radius(): StoredRawValue<T, number>;
-    radius<U = T>(value: RawValue<U, number>): DotComponent<T>;
-    stroke(): StoredRawValue<T, string>;
-    stroke<U = T>(value: RawValue<U, string>): DotComponent<T>;
-    fill(): StoredRawValue<T, string>;
-    fill<U = T>(value: RawValue<U, string>): DotComponent<T>;
+    radius(): StoredAccessor$2<T, number> | undefined;
+    radius<U = T>(value: DotValue<U, number>): DotComponent<T>;
+    stroke(): StoredAccessor$2<T, string | null | undefined> | undefined;
+    stroke<U = T>(value: ColorValue$1<U>): DotComponent<T>;
+    fill(): StoredAccessor$2<T, string | null | undefined> | undefined;
+    fill<U = T>(value: ColorValue$1<U>): DotComponent<T>;
     transition(): boolean;
     transition(enabled: boolean): DotComponent<T>;
 }
-declare function export_default$b<T = unknown>(): DotComponent<T>;
+declare function dot<T = unknown>(): DotComponent<T>;
 
 /**
  * Grouped Bars component
@@ -1876,13 +1860,11 @@ declare const groupedBars: <T = unknown>() => GroupedBarsComponent<T>;
  * @template P The type of one point along a line
  * @template L The type of the datum for a whole line
  *
- * @property {number, function} x       An accessor function for getting the x-value of the line, or a
- *                                       constant. Required: omitting it draws nothing at all, with no
- *                                       warning, because every point then reads as missing.
- * @property {function} y                An accessor function for getting the y-value of the line. Required,
- *                                       and unlike x it must be a function, because the default defined
- *                                       predicate calls it. Omitting it throws a TypeError rather than a
- *                                       named missing-property error.
+ * @property {number, function} x       An accessor function for getting the x-value of the line, in
+ *                                       pixels, or a constant. Becomes a functor. Required: leaving it
+ *                                       unset throws before anything is rendered.
+ * @property {number, function} y        An accessor function for getting the y-value of the line, in
+ *                                       pixels, or a constant. Becomes a functor. Required, like x.
  * @property {function} [defined]        A per-point predicate handed to d3.line, deciding whether a point is
  *                                       drawn. Defaults to skipping points whose x or y is missing. It
  *                                       replaces that default rather than composing with it, so setting it
@@ -1926,6 +1908,12 @@ declare const groupedBars: <T = unknown>() => GroupedBarsComponent<T>;
  */
 type PointAccessor$2<P, R> = (datum: P, index: number, points: P[]) => R;
 /**
+ * How x and y read back once they are stored. Every parameter is optional because a constant
+ * handed to either of them becomes a functor that ignores its arguments; one of these is
+ * still assignable to a setter, so a value read from a getter can be handed straight back.
+ */
+type StoredPointAccessor<P, R> = (datum?: P, index?: number, points?: P[]) => R;
+/**
  * Style accessors are handed to the d3 selection, which calls them with the datum for a
  * whole line and that line's index within the outer array - not with a single point.
  */
@@ -1935,10 +1923,10 @@ type StyleValue$2<L, R> = R | LineAccessor<L, R>;
 /** Pulls the array of points to draw out of one line's datum. */
 type ValuesAccessor$1<L, P> = (datum: L, index: number) => P[];
 interface LineComponent<P = unknown, L = unknown> extends ComponentBuilder<LineComponent<P, L>> {
-    x(): number | PointAccessor$2<P, number> | undefined;
+    x(): StoredPointAccessor<P, number> | undefined;
     x<Q = P>(value: number | PointAccessor$2<Q, number>): LineComponent<P, L>;
-    y(): PointAccessor$2<P, number> | undefined;
-    y<Q = P>(accessor: PointAccessor$2<Q, number>): LineComponent<P, L>;
+    y(): StoredPointAccessor<P, number> | undefined;
+    y<Q = P>(value: number | PointAccessor$2<Q, number>): LineComponent<P, L>;
     defined(): PointAccessor$2<P, boolean> | undefined;
     defined<Q = P>(predicate: PointAccessor$2<Q, boolean>): LineComponent<P, L>;
     key(): LineAccessor<L, string | number>;
@@ -1952,7 +1940,7 @@ interface LineComponent<P = unknown, L = unknown> extends ComponentBuilder<LineC
     transition(): boolean;
     transition(enabled: boolean): LineComponent<P, L>;
 }
-declare function export_default$a<P = unknown, L = unknown>(): LineComponent<P, L>;
+declare function line<P = unknown, L = unknown>(): LineComponent<P, L>;
 
 /**
  * Stacked Bar components
@@ -2054,9 +2042,8 @@ declare function export_default$a<P = unknown, L = unknown>(): LineComponent<P, 
  * selector and no key function, so any pre-existing stack below the target group, at any depth,
  * is captured and re-bound, and surviving groups and rects are matched by index rather than by
  * series. The component also forwards neither bar's `transition` property nor its tooltip
- * anchor properties, so every render attaches a transition that is immediately discarded, and
- * the tooltip anchor is always at the top centre of a segment. See
- * test/component/stackedBar.test.ts.
+ * anchor properties, so a caller cannot turn the segment animation off, and the tooltip anchor
+ * is always at the top centre of a segment. See test/component/stackedBar.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -2465,10 +2452,9 @@ declare function pie<T = unknown>(): PieComponent<T>;
  *
  * Note: an entering reference path gets its d attribute synchronously, so getBBox, snapshots
  * and PNG exports see real geometry on the tick it is rendered. Updates are additionally
- * written through a transition, so a change of data eases into place. The bars underneath do
- * not animate at all - bar's transition property is inert - so on a state change the outline
- * eases towards its new position while the bars jump, and the two visibly detach for the
- * length of the transition. Fixing that belongs to bar.
+ * written through a transition, so a change of data eases into place. The bars underneath
+ * animate over the same duration, so the outline and the bars it describes stay together for
+ * the length of the transition.
  *
  * Note: a reference series with no points renders no path at all, and a path already in the
  * DOM is removed when its series goes away. Each side is still capped at a single line, since
@@ -2683,9 +2669,8 @@ declare function pyramid<T = unknown, D = unknown>(): PyramidComponent<T, D>;
  * a hover handler.
  *
  * Note: the component never sets bar's transition property, so it keeps bar's default of
- * true - and that transition does not animate anything, so the nodes jump straight to their
- * new geometry. It is not free either: a d3 transition is still created and discarded on
- * every node rect on every render. See test/component/sankey.test.ts.
+ * true and the node rects ease to their new geometry over bar's transition. A caller cannot
+ * turn that off, since the property is not forwarded. See test/component/sankey.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -3431,9 +3416,8 @@ declare function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAreaMultip
  * rendered path carries no geometry until the first animation frame and anything that measures the
  * chart synchronously - getBBox, a snapshot, an export to PNG - sees an empty path. Entering lines
  * then snap into place, because d3 has no previous d to interpolate from; only updates animate. The
- * bars underneath do not animate at all - bar's transition property is inert - so on a state change
- * the outline eases towards its new position while the bars jump, and the two visibly detach for
- * the length of the transition. bar also guards every geometry value against NaN while the line
+ * bars underneath animate over the same duration, so the outline and the bars it describes stay
+ * together for the length of the transition. bar also guards every geometry value against NaN while the line
  * hands barWidth and barPosition straight to d3.line, so one missing value poisons the path string
  * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
  * with pyramid.
@@ -7364,5 +7348,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$o as annotationCircle, export_default$n as annotationConfidenceArea, export_default$m as annotationConfidenceBar, export_default$k as annotationLine, export_default$j as annotationRangeFlag, export_default$i as annotationRangeRuler, export_default$h as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, export_default$c as bar, bounds, export_default$p as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, export_default$b as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$l as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, export_default$a as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$f as move, muchDarker, nestedStackedBarsVertical, not, export_default$9 as pack, export_default$e as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$8 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$7 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$g as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$6 as treemap, valueFn, viewport, export_default$d as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$l as annotationCircle, export_default$k as annotationConfidenceArea, export_default$j as annotationConfidenceBar, export_default$h as annotationLine, export_default$g as annotationRangeFlag, export_default$f as annotationRangeRuler, export_default$e as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$m as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$i as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$c as move, muchDarker, nestedStackedBarsVertical, not, export_default$9 as pack, export_default$b as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$8 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$7 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$d as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$6 as treemap, valueFn, viewport, export_default$a as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidReferencePoint, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };

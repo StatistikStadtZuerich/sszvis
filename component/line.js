@@ -1,6 +1,6 @@
 import { select, line as line$1 } from 'd3';
 import { component } from '../d3-component.js';
-import { identity, valueFn } from '../fn.js';
+import { functor, identity, valueFn } from '../fn.js';
 import { defaultTransition } from '../transition.js';
 
 /**
@@ -30,13 +30,11 @@ import { defaultTransition } from '../transition.js';
  * @template P The type of one point along a line
  * @template L The type of the datum for a whole line
  *
- * @property {number, function} x       An accessor function for getting the x-value of the line, or a
- *                                       constant. Required: omitting it draws nothing at all, with no
- *                                       warning, because every point then reads as missing.
- * @property {function} y                An accessor function for getting the y-value of the line. Required,
- *                                       and unlike x it must be a function, because the default defined
- *                                       predicate calls it. Omitting it throws a TypeError rather than a
- *                                       named missing-property error.
+ * @property {number, function} x       An accessor function for getting the x-value of the line, in
+ *                                       pixels, or a constant. Becomes a functor. Required: leaving it
+ *                                       unset throws before anything is rendered.
+ * @property {number, function} y        An accessor function for getting the y-value of the line, in
+ *                                       pixels, or a constant. Becomes a functor. Required, like x.
  * @property {function} [defined]        A per-point predicate handed to d3.line, deciding whether a point is
  *                                       drawn. Defaults to skipping points whose x or y is missing. It
  *                                       replaces that default rather than composing with it, so setting it
@@ -93,8 +91,19 @@ import { defaultTransition } from '../transition.js';
  * immediately applies unary + to the value, which throws the identical TypeError.
  */
 const isMissingVal = value => Number.isNaN(Number(value));
-function line () {
-  return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
+/**
+ * Reports a required property the caller left unset, naming both the component and the
+ * property. Called before the data join, so a missing accessor is reported by name instead of
+ * arriving as a TypeError from d3's internals (a missing y) or as an empty path (a missing x).
+ */
+function required(value, name) {
+  if (value === undefined) {
+    throw new Error("[line] the ".concat(name, " property is required"));
+  }
+  return value;
+}
+function line() {
+  return component().prop("x", functor).prop("y", functor).prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
   // The default layer type L is P[], so the values ARE the layer and identity is correct.
   // A caller who sets a different L must supply a matching accessor; the constraint
   // cannot express "identity is valid only for the default instantiation".
@@ -103,15 +112,17 @@ function line () {
     const selection = select(this);
     const props = selection.props();
     // Layouts
-    // d3 has separate overloads for a constant and an accessor, so a constant x is
-    // normalised here. d3 would wrap it in exactly the same way.
-    const xProp = props.x;
-    const x = typeof xProp === "function" ? xProp : () => xProp;
+    // Both properties are wrapped by fn.functor on set, so a constant reads back as a
+    // function and needs no normalising here - but an unset property is still undefined,
+    // and is reported by name before anything is rendered.
+    const x = required(props.x, "x");
+    const y = required(props.y, "y");
     // Both dimensions are guarded. Checking only y would let a missing x reach the d
     // attribute verbatim, and the browser then drops that segment along with every
-    // segment after it, silently truncating the series.
-    const defined = props.defined === undefined ? (datum, index, points) => !isMissingVal(x(datum, index, points)) && !isMissingVal(props.y(datum, index, points)) : props.defined;
-    const line = line$1().defined(defined).x(x).y(props.y);
+    // segment after it, silently truncating the series. An explicitly set predicate
+    // replaces this one rather than composing with it.
+    const defined = props.defined === undefined ? (datum, index, points) => !isMissingVal(x(datum, index, points)) && !isMissingVal(y(datum, index, points)) : props.defined;
+    const line = line$1().defined(defined).x(x).y(y);
     // Rendering
     // Declared with `function` so that `this` is still forwarded to valuesAccessor, as
     // it was when this was built with fn.compose.

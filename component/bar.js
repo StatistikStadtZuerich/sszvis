@@ -1,7 +1,7 @@
 import { select } from 'd3';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
-import { functor, compose } from '../fn.js';
+import { functor } from '../fn.js';
 import { defaultTransition } from '../transition.js';
 
 /**
@@ -44,50 +44,73 @@ import { defaultTransition } from '../transition.js';
  *                                            would be [1, 0.5], and the lower right corner [1, 1]. Used by, for example,
  *                                            the pyramid chart. Entries beyond the first two are ignored, and an array
  *                                            with fewer than two entries produces a NaN coordinate rather than a warning.
- * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
- *                                            are changed.
+ * @property {boolean} transition             Whether or not to transition the geometry of the bar component when it
+ *                                            changes. Defaults to true, and eases over 300ms.
  *
- * Note: the transition property does not currently animate anything - the geometry is
- * re-applied to the plain selection immediately after the transition is created, so the
- * values always jump. It is not free either: the discarded transition still attaches d3
- * transition state to every bar, which interrupts any transition already running on them.
+ * Note: entering bars receive their geometry on the join, before the transition starts, so they
+ * appear in place rather than animating up from nothing. Only updates animate. fill and stroke are
+ * deliberately not transitioned - a colour change jumps - because the colour scales these charts
+ * use are categorical and interpolating between two category colours reads as a third category.
+ *
+ * Note: the geometry accessors are guarded: x, y, width and height must be finite numbers, so NaN,
+ * Infinity, undefined, null and anything that does not coerce to a finite number all become 0. A
+ * value that does coerce is normalised to its number, so a numeric string is written as a number.
  * See test/component/bar.test.ts.
  *
  * @return {sszvis.component}
  */
 /**
- * Replaces NaN values with 0.
+ * Coerces a geometry value to a finite number, substituting 0 for anything else.
  *
- * Equivalent to the global isNaN, which coerces its argument first. Note that this only
- * catches NaN and undefined: null, Infinity, booleans and numeric strings all coerce to a
- * number and pass through untouched. See test/component/bar.test.ts.
+ * Coercion first, so a numeric string still works; the finiteness check then catches NaN
+ * and Infinity as well as the values that do not coerce at all. Shared in substance with
+ * dot's guard - the two components are expected to agree, and there is no home for the
+ * helper short of a new module.
  */
-function handleMissingVal(v) {
-  return Number.isNaN(Number(v)) ? 0 : v;
+function toFinite(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
 }
-function bar () {
+function bar() {
   return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("fill", functor).prop("stroke", functor).prop("centerTooltip").prop("tooltipAnchor").prop("transition").transition(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-    const xAcc = compose(handleMissingVal, props.x);
-    const yAcc = compose(handleMissingVal, props.y);
-    const wAcc = compose(handleMissingVal, props.width);
-    const hAcc = compose(handleMissingVal, props.height);
-    const bars = selection.selectAll(".sszvis-bar").data(data).join("rect").classed("sszvis-bar", true).attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc).attr("fill", props.fill).attr("stroke", props.stroke);
+    const xAt = (datum, index) => toFinite(props.x(datum, index));
+    const yAt = (datum, index) => toFinite(props.y(datum, index));
+    const wAt = (datum, index) => toFinite(props.width(datum, index));
+    const hAt = (datum, index) => toFinite(props.height(datum, index));
+    const fillAt = (datum, index) => {
+      var _props$fill, _props$fill2;
+      return (_props$fill = (_props$fill2 = props.fill) === null || _props$fill2 === void 0 ? void 0 : _props$fill2.call(props, datum, index)) !== null && _props$fill !== void 0 ? _props$fill : null;
+    };
+    const strokeAt = (datum, index) => {
+      var _props$stroke, _props$stroke2;
+      return (_props$stroke = (_props$stroke2 = props.stroke) === null || _props$stroke2 === void 0 ? void 0 : _props$stroke2.call(props, datum, index)) !== null && _props$stroke !== void 0 ? _props$stroke : null;
+    };
+    // Entering bars are given their geometry on the join, so they are in place before any
+    // transition starts. The geometry is then applied exactly once more - to the transition
+    // when there is one, and to the plain selection otherwise - so an update tweens from its
+    // previous value instead of from the value it already holds.
+    const bars = selection.selectAll(".sszvis-bar").data(data).join(enter => enter.append("rect").classed("sszvis-bar", true).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt)).attr("fill", fillAt).attr("stroke", strokeAt);
     if (props.transition) {
-      bars.transition(defaultTransition());
+      bars.transition(defaultTransition()).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+    } else {
+      bars.attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
     }
-    bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
     // Tooltip anchors
     let tooltipPosition;
     if (props.centerTooltip) {
-      tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+      tooltipPosition = (d, i) => [xAt(d, i) + wAt(d, i) / 2, yAt(d, i) + hAt(d, i) / 2];
     } else if (props.tooltipAnchor) {
       const uv = props.tooltipAnchor.map(value => Number.parseFloat(String(value)));
-      tooltipPosition = d => [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
+      tooltipPosition = (d, i) => [xAt(d, i) + uv[0] * wAt(d, i), yAt(d, i) + uv[1] * hAt(d, i)];
     } else {
-      tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d)];
+      tooltipPosition = (d, i) => [xAt(d, i) + wAt(d, i) / 2, yAt(d, i)];
     }
+    // tooltipAnchor declares its position accessor as taking the datum alone, but d3 calls it
+    // with the index too and the anchors must line up with the bars - so the index is read here
+    // and the narrower declaration is widened. The cast encodes that gap; the real fix is in
+    // tooltipAnchor's own signature.
     const ta = tooltipAnchor().position(tooltipPosition);
     selection.call(ta);
   });

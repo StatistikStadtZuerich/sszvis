@@ -38,13 +38,17 @@
  *                                            would be [1, 0.5], and the lower right corner [1, 1]. Used by, for example,
  *                                            the pyramid chart. Entries beyond the first two are ignored, and an array
  *                                            with fewer than two entries produces a NaN coordinate rather than a warning.
- * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
- *                                            are changed.
+ * @property {boolean} transition             Whether or not to transition the geometry of the bar component when it
+ *                                            changes. Defaults to true, and eases over 300ms.
  *
- * Note: the transition property does not currently animate anything - the geometry is
- * re-applied to the plain selection immediately after the transition is created, so the
- * values always jump. It is not free either: the discarded transition still attaches d3
- * transition state to every bar, which interrupts any transition already running on them.
+ * Note: entering bars receive their geometry on the join, before the transition starts, so they
+ * appear in place rather than animating up from nothing. Only updates animate. fill and stroke are
+ * deliberately not transitioned - a colour change jumps - because the colour scales these charts
+ * use are categorical and interpolating between two category colours reads as a third category.
+ *
+ * Note: the geometry accessors are guarded: x, y, width and height must be finite numbers, so NaN,
+ * Infinity, undefined, null and anything that does not coerce to a finite number all become 0. A
+ * value that does coerce is normalised to its number, so a numeric string is written as a number.
  * See test/component/bar.test.ts.
  *
  * @return {sszvis.component}
@@ -53,16 +57,15 @@ import { type ComponentBuilder } from "../d3-component.js";
 /**
  * Every visual property is wrapped by fn.functor on set, so it is always stored as a
  * function by the time the renderer reads it. The result stays `unknown` because the
- * missing-value guard passes anything that coerces to a number straight through, a numeric
- * string or a boolean included.
+ * geometry guard accepts anything and coerces it, a numeric string or a boolean included.
  */
 type ValueAccessor<T> = (datum?: T, index?: number) => unknown;
 /**
- * fill and stroke resolve to a colour, or to nothing when the property was never set -
- * fn.functor then yields undefined, which d3 treats exactly like null and removes the
- * attribute for.
+ * fill and stroke resolve to a colour, or to nothing - either because the accessor returned
+ * nothing, or because the property was never set at all, in which case the prop itself is
+ * undefined. d3 removes the attribute for null and undefined alike.
  */
-type ColorAccessor<T> = (datum?: T, index?: number) => string | null;
+type ColorAccessor<T> = (datum?: T, index?: number) => string | null | undefined;
 /**
  * A constant or an accessor over the component's datum type; either is accepted, since
  * fn.functor normalises both. d3 hands an accessor the datum and its index, and declaring
@@ -78,9 +81,9 @@ export interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent
     width<U = T>(value: BarValue<U, number>): BarComponent<T>;
     height(): ValueAccessor<T>;
     height<U = T>(value: BarValue<U, number>): BarComponent<T>;
-    fill(): ColorAccessor<T>;
+    fill(): ColorAccessor<T> | undefined;
     fill<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
-    stroke(): ColorAccessor<T>;
+    stroke(): ColorAccessor<T> | undefined;
     stroke<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
     centerTooltip(): boolean | undefined;
     centerTooltip(center: boolean): BarComponent<T>;
@@ -89,6 +92,6 @@ export interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent
     transition(): boolean;
     transition(enabled: boolean): BarComponent<T>;
 }
-export default function <T = unknown>(): BarComponent<T>;
+export default function bar<T = unknown>(): BarComponent<T>;
 export {};
 //# sourceMappingURL=bar.d.ts.map
