@@ -209,6 +209,47 @@ describe("map/renderer/bubble", () => {
       expect(after).toHaveLength(3);
       expect(circles(layer.node() as SVGGElement)).toContain(first);
     });
+
+    // The circles paint over the base layer's areas, which carry the map's event targets, so they
+    // let the pointer through to the area beneath rather than becoming a dead zone in the middle of
+    // every bubble.
+    test("lets the pointer through to the base layer's event targets", async () => {
+      const { default: mapRendererBase } = await import("../../../src/map/renderer/base.js");
+      const collection = geoJson();
+      const key = `bubble-over-base-${++pathKey}`;
+      const merged = prepareMergedGeoData(fullData, collection);
+      const layer = group("bubble-over-base");
+      layer.call(
+        mapRendererBase()
+          .mergedData(merged)
+          .mapPath(swissMapPath(100, 100, collection, key))
+          .fill("#cccccc")
+      );
+      layer.call(
+        mapRendererBubble()
+          .mergedData(merged)
+          .mapPath(swissMapPath(100, 100, collection, key))
+          .radius(5)
+          .fill("#ff0000")
+      );
+      const node = layer.node() as SVGGElement;
+      const children = [...node.children].map((child) => child.getAttribute("data-d3-selectgroup"));
+      // The circles' group is last, so it paints over the base areas.
+      expect(children.at(-1)).toBe("anchoredCircles");
+      // The circles are decoration, not a hit area: the areas below stay the event targets.
+      expect(circles(node)[0].hasAttribute("data-event-target")).toBe(false);
+      expect(circles(node)[0].style.pointerEvents).toBe("none");
+      expect(node.querySelectorAll("path[data-event-target]")).toHaveLength(3);
+      // A point in the middle of a bubble hits the area underneath it, not the circle.
+      const circle = circles(node)[0];
+      const box = circle.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2
+      ) as Element;
+      expect(hit).not.toBe(circle);
+      expect(hit.closest("[data-event-target]")).not.toBeNull();
+    });
   });
 
   describe("transition", () => {
@@ -514,41 +555,6 @@ describe("map/renderer/bubble", () => {
         ],
       ];
       expect(circles(renderWith())[0].getAttribute("transform")).toBe(before);
-    });
-
-    // BUG: the circles are drawn into a group appended after the base layer's areas, so they paint
-    // on top - and they carry neither a data-event-target attribute nor a pointer-events override.
-    // choropleth binds its over/out/click handlers to [data-event-target] *after* calling the
-    // anchored shape, so the circles are never bound, and a pointer over a bubble reaches neither
-    // the base layer's handler nor (usefully) the bubble's own, which delivers undefined. Hovering
-    // the middle of a bubble in either docs example therefore produces no tooltip at all.
-    test("covers the base layer's event targets without becoming one", async () => {
-      const { default: mapRendererBase } = await import("../../../src/map/renderer/base.js");
-      const collection = geoJson();
-      const key = `bubble-over-base-${++pathKey}`;
-      const merged = prepareMergedGeoData(fullData, collection);
-      const layer = group("bubble-over-base");
-      layer.call(
-        mapRendererBase()
-          .mergedData(merged)
-          .mapPath(swissMapPath(100, 100, collection, key))
-          .fill("#cccccc")
-      );
-      layer.call(
-        mapRendererBubble()
-          .mergedData(merged)
-          .mapPath(swissMapPath(100, 100, collection, key))
-          .radius(5)
-          .fill("#ff0000")
-      );
-      const node = layer.node() as SVGGElement;
-      const children = [...node.children].map((child) => child.getAttribute("data-d3-selectgroup"));
-      // The circles' group is last, so it paints over the base areas.
-      expect(children.at(-1)).toBe("anchoredCircles");
-      // And nothing marks a circle as an event target, so choropleth never binds to it.
-      expect(circles(node)[0].hasAttribute("data-event-target")).toBe(false);
-      expect(circles(node)[0].style.pointerEvents).toBe("");
-      expect(node.querySelectorAll("circle[data-event-target]")).toHaveLength(0);
     });
 
     // The other half of the "no datum" note above: an accessor that reads through the datum

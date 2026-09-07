@@ -46,10 +46,10 @@
  * throws, a namespaced name such as "over.tooltip" is accepted, and null removes a handler.
  *
  * Note: the circles are drawn into a group appended after the base layer's areas, so they paint on
- * top - and they carry neither a data-event-target attribute nor a pointer-events override. As
- * choropleth binds its own handlers to [data-event-target] after calling the anchored shape, the
- * circles are never bound, so a pointer over a bubble reaches neither the base layer's handler nor,
- * usefully, the bubble's own.
+ * top of them. They are decoration rather than a hit area, so they carry pointer-events: none and
+ * let the pointer through to the area beneath - which is what keeps the base layer's handlers, and
+ * so choropleth's tooltips, working over the middle of a bubble. The corollary is that this
+ * component's own over, out and click handlers are not reachable from a real pointer.
  *
  * Note: the circles are sorted by radius descending, so the largest paint first and smaller ones sit
  * on top of them. That is a DOM reordering, so the rendered order does not follow mergedData.
@@ -249,6 +249,12 @@ export default function <T = unknown>(): MapRendererBubbleComponent<T> {
         .style("fill", (d) => props.fill(d.datum))
         .style("stroke", (d) => props.strokeColor(d.datum))
         .style("stroke-width", (d) => props.strokeWidth(d.datum))
+        // The circles paint over the base layer's areas, which carry the map's event targets. They
+        // are decoration, not a hit area, so they let the pointer through to the area beneath -
+        // the same way the mesh and lake overlay layers stay out of the way. Without this the
+        // middle of every bubble is a dead zone: choropleth binds its handlers to
+        // [data-event-target], which a circle is not.
+        .style("pointer-events", "none")
         .sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
 
       // Remove the --entering modifier from the updating circles
