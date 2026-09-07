@@ -152,7 +152,7 @@ describe("maps/choropleth", () => {
    * The scope the lake overlay generated for this group, which qualifies its three definition ids.
    * Read back rather than hardcoded, since the generated scope is a global counter.
    */
-  const lakeScope = (node: Element) => node.getAttribute("data-sszvis-lake-overlay");
+  const lakeScope = (node: Element) => node.getAttribute("data-lake-key");
   const highlights = (node: Element) => [
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__highlight"),
   ];

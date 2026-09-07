@@ -27,7 +27,7 @@
  * @property {String} key               Optional scope for this overlay's definitions and paths, so that two overlays
  *                                      drawn into one group each own their elements. Defaults to one scope per group,
  *                                      generated on first render and remembered on the group as
- *                                      data-sszvis-lake-overlay - so re-rendering, even with a freshly constructed
+ *                                      data-lake-key - so re-rendering, even with a freshly constructed
  *                                      component, reuses the same elements, while a second map on the page gets its
  *                                      own. A caller-supplied key must be unique within the document.
  *
@@ -143,9 +143,11 @@ export interface MapRendererPatternedLakeOverlayComponent
 
 /**
  * Marks both the group whose generated scope it records and the paths belonging to a scope,
- * mirroring d3-selectgroup's data-d3-selectgroup.
+ * mirroring d3-selectgroup's data-d3-selectgroup. Read back through getAttribute in a filter
+ * rather than matched with an attribute selector, so a caller-supplied key needs no CSS
+ * escaping - the same idiom as mesh's data-mesh-key and raster's data-raster-key.
  */
-const SCOPE_ATTRIBUTE = "data-sszvis-lake-overlay";
+const KEY_ATTRIBUTE = "data-lake-key";
 
 let generatedScopes = 0;
 
@@ -157,10 +159,10 @@ let generatedScopes = 0;
  */
 function overlayScope(group: Element, key: string | undefined): string {
   if (key !== undefined) return key;
-  const recorded = group.getAttribute(SCOPE_ATTRIBUTE);
+  const recorded = group.getAttribute(KEY_ATTRIBUTE);
   if (recorded !== null) return recorded;
   const generated = String(++generatedScopes);
-  group.setAttribute(SCOPE_ATTRIBUTE, generated);
+  group.setAttribute(KEY_ATTRIBUTE, generated);
   return generated;
 }
 
@@ -224,11 +226,14 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
 
       // generate the Lake Zurich path
       const zurichSee = selection
-        .selectAll(`.sszvis-map__lakezurich[${SCOPE_ATTRIBUTE}="${scope}"]`)
+        .selectAll<SVGPathElement, GeoPermissibleObjects>(".sszvis-map__lakezurich")
+        .filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE) === scope;
+        })
         .data([props.lakeFeature])
         .join("path")
         .classed("sszvis-map__lakezurich", true)
-        .attr(SCOPE_ATTRIBUTE, scope)
+        .attr(KEY_ATTRIBUTE, scope)
         .attr("d", props.mapPath)
         .attr("fill", `url(#${patternId})`);
 
@@ -238,11 +243,14 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
       const lakePath = selection
-        .selectAll(`.sszvis-map__lakepath[${SCOPE_ATTRIBUTE}="${scope}"]`)
+        .selectAll<SVGPathElement, GeoPermissibleObjects>(".sszvis-map__lakepath")
+        .filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE) === scope;
+        })
         .data([props.lakeBounds])
         .join("path")
         .classed("sszvis-map__lakepath", true)
-        .attr(SCOPE_ATTRIBUTE, scope)
+        .attr(KEY_ATTRIBUTE, scope)
         .attr("d", props.mapPath);
 
       // An unset colour writes nothing, so the stylesheet's stroke stands; any value that is set -
