@@ -75,16 +75,16 @@
  * enumerates integer-like keys numerically regardless of insertion order; that part is only
  * cosmetic, since each slice is positioned by its own stack value.
  *
- * Note: `keys` and `maxValue` are hung off the returned array rather than wrapped in an object,
- * so any array operation - a spread, a map, a filter, a trip through JSON - drops them, and
- * `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array. `maxValue`
- * is the maximum of the upper bounds only, so it is not the extent of the data when a value is
- * negative, and it is undefined rather than 0 for an empty layout, which turns into a NaN axis
- * when it is fed straight into a scale domain the way the examples do.
+ * Note: `keys`, `maxValue` and `minValue` are hung off the returned array rather than wrapped in
+ * an object, so any array operation - a spread, a map, a filter, a trip through JSON - drops
+ * them, and `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array.
+ * `maxValue` and `minValue` are the extent of the stacked bounds, so a negative value is
+ * included in them.
  *
- * Note: a negative value produces a negative rect width on a horizontal chart, which the
- * browser rejects, so the segment is simply not drawn. Neither orientation supports values
- * below the baseline.
+ * Note: a negative value is drawn on the other side of the baseline: both orientations take
+ * the lower of the two scaled bounds as the segment's origin and the absolute difference as
+ * its size. The layout reports the extent as `minValue` and `maxValue`, so the value scale's
+ * domain has to be built from both to make room for it.
  *
  * Note: the four scale and size properties are required but neither defaulted nor validated.
  * Two of them fail silently as zero-size bars, and the two scales throw a low-level TypeError
@@ -104,6 +104,7 @@
 import {
   stack as d3Stack,
   max,
+  min,
   type Selection,
   type SeriesPoint,
   select,
@@ -117,10 +118,6 @@ import * as fn from "../fn.js";
 import bar, { type BarComponent } from "./bar.js";
 
 const stackAcc = fn.prop("stack");
-
-// Accessors for the first and second element of a tuple (2-element array).
-const fst = fn.prop("0");
-const snd = fn.prop("1");
 
 /* Types
 ----------------------------------------------- */
@@ -161,7 +158,10 @@ export type StackedBarLayout<T, X extends string | number = string> = Omit<
   "keys"
 > & {
   keys: string[];
-  maxValue: number | undefined;
+  /** The largest of the two bounds over every slice - zero when there are no slices. */
+  maxValue: number;
+  /** The smallest of the two bounds over every slice - negative when a value is. */
+  minValue: number;
 };
 
 /** One row of the cascade: every series of one stack, each holding that cell's data. */
@@ -225,9 +225,12 @@ function stackedBarData(order: StackOrder) {
         return Object.assign(slices, { key: stack.key, index: stack.index });
       });
 
-      const maxValue = max(series, (stack) => max(stack, (d) => d[1])) ?? 0;
+      // Both bounds are considered, so a stack that reaches below the baseline reports an
+      // extent that covers it.
+      const maxValue = max(series, (stack) => max(stack, (d) => Math.max(d[0], d[1]))) ?? 0;
+      const minValue = min(series, (stack) => min(stack, (d) => Math.min(d[0], d[1]))) ?? 0;
 
-      return Object.assign(series, { keys, maxValue });
+      return Object.assign(series, { keys, maxValue, minValue });
     };
 }
 
@@ -382,9 +385,11 @@ export function stackedBarHorizontal<
       const props = selection.props<HorizontalProps<T, X>>();
 
       const barGen = bar<StackedBarSlice<T, X>>()
-        .x(fn.compose(props.xScale, fst))
+        // The lower of the two scaled bounds, so a segment whose value is negative is drawn
+        // on the other side of the baseline rather than with a negative width.
+        .x((d) => Math.min(props.xScale(d[0]), props.xScale(d[1])))
         .y(fn.compose(props.yScale, stackAcc))
-        .width((d) => props.xScale(d[1]) - props.xScale(d[0]))
+        .width((d) => Math.abs(props.xScale(d[1]) - props.xScale(d[0])))
         .height(props.height)
         .fill(props.fill)
         .stroke(props.stroke || "#FFFFFF");
@@ -410,9 +415,11 @@ export function stackedBarVertical<
 
       const barGen = bar<StackedBarSlice<T, X>>()
         .x(fn.compose(props.xScale, stackAcc))
-        .y(fn.compose(props.yScale, snd))
+        // The upper edge is whichever bound scales smaller, which keeps the geometry valid
+        // for a negative value and for a y-scale whose range ascends.
+        .y((d) => Math.min(props.yScale(d[0]), props.yScale(d[1])))
         .width(props.width)
-        .height((d) => props.yScale(d[0]) - props.yScale(d[1]))
+        .height((d) => Math.abs(props.yScale(d[0]) - props.yScale(d[1])))
         .fill(props.fill)
         .stroke(props.stroke || "#FFFFFF");
 
