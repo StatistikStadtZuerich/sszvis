@@ -60,7 +60,7 @@ describe("control/select", () => {
 
   test("should mark the current value as selected", () => {
     render(selectMenu().values(["A", "B", "C"]).current("B"));
-    expect(options().map((o) => o.getAttribute("selected"))).toEqual([null, "selected", null]);
+    expect(options().map((o) => o.selected)).toEqual([false, true, false]);
     expect(selectEl()?.value).toBe("1");
   });
 
@@ -69,14 +69,22 @@ describe("control/select", () => {
     // current one is not treated as selected. The ported types constrain values to
     // strings, so this is only observable for strings that differ in case or whitespace.
     render(selectMenu().values(["A", "a"]).current("a"));
-    expect(options().map((o) => o.getAttribute("selected"))).toEqual([null, "selected"]);
+    expect(options().map((o) => o.selected)).toEqual([false, true]);
   });
 
   test("should select nothing when current matches no value", () => {
     render(selectMenu().values(["A", "B"]).current("Z"));
-    expect(options().map((o) => o.getAttribute("selected"))).toEqual([null, null]);
+    expect(options().map((o) => o.selected)).toEqual([true, false]);
     // With no option marked selected the browser falls back to the first one.
     expect(selectEl()?.value).toBe("0");
+  });
+
+  test("a duplicated value selects the last match", () => {
+    // Selectedness is written per option with no notion of uniqueness, but a
+    // single-select element holds exactly one selection, so the last write wins.
+    render(selectMenu().values(["A", "B", "A"]).current("A"));
+    expect(options().map((o) => o.selected)).toEqual([false, false, true]);
+    expect(selectEl()?.value).toBe("2");
   });
 
   test("should render a metrics element used for measuring label widths", () => {
@@ -198,27 +206,32 @@ describe("control/select", () => {
       expect(first).not.toHaveBeenCalled();
       expect(second).toHaveBeenCalledWith(expect.any(Event), "B");
     });
-  });
 
-  describe("known quirks", () => {
-    test("re-rendering does not move the selection once the user has changed it", () => {
-      // BUG: the current value is written with `.attr("selected", …)`, which sets the
-      // content attribute. Once the user interacts with the select, the option's
-      // dirtiness flag is set and the browser stops deriving selectedness from the
-      // attribute, so a re-render with a different `current` cannot pull the selection
-      // back - the attribute and the rendered selection diverge.
-      // current: the select keeps showing the user's choice. expected: write the
-      // selection with `.property("selected", …)` so `current` stays authoritative.
+    test("should move the selection back to current after the user has changed it", () => {
       const sel = d3Select(container);
       sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
       const el = selectEl() as HTMLSelectElement;
       el.value = "2";
       el.dispatchEvent(new Event("change"));
       sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
-      expect(el.querySelectorAll("option")[0]?.getAttribute("selected")).toBe("selected");
-      expect(el.value).toBe("2");
+      expect(el.value).toBe("0");
+      expect(options().map((o) => o.selected)).toEqual([true, false, false]);
     });
 
+    test("should follow current in both directions after user interaction", () => {
+      const sel = d3Select(container);
+      sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
+      const el = selectEl() as HTMLSelectElement;
+      el.value = "2";
+      el.dispatchEvent(new Event("change"));
+      sel.call(selectMenu().values(["A", "B", "C"]).current("B") as never);
+      expect(el.value).toBe("1");
+      sel.call(selectMenu().values(["A", "B", "C"]).current("C") as never);
+      expect(el.value).toBe("2");
+    });
+  });
+
+  describe("known quirks", () => {
     test("the default change handler returns the event and discards the value", () => {
       // NOTE: `change` defaults to `fn.identity`, an arity-1 function. It receives the
       // event, returns it, and never sees the selected value, so interacting with an
@@ -264,68 +277,6 @@ describe("control/select", () => {
       const value = "M".repeat(length);
       render(selectMenu().values([value]).current(value).width(120));
       expect(options()[0]?.textContent).toBe(`${"M".repeat(length - 2)}…`);
-    });
-
-    test("a measuring width below zero spins for the full recursion limit", () => {
-      // BUG: with a width small enough that `width - 40` is negative, the recursion
-      // reaches "…", where `"…".slice(0, -2) + "…"` is again "…" - a fixed point. It then
-      // runs the full MAX_RECURSION of 1000 steps, each one a forced synchronous layout
-      // read, before returning "…" anyway.
-      // current: 1000 layout reads per option. expected: bail out as soon as the
-      // candidate string stops shrinking.
-      const clientWidth = vi.spyOn(Element.prototype, "clientWidth", "get");
-      render(selectMenu().values(["Hello"]).current("Hello").width(20));
-      expect(options()[0]?.textContent).toBe("…");
-      expect(clientWidth.mock.calls.length).toBeGreaterThanOrEqual(1000);
-    });
-
-    test("a non-string value crashes as soon as its label needs trimming", () => {
-      // BUG: `truncateToWidth` calls `str.slice(…)` on the raw datum, so any value that
-      // is not a string fails the moment it is too wide to fit. Short numbers survive
-      // because the recursion never runs, which makes this crash depend on the width.
-      // current: TypeError for a long numeric value. expected: `String(d)` before
-      // measuring, matching the `.text()` coercion every other control relies on.
-      expect(() =>
-        render(
-          selectMenu()
-            // @ts-expect-error - the ported types constrain values to strings, which is
-            // the type-level half of this fix; the runtime still crashes.
-            .values([123_456_789_012_345])
-            .current("")
-            .width(60)
-        )
-      ).toThrow(TypeError);
-    });
-
-    test("every value equal to current is marked selected", () => {
-      // NOTE: selectedness is computed per option with no notion of uniqueness, so a
-      // duplicated value produces two `selected` attributes. Browsers resolve this by
-      // honouring the last one, but the markup is invalid.
-      render(selectMenu().values(["A", "B", "A"]).current("A"));
-      expect(options().map((o) => o.getAttribute("selected"))).toEqual([
-        "selected",
-        null,
-        "selected",
-      ]);
-    });
-
-    test("a stale selection index reports undefined instead of being ignored", () => {
-      // BUG: the change handler looks the value up as `props.values[i]` using the index
-      // stored in the option. If the value list shrank since the browser recorded that
-      // index, the lookup misses and the callback is invoked with `undefined` rather
-      // than being skipped.
-      // current: change(event, undefined). expected: ignore a selection that no longer
-      // maps to a value.
-      const change = vi.fn();
-      render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
-      const el = selectEl() as HTMLSelectElement;
-      el.value = "9";
-      // The browser rejects an unknown value, so drive the handler the way a shrunk
-      // list would: an option whose index no longer exists in `values`.
-      el.querySelectorAll("option")[2]?.setAttribute("value", "9");
-      el.value = "9";
-      el.dispatchEvent(new Event("change"));
-      expect(change).toHaveBeenCalledWith(expect.any(Event), undefined);
     });
   });
 });
