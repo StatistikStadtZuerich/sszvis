@@ -299,7 +299,11 @@ export default function slider(): SliderComponent {
         // The original always called .on("drag", props.onchange), including with undefined,
         // which d3-dispatch treats as removing the listener. The guard is equivalent.
         const sliderInteraction = move<SliderValue>()
-          .xScale(props.scale)
+          // The same inset scale the handle is drawn with, so that pointing at a handle's
+          // pixel reports that handle's value. Padded back out by the inset so the
+          // interaction layer still spans the whole configured range.
+          .xScale(alteredScale)
+          .padding({ left: HANDLE_SIDE_OFFSET, right: HANDLE_SIDE_OFFSET })
           // range goes from the text top (text is 11px tall) to the bottom of the axis
           .yScale(scaleLinear().range([INTERACTION_TOP, AXIS_OFFSET + MAJOR_TICK_SIZE]))
           .draggable(true);
