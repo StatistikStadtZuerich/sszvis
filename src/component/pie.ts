@@ -27,7 +27,7 @@
  *                                            Ideally, this is a function which takes a data value and returns the
  *                                            angle in radians. Angles are summed as given and never clamped, so a
  *                                            total beyond a full turn overshoots and a negative angle draws its wedge
- *                                            backwards. A value that is not finite is reported with console.warn and
+ *                                            backwards. A value that is not finite is reported through sszvis.logger and
  *                                            treated as zero, so one bad datum costs at most its own wedge.
  *                                            Rendering without the property throws.
  * @property {boolean} transition             Whether to animate between renders (default true). The wedge angles, the
@@ -51,6 +51,7 @@ import { arc, interpolate, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
 
 /** The angles of one wedge, in radians, as d3's arc generator wants them. */
@@ -169,7 +170,7 @@ export default function pie<T = unknown>(): PieComponent<T> {
           // A scale over a domain containing undefined, an empty group, or a division by a
           // zero total all land here. Skipping the step keeps the running total usable, so
           // the wedges after this one are unaffected.
-          console.warn(`[pie] the angle accessor returned ${step}; drawing a zero-width wedge`);
+          logger.warn(`[pie] the angle accessor returned ${step}; drawing a zero-width wedge`);
         }
         layout.push({ a0, a1: angle });
       }
