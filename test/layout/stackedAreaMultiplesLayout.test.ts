@@ -22,6 +22,13 @@ describe("stackedAreaMultiplesLayout", () => {
       expect(layout.padHeight).toBe(60);
     });
 
+    test("an explicit padding ratio of 0 means gapless multiples", () => {
+      const zero = layoutStackedAreaMultiples(300, 3, 0);
+      expect(zero.padHeight).toBe(0);
+      expect(zero.bandHeight).toBe(100);
+      expect(zero.range).toEqual([100, 200, 300]);
+    });
+
     test("a padding ratio of 1 leaves no room for the bands", () => {
       const layout = layoutStackedAreaMultiples(300, 3, 1);
       expect(layout.bandHeight).toBe(0);
@@ -78,12 +85,23 @@ describe("stackedAreaMultiplesLayout", () => {
       expect(layoutStackedAreaMultiples(300, 0)).toEqual(EMPTY);
     });
 
-    test("a padding ratio larger than the stack count has no band to lay out", () => {
-      expect(layoutStackedAreaMultiples(300, 3, 4)).toEqual(EMPTY);
+    test("an infinite step has no band to lay out", () => {
+      // num - pct is exactly zero in both of these, so the step divides by zero. Guarding
+      // only on step > 0 let Infinity through, which gave bandHeight = Infinity * 0 = NaN
+      // for the first and a NaN padHeight for the second.
+      expect(layoutStackedAreaMultiples(300, 1, 1)).toEqual(EMPTY);
+      expect(layoutStackedAreaMultiples(300, 0, 0)).toEqual(EMPTY);
     });
 
     test("rejects a negative height", () => {
       expect(() => layoutStackedAreaMultiples(-300, 3)).toThrow(/height/);
+    });
+
+    test("rejects a padding ratio outside [0, 1]", () => {
+      expect(() => layoutStackedAreaMultiples(300, 3, 4)).toThrow(/pct/);
+      expect(() => layoutStackedAreaMultiples(300, 3, 3)).toThrow(/pct/);
+      expect(() => layoutStackedAreaMultiples(300, 3, -1)).toThrow(/pct/);
+      expect(() => layoutStackedAreaMultiples(300, 3, Number.NaN)).toThrow(/pct/);
     });
 
     test("rejects a stack count that is not a whole number of stacks", () => {
@@ -104,29 +122,6 @@ describe("stackedAreaMultiplesLayout", () => {
       const layout = layoutStackedAreaMultiples(1, 3);
       expect(layout.range).toHaveLength(5);
       expect(layout.range.at(-1)).toBeGreaterThan(1);
-    });
-
-    test("an explicit padding ratio of 0 is replaced by the 0.1 default", () => {
-      // BUG: the default is applied with `pct || (pct = 0.1)`, so the falsy-but-meaningful
-      // value 0 - "no gap between the multiples" - cannot be requested.
-      // got: padHeight 10.34 for pct 0
-      // want: padHeight 0.
-      const zero = layoutStackedAreaMultiples(300, 3, 0);
-      const omitted = layoutStackedAreaMultiples(300, 3);
-      expect(zero).toEqual(omitted);
-      expect(zero.padHeight).toBeGreaterThan(0);
-      // every other falsy value is swallowed the same way
-      expect(layoutStackedAreaMultiples(300, 3, Number.NaN)).toEqual(omitted);
-    });
-
-    test("a pct equal to num emits a single -Infinity baseline", () => {
-      // BUG: step is Infinity here, and bandHeight is Infinity * (1 - 3) = -Infinity, which
-      // passes the loop condition once before `level += step` makes it NaN and stops the
-      // loop. The single baseline is unusable as an ordinal scale range.
-      // got: range [-Infinity]
-      // want: an empty range, or a guard on num.
-      const layout = layoutStackedAreaMultiples(300, 3, 3);
-      expect(layout.range).toEqual([Number.NEGATIVE_INFINITY]);
     });
 
     test("the num-th baseline always lands exactly on the chart height", () => {

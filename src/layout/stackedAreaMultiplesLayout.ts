@@ -28,14 +28,15 @@
  * - By construction, step * (num - pct) === height, so baseline number `num` always lands exactly on `height`.
  * - The baseline loop terminates on an absolute 1px slack (`level - height < 1`), not a fraction of the step,
  *   so charts whose step is under ~1px get MORE baselines than there are stacks.
- * - pct defaults via `pct || 0.1`, so an explicit 0 (or NaN) is silently replaced by 0.1.
+ * - pct defaults to 0.1 when it is omitted. An explicit 0 means exactly that: gapless
+ *   multiples. A pct outside [0, 1] throws.
  * - num is a count of stacks: a negative or fractional value throws, which also rules out the
  *   num === pct division by zero.
  * - A step that is not strictly positive - a zero or negative height, or a num at or below pct -
  *   describes no band at all, and the layout comes back empty rather than looping forever.
  */
 
-import { requireCount, requireSize } from "./validate.js";
+import { requireCount, requireRatio, requireSize } from "./validate.js";
 
 export type StackedAreaMultiplesLayout = {
   range: number[];
@@ -54,7 +55,8 @@ export default function layoutStackedAreaMultiples(
   requireSize("layoutStackedAreaMultiples", "height", height);
   requireCount("layoutStackedAreaMultiples", "num", num);
 
-  const padRatio = pct || 0.1;
+  const padRatio = pct ?? 0.1;
+  requireRatio("layoutStackedAreaMultiples", "pct", padRatio);
   const step = height / (num - padRatio);
   // A non-positive step never reaches the bottom of the chart, so the baseline loop below
   // would never terminate. An infinite one - num and pct both 0, or both 1, either of

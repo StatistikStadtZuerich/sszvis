@@ -128,6 +128,52 @@ describe("layout/sankey", () => {
       warn.mockRestore();
     });
 
+    test("requires the source, target and value accessors", () => {
+      const bare = prepareData().idLists(COLUMNS);
+      expect(() =>
+        (bare as unknown as { apply: (d: Row[]) => unknown }).apply([LINKS[0] as Row])
+      ).toThrow(/source, target, value/);
+    });
+
+    test("warns about a value that is not a number and drops the link", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { links, nodes } = prepare(
+        [{ from: "a", to: "c", value: "not a number" as unknown as number }],
+        COLUMNS
+      );
+      expect(links).toEqual([]);
+      expect(byId(nodes, "a")?.value).toBe(0);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    test("warns about a negative value and drops the link", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const prepared = prepare(
+        [
+          { from: "a", to: "c", value: -5 },
+          { from: "a", to: "d", value: 2 },
+        ],
+        COLUMNS
+      );
+      // the surviving link fills its node exactly, rather than stacking outside a node whose
+      // own value the negative link had already clamped to zero
+      expect(prepared.links.map((l) => l.value)).toEqual([2]);
+      expect(byId(prepared.nodes, "a")?.value).toBe(2);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    test("warns about a link within one column and drops it", () => {
+      // a sankey link runs between columns; one that does not is drawn as a chord that goes
+      // nowhere
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { links } = prepare([{ from: "a", to: "b", value: 4 }], COLUMNS);
+      expect(links).toEqual([]);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
     test("coerces the link value to a number", () => {
       const { nodes } = prepare([{ from: "a", to: "c", value: "7" as unknown as number }], COLUMNS);
       expect(byId(nodes, "a")?.value).toBe(7);
@@ -292,18 +338,6 @@ describe("layout/sankey", () => {
       warn.mockRestore();
     });
 
-    test("a non-numeric value silently becomes 0", () => {
-      // BUG: `+value || 0` turns NaN into 0, so a malformed row is drawn as a zero-width
-      // link rather than reported.
-      // got: node value 0
-      // want: a warning naming the row.
-      const { nodes } = prepare(
-        [{ from: "a", to: "c", value: "not a number" as unknown as number }],
-        COLUMNS
-      );
-      expect(byId(nodes, "a")?.value).toBe(0);
-    });
-
     test("prepareData overrides Function.prototype.apply", () => {
       // BUG: the builder exposes its own `apply(data)`, shadowing the built-in
       // Function.prototype.apply. Calling it the standard way silently misbehaves: the
@@ -316,56 +350,6 @@ describe("layout/sankey", () => {
         .value((d: Row) => d.value)
         .idLists(COLUMNS);
       expect(() => (builder.apply as (a: unknown, b: unknown) => unknown)(null, [LINKS])).toThrow();
-    });
-
-    test("the default accessors drop every row of objects", () => {
-      // BUG: source, target and value all default to fn.identity, so without accessors the
-      // raw row is looked up as a node id. For the object rows this layout is built around
-      // that never matches, and every link is warned about and dropped. (Identity does work
-      // for a dataset of bare id strings, which is the
-      // only reason this default is not immediately fatal.)
-      // got: a silently empty link list
-      // want: the three required accessors validated up front.
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      const bare = prepareData().idLists(COLUMNS);
-      expect(
-        (bare as unknown as { apply: (d: Row[]) => { links: unknown[] } }).apply([LINKS[0] as Row])
-          .links
-      ).toEqual([]);
-      warn.mockRestore();
-    });
-
-    test("a link within one column is accepted and stacked normally", () => {
-      // BUG: the JSDoc requires that no id is both a source and a target, but nothing checks
-      // that the two ends of a link are in different columns. A same-column link is laid
-      // out like any other and drawn as a chord that goes nowhere.
-      // got: a link from a to b, both in column 0
-      // want: a warning naming the link.
-      const { links } = prepare([{ from: "a", to: "b", value: 4 }], COLUMNS);
-      expect(links[0]?.src.columnIndex).toBe(0);
-      expect(links[0]?.tgt.columnIndex).toBe(0);
-    });
-
-    test("a negative value is clamped away at the node but not at the link", () => {
-      // BUG: node.value is Math.max(0, ...), so a negative flow disappears from the node,
-      // but the link keeps its negative value and stacks the links after it backwards.
-      // got: node value 0 with a link of value -5
-      // want: negative values rejected.
-      const prepared = prepare(
-        [
-          { from: "a", to: "c", value: -5 },
-          { from: "a", to: "d", value: 2 },
-        ],
-        COLUMNS
-      );
-      const nodes = prepared.nodes;
-      const links = prepared.links;
-      expect(byId(nodes, "a")?.value).toBe(0);
-      expect(links.find((l) => l.tgt.id === "c")?.value).toBe(-5);
-      // a is a zero-height node, yet its two links are stacked at 0 and 2 and the stack
-      // ends at -3, so the links are drawn outside the node they belong to
-      expect(links.find((l) => l.tgt.id === "d")?.srcOffset).toBe(0);
-      expect(links.find((l) => l.tgt.id === "c")?.srcOffset).toBe(2);
     });
   });
 });
