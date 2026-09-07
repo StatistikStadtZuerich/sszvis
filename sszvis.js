@@ -2880,8 +2880,11 @@
      * a structured approach, this allows us to optimize the render loop and clarifies
      * the relationship between state and actions.
      *
-     * Within an app, state can only be modified through actions. During the render phase,
-     * state is immutable and an error will be thrown if it is modified accidentally.
+     * Within an app, state is meant to be modified only through actions. Note that this is a
+     * convention, not a guarantee: immer's auto-freezing is turned off in this module because
+     * d3 mutates state in many places, so the state handed to render is *not* frozen. Mutating
+     * it silently succeeds and the change survives into the next action's draft — treat the
+     * state in render as read-only.
      *
      * Conceptually, an app works like this:
      *
@@ -2890,31 +2893,21 @@
      *     state ⭢ render
      *      ⮤ action ⮠
      *
-     * The basis of an app are the following three types:
+     * Rendering is batched into a single requestAnimationFrame, so several dispatches within
+     * one frame result in exactly one render. A resize reported by the viewport module also
+     * triggers a re-render. Nothing is rendered until the promise returned by `init` resolves;
+     * `init` must return a promise. An effect returned by `init` or by an action is called with
+     * `dispatch`, which takes an action name and an array of props.
      *
-     * Dispatch can be used to schedule an action after rendering has been completed. In the
-     * render function, dispatch is not directly accessible; instead, an actions object is
-     * provided to dispatch actions by calling them as functions.
-     * @typedef {(action: string, p?: Props) => void} Dispatch
+     * `app()` returns nothing and never removes its resize listener, so an app lives for the
+     * lifetime of the page and cannot be torn down.
      *
-     * An effect can be returned from an action to schedule further actions using dispatch.
-     * @typedef {(d: Dispatch, p?: Props) => void} Effect
-     *
-     * An action receives an Immer.js Draft that can be mutated within the action. If further
-     * actions should be called after this one, an action can return an Effect.
-     * @typedef {(s: Draft, p?: Props) => Effect | void} Action
-     * @see {@link https://immerjs.github.io/immer/docs/produce/}
-     *
-     * The app can be configured with the following props:
-     *
-     * @prop {Object} props
-     * @prop {(s: Draft) => Promise<Effect | void>} props.init - Asynchronously create
-     * the initial state and optionally schedule an action
-     * @prop {(s: State, as: Record<keyof props.actions, (p?: Props) => void>)} props.render - Update
-     * the DOM from the state and optionally dispatch actions
-     * @prop {Record<string, Action>} [props.actions] - Functions to transition the
-     * application state
-     * @prop {{element: string, src: string}} [props.fallback] - Render a fallback image
+     * Error handling: a rejecting `init`, and an error thrown by an effect returned *by init*,
+     * both land in the same catch, where they are re-wrapped with the "[sszvis.app]" prefix and
+     * re-thrown. That throw escapes as an unhandled promise rejection, and as a consequence the
+     * `fallback` option is never rendered. An effect returned by an *action* runs outside that
+     * chain, so its error throws synchronously at the dispatcher's call site instead - a second,
+     * inconsistent path.
      *
      * @module sszvis/app
      */
@@ -2922,14 +2915,21 @@
       let {
         init,
         render,
-        actions = {},
+        actions,
         fallback
       } = _ref;
-      let doing;
+      let renderScheduled = false;
       let state;
       invariant(isFunction(init), 'An "init" function returning a Promise must be provided.');
       invariant(isFunction(render), 'A "render" function must be provided.');
-      const actionDispatchers = Object.keys(actions).reduce((acc, key) => {
+      // A default parameter, like the original, only fills in for undefined.
+      const actionMap = actions === undefined ? {} : actions;
+      // finishDraft is typed as a conditional over the draft it is given, which TypeScript
+      // cannot resolve back to State while State is still a type parameter.
+      const finish = draft => finishDraft(draft);
+      // The dispatchers mirror the keys of the actions object, which is what
+      // ActionDispatchers<Actions> describes but Object.keys cannot express.
+      const actionDispatchers = Object.keys(actionMap).reduce((acc, key) => {
         acc[key] = function () {
           for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
             args[_key] = arguments[_key];
@@ -2939,28 +2939,37 @@
         return acc;
       }, {});
       function scheduleUpdate(effect) {
-        if (!doing) {
-          doing = true;
+        if (!renderScheduled) {
+          renderScheduled = true;
           requestAnimationFrame(() => {
             render(state, actionDispatchers);
-            doing = false;
+            renderScheduled = false;
           });
         }
         if (isFunction(effect)) effect(dispatch);
       }
-      function dispatch(action, props) {
-        invariant(actions[action] != null, "Action \"".concat(action, "\" is not defined, add it to \"actions\"."));
+      const dispatch = (action, props) => {
+        const handler = actionMap[action];
+        invariant(handler != null, "Action \"".concat(action, "\" is not defined, add it to \"actions\"."));
         const draft = createDraft(state);
-        const effect = actions[action](draft, ...props);
-        state = finishDraft(draft);
+        // Each action declares the props it accepts, but which action is being dispatched is
+        // only known from a string at this point, so the props cannot be checked here.
+        const call = handler;
+        // Called on actionMap so that `this` is the actions object, as `actions[action](...)`
+        // in the original implementation made it.
+        const effect = Reflect.apply(call, actionMap, [draft, ...props]);
+        state = finish(draft);
         scheduleUpdate(effect);
-      }
+      };
+      // The app starts out with an empty state that init is expected to populate.
       const initialState = createDraft({});
       init(initialState).then(effect => {
-        state = finishDraft(initialState);
+        state = finish(initialState);
         scheduleUpdate(effect);
         viewport.on("resize", scheduleUpdate);
       }).catch(error => {
+        // NOTE: invariant always throws here, so the fallback is never reached. This is
+        // the behaviour of the original implementation, kept as-is.
         invariant(false, error);
         fallback && fallbackRender(fallback.element, {
           src: fallback.src
