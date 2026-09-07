@@ -24,18 +24,22 @@
  *                                      Default true - but choropleth defaults its own lakeFadeOut to false, so the
  *                                      default branch is the one no in-repo chart takes. Turning it off removes an
  *                                      existing fade again.
+ * @property {String} key               Optional scope for this overlay's definitions and paths, so that two overlays
+ *                                      drawn into one group each own their elements. Defaults to one scope per group,
+ *                                      generated on first render and remembered on the group as
+ *                                      data-sszvis-lake-overlay - so re-rendering, even with a freshly constructed
+ *                                      component, reuses the same elements, while a second map on the page gets its
+ *                                      own. A caller-supplied key must be unique within the document.
+ *
+ * Note: the definition ids are scoped - "lake-pattern-1", "lake-fade-gradient-1", "lake-fade-mask-1"
+ * and so on - so two maps on one page no longer define the same id twice. Consumers must not rely on
+ * the previously fixed ids.
  *
  * Note: the pattern helpers in src/patterns.ts append their contents rather than joining them, so
  * this component may only call them on a definition that is still empty; otherwise the tile would
  * gain another rect and two lines, the gradient another two stops and the mask another rect on every
  * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
  * geojson renderers' "missing-pattern" too.
- *
- * Note: the definition ids are scoped per overlay - "lake-pattern-1", "lake-fade-gradient-1",
- * "lake-fade-mask-1" and so on - so two maps on one page no longer define the same id twice.
- * Consumers must not rely on the previously fixed ids. The scope is generated once per group and
- * remembered on the group as data-sszvis-lake-overlay, so re-rendering - even from a freshly
- * constructed component, which is how the docs examples are written - reuses the same definitions.
  *
  * Note: the mask fades the lake by filling itself with the fade gradient, so the two definitions are
  * only useful together. Both helpers hard-code the old fixed gradient id, so this component rewrites
@@ -68,10 +72,8 @@
  * shape covering the lake - SVG's initial fill is black - and both paths swallow the base layer's
  * hover and click events.
  *
- * Note: both selectors are unscoped and both joins unkeyed, so a second overlay rendered into the
- * same group rebinds and restyles the first one's paths instead of drawing its own. One overlay per
- * layer; choropleth uses exactly one, so the collision is latent, but the renderer is exported
- * publicly.
+ * Note: both path selectors are scoped by the overlay's key, so two overlays rendered into one group
+ * each draw their own pair of paths as long as they are given distinct keys.
  *
  * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
  * caches, and does not mutate the geoJson it is handed, so the whole centroid-caching family of
@@ -119,6 +121,8 @@ type LakeOverlayProps = {
   /** Undefined until set: this prop has no default, and an unset colour writes no inline style. */
   lakePathColor?: LakePathColor;
   fadeOut: boolean;
+  /** Undefined until set: the scope then falls back to one generated per group. */
+  key?: string;
 };
 
 export interface MapRendererPatternedLakeOverlayComponent
@@ -133,20 +137,26 @@ export interface MapRendererPatternedLakeOverlayComponent
   lakePathColor(value: LakePathColor): MapRendererPatternedLakeOverlayComponent;
   fadeOut(): boolean;
   fadeOut(value: boolean): MapRendererPatternedLakeOverlayComponent;
+  key(): string | undefined;
+  key(value: string): MapRendererPatternedLakeOverlayComponent;
 }
 
-/** Records the scope generated for a group, mirroring d3-selectgroup's data-d3-selectgroup. */
+/**
+ * Marks both the group whose generated scope it records and the paths belonging to a scope,
+ * mirroring d3-selectgroup's data-d3-selectgroup.
+ */
 const SCOPE_ATTRIBUTE = "data-sszvis-lake-overlay";
 
 let generatedScopes = 0;
 
 /**
- * The scope every definition id is qualified with. It is generated once per group and remembered on
- * the group itself, so a re-render - even from a freshly constructed component, which is how the
- * docs examples are written - reuses the definitions it created, while a second map on the page gets
- * its own.
+ * The scope every definition id and both path selectors are qualified with. A caller-supplied key
+ * wins; otherwise a scope is generated once per group and remembered on the group itself, so a
+ * re-render - even from a freshly constructed component, which is how the docs examples are written
+ * - reuses the same definitions and paths, while a second map on the page gets its own.
  */
-function overlayScope(group: Element): string {
+function overlayScope(group: Element, key: string | undefined): string {
+  if (key !== undefined) return key;
   const recorded = group.getAttribute(SCOPE_ATTRIBUTE);
   if (recorded !== null) return recorded;
   const generated = String(++generatedScopes);
@@ -180,12 +190,13 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
     .prop("lakeBounds")
     .prop("lakePathColor")
     .prop("fadeOut")
+    .prop("key")
     .fadeOut(true)
     .render(function (this: Element) {
       const selection = select(this);
       const props = selection.props<LakeOverlayProps>();
 
-      const scope = overlayScope(this);
+      const scope = overlayScope(this, props.key);
       const patternId = `lake-pattern-${scope}`;
       const gradientId = `lake-fade-gradient-${scope}`;
       const maskId = `lake-fade-mask-${scope}`;
@@ -213,10 +224,11 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
 
       // generate the Lake Zurich path
       const zurichSee = selection
-        .selectAll(".sszvis-map__lakezurich")
+        .selectAll(`.sszvis-map__lakezurich[${SCOPE_ATTRIBUTE}="${scope}"]`)
         .data([props.lakeFeature])
         .join("path")
         .classed("sszvis-map__lakezurich", true)
+        .attr(SCOPE_ATTRIBUTE, scope)
         .attr("d", props.mapPath)
         .attr("fill", `url(#${patternId})`);
 
@@ -226,10 +238,11 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
       const lakePath = selection
-        .selectAll(".sszvis-map__lakepath")
+        .selectAll(`.sszvis-map__lakepath[${SCOPE_ATTRIBUTE}="${scope}"]`)
         .data([props.lakeBounds])
         .join("path")
         .classed("sszvis-map__lakepath", true)
+        .attr(SCOPE_ATTRIBUTE, scope)
         .attr("d", props.mapPath);
 
       // An unset colour writes nothing, so the stylesheet's stroke stands; any value that is set -
