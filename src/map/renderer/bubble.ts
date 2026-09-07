@@ -73,9 +73,8 @@
  * it is never observable and offers no enter-only styling hook; the anchor positions go through
  * getGeoJsonCenter, which caches a centre onto every feature's properties and never invalidates it,
  * so moving a feature's geometry leaves its bubble behind; and mapPath must be a real d3.geoPath,
- * since the positions read mapPath.projection(). Unlike base, though, the transition itself is the
- * intended one - defaultTransition() is passed to .transition(t) rather than through the no-op
- * `.transition().call(slowTransition)` pattern - so its 300ms and easePolyOut survive.
+ * since the positions read mapPath.projection(). The transition is the intended one:
+ * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
  *
  * Note: this component adds no tooltip anchors of its own; a bubble map's tooltips are anchored by
  * the base renderer underneath it.
