@@ -97,11 +97,10 @@
  * object skips the animation, because the re-partition overwrites the positions the tween was
  * starting from.
  *
- * Note: the tooltip anchors are rendered from the datum bound to the group rather than from the
- * flattened array, so a hierarchy gets one anchor per node including the root, which has no arc and
- * no key, and in breadth-first order while the arcs are depth-first. They are positioned from the
- * pre-transition angles and are never repositioned when the transition ends, so after an update
- * they describe the previous layout. See test/component/sunburst.test.ts.
+ * Note: the tooltip anchors are rendered from the same flattened array as the arcs, so there is one
+ * anchor per arc, in the same order. They are positioned from the pre-transition angles and are
+ * never repositioned when the transition ends, so after an update they describe the previous
+ * layout. See test/component/sunburst.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -342,7 +341,12 @@ export default function <T = unknown>(): SunburstComponent<T> {
         }
       );
 
-      selection.call(arcTooltipAnchor);
+      // Rebind the group to the flattened array before rendering the anchors, the way pie
+      // does. Without it the anchors are joined to whatever datum the caller bound - for a
+      // hierarchy that is the root node, which d3 iterates into every descendant, so the
+      // root gains an anchor of its own and the anchors come out breadth first while the
+      // arcs are depth first.
+      selection.datum(data).call(arcTooltipAnchor);
     });
 
   return sunburstComponent;
