@@ -25,10 +25,10 @@ const SWITZERLAND_KEY = "switzerland";
  * the second collection outside the destination box. Omitting the key is therefore safe rather than
  * shared: with no key the cache is bypassed and the collection is always fitted afresh.
  *
- * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
- * distinct width/height/key triple for the lifetime of the page - a keyed chart that reprojects on
- * resize accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
- * release them.
+ * Note: the memo cache is bounded (see fn.MEMOIZE_CACHE_LIMIT) and evicts the least recently used
+ * width/height/key triple, so a keyed chart that reprojects on every resize tick no longer retains
+ * an entry per tick. A projection may therefore be refitted after enough intervening sizes;
+ * identity is a cache hit, never a guarantee.
  *
  * See test/map/mapUtils.test.ts.
  *
@@ -54,7 +54,7 @@ function swissMapProjection(width, height, featureCollection, featureBoundsCache
   }
   return memoizedSwissMapProjection(width, height, featureCollection, featureBoundsCacheKey);
 }
-/** The bounds cache backing keyed calls. Clearing it is the only way to release its entries. */
+/** The bounds cache backing keyed calls. Bounded and LRU-evicted; clearing it releases it early. */
 swissMapProjection.cache = memoizedSwissMapProjection.cache;
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
@@ -194,42 +194,38 @@ function toLookupKey(value) {
 /**
  * getGeoJsonCenter
  *
- * Gets the geographic centroid of a geojson feature object. Caches the result of the calculation
- * on the object as an optimization (note that this is a coordinate position and is independent
- * of the map projection). If the geoJson object's properties contain a 'center' property, that
- * is expected to be a string of the form "longitude,latitude" which will be parsed into a [lon, lat]
- * pair expected by d3's projection functions. These strings can be added to the properties array
- * using the topojson command line tool's -e option (see the Makefile rule for the zurich statistical
- * quarters map for an example of this use).
+ * Gets the geographic centroid of a geojson feature object (note that this is a coordinate
+ * position and is independent of the map projection). If the geoJson object's properties contain
+ * a 'center' property, that is expected to be a string of the form "longitude,latitude" which will
+ * be parsed into a [lon, lat] pair expected by d3's projection functions. These strings can be
+ * added to the properties array using the topojson command line tool's -e option (see the Makefile
+ * rule for the zurich statistical quarters map for an example of this use).
  *
- * Note: the cache is written onto the feature's own properties object, so this function mutates its
- * argument, and the cache is never invalidated - changing `center` after the first call has no
- * effect for the lifetime of the feature object.
+ * The centre is computed on every call and nothing is written back to the feature, so a feature
+ * whose geometry or `center` changes between renders gets an anchor that follows it. This
+ * deliberately replaced a cache kept on the caller's own `properties.cachedCenter`, which nothing
+ * invalidated. geoCentroid over the largest map shipped here (432 features) measures around 35% of
+ * the cost of the path generation the same render already does - and that map re-renders only on
+ * resize, while the maps that re-render per pointer move are an order of magnitude smaller.
  *
  * Note: a `center` that is not exactly two finite numbers is reported with logger.warn and ignored
  * in favour of the computed centroid, so a typo in the topojson -e output is visible rather than
  * silently placing marks at NaN. A warning rather than a throw: the value is authored map data that
- * the rest of the feature can still render without.
+ * the rest of the feature can still render without. Since the value is re-read on every call, a
+ * malformed one now warns once per call rather than once per feature.
+ *
+ * Note: `properties: null` is spec-legal GeoJSON and is accepted - there is no longer anywhere the
+ * centre needs to be stored, so such a feature falls straight through to the computed centroid.
  *
  * See test/map/mapUtils.test.ts.
  *
  * @param  {Object} geoJson                 The geoJson object for which you want the center.
  * @return {GeoPoint}                       The geographical coordinates (in the form [lon, lat]) of the centroid
  *                                          (or user-specified center) of the object.
- * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
- *                                          but has never been supported here, since the cache is written to
- *                                          the properties object.
  */
 function getGeoJsonCenter(geoJson) {
-  const properties = geoJson.properties;
-  if (properties == null) {
-    throw new TypeError("getGeoJsonCenter: the feature has no properties object to cache onto");
-  }
-  if (!properties.cachedCenter) {
-    var _parseCenter;
-    properties.cachedCenter = (_parseCenter = parseCenter(properties.center, geoJson.id)) !== null && _parseCenter !== void 0 ? _parseCenter : geoCentroid(geoJson);
-  }
-  return properties.cachedCenter;
+  var _parseCenter, _geoJson$properties;
+  return (_parseCenter = parseCenter((_geoJson$properties = geoJson.properties) === null || _geoJson$properties === void 0 ? void 0 : _geoJson$properties.center, geoJson.id)) !== null && _parseCenter !== void 0 ? _parseCenter : geoCentroid(geoJson);
 }
 /**
  * An authored "longitude,latitude" centre, or undefined where none was given or it is not exactly

@@ -13,8 +13,7 @@
  * @property {string} geoJsonKeyName        The keyname in the geoJson which will be used to match map entities
  *                                          with data entities. Default 'id'.
  * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
- *                                          without a 'features' property throws a TypeError. Rendering mutates it; see
- *                                          the note below on the cached centre.
+ *                                          without a 'features' property throws a TypeError.
  * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
  * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
  *                                          that fail it, and entities with no datum at all, display the missing value
@@ -43,8 +42,8 @@
  *
  * Note: anchor positions go through getGeoJsonCenter, the same source the base renderer uses, so an
  * authored `center` property is honoured here too and a feature drawn by both renderers anchors in
- * one place. That centre is cached as `cachedCenter` on the feature's properties and never
- * invalidated, so moving a feature's geometry leaves its anchor behind.
+ * one place. That centre is computed on every render and nothing is written back to the feature,
+ * so moving a feature's geometry moves its anchor with it.
  *
  * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the

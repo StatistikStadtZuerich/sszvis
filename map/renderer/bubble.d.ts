@@ -76,8 +76,9 @@
  * Note: this renderer shares three quirks with the base renderer, documented at length in
  * src/map/renderer/base.ts: the --entering modifier is added and removed within the same render, so
  * it is never observable and offers no enter-only styling hook; the anchor positions go through
- * getGeoJsonCenter, which caches a centre onto every feature's properties and never invalidates it,
- * so moving a feature's geometry leaves its bubble behind; and mapPath must be a real d3.geoPath,
+ * getGeoJsonCenter, which computes the centre on every call and caches nothing, and the transform
+ * is rewritten on the merged enter+update selection, so moving a feature's geometry moves its
+ * bubble on the next render; and mapPath must be a real d3.geoPath,
  * since the positions read mapPath.projection(). The transition is the intended one:
  * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
  *

@@ -44,7 +44,7 @@ export { default as slider } from './control/slider.js';
 export { createHtmlLayer } from './createHtmlLayer.js';
 export { createSvgLayer } from './createSvgLayer.js';
 export { fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported } from './fallback.js';
-export { arity, compose, contains, defined, derivedSet, every, filledArray, find, first, firstTouch, flatten, foldPattern, functor, hashableSet, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, memoize, not, prop, propOr, set, some, stringEqual, valueFn, withRootSelection } from './fn.js';
+export { MEMOIZE_CACHE_LIMIT, arity, compose, contains, defined, derivedSet, every, filledArray, find, first, firstTouch, flatten, foldPattern, functor, hashableSet, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, memoize, not, prop, propOr, set, some, stringEqual, valueFn, withRootSelection } from './fn.js';
 export { formatAge, formatAxisTimeFormat, formatFractionPercent, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear } from './format.js';
 export { colorLegendDimensions, colorLegendLayout } from './layout/colorLegendLayout.js';
 export { default as dimensionsHeatTable } from './layout/heatTableDimensions.js';

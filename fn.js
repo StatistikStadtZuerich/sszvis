@@ -392,6 +392,12 @@ function withRootSelection(selector, render) {
  */
 const valueFn = value => typeof value === "function" ? value : () => value;
 /**
+ * The most entries a memoized function retains. Beyond it the least recently used entry is
+ * dropped. Deliberately in the low tens: the keys a chart revisits are few - a handful of
+ * breakpoint widths, one per map - while a resize drag produces one throwaway key per tick.
+ */
+const MEMOIZE_CACHE_LIMIT = 32;
+/**
  * fn.memoize
  *
  * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
@@ -401,6 +407,17 @@ const valueFn = value => typeof value === "function" ? value : () => value;
  * that entry for any later arguments, so memoizing a function of several arguments without
  * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
  * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
+ *
+ * Also unlike lodash, the cache is bounded to MEMOIZE_CACHE_LIMIT entries and evicts the least
+ * recently used one, so a caller that keys on a continuously varying value - a chart reprojecting
+ * on every resize tick - no longer retains an entry per tick for the lifetime of the page. A
+ * memoized value is therefore a cache, never a registry: it can disappear between calls, and a
+ * caller that needs a value to survive must hold it itself.
+ *
+ * Recency is tracked by the Map's own insertion order, so a cache hit re-inserts its entry and
+ * moves it to the end. `.cache` stays a plain, publicly mutable Map; only its iteration order
+ * now reflects use rather than first insertion. Every call trims, hit or miss, so a cache filled
+ * past the limit from outside is brought back to it by the next call.
  */
 const memoize = (func, resolver
 // The cache key is whatever the resolver returned, or - with no resolver - the first
@@ -415,16 +432,30 @@ const memoize = (func, resolver
     }
     const key = resolver ? resolver(...arguments) : arguments.length <= 0 ? undefined : arguments[0];
     const cache = memoized.cache;
+    let result;
     if (cache.has(key)) {
-      return cache.get(key);
+      result = cache.get(key);
+      // Re-insert so the entry counts as recently used. Delete first: Map.set on an existing key
+      // keeps its original position.
+      cache.delete(key);
+      cache.set(key, result);
+    } else {
+      result = func(...arguments);
+      memoized.cache = cache.set(key, result) || cache;
     }
-    const result = func(...arguments);
-    memoized.cache = cache.set(key, result) || cache;
+    // Iteration starts at the oldest entry, so the first key is the least recently used one. A
+    // loop rather than a single delete, because the cache is public and may have been filled
+    // past the limit from outside; hits trim too, so the bound is restored on any call.
+    while (memoized.cache.size > MEMOIZE_CACHE_LIMIT) {
+      const oldest = memoized.cache.keys().next();
+      if (oldest.done) break;
+      memoized.cache.delete(oldest.value);
+    }
     return result;
   };
   memoized.cache = new Map();
   return memoized;
 };
 
-export { arity, compose, contains, defined, derivedSet, every, filledArray, find, first, firstTouch, flatten, foldPattern, functor, hashableSet, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, memoize, not, prop, propOr, set, some, stringEqual, valueFn, withRootSelection };
+export { MEMOIZE_CACHE_LIMIT, arity, compose, contains, defined, derivedSet, every, filledArray, find, first, firstTouch, flatten, foldPattern, functor, hashableSet, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, memoize, not, prop, propOr, set, some, stringEqual, valueFn, withRootSelection };
 //# sourceMappingURL=fn.js.map

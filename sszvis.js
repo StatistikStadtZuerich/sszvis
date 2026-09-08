@@ -574,6 +574,12 @@
      */
     const valueFn = value => typeof value === "function" ? value : () => value;
     /**
+     * The most entries a memoized function retains. Beyond it the least recently used entry is
+     * dropped. Deliberately in the low tens: the keys a chart revisits are few - a handful of
+     * breakpoint widths, one per map - while a resize drag produces one throwaway key per tick.
+     */
+    const MEMOIZE_CACHE_LIMIT = 32;
+    /**
      * fn.memoize
      *
      * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
@@ -583,6 +589,17 @@
      * that entry for any later arguments, so memoizing a function of several arguments without
      * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
      * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
+     *
+     * Also unlike lodash, the cache is bounded to MEMOIZE_CACHE_LIMIT entries and evicts the least
+     * recently used one, so a caller that keys on a continuously varying value - a chart reprojecting
+     * on every resize tick - no longer retains an entry per tick for the lifetime of the page. A
+     * memoized value is therefore a cache, never a registry: it can disappear between calls, and a
+     * caller that needs a value to survive must hold it itself.
+     *
+     * Recency is tracked by the Map's own insertion order, so a cache hit re-inserts its entry and
+     * moves it to the end. `.cache` stays a plain, publicly mutable Map; only its iteration order
+     * now reflects use rather than first insertion. Every call trims, hit or miss, so a cache filled
+     * past the limit from outside is brought back to it by the next call.
      */
     const memoize = (func, resolver
     // The cache key is whatever the resolver returned, or - with no resolver - the first
@@ -597,11 +614,25 @@
         }
         const key = resolver ? resolver(...arguments) : arguments.length <= 0 ? undefined : arguments[0];
         const cache = memoized.cache;
+        let result;
         if (cache.has(key)) {
-          return cache.get(key);
+          result = cache.get(key);
+          // Re-insert so the entry counts as recently used. Delete first: Map.set on an existing key
+          // keeps its original position.
+          cache.delete(key);
+          cache.set(key, result);
+        } else {
+          result = func(...arguments);
+          memoized.cache = cache.set(key, result) || cache;
         }
-        const result = func(...arguments);
-        memoized.cache = cache.set(key, result) || cache;
+        // Iteration starts at the oldest entry, so the first key is the least recently used one. A
+        // loop rather than a single delete, because the cache is public and may have been filled
+        // past the limit from outside; hits trim too, so the bound is restored on any call.
+        while (memoized.cache.size > MEMOIZE_CACHE_LIMIT) {
+          const oldest = memoized.cache.keys().next();
+          if (oldest.done) break;
+          memoized.cache.delete(oldest.value);
+        }
         return result;
       };
       memoized.cache = new Map();
@@ -10603,10 +10634,10 @@
      * the second collection outside the destination box. Omitting the key is therefore safe rather than
      * shared: with no key the cache is bypassed and the collection is always fitted afresh.
      *
-     * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
-     * distinct width/height/key triple for the lifetime of the page - a keyed chart that reprojects on
-     * resize accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
-     * release them.
+     * Note: the memo cache is bounded (see fn.MEMOIZE_CACHE_LIMIT) and evicts the least recently used
+     * width/height/key triple, so a keyed chart that reprojects on every resize tick no longer retains
+     * an entry per tick. A projection may therefore be refitted after enough intervening sizes;
+     * identity is a cache hit, never a guarantee.
      *
      * See test/map/mapUtils.test.ts.
      *
@@ -10632,7 +10663,7 @@
       }
       return memoizedSwissMapProjection(width, height, featureCollection, featureBoundsCacheKey);
     }
-    /** The bounds cache backing keyed calls. Clearing it is the only way to release its entries. */
+    /** The bounds cache backing keyed calls. Bounded and LRU-evicted; clearing it releases it early. */
     swissMapProjection.cache = memoizedSwissMapProjection.cache;
     /**
      * This is a special d3.geoPath generator function tailored for rendering maps of
@@ -10772,42 +10803,38 @@
     /**
      * getGeoJsonCenter
      *
-     * Gets the geographic centroid of a geojson feature object. Caches the result of the calculation
-     * on the object as an optimization (note that this is a coordinate position and is independent
-     * of the map projection). If the geoJson object's properties contain a 'center' property, that
-     * is expected to be a string of the form "longitude,latitude" which will be parsed into a [lon, lat]
-     * pair expected by d3's projection functions. These strings can be added to the properties array
-     * using the topojson command line tool's -e option (see the Makefile rule for the zurich statistical
-     * quarters map for an example of this use).
+     * Gets the geographic centroid of a geojson feature object (note that this is a coordinate
+     * position and is independent of the map projection). If the geoJson object's properties contain
+     * a 'center' property, that is expected to be a string of the form "longitude,latitude" which will
+     * be parsed into a [lon, lat] pair expected by d3's projection functions. These strings can be
+     * added to the properties array using the topojson command line tool's -e option (see the Makefile
+     * rule for the zurich statistical quarters map for an example of this use).
      *
-     * Note: the cache is written onto the feature's own properties object, so this function mutates its
-     * argument, and the cache is never invalidated - changing `center` after the first call has no
-     * effect for the lifetime of the feature object.
+     * The centre is computed on every call and nothing is written back to the feature, so a feature
+     * whose geometry or `center` changes between renders gets an anchor that follows it. This
+     * deliberately replaced a cache kept on the caller's own `properties.cachedCenter`, which nothing
+     * invalidated. geoCentroid over the largest map shipped here (432 features) measures around 35% of
+     * the cost of the path generation the same render already does - and that map re-renders only on
+     * resize, while the maps that re-render per pointer move are an order of magnitude smaller.
      *
      * Note: a `center` that is not exactly two finite numbers is reported with logger.warn and ignored
      * in favour of the computed centroid, so a typo in the topojson -e output is visible rather than
      * silently placing marks at NaN. A warning rather than a throw: the value is authored map data that
-     * the rest of the feature can still render without.
+     * the rest of the feature can still render without. Since the value is re-read on every call, a
+     * malformed one now warns once per call rather than once per feature.
+     *
+     * Note: `properties: null` is spec-legal GeoJSON and is accepted - there is no longer anywhere the
+     * centre needs to be stored, so such a feature falls straight through to the computed centroid.
      *
      * See test/map/mapUtils.test.ts.
      *
      * @param  {Object} geoJson                 The geoJson object for which you want the center.
      * @return {GeoPoint}                       The geographical coordinates (in the form [lon, lat]) of the centroid
      *                                          (or user-specified center) of the object.
-     * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
-     *                                          but has never been supported here, since the cache is written to
-     *                                          the properties object.
      */
     function getGeoJsonCenter(geoJson) {
-      const properties = geoJson.properties;
-      if (properties == null) {
-        throw new TypeError("getGeoJsonCenter: the feature has no properties object to cache onto");
-      }
-      if (!properties.cachedCenter) {
-        var _parseCenter;
-        properties.cachedCenter = (_parseCenter = parseCenter(properties.center, geoJson.id)) !== null && _parseCenter !== void 0 ? _parseCenter : d3.geoCentroid(geoJson);
-      }
-      return properties.cachedCenter;
+      var _parseCenter, _geoJson$properties;
+      return (_parseCenter = parseCenter((_geoJson$properties = geoJson.properties) === null || _geoJson$properties === void 0 ? void 0 : _geoJson$properties.center, geoJson.id)) !== null && _parseCenter !== void 0 ? _parseCenter : d3.geoCentroid(geoJson);
     }
     /**
      * An authored "longitude,latitude" centre, or undefined where none was given or it is not exactly
@@ -10954,10 +10981,11 @@
      * of that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
      * element so re-renders reuse it. The id is not part of the public API; do not select on it.
      *
-     * Note: rendering mutates the geojson it is handed. Anchor positions go through getGeoJsonCenter,
-     * which caches a center onto every feature's properties. A malformed `center` property parses to
-     * NaN coordinates and the anchor is emitted with a transform of translate(NaN,NaN) rather than
-     * being skipped, so a typo in an authored map file silently detaches that entity's tooltip.
+     * Note: rendering does not mutate the geojson it is handed. Anchor positions go through
+     * getGeoJsonCenter, which computes the centre on every call and writes nothing back, so a feature
+     * whose geometry or `center` changes between renders gets an anchor that follows it. A malformed
+     * `center` property is warned about and ignored in favour of the computed centroid, so a typo in
+     * an authored map file is visible in the console rather than detaching that entity's tooltip.
      *
      * Note: a mapPath that is a bare path function renders all of the areas and then throws a
      * TypeError from the anchor positions, which read mapPath.projection(). An empty mergedData never
@@ -11129,8 +11157,9 @@
      * Note: this renderer shares three quirks with the base renderer, documented at length in
      * src/map/renderer/base.ts: the --entering modifier is added and removed within the same render, so
      * it is never observable and offers no enter-only styling hook; the anchor positions go through
-     * getGeoJsonCenter, which caches a centre onto every feature's properties and never invalidates it,
-     * so moving a feature's geometry leaves its bubble behind; and mapPath must be a real d3.geoPath,
+     * getGeoJsonCenter, which computes the centre on every call and caches nothing, and the transform
+     * is rewritten on the merged enter+update selection, so moving a feature's geometry moves its
+     * bubble on the next render; and mapPath must be a real d3.geoPath,
      * since the positions read mapPath.projection(). The transition is the intended one:
      * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
      *
@@ -11321,8 +11350,7 @@
      * @property {string} geoJsonKeyName        The keyname in the geoJson which will be used to match map entities
      *                                          with data entities. Default 'id'.
      * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
-     *                                          without a 'features' property throws a TypeError. Rendering mutates it; see
-     *                                          the note below on the cached centre.
+     *                                          without a 'features' property throws a TypeError.
      * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
      * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
      *                                          that fail it, and entities with no datum at all, display the missing value
@@ -11351,8 +11379,8 @@
      *
      * Note: anchor positions go through getGeoJsonCenter, the same source the base renderer uses, so an
      * authored `center` property is honoured here too and a feature drawn by both renderers anchors in
-     * one place. That centre is cached as `cachedCenter` on the feature's properties and never
-     * invalidated, so moving a feature's geometry leaves its anchor behind.
+     * one place. That centre is computed on every render and nothing is written back to the feature,
+     * so moving a feature's geometry moves its anchor with it.
      *
      * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
      * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
@@ -11448,13 +11476,10 @@
         });
         // the tooltip anchor generator
         const ta = tooltipAnchor().position(d => {
-          // A feature with the spec-legal `properties: null` reaches here now that the merge no
-          // longer crashes on one, and the centre cache needs somewhere to live. Without this
-          // getGeoJsonCenter would throw on it.
-          if (!d.geoJson.properties) d.geoJson.properties = {};
           // The same centre the base renderer uses, so a feature drawn by both places its tooltip
-          // in one spot: an authored `center` property is honoured, and the result is memoized as
-          // `cachedCenter` on the feature.
+          // in one spot: an authored `center` property is honoured, and the result is computed per
+          // render rather than written back onto the caller's feature. A feature with the
+          // spec-legal `properties: null` falls straight through to the computed centroid.
           const center = getGeoJsonCenter(d.geoJson);
           // d3's own typings expect the projection type as a type argument here.
           const point = props.mapPath.projection()(center);
@@ -13130,6 +13155,7 @@
     exports.DEFAULT_WIDTH = DEFAULT_WIDTH;
     exports.GEO_KEY_DEFAULT = GEO_KEY_DEFAULT;
     exports.LAKE_FADE_GRADIENT_ID = LAKE_FADE_GRADIENT_ID;
+    exports.MEMOIZE_CACHE_LIMIT = MEMOIZE_CACHE_LIMIT;
     exports.RATIO = RATIO;
     exports.STADT_KREISE_KEY = STADT_KREISE_KEY;
     exports.STATISTISCHE_QUARTIERE_KEY = STATISTISCHE_QUARTIERE_KEY;

@@ -258,6 +258,12 @@ export declare function withRootSelection<R, SG extends BaseType, SD, SP extends
  */
 export declare const valueFn: <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>) => ValueFn<E, D, R>;
 /**
+ * The most entries a memoized function retains. Beyond it the least recently used entry is
+ * dropped. Deliberately in the low tens: the keys a chart revisits are few - a handful of
+ * breakpoint widths, one per map - while a resize drag produces one throwaway key per tick.
+ */
+export declare const MEMOIZE_CACHE_LIMIT = 32;
+/**
  * fn.memoize
  *
  * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
@@ -267,6 +273,17 @@ export declare const valueFn: <E extends BaseType, D, R>(value: R | ValueFn<E, D
  * that entry for any later arguments, so memoizing a function of several arguments without
  * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
  * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
+ *
+ * Also unlike lodash, the cache is bounded to MEMOIZE_CACHE_LIMIT entries and evicts the least
+ * recently used one, so a caller that keys on a continuously varying value - a chart reprojecting
+ * on every resize tick - no longer retains an entry per tick for the lifetime of the page. A
+ * memoized value is therefore a cache, never a registry: it can disappear between calls, and a
+ * caller that needs a value to survive must hold it itself.
+ *
+ * Recency is tracked by the Map's own insertion order, so a cache hit re-inserts its entry and
+ * moves it to the end. `.cache` stays a plain, publicly mutable Map; only its iteration order
+ * now reflects use rather than first insertion. Every call trims, hit or miss, so a cache filled
+ * past the limit from outside is brought back to it by the next call.
  */
 export declare const memoize: <TFunc extends (...args: never[]) => unknown>(func: TFunc, resolver?: (...args: Parameters<TFunc>) => string | number) => TFunc & {
     cache: Map<unknown, ReturnType<TFunc>>;

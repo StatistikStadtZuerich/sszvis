@@ -4487,6 +4487,12 @@ declare function withRootSelection<R, SG extends BaseType, SD, SP extends BaseTy
  */
 declare const valueFn: <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>) => ValueFn<E, D, R>;
 /**
+ * The most entries a memoized function retains. Beyond it the least recently used entry is
+ * dropped. Deliberately in the low tens: the keys a chart revisits are few - a handful of
+ * breakpoint widths, one per map - while a resize drag produces one throwaway key per tick.
+ */
+declare const MEMOIZE_CACHE_LIMIT = 32;
+/**
  * fn.memoize
  *
  * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
@@ -4496,6 +4502,17 @@ declare const valueFn: <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>) =
  * that entry for any later arguments, so memoizing a function of several arguments without
  * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
  * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
+ *
+ * Also unlike lodash, the cache is bounded to MEMOIZE_CACHE_LIMIT entries and evicts the least
+ * recently used one, so a caller that keys on a continuously varying value - a chart reprojecting
+ * on every resize tick - no longer retains an entry per tick for the lifetime of the page. A
+ * memoized value is therefore a cache, never a registry: it can disappear between calls, and a
+ * caller that needs a value to survive must hold it itself.
+ *
+ * Recency is tracked by the Map's own insertion order, so a cache hit re-inserts its entry and
+ * moves it to the end. `.cache` stays a plain, publicly mutable Map; only its iteration order
+ * now reflects use rather than first insertion. Every call trims, hit or miss, so a cache filled
+ * past the limit from outside is brought back to it by the next call.
  */
 declare const memoize: <TFunc extends (...args: never[]) => unknown>(func: TFunc, resolver?: (...args: Parameters<TFunc>) => string | number) => TFunc & {
     cache: Map<unknown, ReturnType<TFunc>>;
@@ -5692,44 +5709,45 @@ declare function prepareMergedGeoData<Datum extends object>(dataset: readonly Da
  * else is stringified, so numeric and string ids that print the same collide deliberately.
  */
 declare function toLookupKey(value: unknown): string | symbol;
-/** The properties these utilities read from and write back to a map feature. */
+/** The properties these utilities read from a map feature. */
 interface MapFeatureProperties {
     /** An authored centre, as the string "longitude,latitude". */
     center?: string;
-    /** Where the computed centre is memoized, on the feature itself. */
-    cachedCenter?: GeoPoint;
     [key: string]: unknown;
 }
-/** A map feature whose properties this module is allowed to read and cache onto. */
+/** A map feature whose properties this module reads. */
 type MapFeature = ExtendedFeature<GeoGeometryObjects | null, MapFeatureProperties | null>;
 /**
  * getGeoJsonCenter
  *
- * Gets the geographic centroid of a geojson feature object. Caches the result of the calculation
- * on the object as an optimization (note that this is a coordinate position and is independent
- * of the map projection). If the geoJson object's properties contain a 'center' property, that
- * is expected to be a string of the form "longitude,latitude" which will be parsed into a [lon, lat]
- * pair expected by d3's projection functions. These strings can be added to the properties array
- * using the topojson command line tool's -e option (see the Makefile rule for the zurich statistical
- * quarters map for an example of this use).
+ * Gets the geographic centroid of a geojson feature object (note that this is a coordinate
+ * position and is independent of the map projection). If the geoJson object's properties contain
+ * a 'center' property, that is expected to be a string of the form "longitude,latitude" which will
+ * be parsed into a [lon, lat] pair expected by d3's projection functions. These strings can be
+ * added to the properties array using the topojson command line tool's -e option (see the Makefile
+ * rule for the zurich statistical quarters map for an example of this use).
  *
- * Note: the cache is written onto the feature's own properties object, so this function mutates its
- * argument, and the cache is never invalidated - changing `center` after the first call has no
- * effect for the lifetime of the feature object.
+ * The centre is computed on every call and nothing is written back to the feature, so a feature
+ * whose geometry or `center` changes between renders gets an anchor that follows it. This
+ * deliberately replaced a cache kept on the caller's own `properties.cachedCenter`, which nothing
+ * invalidated. geoCentroid over the largest map shipped here (432 features) measures around 35% of
+ * the cost of the path generation the same render already does - and that map re-renders only on
+ * resize, while the maps that re-render per pointer move are an order of magnitude smaller.
  *
  * Note: a `center` that is not exactly two finite numbers is reported with logger.warn and ignored
  * in favour of the computed centroid, so a typo in the topojson -e output is visible rather than
  * silently placing marks at NaN. A warning rather than a throw: the value is authored map data that
- * the rest of the feature can still render without.
+ * the rest of the feature can still render without. Since the value is re-read on every call, a
+ * malformed one now warns once per call rather than once per feature.
+ *
+ * Note: `properties: null` is spec-legal GeoJSON and is accepted - there is no longer anywhere the
+ * centre needs to be stored, so such a feature falls straight through to the computed centroid.
  *
  * See test/map/mapUtils.test.ts.
  *
  * @param  {Object} geoJson                 The geoJson object for which you want the center.
  * @return {GeoPoint}                       The geographical coordinates (in the form [lon, lat]) of the centroid
  *                                          (or user-specified center) of the object.
- * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
- *                                          but has never been supported here, since the cache is written to
- *                                          the properties object.
  */
 declare function getGeoJsonCenter(geoJson: MapFeature): GeoPoint;
 /**
@@ -5832,10 +5850,11 @@ declare function missingPatternId<G extends BaseType, D, P extends BaseType, PD>
  * of that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
  * element so re-renders reuse it. The id is not part of the public API; do not select on it.
  *
- * Note: rendering mutates the geojson it is handed. Anchor positions go through getGeoJsonCenter,
- * which caches a center onto every feature's properties. A malformed `center` property parses to
- * NaN coordinates and the anchor is emitted with a transform of translate(NaN,NaN) rather than
- * being skipped, so a typo in an authored map file silently detaches that entity's tooltip.
+ * Note: rendering does not mutate the geojson it is handed. Anchor positions go through
+ * getGeoJsonCenter, which computes the centre on every call and writes nothing back, so a feature
+ * whose geometry or `center` changes between renders gets an anchor that follows it. A malformed
+ * `center` property is warned about and ignored in favour of the computed centroid, so a typo in
+ * an authored map file is visible in the console rather than detaching that entity's tooltip.
  *
  * Note: a mapPath that is a bare path function renders all of the areas and then throws a
  * TypeError from the anchor positions, which read mapPath.projection(). An empty mergedData never
@@ -5955,8 +5974,9 @@ declare function mapRendererBase<T = unknown>(): MapRendererBaseComponent<T>;
  * Note: this renderer shares three quirks with the base renderer, documented at length in
  * src/map/renderer/base.ts: the --entering modifier is added and removed within the same render, so
  * it is never observable and offers no enter-only styling hook; the anchor positions go through
- * getGeoJsonCenter, which caches a centre onto every feature's properties and never invalidates it,
- * so moving a feature's geometry leaves its bubble behind; and mapPath must be a real d3.geoPath,
+ * getGeoJsonCenter, which computes the centre on every call and caches nothing, and the transform
+ * is rewritten on the merged enter+update selection, so moving a feature's geometry moves its
+ * bubble on the next render; and mapPath must be a real d3.geoPath,
  * since the positions read mapPath.projection(). The transition is the intended one:
  * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
  *
@@ -6016,8 +6036,7 @@ declare function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T>
  * @property {string} geoJsonKeyName        The keyname in the geoJson which will be used to match map entities
  *                                          with data entities. Default 'id'.
  * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
- *                                          without a 'features' property throws a TypeError. Rendering mutates it; see
- *                                          the note below on the cached centre.
+ *                                          without a 'features' property throws a TypeError.
  * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
  * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
  *                                          that fail it, and entities with no datum at all, display the missing value
@@ -6046,8 +6065,8 @@ declare function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T>
  *
  * Note: anchor positions go through getGeoJsonCenter, the same source the base renderer uses, so an
  * authored `center` property is honoured here too and a feature drawn by both renderers anchors in
- * one place. That centre is cached as `cachedCenter` on the feature's properties and never
- * invalidated, so moving a feature's geometry leaves its anchor behind.
+ * one place. That centre is computed on every render and nothing is written back to the feature,
+ * so moving a feature's geometry moves its anchor with it.
  *
  * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
@@ -7444,5 +7463,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, confidenceArea as annotationConfidenceArea, export_default$d as annotationConfidenceBar, export_default$b as annotationLine, export_default$a as annotationRangeFlag, export_default$9 as annotationRangeRuler, export_default$8 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$f as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$c as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$2 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$1 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$6 as move, muchDarker, nestedStackedBarsVertical, not, pack, export_default$5 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$3 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$7 as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, treemap, valueFn, viewport, export_default$4 as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, MEMOIZE_CACHE_LIMIT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, confidenceArea as annotationConfidenceArea, export_default$d as annotationConfidenceBar, export_default$b as annotationLine, export_default$a as annotationRangeFlag, export_default$9 as annotationRangeRuler, export_default$8 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$f as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$c as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$2 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$1 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$6 as move, muchDarker, nestedStackedBarsVertical, not, pack, export_default$5 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$3 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$7 as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, treemap, valueFn, viewport, export_default$4 as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidReferencePoint, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };
