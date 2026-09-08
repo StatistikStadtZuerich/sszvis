@@ -9,13 +9,13 @@ const stackedData = [
     [
         [0,10, data: {...}, series: "key1", stack: "A"],
         [0,8, data: {...}, series: "key1", stack: "B"],
-        [0,16, data: {...}, series:"key1"2, stack: "C"]
+        [0,16, data: {...}, series: "key1", stack: "C"],
         key: "key1"
     ],
     [
-        [10,16, data: {...}, series: "key1", stack: "A"],
-        [8,20, data: {...}, series: "key1", stack: "B"],
-        [16,18, data: {...}, series: "key1", stack: "C"]
+        [10,16, data: {...}, series: "key2", stack: "A"],
+        [8,20, data: {...}, series: "key2", stack: "B"],
+        [16,18, data: {...}, series: "key2", stack: "C"],
         key: "key2"
     ],
 ]
