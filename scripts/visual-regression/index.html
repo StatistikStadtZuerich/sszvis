@@ -153,6 +153,19 @@
 
     <script>
       const SIDES = ["baseline", "candidate"];
+
+      /**
+       * The page runs both from the local server and from a static export, which
+       * address the same content differently: the server rewrites a chart's HTML per
+       * request and answers `?side=`, while an export has already written one file per
+       * side. `export.mjs` injects `__REGRESSION_STATIC__` to select the second form.
+       */
+      const STATIC = window.__REGRESSION_STATIC__ === true;
+      const manifestUrl = () => (STATIC ? "manifest.json" : "/api/manifest.json");
+      const chartUrl = (path, side) =>
+        STATIC
+          ? `chart/${path.replace(/\.html$/, `.${side}.html`)}`
+          : `/chart/${path}?side=${side}`;
       const list = document.getElementById("list");
       const state = new Map(); // path -> { baseline: report, candidate: report }
       let charts = [];
@@ -269,7 +282,7 @@
               <span class="side">${side === "baseline" ? "current " + chart.version : "working copy"}</span>
               <span class="tag">…</span>
               <span class="spacer" style="flex:1"></span>
-              <a href="/chart/${chart.path}?side=${side}" target="_blank" rel="noreferrer">open</a>
+              <a href="${chartUrl(chart.path, side)}" target="_blank" rel="noreferrer">open</a>
             </div>
             <div class="placeholder" style="height:${paneHeight}px">not loaded</div>
             <div class="errors"></div>
@@ -295,7 +308,7 @@
           const frame = document.createElement("iframe");
           frame.loading = "lazy";
           frame.style.height = paneHeight + "px";
-          frame.src = `/chart/${row.dataset.path}?side=${pane.dataset.side}`;
+          frame.src = chartUrl(row.dataset.path, pane.dataset.side);
           placeholder.replaceWith(frame);
         }
       }
@@ -370,7 +383,7 @@
         render();
       });
 
-      fetch("/api/manifest.json")
+      fetch(manifestUrl())
         .then((r) => r.json())
         .then((data) => {
           charts = data;
