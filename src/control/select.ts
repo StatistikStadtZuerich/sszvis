@@ -71,7 +71,7 @@
  * Note: `values` resolves to the empty array when it is unset or set to undefined, so a render that
  * lands before the data does draws an empty control rather than throwing. A chart fed from a fetch
  * passes a state key that is undefined until the data arrives, so the two spellings of "nothing to
- * offer yet" have to mean the same thing. `buttonGroup` does not do this yet, and still throws.
+ * offer yet" have to mean the same thing. `buttonGroup` coerces its `values` the same way.
  *
  * See test/control/select.test.ts.
  *
