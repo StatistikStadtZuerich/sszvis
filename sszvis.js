@@ -11983,8 +11983,9 @@
      *                                      feature. Never validated; see the note below.
      * @property {GeoJson} lakeFeature      A GeoJson object which provides data for the outline shape of Lake Zurich. This shape will
      *                                      be filled with a special texture fill and masked with an alpha gradient fade.
-     *                                      Never validated, which is why the getter reports it as possibly undefined; see
-     *                                      the note below.
+     *                                      Left out - or set to null - it means "no lake": the overlay then removes the
+     *                                      paths and the definitions it drew earlier, so it can be switched off without
+     *                                      being wrapped in a group the caller empties.
      * @property {GeoJson} lakeBounds       A GeoJson object which provides data for the shape of map entity borders which lie over the
      *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
      *                                      Never validated, like lakeFeature.
@@ -12018,14 +12019,20 @@
      * only useful together. Both helpers take the gradient id as a trailing argument, so this overlay's
      * scoped id is handed to them directly rather than rewritten afterwards.
      *
-     * Note: the defs element is created inside the map group rather than at the svg root, and
-     * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
-     * defs with the base renderer's missing value pattern when both draw into the same group.
+     * Note: the defs element is created inside the map group rather than at the svg root - so this
+     * component shares one defs with the base renderer's missing value pattern when both draw into
+     * the same group. Only the definitions carrying this overlay's scope are ever removed from it.
      *
-     * Note: neither geoJson property is validated. Omitting either leaves a classed, pattern-filled
-     * path with no geometry - invisible, silent, and indistinguishable from having no lake to draw. A
-     * missing property reaches the path generator as undefined, which returns null; a missing mapPath
-     * has d3 remove the attribute without calling anything. The same root defect as the mesh renderer.
+     * Note: an absent lakeFeature is an instruction rather than a mistake - it clears the overlay - so
+     * it is neither validated nor reported. lakeBounds is still unvalidated in the older sense:
+     * omitting it while there is a lake to draw leaves a classed border path with no geometry, because
+     * the missing property reaches the path generator as undefined, which returns null. A missing
+     * mapPath has d3 remove the attribute without calling anything. The same root defect as the mesh
+     * renderer.
+     *
+     * Note: the clearing branch removes only this overlay's own paths and only the three definitions
+     * carrying its scope, so clearing one overlay leaves a sibling overlay in the same group intact.
+     * The shared defs element itself is left in place, since the base renderer may be using it too.
      *
      * Note: lakePathColor is not wrapped in fn.functor, unlike the colour properties of the base,
      * geojson and highlight renderers. An accessor is handed straight to d3 and called with the
@@ -12045,8 +12052,12 @@
      * shape covering the lake - SVG's initial fill is black - and both paths swallow the base layer's
      * hover and click events.
      *
-     * Note: both path selectors are scoped by the overlay's key, so two overlays rendered into one group
-     * each draw their own pair of paths as long as they are given distinct keys.
+     * Note: both path selectors are scoped to the rendering group's own children and filtered by the
+     * overlay's key - so two overlays rendered into one group each draw their own pair of paths as
+     * long as they are given distinct keys, and an overlay in a nested group is left alone even if it
+     * carries the same key. Two unkeyed overlays in one
+     * group still share the scope generated for that group, and so share one pair of paths; that is
+     * what makes a re-render from a freshly constructed component reuse its elements.
      *
      * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
      * caches, and does not mutate the geoJson it is handed, so the whole centroid-caching family of
@@ -12073,10 +12084,10 @@
      */
     const KEY_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
     /**
-     * Rejects a key that cannot be spelled in an id. Without this a key such as "a b" builds the valid
-     * but unmatchable selector "pattern#lake-pattern-a b", so every render appends another definition
-     * and the url(#...) reference is inert, while a quote makes the selector unparseable and throws
-     * from inside ensureDefsElement. Both were silent or obscure; this names the property instead.
+     * Rejects a key that cannot be spelled in an id. The scope is written into the definition ids, and
+     * those ids are named back from the paths as url(#...) references - a fragment that cannot spell a
+     * space or a quote. A key such as "a b" therefore yields definitions no path can reference, which
+     * is silent at render time; this names the property instead.
      */
     function requireSpellableKey(key) {
       if (!KEY_PATTERN.test(key)) {
@@ -12111,6 +12122,38 @@
         const patternId = "lake-pattern-".concat(scope);
         const gradientId = "lake-fade-gradient-".concat(scope);
         const maskId = "lake-fade-mask-".concat(scope);
+        /**
+         * The paths of one class this overlay owns: scoped to the rendering group's own children, so
+         * an overlay in a nested group is never rebound, and filtered by key, which is what lets two
+         * overlays share one group. Read back through getAttribute rather than matched with an
+         * attribute selector, so a caller-supplied key needs no escaping.
+         */
+        const ownPaths = className => selection.selectAll(":scope > path.".concat(className)).filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE$1) === scope;
+        });
+        /**
+         * This overlay's definitions: matched inside the group's own defs element, the one
+         * ensureDefsElement writes into. A descendant lookup would reach into a nested group's
+         * defs, where an inner overlay rendered with the same key owns definitions of the same
+         * id - clearing the outer overlay would then strip the definitions the inner overlay's
+         * paths still reference. Scoped like ownPaths, so ownership is the same on both sides.
+         */
+        const ownDefs = function () {
+          for (var _len = arguments.length, selectors = new Array(_len), _key = 0; _key < _len; _key++) {
+            selectors[_key] = arguments[_key];
+          }
+          return selection.selectAll(":scope > defs").selectAll(selectors.map(selector => ":scope > ".concat(selector)).join(", "));
+        };
+        // No lake to draw: remove what an earlier render left, so a caller can ask this component
+        // for "no lake" rather than wrapping it in a group to empty. Only this overlay's own
+        // definitions are removed - the ids carry its scope - so a sibling overlay keeps its own.
+        // The shared defs element itself is left alone: the base renderer may be using it too.
+        if (props.lakeFeature == null) {
+          ownPaths("sszvis-map__lakezurich").remove();
+          ownPaths("sszvis-map__lakepath").remove();
+          ownDefs("pattern#".concat(patternId), "linearGradient#".concat(gradientId), "mask#".concat(maskId)).remove();
+          return;
+        }
         // the lake texture. The helpers join their contents, so calling them on every render updates
         // the definition rather than growing it.
         ensureDefsElement(selection, "pattern", patternId).call(mapLakePattern);
@@ -12121,19 +12164,15 @@
           ensureDefsElement(selection, "mask", maskId).call(mapLakeGradientMask, gradientId);
         } else {
           // Turning the fade off must undo an existing one, not merely skip writing it.
-          selection.selectAll("linearGradient#".concat(gradientId, ", mask#").concat(maskId)).remove();
+          ownDefs("linearGradient#".concat(gradientId), "mask#".concat(maskId)).remove();
         }
         // generate the Lake Zurich path
-        const zurichSee = selection.selectAll(".sszvis-map__lakezurich").filter(function () {
-          return this.getAttribute(KEY_ATTRIBUTE$1) === scope;
-        }).data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath).attr("fill", "url(#".concat(patternId, ")"));
+        const zurichSee = ownPaths("sszvis-map__lakezurich").data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath).attr("fill", "url(#".concat(patternId, ")"));
         // this mask applies the fade effect
         zurichSee.attr("mask", props.fadeOut ? "url(#".concat(maskId, ")") : null);
         // add a path for the boundaries of map entities which extend over the lake.
         // This path is rendered as a dotted line over the lake shape
-        const lakePath = selection.selectAll(".sszvis-map__lakepath").filter(function () {
-          return this.getAttribute(KEY_ATTRIBUTE$1) === scope;
-        }).data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath);
+        const lakePath = ownPaths("sszvis-map__lakepath").data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath);
         // An unset colour writes nothing, so the stylesheet's stroke stands; any value that is set -
         // including a falsy one - is written, so it can clear a colour an earlier render left behind.
         if (props.lakePathColor === undefined) {
@@ -12481,9 +12520,9 @@
      *                                                    required in practice: the mesh renderer throws a TypeError naming
      *                                                    its geoJson property if it is left out.
      * @property {Object} lakeFeatures                    The shape of the part of Lake Zurich that lies within the city.
-     *                                                    No default; a missing shape renders as an empty path.
-     * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default, and it
-     *                                                    renders as an empty path too.
+     *                                                    No default; without it no lake is drawn at all.
+     * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default; left
+     *                                                    out while there is a lake, it renders as an empty path.
      * @property {Boolean} lakeFadeOut                    Whether to fade the lake out towards the outer edge. Default false,
      *                                                    which overrides the lake renderer's own default of true.
      * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
@@ -12532,19 +12571,26 @@
      * undefined, the scale was NaN, and every area carried a path of NaN coordinates that the browser
      * dropped, leaving a blank map with nothing in the console.
      *
-     * Note: the lake and the anchored shape are each drawn into a group of this component's own, so
-     * that turning withLake off, or clearing anchoredShape, removes what the previous render drew
-     * rather than merely skipping the renderer. Every layer that can be switched off therefore clears
-     * itself: the highlight through its own renderer, these two through their groups.
+     * Note: every layer that can be switched off undoes what the previous render drew rather than
+     * merely being skipped. The base, mesh, lake and highlight renderers each clear their own output,
+     * so withLake off is passed on as "no lake feature" and the lake's paths and definitions sit
+     * directly in the map group. Only the anchored shape keeps a wrapper group of this component's
+     * own, because its markup is arbitrary and cannot be asked to clear itself; that group is emptied
+     * rather than removed, to hold its place among its siblings.
+     *
+     * Note: the lake overlay appends its paths at the end of the map group, so this component moves
+     * them back beneath the highlight mesh and the anchored shape after rendering them. Without that,
+     * a lake switched off and on again would be re-appended over both and paint its texture across
+     * them.
      *
      * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
      * renderer's own default of true, so the fade mask and its gradient are not created unless the
      * caller asks for them. Toggling it is safe in both directions: turning lakeFadeOut back off
      * removes the mask attribute and its two definitions again.
      *
-     * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
-     * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
-     * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
+     * Note: withLake defaults to true, but the lake renderer draws nothing without a lakeFeatures
+     * shape - no paths and no definitions - so a non-Zurich map that leaves the lake data out carries
+     * no lake markup whether or not it remembers .withLake(false).
      *
      * Note: a handler receives the datum of the map entity the event fired on, which this component
      * recognises by identity: the value bound to the event target has to be one of the merged entries
@@ -12605,25 +12651,48 @@
       return value;
     }
     /**
-     * The group keys the two removable layers are drawn under. A group carries everything its renderer
-     * produced - the lake's two paths and its pattern, gradient and mask definitions among them - so
-     * emptying it removes the layer whole.
+     * The group key the anchored shape is drawn under. The group carries everything the shape produced,
+     * so emptying it removes the layer whole - which is the only way to clear markup this component
+     * knows nothing about. The lake needs no such wrapper: its renderer clears itself.
      */
-    const LAKE_GROUP = "lake";
     const SHAPE_GROUP = "anchoredShape";
     /**
-     * The wrapper this component owns for one of those layers, joined against the direct children of
+     * The lake's paths, once the lake overlay has drawn them straight into the map group. Selected by
+     * class rather than tracked, since this component only ever needs to know where they sit.
+     */
+    const LAKE_PATHS = ":scope > path.sszvis-map__lakezurich, :scope > path.sszvis-map__lakepath";
+    /** The layers the lake has to stay beneath, in the order this component draws them. */
+    const ABOVE_THE_LAKE = ":scope > path.sszvis-map__highlight, :scope > [data-d3-selectgroup=\"".concat(SHAPE_GROUP, "\"]");
+    /**
+     * The wrapper this component owns for the anchored shape, joined against the direct children of
      * the map group rather than searched for with selectGroup, which matches any descendant: an
      * anchored shape is arbitrary caller markup and may well contain a group of its own under the same
      * key.
      *
-     * The wrapper is created whether or not its layer is drawn, and a disabled layer empties it rather
+     * The wrapper is created whether or not the shape is drawn, and a cleared shape empties it rather
      * than removing it. Removing it would give up its place among its siblings - selectGroup and this
-     * helper both append on a miss - so re-enabling the lake would insert it after the highlight mesh
-     * drawn later in the same render, and the lake would then paint over the highlight.
+     * helper both append on a miss - so a shape drawn again later would be inserted at the end of the
+     * group instead of back where it belongs.
      */
     function ownGroup(selection, key) {
       return selection.selectAll(":scope > [data-d3-selectgroup=\"".concat(key, "\"]")).data(d => [d]).join("g").attr("data-d3-selectgroup", key);
+    }
+    /**
+     * Puts the lake back beneath the layers drawn after it. The overlay appends its paths at the end of
+     * the map group, so a lake switched off and on again - or one drawn for the first time into a group
+     * that already has a highlight - would otherwise land over the highlight mesh and the anchored
+     * shape and paint its texture across them.
+     */
+    function keepLakeBeneath(selection) {
+      const group = selection.node();
+      if (group === null || !(group instanceof Element)) return;
+      const firstAbove = group.querySelector(ABOVE_THE_LAKE);
+      if (firstAbove === null) return;
+      for (const path of group.querySelectorAll(LAKE_PATHS)) {
+        if (path.compareDocumentPosition(firstAbove) & Node.DOCUMENT_POSITION_PRECEDING) {
+          group.insertBefore(path, firstAbove);
+        }
+      }
     }
     function choropleth() {
       const event = d3.dispatch("over", "out", "click");
@@ -12650,23 +12719,18 @@
         // Border mesh
         meshRenderer.geoJson(props.borders).mapPath(mapPath);
         // Lake Zurich shape
-        lakeRenderer.lakeFeature(props.lakeFeatures).lakeBounds(props.lakeBorders).mapPath(mapPath).fadeOut(props.lakeFadeOut);
+        lakeRenderer.lakeFeature(props.withLake ? props.lakeFeatures : undefined).lakeBounds(props.lakeBorders).mapPath(mapPath).fadeOut(props.lakeFadeOut);
         // Highlight mesh
         highlightRenderer.geoJson(features).keyName(props.keyName).mapPath(mapPath);
         // Rendering
         selection.call(baseRenderer).call(meshRenderer);
-        // The lake and the anchored shape are both optional, and a render that switches one off must
-        // undo what an earlier render drew, the way the highlight renderer clears its paths for an
-        // empty highlight. Each is drawn into a group of this component's own, so switching it off is
-        // emptying that group - which works for an anchored shape whose markup this component knows
-        // nothing about. The group itself stays, to hold its place among its siblings; see ownGroup.
-        const lakeGroup = ownGroup(selection, LAKE_GROUP);
-        if (props.withLake) {
-          lakeGroup.call(lakeRenderer);
-        } else {
-          lakeGroup.selectAll("*").remove();
-        }
+        // withLake off is passed on as "no lake feature", which the overlay answers by removing the
+        // paths and the definitions it drew - so it needs no wrapper group of this component's own.
+        selection.call(lakeRenderer);
+        keepLakeBeneath(selection);
         selection.call(highlightRenderer);
+        // An anchored shape is arbitrary caller markup this component cannot ask to clear itself, so
+        // that one keeps its wrapper; see ownGroup and issue #250.
         const shapeGroup = ownGroup(selection, SHAPE_GROUP);
         if (props.anchoredShape) {
           props.anchoredShape.mergedData(mergedData).mapPath(mapPath);

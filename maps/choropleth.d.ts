@@ -22,9 +22,9 @@
  *                                                    required in practice: the mesh renderer throws a TypeError naming
  *                                                    its geoJson property if it is left out.
  * @property {Object} lakeFeatures                    The shape of the part of Lake Zurich that lies within the city.
- *                                                    No default; a missing shape renders as an empty path.
- * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default, and it
- *                                                    renders as an empty path too.
+ *                                                    No default; without it no lake is drawn at all.
+ * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default; left
+ *                                                    out while there is a lake, it renders as an empty path.
  * @property {Boolean} lakeFadeOut                    Whether to fade the lake out towards the outer edge. Default false,
  *                                                    which overrides the lake renderer's own default of true.
  * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
@@ -73,19 +73,26 @@
  * undefined, the scale was NaN, and every area carried a path of NaN coordinates that the browser
  * dropped, leaving a blank map with nothing in the console.
  *
- * Note: the lake and the anchored shape are each drawn into a group of this component's own, so
- * that turning withLake off, or clearing anchoredShape, removes what the previous render drew
- * rather than merely skipping the renderer. Every layer that can be switched off therefore clears
- * itself: the highlight through its own renderer, these two through their groups.
+ * Note: every layer that can be switched off undoes what the previous render drew rather than
+ * merely being skipped. The base, mesh, lake and highlight renderers each clear their own output,
+ * so withLake off is passed on as "no lake feature" and the lake's paths and definitions sit
+ * directly in the map group. Only the anchored shape keeps a wrapper group of this component's
+ * own, because its markup is arbitrary and cannot be asked to clear itself; that group is emptied
+ * rather than removed, to hold its place among its siblings.
+ *
+ * Note: the lake overlay appends its paths at the end of the map group, so this component moves
+ * them back beneath the highlight mesh and the anchored shape after rendering them. Without that,
+ * a lake switched off and on again would be re-appended over both and paint its texture across
+ * them.
  *
  * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
  * renderer's own default of true, so the fade mask and its gradient are not created unless the
  * caller asks for them. Toggling it is safe in both directions: turning lakeFadeOut back off
  * removes the mask attribute and its two definitions again.
  *
- * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
- * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
- * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
+ * Note: withLake defaults to true, but the lake renderer draws nothing without a lakeFeatures
+ * shape - no paths and no definitions - so a non-Zurich map that leaves the lake data out carries
+ * no lake markup whether or not it remembers .withLake(false).
  *
  * Note: a handler receives the datum of the map entity the event fired on, which this component
  * recognises by identity: the value bound to the event target has to be one of the merged entries
