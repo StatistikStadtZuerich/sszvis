@@ -477,6 +477,71 @@ describe("behavior/voronoi", () => {
       firstPath.dispatchEvent(new Event("touchend", { bubbles: true }));
     });
 
+    // Leaving the mesh has to end the interaction even when the finger lands on some *other*
+    // pannable element. `data-sszvis-behavior-pannable` is shared with `behavior/panning`, so
+    // reading it alone would report "still on this layer" for any pannable element in the
+    // chart, and the pan would keep reporting the datum the mesh happens to hold under that
+    // position - here, the second datum, which the overlay sits exactly on top of.
+    test("should end the interaction when the finger leaves the mesh onto another pannable element", () => {
+      const overHandler = vi.fn();
+      const outHandler = vi.fn();
+      const layer = svg
+        .selectAll("g.voronoi-inset-foreign")
+        .data([insetData])
+        .join("g")
+        .attr("class", "voronoi-inset-foreign");
+      layer.call(
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
+          .bounds([100, 80, 400, 300])
+          .on("over", overHandler)
+          .on("out", outHandler)
+      );
+      const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
+      const firstPath = layer
+        .selectAll("[data-sszvis-behavior-voronoi]")
+        .nodes()[0] as SVGPathElement;
+
+      // A pannable element belonging to some other behavior, covering the second datum.
+      const foreign = d3
+        .select(document.body)
+        .append("div")
+        .attr("data-sszvis-behavior-pannable", "")
+        .style("position", "fixed")
+        .style("left", `${ctm.e + 330 - 20}px`)
+        .style("top", `${ctm.f + 250 - 20}px`)
+        .style("width", "40px")
+        .style("height", "40px")
+        .style("z-index", "10");
+      foreign.datum({ data: "some other behavior's datum" });
+
+      const touchEventAt = (type: string, offsetX: number, offsetY: number) => {
+        const touchEvent = new Event(type, { bubbles: true, cancelable: true });
+        Object.defineProperty(touchEvent, "touches", {
+          value: [{ clientX: ctm.e + offsetX, clientY: ctm.f + offsetY, identifier: 0 }],
+          writable: false,
+        });
+        return touchEvent;
+      };
+
+      try {
+        firstPath.dispatchEvent(touchEventAt("touchstart", 200, 150));
+        expect(overHandler).toHaveBeenCalledTimes(1);
+
+        // Guards the premise: the overlay, not a voronoi cell, is what the browser hit-tests
+        // at the panned position.
+        expect(document.elementFromPoint(ctm.e + 330, ctm.f + 250)).toBe(foreign.node());
+
+        firstPath.dispatchEvent(touchEventAt("touchmove", 330, 250));
+        expect(overHandler).toHaveBeenCalledTimes(1);
+        expect(outHandler).toHaveBeenCalledTimes(1);
+      } finally {
+        foreign.remove();
+        firstPath.dispatchEvent(new Event("touchend", { bubbles: true }));
+      }
+    });
+
     test("should miss when the pointer is outside the interaction radius of every datum", () => {
       const overHandler = vi.fn();
       const outHandler = vi.fn();
