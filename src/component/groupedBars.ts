@@ -231,9 +231,10 @@ function createGroupedBarsComponent<T = unknown>(
       // A callback on the bar unit - the missing-value cross's transform - reads the unit
       // directly; a callback on the bar's rect reads the rect's parent, which is the unit.
       // The `each` above covers the whole barUnits join before any accessor runs, so every
-      // unit is in the map by the time an accessor can ask, which is why the lookup is
-      // asserted rather than defaulted - a `?? 0` here would mean a missing entry silently
-      // placed a bar at its group's left edge instead of failing.
+      // unit is in the map by the time an accessor can ask. A miss therefore means the DOM
+      // was changed underneath the component, and it throws rather than defaulting: a `?? 0`
+      // here would place the bar at its group's left edge, on top of whichever bar belongs
+      // there, which is the silent misrender the configs stopped risking.
       //
       // Note this is only about the index lookup. The configs still apply `?? 0` to the
       // inGroupScale result, whose domain is range(groupSize), so a group holding more
@@ -241,7 +242,13 @@ function createGroupedBarsComponent<T = unknown>(
       // group's left edge. That is long-standing behaviour for a group larger than declared
       // - the component documents the under-full case as visible gaps and does not define
       // the over-full one - and it is unchanged here.
-      const indexOfUnit = (unit: Element) => groupIndexByUnit.get(unit) as number;
+      const indexOfUnit = (unit: Element) => {
+        const index = groupIndexByUnit.get(unit);
+        if (index === undefined) {
+          throw new Error("[groupedBars] a bar unit is missing its in-group index");
+        }
+        return index;
+      };
       const indexOfRect = (rect: Element) => indexOfUnit(rect.parentNode as Element);
 
       const configX = config.x(props, inGroupScale);
