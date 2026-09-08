@@ -70,7 +70,7 @@ This component, like the standard pyramid component, expects an object with left
 
 To create the stacked pyramid, you can use the `sszvis.stackedPyramidLayout` function to transform your data into the correct format. This function accepts the gender accessor, the age accessor, stack accessor and the value accessor, and returns a generator that can be applied to the data. The generator returns an object with the sides in `.sides` and the largest stacked total in `.maxValue` beside them; `.sides` is what gets bound to the chart layer.
 
-The older `sszvis.stackedPyramidData` returns the sides array itself, with `maxValue` assigned onto it. It still works and is what existing charts bind directly, but the assigned property does not survive a spread, a `map` or a trip through JSON, so it is deprecated in favour of the layout function above.
+The older `sszvis.stackedPyramidData` returns the sides array itself, with `maxValue` assigned onto it. The function is not deprecated and remains supported - it is what existing charts bind directly. Only the assigned `maxValue` property is deprecated, since it does not survive a spread, a `map` or a trip through JSON. New code should prefer the layout function above.
 
 ```code
 const layout = sszvis.stackedPyramidLayout(gAcc, aAcc, stackAcc, vAcc)(data);
