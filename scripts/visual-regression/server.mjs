@@ -89,6 +89,7 @@ const REPORTER = (side, chartPath) => `<script>
 (function(){
   var errors = [];
   var meta = { side: ${JSON.stringify(side)}, path: ${JSON.stringify(chartPath)} };
+  var resources = [];
   function snapshot(){
     return {
       type: "sszvis-regression",
@@ -96,6 +97,8 @@ const REPORTER = (side, chartPath) => `<script>
       path: meta.path,
       errors: errors.slice(0, 20),
       errorCount: errors.length,
+      resources: resources.slice(0, 20),
+      resourceCount: resources.length,
       svgCount: document.querySelectorAll("svg").length,
       height: Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)
     };
@@ -104,7 +107,16 @@ const REPORTER = (side, chartPath) => `<script>
   window.__sszvisRegression = snapshot;
   function report(){ try { parent.postMessage(snapshot(), "*"); } catch (e) {} }
   window.addEventListener("error", function(e){
-    errors.push(String((e.error && e.error.stack) || e.message || e));
+    // The capture phase also sees a failed <link>/<script>/<img>, which arrives as an
+    // Event on the element rather than an ErrorEvent with a message - stringifying it
+    // gives "[object Event]". A dead asset is worth reporting, but it is not a script
+    // fault and must not count towards the error totals the two sides are compared on.
+    if (e.target && e.target !== window && e.target.tagName) {
+      var url = e.target.src || e.target.href || "";
+      resources.push(e.target.tagName.toLowerCase() + " failed to load: " + url);
+    } else {
+      errors.push(String((e.error && e.error.stack) || e.message || e));
+    }
     report();
   }, true);
   window.addEventListener("unhandledrejection", function(e){

@@ -202,10 +202,11 @@
             badge.className = "tag";
             continue;
           }
-          badge.textContent = `${report.svgCount} svg · ${report.errorCount} err`;
+          const dead = report.resourceCount > 0 ? ` · ${report.resourceCount} 404` : "";
+          badge.textContent = `${report.svgCount} svg · ${report.errorCount} err${dead}`;
           badge.className =
             "tag " + (report.errorCount > 0 ? "bad" : report.svgCount > 0 ? "ok" : "warn");
-          errors.textContent = report.errors.join("\n");
+          errors.textContent = [...report.errors, ...(report.resources || [])].join("\n");
           if (autoHeight && report.height > 0) {
             const frame = row.querySelector(`.pane[data-side="${side}"] iframe`);
             if (frame) frame.style.height = Math.min(Math.max(report.height, 200), 1400) + "px";
