@@ -216,6 +216,15 @@ describe("map/renderer/base", () => {
       expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
     });
 
+    // The default fill has to be a constant for the same reason. Set as an accessor it would carry
+    // needsDatum, and every layer that never touches `fill` would be inferred to encode data and
+    // texture its whole map before any data arrived.
+    test("draws geometry on a default layer with no data bound", () => {
+      const node = render([], (c) => c.transitionColor(false));
+      expect(attrs(node, "fill")).toEqual(["black", "black", "black"]);
+      expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
+    });
+
     // A constant fill with an accessor `defined` is still a data layer: the predicate needs a
     // datum, so the inference has to consider both accessors, not only the fill.
     test("infers a data layer from an accessor defined even with a constant fill", () => {
