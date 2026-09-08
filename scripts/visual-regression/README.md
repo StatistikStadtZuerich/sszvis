@@ -105,6 +105,22 @@ unhandled rejections and `console.error`, counts rendered SVGs and the data mark
 inside them, and posts the result to the parent frame (and exposes it as
 `window.__sszvisRegression()` for the crawler).
 
+The mark count deliberately means _shapes drawn because there was data_. It skips
+chrome that is drawn either way — axes, legends, rulers, tooltips, controls, `<defs>`
+patterns, a map's border and lake paths — as well as the invisible interaction
+overlays and tooltip anchors, which are identified by attribute rather than class
+(`[data-sszvis-behavior-move]`, `[data-sszvis-behavior-voronoi]`,
+`[data-tooltip-anchor]`). Excluding those is what makes `candidate renders no marks`
+reachable at all: `behavior/move` draws its transparent rect whether or not any data
+arrived, so counting it kept an empty chart at one mark. Marks a behavior only
+_decorates_ still count — `behavior/panning` puts `[data-sszvis-behavior-pannable]`
+and `.sszvis-interactive` on a choropleth's own map areas, so those attributes are
+not exclusions.
+
+One consequence: a map's areas come from the topology, not the data, so a choropleth
+that loses its values keeps a non-zero mark count. `renders-empty` cannot see that
+case; the side-by-side can.
+
 ## Which charts are compared
 
 `.reference` holds 1083 chart pages across four pinned library versions:

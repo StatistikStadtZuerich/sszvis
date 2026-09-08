@@ -68,10 +68,35 @@ const REPORTER = (side, chartPath) => `<script>
   // non-iterable joins nothing, silently, so the SVG and axes still appear.
   var MARKS = "rect,path,circle,line,polygon,ellipse";
   // Chrome that is drawn whether or not there is any data to show, and so must
-  // not keep an empty chart's mark count above zero. Matched on class substring,
-  // because these families vary the suffix ("sszvis-legend--entry", "…__mark").
-  var CHROME = "defs," + ["axis", "legend", "ruler", "tooltip", "behavior", "control"]
-    .map(function(part){ return '[class*="sszvis-' + part + '"]'; })
+  // not keep an empty chart's mark count above zero.
+  //
+  // Two forms have to be covered. Most families are identified by class, matched on
+  // substring because the suffix varies ("sszvis-legend--entry", "…__mark") and
+  // case-insensitively because the stems do too ("sszvis-ruler__rule" but
+  // "sszvis-rangeRuler__rule", "sszvis-handleRuler__handle"). Some overlays instead
+  // carry only a data attribute: behavior/move writes [data-sszvis-behavior-move] on
+  // a transparent rect that is drawn whether or not any data arrived, and
+  // annotation/tooltipAnchor writes [data-tooltip-anchor] on a rect with no class at
+  // all - so matching on class alone kept an empty chart's mark count at one and hid
+  // the very failure "renders-empty" looks for.
+  //
+  // The list deliberately covers only elements a behavior *creates*. behavior/panning
+  // decorates marks the chart already drew - a choropleth's own map areas get both
+  // [data-sszvis-behavior-pannable] and class "sszvis-interactive" - so excluding
+  // either of those would delete the real data marks instead of the chrome.
+  var CHROME = ["defs"]
+    .concat(
+      // class stems: chart frame, keys, interaction rulers, tooltips, controls, and
+      // the map base geometry, which comes from the topology rather than the data.
+      ["axis", "legend", "ruler", "tooltip", "control", "map__border", "map__lake"]
+        .map(function(part){ return '[class*="sszvis-' + part + '" i]'; })
+    )
+    .concat(
+      // overlays identified only by attribute (src/behavior/*, annotation/tooltipAnchor).
+      ["data-sszvis-behavior-move", "data-sszvis-behavior-voronoi",
+       "data-tooltip-anchor", "data-tooltip-anchor-debug"]
+        .map(function(attr){ return "[" + attr + "]"; })
+    )
     .join(",");
   function countMarks(){
     var nodes = document.querySelectorAll("svg " + MARKS.split(",").join(",svg "));
