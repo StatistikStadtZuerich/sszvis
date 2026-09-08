@@ -51,6 +51,15 @@
  *                                      Any bar for which this function returns false, meaning that it has an undefined (missing) value,
  *                                      will be displayed as a faint "x" in the grouped bar chart. This is in order to distinguish bars with
  *                                      missing values from bars with very small values, which would display as a very thin rectangle.
+ * @property {boolean} transition       Whether or not to transition the geometry of the bars when it changes.
+ *                                      Defaults to true, and eases over 300ms.
+ *
+ * Note: entering bars receive their geometry on the join, before the transition starts, so they
+ * appear in place rather than animating up from nothing. Only updates animate. fill and stroke are
+ * deliberately not transitioned, matching `bar` - a colour change jumps - because the colour scales
+ * these charts use are categorical and interpolating between two category colours reads as a third
+ * category. The missing-value cross is positioned by a translation on the bar unit, which is not
+ * transitioned either.
  *
  * @return {sszvis.component}
  */
@@ -60,6 +69,7 @@ import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import translateString from "../svgUtils/translateString.js";
+import { defaultTransition } from "../transition.js";
 
 // Extended datum type that includes the internal index property
 type DatumWithIndex<T> = T & {
@@ -79,6 +89,7 @@ type GroupedBarsProps<T = unknown> = {
   fill: string | ((datum: T) => string);
   stroke?: string | ((datum: T) => string);
   defined: (datum: T) => boolean;
+  transition: boolean;
 };
 
 // Component interface with proper method overloads
@@ -108,6 +119,8 @@ interface GroupedBarsComponent<T = unknown> extends ComponentBuilder<GroupedBars
   stroke<U = T>(value: string | ((datum: U) => string) | undefined): GroupedBarsComponent<T>;
   defined(): (datum: T) => boolean;
   defined<U = T>(predicate: boolean | ((datum: U) => boolean)): GroupedBarsComponent<T>;
+  transition(): boolean;
+  transition(enabled: boolean): GroupedBarsComponent<T>;
 }
 
 // Config type for vertical and horizontal configurations
@@ -157,6 +170,8 @@ function createGroupedBarsComponent<T = unknown>(
     .prop("stroke")
     .prop("defined", fn.functor)
     .defined(true)
+    .prop("transition")
+    .transition(true)
     .render(function (this: Element, data: T[][]) {
       const selection = select(this);
       const props = selection.props<GroupedBarsProps<T>>();
@@ -183,45 +198,92 @@ function createGroupedBarsComponent<T = unknown>(
         d.__sszvisGroupedBarIndex__ = i;
       });
 
+      // The geometry accessors are called with the bar's index within its group. A bar's own
+      // rect is joined one datum at a time, where d3 would pass 0, so the index recorded on
+      // the datum above is used instead.
+      const groupIndexOf = (d: DatumWithIndex<T>, i: number) => d.__sszvisGroupedBarIndex__ ?? i;
+      const configX = config.x(props, inGroupScale);
+      const configY = config.y(props, inGroupScale);
+      const configWidth = config.width(props, inGroupScale);
+      const configHeight = config.height(props, inGroupScale);
+      const configMissingTransform = config.missingTransform(props, inGroupScale);
+      const xAt = (d: DatumWithIndex<T>, i: number) => configX(d, groupIndexOf(d, i));
+      const yAt = (d: DatumWithIndex<T>, i: number) => configY(d, groupIndexOf(d, i));
+      const widthAt = (d: DatumWithIndex<T>) =>
+        typeof configWidth === "function" ? configWidth(d) : configWidth;
+      const heightAt = (d: DatumWithIndex<T>) =>
+        typeof configHeight === "function" ? configHeight(d) : configHeight;
+
       const unitsWithValue = barUnits.filter(props.defined);
-
-      // clear the units before rendering
-      unitsWithValue.selectAll("*").remove();
-
-      //sszsch: fix: reset previously assigned translations
-      unitsWithValue.attr("transform", () => translateString(0, 0));
-
-      unitsWithValue
-        .append("rect")
-        .classed("sszvis-bar", true)
-        .attr("fill", props.fill)
-        .attr("stroke", props.stroke ?? null)
-        .attr("x", config.x(props, inGroupScale))
-        .attr("y", config.y(props, inGroupScale))
-        .attr("width", config.width(props, inGroupScale))
-        .attr("height", config.height(props, inGroupScale));
-
       const unitsWithoutValue = barUnits.filter(fn.not(props.defined));
 
-      unitsWithoutValue.selectAll("*").remove();
+      // A unit keeps its children across renders so they can tween, so each shape is joined
+      // within the unit and the shapes belonging to the other state are joined against no
+      // data, which removes them. That is what lets a bar switch between a rect and the
+      // missing-value cross without the unit being emptied.
+      unitsWithValue.selectAll("line.sszvis-bar--missing").data([]).exit().remove();
+      unitsWithoutValue.selectAll("rect.sszvis-bar").data([]).exit().remove();
 
-      unitsWithoutValue.attr("transform", config.missingTransform(props, inGroupScale));
+      // The unit's translation only positions the missing-value cross. A unit that regains a
+      // value has to lose it again, because its rect is positioned in the unit's own frame.
+      unitsWithValue.attr("transform", () => translateString(0, 0));
+      unitsWithoutValue.attr("transform", configMissingTransform);
+
+      // Entering bars are given their geometry on the join, so they are in place before any
+      // transition starts. The geometry is then applied exactly once more - to the transition
+      // when there is one, and to the plain selection otherwise - so an update tweens from its
+      // previous value instead of from the value it already holds.
+      const bars = unitsWithValue
+        .selectAll<SVGRectElement, DatumWithIndex<T>>("rect.sszvis-bar")
+        .data((d) => [d])
+        .join((enter) =>
+          enter
+            .append("rect")
+            .classed("sszvis-bar", true)
+            .attr("x", xAt)
+            .attr("y", yAt)
+            .attr("width", widthAt)
+            .attr("height", heightAt)
+        )
+        .attr("fill", props.fill)
+        .attr("stroke", props.stroke ?? null);
+
+      if (props.transition) {
+        bars
+          .transition(defaultTransition())
+          .attr("x", xAt)
+          .attr("y", yAt)
+          .attr("width", widthAt)
+          .attr("height", heightAt);
+      } else {
+        bars.attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
+      }
 
       unitsWithoutValue
-        .append("line")
-        .classed("sszvis-bar--missing line1", true)
-        .attr("x1", -4)
-        .attr("y1", -4)
-        .attr("x2", 4)
-        .attr("y2", 4);
+        .selectAll("line.line1")
+        .data((d) => [d])
+        .join((enter) =>
+          enter
+            .append("line")
+            .classed("sszvis-bar--missing line1", true)
+            .attr("x1", -4)
+            .attr("y1", -4)
+            .attr("x2", 4)
+            .attr("y2", 4)
+        );
 
       unitsWithoutValue
-        .append("line")
-        .classed("sszvis-bar--missing line2", true)
-        .attr("x1", 4)
-        .attr("y1", -4)
-        .attr("x2", -4)
-        .attr("y2", 4);
+        .selectAll("line.line2")
+        .data((d) => [d])
+        .join((enter) =>
+          enter
+            .append("line")
+            .classed("sszvis-bar--missing line2", true)
+            .attr("x1", 4)
+            .attr("y1", -4)
+            .attr("x2", -4)
+            .attr("y2", 4)
+        );
 
       const ta = tooltipAnchor<T[]>().position(config.tooltipPosition(props, inGroupScale));
 
