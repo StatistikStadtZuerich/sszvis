@@ -22,7 +22,7 @@
  *        centred on the full width instead. On a tick label (<text> inside a translated
  *        <g class="tick">) 'x' is derived from the narrowed width alone, as -width/2, 0 or
  *        width/2 by anchor. Defaults to 5 when omitted or when the value is not a finite
- *        number, which logs a warning once per message; an explicit 0 and a negative
+ *        number, which logs a warning on each such call; an explicit 0 and a negative
  *        padding are honoured.
  * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the
  *        'invisible box' of 'width' width. Two pixels are subtracted from it to account for
@@ -30,7 +30,7 @@
  *        an explicit 0 yields y="-2". It is used only when the <text> element carries no 'y'
  *        attribute of its own; otherwise that attribute wins and this argument is ignored.
  *        Defaults to 5 when omitted or when the value is not a finite number, which logs a
- *        warning once per message; an explicit 0 and a negative padding are honoured.
+ *        warning on each such call; an explicit 0 and a negative padding are honoured.
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
 
@@ -39,28 +39,6 @@ import { select } from "d3";
 import * as logger from "../logger.js";
 
 const DEFAULT_PADDING = 5;
-
-/**
- * Messages already logged, so a bad padding warns once instead of once per render.
- *
- * `resolvePadding` runs on every `textWrap` call, and `textWrap` runs inside a component's
- * render, so a resize handler or a transition would otherwise emit the same warning every
- * frame. The latch is module-level because `resolvePadding` sees only the argument: it has
- * no component instance and no element to hang per-chart state on, so it cannot latch per
- * instance the way `sunburst` warns per chart. Keying on the message keeps the two padding
- * arguments independent while collapsing the repeats.
- */
-const warnedMessages = new Set<string>();
-
-/**
- * Forgets which padding warnings have already been logged.
- *
- * Only exists so tests can exercise the first-warning path in isolation; production code
- * has no reason to re-arm the latch.
- */
-export function resetPaddingWarnings(): void {
-  warnedMessages.clear();
-}
 
 /**
  * Reads a padding argument, falling back to the default unless it is a usable number.
@@ -77,16 +55,15 @@ export function resetPaddingWarnings(): void {
  * render silently, so it warns rather than throws: wrapping still produces a readable
  * label, and throwing would take down a chart that previously drew fine. The check happens
  * before the per-element pass, so a bad paddingTopBottom is reported even on a <text> that
- * carries its own 'y' and would have discarded it.
+ * carries its own 'y' and would have discarded it. Each unusable argument warns once per
+ * `textWrap` call, the same cadence `sunburst` uses for its own malformed-input warning: a
+ * render-scoped warning needs no state, so the second chart on a page still reports its own
+ * bad padding, which a module-level latch would have swallowed for the lifetime of the page.
  */
 function resolvePadding(padding: number | undefined, name: string): number {
   if (padding === undefined) return DEFAULT_PADDING;
   if (Number.isFinite(padding)) return padding;
-  const message = `sszvis.svgUtils.textWrap: ignoring a non-finite ${name}, using ${DEFAULT_PADDING}`;
-  if (!warnedMessages.has(message)) {
-    warnedMessages.add(message);
-    logger.warn(message);
-  }
+  logger.warn(`sszvis.svgUtils.textWrap: ignoring a non-finite ${name}, using ${DEFAULT_PADDING}`);
   return DEFAULT_PADDING;
 }
 
