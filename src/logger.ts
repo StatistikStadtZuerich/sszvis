@@ -62,9 +62,9 @@ export const error: LoggerFunction = logger("error");
 function logger(type: ConsoleMethod): LoggerFunction {
   return (...args: unknown[]): void => {
     if (console?.[type]) {
-      for (const msg of args) {
-        console[type](msg);
-      }
+      // The console API formats multiple arguments as one entry, which keeps a message
+      // and its cause visually linked; logging them one at a time would split them up.
+      console[type](...args);
     }
   };
 }
