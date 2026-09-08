@@ -11,6 +11,19 @@
  * @param type       Element to create, as an SVG tag name
  * @param elementId  The ID to assign to the created element
  *
+ * The id is matched by reading the attribute back rather than by building an id selector,
+ * so any string a caller can put in an id attribute can also be looked up again - the same
+ * idiom the map renderers use for their key attributes. An id selector cannot do that: an id
+ * holding a CSS-significant character either throws (`pattern#a"b` is not a valid selector,
+ * and neither is the `pattern#` an empty id builds) or, worse, parses as something else -
+ * `pattern#a b` is a valid descendant selector that matches nothing, so a fresh definition is
+ * appended on every render.
+ *
+ * Both lookups are scoped to their parent's own children. The defs element belongs to the
+ * selection itself, not to a group nested inside it: with a descendant lookup an outer
+ * selection reuses a nested group's defs, so two overlays end up sharing - and clearing -
+ * each other's definitions.
+ *
  * The element type is derived from the tag name, so callers get a precisely typed selection
  * without naming it twice:
  *
