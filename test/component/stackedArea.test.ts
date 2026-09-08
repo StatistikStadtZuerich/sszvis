@@ -56,6 +56,18 @@ describe("component/stackedArea", () => {
       .y0((d: Point) => d.y0)
       .y1((d: Point) => d.y1);
 
+  /**
+   * Resolves once a transition has actually moved `attr` on `node`, rather than after a fixed
+   * delay. A fixed delay can overshoot the whole 300ms transition under load, which would let
+   * these tests pass with the interrupt removed.
+   */
+  const untilMoved = (node: Element, attr: string) =>
+    new Promise<void>((resolve) => {
+      const from = node.getAttribute(attr);
+      const check = () => (node.getAttribute(attr) === from ? setTimeout(check, 0) : resolve());
+      check();
+    });
+
   const paths = (node: Element) => [...node.querySelectorAll("path.sszvis-path")];
   const ds = (node: Element) => paths(node).map((p) => p.getAttribute("d"));
   const attrs = (node: Element, attr: string) => paths(node).map((p) => p.getAttribute(attr));
@@ -669,7 +681,7 @@ describe("component/stackedArea", () => {
       await new Promise((resolve) => setTimeout(resolve, 400));
       // Schedules a tween towards a different shape.
       g.datum(twoLayers).call(animated() as never);
-      await new Promise((resolve) => setTimeout(resolve, 60));
+      await untilMoved(paths(g.node() as SVGGElement)[0], "d");
 
       g.datum(oneLayer).call(animated().transition(false) as never);
       // Past the 300ms default, so an uninterrupted tween would have reached its destination.

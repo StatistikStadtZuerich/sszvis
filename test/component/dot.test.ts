@@ -50,6 +50,18 @@ describe("component/dot", () => {
   const anchors = (node: Element) =>
     [...node.querySelectorAll("[data-tooltip-anchor]")].map((a) => a.getAttribute("transform"));
 
+  /**
+   * Resolves once a transition has actually moved `attr` on `node`, rather than after a fixed
+   * delay. A fixed delay can overshoot the whole 300ms transition under load, which would let
+   * these tests pass with the interrupt removed.
+   */
+  const untilMoved = (node: Element, attr: string) =>
+    new Promise<void>((resolve) => {
+      const from = node.getAttribute(attr);
+      const check = () => (node.getAttribute(attr) === from ? setTimeout(check, 0) : resolve());
+      check();
+    });
+
   /** The names of the tweens d3 scheduled on a node, e.g. ["attr.cx"]. */
   const tweenNames = (node: Element) => {
     const schedules = (node as Element & { __transition?: Record<string, unknown> }).__transition;
@@ -429,7 +441,7 @@ describe("component/dot", () => {
       g.datum([{ x: 0, y: 0, r: 2 }]).call(dotOf().transition(true) as never);
       // Schedules a tween from 0 towards 500.
       g.datum([{ x: 500, y: 400, r: 20 }]).call(dotOf().transition(true) as never);
-      await new Promise((resolve) => setTimeout(resolve, 60));
+      await untilMoved(circles(g.node() as SVGGElement)[0], "cx");
 
       g.datum([{ x: 0, y: 0, r: 2 }]).call(dotOf().transition(false) as never);
       // Past the 300ms default, so an uninterrupted tween would have reached its destination.
@@ -452,7 +464,7 @@ describe("component/dot", () => {
         .transition()
         .duration(300)
         .attr("opacity", 1);
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await untilMoved(circles(g.node() as SVGGElement)[0], "opacity");
 
       g.datum([{ x: 5, y: 5, r: 3 }]).call(dotOf().transition(false) as never);
       await new Promise((resolve) => setTimeout(resolve, 400));

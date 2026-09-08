@@ -46,6 +46,18 @@ describe("component/line", () => {
       .x((d: Point) => d.x)
       .y((d: Point) => d.y);
 
+  /**
+   * Resolves once a transition has actually moved `attr` on `node`, rather than after a fixed
+   * delay. A fixed delay can overshoot the whole 300ms transition under load, which would let
+   * these tests pass with the interrupt removed.
+   */
+  const untilMoved = (node: Element, attr: string) =>
+    new Promise<void>((resolve) => {
+      const from = node.getAttribute(attr);
+      const check = () => (node.getAttribute(attr) === from ? setTimeout(check, 0) : resolve());
+      check();
+    });
+
   const paths = (node: Element) => [...node.querySelectorAll("path.sszvis-line")];
   const ds = (node: Element) => paths(node).map((p) => p.getAttribute("d"));
   const styles = (node: Element, prop: string) =>
@@ -625,7 +637,7 @@ describe("component/line", () => {
       await new Promise((resolve) => setTimeout(resolve, 400));
       // Schedules a tween towards a different shape.
       g.datum(twoLines).call(animated() as never);
-      await new Promise((resolve) => setTimeout(resolve, 60));
+      await untilMoved(paths(g.node() as SVGGElement)[0], "d");
 
       g.datum(oneLine).call(animated().transition(false) as never);
       // Past the 300ms default, so an uninterrupted tween would have reached its destination.

@@ -901,7 +901,7 @@ describe("component/stackedAreaMultiples", () => {
       await new Promise((resolve) => setTimeout(resolve, 400));
       // An updating band tweens, so this schedules one towards a different shape.
       g.datum(twoLayers).call(areaOf() as never);
-      await new Promise((resolve) => setTimeout(resolve, 60));
+      await untilMoved(paths(g.node() as SVGGElement)[0], "d");
 
       // Back to the one-band shape, which is NOT the tween's destination - writing the
       // tween's own destination here would leave nothing to observe.
