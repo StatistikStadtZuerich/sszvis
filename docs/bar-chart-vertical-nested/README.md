@@ -79,7 +79,7 @@ A function which returns the content for the tooltip. The function is called wit
 
 #### `nestedStackedBarsVertical.xAcc(xAcc)`
 
-A function which returns the x-value for each data element. This value is used to group elements into stacks.
+Deprecated and optional. A function which returns the x-value for each data element. The component no longer reads it — each nested group is labelled from the `nest` key its own stack layout carries — so it can be omitted, and a future major version will remove it.
 
 #### `nestedStackedBarsVertical.xLabel(xLabel)`
 
