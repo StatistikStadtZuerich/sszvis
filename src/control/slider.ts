@@ -54,7 +54,7 @@ import { axisX, type SlantDirection } from "../axis.js";
 import move from "../behavior/move.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
-import { range } from "../scale.js";
+import { rangeExtent } from "../scale.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import type { StringAccessor } from "../types.js";
@@ -151,7 +151,7 @@ export default function slider(): SliderComponent {
           throw new Error("[sszvis.control.slider] the `value` property is required");
         }
 
-        const scaleRange = range(props.scale);
+        const scaleRange = rangeExtent(props.scale);
         // Inset each end of the configured range towards the middle rather than rebuilding
         // it from the sorted extent, so that a descending range keeps its direction.
         const [rangeStart, rangeEnd] = props.scale.range() as [number, number];

@@ -27,7 +27,7 @@
 import { mean, type NumberValue, select } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
-import { range } from "../scale.js";
+import { rangeExtent } from "../scale.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 
@@ -73,7 +73,7 @@ export default function (): RadiusLegendComponent {
         const props = selection.props<RadiusLegendProps>();
 
         const tickValues = props.tickValues || defaultTickValues(props.scale);
-        const maxRadius = range(props.scale)[1];
+        const maxRadius = rangeExtent(props.scale)[1];
 
         const group = selection
           .selectAll("g.sszvis-legend__elementgroup")
