@@ -465,9 +465,13 @@ describe("component/nestedStackedBar", () => {
     test("should warn and label by index for a layout with no group key", () => {
       // Neither name is required. The label falls back to the group index and the chart still
       // renders: `offset` is the caller's own functor and need not read the key at all, so a
-      // missing key is a diagnostic rather than a reason to draw nothing.
+      // missing key is a diagnostic rather than a reason to draw nothing. This offset ignores
+      // the key so the only warning under test is the missing-key one.
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      const node = render(nestedOf(), untaggedData());
+      const node = render(
+        nestedOf().offset(() => 0),
+        untaggedData()
+      );
       expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["0", "1"]);
       expect(rects(node).length).toBe(rows.length);
       expect(warn).toHaveBeenCalledWith(
@@ -482,7 +486,11 @@ describe("component/nestedStackedBar", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const [first] = nestedData();
       const [, second] = untaggedData();
-      const node = render(nestedOf(), [first, second]);
+      // A key-independent offset again, so the untagged group warns only about its missing key.
+      const node = render(
+        nestedOf().offset(() => 0),
+        [first, second]
+      );
       expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["F", "1"]);
       expect(warn).toHaveBeenCalledWith(
         expect.stringContaining(
