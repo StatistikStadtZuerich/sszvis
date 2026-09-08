@@ -896,7 +896,10 @@ declare const aspectRatioAuto: (measurement: Measurement) => number;
  * @property {function} innerTickSize Delegates to d3.axis
  * @property {function} outerTickSize Delegates to d3.axis
  * @property {function} tickPadding   Delegates to d3.axis
- * @property {function} tickFormat    Delegates to d3.axis
+ * @property {function} tickFormat    Delegates to d3.axis. A function from a tick value to its
+ *                                    label; a label of null or undefined is written as an empty
+ *                                    string. Any other value throws, naming the property, rather
+ *                                    than failing later from inside d3's tick rendering.
  *
  * The following properties are custom additions.
  *

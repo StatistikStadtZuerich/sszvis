@@ -29,7 +29,10 @@ import translateString from './svgUtils/translateString.js';
  * @property {function} innerTickSize Delegates to d3.axis
  * @property {function} outerTickSize Delegates to d3.axis
  * @property {function} tickPadding   Delegates to d3.axis
- * @property {function} tickFormat    Delegates to d3.axis
+ * @property {function} tickFormat    Delegates to d3.axis. A function from a tick value to its
+ *                                    label; a label of null or undefined is written as an empty
+ *                                    string. Any other value throws, naming the property, rather
+ *                                    than failing later from inside d3's tick rendering.
  *
  * The following properties are custom additions.
  *
@@ -136,9 +139,19 @@ function axis() {
       axisDelegate.tickPadding(props.tickPadding);
     }
     if (props.tickFormat !== undefined) {
+      // Checked here rather than left to d3: invoked from inside the tick text callback, a
+      // non-function fails with a message naming a bundler temporary, which points at neither
+      // the axis nor the call site that set it.
+      const tickFormat = props.tickFormat;
+      if (typeof tickFormat !== "function") {
+        // `null` is named outright: it is d3's own idiom for "reset to the default format",
+        // and "got object" is the least useful thing that could be said about it.
+        const got = tickFormat === null ? "null" : typeof tickFormat;
+        throw new TypeError("axis: tickFormat must be a function from a tick value to its label, got ".concat(got));
+      }
       axisDelegate.tickFormat(d => {
-        var _props$tickFormat, _props$tickFormat2;
-        return (_props$tickFormat = (_props$tickFormat2 = props.tickFormat) === null || _props$tickFormat2 === void 0 ? void 0 : _props$tickFormat2.call(props, d)) !== null && _props$tickFormat !== void 0 ? _props$tickFormat : "";
+        var _tickFormat;
+        return (_tickFormat = tickFormat(d)) !== null && _tickFormat !== void 0 ? _tickFormat : "";
       });
     }
     if (props.tickSize !== undefined) {
