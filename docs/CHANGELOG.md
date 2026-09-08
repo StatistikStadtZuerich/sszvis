@@ -1,3 +1,63 @@
+## 3.5.0 (2026-09-08)
+
+- the library is now written entirely in TypeScript, and its types describe the datum your chart actually binds
+- add an `ariaLabel` property and keyboard operation to `sszvis.buttonGroup` and `sszvis.selectMenu`
+- add `sszvis.stackedBarHorizontalLayout`, `sszvis.stackedBarVerticalLayout` and `sszvis.stackedPyramidLayout`, which return the prepared series together with their layout metadata
+- add a `columnLabelOpacity` property to `sszvis.sankey`
+- add a `key` property to the mesh, highlight, raster and lake overlay map renderers so several maps can share a page
+- bars, dots, pie slices, grouped bars, sunburst rings, map bubbles and map fills now animate
+- components now validate their required properties instead of drawing something incomplete
+- around 200 fixes across components, maps, controls, layouts and utilities
+
+The TypeScript port that began in 3.3.0 is finished: there is no JavaScript left in the library, and the datum type now flows through the builder chain instead of being erased to `any`. Expect accurate inference where the surface was previously only partly typed — and expect the compiler to point out mistakes in chart code that compiled before.
+
+We also read every component closely this release, and many turned out to be quietly wrong: stacked bars that summed only the first row of a cell, sunburst rings that saturated to white, map bubbles that swallowed clicks meant for the map beneath, and a `sszvis.nestedStackedBarsVertical` exported under a name that did not exist. Your charts may look different after upgrading, usually because they are now drawing what you asked for.
+
+### Breaking changes
+
+Most components now throw at render time when a required property is missing, naming themselves and the property: `[stackedBarVertical] the xScale property is required`. Open each of your charts once before upgrading in production. Wrongly typed properties throw too — a non-function `tickFormat`, an unrecognized `orientation` on `sszvis.legendColorOrdinal` or `slant` in `sszvis.colorLegendLayout`, a resize listener that is not callable.
+
+Other changes worth checking:
+
+- components join only the elements they own, so anything you appended inside their group now accumulates instead of being cleared — append it to a sibling group
+- the end caps of `sszvis.legendColorLinear` use the class `sszvis-legend__mark`; the old `ssvis-legend--mark` was a misspelling and any rule matching it is now dead
+- lake and missing-value SVG ids are scoped per map; `sszvis.mapLakeFadeGradient` and `sszvis.mapLakeGradientMask` take an id, defaulting to `sszvis.LAKE_FADE_GRADIENT_ID`
+- `sszvis.selectMenu` resolves an option by value rather than position, and `current` now overrides a selection the reader made
+- `sszvis.app` returns a handle with `destroy()`, accepts a synchronous `init`, and freezes the state it hands to `render`
+
+### Animation
+
+Marks that used to jump now animate. Charts rendering into a screenshot or print pipeline should wait for the transition, or turn it off:
+
+```code
+const bars = sszvis.bar().transition(false);
+```
+
+Not everything is opt-out: `sszvis.sunburst` interpolates its arcs unconditionally, and the base map renderer eases its fill through `transitionColor`.
+
+### Layouts that carry their metadata
+
+The `…Data` helpers are unchanged. The new `…Layout` helpers return the same series alongside the values a chart usually recomputes by hand:
+
+```code
+const layout = sszvis.stackedBarVerticalLayout(stackAcc, seriesAcc, valueAcc)(data);
+// { series, keys, maxValue, minValue }
+
+const yScale = d3.scaleLinear().domain([0, layout.maxValue]).range([height, 0]);
+
+chartLayer.selectGroup("bars").datum(layout.series).call(bars);
+```
+
+### Fixes
+
+Every fix is listed in the [release notes for 3.5.0](https://github.com/StatistikStadtZuerich/sszvis/releases/tag/v3.5.0). The ones most likely to change what you see:
+
+- **Components** — stacked bars sum every row and draw negative values; stacked pyramids place their reference lines correctly; grouped bars keep and tween their rects; pack and treemap anchor tooltips on the drawn nodes; pie no longer writes transition state onto your data
+- **Maps** — handlers receive the hovered entity's datum; bubbles let pointers through unless they handle them; the lake and anchored shape can be switched back off; each choropleth fits its own features
+- **Controls and legends** — the slider reads the scale it draws with; the button group lays out as a row again; the linear legend stops corrupting the `displayValues` you pass it; diverging color scales survive `.reverse()`
+- **Layouts** — degenerate sizes give a zeroed layout rather than NaN geometry, and sankey places a single column instead of sending it to infinity ([#120](https://github.com/StatistikStadtZuerich/sszvis/issues/120))
+- **Utilities** — `sszvis.behavior.move` resolves pointers in the scale's own coordinate space, the voronoi behavior follows a finger on touch, and `sszvis.logger` prints a message and its cause as one entry
+
 ## 3.4.0 (2025-12-05)
 
 - add `sszvis.treemap` component for hierarchical data visualization
