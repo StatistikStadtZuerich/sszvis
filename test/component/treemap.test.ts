@@ -1,7 +1,7 @@
-import { scaleOrdinal } from "d3";
+import { scaleOrdinal, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { bounds } from "../../src/bounds.js";
-import treemap from "../../src/component/treemap.js";
+import treemap, { type TreemapLayout } from "../../src/component/treemap.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
@@ -440,7 +440,10 @@ describe("component/treemap", () => {
             .transition(false)
         );
 
-      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      // NOTE: selectAll, not select - d3's select propagates the group's datum onto
+      // the child it picks, which would overwrite the drawn node's datum with the
+      // array the group is bound to for the tooltip anchors.
+      const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
       expect(rect).toBeDefined();
 
       rect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -468,7 +471,7 @@ describe("component/treemap", () => {
             .transition(false)
         );
 
-      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
       rect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
       expect(clickHandler).toHaveBeenCalledWith(
@@ -504,7 +507,7 @@ describe("component/treemap", () => {
             .transition(false)
         );
 
-      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
       const mouseEvent = new MouseEvent("click", {
         bubbles: true,
         clientX: 100,
@@ -588,7 +591,7 @@ describe("component/treemap", () => {
             .transition(false)
         );
 
-      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
 
       // Simulate hover
       rect.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
@@ -620,7 +623,7 @@ describe("component/treemap", () => {
             .transition(false)
         );
 
-      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
       rect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
       const [, nodeArg] = clickHandler.mock.calls[0];
@@ -653,7 +656,7 @@ describe("component/treemap", () => {
             .transition(false)
         );
 
-      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
       rect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
       const [, nodeArg] = clickHandler.mock.calls[0];
@@ -780,6 +783,89 @@ describe("component/treemap", () => {
           expect(grandchild.depth).toBe(2);
         }
       }
+    });
+  });
+
+  describe("tooltip anchors", () => {
+    const anchorNodes = () => [
+      ...svg.selectAll<SVGRectElement, unknown>("[data-tooltip-anchor]").nodes(),
+    ];
+    const anchorData = () =>
+      anchorNodes().map((el) => select<SVGRectElement, TreemapLayout<TestDatum>>(el).datum());
+    const rectNodes = () => [
+      ...svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes(),
+    ];
+    const keyOf = (d: TreemapLayout<TestDatum>) => ("key" in d.data ? d.data.key : undefined);
+
+    const renderTreemap = (rows: TestDatum[]) =>
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(rows)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .transition(false)
+        );
+
+    test("should render one anchor per drawn rectangle, in the same order", () => {
+      renderTreemap(data);
+      const rects = rectNodes();
+      expect(rects.length).toBeGreaterThan(0);
+      expect(anchorNodes().length).toBe(rects.length);
+
+      const rectData = rects.map((el) =>
+        select<SVGRectElement, TreemapLayout<TestDatum>>(el).datum()
+      );
+      expect(anchorData().map(keyOf)).toEqual(rectData.map(keyOf));
+    });
+
+    test("should place each anchor at the centre of its own rectangle", () => {
+      renderTreemap(data);
+      for (const el of anchorNodes()) {
+        const d = select<SVGRectElement, TreemapLayout<TestDatum>>(el).datum();
+        const cx = (d.x0 + d.x1) / 2;
+        const cy = (d.y0 + d.y1) / 2;
+        expect(el.getAttribute("transform")).toBe(`translate(${cx},${cy})`);
+      }
+    });
+
+    test("should give no anchor to a branch node, which is never drawn", () => {
+      // visibleData is filtered to leaves, so the category and subcategory nodes have no
+      // rectangle - and must not gain an anchor a tooltip could latch on to.
+      renderTreemap(data);
+      expect(anchorNodes().length).toBe(rectNodes().length);
+      for (const d of anchorData()) {
+        expect(d.data._tag).toBe("leaf");
+      }
+      expect(anchorData().map(keyOf)).not.toContain("Technology");
+    });
+
+    test("should not give the invisible root an anchor", () => {
+      renderTreemap(data);
+      expect(anchorNodes().length).toBeGreaterThan(0);
+      for (const d of anchorData()) {
+        expect(d.data._tag).not.toBe("root");
+        expect(keyOf(d)).toBeDefined();
+      }
+    });
+
+    test("should render no anchors for an empty data array", () => {
+      renderTreemap([]);
+      expect(anchorNodes().length).toBe(0);
+    });
+
+    test("should re-render anchors in place rather than appending duplicates", () => {
+      renderTreemap(data);
+      const first = anchorNodes().length;
+      renderTreemap(data);
+      expect(anchorNodes().length).toBe(first);
     });
   });
 });

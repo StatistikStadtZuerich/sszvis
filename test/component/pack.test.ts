@@ -1,7 +1,7 @@
-import { scaleOrdinal } from "d3";
+import { scaleOrdinal, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { bounds } from "../../src/bounds.js";
-import pack from "../../src/component/pack.js";
+import pack, { type PackLayout } from "../../src/component/pack.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
@@ -442,7 +442,10 @@ describe("component/pack", () => {
             .transition(false)
         );
 
-      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      // NOTE: selectAll, not select - d3's select propagates the group's datum onto
+      // the child it picks, which would overwrite the drawn node's datum with the
+      // array the group is bound to for the tooltip anchors.
+      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
       expect(circle).toBeDefined();
 
       circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -470,7 +473,7 @@ describe("component/pack", () => {
             .transition(false)
         );
 
-      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
       circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
       expect(clickHandler).toHaveBeenCalledWith(
@@ -505,7 +508,7 @@ describe("component/pack", () => {
             .transition(false)
         );
 
-      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
       const mouseEvent = new MouseEvent("click", {
         bubbles: true,
         clientX: 100,
@@ -665,7 +668,7 @@ describe("component/pack", () => {
             .transition(false)
         );
 
-      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
 
       // Simulate hover
       circle.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
@@ -697,7 +700,7 @@ describe("component/pack", () => {
             .transition(false)
         );
 
-      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
       circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
       const [, nodeArg] = clickHandler.mock.calls[0];
@@ -806,7 +809,7 @@ describe("component/pack", () => {
             .transition(false)
         );
 
-      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
       expect(circle).toBeDefined();
 
       circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -877,6 +880,92 @@ describe("component/pack", () => {
       lastCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
       expect(clickHandler).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("tooltip anchors", () => {
+    const anchorNodes = () => [
+      ...svg.selectAll<SVGRectElement, unknown>("[data-tooltip-anchor]").nodes(),
+    ];
+    const anchorData = () =>
+      anchorNodes().map((el) => select<SVGRectElement, PackLayout<TestDatum>>(el).datum());
+    const circleNodes = () => [
+      ...svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes(),
+    ];
+    const keyOf = (d: PackLayout<TestDatum>) => ("key" in d.data ? d.data.key : undefined);
+
+    const renderPack = (rows: TestDatum[], minRadius: number) =>
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(rows)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .minRadius(minRadius)
+            .transition(false)
+        );
+
+    test("should render one anchor per drawn circle, in the same order", () => {
+      renderPack(data, 5);
+      const circles = circleNodes();
+      expect(circles.length).toBeGreaterThan(0);
+      expect(anchorNodes().length).toBe(circles.length);
+
+      const circleData = circles.map((el) =>
+        select<SVGCircleElement, PackLayout<TestDatum>>(el).datum()
+      );
+      expect(anchorData().map(keyOf)).toEqual(circleData.map(keyOf));
+    });
+
+    test("should place each anchor at the centre of its own circle", () => {
+      renderPack(data, 5);
+      for (const el of anchorNodes()) {
+        const d = select<SVGRectElement, PackLayout<TestDatum>>(el).datum();
+        expect(el.getAttribute("transform")).toBe(`translate(${d.x},${d.y})`);
+      }
+    });
+
+    test("should give no anchor to a node the minRadius filter excludes", () => {
+      // The tiny node's circle is below minRadius and is never drawn, so it must not
+      // gain an anchor either - a tooltip bound to the anchors would otherwise point at
+      // a node the reader cannot see.
+      renderPack(
+        [
+          { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
+          { category: "B", subcategory: "B1", value: 100, name: "Normal" },
+        ],
+        5
+      );
+      expect(anchorNodes().length).toBe(circleNodes().length);
+      expect(anchorData().map(keyOf)).not.toContain("A1");
+    });
+
+    test("should not give the invisible root an anchor", () => {
+      renderPack(data, 5);
+      expect(anchorNodes().length).toBeGreaterThan(0);
+      for (const d of anchorData()) {
+        expect(d.data._tag).not.toBe("root");
+        expect(keyOf(d)).toBeDefined();
+      }
+    });
+
+    test("should render no anchors for an empty data array", () => {
+      renderPack([], 5);
+      expect(anchorNodes().length).toBe(0);
+    });
+
+    test("should re-render anchors in place rather than appending duplicates", () => {
+      renderPack(data, 5);
+      const first = anchorNodes().length;
+      renderPack(data, 5);
+      expect(anchorNodes().length).toBe(first);
     });
   });
 });
