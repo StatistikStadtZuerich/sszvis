@@ -96,14 +96,17 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
 
       // The along-group centre of a bar's slot. Resolved from the element the callback is
       // running on - a line whose parent is the bar unit - because the index is no longer on
-      // the datum. Every unit is in the map before any of these run, so the lookup is
-      // asserted rather than defaulted.
+      // the datum. Every unit is in the map before any of these run, so a miss means the DOM
+      // was changed underneath the component, and it throws rather than defaulting to slot 0.
       //
       // Called once per attribute rather than once per unit: groupScale is a consumer
       // accessor and a stateful one is observable, so the number and order of calls is part
       // of the existing behaviour and is left alone.
       const centreAt = function (this: Element, d: T): number {
-        const index = indexByUnit.get(this.parentNode as Element) as number;
+        const index = indexByUnit.get(this.parentNode as Element);
+        if (index === undefined) {
+          throw new Error("[confidenceBar] a bar unit is missing its in-group index");
+        }
         return (
           props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2
         );
