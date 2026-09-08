@@ -812,6 +812,36 @@ describe("component/stackedPyramid", () => {
       expect(path.getAttribute("stroke-dasharray")).toBe("3 3");
     });
 
+    test("should keep the generic class in the written class attribute", () => {
+      // The join is scoped to the component's own class, but sszvis-path stays on the
+      // element so that no selector written against the generic class changes meaning.
+      const node = render(withRefs());
+      expect(lines(node, "rightReference")[0].getAttribute("class")).toBe(
+        "sszvis-path sszvis-stacked-pyramid__referenceline"
+      );
+    });
+
+    test("should leave a foreign generic path in the same group alone", () => {
+      // The join matches only the paths this component drew, so another component's path
+      // parked in the same group is neither adopted nor repainted.
+      const g = group("ref-foreign");
+      g.datum(layout()).call(pyramidOf() as never);
+      const node = g.node() as SVGGElement;
+      const planted = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      planted.setAttribute("class", "sszvis-path");
+      planted.setAttribute("stroke", "#f00");
+      sideGroup(node, "rightReference")?.append(planted);
+
+      g.datum(layout()).call(pyramidOf().rightRefAccessor(() => refs(0, 1)) as never);
+
+      expect(planted.getAttribute("stroke")).toBe("#f00");
+      expect(planted.getAttribute("class")).toBe("sszvis-path");
+      expect(planted.getAttribute("d")).toBeNull();
+      const own = lines(node, "rightReference").filter((p) => p !== planted);
+      expect(own.length).toBe(1);
+      expect(own[0].getAttribute("stroke")).toBe("#aaa");
+    });
+
     test("should re-render the reference line in place", async () => {
       const component = withRefs();
       const g = group("ref-rerender");
@@ -1203,30 +1233,6 @@ describe("component/stackedPyramid", () => {
       }
     });
 
-    test("adopts a foreign path that happens to carry the reference line's class", () => {
-      // NOTE: the reference join is selectAll(".sszvis-path") with no key function, so a
-      // path another component left in the same group is bound as the reference line and
-      // repainted rather than left alone. Harmless while each component owns its own
-      // selectGroup, which is how every example is written. The same collision is documented
-      // on pie and stackedArea, which use the same class.
-      const g = group("ref-adopt");
-      g.datum(layout()).call(pyramidOf() as never);
-      const node = g.node() as SVGGElement;
-      const planted = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      planted.setAttribute("class", "sszvis-path");
-      planted.setAttribute("stroke", "#f00");
-      sideGroup(node, "rightReference")?.append(planted);
-
-      g.datum(layout()).call(
-        pyramidOf().rightRefAccessor(() => [
-          { row: 0, value: 0 },
-          { row: 1, value: 1 },
-        ]) as never
-      );
-      expect(lines(node, "rightReference")).toEqual([planted]);
-      expect(planted.getAttribute("stroke")).toBe("#aaa");
-    });
-
     test("drops d3's index on the reference line too", async () => {
       // NOTE: d3.line calls its x accessor as (d, i, data), but the line reads the point's
       // value out of it and calls barWidth with that alone, so the property has one calling
@@ -1249,16 +1255,6 @@ describe("component/stackedPyramid", () => {
       // Harmless, but it means the attribute is always present. Shared with pyramid.
       const node = render(pyramidOf().rightRefAccessor(() => refPoints));
       expect(lines(node, "rightReference")[0].getAttribute("transform")).toBe("");
-    });
-
-    test("uses a class for the reference path that no stylesheet defines", () => {
-      // NOTE: the path is classed .sszvis-path, which sszvis.css does not style - the
-      // appearance comes from the four inlined attributes instead. The class collides with
-      // the one pie, stackedArea and stackedAreaMultiples use for their own paths, so a
-      // selector written for one of those components also matches a stackedPyramid
-      // reference line.
-      const node = render(pyramidOf().rightRefAccessor(() => refPoints));
-      expect(lines(node, "rightReference")[0].getAttribute("class")).toBe("sszvis-path");
     });
 
     test("puts a negative-width left bar on the wrong side of the spine", () => {
