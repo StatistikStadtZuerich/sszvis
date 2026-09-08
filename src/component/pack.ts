@@ -151,6 +151,14 @@ export default function pack<T = unknown>(): PackComponent<T> {
       // Filter out very small circles - include both branches (categories) and leaves
       const visibleData = packData.filter((d: PackLayout<T>) => d.r > (props.minRadius || 1));
 
+      // The one expression for what a circle is painted. The label colour is derived from
+      // this rather than recomputing nodeColor, so the contrast can never be calculated
+      // against a colour other than the one on screen - today the label data is filtered to
+      // leaves and the two agree, but a branch label would otherwise come out white on white.
+      const circleFillAcc = (d: PackLayout<T>) =>
+        // Branch nodes get a light fill so they stay clickable.
+        d.children ? "white" : nodeColor(d, props.colorScale);
+
       const circles = selection
         .selectAll<SVGCircleElement, PackLayout<T>>(".sszvis-pack-circle")
         .data(visibleData)
@@ -159,14 +167,7 @@ export default function pack<T = unknown>(): PackComponent<T> {
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y)
         .attr("r", (d) => d.r)
-        .attr("fill", (d: PackLayout<T>) => {
-          if (d.children) {
-            // Branch nodes should have a light fill to be able to click them
-            return "white";
-          }
-
-          return nodeColor(d, props.colorScale);
-        })
+        .attr("fill", circleFillAcc)
         .attr("stroke", (d: PackLayout<T>) => {
           // Branches carry the category colour; leaves fall back to the configured stroke.
           const inherited = inheritedColorKey(d);
@@ -199,9 +200,7 @@ export default function pack<T = unknown>(): PackComponent<T> {
           typeof props.label === "function" ? props.label(d) : props.label || "";
         const labelXAcc = (d: PackLayout<T>) => d.x;
         const labelYAcc = (d: PackLayout<T>) => d.y + fontSize / 3;
-        const labelFillAcc = (d: PackLayout<T>) => {
-          return getAccessibleTextColor(nodeColor(d, props.colorScale));
-        };
+        const labelFillAcc = (d: PackLayout<T>) => getAccessibleTextColor(circleFillAcc(d));
 
         // Filter data for labels - only show labels on leaf nodes that are large enough
         const labelData = visibleData

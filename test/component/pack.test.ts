@@ -1,6 +1,7 @@
 import { scaleOrdinal, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { bounds } from "../../src/bounds.js";
+import { getAccessibleTextColor } from "../../src/color.js";
 import pack, { type PackLayout } from "../../src/component/pack.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
@@ -966,6 +967,51 @@ describe("component/pack", () => {
       const first = anchorNodes().length;
       renderPack(data, 5);
       expect(anchorNodes().length).toBe(first);
+    });
+  });
+
+  describe("label contrast", () => {
+    test("should compute every label's colour from the fill on its own circle", () => {
+      // The fill and the contrast source are one expression, so they cannot drift apart:
+      // whatever a node's circle is painted, its label is legible against that. There is
+      // no failing case at master - branch nodes are never labelled - so this pins the
+      // invariant against a future change to how branches are painted or labelled.
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .showLabels(true)
+            .transition(false)
+        );
+
+      const circleFill = new Map<PackLayout<TestDatum>, string | null>(
+        svg
+          .selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle")
+          .nodes()
+          .map((el) => [
+            select<SVGCircleElement, PackLayout<TestDatum>>(el).datum(),
+            el.getAttribute("fill"),
+          ])
+      );
+
+      const labels = svg.selectAll<SVGTextElement, unknown>(".sszvis-pack-label").nodes();
+      expect(labels.length).toBeGreaterThan(0);
+
+      for (const el of labels) {
+        const d = select<SVGTextElement, PackLayout<TestDatum>>(el).datum();
+        const fill = circleFill.get(d);
+        expect(fill).toBeDefined();
+        expect(el.getAttribute("fill")).toBe(getAccessibleTextColor(fill ?? null));
+      }
     });
   });
 });
