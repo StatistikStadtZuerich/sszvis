@@ -6,10 +6,16 @@ import { transition, easePolyOut } from 'd3';
  * @module sszvis/transition
  *
  * Generally speaking, this module is used internally by components which transition the state of the update selection.
- * The module sszvis.transition encapsulates the basic transition attributes used in the app. It is invoked by doing
- * d3.selection().transition().call(sszvis.transition), which applies the transition attributes to the passed transition.
- * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
- * too slow.
+ * Each helper builds a fresh transition carrying the app's standard easing and duration, and is applied by handing it to
+ * a selection: `d3.selection().transition(sszvis.defaultTransition())`. The transition inherits its timing from the one
+ * passed in.
+ *
+ * Do not use `d3.selection().transition().call(sszvis.defaultTransition)`. d3's `transition.call(f)` invokes `f` and
+ * returns the original transition, while these helpers ignore their argument and build a detached transition that is then
+ * discarded - the scheduled transition silently keeps d3's defaults of 250ms and easeCubicInOut.
+ *
+ * fastTransition provides an alternate transition duration for certain situations where the standard duration is
+ * too slow, and slowTransition for where it is too fast.
  */
 const defaultEase = easePolyOut;
 /**

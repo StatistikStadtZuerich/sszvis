@@ -947,10 +947,16 @@
      * @module sszvis/transition
      *
      * Generally speaking, this module is used internally by components which transition the state of the update selection.
-     * The module sszvis.transition encapsulates the basic transition attributes used in the app. It is invoked by doing
-     * d3.selection().transition().call(sszvis.transition), which applies the transition attributes to the passed transition.
-     * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
-     * too slow.
+     * Each helper builds a fresh transition carrying the app's standard easing and duration, and is applied by handing it to
+     * a selection: `d3.selection().transition(sszvis.defaultTransition())`. The transition inherits its timing from the one
+     * passed in.
+     *
+     * Do not use `d3.selection().transition().call(sszvis.defaultTransition)`. d3's `transition.call(f)` invokes `f` and
+     * returns the original transition, while these helpers ignore their argument and build a detached transition that is then
+     * discarded - the scheduled transition silently keeps d3's defaults of 250ms and easeCubicInOut.
+     *
+     * fastTransition provides an alternate transition duration for certain situations where the standard duration is
+     * too slow, and slowTransition for where it is too fast.
      */
     const defaultEase = d3.easePolyOut;
     /**
@@ -992,7 +998,7 @@
      *
      * @returns {sszvis.component} a confidence area component
      */
-    function confidenceArea () {
+    function confidenceArea() {
       return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("stroke").prop("strokeWidth").prop("fill").prop("key").key((_, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
@@ -1006,7 +1012,7 @@
           path.style("stroke", props.stroke);
         }
         path.attr("fill", "url(#data-area-pattern)").order();
-        const finalPath = props.transition ? path.transition().call(defaultTransition) : path;
+        const finalPath = props.transition ? path.transition(defaultTransition()) : path;
         finalPath.attr("d", d => area(props.valuesAccessor(d)));
         if (props.stroke) {
           finalPath.style("stroke", props.stroke);
@@ -10770,10 +10776,7 @@
      *                                                    the missing value texture takes its fill synchronously either way,
      *                                                    since a paint-server reference cannot be interpolated.
      *
-     * Note: the scheduled transition keeps d3's defaults of 250ms and easeCubicInOut rather than the
-     * intended 500ms easePolyOut. `.transition().call(slowTransition)` returns the original
-     * transition, while slowTransition ignores its argument and builds a fresh detached transition
-     * that is discarded.
+     * Note: the fill transition runs for 500ms with easePolyOut, the slow transition's timing.
      *
      * Note: "missing" only means something relative to a dataset, so a layer where no entity has a
      * datum is taken to be drawing geometry rather than encoding values - it keeps the caller's fill,
@@ -10803,7 +10806,7 @@
      *
      * @return {sszvis.component}
      */
-    function mapRendererBase () {
+    function mapRendererBase() {
       return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true) // a predicate function to determine whether a datum has a defined value
       .prop("fill", functor).fill(() => "black") // a function for the entity fill color. default is black
       .prop("transitionColor").transitionColor(true).render(function () {
@@ -10847,7 +10850,7 @@
           const tweenable = function (d) {
             return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
           };
-          mapAreas.filter(tweenable).transition().call(slowTransition).attr("fill", getMapFill);
+          mapAreas.filter(tweenable).transition(slowTransition()).attr("fill", getMapFill);
           mapAreas.filter(function (d) {
             return !tweenable.call(this, d);
           }).attr("fill", getMapFill);
@@ -11154,7 +11157,7 @@
      *                                          with data entities. Default 'id'.
      * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
      *                                          without a 'features' property throws a TypeError. Rendering mutates it; see
-     *                                          the note below on the cached centroid.
+     *                                          the note below on the cached centre.
      * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
      * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
      *                                          that fail it, and entities with no datum at all, display the missing value
@@ -11181,10 +11184,10 @@
      * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
      * key at all is left unmatched.
      *
-     * Note: rendering caches a sphericalCentroid onto every feature's properties and never invalidates
-     * it, so moving a feature's geometry leaves its anchor behind. Unlike the base renderer it ignores
-     * an authored `center` property and caches under a different key, so the two renderers disagree
-     * about where the same entity's tooltip belongs.
+     * Note: anchor positions go through getGeoJsonCenter, the same source the base renderer uses, so an
+     * authored `center` property is honoured here too and a feature drawn by both renderers anchors in
+     * one place. That centre is cached as `cachedCenter` on the feature's properties and never
+     * invalidated, so moving a feature's geometry leaves its anchor behind.
      *
      * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
      * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
@@ -11194,10 +11197,9 @@
      * that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
      * element so re-renders reuse it. The id is not part of the public API; do not select on it.
      *
-     * Note: two quirks remain, shared with the base renderer. The slowTransition call is a no-op that
-     * leaves d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut, and the
-     * data join has no key function, so it is an index join: reordering the features repaints the
-     * existing nodes in place instead of moving them.
+     * Note: one quirk remains, shared with the base renderer. The data join has no key function, so it
+     * is an index join: reordering the features repaints the existing nodes in place instead of moving
+     * them.
      *
      * See test/map/renderer/geojson.test.ts.
      *
@@ -11262,7 +11264,7 @@
           const tweenable = function (d) {
             return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
           };
-          geoElements.filter(tweenable).transition().call(slowTransition).attr("fill", getMapFill);
+          geoElements.filter(tweenable).transition(slowTransition()).attr("fill", getMapFill);
           geoElements.filter(function (d) {
             return !tweenable.call(this, d);
           }).attr("fill", getMapFill);
@@ -11282,16 +11284,15 @@
         // the tooltip anchor generator
         const ta = tooltipAnchor().position(d => {
           // A feature with the spec-legal `properties: null` reaches here now that the merge no
-          // longer crashes on one, and the centroid cache needs somewhere to live.
+          // longer crashes on one, and the centre cache needs somewhere to live. Without this
+          // getGeoJsonCenter would throw on it.
           if (!d.geoJson.properties) d.geoJson.properties = {};
-          const properties = d.geoJson.properties;
-          let sphericalCentroid = properties.sphericalCentroid;
-          if (!sphericalCentroid) {
-            sphericalCentroid = d3.geoCentroid(d.geoJson);
-            properties.sphericalCentroid = sphericalCentroid;
-          }
+          // The same centre the base renderer uses, so a feature drawn by both places its tooltip
+          // in one spot: an authored `center` property is honoured, and the result is memoized as
+          // `cachedCenter` on the feature.
+          const center = getGeoJsonCenter(d.geoJson);
           // d3's own typings expect the projection type as a type argument here.
-          const point = props.mapPath.projection()(sphericalCentroid);
+          const point = props.mapPath.projection()(center);
           // Only a hand-written projection can return null: d3's projections clip in the stream,
           // not in the point call, and return a pair - of NaN, for a degenerate centroid. A null is
           // passed on rather than replaced, as the JavaScript did: tooltipAnchor spreads it into

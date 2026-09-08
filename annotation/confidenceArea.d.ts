@@ -37,6 +37,6 @@ interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<Confiden
     valuesAccessor(accessor?: (d: Datum<T>[]) => Datum<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-export default function <T = unknown>(): ConfidenceAreaComponent<T>;
+export default function confidenceArea<T = unknown>(): ConfidenceAreaComponent<T>;
 export {};
 //# sourceMappingURL=confidenceArea.d.ts.map

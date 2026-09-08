@@ -14,7 +14,7 @@
  *                                          with data entities. Default 'id'.
  * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
  *                                          without a 'features' property throws a TypeError. Rendering mutates it; see
- *                                          the note below on the cached centroid.
+ *                                          the note below on the cached centre.
  * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
  * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
  *                                          that fail it, and entities with no datum at all, display the missing value
@@ -41,10 +41,10 @@
  * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
  * key at all is left unmatched.
  *
- * Note: rendering caches a sphericalCentroid onto every feature's properties and never invalidates
- * it, so moving a feature's geometry leaves its anchor behind. Unlike the base renderer it ignores
- * an authored `center` property and caches under a different key, so the two renderers disagree
- * about where the same entity's tooltip belongs.
+ * Note: anchor positions go through getGeoJsonCenter, the same source the base renderer uses, so an
+ * authored `center` property is honoured here too and a feature drawn by both renderers anchors in
+ * one place. That centre is cached as `cachedCenter` on the feature's properties and never
+ * invalidated, so moving a feature's geometry leaves its anchor behind.
  *
  * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
@@ -54,10 +54,9 @@
  * that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
  * element so re-renders reuse it. The id is not part of the public API; do not select on it.
  *
- * Note: two quirks remain, shared with the base renderer. The slowTransition call is a no-op that
- * leaves d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut, and the
- * data join has no key function, so it is an index join: reordering the features repaints the
- * existing nodes in place instead of moving them.
+ * Note: one quirk remains, shared with the base renderer. The data join has no key function, so it
+ * is an index join: reordering the features repaints the existing nodes in place instead of moving
+ * them.
  *
  * See test/map/renderer/geojson.test.ts.
  *

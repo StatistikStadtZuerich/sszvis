@@ -1,11 +1,11 @@
-import { dispatch, select, geoCentroid } from 'd3';
+import { dispatch, select } from 'd3';
 import tooltipAnchor from '../../annotation/tooltipAnchor.js';
 import { component } from '../../d3-component.js';
 import { functor, prop, defined } from '../../fn.js';
 import { mapMissingValuePattern } from '../../patterns.js';
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { slowTransition } from '../../transition.js';
-import { GEO_KEY_DEFAULT, missingPatternId, toLookupKey, isPaintServer } from '../mapUtils.js';
+import { GEO_KEY_DEFAULT, missingPatternId, toLookupKey, getGeoJsonCenter, isPaintServer } from '../mapUtils.js';
 
 /**
  * geojson renderer component
@@ -23,7 +23,7 @@ import { GEO_KEY_DEFAULT, missingPatternId, toLookupKey, isPaintServer } from '.
  *                                          with data entities. Default 'id'.
  * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
  *                                          without a 'features' property throws a TypeError. Rendering mutates it; see
- *                                          the note below on the cached centroid.
+ *                                          the note below on the cached centre.
  * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
  * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
  *                                          that fail it, and entities with no datum at all, display the missing value
@@ -50,10 +50,10 @@ import { GEO_KEY_DEFAULT, missingPatternId, toLookupKey, isPaintServer } from '.
  * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
  * key at all is left unmatched.
  *
- * Note: rendering caches a sphericalCentroid onto every feature's properties and never invalidates
- * it, so moving a feature's geometry leaves its anchor behind. Unlike the base renderer it ignores
- * an authored `center` property and caches under a different key, so the two renderers disagree
- * about where the same entity's tooltip belongs.
+ * Note: anchor positions go through getGeoJsonCenter, the same source the base renderer uses, so an
+ * authored `center` property is honoured here too and a feature drawn by both renderers anchors in
+ * one place. That centre is cached as `cachedCenter` on the feature's properties and never
+ * invalidated, so moving a feature's geometry leaves its anchor behind.
  *
  * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
@@ -63,10 +63,9 @@ import { GEO_KEY_DEFAULT, missingPatternId, toLookupKey, isPaintServer } from '.
  * that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
  * element so re-renders reuse it. The id is not part of the public API; do not select on it.
  *
- * Note: two quirks remain, shared with the base renderer. The slowTransition call is a no-op that
- * leaves d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut, and the
- * data join has no key function, so it is an index join: reordering the features repaints the
- * existing nodes in place instead of moving them.
+ * Note: one quirk remains, shared with the base renderer. The data join has no key function, so it
+ * is an index join: reordering the features repaints the existing nodes in place instead of moving
+ * them.
  *
  * See test/map/renderer/geojson.test.ts.
  *
@@ -131,7 +130,7 @@ function mapRendererGeoJson() {
       const tweenable = function (d) {
         return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
       };
-      geoElements.filter(tweenable).transition().call(slowTransition).attr("fill", getMapFill);
+      geoElements.filter(tweenable).transition(slowTransition()).attr("fill", getMapFill);
       geoElements.filter(function (d) {
         return !tweenable.call(this, d);
       }).attr("fill", getMapFill);
@@ -151,16 +150,15 @@ function mapRendererGeoJson() {
     // the tooltip anchor generator
     const ta = tooltipAnchor().position(d => {
       // A feature with the spec-legal `properties: null` reaches here now that the merge no
-      // longer crashes on one, and the centroid cache needs somewhere to live.
+      // longer crashes on one, and the centre cache needs somewhere to live. Without this
+      // getGeoJsonCenter would throw on it.
       if (!d.geoJson.properties) d.geoJson.properties = {};
-      const properties = d.geoJson.properties;
-      let sphericalCentroid = properties.sphericalCentroid;
-      if (!sphericalCentroid) {
-        sphericalCentroid = geoCentroid(d.geoJson);
-        properties.sphericalCentroid = sphericalCentroid;
-      }
+      // The same centre the base renderer uses, so a feature drawn by both places its tooltip
+      // in one spot: an authored `center` property is honoured, and the result is memoized as
+      // `cachedCenter` on the feature.
+      const center = getGeoJsonCenter(d.geoJson);
       // d3's own typings expect the projection type as a type argument here.
-      const point = props.mapPath.projection()(sphericalCentroid);
+      const point = props.mapPath.projection()(center);
       // Only a hand-written projection can return null: d3's projections clip in the stream,
       // not in the point call, and return a pair - of NaN, for a degenerate centroid. A null is
       // passed on rather than replaced, as the JavaScript did: tooltipAnchor spreads it into

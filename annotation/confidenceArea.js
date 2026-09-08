@@ -28,7 +28,7 @@ import { defaultTransition } from '../transition.js';
  *
  * @returns {sszvis.component} a confidence area component
  */
-function confidenceArea () {
+function confidenceArea() {
   return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("stroke").prop("strokeWidth").prop("fill").prop("key").key((_, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
@@ -42,7 +42,7 @@ function confidenceArea () {
       path.style("stroke", props.stroke);
     }
     path.attr("fill", "url(#data-area-pattern)").order();
-    const finalPath = props.transition ? path.transition().call(defaultTransition) : path;
+    const finalPath = props.transition ? path.transition(defaultTransition()) : path;
     finalPath.attr("d", d => area$1(props.valuesAccessor(d)));
     if (props.stroke) {
       finalPath.style("stroke", props.stroke);

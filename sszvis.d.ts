@@ -291,7 +291,7 @@ interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbCo
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$k<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$i<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -323,7 +323,7 @@ interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$j<T = unknown>(): CircleComponent<T>;
+declare function export_default$h<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -363,7 +363,7 @@ interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<Confiden
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$i<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function confidenceArea<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -403,7 +403,7 @@ interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<Confidenc
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$h<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$g<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -429,7 +429,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$g<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$f<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -468,7 +468,7 @@ interface LineComponent$1<T = unknown> extends ComponentBuilder<LineComponent$1<
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent$1<T>;
 }
-declare function export_default$f<T = unknown>(): LineComponent$1<T>;
+declare function export_default$e<T = unknown>(): LineComponent$1<T>;
 
 /**
  * Range Flag annotation
@@ -494,7 +494,7 @@ interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComp
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$e<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$d<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -531,7 +531,7 @@ interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerCo
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$d<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$c<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -565,7 +565,7 @@ interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComp
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$c<T = unknown>(): RectangleComponent<T>;
+declare function export_default$b<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -670,7 +670,7 @@ interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponen
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$b<T = unknown>(): TooltipComponent<T>;
+declare function export_default$a<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -1046,7 +1046,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBui
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$a<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$9<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -1096,7 +1096,7 @@ interface PanningComponent extends ComponentBuilder<PanningComponent> {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$9(): PanningComponent;
+declare function export_default$8(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -1158,7 +1158,7 @@ interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponen
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default$8<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$7<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -2302,7 +2302,7 @@ interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> 
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$7<T = unknown>(): PackComponent<T>;
+declare function export_default$6<T = unknown>(): PackComponent<T>;
 
 /**
  * Pie component
@@ -2825,7 +2825,7 @@ interface SankeyComponent extends SankeyBuilder {
     linkLabel(): LabelAccessor<SankeyLink> | undefined;
     linkLabel<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
 }
-declare function export_default$6(): SankeyComponent;
+declare function export_default$5(): SankeyComponent;
 
 /**
  * Stacked Area component
@@ -3749,7 +3749,7 @@ interface SunburstComponent<T = unknown> extends ComponentBuilder<SunburstCompon
     stroke(): StrokeValue<T>;
     stroke<U = T>(stroke: StrokeValue<U>): SunburstComponent<T>;
 }
-declare function export_default$5<T = unknown>(): SunburstComponent<T>;
+declare function export_default$4<T = unknown>(): SunburstComponent<T>;
 
 /**
  * Treemap component
@@ -3813,7 +3813,7 @@ interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponen
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$4<T = unknown>(): TreemapComponent<T>;
+declare function export_default$3<T = unknown>(): TreemapComponent<T>;
 
 /**
  * Button Group control
@@ -5195,7 +5195,7 @@ interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGr
     titleY(): number;
     titleY(y: number): SmallMultiplesComponent<G>;
 }
-declare function export_default$3<G extends SmallMultipleGroup = SmallMultipleGroup>(): SmallMultiplesComponent<G>;
+declare function export_default$2<G extends SmallMultipleGroup = SmallMultipleGroup>(): SmallMultiplesComponent<G>;
 
 /**
  * Stacked Area Multiples Layout
@@ -5388,7 +5388,7 @@ interface BinnedColorScaleComponent extends ComponentBuilder<BinnedColorScaleCom
     labelFormat(): BinLabelFormatter;
     labelFormat(format: BinLabelFormatter): BinnedColorScaleComponent;
 }
-declare function export_default$2(): BinnedColorScaleComponent;
+declare function export_default$1(): BinnedColorScaleComponent;
 
 /**
  * Linear Color Scale Legend
@@ -5478,7 +5478,7 @@ interface RadiusLegendComponent extends ComponentBuilder<RadiusLegendComponent> 
     tickValues(): NumberValue[] | undefined;
     tickValues(values: NumberValue[]): RadiusLegendComponent;
 }
-declare function export_default$1(): RadiusLegendComponent;
+declare function export_default(): RadiusLegendComponent;
 
 /**
  * Handle data load errors in a standardized way
@@ -5751,10 +5751,7 @@ declare function missingPatternId<G extends BaseType, D, P extends BaseType, PD>
  *                                                    the missing value texture takes its fill synchronously either way,
  *                                                    since a paint-server reference cannot be interpolated.
  *
- * Note: the scheduled transition keeps d3's defaults of 250ms and easeCubicInOut rather than the
- * intended 500ms easePolyOut. `.transition().call(slowTransition)` returns the original
- * transition, while slowTransition ignores its argument and builds a fresh detached transition
- * that is discarded.
+ * Note: the fill transition runs for 500ms with easePolyOut, the slow transition's timing.
  *
  * Note: "missing" only means something relative to a dataset, so a layer where no entity has a
  * datum is taken to be drawing geometry rather than encoding values - it keeps the caller's fill,
@@ -5811,7 +5808,7 @@ interface MapRendererBaseComponent<T = unknown> extends ComponentBuilder<MapRend
     transitionColor(): boolean;
     transitionColor(enabled: boolean): MapRendererBaseComponent<T>;
 }
-declare function export_default<T = unknown>(): MapRendererBaseComponent<T>;
+declare function mapRendererBase<T = unknown>(): MapRendererBaseComponent<T>;
 
 /**
  * bubble renderer component
@@ -5952,7 +5949,7 @@ declare function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T>
  *                                          with data entities. Default 'id'.
  * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
  *                                          without a 'features' property throws a TypeError. Rendering mutates it; see
- *                                          the note below on the cached centroid.
+ *                                          the note below on the cached centre.
  * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
  * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
  *                                          that fail it, and entities with no datum at all, display the missing value
@@ -5979,10 +5976,10 @@ declare function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T>
  * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
  * key at all is left unmatched.
  *
- * Note: rendering caches a sphericalCentroid onto every feature's properties and never invalidates
- * it, so moving a feature's geometry leaves its anchor behind. Unlike the base renderer it ignores
- * an authored `center` property and caches under a different key, so the two renderers disagree
- * about where the same entity's tooltip belongs.
+ * Note: anchor positions go through getGeoJsonCenter, the same source the base renderer uses, so an
+ * authored `center` property is honoured here too and a feature drawn by both renderers anchors in
+ * one place. That centre is cached as `cachedCenter` on the feature's properties and never
+ * invalidated, so moving a feature's geometry leaves its anchor behind.
  *
  * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
  * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
@@ -5992,10 +5989,9 @@ declare function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T>
  * that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
  * element so re-renders reuse it. The id is not part of the public API; do not select on it.
  *
- * Note: two quirks remain, shared with the base renderer. The slowTransition call is a no-op that
- * leaves d3's 250ms easeCubicInOut defaults in place of the intended 500ms easePolyOut, and the
- * data join has no key function, so it is an index join: reordering the features repaints the
- * existing nodes in place instead of moving them.
+ * Note: one quirk remains, shared with the base renderer. The data join has no key function, so it
+ * is an index join: reordering the features repaints the existing nodes in place instead of moving
+ * them.
  *
  * See test/map/renderer/geojson.test.ts.
  *
@@ -7240,10 +7236,16 @@ declare function translateString(x: number, y: number): string;
  * @module sszvis/transition
  *
  * Generally speaking, this module is used internally by components which transition the state of the update selection.
- * The module sszvis.transition encapsulates the basic transition attributes used in the app. It is invoked by doing
- * d3.selection().transition().call(sszvis.transition), which applies the transition attributes to the passed transition.
- * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
- * too slow.
+ * Each helper builds a fresh transition carrying the app's standard easing and duration, and is applied by handing it to
+ * a selection: `d3.selection().transition(sszvis.defaultTransition())`. The transition inherits its timing from the one
+ * passed in.
+ *
+ * Do not use `d3.selection().transition().call(sszvis.defaultTransition)`. d3's `transition.call(f)` invokes `f` and
+ * returns the original transition, while these helpers ignore their argument and build a detached transition that is then
+ * discarded - the scheduled transition silently keeps d3's defaults of 250ms and easeCubicInOut.
+ *
+ * fastTransition provides an alternate transition duration for certain situations where the standard duration is
+ * too slow, and slowTransition for where it is too fast.
  */
 /**
  * Creates a default transition with standard easing and duration
@@ -7332,5 +7334,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$j as annotationCircle, export_default$i as annotationConfidenceArea, export_default$h as annotationConfidenceBar, export_default$f as annotationLine, export_default$e as annotationRangeFlag, export_default$d as annotationRangeRuler, export_default$c as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$k as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$g as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$3 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$2 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$1 as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default as mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$a as move, muchDarker, nestedStackedBarsVertical, not, export_default$7 as pack, export_default$9 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$6 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$5 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$b as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$4 as treemap, valueFn, viewport, export_default$8 as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$h as annotationCircle, confidenceArea as annotationConfidenceArea, export_default$g as annotationConfidenceBar, export_default$e as annotationLine, export_default$d as annotationRangeFlag, export_default$c as annotationRangeRuler, export_default$b as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$i as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$f as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$2 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$1 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$9 as move, muchDarker, nestedStackedBarsVertical, not, export_default$6 as pack, export_default$8 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$5 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$4 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$a as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$3 as treemap, valueFn, viewport, export_default$7 as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidReferencePoint, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };
