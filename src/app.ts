@@ -105,7 +105,8 @@ export interface AppProps<State, Actions extends Record<string, Action<State>>> 
  * rejection. An effect - whether it came from `init` or from an action - runs on its own path:
  * an error it throws is reported as an effect failure and never travels through the `init`
  * rejection path, so it is not mistaken for a chart that could not be built and does not render
- * the fallback.
+ * the fallback. A dispatch naming an action the `actions` object does not declare is reported the
+ * same way and otherwise ignored, so a mistyped name in an effect leaves the app running.
  *
  * @module sszvis/app
  */
@@ -204,8 +205,22 @@ export const app = <
   }
 
   const dispatch: Dispatch = (action, props) => {
-    const handler = actionMap[action];
-    invariant(handler != null, `Action "${action}" is not defined, add it to "actions".`);
+    // Own property only, matching how the dispatchers are built from `Object.keys`: a name
+    // like "toString" resolves on the prototype chain but is not a declared action.
+    const handler = Object.hasOwn(actionMap, action) ? actionMap[action] : undefined;
+    if (handler == null) {
+      // A name dispatch cannot resolve is a configuration mistake, but there is nothing to
+      // validate up front: the dispatchers handed to `render` are built from the keys of the
+      // actions object, so a typo in an interaction handler - `actions.selct(d)` - is not a
+      // function and fails in the caller's own code. The names that reach here as strings come
+      // from effects, at an arbitrary later point, so this is reported like any other runtime
+      // failure instead of thrown: one mistyped dispatch should not take the chart down.
+      reportError(
+        "Dispatch failed",
+        new Error(`Action "${action}" is not defined, add it to "actions".`)
+      );
+      return;
+    }
     const draft = createDraft(state);
     // Each action declares the props it accepts, but which action is being dispatched is
     // only known from a string at this point, so the props cannot be checked here.
