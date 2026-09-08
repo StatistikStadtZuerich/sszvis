@@ -10,12 +10,13 @@
  * @module sszvis/control/select
  *
  * @property {array} values         an array of string values which are the options available in
- *                                  the control. Required - there is no default.
+ *                                  the control. Unset or undefined is read as the empty array,
+ *                                  which renders a select with no options.
  * @property {string} current       the currently selected value of the select control. Should be one
  *                                  of the options passed to .values(). Compared with ===.
- * @property {number} width         The total width of the select control. If text labels exceed this
- *                                  width they will be trimmed to fit using an ellipsis mark.
- *                                  (default: 300px)
+ * @property {number} width         The total width of the select control. Labels wider than
+ *                                  `width - 40` are trimmed to fit with an ellipsis mark, the 40px
+ *                                  covering the select's own chrome. (default: 300px)
  * @property {function} change      A callback/event handler function called as (event, value) when
  *                                  the user selects an option. Selecting a value does not change any
  *                                  state unless this callback does something. (default: fn.identity,
@@ -29,6 +30,16 @@
  * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
  * into a container that already holds the other replaces the other's DOM. This is what makes them
  * interchangeable.
+ *
+ * Note: the two controls do not show an overlong label the same way, because they cannot. A native
+ * select element is laid out by the browser: its options can neither wrap onto a second line nor
+ * grow the control, so this control measures each label and trims it with an ellipsis to fit
+ * `width - 40` (`LABEL_WIDTH_ALLOWANCE`, which reserves room for the select's own chrome). The
+ * button group draws ordinary elements it does control, so it wraps a long label over more lines
+ * instead of shortening it. Swapping one control for the other across a breakpoint therefore keeps
+ * the same values and the same callback, but not the same label *text*: expect ellipses here, and
+ * the full string on two or three lines there. This says nothing about which control takes more
+ * room - see the note below on the 30px this one adds to `width`.
  *
  * Note: `current` is written as each option's `selected` DOM property, so it stays authoritative
  * across re-renders even after the user has picked an option themselves. A value duplicated in
@@ -57,9 +68,10 @@
  * attribute goes on the `select` element itself, not on the wrapper `div`, which carries no role and
  * so cannot be named; `buttonGroup` names its `radiogroup` wrapper instead.
  *
- * Note: `values` has no default, so rendering before the data is available throws mid-render from
- * d3's data join - after the wrapper and select have been created and styled, leaving an empty,
- * width-styled control behind rather than nothing at all.
+ * Note: `values` resolves to the empty array when it is unset or set to undefined, so a render that
+ * lands before the data does draws an empty control rather than throwing. A chart fed from a fetch
+ * passes a state key that is undefined until the data arrives, so the two spellings of "nothing to
+ * offer yet" have to mean the same thing. `buttonGroup` does not do this yet, and still throws.
  *
  * See test/control/select.test.ts.
  *
@@ -101,91 +113,97 @@ export interface SelectComponent<T extends string = string>
 }
 
 export default function selectMenu<T extends string = string>(): SelectComponent<T> {
-  return component<SelectComponent<T>>()
-    .prop("values")
-    .prop("current")
-    .prop("width")
-    .width(300)
-    .prop("change")
-    .change(fn.identity)
-    .prop("ariaLabel")
-    .render(function (this: Element) {
-      const selection = select(this);
-      const props = selection.props<SelectProps<T>>();
+  return (
+    component<SelectComponent<T>>()
+      // Coerced rather than merely defaulted: a chart hands this a state key that is only
+      // populated when its data arrives, so the value actually passed is `undefined`, which a
+      // plain default would not catch - `.prop()` stores whatever the setter is given.
+      .prop("values", (values?: T[]) => values ?? [])
+      .values([])
+      .prop("current")
+      .prop("width")
+      .width(300)
+      .prop("change")
+      .change(fn.identity)
+      .prop("ariaLabel")
+      .render(function (this: Element) {
+        const selection = select(this);
+        const props = selection.props<SelectProps<T>>();
 
-      const wrapperEl = selection
-        .selectAll<HTMLDivElement, string>(".sszvis-control-optionSelectable")
-        .data(["sszvis-control-select"], (d) => d)
-        .join("div")
-        .classed("sszvis-control-optionSelectable", true)
-        .classed("sszvis-control-select", true);
+        const wrapperEl = selection
+          .selectAll<HTMLDivElement, string>(".sszvis-control-optionSelectable")
+          .data(["sszvis-control-select"], (d) => d)
+          .join("div")
+          .classed("sszvis-control-optionSelectable", true)
+          .classed("sszvis-control-select", true);
 
-      wrapperEl.style("width", `${props.width}px`);
+        wrapperEl.style("width", `${props.width}px`);
 
-      const metricsEl = wrapperEl
-        .selectDiv("selectMetrics")
-        .classed("sszvis-control-select__metrics", true);
+        const metricsEl = wrapperEl
+          .selectDiv("selectMetrics")
+          .classed("sszvis-control-select__metrics", true);
 
-      const selectEl = wrapperEl
-        .selectAll<HTMLSelectElement, unknown>(".sszvis-control-select__element")
-        .data([1])
-        .join("select")
-        .classed("sszvis-control-select__element", true)
-        .on("change", function (this: HTMLSelectElement, e: Event) {
-          // An option's value can only hold a string, so it holds `String(value)` and the
-          // selection is resolved back by comparing that coercion. Storing the array
-          // position instead let a selection recorded against an older `values` array
-          // resolve to whatever had since moved into that position.
-          const value = this.value;
-          const selected = props.values.find((d) => String(d) === value);
-          if (selected === undefined) {
-            // Still reachable: a select with no options at all reports "", and an option
-            // value written by something other than this component matches nothing. A
-            // selection that maps to no value is not a selection.
-            logger.warn(
-              `[selectMenu] ignoring a selection whose option value "${value}" does not match any of the ${props.values.length} configured values.`
-            );
-            return;
-          }
-          props.change(e, selected);
-          // Prevent highlights on the select element after users have selected
-          // an option by moving away from it.
-          setTimeout(() => {
-            window.focus();
-          }, 0);
-        });
+        const selectEl = wrapperEl
+          .selectAll<HTMLSelectElement, unknown>(".sszvis-control-select__element")
+          .data([1])
+          .join("select")
+          .classed("sszvis-control-select__element", true)
+          .on("change", function (this: HTMLSelectElement, e: Event) {
+            // An option's value can only hold a string, so it holds `String(value)` and the
+            // selection is resolved back by comparing that coercion. Storing the array
+            // position instead let a selection recorded against an older `values` array
+            // resolve to whatever had since moved into that position.
+            const value = this.value;
+            const selected = props.values.find((d) => String(d) === value);
+            if (selected === undefined) {
+              // Still reachable: a select with no options at all reports "", and an option
+              // value written by something other than this component matches nothing. A
+              // selection that maps to no value is not a selection.
+              logger.warn(
+                `[selectMenu] ignoring a selection whose option value "${value}" does not match any of the ${props.values.length} configured values.`
+              );
+              return;
+            }
+            props.change(e, selected);
+            // Prevent highlights on the select element after users have selected
+            // an option by moving away from it.
+            setTimeout(() => {
+              window.focus();
+            }, 0);
+          });
 
-      selectEl.style("width", `${props.width + SELECT_WIDTH_PADDING}px`);
-      // `??` rather than `||`, so an explicitly empty name stays an empty name.
-      selectEl.attr("aria-label", props.ariaLabel ?? null);
+        selectEl.style("width", `${props.width + SELECT_WIDTH_PADDING}px`);
+        // `??` rather than `||`, so an explicitly empty name stays an empty name.
+        selectEl.attr("aria-label", props.ariaLabel ?? null);
 
-      // Options are keyed by their own value, so an option element follows its value
-      // across a re-render rather than being positionally re-labelled. Values repeated
-      // verbatim are fine - they key the same and resolve to the same thing - but two
-      // *distinct* values that coerce to the same string are indistinguishable, and the
-      // first of them wins when a selection is resolved. Say so rather than guessing.
-      const keyOf = (d: T) => String(d);
-      const firstByKey = new Map<string, T>();
-      const collisions: string[] = [];
-      for (const d of props.values) {
-        const key = keyOf(d);
-        if (!firstByKey.has(key)) firstByKey.set(key, d);
-        else if (firstByKey.get(key) !== d) collisions.push(key);
-      }
-      if (collisions.length > 0) {
-        logger.warn(
-          `[selectMenu] values contains distinct entries that are indistinguishable as strings (${collisions.join(", ")}); a selection resolves to the first of each.`
-        );
-      }
+        // Options are keyed by their own value, so an option element follows its value
+        // across a re-render rather than being positionally re-labelled. Values repeated
+        // verbatim are fine - they key the same and resolve to the same thing - but two
+        // *distinct* values that coerce to the same string are indistinguishable, and the
+        // first of them wins when a selection is resolved. Say so rather than guessing.
+        const keyOf = (d: T) => String(d);
+        const firstByKey = new Map<string, T>();
+        const collisions: string[] = [];
+        for (const d of props.values) {
+          const key = keyOf(d);
+          if (!firstByKey.has(key)) firstByKey.set(key, d);
+          else if (firstByKey.get(key) !== d) collisions.push(key);
+        }
+        if (collisions.length > 0) {
+          logger.warn(
+            `[selectMenu] values contains distinct entries that are indistinguishable as strings (${collisions.join(", ")}); a selection resolves to the first of each.`
+          );
+        }
 
-      selectEl
-        .selectAll<HTMLOptionElement, T>("option")
-        .data(props.values, keyOf)
-        .join("option")
-        .property("selected", (d) => d === props.current)
-        .attr("value", keyOf)
-        .text((d) => truncateToWidth(metricsEl, props.width - LABEL_WIDTH_ALLOWANCE, d));
-    });
+        selectEl
+          .selectAll<HTMLOptionElement, T>("option")
+          .data(props.values, keyOf)
+          .join("option")
+          .property("selected", (d) => d === props.current)
+          .attr("value", keyOf)
+          .text((d) => truncateToWidth(metricsEl, props.width - LABEL_WIDTH_ALLOWANCE, d));
+      })
+  );
 }
 
 /**
