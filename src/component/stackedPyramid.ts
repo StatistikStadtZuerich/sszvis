@@ -22,8 +22,9 @@
  * its `row`, its own `value`, and its `data`, narrowed from the whole grouped row to the single
  * source row the slice was computed from - or undefined, where the row carries no value for that
  * series and the slice is a zero-width pad. d3's own `key` and `index` are carried across onto each
- * series. The largest stacked total across both sides is attached to the returned array as
- * `maxValue`, which is what the horizontal scale's domain is built from. The rows passed in are not
+ * series. The sides come back as the `sides` field of an object, with the largest stacked total
+ * across both of them beside them as `maxValue`, which is what the horizontal scale's domain is
+ * built from; `sides` is the array to bind to the chart layer. The rows passed in are not
  * modified.
  *
  * The component always creates four sub-groups, in this order: leftStack, rightStack, leftReference
@@ -302,15 +303,17 @@ export type StackedPyramidSide<T, S extends string | number = string> = StackedP
 >[];
 
 /**
- * What stackedPyramidData returns: the sides, with the largest stacked total across both of
- * them hung off the array itself rather than wrapped in an object.
+ * What stackedPyramidData returns: the sides in `sides`, with the largest stacked total across
+ * both of them beside them rather than assigned onto the array. The array itself is an ordinary
+ * array, so copying the layout - a spread, a map, a trip through JSON - carries `maxValue` with
+ * it. `sides` is what gets bound to the chart layer.
  */
-export type StackedPyramidLayout<T, S extends string | number = string> = StackedPyramidSide<
-  T,
-  S
->[] & {
+export interface StackedPyramidLayout<T, S extends string | number = string> {
+  /** One entry per side, in the order the side accessor first mentions each. Bind this. */
+  sides: StackedPyramidSide<T, S>[];
+  /** The largest upper bound over every slice of both sides - zero when there are none. */
   maxValue: number;
-};
+}
 
 /* Data layout
 ----------------------------------------------- */
@@ -384,7 +387,7 @@ export function stackedPyramidData<T, S extends string | number = string>(
     // the horizontal scale.
     const maxValue = max(sides, (s) => max(s, (rows) => max(rows, (row) => row[1]))) ?? 0;
 
-    return Object.assign(sides, { maxValue });
+    return { sides, maxValue };
   };
 }
 
@@ -424,7 +427,7 @@ type StoredFill<T> = (datum: T, index?: number) => string | undefined;
 
 /** Pulls one side's series out of the datum bound to the chart layer. */
 type SideAccessor<T, S extends string | number> = (
-  data: StackedPyramidLayout<T, S>
+  data: StackedPyramidSide<T, S>[]
 ) => StackedPyramidSide<T, S>;
 
 /**
@@ -442,7 +445,7 @@ export interface StackedPyramidReferencePoint {
 
 /** Pulls one side's reference series out of the datum bound to the chart layer. */
 type ReferenceAccessor<T, S extends string | number> = (
-  data: StackedPyramidLayout<T, S>
+  data: StackedPyramidSide<T, S>[]
 ) => StackedPyramidReferencePoint[];
 
 /** A constant or an accessor; either is accepted, since fn.functor normalises both. */
@@ -487,19 +490,19 @@ export interface StackedPyramidComponent<T = unknown, S extends string | number 
   tooltipAnchor(): (number | string)[];
   tooltipAnchor(anchor: (number | string)[]): StackedPyramidComponent<T, S>;
   leftAccessor(): SideAccessor<T, S>;
-  leftAccessor<U = StackedPyramidLayout<T, S>>(
+  leftAccessor<U = StackedPyramidSide<T, S>[]>(
     accessor: (data: U) => StackedPyramidSide<T, S>
   ): StackedPyramidComponent<T, S>;
   rightAccessor(): SideAccessor<T, S>;
-  rightAccessor<U = StackedPyramidLayout<T, S>>(
+  rightAccessor<U = StackedPyramidSide<T, S>[]>(
     accessor: (data: U) => StackedPyramidSide<T, S>
   ): StackedPyramidComponent<T, S>;
   leftRefAccessor(): ReferenceAccessor<T, S> | undefined;
-  leftRefAccessor<U = StackedPyramidLayout<T, S>>(
+  leftRefAccessor<U = StackedPyramidSide<T, S>[]>(
     accessor: (data: U) => StackedPyramidReferencePoint[]
   ): StackedPyramidComponent<T, S>;
   rightRefAccessor(): ReferenceAccessor<T, S> | undefined;
-  rightRefAccessor<U = StackedPyramidLayout<T, S>>(
+  rightRefAccessor<U = StackedPyramidSide<T, S>[]>(
     accessor: (data: U) => StackedPyramidReferencePoint[]
   ): StackedPyramidComponent<T, S>;
 }
@@ -524,7 +527,7 @@ export function stackedPyramid<
       .prop("rightAccessor")
       .prop("leftRefAccessor")
       .prop("rightRefAccessor")
-      .render(function (this: Element, data: StackedPyramidLayout<T, S>) {
+      .render(function (this: Element, data: StackedPyramidSide<T, S>[]) {
         const selection = select(this);
         const props = selection.props<StackedPyramidProps<T, S>>();
 
