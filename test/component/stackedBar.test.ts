@@ -727,8 +727,8 @@ describe("component/stackedBar", () => {
     });
 
     test("renders a falsy stroke as configured rather than falling back to white", () => {
-      // The default applies only when the property was never set, so an empty string and a
-      // null - the two values that remove the attribute rather than paint it - survive.
+      // The default applies to undefined only, so the two falsy strokes survive as set: an
+      // empty string as an empty attribute, a null as no attribute at all.
       const empty = render(verticalOf().stroke(""));
       expect(new Set(attrs(rects(empty), "stroke"))).toEqual(new Set([""]));
       const emptyFromAccessor = render(verticalOf().stroke(() => ""));

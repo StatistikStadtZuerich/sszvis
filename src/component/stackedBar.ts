@@ -59,10 +59,15 @@
  * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
  *                                      unset, a 1px #FFFFFF stroke separates the segments -
  *                                      centred on the bar edge, so it overpaints half a pixel
- *                                      on each side. The default applies only when the property
- *                                      was never set, so a falsy value is rendered as set: null
- *                                      and an empty string both clear the attribute, and "none"
- *                                      replaces the separator.
+ *                                      on each side. The default applies when the property is
+ *                                      undefined, whether it was never set or set to undefined
+ *                                      explicitly. Every other value is rendered as set: "none"
+ *                                      replaces the separator, null writes no stroke attribute
+ *                                      at all, and an empty string writes stroke="" - an empty
+ *                                      attribute, not a removed one. An accessor is always
+ *                                      called, and one that returns undefined for a slice
+ *                                      leaves that rect with no stroke attribute rather than
+ *                                      the white default.
  * @property {boolean} transition       Optional, and forwarded to bar. Whether to animate the
  *                                      segment geometry on an update. Defaults to bar's own
  *                                      default of true; pass false for anything that measures
@@ -274,9 +279,9 @@ type FillValue<T, X extends string | number> = SliceValue<
 >;
 
 /**
- * stroke is stored exactly as set and rendered as set. Only undefined - the property never
- * having been set - falls back to the white default; null and an empty string clear the
- * attribute instead.
+ * stroke is stored exactly as set and rendered as set. Only undefined - never set, or set to
+ * undefined - falls back to the white default. null writes no stroke attribute; an empty
+ * string writes an empty one, stroke="".
  */
 type StrokeValue<T, X extends string | number> =
   | string
@@ -413,9 +418,10 @@ function fillOf<T, X extends string | number>(fill: FillValue<T, X> | undefined)
 }
 
 /**
- * The stroke as bar takes it. The white separator applies only when the property was never
- * set, so that a falsy stroke is rendered as set; a null becomes undefined because bar's
- * setter does not accept null, and both leave the rect with no stroke attribute at all.
+ * The stroke as bar takes it. The white separator applies to undefined only - never set, or
+ * set to undefined - so that every other falsy stroke is rendered as set: a null becomes
+ * undefined because bar's setter does not accept null, and bar then writes no stroke
+ * attribute for it, while an empty string reaches the rect as stroke="".
  */
 function strokeOf<T, X extends string | number>(
   stroke: StrokeValue<T, X>
