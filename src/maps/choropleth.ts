@@ -36,8 +36,13 @@
  *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
  *                                                    Defaults to a constant true, so nothing is textured unless it is set.
  * @property {Boolean} encodesData                    Whether this map paints values or plain geometry. No default: left
- *                                                    unset it is inferred from whether fill and defined are accessors or
- *                                                    constants. Set false for a map drawn for its shapes alone - an outline
+ *                                                    unset it is inferred, first from whether fill and defined are
+ *                                                    accessors or constants - either one supplied as an accessor makes the
+ *                                                    map encode data even before its data arrives - and, when both are
+ *                                                    constants, from the data itself: the map encodes data as soon as any
+ *                                                    feature matches a datum. So a map built from constants alone draws
+ *                                                    geometry while its data is empty and starts texturing unmatched
+ *                                                    features once data arrives. Set false for a map drawn for its shapes alone - an outline
  *                                                    over a raster, say: nothing is textured as missing and the fill
  *                                                    accessor is called with undefined throughout.
  *                                                    See src/map/renderer/base.ts.
