@@ -2,7 +2,7 @@ import { type ScaleBand, type ScaleLinear, scaleBand, scaleLinear } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { cascade } from "../../src/cascade.js";
 import { nestedStackedBarsVertical } from "../../src/component/nestedStackedBar.js";
-import { stackedBarVerticalData } from "../../src/component/stackedBar.js";
+import { type StackedBarLayout, stackedBarVerticalData } from "../../src/component/stackedBar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
 
@@ -10,8 +10,8 @@ type Row = { year: string; category: string; nested: string; value: number };
 
 /** One slice of a stack: [y0, y1] plus the properties stackedBarVerticalData attaches. */
 type Slice = [number, number] & { data: Row; series: string; stack: string };
-/** One stack layout (an array of series), tagged with the nested group it belongs to. */
-type NestedStack = Slice[][] & { nest: string };
+/** One stack layout, tagged with the nested group it belongs to. */
+type NestedStack = StackedBarLayout<Row>;
 
 describe("component/nestedStackedBar", () => {
   let container: HTMLDivElement;
@@ -39,11 +39,20 @@ describe("component/nestedStackedBar", () => {
       .arrayBy((d: Row) => d.nested)
       .apply<Row[][]>(data)
       .map((group: Row[]) => {
-        const stack = stackLayout(group) as unknown as NestedStack;
+        const stack = stackLayout(group);
         stack.nest = group[0].nested;
         return stack;
       });
   };
+
+  /** A layout for a nested group that carries no stacks at all. */
+  const emptyLayout = (nest: string): NestedStack => ({
+    series: [],
+    keys: [],
+    maxValue: 0,
+    minValue: 0,
+    nest,
+  });
 
   let offsetScale: ScaleBand<string>;
   let xScale: ScaleBand<string>;
@@ -83,7 +92,7 @@ describe("component/nestedStackedBar", () => {
   /** A component wired to the test row shape, with every required prop set. */
   const nestedOf = () =>
     nestedStackedBarsVertical()
-      .offset((d: NestedStack) => offsetScale(d.nest))
+      .offset((d: NestedStack) => offsetScale(String(d.nest)))
       .xScale(xScale)
       .yScale(yScale)
       .xAcc((d: Row) => d.year)
@@ -393,7 +402,7 @@ describe("component/nestedStackedBar", () => {
     test("should render without xAcc", () => {
       const node = render(
         nestedStackedBarsVertical()
-          .offset((d: NestedStack) => offsetScale(d.nest))
+          .offset((d: NestedStack) => offsetScale(String(d.nest)))
           .xScale(xScale)
           .yScale(yScale)
           .tooltip(() => undefined)
@@ -433,10 +442,7 @@ describe("component/nestedStackedBar", () => {
     });
 
     test("should fall back to the group index for an untagged layout", () => {
-      const untagged = nestedData().map((stack) => {
-        const copy = [...stack] as unknown as NestedStack;
-        return copy;
-      });
+      const untagged = nestedData().map((stack) => ({ ...stack, nest: undefined }));
       const node = render(
         nestedStackedBarsVertical()
           .offset(() => 0)
@@ -453,7 +459,7 @@ describe("component/nestedStackedBar", () => {
   describe("empty nested groups", () => {
     test("should render an empty group rather than throwing", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      const node = render(nestedOf(), [[]]);
+      const node = render(nestedOf(), [emptyLayout("E")]);
       expect(groups(node).length).toBe(1);
       expect(rects(node).length).toBe(0);
       expect(warn).toHaveBeenCalled();
@@ -462,7 +468,7 @@ describe("component/nestedStackedBar", () => {
 
     test("should keep the populated groups when one group is empty", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      const data = [...nestedData(), [] as unknown as NestedStack];
+      const data = [...nestedData(), emptyLayout("E")];
       const node = render(nestedOf(), data);
       expect(groups(node).length).toBe(3);
       expect(rects(node).length).toBe(rows.length);

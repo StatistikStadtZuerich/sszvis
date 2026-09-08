@@ -2,11 +2,15 @@ import { type ScaleBand, type ScaleLinear, scaleBand, scaleLinear } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   type StackedBarLayout,
+  type StackedBarSeries,
+  type StackedBarSeriesData,
   type StackedBarSlice,
   stackedBarHorizontal,
   stackedBarHorizontalData,
+  stackedBarHorizontalLayout,
   stackedBarVertical,
   stackedBarVerticalData,
+  stackedBarVerticalLayout,
 } from "../../src/component/stackedBar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
@@ -15,8 +19,12 @@ type Row = { region: string; category: string; value: number };
 
 /** One slice of a stack: the [y0, y1] pair plus the properties the layout attaches to it. */
 type Slice = StackedBarSlice<Row>;
-/** The whole layout: an array of series, tagged with the series keys and the stack maximum. */
+/** The whole layout: the series array plus the series keys and the stacked extent. */
 type Layout = StackedBarLayout<Row>;
+/** What stackedBar*Data returns: the series array with the extent assigned onto it. */
+type SeriesData = StackedBarSeriesData<Row>;
+/** Just the series array of a layout, which is what gets bound to the chart layer. */
+type Series = StackedBarSeries<Row>[];
 
 describe("component/stackedBar", () => {
   let container: HTMLDivElement;
@@ -33,13 +41,19 @@ describe("component/stackedBar", () => {
     { region: "B", category: "Y", value: 25 },
   ];
 
-  const verticalData = (data: Row[] = rows): Layout =>
+  const verticalLayout = (data: Row[] = rows): Layout =>
+    stackedBarVerticalLayout(regionAcc, categoryAcc, valueAcc)(data);
+  const horizontalLayout = (data: Row[] = rows): Layout =>
+    stackedBarHorizontalLayout(regionAcc, categoryAcc, valueAcc)(data);
+
+  /** The array form, which is what the components take as their data. */
+  const verticalData = (data: Row[] = rows): SeriesData =>
     stackedBarVerticalData(regionAcc, categoryAcc, valueAcc)(data);
-  const horizontalData = (data: Row[] = rows): Layout =>
+  const horizontalData = (data: Row[] = rows): SeriesData =>
     stackedBarHorizontalData(regionAcc, categoryAcc, valueAcc)(data);
 
   /** The [y0, y1] pairs of a layout, series by series, without the attached properties. */
-  const pairs = (layout: Layout) => layout.map((series) => series.map((d) => [d[0], d[1]]));
+  const pairs = (series: Series) => series.map((s) => s.map((d) => [d[0], d[1]]));
 
   let xBand: ScaleBand<string>;
   let yLinear: ScaleLinear<number, number>;
@@ -98,7 +112,7 @@ describe("component/stackedBar", () => {
     });
 
     test("should collect the series keys in the order the layout stacked them", () => {
-      expect(verticalData().keys).toEqual(["X", "Y"]);
+      expect(verticalLayout().keys).toEqual(["X", "Y"]);
     });
 
     test("should stack the last series key on the baseline", () => {
@@ -131,12 +145,58 @@ describe("component/stackedBar", () => {
     });
 
     test("should report the highest stacked total as maxValue", () => {
-      expect(verticalData().maxValue).toBe(40);
+      expect(verticalLayout().maxValue).toBe(40);
+    });
+
+    test("should leave Array.prototype.keys intact on the series array", () => {
+      // The series keys are a field of the layout object, so nothing shadows the built-in
+      // Array.prototype.keys iterator and the series array stays a well-behaved one.
+      const layout = verticalLayout();
+      expect(Array.isArray(layout.keys)).toBe(true);
+      expect([...layout.series.keys()]).toEqual([0, 1]);
+    });
+
+    test("should keep the metadata when the layout is copied", () => {
+      // The metadata sits beside the series rather than assigned onto them, so a spread, a
+      // map, a filter or a trip through JSON carries it along instead of dropping it, and
+      // callers that reshape the series before rendering need not carry it across by hand.
+      const layout = verticalLayout();
+      const copy: Layout = { ...layout, series: layout.series.filter(() => true) };
+      expect(copy.keys).toEqual(layout.keys);
+      expect(copy.maxValue).toBe(layout.maxValue);
+      expect(copy.minValue).toBe(layout.minValue);
+      expect(copy.series.length).toBe(layout.series.length);
+      expect(JSON.parse(JSON.stringify(layout)).maxValue).toBe(40);
+    });
+
+    test("should return an ordinary array from stackedBarVerticalData", () => {
+      // The array form is what `.datum(...)` binds, so it has to stay a real array: d3's
+      // .data() takes the length of a non-array as 0 and silently draws nothing.
+      const data = verticalData();
+      expect(Array.isArray(data)).toBe(true);
+      expect([...data.keys()]).toEqual([0, 1]);
+      expect(data.length).toBe(2);
+    });
+
+    test("should assign the deprecated extent onto the array form", () => {
+      // Kept for the charts that read state.stackedData.maxValue. `keys` is deliberately
+      // not assigned - it shadowed Array.prototype.keys - so it lives only on the object
+      // form, and every array operation still drops these two.
+      const data = verticalData();
+      expect(data.maxValue).toBe(40);
+      expect(data.minValue).toBe(0);
+      expect(Reflect.get(data, "keys")).toBe(Array.prototype.keys);
+      expect(
+        Reflect.get(
+          data.filter(() => true),
+          "maxValue"
+        )
+      ).toBeUndefined();
     });
 
     test("should return an empty layout for empty data", () => {
-      const layout = verticalData([]);
-      expect(layout.length).toBe(0);
+      const layout = verticalLayout([]);
+      expect(layout.series.length).toBe(0);
       expect(layout.keys).toEqual([]);
       // d3.max over an empty array is undefined, which the fold coerces to 0. The examples
       // feed maxValue straight into a scale domain - docs/bar-chart-vertical-stacked
@@ -153,11 +213,11 @@ describe("component/stackedBar", () => {
         { region: "A", category: "10", value: 1 },
         { region: "A", category: "2", value: 2 },
       ];
-      const layout = verticalData(numeric);
+      const layout = verticalLayout(numeric);
       expect(layout.keys).toEqual(["10", "2"]);
-      expect(layout.map((series) => series[0].series)).toEqual(["10", "2"]);
+      expect(layout.series.map((s) => s[0].series)).toEqual(["10", "2"]);
       // "2" is the last key, so it sits on the baseline with "10" (value 1) on top of it.
-      expect(pairs(layout)).toEqual([[[2, 3]], [[0, 2]]]);
+      expect(pairs(layout.series)).toEqual([[[2, 3]], [[0, 2]]]);
     });
 
     test("should stack a series a stack has no row for as zero", () => {
@@ -197,11 +257,11 @@ describe("component/stackedBar", () => {
         { region: "A", category: "X", value: 10 },
         { region: "B", category: "Y", value: 20 },
       ];
-      const layout = verticalData(sparse);
+      const layout = verticalLayout(sparse);
       expect(layout.keys).toEqual(["X", "Y"]);
       // Stack "A" has only "X", stack "B" only "Y", and the missing half of each stacks
       // as a zero-height slice.
-      expect(pairs(layout)).toEqual([
+      expect(pairs(layout.series)).toEqual([
         [
           [0, 10],
           [20, 20],
@@ -217,9 +277,9 @@ describe("component/stackedBar", () => {
       // Data that is not pre-aggregated to one row per (stack, series) pair is stacked to
       // its true total rather than truncated to its first row.
       const withDuplicate: Row[] = [...rows, { region: "A", category: "X", value: 90 }];
-      const layout = verticalData(withDuplicate);
+      const layout = verticalLayout(withDuplicate);
       // Stack "A" now carries 100 of "X" on top of 20 of "Y"; stack "B" is unchanged.
-      expect(pairs(layout)).toEqual([
+      expect(pairs(layout.series)).toEqual([
         [
           [20, 120],
           [25, 40],
@@ -234,8 +294,8 @@ describe("component/stackedBar", () => {
 
     test("should sum a cell on the horizontal layout too", () => {
       const withDuplicate: Row[] = [...rows, { region: "A", category: "X", value: 90 }];
-      const layout = horizontalData(withDuplicate);
-      expect(pairs(layout)[0][0]).toEqual([0, 100]);
+      const layout = horizontalLayout(withDuplicate);
+      expect(pairs(layout.series)[0][0]).toEqual([0, 100]);
       expect(layout.maxValue).toBe(120);
     });
 
@@ -267,9 +327,9 @@ describe("component/stackedBar", () => {
       ]);
     });
 
-    test("should attach the same keys and maxValue as the vertical layout", () => {
-      expect(horizontalData().keys).toEqual(verticalData().keys);
-      expect(horizontalData().maxValue).toBe(verticalData().maxValue);
+    test("should report the same keys and maxValue as the vertical layout", () => {
+      expect(horizontalLayout().keys).toEqual(verticalLayout().keys);
+      expect(horizontalLayout().maxValue).toBe(verticalLayout().maxValue);
     });
 
     test("should tag every slice with its series, stack and source datum", () => {
@@ -670,12 +730,12 @@ describe("component/stackedBar", () => {
     });
 
     test("should report an extent that covers a negative value", () => {
-      const layout = horizontalData(negative);
+      const layout = horizontalLayout(negative);
       // d3.stack accumulates in key order: "X" spans [0, -10] and "Y" [-10, 10].
       expect(layout.minValue).toBe(-10);
       expect(layout.maxValue).toBe(10);
       // An all-positive layout has its baseline as the lower bound.
-      expect(horizontalData().minValue).toBe(0);
+      expect(horizontalLayout().minValue).toBe(0);
     });
 
     test("should size the bars from a y-scale whose range ascends", () => {
@@ -687,6 +747,38 @@ describe("component/stackedBar", () => {
       for (const value of attrs(rects(node), "height")) {
         expect(Number(value)).toBeGreaterThan(0);
       }
+    });
+  });
+
+  describe("binding a layout return value", () => {
+    test("should draw bars when the whole return value of stackedBarVerticalData is bound", () => {
+      // The guard against the regression that broke every stacked chart: the charts bind
+      // whatever the layout function returned straight to the layer, so if that value stops
+      // being an array, d3's .data() reads its length as 0, joins nothing, and draws no bars
+      // without raising a single error.
+      const node = render(
+        verticalOf(),
+        stackedBarVerticalData(regionAcc, categoryAcc, valueAcc)(rows)
+      );
+      expect(stacks(node).length).toBe(2);
+      expect(rects(node).length).toBe(4);
+    });
+
+    test("should draw bars when the whole return value of stackedBarHorizontalData is bound", () => {
+      const node = render(
+        horizontalOf(),
+        stackedBarHorizontalData(regionAcc, categoryAcc, valueAcc)(rows)
+      );
+      expect(stacks(node).length).toBe(2);
+      expect(rects(node).length).toBe(4);
+    });
+
+    test("should draw no bars when the object form is bound by mistake", () => {
+      // The mirror image, pinned so the failure mode is documented rather than rediscovered:
+      // stackedBar*Layout returns an object, which d3 binds as a zero-length join. Bind
+      // `layout.series`, not the layout.
+      const node = render(verticalOf(), verticalLayout());
+      expect(rects(node).length).toBe(0);
     });
   });
 
@@ -783,35 +875,6 @@ describe("component/stackedBar", () => {
       for (const prop of ["xAccessor", "yAccessor", "orientation"]) {
         expect(Reflect.get(component, prop)).toBeUndefined();
       }
-    });
-
-    test("shadows Array.prototype.keys with the series key array", () => {
-      // BUG: `keys` is assigned onto the returned array, where it shadows the built-in
-      // Array.prototype.keys iterator method, so the layout is not a well-behaved array.
-      // Nothing in the library or the examples calls `.keys()` on it today, so nothing is
-      // broken right now - but any index-based iteration helper would throw.
-      // current: `layout.keys()` throws a TypeError. expected: the keys and the maximum are
-      // returned in a wrapper object instead of hung off the array.
-      const layout = verticalData();
-      expect(Array.isArray(layout.keys)).toBe(true);
-      expect(() => (layout as unknown as string[]).keys()).toThrow(TypeError);
-    });
-
-    test("loses keys and maxValue when the layout array is copied", () => {
-      // NOTE: `keys` and `maxValue` are properties hung off the returned array rather than
-      // part of a wrapper object, so any array operation - a spread, a map, a filter, or a
-      // trip through JSON - drops them. Callers that reshape the layout before rendering
-      // have to carry the two values across by hand, and because of the shadowing above a
-      // dropped `keys` reads back as the built-in method rather than as undefined.
-      const layout = verticalData();
-      // The spread yields a plain array, which the layout type no longer describes now that
-      // it omits the inherited `keys` before declaring its own - so the dropped properties
-      // are read back through a partial view of it.
-      const copy = [...layout];
-      expect(copy.length).toBe(layout.length);
-      expect((copy as Partial<Pick<Layout, "maxValue">>).maxValue).toBeUndefined();
-      expect(typeof copy.keys).toBe("function");
-      expect(JSON.parse(JSON.stringify(layout)).maxValue).toBeUndefined();
     });
 
     test("captures a pre-existing stack anywhere below the target group", () => {
