@@ -550,9 +550,14 @@ describe("component/groupedBars", () => {
       expect(svg.select("line.sszvis-bar--missing.line2").empty()).toBe(false);
     });
 
-    /** A single-group vertical component whose only value is missing. */
+    /**
+     * A single-group vertical component whose only value is missing. Transitions are off:
+     * these tests never assert transition behaviour, and a render of a defined value would
+     * otherwise schedule a 300ms tween that outlives the test.
+     */
     const missingOnly = () =>
       groupedBarsVertical<TestDatum>()
+        .transition(false)
         .groupScale((d) => groupScale(d.group) || 0)
         .groupSize(1)
         .groupWidth(groupScale.bandwidth())
