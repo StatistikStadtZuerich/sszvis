@@ -156,7 +156,7 @@ export interface OrdinalColorScaleComponent<T = string>
   floatWidth(width: number): OrdinalColorScaleComponent<T>;
 }
 
-export function legendColorOrdinal<T = string>(): OrdinalColorScaleComponent<T> {
+export default function legendColorOrdinal<T = string>(): OrdinalColorScaleComponent<T> {
   return component<OrdinalColorScaleComponent<T>>()
     .prop("scale")
     .prop("rowHeight")
