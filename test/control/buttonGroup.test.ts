@@ -38,6 +38,38 @@ describe("control/buttonGroup", () => {
     return event;
   };
 
+  test("should render an unset values the same as an empty one", () => {
+    render(buttonGroup().width(200));
+    const unset = container.innerHTML;
+    container.innerHTML = "";
+    render(buttonGroup().width(200).values([]));
+    expect(container.innerHTML).toBe(unset);
+  });
+
+  test("should render an empty control when values is set to undefined", () => {
+    // The shape #357 was filed against: a chart hands the control a state key that is only
+    // assigned when its CSV resolves, so the setter is called with undefined rather than skipped.
+    render(
+      buttonGroup()
+        .width(200)
+        .values(undefined as never)
+    );
+    expect(wrapper()).toBeTruthy();
+    expect(buttons()).toHaveLength(0);
+  });
+
+  test("should render an undefined values the same as an empty one", () => {
+    render(
+      buttonGroup()
+        .width(200)
+        .values(undefined as never)
+    );
+    const undef = container.innerHTML;
+    container.innerHTML = "";
+    render(buttonGroup().width(200).values([]));
+    expect(container.innerHTML).toBe(undef);
+  });
+
   test("should render a wrapper carrying both the shared and the specific class", () => {
     render(buttonGroup().values(["A", "B"]).current("A"));
     const el = wrapper();
@@ -309,14 +341,6 @@ describe("control/buttonGroup", () => {
       render(buttonGroup().values([]).current("A"));
       expect(buttons()).toEqual([]);
       expect(wrapper()?.style.width).toBe("300px");
-    });
-
-    test("a missing values prop throws before anything is rendered", () => {
-      // NOTE: `values` has no default, so a control rendered before its data is available
-      // throws - here from reading `.length` off undefined, which happens before any DOM
-      // is created. Unlike the select control, that leaves no partial control behind.
-      expect(() => render(buttonGroup().current("A"))).toThrow(TypeError);
-      expect(wrapper()).toBeNull();
     });
 
     test("labels are never trimmed to fit their button", () => {

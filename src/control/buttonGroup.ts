@@ -10,7 +10,8 @@
  * @module sszvis/control/buttonGroup
  *
  * @property {array} values         an array of values which are the options available in the control.
- *                                  Each one will become a button. Required - there is no default.
+ *                                  Each one will become a button. (default: [], which renders an
+ *                                  empty group)
  * @property {string|number} current the current value of the button group. Should be one of the
  *                                  options passed to .values(). Compared with ===.
  * @property {number} width         The total width of the button group, divided evenly between the
@@ -51,8 +52,11 @@
  * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
  * existing call site is unnamed and a per-render warning would be noise rather than a signal.
  *
- * Note: `values` has no default, so rendering before the data is available throws while computing
- * the button width - before any DOM is created, so no partial control is left behind.
+ * Note: `values` is coerced to the empty array, so a render that lands before the data does draws
+ * an empty group rather than throwing - whether the prop was never set or was set to `undefined`
+ * from a state key the fetch has not filled in yet. "Not configured yet" and "nothing to offer
+ * yet" are the same state for a control fed from a fetch, and they render the same way.
+ * `selectMenu` does this the same way.
  *
  * See test/control/buttonGroup.test.ts.
  *
@@ -94,86 +98,94 @@ export interface ButtonGroupComponent<T extends string | number = string | numbe
 export default function buttonGroup<
   T extends string | number = string | number,
 >(): ButtonGroupComponent<T> {
-  return component<ButtonGroupComponent<T>>()
-    .prop("values")
-    .prop("current")
-    .prop("width")
-    .width(300)
-    .prop("change")
-    .change(fn.identity)
-    .prop("ariaLabel")
-    .render(function (this: Element) {
-      const selection = select(this);
-      const props = selection.props<ButtonGroupProps<T>>();
+  return (
+    component<ButtonGroupComponent<T>>()
+      // Coerced rather than merely defaulted: a chart hands this a state key that is only
+      // populated when its data arrives, so the value actually passed is `undefined`, which a
+      // plain default would not catch - `.prop()` stores whatever the setter is given.
+      .prop("values", (values?: T[]) => values ?? [])
+      .values([])
+      .prop("current")
+      .prop("width")
+      .width(300)
+      .prop("change")
+      .change(fn.identity)
+      .prop("ariaLabel")
+      .render(function (this: Element) {
+        const selection = select(this);
+        const props = selection.props<ButtonGroupProps<T>>();
 
-      const buttonWidth = props.width / props.values.length;
+        // Divided by zero for an empty group, which is only ever written onto buttons - of which
+        // there are then none - so the infinity never reaches the DOM.
+        const buttonWidth = props.width / props.values.length;
 
-      const container = selection
-        .selectAll<HTMLDivElement, string>(".sszvis-control-optionSelectable")
-        .data(["sszvis-control-buttonGroup"], (d) => d)
-        .join("div")
-        .classed("sszvis-control-optionSelectable", true)
-        .classed("sszvis-control-buttonGroup", true)
-        .attr("role", "radiogroup")
-        // `??` rather than `||`, so an explicitly empty name stays an empty name.
-        .attr("aria-label", props.ariaLabel ?? null);
+        const container = selection
+          .selectAll<HTMLDivElement, string>(".sszvis-control-optionSelectable")
+          .data(["sszvis-control-buttonGroup"], (d) => d)
+          .join("div")
+          .classed("sszvis-control-optionSelectable", true)
+          .classed("sszvis-control-buttonGroup", true)
+          .attr("role", "radiogroup")
+          // `??` rather than `||`, so an explicitly empty name stays an empty name.
+          .attr("aria-label", props.ariaLabel ?? null);
 
-      container.style("width", `${props.width}px`);
+        container.style("width", `${props.width}px`);
 
-      const buttons = container
-        .selectAll<HTMLButtonElement, T>(".sszvis-control-buttonGroup__item")
-        .data(props.values)
-        .join("button")
-        .classed("sszvis-control-buttonGroup__item", true)
-        .attr("type", "button")
-        .attr("role", "radio");
+        const buttons = container
+          .selectAll<HTMLButtonElement, T>(".sszvis-control-buttonGroup__item")
+          .data(props.values)
+          .join("button")
+          .classed("sszvis-control-buttonGroup__item", true)
+          .attr("type", "button")
+          .attr("role", "radio");
 
-      // Roving tabindex: exactly one option is in the tab order. That is the current one, or
-      // the first option when `current` matches no value, so the group stays reachable.
-      const currentIndex = props.values.indexOf(props.current);
-      const rovingIndex = currentIndex === -1 ? 0 : currentIndex;
+        // Roving tabindex: exactly one option is in the tab order. That is the current one, or
+        // the first option when `current` matches no value, so the group stays reachable.
+        const currentIndex = props.values.indexOf(props.current);
+        const rovingIndex = currentIndex === -1 ? 0 : currentIndex;
 
-      const nodes = buttons.nodes();
+        const nodes = buttons.nodes();
 
-      /** Moves the selection by `step` options, wrapping at both ends. */
-      const move = (event: Event, from: number, step: number) => {
-        const to = (from + step + nodes.length) % nodes.length;
-        event.preventDefault();
-        nodes[to]?.focus();
-        props.change(event, props.values[to]);
-      };
+        /** Moves the selection by `step` options, wrapping at both ends. */
+        const move = (event: Event, from: number, step: number) => {
+          const to = (from + step + nodes.length) % nodes.length;
+          event.preventDefault();
+          nodes[to]?.focus();
+          props.change(event, props.values[to]);
+        };
 
-      buttons
-        .style("width", `${buttonWidth}px`)
-        .classed("selected", (d) => d === props.current)
-        // Keyed on the index, not on the value: duplicate values are supported, and a
-        // radiogroup with two checked radios is contradictory state for assistive
-        // technology. The legacy `selected` class still highlights every occurrence.
-        .attr("aria-checked", (_d, i) => (i === currentIndex ? "true" : "false"))
-        .attr("tabindex", (_d, i) => (i === rovingIndex ? 0 : -1))
-        .text((d) => d)
-        .on("click", props.change)
-        .on("keydown", function (this: HTMLButtonElement, event: KeyboardEvent, d: T) {
-          const index = nodes.indexOf(this);
-          switch (event.key) {
-            case "Enter":
-            case " ":
-              // The native button would activate on its own, but calling `change` here and
-              // suppressing that activation keeps a keypress and a click on one code path.
-              event.preventDefault();
-              props.change(event, d);
-              break;
-            case "ArrowRight":
-            case "ArrowDown":
-              move(event, index, 1);
-              break;
-            case "ArrowLeft":
-            case "ArrowUp":
-              move(event, index, -1);
-              break;
-            default:
-              break;
-          }
-        });
-    });
+        buttons
+          .style("width", `${buttonWidth}px`)
+          .classed("selected", (d) => d === props.current)
+          // Keyed on the index, not on the value: duplicate values are supported, and a
+          // radiogroup with two checked radios is contradictory state for assistive
+          // technology. The legacy `selected` class still highlights every occurrence.
+          .attr("aria-checked", (_d, i) => (i === currentIndex ? "true" : "false"))
+          .attr("tabindex", (_d, i) => (i === rovingIndex ? 0 : -1))
+          .text((d) => d)
+          .on("click", props.change)
+          .on("keydown", function (this: HTMLButtonElement, event: KeyboardEvent, d: T) {
+            const index = nodes.indexOf(this);
+            switch (event.key) {
+              case "Enter":
+              case " ":
+                // The native button would activate on its own, but calling `change` here and
+                // suppressing that activation keeps a keypress and a click on one code path.
+                event.preventDefault();
+                props.change(event, d);
+                break;
+              case "ArrowRight":
+              case "ArrowDown":
+                move(event, index, 1);
+                break;
+              case "ArrowLeft":
+              case "ArrowUp":
+                move(event, index, -1);
+                break;
+              default:
+                break;
+            }
+          });
+      })
+  );
 }
