@@ -47,7 +47,7 @@ const actions = {
     state.data = data;
     state.groups = sszvis.set(state.data, groupAndStackAcc);
 
-    const layout = sszvis.stackedPyramidData(gAcc, aAcc, stackAcc, vAcc)(data);
+    const layout = sszvis.stackedPyramidLayout(gAcc, aAcc, stackAcc, vAcc)(data);
 
     state.stackedPyramidData = layout.sides;
     state.maxStackedValue = layout.maxValue;
