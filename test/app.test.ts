@@ -381,17 +381,15 @@ describe("app", () => {
     test("is reported as an effect failure, not an init failure", async () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
       app({
-        init: async () => (dispatch) => {
-          dispatch("missing", []);
+        init: async () => () => {
+          throw new Error("boom");
         },
         render: () => {},
       });
       await nextFrame();
 
       const reported = error.mock.calls.at(0)?.[0] as Error;
-      expect(reported.message).toBe(
-        '[sszvis.app] An effect failed: [sszvis.app] Action "missing" is not defined, add it to "actions".'
-      );
+      expect(reported.message).toBe("[sszvis.app] An effect failed: boom");
     });
 
     test("does not render the fallback, since the chart itself was built", async () => {
@@ -402,8 +400,8 @@ describe("app", () => {
 
       const render = vi.fn();
       app({
-        init: async () => (dispatch) => {
-          dispatch("missing", []);
+        init: async () => () => {
+          throw new Error("boom");
         },
         render,
         fallback: { element: "#effect-fallback-target", src: "fallback.png" },
@@ -421,8 +419,8 @@ describe("app", () => {
         init: async () => {},
         render,
         actions: {
-          start: () => (dispatch) => {
-            dispatch("missing", []);
+          start: () => () => {
+            throw new Error("boom");
           },
         },
       });
@@ -430,7 +428,93 @@ describe("app", () => {
       expect(() => render.mock.calls[0][1].start()).not.toThrow();
 
       const reported = error.mock.calls.at(0)?.[0] as Error;
-      expect(reported.message).toContain("[sszvis.app] An effect failed:");
+      expect(reported.message).toBe("[sszvis.app] An effect failed: boom");
+    });
+  });
+
+  describe("an unknown action name", () => {
+    test("is reported rather than thrown out of the effect that dispatched it", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const render = vi.fn();
+      app({
+        init: async () => (dispatch) => {
+          dispatch("missing", []);
+        },
+        render,
+      });
+      await nextFrame();
+
+      const reported = error.mock.calls.at(0)?.[0] as Error;
+      expect(reported.message).toBe(
+        '[sszvis.app] Dispatch failed: Action "missing" is not defined, add it to "actions".'
+      );
+      // Reported as the dispatch it is, rather than wrapped as a failure of the effect that
+      // happened to make it - the effect itself is fine, the action map is not.
+      expect(reported.message).not.toContain("An effect failed");
+    });
+
+    test("is reported for a name inherited from Object.prototype", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const render = vi.fn();
+      app({
+        init: async () => (dispatch) => {
+          dispatch("toString", []);
+        },
+        render,
+      });
+      await nextFrame();
+
+      const reported = error.mock.calls.at(0)?.[0] as Error;
+      expect(reported.message).toBe(
+        '[sszvis.app] Dispatch failed: Action "toString" is not defined, add it to "actions".'
+      );
+    });
+
+    test("leaves the app rendering, with the state the last real action produced", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const render = vi.fn();
+      app<{ count: number }>({
+        init: async (state) => {
+          state.count = 0;
+        },
+        actions: {
+          bump: (state) => {
+            state.count += 1;
+          },
+          typo: () => (dispatch) => {
+            dispatch("bmup", []);
+          },
+        },
+        render,
+      });
+      await nextFrame();
+      expect(() => render.mock.calls[0][1].typo()).not.toThrow();
+      await nextFrame();
+      render.mock.lastCall?.[1].bump();
+      await nextFrame();
+
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(render.mock.lastCall?.[0]).toEqual({ count: 1 });
+    });
+
+    // NOTE: the typo the issue describes - `actions.selct(d)` in an interaction handler -
+    // never reaches `dispatch` at all: the dispatchers are built from the keys of the actions
+    // object, so an undeclared name is simply not a function and the caller's own code throws
+    // a TypeError. That is why there is nothing for a configuration-time check to validate:
+    // the only names dispatch sees as strings come from effects, which is the path above.
+    test("has no dispatcher, so a handler typo fails in the caller\u2019s own code", async () => {
+      const render = vi.fn();
+      app({
+        init: async () => {},
+        render,
+        actions: {
+          select: () => {},
+        },
+      });
+      await nextFrame();
+      const actions = render.mock.calls[0][1];
+      expect(actions.select).toBeTypeOf("function");
+      expect(actions.selct).toBeUndefined();
     });
   });
 
