@@ -1,9 +1,8 @@
 import { scaleOrdinal } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
-import {
+import legendColorOrdinal, {
   DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT,
-  legendColorOrdinal,
   type OrdinalColorScaleComponent,
 } from "../../src/legend/ordinalColorScale.js";
 import "../../src/d3-selectgroup.js";
@@ -46,6 +45,14 @@ describe("legend/ordinalColorScale", () => {
 
   test("should export the default row height", () => {
     expect(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).toBe(21);
+  });
+
+  test("should keep the module's public names reachable from the library barrel", async () => {
+    const sszvis = await import("../../src/index.js");
+    expect(sszvis.legendColorOrdinal).toBe(legendColorOrdinal);
+    expect(sszvis.DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).toBe(
+      DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT
+    );
   });
 
   test("should render one entry per domain member, in domain order", () => {
