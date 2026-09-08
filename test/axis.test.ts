@@ -1,3 +1,4 @@
+import type { AxisDomain } from "d3";
 import { scaleBand, scaleLinear, scaleTime, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { axisX, axisY } from "../src/axis.js";
@@ -214,6 +215,47 @@ describe("axis", () => {
         .nodes()
         .filter((node) => select(node).text().includes("%"));
       expect(formattedLabels.length).toBeGreaterThan(0);
+    });
+
+    test("should reject a non-function tickFormat by name", () => {
+      const xAxis = axisX()
+        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
+        .orient("bottom")
+        // A caller reaching this passed a string where a formatter was wanted; the point of the
+        // test is the message, so the argument is cast rather than declared.
+        .tickFormat("" as unknown as (d: AxisDomain) => string);
+      expect(() =>
+        createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+          .selectGroup("xAxis")
+          .call(xAxis)
+      ).toThrow(/axis: tickFormat must be a function .*, got string/);
+    });
+
+    test("should name null rather than its typeof, since it is d3's reset idiom", () => {
+      const xAxis = axisX()
+        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
+        .orient("bottom")
+        .tickFormat(null as unknown as (d: AxisDomain) => string);
+      expect(() =>
+        createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+          .selectGroup("xAxis")
+          .call(xAxis)
+      ).toThrow(/got null/);
+    });
+
+    test("should write an empty label where tickFormat returns nothing", () => {
+      const xAxis = axisX()
+        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
+        .orient("bottom")
+        .tickFormat(() => null);
+      const labels = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+        .selectGroup("xAxis")
+        .call(xAxis)
+        .select(".sszvis-axis")
+        .selectAll("g.tick text")
+        .nodes();
+      expect(labels.length).toBeGreaterThan(0);
+      expect(labels.every((node) => select(node).text() === "")).toBe(true);
     });
 
     test("should highlight ticks based on predicate function", () => {
