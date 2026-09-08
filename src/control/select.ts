@@ -9,19 +9,19 @@
  *
  * @module sszvis/control/select
  *
- * @property {array} values         an array of string values which are the options available in
+ * @property values         an array of string values which are the options available in
  *                                  the control. Unset or undefined is read as the empty array,
  *                                  which renders a select with no options.
- * @property {string} current       the currently selected value of the select control. Should be one
+ * @property current       the currently selected value of the select control. Should be one
  *                                  of the options passed to .values(). Compared with ===.
- * @property {number} width         The total width of the select control. Labels wider than
+ * @property width         The total width of the select control. Labels wider than
  *                                  `width - 40` are trimmed to fit with an ellipsis mark, the 40px
  *                                  covering the select's own chrome. (default: 300px)
- * @property {function} change      A callback/event handler function called as (event, value) when
+ * @property change      A callback/event handler function called as (event, value) when
  *                                  the user selects an option. Selecting a value does not change any
  *                                  state unless this callback does something. (default: fn.identity,
  *                                  which returns the event and silently discards the value)
- * @property {string} ariaLabel     An accessible name for the control, naming what it filters rather
+ * @property ariaLabel     An accessible name for the control, naming what it filters rather
  *                                  than what the options are. Written as `aria-label` on the select
  *                                  element. (default: undefined, which writes no attribute, leaving
  *                                  the control unnamed)
