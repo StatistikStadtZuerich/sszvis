@@ -108,6 +108,17 @@ describe("component/stackedArea", () => {
       expect(paths(g.node() as SVGGElement).length).toBe(2);
     });
 
+    test("should keep a class a caller added to a path across rerenders", () => {
+      const component = areaOf();
+      const g = group("consumer-class");
+      g.datum(oneLayer).call(component as never);
+      const node = g.node() as SVGGElement;
+      paths(node)[0]?.classList.add("consumer-decoration");
+      g.datum(oneLayer).call(component as never);
+      expect(paths(node)[0]?.classList.contains("consumer-decoration")).toBe(true);
+      expect(paths(node)[0]?.classList.contains("sszvis-stacked-area-path")).toBe(true);
+    });
+
     test("should remove paths when the data shrinks", () => {
       const component = areaOf();
       const g = group("shrink");
@@ -641,23 +652,6 @@ describe("component/stackedArea", () => {
           )
         ).toThrow(TypeError);
       });
-
-      test("adopts any pre-existing path.sszvis-path in the group", () => {
-        // NOTE: the join matches on the generic .sszvis-path class, which pie,
-        // stackedAreaMultiples and stackedPyramid also use. A path another component left in
-        // the same group is bound to layer zero and repainted as an area rather than being
-        // left alone. Harmless while each component owns its own selectGroup, which is how
-        // every example is written, and benign here because stackedArea rewrites every
-        // attribute it uses - the cost falls on whichever component owned the path. See the
-        // same collision documented from the other side in test/component/pie.test.ts, where
-        // it corrupts pie's own geometry and is labelled a bug for that reason.
-        const g = group("foreign");
-        g.append("path").attr("class", "sszvis-path").attr("d", "M1,1");
-        g.datum(oneLayer).call(areaOf() as never);
-        const node = g.node() as SVGGElement;
-        expect(paths(node).length).toBe(1);
-        expect(ds(node)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
-      });
     });
   });
 
@@ -764,6 +758,44 @@ describe("component/stackedArea", () => {
         await settle();
         expect(attrs(g.node() as SVGGElement, "fill")).toEqual(["rgb(255, 0, 0)"]);
       });
+    });
+  });
+
+  describe("foreign elements in the group", () => {
+    /** A path another component could have left in the same group, carrying only the generic class. */
+    const plant = (parent: Element) => {
+      const foreign = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      foreign.setAttribute("class", "sszvis-path");
+      foreign.setAttribute("d", "M0,0");
+      foreign.setAttribute("fill", "#abc");
+      parent.append(foreign);
+      return foreign;
+    };
+
+    test("should leave a foreign generic path in the same group alone", () => {
+      const g = group("foreign-untouched");
+      const foreign = plant(g.node() as SVGGElement);
+      g.datum(twoLayers).call(areaOf().fill("#f00") as never);
+
+      expect(foreign.getAttribute("d")).toBe("M0,0");
+      expect(foreign.getAttribute("fill")).toBe("#abc");
+      expect(foreign.getAttribute("class")).toBe("sszvis-path");
+    });
+
+    test("should join only the paths it drew, so every layer still gets one", () => {
+      const g = group("foreign-count");
+      plant(g.node() as SVGGElement);
+      g.datum(twoLayers).call(areaOf() as never);
+      const node = g.node() as SVGGElement;
+
+      expect(node.querySelectorAll("path.sszvis-stacked-area-path").length).toBe(2);
+      expect(node.querySelectorAll("path.sszvis-path").length).toBe(3);
+    });
+
+    test("should keep the generic class on its own paths, so the stylesheet is unaffected", () => {
+      const node = render(areaOf(), oneLayer);
+      const own = node.querySelector("path.sszvis-stacked-area-path") as Element;
+      expect(own.classList.contains("sszvis-path")).toBe(true);
     });
   });
 });

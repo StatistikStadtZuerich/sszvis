@@ -114,12 +114,12 @@
  * is silently skipped as an empty path. stackedAreaMultiples, a near-copy of this component, does
  * declare valuesAccessor.
  *
- * Note: the data join matches on the generic .sszvis-path class, which pie, stackedAreaMultiples
- * and stackedPyramid also use. A path another component left in the same group is bound to layer
- * zero and repainted as an area rather than being left alone. Harmless while each component owns
- * its own selectGroup, which is how every example is written, and benign here because this
- * component rewrites every attribute it uses - the cost falls on whichever component owned the
- * path. The same collision corrupts pie's own geometry when it is read from the other side.
+ * Note: the areas carry a `sszvis-stacked-area-path` class alongside the generic `sszvis-path` one,
+ * and the data join matches only the former, so a pie wedge or a pyramid reference path left in the
+ * same group is left alone. That class is shared with stackedAreaMultiples on purpose - the two are
+ * the two views of one chart, rendered into one group and toggled between, and the eased switch
+ * depends on both joining the same path nodes - and with no other component. The generic class
+ * stays in the class attribute purely as a styling hook.
  *
  * Note: nothing constrains the geometry. A layer with no points yields a path element with no d
  * attribute, a single point yields a closed shape that encloses no area but still draws a vertical
@@ -327,11 +327,20 @@ export default function stackedArea<
       const stroke = fn.valueFn(props.stroke || "#ffffff");
       const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
 
+      // Matching on the stacked-area class rather than the generic .sszvis-path one, which pie
+      // and stackedPyramid also write, keeps a foreign path in the same group out of the join.
+      // The class is deliberately shared with stackedAreaMultiples and with no other component:
+      // docs/area-chart-stacked/sa-two.js renders the two into one group and toggles between
+      // them, and the eased switch between the stacked and the separated view depends on both
+      // components joining the same path nodes. The generic class stays on the node, so no CSS
+      // selector changes meaning, and both are added with classed rather than written as a
+      // class attribute, so a class a caller put on the node survives every rerender.
       const paths = selection
-        .selectAll<SVGPathElement, L>("path.sszvis-path")
+        .selectAll<SVGPathElement, L>("path.sszvis-stacked-area-path")
         .data(data, props.key)
         .join("path")
-        .classed("sszvis-path", true);
+        .classed("sszvis-path", true)
+        .classed("sszvis-stacked-area-path", true);
 
       // Every visual property is applied to the transition when there is one, so the two
       // branches are spelled out rather than sharing a variable - a d3 transition and a d3
