@@ -206,8 +206,8 @@ export default function voronoi<T = unknown>(): VoronoiComponent<T> {
               }
             };
 
-            const end = () => {
-              if (this) event.apply("out", this, [e]);
+            const end = (endEvent: TouchEvent) => {
+              if (this) event.apply("out", this, [endEvent]);
               select(this).on("touchmove", null).on("touchend", null);
             };
 
