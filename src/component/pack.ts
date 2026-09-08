@@ -119,7 +119,13 @@ export default function pack<T = unknown>(): PackComponent<T> {
     .prop("radiusScale", fn.functor)
     .prop("onClick")
     .render(function (this: Element, inputData: HierarchyNode<NodeDatum<T>>) {
-      const selection = select<Element, PackLayout<T>>(this);
+      // The old datum is the render's own input: the component is called through
+      // selection.each, so the group's datum is exactly what was handed to the render.
+      // Deriving it with typeof rather than restating the type is what keeps the two from
+      // drifting apart, the way they did in #303. pack, treemap and sunburst all declare it
+      // this way. It is rebound to the flattened node array at the end of the render, and
+      // datum() types that new binding on its own.
+      const selection = select<Element, typeof inputData>(this);
       const props = selection.props<PackProps<T>>();
 
       // Apply pack layout to hierarchical data
@@ -247,5 +253,5 @@ export default function pack<T = unknown>(): PackComponent<T> {
       // first while the circles are depth first, and nodes dropped by the minRadius filter
       // get an anchor with no circle under it.
       selection.datum(visibleData).call(ta);
-    }) as PackComponent<T>;
+    });
 }
