@@ -1,4 +1,6 @@
 /**
+ * @module sszvis/svgUtils/toFinite
+ *
  * Coerces a geometry value to a finite number, substituting 0 for anything else.
  *
  * Coercion first, so a numeric string still works; the finiteness check then catches NaN

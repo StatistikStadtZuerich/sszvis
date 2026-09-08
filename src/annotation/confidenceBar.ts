@@ -50,7 +50,7 @@ interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<Confidenc
   groupScale(scale?: (d: T) => number): ConfidenceBarComponent<T>;
 }
 
-export default function <T = unknown>(): ConfidenceBarComponent<T> {
+export default function confidenceBar<T = unknown>(): ConfidenceBarComponent<T> {
   return component<ConfidenceBarComponent<T>>()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
