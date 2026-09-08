@@ -556,6 +556,87 @@ describe("map/renderer/highlight", () => {
     });
   });
 
+  describe("sibling order", () => {
+    /** Renders `highlight` into `layer`, returning the layer's node. */
+    const renderInto = (
+      layer: ReturnType<typeof group>,
+      highlight: Datum[],
+      key?: string
+    ): SVGGElement => {
+      let component = mapRendererHighlight<Datum>()
+        .geoJson(collection())
+        .mapPath(mapPathOf())
+        .highlight(highlight);
+      if (key !== undefined) component = component.key(key);
+      return layer.call(component).node() as SVGGElement;
+    };
+
+    /** A sibling drawn into the map group after the highlight, as choropleth's shape group is. */
+    const appendSibling = (node: SVGGElement, id: string): Element => {
+      const sibling = node.ownerDocument.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g"
+      ) as Element;
+      sibling.setAttribute("data-sibling", id);
+      node.appendChild(sibling);
+      return sibling;
+    };
+
+    const precedes = (first: Element, second: Element) =>
+      Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+    // The reported bug: clearing the highlight and re-hovering used to re-append the paths at the
+    // end of the map group, over the anchored shape drawn while they were gone.
+    test("keeps refilled paths beneath a sibling appended while they were gone", () => {
+      const layer = group("highlight-refill-order");
+      const node = renderInto(layer, [{ geoId: "a" }]);
+      const sibling = appendSibling(node, "shape");
+      renderInto(layer, []);
+      renderInto(layer, [{ geoId: "a" }]);
+      const after = highlights(node);
+      expect(after).toHaveLength(1);
+      expect(precedes(after[0], sibling)).toBe(true);
+    });
+
+    // The same shape without an empty render in between: a newly highlighted entity enters while
+    // paths already exist, and must join them rather than land past the later siblings.
+    test("keeps a newly highlighted entity beneath a later sibling", () => {
+      const layer = group("highlight-grow-order");
+      const node = renderInto(layer, [{ geoId: "a" }]);
+      const sibling = appendSibling(node, "shape");
+      renderInto(layer, [{ geoId: "a" }, { geoId: "b" }]);
+      const after = highlights(node);
+      expect(after).toHaveLength(2);
+      for (const path of after) expect(precedes(path, sibling)).toBe(true);
+    });
+
+    // Each layer holds its own place, so a second keyed layer's paths are not dragged in front of
+    // the first's when it refills.
+    test("keeps two layers in the order they were first drawn", () => {
+      const layer = group("highlight-two-layer-order");
+      const node = renderInto(layer, [{ geoId: "a" }], "first");
+      renderInto(layer, [{ geoId: "b" }], "second");
+      const sibling = appendSibling(node, "shape");
+      renderInto(layer, [], "first");
+      renderInto(layer, [{ geoId: "a" }], "first");
+      const after = highlights(node);
+      expect(after.map((p) => p.getAttribute("data-highlight-key"))).toEqual(["first", "second"]);
+      expect(precedes(after[1], sibling)).toBe(true);
+    });
+
+    // The remembered position is only a hint: if the sibling it pointed at is itself gone, the
+    // render falls back to appending rather than failing.
+    test("falls back to appending when the remembered sibling is gone", () => {
+      const layer = group("highlight-stale-anchor");
+      const node = renderInto(layer, [{ geoId: "a" }]);
+      const sibling = appendSibling(node, "shape");
+      renderInto(layer, []);
+      sibling.remove();
+      expect(() => renderInto(layer, [{ geoId: "a" }])).not.toThrow();
+      expect(highlights(node)).toHaveLength(1);
+    });
+  });
+
   describe("known quirks", () => {
     // NOTE: falsy entries are dropped by the merge, so a sparse or partially-cleared highlight
     // array is tolerated. Note the asymmetry with the empty case: dropping every entry still
