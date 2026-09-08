@@ -74,6 +74,36 @@ describe("Color scales", () => {
     test("should return an array of 9 colors for scaleDivNtrGry", () => {
       expect(scaleDivNtrGry().range()).toHaveLength(9);
     });
+
+    test("reads back the domain expanded across the range's stops", () => {
+      const scale = scaleDivValGry().domain([-60, 60]);
+      expect(scale.domain()).toEqual([-60, -45, -30, -15, 0, 15, 30, 45, 60]);
+    });
+
+    test("keeps mapping values after the domain has been read", () => {
+      const scale = scaleDivValGry().domain([-60, 60]);
+      const before = String(scale(30));
+      scale.domain();
+      expect(String(scale(30))).toBe(before);
+    });
+
+    test("stays a diverging scale after reverse, expanding across every stop", () => {
+      const scale = scaleDivValGry().reverse().domain([-60, 60]);
+      expect(scale.domain()).toHaveLength(scale.range().length);
+      expect(scale.domain()).toEqual([-60, -45, -30, -15, 0, 15, 30, 45, 60]);
+    });
+
+    test("reverses the range rather than only the first three stops", () => {
+      const forward = scaleDivValGry().domain([-60, 60]);
+      const reversed = scaleDivValGry().reverse().domain([-60, 60]);
+      expect(String(reversed(-60))).toBe(String(forward(60)));
+      expect(String(reversed(60))).toBe(String(forward(-60)));
+    });
+
+    test("expands a two-value domain but takes any other domain verbatim", () => {
+      const scale = scaleDivValGry().domain([-1, 0, 1]);
+      expect(scale.domain()).toEqual([-1, 0, 1]);
+    });
   });
 
   describe("Greyscale color scales", () => {
