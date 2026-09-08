@@ -5503,7 +5503,13 @@
         // transition starts. The geometry is then applied exactly once more - to the transition
         // when there is one, and to the plain selection otherwise - so an update tweens from its
         // previous value instead of from the value it already holds.
-        const bars = selection.selectAll(".sszvis-bar").data(data).join(enter => enter.append("rect").classed("sszvis-bar", true).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt)).attr("fill", fillAt).attr("stroke", strokeAt);
+        //
+        // Matching on the component's own class rather than the generic .sszvis-bar one keeps a
+        // foreign rect out of the join - groupedBars draws rects under the generic class, and the
+        // join has no key function, so an unscoped descendant selector would adopt one of those,
+        // or one left over from an earlier chart, as bar zero and shift the whole series by one.
+        // The generic class stays on the node, so no CSS selector changes meaning.
+        const bars = selection.selectAll("rect.sszvis-bar-rect").data(data).join(enter => enter.append("rect").attr("class", "sszvis-bar sszvis-bar-rect").attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt)).attr("fill", fillAt).attr("stroke", strokeAt);
         if (props.transition) {
           bars.transition(defaultTransition()).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
         } else {
@@ -7967,9 +7973,8 @@
      * Note: the stack join is a child selector, ":scope > [data-sszvis-stack]", so only the groups the
      * component owns take part in it and a caller may render content of its own - including further
      * stack groups - inside a series group without the join adopting it. The bars inside each series
-     * group are still joined with an unscoped selectAll(".sszvis-bar") by bar itself, so a planted
-     * rect.sszvis-bar descendant is captured there. stackedBar's copy of the same descendant selector
-     * on the stack groups is unfixed.
+     * group are joined by bar itself on its own .sszvis-bar-rect class, so a planted rect carrying
+     * only the generic .sszvis-bar class is not captured there either.
      *
      * Note: neither join uses a key function, so on a re-render the stack groups and the rects inside
      * them are matched by index rather than by series. When a series is dropped from anywhere but the

@@ -3468,9 +3468,8 @@ declare function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAreaMultip
  * Note: the stack join is a child selector, ":scope > [data-sszvis-stack]", so only the groups the
  * component owns take part in it and a caller may render content of its own - including further
  * stack groups - inside a series group without the join adopting it. The bars inside each series
- * group are still joined with an unscoped selectAll(".sszvis-bar") by bar itself, so a planted
- * rect.sszvis-bar descendant is captured there. stackedBar's copy of the same descendant selector
- * on the stack groups is unfixed.
+ * group are joined by bar itself on its own .sszvis-bar-rect class, so a planted rect carrying
+ * only the generic .sszvis-bar class is not captured there either.
  *
  * Note: neither join uses a key function, so on a re-render the stack groups and the rects inside
  * them are matched by index rather than by series. When a series is dropped from anywhere but the
