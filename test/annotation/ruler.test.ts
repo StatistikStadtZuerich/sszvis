@@ -95,6 +95,67 @@ describe("annotation/ruler", () => {
     });
   });
 
+  test("should clamp the rule to top for a datum above it", () => {
+    const aboveTop: TestDatum[] = [{ x: 40, y: 10, label: "Above", color: "red" }];
+
+    const rulerComponent = annotationRuler()
+      .x((d: unknown) => (d as TestDatum).x)
+      .y((d: unknown) => (d as TestDatum).y)
+      .top(50)
+      .bottom(200)
+      .label((d: unknown) => (d as TestDatum).label);
+
+    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+      .selectGroup("ruler")
+      .datum(aboveTop)
+      .call(rulerComponent);
+
+    const line = select(chartLayer.select("line.sszvis-ruler__rule").node());
+    expect(Number(line.attr("y1"))).toBe(50);
+    expect(Number(line.attr("y2"))).toBe(200);
+
+    // The dot and its label mark the datum, so they stay where the datum is.
+    const dot = select(chartLayer.select("circle.sszvis-ruler__dot").node());
+    expect(Number(dot.attr("cy"))).toBe(10.5);
+    const label = select(chartLayer.select("text.sszvis-ruler__label").node());
+    expect(label.attr("transform")).toBe("translate(50.5,15.5)");
+  });
+
+  test("should treat a top of 0 as a real boundary", () => {
+    const aboveZero: TestDatum[] = [{ x: 40, y: -20, label: "Overflow" }];
+
+    const rulerComponent = annotationRuler()
+      .x((d: unknown) => (d as TestDatum).x)
+      .y((d: unknown) => (d as TestDatum).y)
+      .top(0)
+      .bottom(200);
+
+    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+      .selectGroup("ruler")
+      .datum(aboveZero)
+      .call(rulerComponent);
+
+    const line = select(chartLayer.select("line.sszvis-ruler__rule").node());
+    expect(Number(line.attr("y1"))).toBe(0);
+  });
+
+  test("should start the rule at the datum when no top is supplied", () => {
+    const aboveTop: TestDatum[] = [{ x: 40, y: -20, label: "Unbounded" }];
+
+    const rulerComponent = annotationRuler()
+      .x((d: unknown) => (d as TestDatum).x)
+      .y((d: unknown) => (d as TestDatum).y)
+      .bottom(200);
+
+    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+      .selectGroup("ruler")
+      .datum(aboveTop)
+      .call(rulerComponent);
+
+    const line = select(chartLayer.select("line.sszvis-ruler__rule").node());
+    expect(Number(line.attr("y1"))).toBe(-20);
+  });
+
   test("should position dots correctly", () => {
     const rulerComponent = annotationRuler()
       .x((d: unknown) => (d as TestDatum).x)
