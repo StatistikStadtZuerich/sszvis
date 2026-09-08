@@ -37,9 +37,10 @@
  * required in practice, and each fails differently when left out.
  *
  * Note: the over, out and click handlers registered through .on() are called with the hovered map
- * entity's datum - undefined for a feature that matched no data. The circles carry
- * pointer-events: none (see below), so these handlers are only reachable by dispatching an event
- * on a circle directly; a real pointer reaches the base layer underneath instead.
+ * entity's datum - undefined for a feature that matched no data. Registering one of them is also
+ * what makes the circles a hit area: with no handler registered they carry pointer-events: none
+ * and the pointer falls through to the base layer beneath, so a bubble map's interaction then
+ * comes entirely from the enclosing choropleth's own dispatch (see below).
  *
  * Note: on() forwards straight to a d3 dispatch, so it inherits its semantics: it returns the
  * component for chaining and the handler when called with a name alone, an unknown event name

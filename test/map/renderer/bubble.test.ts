@@ -578,8 +578,43 @@ describe("map/renderer/bubble", () => {
   });
 
   describe("events", () => {
-    // The circles carry pointer-events: none, so these handlers cannot be reached by a real
-    // pointer; the events have to be dispatched on a circle directly, as they are here.
+    // The reachability of these handlers, pinned with elementFromPoint rather than with a
+    // synthetic dispatch: a dispatched event reaches a listener whatever the pointer policy is, so
+    // it says nothing about whether a reader could ever trigger one. Registering a handler is what
+    // makes the circle a hit area - without one it carries pointer-events: none and the pointer
+    // falls through to the base layer, which is pinned in "lets the pointer through to the base
+    // layer's event targets" above.
+    test("puts the circle under the pointer once a handler is registered", async () => {
+      const { default: mapRendererBase } = await import("../../../src/map/renderer/base.js");
+      const collection = geoJson();
+      const key = `bubble-reachable-${++pathKey}`;
+      const merged = prepareMergedGeoData(fullData, collection);
+      const layer = group("bubble-reachable");
+      layer.call(
+        mapRendererBase()
+          .mergedData(merged)
+          .mapPath(swissMapPath(100, 100, collection, key))
+          .fill("#cccccc")
+      );
+      layer.call(
+        mapRendererBubble<Datum>()
+          .mergedData(merged)
+          .mapPath(swissMapPath(100, 100, collection, key))
+          .radius(5)
+          .fill("#ff0000")
+          .transition(false)
+          .on("over", () => undefined)
+      );
+      const node = layer.node() as SVGGElement;
+      const circle = circles(node)[0];
+      expect(circle.style.pointerEvents).toBe("");
+      const box = circle.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      expect(hit).toBe(circle);
+    });
+
+    // The events below are dispatched on a circle directly, which keeps them independent of the
+    // pointer policy; the test above is what pins that a real pointer can reach them at all.
     test("delivers the hovered entity's datum to an over handler", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) => c.on("over", (datum: unknown) => seen.push(datum)));
