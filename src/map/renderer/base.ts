@@ -32,7 +32,9 @@
  *                                                    than values, where nothing is textured, nothing is classed
  *                                                    --undefined, and the fill accessor is called with undefined
  *                                                    throughout.
- * @property {String, Function} fill                  A string or function for the fill of the map entities. An accessor is
+ * @property {String, Function} fill                  A string or function for the fill of the map entities. Defaults to the
+ *                                                    constant black - a constant, so that the default layer draws geometry
+ *                                                    until a datum matches rather than encoding data from the start. An accessor is
  *                                                    called with the entity's datum, and is not called at all for an entity
  *                                                    the dataset does not cover - that one is textured instead. On a layer
  *                                                    that draws geometry, though, nothing is textured and the accessor is
@@ -169,7 +171,7 @@ export default function mapRendererBase<T = unknown>(): MapRendererBaseComponent
     .defined(true) // a predicate function to determine whether a datum has a defined value
     .prop("encodesData")
     .prop("fill", storeMapValue)
-    .fill(() => "black") // a function for the entity fill color. default is black
+    .fill("black") // a constant: an accessor would make every default layer encode data
     .prop("transitionColor")
     .transitionColor(true)
     .render(function (this: Element) {
