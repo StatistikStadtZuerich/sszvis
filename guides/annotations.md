@@ -172,7 +172,7 @@ The ruler depicts information at a certain x value
 
 #### `annotationRuler.top`
 
-A number which is the y-position of the top of the ruler line
+A number which is the y-position of the top of the ruler line. Each rule runs from its own datum down to `bottom`, so `top` acts as an upper bound: a datum above it has its rule clamped to `top` rather than drawn outside the chart area. The dot and the label stay on the datum. Omit it to leave the rule unbounded.
 
 #### `annotationRuler.bottom`
 

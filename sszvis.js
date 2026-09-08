@@ -1714,7 +1714,11 @@
      *
      * @module sszvis/annotation/ruler
      *
-     * @property {number} top                 A number which is the y-position of the top of the ruler line
+     * @property {number} top                 A number which is the y-position of the top of the ruler line.
+     *                                        Each rule runs from its own datum down to `bottom`, so `top`
+     *                                        acts as an upper bound: a datum above it has its rule clamped
+     *                                        to `top` rather than drawn outside the chart area. The dot and
+     *                                        label stay on the datum. Omit it to leave the rule unbounded.
      * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
      * @property {function} x                 A number or function returning a number for the x-position of the ruler line.
      * @property {function} y                 A function for determining the y-position of the ruler dots. Should take a data
@@ -1741,11 +1745,18 @@
     /** Vertical nudge that drops a label's baseline clear of its dot. */
     const LABEL_BASELINE_NUDGE$1 = 5;
     const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
+      var _props$top;
       const selection = d3.select(this);
       const props = selection.props();
       const labelId = props.labelId || (d => "".concat(props.x(d), "_").concat(props.y(d)));
+      // `top` is an upper bound on the rule, not its anchor: the rule still starts at its
+      // datum, but a datum above `top` is clamped there so the rule stays inside the chart
+      // area. `??` rather than `||` so that a `top` of 0 - what every caller passes - binds.
+      // Unlike control/handleRuler, which draws a single full-height rule anchored at `top`,
+      // this component draws one rule per datum, so it clamps instead of anchoring.
+      const top = (_props$top = props.top) !== null && _props$top !== void 0 ? _props$top : Number.NEGATIVE_INFINITY;
       const ruler = selection.selectAll(".sszvis-ruler__rule").data(data, d => labelId(d)).join("line").classed("sszvis-ruler__rule", true);
-      ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", d => Number(props.y(d))).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
+      ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", d => Math.max(Number(props.y(d)), top)).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
       const dot = selection.selectAll(".sszvis-ruler__dot").data(data, d => labelId(d)).join("circle").classed("sszvis-ruler__dot", true);
       dot.attr("cx", compose(halfPixel, props.x)).attr("cy", compose(halfPixel, props.y)).attr("r", 3.5).attr("fill", props.color || "black");
       selection.selectAll(".sszvis-ruler__label-outline").data(data, d => labelId(d)).join("text").classed("sszvis-ruler__label-outline", true);

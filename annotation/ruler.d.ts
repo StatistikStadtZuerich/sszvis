@@ -7,7 +7,11 @@
  *
  * @module sszvis/annotation/ruler
  *
- * @property {number} top                 A number which is the y-position of the top of the ruler line
+ * @property {number} top                 A number which is the y-position of the top of the ruler line.
+ *                                        Each rule runs from its own datum down to `bottom`, so `top`
+ *                                        acts as an upper bound: a datum above it has its rule clamped
+ *                                        to `top` rather than drawn outside the chart area. The dot and
+ *                                        label stay on the datum. Omit it to leave the rule unbounded.
  * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
  * @property {function} x                 A number or function returning a number for the x-position of the ruler line.
  * @property {function} y                 A function for determining the y-position of the ruler dots. Should take a data
