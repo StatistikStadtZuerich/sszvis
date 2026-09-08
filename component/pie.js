@@ -123,9 +123,9 @@ function pie() {
       var _arcGen;
       return (_arcGen = arcGen(angles)) !== null && _arcGen !== void 0 ? _arcGen : "";
     };
-    // Matching on the component's own class rather than the generic .sszvis-path one, which
-    // stackedArea, stackedAreaMultiples and stackedPyramid also use, keeps a foreign path in
-    // the same group out of the join.
+    // Matching on the component's own class rather than the generic .sszvis-path one keeps a
+    // foreign path in the same group out of the join. The generic class stays on the node, so
+    // no CSS selector changes meaning.
     const segments = selection.selectAll("path.sszvis-pie-path").data(data).join(enter =>
     // transform, fill and stroke are written here and then only on the transition, so
     // that they have an old value to animate away from on every later render.

@@ -2897,14 +2897,13 @@ declare function sankey(): SankeyComponent;
  *                                            Every chart in docs/area-chart-stacked sets a fill.
  * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
  *                                            whole layer. Defaults to #ffffff, the hairline that
- *                                            visually separates two touching layers. The default is
- *                                            applied as `props.stroke || "#ffffff"`, which tests
- *                                            for truthiness rather than for having been set, so
- *                                            both null and "" - the two ways a caller would ask for
- *                                            no stroke - come back white. Only an accessor gets
- *                                            through, because a function is always truthy: `() =>
- *                                            null` removes the attribute and `() => ""` writes an
- *                                            invalid paint, and both compute to none.
+ *                                            visually separates two touching layers. The default
+ *                                            stands in for an unset stroke only - it is applied
+ *                                            with an explicit undefined check, as strokeWidth's
+ *                                            is - so null and "" are
+ *                                            passed through as given - null removes the attribute
+ *                                            and "" writes an invalid paint, both computing to
+ *                                            none - which is how a caller asks for no outline.
  * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
  *                                            whole layer. Defaults to 1, applied with an explicit
  *                                            undefined check, so 0 survives where a falsy fallback
@@ -2973,12 +2972,12 @@ declare function sankey(): SankeyComponent;
  * is silently skipped as an empty path. stackedAreaMultiples, a near-copy of this component, does
  * declare valuesAccessor.
  *
- * Note: the data join matches on the generic .sszvis-path class, which pie, stackedAreaMultiples
- * and stackedPyramid also use. A path another component left in the same group is bound to layer
- * zero and repainted as an area rather than being left alone. Harmless while each component owns
- * its own selectGroup, which is how every example is written, and benign here because this
- * component rewrites every attribute it uses - the cost falls on whichever component owned the
- * path. The same collision corrupts pie's own geometry when it is read from the other side.
+ * Note: the areas carry a `sszvis-stacked-area-path` class alongside the generic `sszvis-path` one,
+ * and the data join matches only the former, so a pie wedge or a pyramid reference path left in the
+ * same group is left alone. That class is shared with stackedAreaMultiples on purpose - the two are
+ * the two views of one chart, rendered into one group and toggled between, and the eased switch
+ * depends on both joining the same path nodes - and with no other component. The generic class
+ * stays in the class attribute purely as a styling hook.
  *
  * Note: nothing constrains the geometry. A layer with no points yields a path element with no d
  * attribute, a single point yields a closed shape that encloses no area but still draws a vertical
@@ -3070,8 +3069,8 @@ declare function stackedArea<P = unknown, L extends Iterable<P> = P[]>(): Stacke
  *                                            caught. An explicit null keeps its d3 meaning, which
  *                                            is "no upper bound": d3 then falls back to y0, so each
  *                                            band collapses onto its own baseline and becomes a
- *                                            zero-height sliver, and with no default stroke to draw
- *                                            it there is nothing on screen.
+ *                                            zero-height sliver, drawn as a hairline in the default
+ *                                            stroke.
  * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
  *                                            layer. It has no default, and unlike .sszvis-line
  *                                            there is no .sszvis-path rule in the stylesheet to
@@ -3082,27 +3081,20 @@ declare function stackedArea<P = unknown, L extends Iterable<P> = P[]>(): Stacke
  *                                            configured with .unknown(undefined) is black too.
  *                                            Every chart in docs/area-chart-stacked sets a fill.
  * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
- *                                            whole layer. Unlike stackedArea, which defaults it to
- *                                            the #ffffff hairline that separates two touching
- *                                            layers, this component has no default at all, so
- *                                            touching bands run together, and null and "" are
- *                                            passed through as given: null removes the attribute
- *                                            and "" writes an invalid paint, both computing to
- *                                            none, which is what an unset stroke does too.
- *                                            Harmless in the separated view, where
- *                                            stackedAreaMultiplesLayout spaces the bands so they
- *                                            never touch - but since the docs example sets no
- *                                            stroke on either component, the stacked view of a
- *                                            chart gets stackedArea's white hairline while the
- *                                            separated view gets none.
+ *                                            whole layer. Defaults to #ffffff, the hairline that
+ *                                            visually separates two touching bands, so the
+ *                                            separated and the stacked view of one chart are
+ *                                            outlined alike. The default stands in for an unset
+ *                                            stroke only: null and "" are passed through as given -
+ *                                            null removes the attribute and "" writes an invalid
+ *                                            paint, both computing to none - which is how a caller
+ *                                            asks for no outline.
  * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
  *                                            whole layer. Defaults to 1, applied with an explicit
  *                                            undefined check, so 0 survives where a falsy fallback
  *                                            would have replaced it. null is passed through to d3,
  *                                            which reads a null-ish value as a removal: unset means
- *                                            1, null means no attribute at all. Since there is no
- *                                            default stroke, the width is inert until a stroke is
- *                                            set, and setting only strokeWidth draws nothing.
+ *                                            1, null means no attribute at all.
  * @property {boolean, function} [defined]    A per-point predicate handed to d3.area, deciding
  *                                            whether a point is drawn; a constant is coerced to a
  *                                            boolean. Each surviving run of points becomes its own
@@ -3189,17 +3181,16 @@ declare function stackedArea<P = unknown, L extends Iterable<P> = P[]>(): Stacke
  * accessor that returns nothing instead throws out of d3.area, which names neither the component
  * nor the property.
  *
- * Note: the data join matches on the generic .sszvis-path class, which pie, stackedArea and
- * stackedPyramid also use. A path another component left in the same group is bound to a layer and
- * repainted as an area rather than being left alone, and since every attribute here is written
- * unconditionally - an unset fill or stroke is written as null, which d3 reads as a removal - the
- * foreign path loses the colours it came with. Harmless while each component owns its own
- * selectGroup, which is how every example is written. The same collision corrupts pie's own
- * geometry when it is read from the other side.
+ * Note: the bands carry a `sszvis-stacked-area-path` class alongside the generic `sszvis-path` one,
+ * and the data join matches only the former, so a pie wedge or a pyramid reference path left in the
+ * same group is left alone. That class is shared with stackedArea on purpose - the two are the two
+ * views of one chart, rendered into one group and toggled between, and the eased switch depends on
+ * both joining the same path nodes - and with no other component. The generic class stays in the
+ * class attribute purely as a styling hook.
  *
  * Note: nothing constrains the geometry, and nothing reports its own absence. A layer with no points
  * yields a path element with no d attribute, a single point yields a closed shape that encloses no
- * area and, with no default stroke, draws nothing at all, and a band whose y1 lies below y0 simply
+ * area but still draws a vertical hairline in the default stroke, and a band whose y1 lies below y0 simply
  * winds the other way. See test/component/stackedAreaMultiples.test.ts.
  *
  * @return {sszvis.component}
@@ -5301,8 +5292,8 @@ declare function export_default$2<G extends SmallMultipleGroup = SmallMultipleGr
  * Behaviour notes:
  * - step = height / (num - pct); band and pad split that step in a (1 - pct) / pct ratio.
  * - By construction, step * (num - pct) === height, so baseline number `num` always lands exactly on `height`.
- * - The baseline loop terminates on an absolute 1px slack (`level - height < 1`), not a fraction of the step,
- *   so charts whose step is under ~1px get MORE baselines than there are stacks.
+ * - The baseline loop terminates on the stack count, so `range` always holds exactly `num`
+ *   baselines, whatever the height.
  * - pct defaults to 0.1 when it is omitted. An explicit 0 means exactly that: gapless
  *   multiples. A pct outside [0, 1] throws.
  * - num is a count of stacks: a negative or fractional value throws, which also rules out the

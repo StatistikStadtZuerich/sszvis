@@ -26,8 +26,8 @@
  * Behaviour notes:
  * - step = height / (num - pct); band and pad split that step in a (1 - pct) / pct ratio.
  * - By construction, step * (num - pct) === height, so baseline number `num` always lands exactly on `height`.
- * - The baseline loop terminates on an absolute 1px slack (`level - height < 1`), not a fraction of the step,
- *   so charts whose step is under ~1px get MORE baselines than there are stacks.
+ * - The baseline loop terminates on the stack count, so `range` always holds exactly `num`
+ *   baselines, whatever the height.
  * - pct defaults to 0.1 when it is omitted. An explicit 0 means exactly that: gapless
  *   multiples. A pct outside [0, 1] throws.
  * - num is a count of stacks: a negative or fractional value throws, which also rules out the

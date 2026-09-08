@@ -6637,9 +6637,9 @@
           var _arcGen;
           return (_arcGen = arcGen(angles)) !== null && _arcGen !== void 0 ? _arcGen : "";
         };
-        // Matching on the component's own class rather than the generic .sszvis-path one, which
-        // stackedArea, stackedAreaMultiples and stackedPyramid also use, keeps a foreign path in
-        // the same group out of the join.
+        // Matching on the component's own class rather than the generic .sszvis-path one keeps a
+        // foreign path in the same group out of the join. The generic class stays on the node, so
+        // no CSS selector changes meaning.
         const segments = selection.selectAll("path.sszvis-pie-path").data(data).join(enter =>
         // transform, fill and stroke are written here and then only on the transition, so
         // that they have an old value to animate away from on every later render.
@@ -7210,14 +7210,13 @@
      *                                            Every chart in docs/area-chart-stacked sets a fill.
      * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
      *                                            whole layer. Defaults to #ffffff, the hairline that
-     *                                            visually separates two touching layers. The default is
-     *                                            applied as `props.stroke || "#ffffff"`, which tests
-     *                                            for truthiness rather than for having been set, so
-     *                                            both null and "" - the two ways a caller would ask for
-     *                                            no stroke - come back white. Only an accessor gets
-     *                                            through, because a function is always truthy: `() =>
-     *                                            null` removes the attribute and `() => ""` writes an
-     *                                            invalid paint, and both compute to none.
+     *                                            visually separates two touching layers. The default
+     *                                            stands in for an unset stroke only - it is applied
+     *                                            with an explicit undefined check, as strokeWidth's
+     *                                            is - so null and "" are
+     *                                            passed through as given - null removes the attribute
+     *                                            and "" writes an invalid paint, both computing to
+     *                                            none - which is how a caller asks for no outline.
      * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
      *                                            whole layer. Defaults to 1, applied with an explicit
      *                                            undefined check, so 0 survives where a falsy fallback
@@ -7286,12 +7285,12 @@
      * is silently skipped as an empty path. stackedAreaMultiples, a near-copy of this component, does
      * declare valuesAccessor.
      *
-     * Note: the data join matches on the generic .sszvis-path class, which pie, stackedAreaMultiples
-     * and stackedPyramid also use. A path another component left in the same group is bound to layer
-     * zero and repainted as an area rather than being left alone. Harmless while each component owns
-     * its own selectGroup, which is how every example is written, and benign here because this
-     * component rewrites every attribute it uses - the cost falls on whichever component owned the
-     * path. The same collision corrupts pie's own geometry when it is read from the other side.
+     * Note: the areas carry a `sszvis-stacked-area-path` class alongside the generic `sszvis-path` one,
+     * and the data join matches only the former, so a pie wedge or a pyramid reference path left in the
+     * same group is left alone. That class is shared with stackedAreaMultiples on purpose - the two are
+     * the two views of one chart, rendered into one group and toggled between, and the eased switch
+     * depends on both joining the same path nodes - and with no other component. The generic class
+     * stays in the class attribute purely as a styling hook.
      *
      * Note: nothing constrains the geometry. A layer with no points yields a path element with no d
      * attribute, a single point yields a closed shape that encloses no area but still draws a vertical
@@ -7380,11 +7379,20 @@
         // Rendering
         const pathData = datum => areaGen(datum);
         const fill = valueFn((_props$fill = props.fill) !== null && _props$fill !== void 0 ? _props$fill : null);
-        // The white hairline separating two touching layers. Applied with a truthiness check
-        // rather than an undefined one, so a null or empty stroke is replaced by it too.
-        const stroke = valueFn(props.stroke || "#ffffff");
+        // The white hairline separating two touching layers. Applied with an explicit undefined
+        // check, as strokeWidth is, so it stands in for an unset stroke only: null and "" are
+        // supplied values and reach d3 as given. A ?? would have swallowed the null.
+        const stroke = valueFn(props.stroke === undefined ? "#ffffff" : props.stroke);
         const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
-        const paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
+        // Matching on the stacked-area class rather than the generic .sszvis-path one, which pie
+        // and stackedPyramid also write, keeps a foreign path in the same group out of the join.
+        // The class is deliberately shared with stackedAreaMultiples and with no other component:
+        // docs/area-chart-stacked/sa-two.js renders the two into one group and toggles between
+        // them, and the eased switch between the stacked and the separated view depends on both
+        // components joining the same path nodes. The generic class stays on the node, so no CSS
+        // selector changes meaning, and both are added with classed rather than written as a
+        // class attribute, so a class a caller put on the node survives every rerender.
+        const paths = selection.selectAll("path.sszvis-stacked-area-path").data(data, props.key).join("path").classed("sszvis-path", true).classed("sszvis-stacked-area-path", true);
         // Every visual property is applied to the transition when there is one, so the two
         // branches are spelled out rather than sharing a variable - a d3 transition and a d3
         // selection have separate types.
@@ -7426,8 +7434,8 @@
      *                                            caught. An explicit null keeps its d3 meaning, which
      *                                            is "no upper bound": d3 then falls back to y0, so each
      *                                            band collapses onto its own baseline and becomes a
-     *                                            zero-height sliver, and with no default stroke to draw
-     *                                            it there is nothing on screen.
+     *                                            zero-height sliver, drawn as a hairline in the default
+     *                                            stroke.
      * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
      *                                            layer. It has no default, and unlike .sszvis-line
      *                                            there is no .sszvis-path rule in the stylesheet to
@@ -7438,27 +7446,20 @@
      *                                            configured with .unknown(undefined) is black too.
      *                                            Every chart in docs/area-chart-stacked sets a fill.
      * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
-     *                                            whole layer. Unlike stackedArea, which defaults it to
-     *                                            the #ffffff hairline that separates two touching
-     *                                            layers, this component has no default at all, so
-     *                                            touching bands run together, and null and "" are
-     *                                            passed through as given: null removes the attribute
-     *                                            and "" writes an invalid paint, both computing to
-     *                                            none, which is what an unset stroke does too.
-     *                                            Harmless in the separated view, where
-     *                                            stackedAreaMultiplesLayout spaces the bands so they
-     *                                            never touch - but since the docs example sets no
-     *                                            stroke on either component, the stacked view of a
-     *                                            chart gets stackedArea's white hairline while the
-     *                                            separated view gets none.
+     *                                            whole layer. Defaults to #ffffff, the hairline that
+     *                                            visually separates two touching bands, so the
+     *                                            separated and the stacked view of one chart are
+     *                                            outlined alike. The default stands in for an unset
+     *                                            stroke only: null and "" are passed through as given -
+     *                                            null removes the attribute and "" writes an invalid
+     *                                            paint, both computing to none - which is how a caller
+     *                                            asks for no outline.
      * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
      *                                            whole layer. Defaults to 1, applied with an explicit
      *                                            undefined check, so 0 survives where a falsy fallback
      *                                            would have replaced it. null is passed through to d3,
      *                                            which reads a null-ish value as a removal: unset means
-     *                                            1, null means no attribute at all. Since there is no
-     *                                            default stroke, the width is inert until a stroke is
-     *                                            set, and setting only strokeWidth draws nothing.
+     *                                            1, null means no attribute at all.
      * @property {boolean, function} [defined]    A per-point predicate handed to d3.area, deciding
      *                                            whether a point is drawn; a constant is coerced to a
      *                                            boolean. Each surviving run of points becomes its own
@@ -7545,17 +7546,16 @@
      * accessor that returns nothing instead throws out of d3.area, which names neither the component
      * nor the property.
      *
-     * Note: the data join matches on the generic .sszvis-path class, which pie, stackedArea and
-     * stackedPyramid also use. A path another component left in the same group is bound to a layer and
-     * repainted as an area rather than being left alone, and since every attribute here is written
-     * unconditionally - an unset fill or stroke is written as null, which d3 reads as a removal - the
-     * foreign path loses the colours it came with. Harmless while each component owns its own
-     * selectGroup, which is how every example is written. The same collision corrupts pie's own
-     * geometry when it is read from the other side.
+     * Note: the bands carry a `sszvis-stacked-area-path` class alongside the generic `sszvis-path` one,
+     * and the data join matches only the former, so a pie wedge or a pyramid reference path left in the
+     * same group is left alone. That class is shared with stackedArea on purpose - the two are the two
+     * views of one chart, rendered into one group and toggled between, and the eased switch depends on
+     * both joining the same path nodes - and with no other component. The generic class stays in the
+     * class attribute purely as a styling hook.
      *
      * Note: nothing constrains the geometry, and nothing reports its own absence. A layer with no points
      * yields a path element with no d attribute, a single point yields a closed shape that encloses no
-     * area and, with no default stroke, draws nothing at all, and a band whose y1 lies below y0 simply
+     * area but still draws a vertical hairline in the default stroke, and a band whose y1 lies below y0 simply
      * winds the other way. See test/component/stackedAreaMultiples.test.ts.
      *
      * @return {sszvis.component}
@@ -7597,7 +7597,7 @@
       // A caller who sets a different L must supply a matching accessor; the constraint
       // cannot express "identity is valid only for the default instantiation".
       .valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
-        var _props$fill, _props$stroke;
+        var _props$fill;
         const selection = d3.select(this);
         const props = selection.props();
         // x, y0 and y1 are all required, and each used to fail differently and silently: an
@@ -7648,8 +7648,10 @@
           return areaGen(props.valuesAccessor.call(this, datum, index, group));
         };
         const fill = valueFn((_props$fill = props.fill) !== null && _props$fill !== void 0 ? _props$fill : null);
-        // No default, where stackedArea falls back to a #ffffff hairline.
-        const stroke = valueFn((_props$stroke = props.stroke) !== null && _props$stroke !== void 0 ? _props$stroke : null);
+        // The white hairline separating two touching bands, as stackedArea has. Applied with an
+        // explicit undefined check, as strokeWidth is, so it stands in for an unset stroke
+        // only: null and "" are supplied values and reach d3 as given.
+        const stroke = valueFn(props.stroke === undefined ? "#ffffff" : props.stroke);
         const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
         // An entering band is painted synchronously, as bar does, so it is complete on the
         // tick it appears on rather than staying an empty path element until the first
@@ -7660,7 +7662,14 @@
         // The transition used to be created on its own statement with its return value
         // dropped, which left it carrying no tweens while still interrupting whatever else
         // was animating these nodes.
-        selection.selectAll("path.sszvis-path").data(data, props.key).join(enter => enter.append("path").classed("sszvis-path", true).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth), update => {
+        // Matching on the stacked-area class rather than the generic .sszvis-path one, which pie
+        // and stackedPyramid also write, keeps a foreign path in the same group out of the join.
+        // The class is deliberately shared with stackedArea and with no other component:
+        // docs/area-chart-stacked/sa-two.js renders the two into one group and toggles between
+        // them, and the eased switch between the stacked and the separated view depends on both
+        // components joining the same path nodes. The generic class stays in the class
+        // attribute, so no CSS selector changes meaning.
+        selection.selectAll("path.sszvis-stacked-area-path").data(data, props.key).join(enter => enter.append("path").attr("class", "sszvis-path sszvis-stacked-area-path").attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth), update => {
           if (props.transition) {
             update.transition(defaultTransition()).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
             return update;
@@ -10145,15 +10154,20 @@
       const padRatio = pct !== null && pct !== void 0 ? pct : 0.1;
       requireRatio("layoutStackedAreaMultiples", "pct", padRatio);
       const step = height / (num - padRatio);
-      // A non-positive step never reaches the bottom of the chart, so the baseline loop below
-      // would never terminate. An infinite one - num and pct both 0, or both 1, either of
-      // which divides by zero - overshoots on the first iteration and yields NaN geometry.
-      // There is no layout to describe in either case.
+      // A non-positive step describes no band at all, and an infinite one - num and pct both 0,
+      // or both 1, either of which divides by zero - yields NaN geometry. There is no layout to
+      // describe in either case, so neither reaches the baseline loop. A degenerate height is not
+      // a misconfiguration: it is what a container mid-entrance or a flex parent that has not
+      // settled reports, and it corrects itself, so it is neither warned about nor thrown on.
       if (!(step > 0) || !Number.isFinite(step)) return _objectSpread2({}, EMPTY_LAYOUT);
       const bandHeight = step * (1 - padRatio),
         range = [];
       let level = bandHeight; // count from the top, and start at the bottom of the first band
-      while (level - height < 1) {
+      // Terminating on the stack count, not on a pixel slack: step * (num - pct) === height by
+      // construction, so `num` baselines are exactly the ones that fit and the last of them lands
+      // on `height`. The absolute 1px slack this replaces bought an extra iteration or two
+      // whenever the step was under ~1px, and returned more baselines than there are stacks.
+      while (range.length < num) {
         range.push(level);
         level += step;
       }

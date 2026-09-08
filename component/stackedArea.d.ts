@@ -38,14 +38,13 @@
  *                                            Every chart in docs/area-chart-stacked sets a fill.
  * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
  *                                            whole layer. Defaults to #ffffff, the hairline that
- *                                            visually separates two touching layers. The default is
- *                                            applied as `props.stroke || "#ffffff"`, which tests
- *                                            for truthiness rather than for having been set, so
- *                                            both null and "" - the two ways a caller would ask for
- *                                            no stroke - come back white. Only an accessor gets
- *                                            through, because a function is always truthy: `() =>
- *                                            null` removes the attribute and `() => ""` writes an
- *                                            invalid paint, and both compute to none.
+ *                                            visually separates two touching layers. The default
+ *                                            stands in for an unset stroke only - it is applied
+ *                                            with an explicit undefined check, as strokeWidth's
+ *                                            is - so null and "" are
+ *                                            passed through as given - null removes the attribute
+ *                                            and "" writes an invalid paint, both computing to
+ *                                            none - which is how a caller asks for no outline.
  * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
  *                                            whole layer. Defaults to 1, applied with an explicit
  *                                            undefined check, so 0 survives where a falsy fallback
@@ -114,12 +113,12 @@
  * is silently skipped as an empty path. stackedAreaMultiples, a near-copy of this component, does
  * declare valuesAccessor.
  *
- * Note: the data join matches on the generic .sszvis-path class, which pie, stackedAreaMultiples
- * and stackedPyramid also use. A path another component left in the same group is bound to layer
- * zero and repainted as an area rather than being left alone. Harmless while each component owns
- * its own selectGroup, which is how every example is written, and benign here because this
- * component rewrites every attribute it uses - the cost falls on whichever component owned the
- * path. The same collision corrupts pie's own geometry when it is read from the other side.
+ * Note: the areas carry a `sszvis-stacked-area-path` class alongside the generic `sszvis-path` one,
+ * and the data join matches only the former, so a pie wedge or a pyramid reference path left in the
+ * same group is left alone. That class is shared with stackedAreaMultiples on purpose - the two are
+ * the two views of one chart, rendered into one group and toggled between, and the eased switch
+ * depends on both joining the same path nodes - and with no other component. The generic class
+ * stays in the class attribute purely as a styling hook.
  *
  * Note: nothing constrains the geometry. A layer with no points yields a path element with no d
  * attribute, a single point yields a closed shape that encloses no area but still draws a vertical
