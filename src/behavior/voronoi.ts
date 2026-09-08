@@ -45,7 +45,7 @@ import { Delaunay, dispatch, pointer, select } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
-import { datumFromPannableElement, elementFromEvent } from "./util.js";
+import { elementFromEvent } from "./util.js";
 
 // Type definitions for voronoi behavior component
 export type VoronoiBounds = [number, number, number, number]; // [minX, minY, maxX, maxY]
@@ -155,10 +155,16 @@ export default function voronoi<T = unknown>(): VoronoiComponent<T> {
               const touchEvent = fn.firstTouch(panEvent);
               if (!touchEvent) return;
 
-              // The pannable elements are the voronoi cells, which are joined to
-              // `voronoi.cellPolygons()` - coordinate-pair arrays, not `{data}` containers - so
-              // this only answers whether the finger is still over a cell of this layer.
-              if (datumFromPannableElement(elementFromEvent(touchEvent)) === null) {
+              // Is the finger still over a cell of *this* layer? The shared
+              // `data-sszvis-behavior-pannable` attribute cannot answer that - `behavior/panning`
+              // writes it too, so any other pannable element in the chart would read as "still
+              // here" - so test for a voronoi cell whose parent is this layer's own group.
+              const panTarget = elementFromEvent(touchEvent);
+              if (
+                panTarget === null ||
+                !panTarget.hasAttribute("data-sszvis-behavior-voronoi") ||
+                panTarget.parentNode !== parent
+              ) {
                 if (this) event.apply("out", this, [panEvent]);
                 return;
               }
