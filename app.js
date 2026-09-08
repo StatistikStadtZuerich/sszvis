@@ -27,21 +27,23 @@ setAutoFreeze(false);
  *
  * Rendering is batched into a single requestAnimationFrame, so several dispatches within
  * one frame result in exactly one render. A resize reported by the viewport module also
- * triggers a re-render. Nothing is rendered until the promise returned by `init` resolves;
- * `init` must return a promise. An effect returned by `init` or by an action is called with
- * `dispatch`, which takes an action name and an array of props.
+ * triggers a re-render. Nothing is rendered until `init` has completed: an asynchronous `init`
+ * is awaited and rendered once it resolves, a synchronous one is rendered on the next frame.
+ * An effect returned by `init` or by an action is called with `dispatch`, which takes an
+ * action name and an array of props.
  *
  * `app()` returns a handle whose `destroy()` releases the resize listener and stops any queued
  * frame, so a host that mounts and unmounts charts can tear an app down instead of leaking one
  * render loop per mount.
  *
- * Error handling: a rejecting `init` is reported through `sszvis.logger.error`, keeping the
+ * Error handling: an `init` that rejects, or throws synchronously, is reported through `sszvis.logger.error`, keeping the
  * original error as the reported error's `cause`, and the `fallback` image - if one is
  * configured - is rendered in its place. The failure does not escape as an unhandled promise
  * rejection. An effect - whether it came from `init` or from an action - runs on its own path:
  * an error it throws is reported as an effect failure and never travels through the `init`
  * rejection path, so it is not mistaken for a chart that could not be built and does not render
- * the fallback.
+ * the fallback. A dispatch naming an action the `actions` object does not declare is reported the
+ * same way and otherwise ignored, so a mistyped name in an effect leaves the app running.
  *
  * @module sszvis/app
  */
@@ -59,7 +61,7 @@ const app = _ref => {
   let cascadedRenders = 0;
   let destroyed = false;
   let state;
-  invariant(isFunction(init), 'An "init" function returning a Promise must be provided.');
+  invariant(isFunction(init), 'An "init" function must be provided.');
   invariant(isFunction(render), 'A "render" function must be provided.');
   // A default parameter, like the original, only fills in for undefined.
   const actionMap = actions === undefined ? {} : actions;
@@ -123,8 +125,19 @@ const app = _ref => {
     }
   }
   const dispatch = (action, props) => {
-    const handler = actionMap[action];
-    invariant(handler != null, "Action \"".concat(action, "\" is not defined, add it to \"actions\"."));
+    // Own property only, matching how the dispatchers are built from `Object.keys`: a name
+    // like "toString" resolves on the prototype chain but is not a declared action.
+    const handler = Object.hasOwn(actionMap, action) ? actionMap[action] : undefined;
+    if (handler == null) {
+      // A name dispatch cannot resolve is a configuration mistake, but there is nothing to
+      // validate up front: the dispatchers handed to `render` are built from the keys of the
+      // actions object, so a typo in an interaction handler - `actions.selct(d)` - is not a
+      // function and fails in the caller's own code. The names that reach here as strings come
+      // from effects, at an arbitrary later point, so this is reported like any other runtime
+      // failure instead of thrown: one mistyped dispatch should not take the chart down.
+      reportError("Dispatch failed", new Error("Action \"".concat(action, "\" is not defined, add it to \"actions\".")));
+      return;
+    }
     const draft = createDraft(state);
     // Each action declares the props it accepts, but which action is being dispatched is
     // only known from a string at this point, so the props cannot be checked here.
@@ -137,7 +150,15 @@ const app = _ref => {
   };
   // The app starts out with an empty state that init is expected to populate.
   const initialState = createDraft({});
-  init(initialState).then(effect => {
+  // `init` is normally async, because the state is normally loaded - but a chart whose data is
+  // already in memory can reasonably write the state and return nothing, and that works just as
+  // well: there is simply no effect and nothing to wait for. The executor of a `new Promise`
+  // runs synchronously, so `init` is still called during `app()` as it always was, while
+  // `resolve` tolerates a plain return value and a synchronous throw becomes a rejection -
+  // reported through the same path as one from a promise, rather than escaping the call site.
+  new Promise(resolve => {
+    resolve(init(initialState));
+  }).then(effect => {
     state = finish(initialState);
     // An app destroyed while init was still in flight must not register a listener that
     // nothing will ever release.

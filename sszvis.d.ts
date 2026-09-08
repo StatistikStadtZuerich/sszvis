@@ -769,8 +769,9 @@ interface AppHandle {
     destroy: () => void;
 }
 interface AppProps<State, Actions extends Record<string, Action<State>>> {
-    /** Asynchronously create the initial state and optionally schedule an action. */
-    init: (state: Draft<State>) => Promise<Effect | void>;
+    /** Create the initial state and optionally schedule an action. Usually asynchronous, since
+     * the state is normally loaded; a chart whose data is already in memory may return nothing. */
+    init: (state: Draft<State>) => Promise<Effect | void> | Effect | void;
     /** Update the DOM from the state and optionally dispatch actions. */
     render: (state: State, actions: ActionDispatchers<Actions>) => void;
     /** Functions to transition the application state. */
@@ -800,21 +801,23 @@ interface AppProps<State, Actions extends Record<string, Action<State>>> {
  *
  * Rendering is batched into a single requestAnimationFrame, so several dispatches within
  * one frame result in exactly one render. A resize reported by the viewport module also
- * triggers a re-render. Nothing is rendered until the promise returned by `init` resolves;
- * `init` must return a promise. An effect returned by `init` or by an action is called with
- * `dispatch`, which takes an action name and an array of props.
+ * triggers a re-render. Nothing is rendered until `init` has completed: an asynchronous `init`
+ * is awaited and rendered once it resolves, a synchronous one is rendered on the next frame.
+ * An effect returned by `init` or by an action is called with `dispatch`, which takes an
+ * action name and an array of props.
  *
  * `app()` returns a handle whose `destroy()` releases the resize listener and stops any queued
  * frame, so a host that mounts and unmounts charts can tear an app down instead of leaking one
  * render loop per mount.
  *
- * Error handling: a rejecting `init` is reported through `sszvis.logger.error`, keeping the
+ * Error handling: an `init` that rejects, or throws synchronously, is reported through `sszvis.logger.error`, keeping the
  * original error as the reported error's `cause`, and the `fallback` image - if one is
  * configured - is rendered in its place. The failure does not escape as an unhandled promise
  * rejection. An effect - whether it came from `init` or from an action - runs on its own path:
  * an error it throws is reported as an effect failure and never travels through the `init`
  * rejection path, so it is not mistaken for a chart that could not be built and does not render
- * the fallback.
+ * the fallback. A dispatch naming an action the `actions` object does not declare is reported the
+ * same way and otherwise ignored, so a mistyped name in an effect leaves the app running.
  *
  * @module sszvis/app
  */
