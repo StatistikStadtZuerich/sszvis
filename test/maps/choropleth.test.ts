@@ -459,6 +459,37 @@ describe("maps/choropleth", () => {
       }
     });
 
+    // The other order of operation: the lake stays put and the highlight is the layer that goes
+    // away and comes back, including the first-hover case where nothing was ever highlighted. The
+    // highlight's own wrapper group holds the slot above the lake, so keepLakeBeneath has a stable
+    // thing to measure against - it matches the group, not the paths.
+    test.each([[[] as Datum[]], [[fullData[0]]]])(
+      "keeps the lake beneath a highlight cleared and re-hovered, first drawn as %j",
+      (initialHighlight) => {
+        const target = layer(`lake-highlight-cycle-${initialHighlight.length}`);
+        const map = choropleth<Datum>()
+          .features(geoJson())
+          .borders(mesh())
+          .lakeFeatures(lakeFeature())
+          .lakeBorders(lakeBorders())
+          .width(260)
+          .height(260);
+
+        target.datum(fullData).call(map.highlight(initialHighlight));
+        target.datum(fullData).call(map.highlight([]));
+        target.datum(fullData).call(map.highlight([fullData[0]]));
+        const node = target.node() as SVGGElement;
+
+        const highlight = highlights(node)[0];
+        expect(highlight).toBeDefined();
+        for (const path of [...lake(node), ...lakePaths(node)]) {
+          expect(
+            path.compareDocumentPosition(highlight) & Node.DOCUMENT_POSITION_FOLLOWING
+          ).toBeTruthy();
+        }
+      }
+    );
+
     // The overlay clears itself, so choropleth no longer wraps it in a group of its own: the lake's
     // paths and definitions sit directly in the map group, one level shallower than before.
     test("draws the lake straight into the map group, with no wrapper", () => {

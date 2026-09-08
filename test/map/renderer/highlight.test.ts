@@ -585,6 +585,20 @@ describe("map/renderer/highlight", () => {
     const precedes = (first: Element, second: Element) =>
       Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
 
+    // The issue's real lifecycle: highlight defaults to [], so a bubble map's first render draws
+    // nothing, the anchored shape group is created next, and the *first* hover is the one that has
+    // to land beneath it. Nothing was ever drawn, so there is no earlier position to recover from -
+    // only a wrapper group claimed on the empty render keeps the slot.
+    test("keeps the first hover's paths beneath a sibling drawn before them", () => {
+      const layer = group("highlight-empty-first");
+      const node = renderInto(layer, []);
+      const sibling = appendSibling(node, "shape");
+      renderInto(layer, [{ geoId: "a" }]);
+      const after = highlights(node);
+      expect(after).toHaveLength(1);
+      expect(precedes(after[0], sibling)).toBe(true);
+    });
+
     // The reported bug: clearing the highlight and re-hovering used to re-append the paths at the
     // end of the map group, over the anchored shape drawn while they were gone.
     test("keeps refilled paths beneath a sibling appended while they were gone", () => {
@@ -624,16 +638,53 @@ describe("map/renderer/highlight", () => {
       expect(precedes(after[1], sibling)).toBe(true);
     });
 
-    // The remembered position is only a hint: if the sibling it pointed at is itself gone, the
-    // render falls back to appending rather than failing.
-    test("falls back to appending when the remembered sibling is gone", () => {
-      const layer = group("highlight-stale-anchor");
+    // Two layers, cleared in the opposite order to the test above: whichever is refilled first
+    // must still come back in front of the lower layer and behind the later sibling. A layer that
+    // held a node rather than a slot lost this, since clearing the other layer detached it.
+    test.each([
+      ["first", "second"],
+      ["second", "first"],
+    ])("keeps two layers ordered when %s is cleared before %s", (cleared, other) => {
+      const layer = group(`highlight-two-layer-${cleared}-first`);
+      const node = renderInto(layer, [{ geoId: "a" }], "first");
+      renderInto(layer, [{ geoId: "b" }], "second");
+      const sibling = appendSibling(node, "shape");
+      renderInto(layer, [], cleared);
+      renderInto(layer, [], other);
+      renderInto(layer, [{ geoId: "a" }], "first");
+      renderInto(layer, [{ geoId: "b" }], "second");
+      const after = highlights(node);
+      expect(after.map((p) => p.getAttribute("data-highlight-key"))).toEqual(["first", "second"]);
+      for (const path of after) expect(precedes(path, sibling)).toBe(true);
+    });
+
+    // The wrapper holds a place, not a reference to a neighbour, so moving the sibling that used
+    // to follow it cannot invert the order: the highlight stays where it is and the sibling moves.
+    test("is unaffected by a sibling moved in front of it", () => {
+      const layer = group("highlight-moved-sibling");
+      const node = renderInto(layer, [{ geoId: "a" }]);
+      const sibling = appendSibling(node, "shape");
+      renderInto(layer, []);
+      node.insertBefore(sibling, node.firstChild);
+      renderInto(layer, [{ geoId: "a" }]);
+      const after = highlights(node);
+      expect(after).toHaveLength(1);
+      expect(precedes(sibling, after[0])).toBe(true);
+    });
+
+    // A sibling removed and drawn again is a new node, so nothing about it can be remembered. The
+    // highlight keeps its own slot, which is ahead of anything appended afterwards.
+    test("keeps its place when a sibling is removed and re-created", () => {
+      const layer = group("highlight-recreated-sibling");
       const node = renderInto(layer, [{ geoId: "a" }]);
       const sibling = appendSibling(node, "shape");
       renderInto(layer, []);
       sibling.remove();
-      expect(() => renderInto(layer, [{ geoId: "a" }])).not.toThrow();
-      expect(highlights(node)).toHaveLength(1);
+      const replacement = appendSibling(node, "shape");
+      renderInto(layer, [{ geoId: "a" }]);
+      const after = highlights(node);
+      expect(after).toHaveLength(1);
+      expect(precedes(after[0], replacement)).toBe(true);
     });
   });
 
