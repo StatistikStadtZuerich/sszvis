@@ -67,10 +67,10 @@ export type PointProjection = (point: GeoPoint) => [number, number] | null;
  * the second collection outside the destination box. Omitting the key is therefore safe rather than
  * shared: with no key the cache is bypassed and the collection is always fitted afresh.
  *
- * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
- * distinct width/height/key triple for the lifetime of the page - a keyed chart that reprojects on
- * resize accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
- * release them.
+ * Note: the memo cache is bounded (see fn.MEMOIZE_CACHE_LIMIT) and evicts the least recently used
+ * width/height/key triple, so a keyed chart that reprojects on every resize tick no longer retains
+ * an entry per tick. A projection may therefore be refitted after enough intervening sizes;
+ * identity is a cache hit, never a guarantee.
  *
  * See test/map/mapUtils.test.ts.
  *
@@ -109,7 +109,7 @@ export function swissMapProjection(
   return memoizedSwissMapProjection(width, height, featureCollection, featureBoundsCacheKey);
 }
 
-/** The bounds cache backing keyed calls. Clearing it is the only way to release its entries. */
+/** The bounds cache backing keyed calls. Bounded and LRU-evicted; clearing it releases it early. */
 swissMapProjection.cache = memoizedSwissMapProjection.cache;
 
 /**

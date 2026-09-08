@@ -23,6 +23,7 @@ import {
   isSelection,
   isString,
   last,
+  MEMOIZE_CACHE_LIMIT,
   memoize,
   not,
   prop,
@@ -471,6 +472,41 @@ describe("fn", () => {
       expect(memo(2)).toBe(99);
       memo.cache.clear();
       expect(memo(2)).toBe(4);
+    });
+
+    test("should evict the least recently used entry beyond the cache limit", () => {
+      const inner = vi.fn((x: number) => x * 2);
+      const memo = memoize(inner);
+      for (let i = 0; i < MEMOIZE_CACHE_LIMIT + 5; i++) memo(i);
+      expect(memo.cache.size).toBe(MEMOIZE_CACHE_LIMIT);
+      // The five oldest keys were dropped; the newest are still there.
+      expect(memo.cache.has(0)).toBe(false);
+      expect(memo.cache.has(4)).toBe(false);
+      expect(memo.cache.has(5)).toBe(true);
+      expect(memo.cache.has(MEMOIZE_CACHE_LIMIT + 4)).toBe(true);
+    });
+
+    test("should keep a repeatedly read entry alive across evictions", () => {
+      // The sizes a resizing chart revisits are few: a hit must not be evicted by the debris of
+      // the keys passed once during a drag.
+      const memo = memoize((x: number) => x * 2);
+      memo(0);
+      for (let i = 1; i < MEMOIZE_CACHE_LIMIT * 2; i++) {
+        memo(i);
+        memo(0);
+      }
+      expect(memo.cache.has(0)).toBe(true);
+    });
+
+    test("should trim a cache filled past the limit from outside on a hit", () => {
+      // `.cache` is public, so entries can arrive without going through the memoized function. A
+      // read of an existing key restores the bound just as a miss does, and keeps its own entry.
+      const memo = memoize((x: number) => x * 2);
+      for (let i = 0; i < MEMOIZE_CACHE_LIMIT + 1; i++) memo.cache.set(i, i * 2);
+      expect(memo.cache.size).toBe(MEMOIZE_CACHE_LIMIT + 1);
+      expect(memo(0)).toBe(0);
+      expect(memo.cache.size).toBe(MEMOIZE_CACHE_LIMIT);
+      expect(memo.cache.has(0)).toBe(true);
     });
 
     test("should cache undefined results", () => {

@@ -439,6 +439,13 @@ export const valueFn = <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>): 
   typeof value === "function" ? (value as ValueFn<E, D, R>) : () => value;
 
 /**
+ * The most entries a memoized function retains. Beyond it the least recently used entry is
+ * dropped. Deliberately in the low tens: the keys a chart revisits are few - a handful of
+ * breakpoint widths, one per map - while a resize drag produces one throwaway key per tick.
+ */
+export const MEMOIZE_CACHE_LIMIT = 32;
+
+/**
  * fn.memoize
  *
  * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
@@ -448,6 +455,17 @@ export const valueFn = <E extends BaseType, D, R>(value: R | ValueFn<E, D, R>): 
  * that entry for any later arguments, so memoizing a function of several arguments without
  * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
  * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
+ *
+ * Also unlike lodash, the cache is bounded to MEMOIZE_CACHE_LIMIT entries and evicts the least
+ * recently used one, so a caller that keys on a continuously varying value - a chart reprojecting
+ * on every resize tick - no longer retains an entry per tick for the lifetime of the page. A
+ * memoized value is therefore a cache, never a registry: it can disappear between calls, and a
+ * caller that needs a value to survive must hold it itself.
+ *
+ * Recency is tracked by the Map's own insertion order, so a cache hit re-inserts its entry and
+ * moves it to the end. `.cache` stays a plain, publicly mutable Map; only its iteration order
+ * now reflects use rather than first insertion. Every call trims, hit or miss, so a cache filled
+ * past the limit from outside is brought back to it by the next call.
  */
 export const memoize = <TFunc extends (...args: never[]) => unknown>(
   func: TFunc,
@@ -469,11 +487,25 @@ export const memoize = <TFunc extends (...args: never[]) => unknown>(
     const key = resolver ? resolver(...args) : args[0];
     const cache = memoized.cache;
 
+    let result: ReturnType<TFunc>;
     if (cache.has(key)) {
-      return cache.get(key) as ReturnType<TFunc>;
+      result = cache.get(key) as ReturnType<TFunc>;
+      // Re-insert so the entry counts as recently used. Delete first: Map.set on an existing key
+      // keeps its original position.
+      cache.delete(key);
+      cache.set(key, result);
+    } else {
+      result = func(...args) as ReturnType<TFunc>;
+      memoized.cache = cache.set(key, result) || cache;
     }
-    const result = func(...args) as ReturnType<TFunc>;
-    memoized.cache = cache.set(key, result) || cache;
+    // Iteration starts at the oldest entry, so the first key is the least recently used one. A
+    // loop rather than a single delete, because the cache is public and may have been filled
+    // past the limit from outside; hits trim too, so the bound is restored on any call.
+    while (memoized.cache.size > MEMOIZE_CACHE_LIMIT) {
+      const oldest = memoized.cache.keys().next();
+      if (oldest.done) break;
+      memoized.cache.delete(oldest.value);
+    }
     return result;
   }) as TFunc & { cache: Map<unknown, ReturnType<TFunc>> };
 
