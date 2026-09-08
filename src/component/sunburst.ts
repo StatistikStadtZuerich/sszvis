@@ -215,9 +215,9 @@ export interface SunburstComponent<T = unknown> extends ComponentBuilder<Sunburs
 export type SunburstData<T = unknown> = HierarchyNode<NodeDatum<T>> | SunburstNode<T>[];
 
 export default function sunburst<T = unknown>(): SunburstComponent<T> {
-  // The chain is built on the component rather than returned from it: .prop() and .render()
-  // are declared to return the generic Component type, since the accessors they install only
-  // exist at runtime, so the typed instance has to come from the factory itself.
+  // The chain is held in a variable rather than returned inline only to keep the long
+  // configuration block readable: ComponentBuilder declares .prop() and .render() as
+  // returning the component interface itself, so the chain stays typed either way.
   const sunburstComponent = component<SunburstComponent<T>>();
 
   sunburstComponent
@@ -234,7 +234,7 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
       // either a hierarchy root or an already flattened array. Deriving it with typeof
       // rather than restating the type is what keeps the two from drifting apart, the way
       // they did in #303. pack, treemap and sunburst all declare it this way. It is rebound
-      // to the flattened node array at the end of the render, and datum() types that new
+      // to the flattened node array at the end of the render, and datum() types the new
       // binding on its own.
       const selection = select<Element, typeof inputData>(this);
       const props = selection.props<SunburstProps<T>>();
