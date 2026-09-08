@@ -46,7 +46,7 @@ describe("component/bar", () => {
       .width((d: Datum) => d.w)
       .height((d: Datum) => d.h);
 
-  const bars = (node: Element) => [...node.querySelectorAll("rect.sszvis-bar")];
+  const bars = (node: Element) => [...node.querySelectorAll("rect.sszvis-bar-rect")];
   const attrs = (node: Element, attr: string) => bars(node).map((b) => b.getAttribute(attr));
   const anchors = (node: Element) =>
     [...node.querySelectorAll("[data-tooltip-anchor]")].map((a) => a.getAttribute("transform"));
@@ -65,6 +65,13 @@ describe("component/bar", () => {
       const node = render(barOf(), testData);
       expect(bars(node).length).toBe(2);
       for (const b of bars(node)) expect(b.tagName).toBe("rect");
+    });
+
+    test("should carry both the generic and the component-owned class", () => {
+      // The join matches on .sszvis-bar-rect; .sszvis-bar stays on the node so the
+      // stylesheet rule and any consumer selector aimed at it keep working.
+      const node = render(barOf(), [testData[0]]);
+      expect(bars(node)[0].getAttribute("class")).toBe("sszvis-bar sszvis-bar-rect");
     });
 
     test("should take x, y, width and height from the accessors", () => {
@@ -342,6 +349,52 @@ describe("component/bar", () => {
           "translate(10,20)",
         ]);
       });
+    });
+  });
+
+  describe("foreign elements", () => {
+    /** Appends a rect carrying only the generic class, as another component would. */
+    const plantForeign = (parent: Element) => {
+      const foreign = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      foreign.setAttribute("class", "sszvis-bar");
+      foreign.setAttribute("x", "1");
+      foreign.setAttribute("y", "2");
+      foreign.setAttribute("width", "3");
+      foreign.setAttribute("height", "4");
+      parent.appendChild(foreign);
+      return foreign;
+    };
+
+    const geometry = (node: Element) =>
+      ["x", "y", "width", "height"].map((attr) => node.getAttribute(attr));
+
+    test("should ignore a foreign rect.sszvis-bar planted in the target group", () => {
+      const g = group("foreign-sibling");
+      const foreign = plantForeign(g.node() as SVGGElement);
+
+      g.datum(testData).call(barOf() as never);
+
+      const node = g.node() as SVGGElement;
+      expect(bars(node).length).toBe(2);
+      expect(attrs(node, "x")).toEqual(["10", "60"]);
+      expect(foreign.parentNode).toBe(node);
+      expect(geometry(foreign)).toEqual(["1", "2", "3", "4"]);
+      expect(foreign.getAttribute("class")).toBe("sszvis-bar");
+    });
+
+    test("should ignore a foreign rect.sszvis-bar nested one level deeper", () => {
+      const g = group("foreign-nested");
+      const nest = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      (g.node() as SVGGElement).appendChild(nest);
+      const foreign = plantForeign(nest);
+
+      g.datum(testData).call(barOf() as never);
+
+      const node = g.node() as SVGGElement;
+      expect(bars(node).length).toBe(2);
+      expect(attrs(node, "x")).toEqual(["10", "60"]);
+      expect(foreign.parentNode).toBe(nest);
+      expect(geometry(foreign)).toEqual(["1", "2", "3", "4"]);
     });
   });
 
