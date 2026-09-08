@@ -4784,28 +4784,39 @@
           if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
             e.preventDefault();
             if (this) event.apply("over", this, [e, data[datumIdx]]);
-            const pan = () => {
-              const touchEvent = firstTouch(e);
+            const pan = panEvent => {
+              // Extract the touch from the new touchmove event, not the original touchstart event
+              const touchEvent = firstTouch(panEvent);
               if (!touchEvent) return;
-              const element = elementFromEvent(touchEvent);
-              const panDatum = datumFromPannableElement(element);
-              if (panDatum === null) {
-                if (this) event.apply("out", this, [e]);
-              } else {
-                const panParent = element === null || element === void 0 ? void 0 : element.parentNode;
-                if (!panParent) return;
-                if (nearPoint(d3.pointer(touchEvent, panParent), [props.x(panDatum.data), props.y(panDatum.data)])) {
-                  // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
-                  // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
-                  // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
-                  // we want to avoid.
-                  if (e.cancelable) {
-                    e.preventDefault();
-                  }
-                  if (this) event.apply("over", this, [e, panDatum.data]);
-                } else {
-                  if (this) event.apply("out", this, [e]);
+              // Is the finger still over a cell of *this* layer? The shared
+              // `data-sszvis-behavior-pannable` attribute cannot answer that - `behavior/panning`
+              // writes it too, so any other pannable element in the chart would read as "still
+              // here" - so test for a voronoi cell whose parent is this layer's own group.
+              const panTarget = elementFromEvent(touchEvent);
+              if (panTarget === null || !panTarget.hasAttribute("data-sszvis-behavior-voronoi") || panTarget.parentNode !== parent) {
+                if (this) event.apply("out", this, [panEvent]);
+                return;
+              }
+              // Resolve the datum by re-running `delaunay.find` on the panned position rather
+              // than reading `data[polygon.index]` off the cell under the finger. The two agree
+              // in a cell's interior but can disagree right at a cell boundary, where the
+              // browser's hit test and the mesh round differently; `find` answers for where the
+              // finger actually is, which is what the mouse path does and what keeps a finger
+              // on the seam between two cells reporting the same datum the mouse would.
+              const panPosition = d3.pointer(touchEvent, parent);
+              const panDatumIdx = delaunay.find(panPosition[0], panPosition[1]);
+              const panDatum = data[panDatumIdx];
+              if (nearPoint(panPosition, [props.x(panDatum), props.y(panDatum)])) {
+                // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
+                // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
+                // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
+                // we want to avoid.
+                if (panEvent.cancelable) {
+                  panEvent.preventDefault();
                 }
+                if (this) event.apply("over", this, [panEvent, panDatum]);
+              } else {
+                if (this) event.apply("out", this, [panEvent]);
               }
             };
             const end = () => {
