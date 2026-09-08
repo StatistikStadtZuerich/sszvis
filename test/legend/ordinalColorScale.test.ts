@@ -118,6 +118,35 @@ describe("legend/ordinalColorScale", () => {
       ]);
     });
 
+    test("should read a null columnWidth as a zero column offset", () => {
+      // NOTE: null does not reduce the column count, so the two entries of each
+      // row overlap. `colorLegendLayout` only passes null once it has settled on
+      // one column, where the horizontal offset does not matter.
+      const node = render(
+        legendColorOrdinal().scale(scale()).orientation("horizontal").columns(2).columnWidth(null)
+      );
+      expect(transforms(node)).toEqual([
+        "translate(0,0)",
+        "translate(0,0)",
+        "translate(0,21)",
+        "translate(0,21)",
+        "translate(0,42)",
+      ]);
+    });
+
+    test("should stack every entry for a null columnWidth with one column", () => {
+      const node = render(
+        legendColorOrdinal().scale(scale()).orientation("horizontal").columns(1).columnWidth(null)
+      );
+      expect(transforms(node)).toEqual([
+        "translate(0,0)",
+        "translate(0,21)",
+        "translate(0,42)",
+        "translate(0,63)",
+        "translate(0,84)",
+      ]);
+    });
+
     test("should default to 3 columns", () => {
       const node = render(legendColorOrdinal().scale(scale()).orientation("horizontal"));
       expect(transforms(node)).toEqual([
