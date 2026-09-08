@@ -150,35 +150,40 @@ export default function voronoi<T = unknown>(): VoronoiComponent<T> {
           if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
             e.preventDefault();
             if (this) event.apply("over", this, [e, data[datumIdx]]);
-            const pan = () => {
-              const touchEvent = fn.firstTouch(e);
+            const pan = (panEvent: TouchEvent) => {
+              // Extract the touch from the new touchmove event, not the original touchstart event
+              const touchEvent = fn.firstTouch(panEvent);
               if (!touchEvent) return;
 
-              const element = elementFromEvent(touchEvent);
-              const panDatum = datumFromPannableElement<T>(element);
-              if (panDatum === null) {
-                if (this) event.apply("out", this, [e]);
-              } else {
-                const panParent = element?.parentNode as SVGElement;
-                if (!panParent) return;
+              // The pannable elements are the voronoi cells, which are joined to
+              // `voronoi.cellPolygons()` - coordinate-pair arrays, not `{data}` containers - so
+              // this only answers whether the finger is still over a cell of this layer.
+              if (datumFromPannableElement(elementFromEvent(touchEvent)) === null) {
+                if (this) event.apply("out", this, [panEvent]);
+                return;
+              }
 
-                if (
-                  nearPoint(pointer(touchEvent, panParent), [
-                    props.x(panDatum.data),
-                    props.y(panDatum.data),
-                  ])
-                ) {
-                  // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
-                  // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
-                  // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
-                  // we want to avoid.
-                  if (e.cancelable) {
-                    e.preventDefault();
-                  }
-                  if (this) event.apply("over", this, [e, panDatum.data]);
-                } else {
-                  if (this) event.apply("out", this, [e]);
+              // Resolve the datum by re-running `delaunay.find` on the panned position rather
+              // than reading `data[polygon.index]` off the cell under the finger. The two agree
+              // in a cell's interior but can disagree right at a cell boundary, where the
+              // browser's hit test and the mesh round differently; `find` answers for where the
+              // finger actually is, which is what the mouse path does and what keeps a finger
+              // on the seam between two cells reporting the same datum the mouse would.
+              const panPosition = pointer(touchEvent, parent);
+              const panDatumIdx = delaunay.find(panPosition[0], panPosition[1]);
+              const panDatum = data[panDatumIdx];
+
+              if (nearPoint(panPosition, [props.x(panDatum), props.y(panDatum)])) {
+                // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
+                // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
+                // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
+                // we want to avoid.
+                if (panEvent.cancelable) {
+                  panEvent.preventDefault();
                 }
+                if (this) event.apply("over", this, [panEvent, panDatum]);
+              } else {
+                if (this) event.apply("out", this, [panEvent]);
               }
             };
 
