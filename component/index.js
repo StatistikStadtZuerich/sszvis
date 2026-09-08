@@ -10,7 +10,7 @@ export { default as sankey } from './sankey.js';
 export { default as stackedArea } from './stackedArea.js';
 export { default as stackedAreaMultiples } from './stackedAreaMultiples.js';
 export { stackedBarHorizontal, stackedBarHorizontalData, stackedBarHorizontalLayout, stackedBarVertical, stackedBarVerticalData, stackedBarVerticalLayout } from './stackedBar.js';
-export { stackedPyramid, stackedPyramidData } from './stackedPyramid.js';
+export { stackedPyramid, stackedPyramidData, stackedPyramidLayout } from './stackedPyramid.js';
 export { default as sunburst } from './sunburst.js';
 export { default as treemap } from './treemap.js';
 //# sourceMappingURL=index.js.map

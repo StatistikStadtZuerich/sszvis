@@ -7949,11 +7949,14 @@
      * This chart's horizontal point of origin is at its spine, i.e. the center of
      * the chart.
      *
-     * The datum bound to the chart layer is the output of stackedPyramidData(sideAcc, rowAcc,
-     * seriesAcc, valueAcc), which returns a function over a flat array of rows. Each accessor is called
-     * with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc into the
-     * vertical positions within a side, seriesAcc into the layers of each row's stack, and valueAcc
-     * supplies the number that is stacked.
+     * The datum bound to the chart layer is the sides array, never a wrapper around it: either the
+     * return value of stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc), which is that array,
+     * or the `sides` field of stackedPyramidLayout(...)(rows), which is the same array with the
+     * maximum beside it rather than assigned onto it. Binding the layout object itself draws nothing
+     * - d3's data join over a non-iterable yields an empty selection, without an error. Each accessor
+     * is called with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc
+     * into the vertical positions within a side, seriesAcc into the layers of each row's stack, and
+     * valueAcc supplies the number that is stacked.
      *
      * The result is an array of sides, each an array of the series d3.stack produced for that side,
      * each series an array of the [y0, y1] slices it computed - so a slice is addressed as
@@ -7962,9 +7965,10 @@
      * its `row`, its own `value`, and its `data`, narrowed from the whole grouped row to the single
      * source row the slice was computed from - or undefined, where the row carries no value for that
      * series and the slice is a zero-width pad. d3's own `key` and `index` are carried across onto each
-     * series. The largest stacked total across both sides is attached to the returned array as
-     * `maxValue`, which is what the horizontal scale's domain is built from. The rows passed in are not
-     * modified.
+     * series. The largest stacked total across both sides is what the horizontal scale's domain is
+     * built from: stackedPyramidData assigns it onto the returned array as `maxValue`, where it is
+     * deprecated because no array operation carries it, and stackedPyramidLayout returns it beside
+     * the sides. The rows passed in are not modified.
      *
      * The component always creates four sub-groups, in this order: leftStack, rightStack, leftReference
      * and rightReference. The order is load-bearing, since it makes the reference lines paint over the
@@ -8093,14 +8097,14 @@
      * function requires the triplet to appear exactly once and says it makes no effort to normalize the
      * data if that is not the case, but nothing reports a violation. Shared with stackedBarData.
      *
-     * Note: `maxValue` is hung off the returned array rather than wrapped in an object, so any array
-     * operation - a spread, a map, a filter, a trip through JSON - drops it. It is the maximum of the
-     * upper bounds only, so it is not the extent of the data when a value is negative. An empty layout
-     * reports 0, so a scale domain built from it stays valid. A slice's `value` is a convenience of the
-     * same kind:
-     * the component never reads it, and it duplicates d[1] - d[0] as it stood when the layout ran, so
-     * it goes stale if a caller rewrites the pair. Shared with stackedBarData. See
-     * test/component/stackedPyramid.test.ts.
+     * Note: stackedPyramidData hangs `maxValue` off the returned array rather than wrapping it in an
+     * object, so any array operation - a spread, a map, a filter, a trip through JSON - drops it. The
+     * property is deprecated for that reason; stackedPyramidLayout returns the same value beside the
+     * sides. It is the maximum of the upper bounds only, so it is not the extent of the data when a
+     * value is negative. An empty layout reports 0, so a scale domain built from it stays valid. A
+     * slice's `value` is a convenience of the same kind: the component never reads it, and it
+     * duplicates d[1] - d[0] as it stood when the layout ran, so it goes stale if a caller rewrites
+     * the pair. Shared with stackedBarData. See test/component/stackedPyramid.test.ts.
      *
      * Note: a reference series is an array of {row, value} points, so barWidth maps the value to x and
      * barPosition the row to y - the same division of labour as in the bars, which is what makes the
@@ -8185,7 +8189,9 @@
     /* Data layout
     ----------------------------------------------- */
     /**
-     * This function prepares the data for the stackedPyramid component
+     * This function prepares the data for the stackedPyramid component, returning the sides in
+     * `sides` with the stacked maximum beside them. Prefer it over stackedPyramidData in new code:
+     * the metadata survives being copied.
      *
      * The input data is expected to have at least four columns:
      *
@@ -8197,7 +8203,7 @@
      * The combination of each distinct (side,row,series) triplet MUST appear only once
      * in the data. This function makes no effort to normalize the data if that's not the case.
      */
-    function stackedPyramidData(sideAcc,
+    function stackedPyramidLayout(sideAcc,
     // cascade stringifies its keys, so a numeric row or series accessor - an age, a year, a
     // category code - groups the same way a string one does. The series keys are read back off
     // the cascade row with Object.keys, which is why `series` stays a string.
@@ -8244,6 +8250,24 @@
         // Compute the max value, for convenience. This value is needed to construct
         // the horizontal scale.
         const maxValue = (_max = d3.max(sides, s => d3.max(s, rows => d3.max(rows, row => row[1])))) !== null && _max !== void 0 ? _max : 0;
+        return {
+          sides,
+          maxValue
+        };
+      };
+    }
+    /**
+     * The array-returning form of the layout: the sides themselves, with the stacked maximum
+     * assigned onto them so that `.datum(stackedPyramidData(...)(rows))` still binds a real array
+     * and the side accessors can index into it.
+     */
+    function stackedPyramidData(sideAcc, rowValueAcc, seriesAcc, valueAcc) {
+      const layout = stackedPyramidLayout(sideAcc, rowValueAcc, seriesAcc, valueAcc);
+      return data => {
+        const {
+          sides,
+          maxValue
+        } = layout(data);
         return Object.assign(sides, {
           maxValue
         });
@@ -13703,6 +13727,7 @@
     exports.stackedBarVerticalLayout = stackedBarVerticalLayout;
     exports.stackedPyramid = stackedPyramid;
     exports.stackedPyramidData = stackedPyramidData;
+    exports.stackedPyramidLayout = stackedPyramidLayout;
     exports.stringEqual = stringEqual;
     exports.sunburst = sunburst;
     exports.sunburstGetRadiusExtent = getRadiusExtent;

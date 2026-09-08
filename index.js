@@ -34,7 +34,7 @@ export { default as sankey } from './component/sankey.js';
 export { default as stackedArea } from './component/stackedArea.js';
 export { default as stackedAreaMultiples } from './component/stackedAreaMultiples.js';
 export { stackedBarHorizontal, stackedBarHorizontalData, stackedBarHorizontalLayout, stackedBarVertical, stackedBarVerticalData, stackedBarVerticalLayout } from './component/stackedBar.js';
-export { stackedPyramid, stackedPyramidData } from './component/stackedPyramid.js';
+export { stackedPyramid, stackedPyramidData, stackedPyramidLayout } from './component/stackedPyramid.js';
 export { default as sunburst } from './component/sunburst.js';
 export { default as treemap } from './component/treemap.js';
 export { default as buttonGroup } from './control/buttonGroup.js';

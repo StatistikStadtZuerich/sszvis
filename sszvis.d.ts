@@ -3338,11 +3338,14 @@ declare function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAreaMultip
  * This chart's horizontal point of origin is at its spine, i.e. the center of
  * the chart.
  *
- * The datum bound to the chart layer is the output of stackedPyramidData(sideAcc, rowAcc,
- * seriesAcc, valueAcc), which returns a function over a flat array of rows. Each accessor is called
- * with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc into the
- * vertical positions within a side, seriesAcc into the layers of each row's stack, and valueAcc
- * supplies the number that is stacked.
+ * The datum bound to the chart layer is the sides array, never a wrapper around it: either the
+ * return value of stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc), which is that array,
+ * or the `sides` field of stackedPyramidLayout(...)(rows), which is the same array with the
+ * maximum beside it rather than assigned onto it. Binding the layout object itself draws nothing
+ * - d3's data join over a non-iterable yields an empty selection, without an error. Each accessor
+ * is called with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc
+ * into the vertical positions within a side, seriesAcc into the layers of each row's stack, and
+ * valueAcc supplies the number that is stacked.
  *
  * The result is an array of sides, each an array of the series d3.stack produced for that side,
  * each series an array of the [y0, y1] slices it computed - so a slice is addressed as
@@ -3351,9 +3354,10 @@ declare function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAreaMultip
  * its `row`, its own `value`, and its `data`, narrowed from the whole grouped row to the single
  * source row the slice was computed from - or undefined, where the row carries no value for that
  * series and the slice is a zero-width pad. d3's own `key` and `index` are carried across onto each
- * series. The largest stacked total across both sides is attached to the returned array as
- * `maxValue`, which is what the horizontal scale's domain is built from. The rows passed in are not
- * modified.
+ * series. The largest stacked total across both sides is what the horizontal scale's domain is
+ * built from: stackedPyramidData assigns it onto the returned array as `maxValue`, where it is
+ * deprecated because no array operation carries it, and stackedPyramidLayout returns it beside
+ * the sides. The rows passed in are not modified.
  *
  * The component always creates four sub-groups, in this order: leftStack, rightStack, leftReference
  * and rightReference. The order is load-bearing, since it makes the reference lines paint over the
@@ -3482,14 +3486,14 @@ declare function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAreaMultip
  * function requires the triplet to appear exactly once and says it makes no effort to normalize the
  * data if that is not the case, but nothing reports a violation. Shared with stackedBarData.
  *
- * Note: `maxValue` is hung off the returned array rather than wrapped in an object, so any array
- * operation - a spread, a map, a filter, a trip through JSON - drops it. It is the maximum of the
- * upper bounds only, so it is not the extent of the data when a value is negative. An empty layout
- * reports 0, so a scale domain built from it stays valid. A slice's `value` is a convenience of the
- * same kind:
- * the component never reads it, and it duplicates d[1] - d[0] as it stood when the layout ran, so
- * it goes stale if a caller rewrites the pair. Shared with stackedBarData. See
- * test/component/stackedPyramid.test.ts.
+ * Note: stackedPyramidData hangs `maxValue` off the returned array rather than wrapping it in an
+ * object, so any array operation - a spread, a map, a filter, a trip through JSON - drops it. The
+ * property is deprecated for that reason; stackedPyramidLayout returns the same value beside the
+ * sides. It is the maximum of the upper bounds only, so it is not the extent of the data when a
+ * value is negative. An empty layout reports 0, so a scale domain built from it stays valid. A
+ * slice's `value` is a convenience of the same kind: the component never reads it, and it
+ * duplicates d[1] - d[0] as it stood when the layout ran, so it goes stale if a caller rewrites
+ * the pair. Shared with stackedBarData. See test/component/stackedPyramid.test.ts.
  *
  * Note: a reference series is an array of {row, value} points, so barWidth maps the value to x and
  * barPosition the row to y - the same division of labour as in the bars, which is what makes the
@@ -3586,14 +3590,38 @@ type StackedPyramidSeries<T, S extends string | number = string> = StackedPyrami
 /** One side of the pyramid: the series d3.stack produced for it. */
 type StackedPyramidSide<T, S extends string | number = string> = StackedPyramidSeries<T, S>[];
 /**
- * What stackedPyramidData returns: the sides, with the largest stacked total across both of
- * them hung off the array itself rather than wrapped in an object.
+ * What stackedPyramidData returns: the plain sides array, with the stacked maximum assigned
+ * onto it. It is what the component takes as its data, so it can be bound to a layer directly
+ * and the side accessors keep picking the two sides positionally off it.
+ *
+ * The assigned property is dropped by every array operation, which is why it is deprecated;
+ * stackedPyramidLayout returns it beside the array instead.
  */
-type StackedPyramidLayout<T, S extends string | number = string> = StackedPyramidSide<T, S>[] & {
+type StackedPyramidSidesData<T, S extends string | number = string> = StackedPyramidSide<T, S>[] & {
+    /**
+     * The largest upper bound over every slice of both sides - zero when there are none.
+     *
+     * @deprecated Read `maxValue` off stackedPyramidLayout instead; assigned onto an array it
+     * does not survive a copy.
+     */
     maxValue: number;
 };
 /**
- * This function prepares the data for the stackedPyramid component
+ * What stackedPyramidLayout returns: the sides in `sides`, with the largest stacked total
+ * across both of them beside them rather than assigned onto the array. Copying the layout - a
+ * spread, a map, a trip through JSON - carries `maxValue` with it, and `layout.sides` is a
+ * well-behaved array. `sides` is what gets bound to the chart layer.
+ */
+interface StackedPyramidLayout<T, S extends string | number = string> {
+    /** One entry per side, in the order the side accessor first mentions each. Bind this. */
+    sides: StackedPyramidSide<T, S>[];
+    /** The largest upper bound over every slice of both sides - zero when there are none. */
+    maxValue: number;
+}
+/**
+ * This function prepares the data for the stackedPyramid component, returning the sides in
+ * `sides` with the stacked maximum beside them. Prefer it over stackedPyramidData in new code:
+ * the metadata survives being copied.
  *
  * The input data is expected to have at least four columns:
  *
@@ -3605,7 +3633,13 @@ type StackedPyramidLayout<T, S extends string | number = string> = StackedPyrami
  * The combination of each distinct (side,row,series) triplet MUST appear only once
  * in the data. This function makes no effort to normalize the data if that's not the case.
  */
-declare function stackedPyramidData<T, S extends string | number = string>(sideAcc: (datum: T) => S, rowValueAcc: (datum: T) => string | number, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number): (data: T[]) => StackedPyramidLayout<T, S>;
+declare function stackedPyramidLayout<T, S extends string | number = string>(sideAcc: (datum: T) => S, rowValueAcc: (datum: T) => string | number, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number): (data: T[]) => StackedPyramidLayout<T, S>;
+/**
+ * The array-returning form of the layout: the sides themselves, with the stacked maximum
+ * assigned onto them so that `.datum(stackedPyramidData(...)(rows))` still binds a real array
+ * and the side accessors can index into it.
+ */
+declare function stackedPyramidData<T, S extends string | number = string>(sideAcc: (datum: T) => S, rowValueAcc: (datum: T) => string | number, seriesAcc: (datum: T) => string | number, valueAcc: (datum: T) => number): (data: T[]) => StackedPyramidSidesData<T, S>;
 /**
  * A barWidth scale: a function from one of the numbers out of a slice's [y0, y1] pair - never
  * from the slice itself - to a distance from the spine. Both parameters are optional because
@@ -3630,7 +3664,7 @@ type StoredHeight<T, S extends string | number> = (slice?: StackedPyramidSlice<T
 /** How barFill reads back. It is called with the slice's `data`, so it reads a source row. */
 type StoredFill<T> = (datum: T, index?: number) => string | undefined;
 /** Pulls one side's series out of the datum bound to the chart layer. */
-type SideAccessor<T, S extends string | number> = (data: StackedPyramidLayout<T, S>) => StackedPyramidSide<T, S>;
+type SideAccessor<T, S extends string | number> = (data: StackedPyramidSide<T, S>[]) => StackedPyramidSide<T, S>;
 /**
  * One point of a reference outline. Each half is mapped by the property that owns it in the
  * bars: barWidth reads the `value`, barPosition the `row`, so the outline is drawn in the same
@@ -3644,7 +3678,7 @@ interface StackedPyramidReferencePoint {
     value: number;
 }
 /** Pulls one side's reference series out of the datum bound to the chart layer. */
-type ReferenceAccessor<T, S extends string | number> = (data: StackedPyramidLayout<T, S>) => StackedPyramidReferencePoint[];
+type ReferenceAccessor<T, S extends string | number> = (data: StackedPyramidSide<T, S>[]) => StackedPyramidReferencePoint[];
 /** A constant or an accessor; either is accepted, since fn.functor normalises both. */
 type PyramidValue<A, R> = R | ((value: A, index: number) => R);
 /**
@@ -3670,13 +3704,13 @@ interface StackedPyramidComponent<T = unknown, S extends string | number = strin
     tooltipAnchor(): (number | string)[];
     tooltipAnchor(anchor: (number | string)[]): StackedPyramidComponent<T, S>;
     leftAccessor(): SideAccessor<T, S>;
-    leftAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidSide<T, S>): StackedPyramidComponent<T, S>;
+    leftAccessor<U = StackedPyramidSide<T, S>[]>(accessor: (data: U) => StackedPyramidSide<T, S>): StackedPyramidComponent<T, S>;
     rightAccessor(): SideAccessor<T, S>;
-    rightAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidSide<T, S>): StackedPyramidComponent<T, S>;
+    rightAccessor<U = StackedPyramidSide<T, S>[]>(accessor: (data: U) => StackedPyramidSide<T, S>): StackedPyramidComponent<T, S>;
     leftRefAccessor(): ReferenceAccessor<T, S> | undefined;
-    leftRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidReferencePoint[]): StackedPyramidComponent<T, S>;
+    leftRefAccessor<U = StackedPyramidSide<T, S>[]>(accessor: (data: U) => StackedPyramidReferencePoint[]): StackedPyramidComponent<T, S>;
     rightRefAccessor(): ReferenceAccessor<T, S> | undefined;
-    rightRefAccessor<U = StackedPyramidLayout<T, S>>(accessor: (data: U) => StackedPyramidReferencePoint[]): StackedPyramidComponent<T, S>;
+    rightRefAccessor<U = StackedPyramidSide<T, S>[]>(accessor: (data: U) => StackedPyramidReferencePoint[]): StackedPyramidComponent<T, S>;
 }
 declare function stackedPyramid<T = unknown, S extends string | number = string>(): StackedPyramidComponent<T, S>;
 
@@ -7639,5 +7673,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, MEMOIZE_CACHE_LIMIT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$b as annotationCircle, confidenceArea as annotationConfidenceArea, export_default$a as annotationConfidenceBar, export_default$8 as annotationLine, export_default$7 as annotationRangeFlag, export_default$6 as annotationRangeRuler, export_default$5 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$c as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$9 as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$2 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$1 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, move, muchDarker, nestedStackedBarsVertical, not, pack, export_default$3 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, rangeExtent, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarHorizontalLayout, stackedBarVertical, stackedBarVerticalData, stackedBarVerticalLayout, stackedPyramid, stackedPyramidData, stringEqual, sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$4 as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, treemap, valueFn, viewport, voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
-export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSeriesData, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidReferencePoint, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, MEMOIZE_CACHE_LIMIT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$b as annotationCircle, confidenceArea as annotationConfidenceArea, export_default$a as annotationConfidenceBar, export_default$8 as annotationLine, export_default$7 as annotationRangeFlag, export_default$6 as annotationRangeRuler, export_default$5 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$c as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$9 as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$2 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$1 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, move, muchDarker, nestedStackedBarsVertical, not, pack, export_default$3 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, rangeExtent, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarHorizontalLayout, stackedBarVertical, stackedBarVerticalData, stackedBarVerticalLayout, stackedPyramid, stackedPyramidData, stackedPyramidLayout, stringEqual, sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$4 as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, treemap, valueFn, viewport, voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSeriesData, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidReferencePoint, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSidesData, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };
