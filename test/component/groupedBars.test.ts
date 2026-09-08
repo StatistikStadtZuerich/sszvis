@@ -606,6 +606,30 @@ describe("component/groupedBars", () => {
       expect(svg.selectAll("rect.sszvis-bar-rect").size()).toBe(1);
     });
 
+    test("a consumer-added rect.sszvis-bar survives a value going missing", () => {
+      const withValue: TestDatum[][] = [[{ category: "A", group: "G1", value: 10 }]];
+      const bars = svg.selectGroup("bars").datum(withValue);
+      bars.call(missingOnly());
+
+      const unit = svg.select<SVGGElement>("g.sszvis-barunit").node();
+      expect(unit).not.toBeNull();
+      const consumerRect = select(unit)
+        .append("rect")
+        .classed("sszvis-bar", true)
+        .attr("data-consumer", "yes")
+        .attr("x", 99);
+
+      // The unit loses its value, so the component clears its own rect. Its exit join is
+      // scoped to the component-owned class, so the consumer's rect is left untouched.
+      bars.datum(oneMissing).call(missingOnly());
+
+      expect(svg.selectAll("rect[data-consumer]").size()).toBe(1);
+      expect(consumerRect.attr("x")).toBe("99");
+      expect(consumerRect.node()?.parentNode).toBe(unit);
+      expect(svg.selectAll("rect.sszvis-bar-rect").size()).toBe(0);
+      expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2);
+    });
+
     test("the cross geometry is reapplied on a second render", () => {
       const bars = svg.selectGroup("bars").datum(oneMissing);
       bars.call(missingOnly());
