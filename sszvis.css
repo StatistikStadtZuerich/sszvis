@@ -317,7 +317,16 @@
   box-sizing: border-box;
   color: #0f05a0;
   cursor: pointer;
-  display: inline-block;
+  /* The component writes each option's share of `width` as its `width`, and `min-width:
+     min-content` reproduces what the row's old `display: table-cell` items actually did: hold
+     the assigned width and wrap the label inside it, growing only for a single word that
+     cannot break. */
+  display: flex;
+  min-width: min-content;
+  /* Centre the label in whatever box the option ends up with, in both directions, so a
+     wrapping two-line label sits level with its single-line neighbours. */
+  align-items: center;
+  justify-content: center;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-family: var(--stzh-font);
   font-size: 12px;

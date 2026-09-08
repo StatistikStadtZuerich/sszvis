@@ -5,7 +5,7 @@
  * options which affect the state of the chart. This component should be rendered into an html layer.
  *
  * This control is part of the `optionSelectable` class of controls and can be used interchangeably
- * with other controls of this class (sszvis.control.select).
+ * with other controls of this class (`sszvis.control.selectMenu`).
  *
  * @module sszvis/control/buttonGroup
  *
@@ -15,7 +15,10 @@
  * @property {string|number} current the current value of the button group. Should be one of the
  *                                  options passed to .values(). Compared with ===.
  * @property {number} width         The total width of the button group, divided evenly between the
- *                                  options. (default: 300px)
+ *                                  options. A label too long for its share wraps onto more lines
+ *                                  rather than widening the group; only an unbreakable word wider
+ *                                  than its share makes an option, and so the group, exceed it.
+ *                                  (default: 300px)
  * @property {function} change      A callback/event handler function called as (event, value) when
  *                                  the user clicks on a value. Note that clicking on a value does not
  *                                  necessarily change any state unless this callback function does
@@ -33,8 +36,22 @@
  * through d3's text coercion and so takes numbers as well as strings, while the select control
  * trims its labels and therefore requires strings.
  *
- * Note: each button gets exactly `width / values.length` pixels, written out unrounded. Labels are
- * never measured or trimmed, so a label wider than its button simply overflows - keep labels short.
+ * Note: each button is written `width / values.length` pixels wide, unrounded, and the stylesheet
+ * gives it `min-width: min-content`. A label too long for that share therefore wraps onto as many
+ * lines as it needs *inside* its button, and the button only grows past its share when a single
+ * unbreakable word cannot fit at all. `width` is honoured in the normal case, which is what the
+ * call sites that centre the control by it rely on. Labels are never measured or trimmed here -
+ * that is where the control diverges from `selectMenu`, which cannot wrap and shortens the label
+ * instead: the two controls render the same values through the same callback, but not the same
+ * label text. Swapping to `selectMenu` across a breakpoint can substitute an ellipsised label for
+ * one this control would have wrapped.
+ *
+ * Note: #362 left open whether a group whose labels do not fit should shrink its padding, stay
+ * within `width`, or wrap. It wraps. That is what the `display: table-cell` items this row is
+ * descended from actually did - a cell holds its assigned width and wraps its content, growing only
+ * for content that cannot break - and it keeps `props.width` an honest measure of the control's
+ * footprint. Shrinking the padding would have made the option boxes inconsistent between charts
+ * and still failed for a label of any length.
  *
  * Note: selectedness is computed per button with no notion of uniqueness, so a value repeated in
  * `values` renders twice and both copies are highlighted when they equal `current`.
