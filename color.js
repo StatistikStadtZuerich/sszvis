@@ -140,7 +140,11 @@ function decorateOrdinalScale(scale) {
 }
 function decorateDivScale(scale) {
   const enhancedScale = interpolatedDivergentColorScale(scale);
-  enhancedScale.reverse = () => decorateLinearScale(scale.copy().range(scale.range().reverse()));
+  // decorateDivScale, not decorateLinearScale: copy() returns a bare d3 scale, so the reversed
+  // scale has to be re-wrapped with the diverging expansion. Wrapping it with the linear one
+  // silently downgraded it to the sequential three-stop domain, and every stop past the third
+  // became unreachable - a reversed diverging legend rendered as a single-hue ramp.
+  enhancedScale.reverse = () => decorateDivScale(scale.copy().range(scale.range().reverse()));
   return enhancedScale;
 }
 function interpolatedDivergentColorScale(scale) {
@@ -150,12 +154,17 @@ function interpolatedDivergentColorScale(scale) {
   // Replacing the scale's own .domain in place is the whole point of these two wrappers.
   // Reflect.set writes it without having to restate the scale's type.
   const replaceDomain = function (dom) {
-    if (!dom) return nativeDomain.call(this, []);
-    const xDomain = [];
-    for (let i = 0; i < length; i++) {
-      xDomain.push(quantile(dom, i / (length - 1)) || 0);
+    // Only a two-value domain is expanded across the range's stops. Everything else - a
+    // no-argument getter call above all - forwards to the scale's own domain verbatim, so
+    // reading the domain back is not a disguised setter call. Mirrors interpolatedColorScale.
+    if (arguments.length === 1 && dom && dom.length === 2) {
+      const xDomain = [];
+      for (let i = 0; i < length; i++) {
+        xDomain.push(quantile(dom, i / (length - 1)) || 0);
+      }
+      return nativeDomain.call(this, xDomain);
     }
-    return nativeDomain.call(this, xDomain);
+    return Reflect.apply(nativeDomain, this, arguments);
   };
   Reflect.set(scale, "domain", replaceDomain);
   return scale;
