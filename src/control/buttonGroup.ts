@@ -84,7 +84,7 @@ type ButtonGroupProps<T> = {
 export interface ButtonGroupComponent<T extends string | number = string | number>
   extends ComponentBuilder<ButtonGroupComponent<T>> {
   values(): T[];
-  values(values: T[]): ButtonGroupComponent<T>;
+  values(values: T[] | undefined): ButtonGroupComponent<T>;
   current(): T;
   current(current: T): ButtonGroupComponent<T>;
   width(): number;
