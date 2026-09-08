@@ -286,7 +286,16 @@ function createGroupedBarsComponent<T = unknown>(
           .attr("width", widthAt)
           .attr("height", heightAt);
       } else {
-        bars.attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
+        // A transition scheduled by an earlier render would keep ticking and overwrite the
+        // geometry written here, so `transition(false)` is only deterministic once any
+        // in-flight tween is interrupted. This matters on a resize or an event that lands
+        // mid-animation.
+        bars
+          .interrupt()
+          .attr("x", xAt)
+          .attr("y", yAt)
+          .attr("width", widthAt)
+          .attr("height", heightAt);
       }
 
       // The join selectors use component-owned marker classes so a consumer-added

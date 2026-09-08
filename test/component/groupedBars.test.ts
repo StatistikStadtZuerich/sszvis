@@ -741,6 +741,24 @@ describe("component/groupedBars", () => {
       svg.selectAll("*").interrupt();
     });
 
+    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+      const chartLayer = svg.selectGroup("bars");
+      chartLayer.datum(oneBar(10)).call(verticalOf());
+      // Schedules a tween from 10 towards 30.
+      chartLayer.datum(oneBar(30)).call(verticalOf());
+      // Let the tween start and run partway, so it holds an interpolated geometry.
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      chartLayer.datum(oneBar(0)).call(verticalOf().transition(false));
+      // The stale tween must have been interrupted: it may not tick again and reinstate its
+      // own interpolation over the geometry the synchronous render just wrote.
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      const bar = svg.select<SVGRectElement>("rect.sszvis-bar");
+      expect(bar.attr("y")).toBe(String(valueScale(0)));
+      expect(bar.attr("height")).toBe(String(200 - valueScale(0)));
+    });
+
     test("should swap between a rect and the missing-value lines as `defined` changes", () => {
       const component = verticalOf().transition(false);
       const chartLayer = svg.selectGroup("bars");
