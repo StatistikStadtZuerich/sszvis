@@ -50,6 +50,7 @@ const WIDTHS = listFlag("widths", [400, 560, 900]);
 const SEVERITY = [
   "new-errors", // candidate raised errors the baseline did not
   "render-differs", // the two sides disagree on how many SVGs got drawn
+  "renders-empty", // the candidate drew the SVG but none of the marks in it
   "load-failed", // the page did not load far enough to report
   "renders-nothing", // neither side drew anything
   "shared-errors", // both sides raised the same number of errors
@@ -84,6 +85,9 @@ function verdict(baseline, candidate) {
   const c = candidate.snapshot;
   if (c.errorCount > b.errorCount) return "new-errors";
   if (c.svgCount !== b.svgCount) return "render-differs";
+  // svgCount and the error log both stay clean when a chart draws its frame and
+  // axes but joins no data, so the marks are counted separately.
+  if (b.markCount > 0 && c.markCount === 0) return "renders-empty";
   if (b.errorCount > c.errorCount) return "fixed";
   if (c.svgCount === 0) return "renders-nothing";
   if (c.errorCount > 0) return "shared-errors";
@@ -172,8 +176,11 @@ for (const level of SEVERITY.filter((v) => v !== "ok")) {
   for (const r of hits) {
     const bad = r.widths.filter((w) => w.verdict === level);
     const at = bad.map((w) => w.width).join(",");
-    const err = (bad[0].candidate.errors || bad[0].baseline.errors || [])[0] || "";
-    process.stdout.write(`  ${r.name.padEnd(16)} @${at.padEnd(13)} ${err.split("\n")[0]}\n`);
+    const detail =
+      level === "renders-empty"
+        ? `${bad[0].baseline.markCount} marks -> 0`
+        : ((bad[0].candidate.errors || bad[0].baseline.errors || [])[0] || "").split("\n")[0];
+    process.stdout.write(`  ${r.name.padEnd(16)} @${at.padEnd(13)} ${detail}\n`);
   }
 }
 process.stdout.write(`\nreport: ${path.relative(process.cwd(), path.join(OUT, "report.json"))}\n`);

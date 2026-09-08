@@ -63,6 +63,24 @@ export async function buildManifest() {
 const REPORTER = (side, chartPath) => `<script>
 (function(){
   var errors = [];
+  // Shapes a chart draws to carry data. A chart that renders its frame but no
+  // marks is the failure mode svgCount cannot see: d3's .data() over a
+  // non-iterable joins nothing, silently, so the SVG and axes still appear.
+  var MARKS = "rect,path,circle,line,polygon,ellipse";
+  // Chrome that is drawn whether or not there is any data to show, and so must
+  // not keep an empty chart's mark count above zero. Matched on class substring,
+  // because these families vary the suffix ("sszvis-legend--entry", "…__mark").
+  var CHROME = "defs," + ["axis", "legend", "ruler", "tooltip", "behavior", "control"]
+    .map(function(part){ return '[class*="sszvis-' + part + '"]'; })
+    .join(",");
+  function countMarks(){
+    var nodes = document.querySelectorAll("svg " + MARKS.split(",").join(",svg "));
+    var n = 0;
+    for (var i = 0; i < nodes.length; i++) {
+      if (!nodes[i].closest || !nodes[i].closest(CHROME)) n++;
+    }
+    return n;
+  }
   var meta = { side: ${JSON.stringify(side)}, path: ${JSON.stringify(chartPath)} };
   var resources = [];
   function snapshot(){
@@ -75,6 +93,7 @@ const REPORTER = (side, chartPath) => `<script>
       resources: resources.slice(0, 20),
       resourceCount: resources.length,
       svgCount: document.querySelectorAll("svg").length,
+      markCount: countMarks(),
       height: Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)
     };
   }

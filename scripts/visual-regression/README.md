@@ -16,13 +16,14 @@ The comparison page is a long scroll: one row per chart, baseline on the left,
 working copy on the right. Only rows near the viewport hold live iframes, so all
 711 charts stay in one page without exhausting the browser.
 
-Each pane reports `<n> svg · <n> err`, and the row gets a verdict:
+Each pane reports `<n> svg · <n> marks · <n> err`, and the row gets a verdict:
 
 | verdict | meaning |
 | --- | --- |
-| `matches baseline` | same number of rendered SVGs, no new errors |
+| `matches baseline` | same rendered SVGs and marks, no new errors |
 | `new errors in candidate` | the working copy threw where the baseline did not |
 | `render count differs` | one side rendered a chart, the other did not |
+| `candidate renders no marks` | the SVG and axes are there, the data marks are gone |
 | `nothing rendered on either side` | the page is broken independently of our change |
 
 Filters: free-text on chart id / folder / title, library version, and
@@ -50,6 +51,7 @@ Verdicts separate our breakage from breakage that was already there:
 | --- | --- |
 | `new-errors` | the candidate raised errors the baseline did not |
 | `render-differs` | the sides disagree on how many SVGs were drawn |
+| `renders-empty` | the candidate drew the SVG but none of the marks the baseline drew |
 | `load-failed` | the page never loaded far enough to report |
 | `renders-nothing` | neither side drew anything |
 | `shared-errors` | both sides raised the same errors — predates the working copy |
@@ -99,9 +101,9 @@ resolves them per side. Nothing in `.reference` is modified.
   only variable.
 
 It also injects a small reporter into each page that collects `window.onerror`,
-unhandled rejections and `console.error`, counts rendered SVGs, and posts the
-result to the parent frame (and exposes it as `window.__sszvisRegression()` for
-the crawler).
+unhandled rejections and `console.error`, counts rendered SVGs and the data marks
+inside them, and posts the result to the parent frame (and exposes it as
+`window.__sszvisRegression()` for the crawler).
 
 ## Which charts are compared
 
@@ -120,8 +122,9 @@ listed under the `all versions` filter if you want to look at them.
 
 ## Caveats
 
-- The verdict is a smoke signal, not a pixel diff: it catches thrown errors and
-  charts that fail to render, not subtle layout or colour shifts. Those are what
-  the visual side-by-side is for.
+- The verdict is a smoke signal, not a pixel diff: it catches thrown errors,
+  charts that fail to render, and charts that render their frame but no data
+  marks — not subtle layout or colour shifts, and not a chart that draws _fewer_
+  marks than the baseline. Those are what the visual side-by-side is for.
 - `build/` is a snapshot. Rebuild before a run or you are comparing against
   stale output.
