@@ -131,6 +131,33 @@ describe("control/select", () => {
     expect(metrics?.style.position).toBe("absolute");
   });
 
+  describe("accessibility", () => {
+    test("should carry no aria-label when ariaLabel is unset", () => {
+      render(selectMenu().values(["A", "B"]).current("A"));
+      expect(selectEl()?.hasAttribute("aria-label")).toBe(false);
+    });
+
+    test("should name the select element with the given ariaLabel", () => {
+      // The name goes on the `select`, not the wrapper `div`, which has no role to name.
+      render(selectMenu().values(["A", "B"]).current("A").ariaLabel("Year"));
+      expect(selectEl()?.getAttribute("aria-label")).toBe("Year");
+      expect(wrapper()?.hasAttribute("aria-label")).toBe(false);
+    });
+
+    test("should keep an explicitly empty ariaLabel rather than dropping it", () => {
+      // `??`, not `||`: an empty string is a value the caller supplied, not an absence.
+      render(selectMenu().values(["A", "B"]).current("A").ariaLabel(""));
+      expect(selectEl()?.getAttribute("aria-label")).toBe("");
+    });
+
+    test("should remove the name again when a later render omits ariaLabel", () => {
+      const sel = d3Select(container);
+      sel.call(selectMenu().values(["A", "B"]).current("A").ariaLabel("Year") as never);
+      sel.call(selectMenu().values(["A", "B"]).current("A") as never);
+      expect(selectEl()?.hasAttribute("aria-label")).toBe(false);
+    });
+  });
+
   describe("change callback", () => {
     test("should be called with the event and the newly selected value", () => {
       const change = vi.fn();
