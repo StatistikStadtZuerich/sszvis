@@ -106,7 +106,13 @@ export default function treemap<T = unknown>(): TreemapComponent<T> {
     .labelPosition("center")
     .prop("onClick")
     .render(function (this: Element, inputData: HierarchyNode<NodeDatum<T>>) {
-      const selection = select<Element, TreemapLayout<T>>(this);
+      // The old datum is the render's own input: the component is called through
+      // selection.each, so the group's datum is exactly what was handed to the render.
+      // Deriving it with typeof rather than restating the type is what keeps the two from
+      // drifting apart, the way they did in #303. pack, treemap and sunburst all declare it
+      // this way. It is rebound to the flattened node array at the end of the render, and
+      // datum() types that new binding on its own.
+      const selection = select<Element, typeof inputData>(this);
       const props = selection.props<TreemapProps<T>>();
 
       // Apply treemap layout to hierarchical data
@@ -273,5 +279,5 @@ export default function treemap<T = unknown>(): TreemapComponent<T> {
       // descendant, so the root and every undrawn branch gain anchors of their own and the
       // anchors come out breadth first while the rectangles are depth first.
       selection.datum(visibleData).call(ta);
-    }) as TreemapComponent<T>;
+    });
 }
