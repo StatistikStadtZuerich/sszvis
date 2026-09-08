@@ -318,27 +318,25 @@ describe("component/stackedArea", () => {
       expect(attrs(node, "stroke-width")).toEqual(["2", "2"]);
     });
 
-    describe("known quirks", () => {
-      test("a falsy stroke is silently replaced by white, so there is no way to opt out", () => {
-        // NOTE: the default is applied as `props.stroke || "#ffffff"`, which tests the prop
-        // for truthiness rather than for having been set. Both null and "" - the two ways a
-        // caller would ask for no stroke at all - therefore come back white. Only an
-        // accessor gets through, because a function is always truthy: `() => null` removes
-        // the attribute outright and `() => ""` writes an invalid paint, and both compute
-        // to none.
-        expect(attrs(render(areaOf().stroke(null), oneLayer), "stroke")).toEqual(["#ffffff"]);
-        expect(attrs(render(areaOf().stroke(""), oneLayer), "stroke")).toEqual(["#ffffff"]);
-        expect(
-          attrs(
-            render(
-              areaOf().stroke(() => ""),
-              oneLayer
-            ),
-            "stroke"
-          )
-        ).toEqual([""]);
-      });
+    test("should pass a falsy stroke through, so a caller can opt out of the hairline", () => {
+      // The default stands in for an unset stroke only: null and "" reach d3 as given, null
+      // removing the attribute and "" writing an invalid paint. Both compute to none, which
+      // is also what an accessor returning either of them does. A ?? would have swallowed
+      // the null, so the guard is an explicit undefined check, as strokeWidth's is.
+      expect(attrs(render(areaOf().stroke(null), oneLayer), "stroke")).toEqual([null]);
+      expect(attrs(render(areaOf().stroke(""), oneLayer), "stroke")).toEqual([""]);
+      expect(
+        attrs(
+          render(
+            areaOf().stroke(() => ""),
+            oneLayer
+          ),
+          "stroke"
+        )
+      ).toEqual([""]);
+    });
 
+    describe("known quirks", () => {
       test("a null strokeWidth removes the attribute where an unset one gives 1", () => {
         // NOTE: strokeWidth guards with `=== undefined`, so null is passed through to d3,
         // which reads a null-ish value as a removal. The two ways of saying "no width" thus

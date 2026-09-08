@@ -28,8 +28,8 @@
  *                                            caught. An explicit null keeps its d3 meaning, which
  *                                            is "no upper bound": d3 then falls back to y0, so each
  *                                            band collapses onto its own baseline and becomes a
- *                                            zero-height sliver, and with no default stroke to draw
- *                                            it there is nothing on screen.
+ *                                            zero-height sliver, drawn as a hairline in the default
+ *                                            stroke.
  * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
  *                                            layer. It has no default, and unlike .sszvis-line
  *                                            there is no .sszvis-path rule in the stylesheet to
@@ -40,27 +40,20 @@
  *                                            configured with .unknown(undefined) is black too.
  *                                            Every chart in docs/area-chart-stacked sets a fill.
  * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
- *                                            whole layer. Unlike stackedArea, which defaults it to
- *                                            the #ffffff hairline that separates two touching
- *                                            layers, this component has no default at all, so
- *                                            touching bands run together, and null and "" are
- *                                            passed through as given: null removes the attribute
- *                                            and "" writes an invalid paint, both computing to
- *                                            none, which is what an unset stroke does too.
- *                                            Harmless in the separated view, where
- *                                            stackedAreaMultiplesLayout spaces the bands so they
- *                                            never touch - but since the docs example sets no
- *                                            stroke on either component, the stacked view of a
- *                                            chart gets stackedArea's white hairline while the
- *                                            separated view gets none.
+ *                                            whole layer. Defaults to #ffffff, the hairline that
+ *                                            visually separates two touching bands, so the
+ *                                            separated and the stacked view of one chart are
+ *                                            outlined alike. The default stands in for an unset
+ *                                            stroke only: null and "" are passed through as given -
+ *                                            null removes the attribute and "" writes an invalid
+ *                                            paint, both computing to none - which is how a caller
+ *                                            asks for no outline.
  * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
  *                                            whole layer. Defaults to 1, applied with an explicit
  *                                            undefined check, so 0 survives where a falsy fallback
  *                                            would have replaced it. null is passed through to d3,
  *                                            which reads a null-ish value as a removal: unset means
- *                                            1, null means no attribute at all. Since there is no
- *                                            default stroke, the width is inert until a stroke is
- *                                            set, and setting only strokeWidth draws nothing.
+ *                                            1, null means no attribute at all.
  * @property {boolean, function} [defined]    A per-point predicate handed to d3.area, deciding
  *                                            whether a point is drawn; a constant is coerced to a
  *                                            boolean. Each surviving run of points becomes its own
@@ -156,7 +149,7 @@
  *
  * Note: nothing constrains the geometry, and nothing reports its own absence. A layer with no points
  * yields a path element with no d attribute, a single point yields a closed shape that encloses no
- * area and, with no default stroke, draws nothing at all, and a band whose y1 lies below y0 simply
+ * area but still draws a vertical hairline in the default stroke, and a band whose y1 lies below y0 simply
  * winds the other way. See test/component/stackedAreaMultiples.test.ts.
  *
  * @return {sszvis.component}
@@ -381,8 +374,10 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
           return areaGen(props.valuesAccessor.call(this, datum, index, group));
         };
         const fill = fn.valueFn(props.fill ?? null);
-        // No default, where stackedArea falls back to a #ffffff hairline.
-        const stroke = fn.valueFn(props.stroke ?? null);
+        // The white hairline separating two touching bands, as stackedArea has. Applied with an
+        // explicit undefined check, as strokeWidth is, so it stands in for an unset stroke
+        // only: null and "" are supplied values and reach d3 as given.
+        const stroke = fn.valueFn(props.stroke === undefined ? "#ffffff" : props.stroke);
         const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
 
         // An entering band is painted synchronously, as bar does, so it is complete on the

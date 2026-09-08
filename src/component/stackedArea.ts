@@ -38,14 +38,13 @@
  *                                            Every chart in docs/area-chart-stacked sets a fill.
  * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
  *                                            whole layer. Defaults to #ffffff, the hairline that
- *                                            visually separates two touching layers. The default is
- *                                            applied as `props.stroke || "#ffffff"`, which tests
- *                                            for truthiness rather than for having been set, so
- *                                            both null and "" - the two ways a caller would ask for
- *                                            no stroke - come back white. Only an accessor gets
- *                                            through, because a function is always truthy: `() =>
- *                                            null` removes the attribute and `() => ""` writes an
- *                                            invalid paint, and both compute to none.
+ *                                            visually separates two touching layers. The default
+ *                                            stands in for an unset stroke only - it is applied
+ *                                            with an explicit undefined check, as strokeWidth's
+ *                                            is - so null and "" are
+ *                                            passed through as given - null removes the attribute
+ *                                            and "" writes an invalid paint, both computing to
+ *                                            none - which is how a caller asks for no outline.
  * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
  *                                            whole layer. Defaults to 1, applied with an explicit
  *                                            undefined check, so 0 survives where a falsy fallback
@@ -322,9 +321,10 @@ export default function stackedArea<
 
       const pathData: ValueFn<SVGPathElement, L, string | null> = (datum) => areaGen(datum);
       const fill = fn.valueFn(props.fill ?? null);
-      // The white hairline separating two touching layers. Applied with a truthiness check
-      // rather than an undefined one, so a null or empty stroke is replaced by it too.
-      const stroke = fn.valueFn(props.stroke || "#ffffff");
+      // The white hairline separating two touching layers. Applied with an explicit undefined
+      // check, as strokeWidth is, so it stands in for an unset stroke only: null and "" are
+      // supplied values and reach d3 as given. A ?? would have swallowed the null.
+      const stroke = fn.valueFn(props.stroke === undefined ? "#ffffff" : props.stroke);
       const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
 
       // Matching on the stacked-area class rather than the generic .sszvis-path one, which pie
