@@ -22,6 +22,11 @@
  * rows passed in are not modified: the d3v3 stack layout used to write `y0` and `y` onto every
  * data object, but d3v7 returns pairs instead and leaves the source data alone.
  *
+ * stackedBarVerticalLayout and stackedBarHorizontalLayout are the same computation returning
+ * the metadata beside the series instead of on them - `{ series, keys, maxValue, minValue }` -
+ * which is the shape new code should use. The two shapes cannot be one return value: an
+ * ordinary array cannot also carry properties that survive being copied.
+ *
  * @module sszvis/component/stackedBar/horizontal
  * @module sszvis/component/stackedBar/vertical
  *
@@ -90,11 +95,12 @@
  * enumerates integer-like keys numerically regardless of insertion order; that part is only
  * cosmetic, since each slice is positioned by its own stack value.
  *
- * Note: `keys`, `maxValue` and `minValue` are hung off the returned array rather than wrapped in
- * an object, so any array operation - a spread, a map, a filter, a trip through JSON - drops
- * them, and `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array.
- * `maxValue` and `minValue` are the extent of the stacked bounds, so a negative value is
- * included in them.
+ * Note: stackedBar*Data returns the series array with `maxValue` and `minValue` assigned onto
+ * it, so any array operation - a spread, a map, a filter, a trip through JSON - drops them. The
+ * series keys are no longer assigned: `keys` shadowed Array.prototype.keys and made the layout
+ * a badly behaved array, and no caller read it off the array. Use stackedBar*Layout to get all
+ * three beside the series. `maxValue` and `minValue` are the extent of the stacked bounds, so a
+ * negative value is included in them.
  *
  * Note: a negative value is drawn on the other side of the baseline: both orientations take
  * the lower of the two scaled bounds as the segment's origin and the absolute difference as
@@ -156,26 +162,56 @@ export type StackedBarSeries<T, X extends string | number = string> = StackedBar
 };
 
 /**
- * What stackedBar*Data returns: the series, with the series keys and the largest stacked
- * total hung off the array itself rather than wrapped in an object.
+ * What stackedBar*Data returns: the plain series array, with the stacked extent assigned onto
+ * it. It is an ordinary array - nothing shadows Array.prototype.keys - and it is what the
+ * components take as their data, so it can be bound to a layer directly.
  *
- * `keys` shadows Array.prototype.keys, so the inherited member is omitted before the
- * property is declared. Intersecting the two instead would leave the layout callable as
- * `layout.keys()`, which type-checks as the built-in iterator but throws a TypeError at
- * runtime. Omitting it costs assignability back to a plain array, which is the point: the
- * layout is not a well-behaved one. Indexing, length, the array methods, spread and for-of
- * all still work.
+ * The two assigned properties are dropped by every array operation, which is why they are
+ * deprecated; stackedBar*Layout returns them, and the series keys, beside the array.
  */
-export type StackedBarLayout<T, X extends string | number = string> = Omit<
-  StackedBarSeries<T, X>[],
-  "keys"
-> & {
+export type StackedBarSeriesData<T, X extends string | number = string> = StackedBarSeries<
+  T,
+  X
+>[] & {
+  /**
+   * The largest of the two bounds over every slice - zero when there are no slices.
+   *
+   * @deprecated Read `maxValue` off stackedBarVerticalLayout / stackedBarHorizontalLayout
+   * instead; assigned onto an array it does not survive a copy.
+   */
+  maxValue: number;
+  /**
+   * The smallest of the two bounds over every slice - negative when a value is.
+   *
+   * @deprecated Read `minValue` off stackedBarVerticalLayout / stackedBarHorizontalLayout
+   * instead; assigned onto an array it does not survive a copy.
+   */
+  minValue: number;
+  /**
+   * Which nested group these series belong to, when they are one group of a
+   * nestedStackedBarsVertical chart. The caller tags the array after cascading; the plain
+   * stacked-bar charts leave it unset. See src/component/nestedStackedBar.ts.
+   */
+  key?: string | number;
+  /** The older name of `key`, still accepted by nestedStackedBarsVertical. */
+  nest?: string | number;
+};
+
+/**
+ * What stackedBar*Layout returns: the series in `series`, with the metadata beside them rather
+ * than assigned onto the array. Copying the layout - a spread, a map, a trip through JSON -
+ * carries the metadata with it, and `layout.series` is a well-behaved array.
+ */
+export interface StackedBarLayout<T, X extends string | number = string> {
+  /** One entry per series key, each holding that layer's slices. Bind this to the layer. */
+  series: StackedBarSeries<T, X>[];
+  /** The series keys, in the order they first appear in the data. */
   keys: string[];
   /** The largest of the two bounds over every slice - zero when there are no slices. */
   maxValue: number;
   /** The smallest of the two bounds over every slice - negative when a value is. */
   minValue: number;
-};
+}
 
 /** One row of the cascade: every series of one stack, each holding that cell's data. */
 type CascadeRow<T> = Record<string, T[]>;
@@ -243,12 +279,34 @@ function stackedBarData(order: StackOrder) {
       const maxValue = max(series, (stack) => max(stack, (d) => Math.max(d[0], d[1]))) ?? 0;
       const minValue = min(series, (stack) => min(stack, (d) => Math.min(d[0], d[1]))) ?? 0;
 
-      return Object.assign(series, { keys, maxValue, minValue });
+      return { series, keys, maxValue, minValue };
     };
 }
 
-export const stackedBarHorizontalData = stackedBarData(stackOrderNone);
-export const stackedBarVerticalData = stackedBarData(stackOrderReverse);
+/**
+ * The array-returning form of a layout function: the series themselves, with the extent
+ * assigned onto them so that `.datum(layout)` still binds a real array.
+ */
+function stackedBarSeriesData(order: StackOrder) {
+  const layout = stackedBarData(order);
+  return <T, X extends string | number = string>(
+    stackAcc: (datum: T) => X,
+    seriesAcc: (datum: T) => string | number,
+    valueAcc: (datum: T) => number
+  ) =>
+    (data: T[]): StackedBarSeriesData<T, X> => {
+      const { series, maxValue, minValue } = layout<T, X>(stackAcc, seriesAcc, valueAcc)(data);
+      // `keys` is deliberately not assigned: it shadows Array.prototype.keys, and no caller
+      // reads it off the array. stackedBar*Layout returns it beside the series instead.
+      return Object.assign(series, { maxValue, minValue });
+    };
+}
+
+export const stackedBarHorizontalData = stackedBarSeriesData(stackOrderNone);
+export const stackedBarVerticalData = stackedBarSeriesData(stackOrderReverse);
+
+export const stackedBarHorizontalLayout = stackedBarData(stackOrderNone);
+export const stackedBarVerticalLayout = stackedBarData(stackOrderReverse);
 
 /* Component
 ----------------------------------------------- */

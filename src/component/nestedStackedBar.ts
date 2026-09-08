@@ -64,7 +64,7 @@ import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import translateString from "../svgUtils/translateString.js";
 import type { AnySelection } from "../types.js";
-import type { StackedBarSeries, StackedBarSlice } from "./stackedBar.js";
+import type { StackedBarLayout, StackedBarSlice } from "./stackedBar.js";
 import { stackedBarVertical } from "./stackedBar.js";
 
 // The slice and series types are stackedBar's own - this component renders through
@@ -74,13 +74,11 @@ import { stackedBarVertical } from "./stackedBar.js";
 export type { StackedBarSeries, StackedBarSlice } from "./stackedBar.js";
 
 /**
- * The stack layout of a single nested group, as returned by stackedBarVerticalData.
- * Callers usually tag it with the key they cascaded by, which is what `offset` reads.
+ * The stack layout of a single nested group, as returned by stackedBarVerticalData: the
+ * series live in `series`, and `nest` is the key the caller cascaded by, which is what
+ * `offset` reads and what labels the group.
  */
-export type NestedStack<T, X extends string | number = string> = StackedBarSeries<T, X>[] & {
-  /** The key the caller cascaded by, used to position and to label the group. */
-  nest?: string | number;
-};
+export type NestedStack<T, X extends string | number = string> = StackedBarLayout<T, X>;
 
 /**
  * The props as the renderer sees them. Everything except `slant` is wrapped by fn.functor
@@ -205,7 +203,7 @@ export const nestedStackedBarsVertical = <
       const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
 
       const nestedGroups = group.join("g").attr("data-nested-stacked-bars", (d, i) => {
-        if (d.length === 0) {
+        if (d.series.length === 0) {
           logger.warn(
             `[nestedStackedBarsVertical] the nested group at index ${i} has no stacks; rendering it empty`
           );
@@ -235,7 +233,11 @@ export const nestedStackedBarsVertical = <
         .fill(fill)
         .stroke(stroke);
 
-      const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
+      const bars = nestedGroups
+        .selectGroup("barchart")
+        // The group's datum is the whole layout; stackedBarVertical renders the series.
+        .datum((d: NestedStack<T, X>) => d.series)
+        .call(stackedBars);
 
       bars.selectAll("[data-tooltip-anchor]").call(tooltip);
     }) as NestedStackedBarsVerticalComponent<T, X>;
