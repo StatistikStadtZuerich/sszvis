@@ -60,7 +60,7 @@ describe("app", () => {
   describe("configuration", () => {
     test("throws when no init function is provided", () => {
       expect(() => app({ render: () => {} } as never)).toThrow(
-        '[sszvis.app] An "init" function returning a Promise must be provided.'
+        '[sszvis.app] An "init" function must be provided.'
       );
     });
 
@@ -111,6 +111,56 @@ describe("app", () => {
       resolveInit();
       await nextFrame();
       expect(render).toHaveBeenCalledTimes(1);
+    });
+
+    test("renders the state produced by a synchronous init", async () => {
+      const render = vi.fn();
+      app({
+        init: (state) => {
+          state.greeting = "hello";
+        },
+        render,
+      });
+      await nextFrame();
+      expect(render.mock.calls[0][0]).toEqual({ greeting: "hello" });
+    });
+
+    test("runs an effect returned from a synchronous init", async () => {
+      const render = vi.fn();
+      app({
+        init: (state) => {
+          state.count = 0;
+          return (dispatch) => {
+            dispatch("increment", []);
+          };
+        },
+        render,
+        actions: {
+          increment: (state) => {
+            state.count += 1;
+          },
+        },
+      });
+      await nextFrame();
+      expect(render.mock.lastCall?.[0]).toEqual({ count: 1 });
+    });
+
+    test("reports an init that throws synchronously as an init failure", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const render = vi.fn();
+      const cause = new Error("no data");
+      app({
+        init: () => {
+          throw cause;
+        },
+        render,
+      });
+      await nextFrame();
+
+      const reported = error.mock.calls.at(0)?.[0] as Error;
+      expect(reported.message).toBe("[sszvis.app] Initialisation failed: no data");
+      expect(reported.cause).toBe(cause);
+      expect(render).not.toHaveBeenCalled();
     });
 
     test("runs an effect returned from init", async () => {
