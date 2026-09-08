@@ -97,7 +97,7 @@ interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> 
  *
  * @template T The type of the original flat data objects
  */
-export default function <T = unknown>(): PackComponent<T> {
+export default function pack<T = unknown>(): PackComponent<T> {
   return component<PackComponent<T>>()
     .prop("colorScale", fn.functor)
     .prop("transition")
@@ -241,6 +241,12 @@ export default function <T = unknown>(): PackComponent<T> {
       const tooltipPosition = (d: PackLayout<T>): [number, number] => [d.x, d.y];
 
       const ta = tooltipAnchor<PackLayout<T>>().position(tooltipPosition);
-      selection.call(ta);
+      // Rebind the group to the filtered node array before rendering the anchors, the way
+      // sunburst and pie do. Without it the anchors are joined to whatever datum the caller
+      // bound - for a hierarchy that is the root node, which d3 iterates into every
+      // descendant, so the root gains an anchor of its own, the anchors come out breadth
+      // first while the circles are depth first, and nodes dropped by the minRadius filter
+      // get an anchor with no circle under it.
+      selection.datum(visibleData).call(ta);
     }) as PackComponent<T>;
 }

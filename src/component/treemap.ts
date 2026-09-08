@@ -89,7 +89,7 @@ interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponen
  *
  * @template T The type of the original flat data objects
  */
-export default function <T = unknown>(): TreemapComponent<T> {
+export default function treemap<T = unknown>(): TreemapComponent<T> {
   return component<TreemapComponent<T>>()
     .prop("colorScale", fn.functor)
     .prop("transition")
@@ -267,6 +267,11 @@ export default function <T = unknown>(): TreemapComponent<T> {
       ];
 
       const ta = tooltipAnchor<TreemapLayout<T>>().position(tooltipPosition);
-      selection.call(ta);
+      // Rebind the group to the drawn node array before rendering the anchors, the way
+      // sunburst and pie do. Without it the anchors are joined to whatever datum the caller
+      // bound - for a hierarchy that is the root node, which d3 iterates into every
+      // descendant, so the root and every undrawn branch gain anchors of their own and the
+      // anchors come out breadth first while the rectangles are depth first.
+      selection.datum(visibleData).call(ta);
     }) as TreemapComponent<T>;
 }
