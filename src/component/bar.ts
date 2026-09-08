@@ -154,13 +154,19 @@ export default function bar<T = unknown>(): BarComponent<T> {
       // transition starts. The geometry is then applied exactly once more - to the transition
       // when there is one, and to the plain selection otherwise - so an update tweens from its
       // previous value instead of from the value it already holds.
+      //
+      // Matching on the component's own class rather than the generic .sszvis-bar one keeps a
+      // foreign rect out of the join - groupedBars draws rects under the generic class, and the
+      // join has no key function, so an unscoped descendant selector would adopt one of those,
+      // or one left over from an earlier chart, as bar zero and shift the whole series by one.
+      // The generic class stays on the node, so no CSS selector changes meaning.
       const bars = selection
-        .selectAll<SVGRectElement, T>(".sszvis-bar")
+        .selectAll<SVGRectElement, T>("rect.sszvis-bar-rect")
         .data(data)
         .join((enter) =>
           enter
             .append("rect")
-            .classed("sszvis-bar", true)
+            .attr("class", "sszvis-bar sszvis-bar-rect")
             .attr("x", xAt)
             .attr("y", yAt)
             .attr("width", wAt)
