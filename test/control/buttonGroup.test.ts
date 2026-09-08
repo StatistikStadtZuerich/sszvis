@@ -337,8 +337,9 @@ describe("control/buttonGroup", () => {
 
     test("labels are never trimmed to fit their button", () => {
       // NOTE: unlike the select control, buttonGroup does no measuring, so a label wider
-      // than width / values.length simply overflows its button. Callers have to keep
-      // labels short themselves.
+      // than width / values.length keeps its full text and wraps onto more lines inside its
+      // button - the label is never cut. (jsdom does no layout, so only the text is checked
+      // here; the wrapping itself is exercised in the browser.)
       const long = "An extremely long button label that cannot possibly fit";
       render(buttonGroup().values([long]).current(long).width(100));
       expect(buttons()[0]?.textContent).toBe(long);

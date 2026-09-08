@@ -5,7 +5,7 @@
 ### sszvis.buttonGroup
 
 ```hint|directive
-This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.selectMenu).
+This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.selectMenu). The two take the same values and the same `change` callback and replace each other's DOM, but they do not show an overlong label the same way: a button group wraps the label onto more lines, while a select menu trims it with an ellipsis.
 ```
 
 #### `buttonGroup.values`
@@ -18,7 +18,7 @@ the current value of the buttonGroup control. Should be one of the options passe
 
 #### `buttonGroup.[width]`
 
-The total width of the buttonGroup control. Each option will have 1/3rd of this width. (default: 300px)
+The total width of the buttonGroup control, divided evenly between the options: each one is `width / values.length` wide. A label too long for its share wraps onto as many lines as it needs inside its own button, so the group still measures `width`. Only a single unbreakable word wider than an option's share makes that option — and with it the group — grow past `width`. Labels are never measured or shortened here. (default: 300px)
 
 #### `buttonGroup.change`
 
@@ -53,7 +53,7 @@ An accessible name for the group of buttons, written to the wrapper as `aria-lab
 ### sszvis.selectMenu
 
 ```hint|directive
-This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.buttonGroup).
+This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.buttonGroup). A native select element cannot wrap or grow, so this control shortens a long label where a button group would wrap it — swapping between the two across a breakpoint keeps the values and the callback, but not necessarily the same label text.
 ```
 
 #### `selectMenu.values`
@@ -66,7 +66,7 @@ the currently selected value of the select control. Should be one of the options
 
 #### `selectMenu.[width]`
 
-The total width of the select control. If text labels exceed this width they will be trimmed to fit using an ellipsis mark. (default: 300px)
+The total width of the select control. Labels wider than `width - 40` are trimmed to fit with an ellipsis mark, the 40px covering the select's own chrome; the select element itself is rendered 30px wider than `width`. (default: 300px)
 
 #### `selectMenu.change`
 
@@ -78,7 +78,7 @@ An accessible name for the menu, written to the `select` element as `aria-label`
 
 ### Example
 
-This example shows how a button group can be used interchangeably with a select. The button group is used when enough horizontal space is available and falls back to the select on narrow screens.
+This example shows how a button group can be used interchangeably with a select. The button group is used when enough horizontal space is available and falls back to the select on narrow screens. Note that the label text can differ between the two at a given width: the button group wraps a long label, the select ellipsises it.
 
 ```project
 {
