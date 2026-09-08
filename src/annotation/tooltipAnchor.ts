@@ -35,7 +35,9 @@
  *   });
  * selection.call(tooltipAnchor);
  *
- * @property {function} position A vector of the tooltip's [x, y] coordinates
+ * @property {function} position Accessor (datum, index) returning the tooltip's
+ *                               [x, y] coordinates. The index is d3's element
+ *                               index; accessors may take the datum alone.
  * @property {boolean}  debug    Renders a visible tooltip anchor when true
  *
  * @return {sszvis.component}
