@@ -6461,15 +6461,13 @@ declare function mapRendererMesh(): MapRendererMeshComponent;
  * and so on - so two maps on one page no longer define the same id twice. Consumers must not rely on
  * the previously fixed ids.
  *
- * Note: the pattern helpers in src/patterns.ts append their contents rather than joining them, so
- * this component may only call them on a definition that is still empty; otherwise the tile would
- * gain another rect and two lines, the gradient another two stops and the mask another rect on every
- * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
- * geojson renderers' "missing-pattern" too.
+ * Note: the pattern helpers in src/patterns.ts are idempotent - they data-join their contents - so
+ * they can be called on every render, and a redraw updates the definition in place rather than
+ * growing it.
  *
  * Note: the mask fades the lake by filling itself with the fade gradient, so the two definitions are
- * only useful together. Both helpers hard-code the old fixed gradient id, so this component rewrites
- * the gradient's id and the mask rect's fill after calling them.
+ * only useful together. Both helpers take the gradient id as a trailing argument, so this overlay's
+ * scoped id is handed to them directly rather than rewritten afterwards.
  *
  * Note: the defs element is created inside the map group rather than at the svg root, and
  * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
@@ -6563,16 +6561,17 @@ declare function mapRendererPatternedLakeOverlay(): MapRendererPatternedLakeOver
  * @property {Function} position     A function which takes a datum and returns a position for the corresponding
  *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
  *                                   index, no array - unlike a d3 accessor, though the render callback itself
- *                                   does receive d3's (data, index, group). A null result throws and a
- *                                   non-finite one is silently dropped; see the notes below.
+ *                                   does receive d3's (data, index, group). Required: a missing position
+ *                                   throws. A null result throws and a non-finite one is silently dropped;
+ *                                   see the notes below.
  * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2. A
  *                                   fractional side antialiases; see the notes below.
  *                                   sszvis.pixelsFromGeoDistance is the intended source for this value, and it
  *                                   returns a float.
  * @property {String, Function} fill The fill function. Takes a datum and should return a fill color for the datum's pixel.
- *                                   Wrapped in fn.functor, so a constant colour is accepted too. It has no
- *                                   default. A value the canvas cannot parse leaves the cell unpainted; see
- *                                   the notes below.
+ *                                   Wrapped in fn.functor, so a constant colour is accepted too. Required: a
+ *                                   missing fill throws. A value the canvas cannot parse leaves the cell
+ *                                   unpainted; see the notes below.
  *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
  *                                   CanvasPattern at runtime, which this contract deliberately excludes.
  * @property {String} key          Identifies this raster within its layer. Default "raster". Two rasters in
@@ -6621,10 +6620,9 @@ declare function mapRendererPatternedLakeOverlay(): MapRendererPatternedLakeOver
  *
  * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
  * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
- * nothing. Neither position nor fill is validated, and each throws a bare TypeError from
- * being called, naming neither property - but only for non-empty data, so an empty dataset hides
- * the misconfiguration entirely. The canvas has already been created by the time any of these
- * throw.
+ * nothing, and the canvas has already been created by the time it throws. The four required
+ * properties are checked before that: width, height, position and fill are all validated before the
+ * canvas is created, so a missing one is named whether or not there are data to draw.
  *
  * Note: a non-finite position is dropped by the canvas API rather than reported, so a datum the
  * projection could not place leaves a hole in the raster with no indication; a null position throws
@@ -6915,6 +6913,11 @@ declare const parseNumber: (d: string) => number;
  * This module contains svg patterns and pattern helper functions which are used
  * to render important textures for various other components.
  *
+ * Every helper here is idempotent: the contents are data-joined rather than appended, so calling a
+ * helper again on the same element updates that element's contents in place instead of adding a
+ * second copy. Map renderers re-derive their definition selection on every render and `call` these
+ * helpers unconditionally, so appending would grow the definition without bound.
+ *
  * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
  * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
  * @method  mapLakePattern                  The pattern for Lake Zurich in the map component. Used by map.js internally
@@ -6926,6 +6929,8 @@ declare const parseNumber: (d: string) => number;
  *
  */
 
+/** The default id `mapLakeFadeGradient` defines and `mapLakeGradientMask` references. */
+declare const LAKE_FADE_GRADIENT_ID = "lake-fade-gradient";
 /**
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements
@@ -6943,14 +6948,28 @@ declare const mapMissingValuePattern: <D, P extends BaseType, PD>(selection: Sel
 declare const mapLakePattern: <D, P extends BaseType, PD>(selection: Selection<SVGPatternElement, D, P, PD>) => void;
 /**
  * The gradient used by the alpha fade pattern in the Lake Zurich shape
+ *
+ * The id it writes is the one `mapLakeGradientMask` has to be pointed at. It defaults to the
+ * historical fixed id, so an unparameterised call is unchanged; pass an id to scope the definition
+ * to one map rather than rewriting the attribute afterwards. Because it is a trailing parameter it
+ * can also be handed over as `selection.call(mapLakeFadeGradient, id)`.
+ *
  * @param selection A d3 selection of SVG linear gradient elements
+ * @param gradientId The id to write on the gradient. Defaults to `lake-fade-gradient`.
  */
-declare const mapLakeFadeGradient: <D, P extends BaseType, PD>(selection: Selection<SVGLinearGradientElement, D, P, PD>) => void;
+declare const mapLakeFadeGradient: <D, P extends BaseType, PD>(selection: Selection<SVGLinearGradientElement, D, P, PD>, gradientId?: string) => void;
 /**
  * The gradient alpha fade mask for the Lake Zurich shape
+ *
+ * The mask fades the lake by filling itself with the fade gradient, so it is only useful beside a
+ * `mapLakeFadeGradient` that defines the id given here; the two must be scoped together. The id
+ * defaults to the historical fixed one, and is written on every call, so a later call with a new id
+ * repoints the existing rect.
+ *
  * @param selection A d3 selection of SVG mask elements
+ * @param gradientId The id of the gradient to fill the mask with. Defaults to `lake-fade-gradient`.
  */
-declare const mapLakeGradientMask: <D, P extends BaseType, PD>(selection: Selection<SVGMaskElement, D, P, PD>) => void;
+declare const mapLakeGradientMask: <D, P extends BaseType, PD>(selection: Selection<SVGMaskElement, D, P, PD>, gradientId?: string) => void;
 /**
  * The pattern for the data area texture
  * @param selection A d3 selection of SVG pattern elements
@@ -7348,5 +7367,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$l as annotationCircle, export_default$k as annotationConfidenceArea, export_default$j as annotationConfidenceBar, export_default$h as annotationLine, export_default$g as annotationRangeFlag, export_default$f as annotationRangeRuler, export_default$e as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$m as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$i as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$c as move, muchDarker, nestedStackedBarsVertical, not, export_default$9 as pack, export_default$b as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$8 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$7 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$d as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$6 as treemap, valueFn, viewport, export_default$a as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$l as annotationCircle, export_default$k as annotationConfidenceArea, export_default$j as annotationConfidenceBar, export_default$h as annotationLine, export_default$g as annotationRangeFlag, export_default$f as annotationRangeRuler, export_default$e as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$m as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$i as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$c as move, muchDarker, nestedStackedBarsVertical, not, export_default$9 as pack, export_default$b as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$8 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$7 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$d as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$6 as treemap, valueFn, viewport, export_default$a as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidReferencePoint, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };

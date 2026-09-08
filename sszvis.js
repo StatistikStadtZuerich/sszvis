@@ -72,7 +72,7 @@
         let setter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : identity$1;
         // The accessor is created from a runtime prop name, so it cannot be assigned through
         // a statically known key.
-        Reflect.set(sszvisComponent, prop, accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent));
+        Reflect.set(sszvisComponent, prop, accessor$1(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent));
         return sszvisComponent;
       };
       /**
@@ -155,7 +155,7 @@
      * @param  {Function} [setter] Transforms the data on set
      * @return {Function} The accessor function
      */
-    function accessor(props, prop) {
+    function accessor$1(props, prop) {
       let setter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : identity$1;
       // Getter when called with no arguments, setter otherwise - the two return different
       // things, and the prop's own declaration in the component interface states which.
@@ -695,6 +695,11 @@
      * This module contains svg patterns and pattern helper functions which are used
      * to render important textures for various other components.
      *
+     * Every helper here is idempotent: the contents are data-joined rather than appended, so calling a
+     * helper again on the same element updates that element's contents in place instead of adding a
+     * second copy. Map renderers re-derive their definition selection on every render and `call` these
+     * helpers unconditionally, so appending would grow the definition without bound.
+     *
      * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
      * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
      * @method  mapLakePattern                  The pattern for Lake Zurich in the map component. Used by map.js internally
@@ -705,6 +710,8 @@
      * @method  dataAreaPattern                 The pattern for the data area texture.
      *
      */
+    /** The default id `mapLakeFadeGradient` defines and `mapLakeGradientMask` references. */
+    const LAKE_FADE_GRADIENT_ID = "lake-fade-gradient";
     /**
      * The pattern for the missing values in the heat table
      * @param selection A d3 selection of SVG pattern elements
@@ -716,10 +723,20 @@
         crossStrokeWidth = 0.035,
         cross1 = 0.35,
         cross2 = 0.65;
+      const lines = [{
+        x1: cross1,
+        y1: cross1,
+        x2: cross2,
+        y2: cross2
+      }, {
+        x1: cross2,
+        y1: cross1,
+        x2: cross1,
+        y2: cross2
+      }];
       selection.attr("patternUnits", "objectBoundingBox").attr("patternContentUnits", "objectBoundingBox").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1);
-      selection.append("rect").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1).attr("fill", rectFill);
-      selection.append("line").attr("x1", cross1).attr("y1", cross1).attr("x2", cross2).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
-      selection.append("line").attr("x1", cross2).attr("y1", cross1).attr("x2", cross1).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
+      selection.selectAll("rect").data([0]).join("rect").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1).attr("fill", rectFill);
+      selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
     };
     /**
      * The pattern for the map areas which are missing values
@@ -730,12 +747,30 @@
         pHeight = 14,
         fillColor = "#FAFAFA",
         lineStroke = "#CCCCCC";
+      const lines = [{
+        x1: 1,
+        y1: 10,
+        x2: 5,
+        y2: 14
+      }, {
+        x1: 5,
+        y1: 10,
+        x2: 1,
+        y2: 14
+      }, {
+        x1: 8,
+        y1: 3,
+        x2: 12,
+        y2: 7
+      }, {
+        x1: 12,
+        y1: 3,
+        x2: 8,
+        y2: 7
+      }];
       selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
-      selection.append("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", fillColor);
-      selection.append("line").attr("x1", 1).attr("y1", 10).attr("x2", 5).attr("y2", 14).attr("stroke", lineStroke);
-      selection.append("line").attr("x1", 5).attr("y1", 10).attr("x2", 1).attr("y2", 14).attr("stroke", lineStroke);
-      selection.append("line").attr("x1", 8).attr("y1", 3).attr("x2", 12).attr("y2", 7).attr("stroke", lineStroke);
-      selection.append("line").attr("x1", 12).attr("y1", 3).attr("x2", 8).attr("y2", 7).attr("stroke", lineStroke);
+      selection.selectAll("rect").data([0]).join("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", fillColor);
+      selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke", lineStroke);
     };
     /**
      * The pattern for Lake Zurich in the map component
@@ -745,27 +780,59 @@
       const pWidth = 6;
       const pHeight = 6;
       const offset = 0.5;
+      const lines = [{
+        x1: 0,
+        y1: pHeight * offset,
+        x2: pWidth * offset,
+        y2: 0
+      }, {
+        x1: pWidth * offset,
+        y1: pHeight,
+        x2: pWidth,
+        y2: pHeight * offset
+      }];
       selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
-      selection.append("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", "#fff");
-      selection.append("line").attr("x1", 0).attr("y1", pHeight * offset).attr("x2", pWidth * offset).attr("y2", 0).attr("stroke", "#ddd").attr("stroke-linecap", "square");
-      selection.append("line").attr("x1", pWidth * offset).attr("y1", pHeight).attr("x2", pWidth).attr("y2", pHeight * offset).attr("stroke", "#ddd").attr("stroke-linecap", "square");
+      selection.selectAll("rect").data([0]).join("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", "#fff");
+      selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke", "#ddd").attr("stroke-linecap", "square");
     };
     /**
      * The gradient used by the alpha fade pattern in the Lake Zurich shape
+     *
+     * The id it writes is the one `mapLakeGradientMask` has to be pointed at. It defaults to the
+     * historical fixed id, so an unparameterised call is unchanged; pass an id to scope the definition
+     * to one map rather than rewriting the attribute afterwards. Because it is a trailing parameter it
+     * can also be handed over as `selection.call(mapLakeFadeGradient, id)`.
+     *
      * @param selection A d3 selection of SVG linear gradient elements
+     * @param gradientId The id to write on the gradient. Defaults to `lake-fade-gradient`.
      */
-    const mapLakeFadeGradient = selection => {
-      selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", "lake-fade-gradient");
-      selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
-      selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
+    const mapLakeFadeGradient = function (selection) {
+      let gradientId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : LAKE_FADE_GRADIENT_ID;
+      const stops = [{
+        offset: 0.74,
+        opacity: 1
+      }, {
+        offset: 0.97,
+        opacity: 0
+      }];
+      selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", gradientId);
+      selection.selectAll("stop").data(stops).join("stop").attr("offset", d => d.offset).attr("stop-color", "white").attr("stop-opacity", d => d.opacity);
     };
     /**
      * The gradient alpha fade mask for the Lake Zurich shape
+     *
+     * The mask fades the lake by filling itself with the fade gradient, so it is only useful beside a
+     * `mapLakeFadeGradient` that defines the id given here; the two must be scoped together. The id
+     * defaults to the historical fixed one, and is written on every call, so a later call with a new id
+     * repoints the existing rect.
+     *
      * @param selection A d3 selection of SVG mask elements
+     * @param gradientId The id of the gradient to fill the mask with. Defaults to `lake-fade-gradient`.
      */
-    const mapLakeGradientMask = selection => {
+    const mapLakeGradientMask = function (selection) {
+      let gradientId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : LAKE_FADE_GRADIENT_ID;
       selection.attr("maskContentUnits", "objectBoundingBox");
-      selection.append("rect").attr("fill", "url(#lake-fade-gradient)").attr("width", 1).attr("height", 1);
+      selection.selectAll("rect").data([0]).join("rect").attr("fill", "url(#".concat(gradientId, ")")).attr("width", 1).attr("height", 1);
     };
     /**
      * The pattern for the data area texture
@@ -775,9 +842,19 @@
       const pWidth = 6;
       const pHeight = 6;
       const offset = 0.5;
+      const lines = [{
+        x1: 0,
+        y1: pHeight * offset,
+        x2: pWidth * offset,
+        y2: 0
+      }, {
+        x1: pWidth * offset,
+        y1: pHeight,
+        x2: pWidth,
+        y2: pHeight * offset
+      }];
       selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
-      selection.append("line").attr("x1", 0).attr("y1", pHeight * offset).attr("x2", pWidth * offset).attr("y2", 0).attr("stroke", "#e6e6e6").attr("stroke-width", 1.1);
-      selection.append("line").attr("x1", pWidth * offset).attr("y1", pHeight).attr("x2", pWidth).attr("y2", pHeight * offset).attr("stroke", "#e6e6e6").attr("stroke-width", 1.1);
+      selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke", "#e6e6e6").attr("stroke-width", 1.1);
     };
 
     /**
@@ -11671,15 +11748,13 @@
      * and so on - so two maps on one page no longer define the same id twice. Consumers must not rely on
      * the previously fixed ids.
      *
-     * Note: the pattern helpers in src/patterns.ts append their contents rather than joining them, so
-     * this component may only call them on a definition that is still empty; otherwise the tile would
-     * gain another rect and two lines, the gradient another two stops and the mask another rect on every
-     * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
-     * geojson renderers' "missing-pattern" too.
+     * Note: the pattern helpers in src/patterns.ts are idempotent - they data-join their contents - so
+     * they can be called on every render, and a redraw updates the definition in place rather than
+     * growing it.
      *
      * Note: the mask fades the lake by filling itself with the fade gradient, so the two definitions are
-     * only useful together. Both helpers hard-code the old fixed gradient id, so this component rewrites
-     * the gradient's id and the mask rect's fill after calling them.
+     * only useful together. Both helpers take the gradient id as a trailing argument, so this overlay's
+     * scoped id is handed to them directly rather than rewritten afterwards.
      *
      * Note: the defs element is created inside the map group rather than at the svg root, and
      * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
@@ -11766,17 +11841,6 @@
       group.setAttribute(KEY_ATTRIBUTE$1, generated);
       return generated;
     }
-    /**
-     * Calls one of the pattern helpers, but only on a definition that is still empty. The helpers append
-     * their contents rather than joining them, so calling them on every render would grow the definition
-     * without bound. The id is rewritten afterwards because mapLakeFadeGradient writes its own fixed one.
-     */
-    function defineOnce(definition, elementId, define) {
-      definition.filter(function () {
-        return this.childElementCount === 0;
-      }).call(define).attr("id", elementId);
-      return definition;
-    }
     function mapRendererPatternedLakeOverlay() {
       return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").prop("key").fadeOut(true).render(function () {
         const selection = d3.select(this);
@@ -11785,14 +11849,14 @@
         const patternId = "lake-pattern-".concat(scope);
         const gradientId = "lake-fade-gradient-".concat(scope);
         const maskId = "lake-fade-mask-".concat(scope);
-        // the lake texture
-        defineOnce(ensureDefsElement(selection, "pattern", patternId), patternId, mapLakePattern);
+        // the lake texture. The helpers join their contents, so calling them on every render updates
+        // the definition rather than growing it.
+        ensureDefsElement(selection, "pattern", patternId).call(mapLakePattern);
         if (props.fadeOut) {
-          // the fade gradient
-          defineOnce(ensureDefsElement(selection, "linearGradient", gradientId), gradientId, mapLakeFadeGradient);
-          // the mask, which uses the fade gradient. The helper hard-codes the old fixed gradient id,
-          // so point its rect at this overlay's gradient instead.
-          defineOnce(ensureDefsElement(selection, "mask", maskId), maskId, mapLakeGradientMask).selectAll("rect").attr("fill", "url(#".concat(gradientId, ")"));
+          // the fade gradient, and the mask that fills itself with it - both scoped to this overlay
+          // by the id handed to them.
+          ensureDefsElement(selection, "linearGradient", gradientId).call(mapLakeFadeGradient, gradientId);
+          ensureDefsElement(selection, "mask", maskId).call(mapLakeGradientMask, gradientId);
         } else {
           // Turning the fade off must undo an existing one, not merely skip writing it.
           selection.selectAll("linearGradient#".concat(gradientId, ", mask#").concat(maskId)).remove();
@@ -11841,16 +11905,17 @@
      * @property {Function} position     A function which takes a datum and returns a position for the corresponding
      *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
      *                                   index, no array - unlike a d3 accessor, though the render callback itself
-     *                                   does receive d3's (data, index, group). A null result throws and a
-     *                                   non-finite one is silently dropped; see the notes below.
+     *                                   does receive d3's (data, index, group). Required: a missing position
+     *                                   throws. A null result throws and a non-finite one is silently dropped;
+     *                                   see the notes below.
      * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2. A
      *                                   fractional side antialiases; see the notes below.
      *                                   sszvis.pixelsFromGeoDistance is the intended source for this value, and it
      *                                   returns a float.
      * @property {String, Function} fill The fill function. Takes a datum and should return a fill color for the datum's pixel.
-     *                                   Wrapped in fn.functor, so a constant colour is accepted too. It has no
-     *                                   default. A value the canvas cannot parse leaves the cell unpainted; see
-     *                                   the notes below.
+     *                                   Wrapped in fn.functor, so a constant colour is accepted too. Required: a
+     *                                   missing fill throws. A value the canvas cannot parse leaves the cell
+     *                                   unpainted; see the notes below.
      *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
      *                                   CanvasPattern at runtime, which this contract deliberately excludes.
      * @property {String} key          Identifies this raster within its layer. Default "raster". Two rasters in
@@ -11899,10 +11964,9 @@
      *
      * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
      * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
-     * nothing. Neither position nor fill is validated, and each throws a bare TypeError from
-     * being called, naming neither property - but only for non-empty data, so an empty dataset hides
-     * the misconfiguration entirely. The canvas has already been created by the time any of these
-     * throw.
+     * nothing, and the canvas has already been created by the time it throws. The four required
+     * properties are checked before that: width, height, position and fill are all validated before the
+     * canvas is created, so a missing one is named whether or not there are data to draw.
      *
      * Note: a non-finite position is dropped by the canvas API rather than reported, so a datum the
      * projection could not place leaves a hole in the raster with no indication; a null position throws
@@ -12021,7 +12085,23 @@
      */
     function dimension(value, name) {
       if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-        throw new Error("[map/renderer/raster] ".concat(name, " is required, and must be a finite, non-negative number"));
+        throw new Error("[mapRendererRaster] the ".concat(name, " property is required, and must be a finite, non-negative number"));
+      }
+      return value;
+    }
+    /**
+     * Reads a required accessor, reporting a missing one the way dimension() reports a missing
+     * dimension. Without this the property is read straight out of props inside the per-datum loop, so
+     * a missing one raised a bare TypeError naming nothing - and only when the data were non-empty, so
+     * an empty dataset (the state every chart is in before its data load) hid the misconfiguration
+     * entirely. A constant fill is already a function by the time it is read, since the prop is wrapped
+     * in fn.functor on the way in - which is why `accepts` describes the public contract rather than
+     * the stored value: telling a consumer who omitted `fill` that it "must be a function" would deny
+     * the colour string the component in fact accepts.
+     */
+    function accessor(value, name, accepts) {
+      if (typeof value !== "function") {
+        throw new Error("[mapRendererRaster] the ".concat(name, " property is required, and must be ").concat(accepts));
       }
       return value;
     }
@@ -12034,6 +12114,10 @@
         // rather than falling a hairline short of them at the right and bottom edges.
         const width = Math.ceil(dimension(props.width, "width"));
         const height = Math.ceil(dimension(props.height, "height"));
+        // Validated here rather than where they are called, so a misconfigured raster is reported
+        // before anything is created and whether or not there are data to draw.
+        const position = accessor(props.position, "position", "a function");
+        const fill = accessor(props.fill, "fill", "a color string or an accessor returning one");
         const canvas = selection.selectAll(":scope > canvas.sszvis-map__rasterimage").filter(function () {
           return this.getAttribute(KEY_ATTRIBUTE) === props.key;
         }).data([0]).join("canvas").classed("sszvis-map__rasterimage", true).attr(KEY_ATTRIBUTE, props.key);
@@ -12061,17 +12145,17 @@
         // per render keeps the probe off the hot path.
         const parsed = new Map();
         for (const datum of data) {
-          const position = props.position(datum);
-          const x = coordinate(position, 0) - halfSide;
-          const y = coordinate(position, 1) - halfSide;
-          const fill = props.fill(datum);
-          let parses = parsed.get(fill);
+          const at = position(datum);
+          const x = coordinate(at, 0) - halfSide;
+          const y = coordinate(at, 1) - halfSide;
+          const colour = fill(datum);
+          let parses = parsed.get(colour);
           if (parses === undefined) {
-            parses = fillParses(ctx, fill);
-            parsed.set(fill, parses);
+            parses = fillParses(ctx, colour);
+            parsed.set(colour, parses);
           }
           if (!parses) continue;
-          ctx.fillStyle = fill;
+          ctx.fillStyle = colour;
           ctx.fillRect(x, y, props.cellSide, props.cellSide);
         }
       });
@@ -12609,6 +12693,7 @@
     exports.DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;
     exports.DEFAULT_WIDTH = DEFAULT_WIDTH;
     exports.GEO_KEY_DEFAULT = GEO_KEY_DEFAULT;
+    exports.LAKE_FADE_GRADIENT_ID = LAKE_FADE_GRADIENT_ID;
     exports.RATIO = RATIO;
     exports.STADT_KREISE_KEY = STADT_KREISE_KEY;
     exports.STATISTISCHE_QUARTIERE_KEY = STATISTISCHE_QUARTIERE_KEY;

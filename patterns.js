@@ -6,6 +6,11 @@
  * This module contains svg patterns and pattern helper functions which are used
  * to render important textures for various other components.
  *
+ * Every helper here is idempotent: the contents are data-joined rather than appended, so calling a
+ * helper again on the same element updates that element's contents in place instead of adding a
+ * second copy. Map renderers re-derive their definition selection on every render and `call` these
+ * helpers unconditionally, so appending would grow the definition without bound.
+ *
  * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
  * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
  * @method  mapLakePattern                  The pattern for Lake Zurich in the map component. Used by map.js internally
@@ -16,6 +21,8 @@
  * @method  dataAreaPattern                 The pattern for the data area texture.
  *
  */
+/** The default id `mapLakeFadeGradient` defines and `mapLakeGradientMask` references. */
+const LAKE_FADE_GRADIENT_ID = "lake-fade-gradient";
 /**
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements
@@ -27,10 +34,20 @@ const heatTableMissingValuePattern = selection => {
     crossStrokeWidth = 0.035,
     cross1 = 0.35,
     cross2 = 0.65;
+  const lines = [{
+    x1: cross1,
+    y1: cross1,
+    x2: cross2,
+    y2: cross2
+  }, {
+    x1: cross2,
+    y1: cross1,
+    x2: cross1,
+    y2: cross2
+  }];
   selection.attr("patternUnits", "objectBoundingBox").attr("patternContentUnits", "objectBoundingBox").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1);
-  selection.append("rect").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1).attr("fill", rectFill);
-  selection.append("line").attr("x1", cross1).attr("y1", cross1).attr("x2", cross2).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
-  selection.append("line").attr("x1", cross2).attr("y1", cross1).attr("x2", cross1).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
+  selection.selectAll("rect").data([0]).join("rect").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1).attr("fill", rectFill);
+  selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
 };
 /**
  * The pattern for the map areas which are missing values
@@ -41,12 +58,30 @@ const mapMissingValuePattern = selection => {
     pHeight = 14,
     fillColor = "#FAFAFA",
     lineStroke = "#CCCCCC";
+  const lines = [{
+    x1: 1,
+    y1: 10,
+    x2: 5,
+    y2: 14
+  }, {
+    x1: 5,
+    y1: 10,
+    x2: 1,
+    y2: 14
+  }, {
+    x1: 8,
+    y1: 3,
+    x2: 12,
+    y2: 7
+  }, {
+    x1: 12,
+    y1: 3,
+    x2: 8,
+    y2: 7
+  }];
   selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
-  selection.append("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", fillColor);
-  selection.append("line").attr("x1", 1).attr("y1", 10).attr("x2", 5).attr("y2", 14).attr("stroke", lineStroke);
-  selection.append("line").attr("x1", 5).attr("y1", 10).attr("x2", 1).attr("y2", 14).attr("stroke", lineStroke);
-  selection.append("line").attr("x1", 8).attr("y1", 3).attr("x2", 12).attr("y2", 7).attr("stroke", lineStroke);
-  selection.append("line").attr("x1", 12).attr("y1", 3).attr("x2", 8).attr("y2", 7).attr("stroke", lineStroke);
+  selection.selectAll("rect").data([0]).join("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", fillColor);
+  selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke", lineStroke);
 };
 /**
  * The pattern for Lake Zurich in the map component
@@ -56,27 +91,59 @@ const mapLakePattern = selection => {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;
+  const lines = [{
+    x1: 0,
+    y1: pHeight * offset,
+    x2: pWidth * offset,
+    y2: 0
+  }, {
+    x1: pWidth * offset,
+    y1: pHeight,
+    x2: pWidth,
+    y2: pHeight * offset
+  }];
   selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
-  selection.append("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", "#fff");
-  selection.append("line").attr("x1", 0).attr("y1", pHeight * offset).attr("x2", pWidth * offset).attr("y2", 0).attr("stroke", "#ddd").attr("stroke-linecap", "square");
-  selection.append("line").attr("x1", pWidth * offset).attr("y1", pHeight).attr("x2", pWidth).attr("y2", pHeight * offset).attr("stroke", "#ddd").attr("stroke-linecap", "square");
+  selection.selectAll("rect").data([0]).join("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", "#fff");
+  selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke", "#ddd").attr("stroke-linecap", "square");
 };
 /**
  * The gradient used by the alpha fade pattern in the Lake Zurich shape
+ *
+ * The id it writes is the one `mapLakeGradientMask` has to be pointed at. It defaults to the
+ * historical fixed id, so an unparameterised call is unchanged; pass an id to scope the definition
+ * to one map rather than rewriting the attribute afterwards. Because it is a trailing parameter it
+ * can also be handed over as `selection.call(mapLakeFadeGradient, id)`.
+ *
  * @param selection A d3 selection of SVG linear gradient elements
+ * @param gradientId The id to write on the gradient. Defaults to `lake-fade-gradient`.
  */
-const mapLakeFadeGradient = selection => {
-  selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", "lake-fade-gradient");
-  selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
-  selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
+const mapLakeFadeGradient = function (selection) {
+  let gradientId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : LAKE_FADE_GRADIENT_ID;
+  const stops = [{
+    offset: 0.74,
+    opacity: 1
+  }, {
+    offset: 0.97,
+    opacity: 0
+  }];
+  selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", gradientId);
+  selection.selectAll("stop").data(stops).join("stop").attr("offset", d => d.offset).attr("stop-color", "white").attr("stop-opacity", d => d.opacity);
 };
 /**
  * The gradient alpha fade mask for the Lake Zurich shape
+ *
+ * The mask fades the lake by filling itself with the fade gradient, so it is only useful beside a
+ * `mapLakeFadeGradient` that defines the id given here; the two must be scoped together. The id
+ * defaults to the historical fixed one, and is written on every call, so a later call with a new id
+ * repoints the existing rect.
+ *
  * @param selection A d3 selection of SVG mask elements
+ * @param gradientId The id of the gradient to fill the mask with. Defaults to `lake-fade-gradient`.
  */
-const mapLakeGradientMask = selection => {
+const mapLakeGradientMask = function (selection) {
+  let gradientId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : LAKE_FADE_GRADIENT_ID;
   selection.attr("maskContentUnits", "objectBoundingBox");
-  selection.append("rect").attr("fill", "url(#lake-fade-gradient)").attr("width", 1).attr("height", 1);
+  selection.selectAll("rect").data([0]).join("rect").attr("fill", "url(#".concat(gradientId, ")")).attr("width", 1).attr("height", 1);
 };
 /**
  * The pattern for the data area texture
@@ -86,10 +153,20 @@ const dataAreaPattern = selection => {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;
+  const lines = [{
+    x1: 0,
+    y1: pHeight * offset,
+    x2: pWidth * offset,
+    y2: 0
+  }, {
+    x1: pWidth * offset,
+    y1: pHeight,
+    x2: pWidth,
+    y2: pHeight * offset
+  }];
   selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
-  selection.append("line").attr("x1", 0).attr("y1", pHeight * offset).attr("x2", pWidth * offset).attr("y2", 0).attr("stroke", "#e6e6e6").attr("stroke-width", 1.1);
-  selection.append("line").attr("x1", pWidth * offset).attr("y1", pHeight).attr("x2", pWidth).attr("y2", pHeight * offset).attr("stroke", "#e6e6e6").attr("stroke-width", 1.1);
+  selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke", "#e6e6e6").attr("stroke-width", 1.1);
 };
 
-export { dataAreaPattern, heatTableMissingValuePattern, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern };
+export { LAKE_FADE_GRADIENT_ID, dataAreaPattern, heatTableMissingValuePattern, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern };
 //# sourceMappingURL=patterns.js.map

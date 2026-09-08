@@ -21,16 +21,17 @@
  * @property {Function} position     A function which takes a datum and returns a position for the corresponding
  *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
  *                                   index, no array - unlike a d3 accessor, though the render callback itself
- *                                   does receive d3's (data, index, group). A null result throws and a
- *                                   non-finite one is silently dropped; see the notes below.
+ *                                   does receive d3's (data, index, group). Required: a missing position
+ *                                   throws. A null result throws and a non-finite one is silently dropped;
+ *                                   see the notes below.
  * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2. A
  *                                   fractional side antialiases; see the notes below.
  *                                   sszvis.pixelsFromGeoDistance is the intended source for this value, and it
  *                                   returns a float.
  * @property {String, Function} fill The fill function. Takes a datum and should return a fill color for the datum's pixel.
- *                                   Wrapped in fn.functor, so a constant colour is accepted too. It has no
- *                                   default. A value the canvas cannot parse leaves the cell unpainted; see
- *                                   the notes below.
+ *                                   Wrapped in fn.functor, so a constant colour is accepted too. Required: a
+ *                                   missing fill throws. A value the canvas cannot parse leaves the cell
+ *                                   unpainted; see the notes below.
  *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
  *                                   CanvasPattern at runtime, which this contract deliberately excludes.
  * @property {String} key          Identifies this raster within its layer. Default "raster". Two rasters in
@@ -79,10 +80,9 @@
  *
  * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
  * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
- * nothing. Neither position nor fill is validated, and each throws a bare TypeError from
- * being called, naming neither property - but only for non-empty data, so an empty dataset hides
- * the misconfiguration entirely. The canvas has already been created by the time any of these
- * throw.
+ * nothing, and the canvas has already been created by the time it throws. The four required
+ * properties are checked before that: width, height, position and fill are all validated before the
+ * canvas is created, so a missing one is named whether or not there are data to draw.
  *
  * Note: a non-finite position is dropped by the canvas API rather than reported, so a datum the
  * projection could not place leaves a hole in the raster with no indication; a null position throws

@@ -39,15 +39,13 @@
  * and so on - so two maps on one page no longer define the same id twice. Consumers must not rely on
  * the previously fixed ids.
  *
- * Note: the pattern helpers in src/patterns.ts append their contents rather than joining them, so
- * this component may only call them on a definition that is still empty; otherwise the tile would
- * gain another rect and two lines, the gradient another two stops and the mask another rect on every
- * redraw. The narrower fix would be to make the helpers idempotent, which would cover the base and
- * geojson renderers' "missing-pattern" too.
+ * Note: the pattern helpers in src/patterns.ts are idempotent - they data-join their contents - so
+ * they can be called on every render, and a redraw updates the definition in place rather than
+ * growing it.
  *
  * Note: the mask fades the lake by filling itself with the fade gradient, so the two definitions are
- * only useful together. Both helpers hard-code the old fixed gradient id, so this component rewrites
- * the gradient's id and the mask rect's fill after calling them.
+ * only useful together. Both helpers take the gradient id as a trailing argument, so this overlay's
+ * scoped id is handed to them directly rather than rewritten afterwards.
  *
  * Note: the defs element is created inside the map group rather than at the svg root, and
  * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one

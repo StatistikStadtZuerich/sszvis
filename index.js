@@ -74,7 +74,7 @@ export { default as mapRendererRaster } from './map/renderer/raster.js';
 export { default as choropleth } from './maps/choropleth.js';
 export { measureAxisLabel, measureDimensions, measureLegendLabel, measureText } from './measure.js';
 export { parseDate, parseNumber, parseYear } from './parse.js';
-export { dataAreaPattern, heatTableMissingValuePattern, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern } from './patterns.js';
+export { LAKE_FADE_GRADIENT_ID, dataAreaPattern, heatTableMissingValuePattern, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern } from './patterns.js';
 export { responsiveProps } from './responsiveProps.js';
 export { range } from './scale.js';
 export { halfPixel, roundTransformString, transformTranslateSubpixelShift } from './svgUtils/crisp.js';
