@@ -49,21 +49,13 @@ describe("control/buttonGroup", () => {
   test("should render an empty control when values is set to undefined", () => {
     // The shape #357 was filed against: a chart hands the control a state key that is only
     // assigned when its CSV resolves, so the setter is called with undefined rather than skipped.
-    render(
-      buttonGroup()
-        .width(200)
-        .values(undefined as never)
-    );
+    render(buttonGroup().width(200).values(undefined));
     expect(wrapper()).toBeTruthy();
     expect(buttons()).toHaveLength(0);
   });
 
   test("should render an undefined values list the same as an empty one", () => {
-    render(
-      buttonGroup()
-        .width(200)
-        .values(undefined as never)
-    );
+    render(buttonGroup().width(200).values(undefined));
     const undef = container.innerHTML;
     container.innerHTML = "";
     render(buttonGroup().width(200).values([]));
