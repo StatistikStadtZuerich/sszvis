@@ -111,7 +111,10 @@
  * place rather than a remembered neighbour also survives that neighbour being moved, removed, or
  * re-created. The cost is one extra `<g>` in the markup; consumers selecting
  * .sszvis-map__highlight as a descendant are unaffected. See issue #332, and choropleth's ownGroup
- * for the same pattern applied to the anchored shape.
+ * for the same pattern applied to the anchored shape. The class, paired with this layer's key, is
+ * reserved for this component's own wrapper: a direct child of the render group already carrying
+ * both is adopted rather than replaced, and a second one is removed along with its content - the
+ * same exposure ownGroup has.
  *
  * Note: no transition is scheduled, so a highlight appears and disappears instantly. Unlike the
  * base and geojson renderers this component keeps no caches, emits no missing-value pattern, and

@@ -659,17 +659,22 @@ describe("map/renderer/highlight", () => {
     });
 
     // The wrapper holds a place, not a reference to a neighbour, so moving the sibling that used
-    // to follow it cannot invert the order: the highlight stays where it is and the sibling moves.
+    // to follow it cannot invert the order. The moved sibling alone would prove nothing - it is
+    // unconditionally first once it is inserted there - so the assertion that carries the test is
+    // the second sibling, appended while the layer was empty and never touched: the refilled
+    // paths have to come back in front of it.
     test("is unaffected by a sibling moved in front of it", () => {
       const layer = group("highlight-moved-sibling");
       const node = renderInto(layer, [{ geoId: "a" }]);
-      const sibling = appendSibling(node, "shape");
+      const moved = appendSibling(node, "moved");
       renderInto(layer, []);
-      node.insertBefore(sibling, node.firstChild);
+      const unmoved = appendSibling(node, "unmoved");
+      node.insertBefore(moved, node.firstChild);
       renderInto(layer, [{ geoId: "a" }]);
       const after = highlights(node);
       expect(after).toHaveLength(1);
-      expect(precedes(sibling, after[0])).toBe(true);
+      expect(precedes(moved, after[0])).toBe(true);
+      expect(precedes(after[0], unmoved)).toBe(true);
     });
 
     // A sibling removed and drawn again is a new node, so nothing about it can be remembered. The
@@ -685,6 +690,28 @@ describe("map/renderer/highlight", () => {
       const after = highlights(node);
       expect(after).toHaveLength(1);
       expect(precedes(after[0], replacement)).toBe(true);
+    });
+
+    // The wrapper join is scoped to direct children for a reason: an anchored shape is arbitrary
+    // caller markup and may contain a group of its own carrying this class and key. Matched as a
+    // descendant, it would come second in document order behind the real wrapper, land in the
+    // one-datum join's exit selection, and be removed with everything inside it.
+    test("leaves a nested group of the same key untouched", () => {
+      const layer = group("highlight-nested-decoy");
+      const node = renderInto(layer, [{ geoId: "a" }]);
+      const outer = appendSibling(node, "shape");
+      const nested = node.ownerDocument.createElementNS("http://www.w3.org/2000/svg", "g");
+      nested.setAttribute("class", "sszvis-map__highlight-group");
+      nested.setAttribute("data-highlight-key", "highlight");
+      const content = node.ownerDocument.createElementNS("http://www.w3.org/2000/svg", "circle");
+      content.setAttribute("class", "nested-content");
+      nested.appendChild(content);
+      outer.appendChild(nested);
+
+      renderInto(layer, [{ geoId: "a" }]);
+
+      expect(outer.querySelectorAll("g.sszvis-map__highlight-group")).toHaveLength(1);
+      expect(node.querySelectorAll("circle.nested-content")).toHaveLength(1);
     });
   });
 
