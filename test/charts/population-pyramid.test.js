@@ -1,7 +1,7 @@
 import { ascending } from "d3";
 import { describe, expect, test } from "vitest";
 import { cascade } from "../../src/cascade.js";
-import { stackedPyramidData } from "../../src/component/stackedPyramid.js";
+import { stackedPyramidLayout } from "../../src/component/stackedPyramid.js";
 
 const xAcc = (d) => d.xValue;
 const yAcc = (d) => d.yValue;
@@ -85,7 +85,7 @@ describe("population-pyramid", () => {
       { yValue: 2, gender: "Männer", category: "Andere", xValue: 234 },
       { yValue: 3, gender: "Männer", category: "Andere", xValue: 285 },
     ];
-    const stackedLayout = stackedPyramidData(gAcc, yAcc, cAcc, xAcc);
+    const stackedLayout = stackedPyramidLayout(gAcc, yAcc, cAcc, xAcc);
     const stackedData = stackedLayout(stackedTidyData);
 
     for (const side of stackedData.sides) {

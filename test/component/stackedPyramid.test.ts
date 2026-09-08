@@ -3,8 +3,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   type StackedPyramidLayout,
   type StackedPyramidSide,
+  type StackedPyramidSidesData,
   stackedPyramid,
   stackedPyramidData,
+  stackedPyramidLayout,
 } from "../../src/component/stackedPyramid.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
@@ -15,8 +17,11 @@ type Row = { side: string; row: number; series: string; value: number };
 /** One side of the pyramid: the series d3.stack produced for it. */
 type Side = StackedPyramidSide<Row>;
 
-/** What stackedPyramidData returns: the sides in `sides`, with the overall maximum beside them. */
+/** What stackedPyramidLayout returns: the sides in `sides`, with the overall maximum beside them. */
 type Layout = StackedPyramidLayout<Row>;
+
+/** What stackedPyramidData returns: the sides array, with the overall maximum assigned onto it. */
+type SidesData = StackedPyramidSidesData<Row>;
 
 describe("component/stackedPyramid", () => {
   let container: HTMLDivElement;
@@ -43,6 +48,10 @@ describe("component/stackedPyramid", () => {
   ];
 
   const layoutOf = (data: Row[] = rows): Layout =>
+    stackedPyramidLayout(sideAcc, rowAcc, seriesAcc, valueAcc)(data);
+
+  /** The array-returning form, i.e. what existing charts bind straight to the chart layer. */
+  const sidesDataOf = (data: Row[] = rows): SidesData =>
     stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc)(data);
 
   /** The sides of the layout, i.e. the array the component is handed. */
@@ -123,6 +132,30 @@ describe("component/stackedPyramid", () => {
       return d;
     });
 
+  describe("layout/component contract", () => {
+    // This is the guard whose absence let a broken shape ship: an earlier pass had
+    // stackedPyramidData return { sides, maxValue }, which every chart that binds the return
+    // value straight to the layer indexes into as if it were the sides array. d3's data join
+    // over a non-iterable yields an empty selection, so those charts rendered nothing - four
+    // shipped pyramids, and the unit tests stayed green because they all reshaped the layout
+    // first. Bind exactly what the charts bind and assert marks come out.
+    test("renders bars when the whole stackedPyramidData return value is bound to the layer", () => {
+      const node = render(pyramidOf(), sidesDataOf());
+      expect(bars(node, "leftStack").length).toBe(4);
+      expect(bars(node, "rightStack").length).toBe(4);
+    });
+
+    test("renders bars when the layout's sides are bound to the layer", () => {
+      const node = render(pyramidOf(), layoutOf().sides);
+      expect(bars(node, "leftStack").length).toBe(4);
+      expect(bars(node, "rightStack").length).toBe(4);
+    });
+
+    test("agrees on maxValue between the two forms", () => {
+      expect(sidesDataOf().maxValue).toBe(layoutOf().maxValue);
+    });
+  });
+
   describe("stackedPyramidData", () => {
     test("should return one entry per side", () => {
       const sides = layout();
@@ -192,6 +225,26 @@ describe("component/stackedPyramid", () => {
 
     test("should report the highest stacked total across both sides as maxValue", () => {
       expect(layoutOf().maxValue).toBe(70);
+    });
+
+    test("should return the sides array with maxValue assigned, from stackedPyramidData", () => {
+      // The array-returning form is what the shipped charts bind straight to the chart layer,
+      // so it stays an ordinary array that the side accessors can index into positionally.
+      const sides = sidesDataOf();
+      expect(Array.isArray(sides)).toBe(true);
+      expect(sides.length).toBe(2);
+      expect(sides.maxValue).toBe(70);
+    });
+
+    test("drops the assigned maxValue on copy, which is why it is deprecated", () => {
+      // maxValue is a property on the returned array rather than a field of a wrapper object,
+      // so a spread or a trip through JSON loses it. That is the whole reason for
+      // stackedPyramidLayout; the property is kept, and deprecated, so that the charts binding
+      // the array keep working.
+      const sides = sidesDataOf();
+      expect(sides.maxValue).toBe(70);
+      expect(([...sides] as SidesData).maxValue).toBeUndefined();
+      expect((JSON.parse(JSON.stringify(sides)) as SidesData).maxValue).toBeUndefined();
     });
 
     test("should keep maxValue when the layout is copied", () => {
