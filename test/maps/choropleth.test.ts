@@ -147,10 +147,10 @@ describe("maps/choropleth", () => {
   ];
   /**
    * The scope the lake overlay generated for this group, which qualifies its three definition ids.
-   * Read back rather than hardcoded, since the generated scope is a global counter.
+   * Read back rather than hardcoded, since the generated scope is a global counter. The overlay
+   * records it on the group it draws into, which is the map group itself.
    */
-  const lakeScope = (node: Element) =>
-    node.querySelector('[data-d3-selectgroup="lake"]')?.getAttribute("data-lake-key") ?? null;
+  const lakeScope = (node: Element) => node.getAttribute("data-lake-key");
   const highlights = (node: Element) => [
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__highlight"),
   ];
@@ -418,9 +418,9 @@ describe("maps/choropleth", () => {
       expect(node.querySelectorAll(`#lake-fade-gradient-${scope}`)).toHaveLength(0);
     });
 
-    // The lake sits under the highlight mesh, and has to stay there across a toggle. The wrapper it
-    // is drawn into is emptied rather than removed for exactly this reason: a removed wrapper would
-    // be re-appended after the highlight on the next render, and the lake would cover it.
+    // The lake sits under the highlight mesh, and has to stay there across a toggle. Its paths are
+    // drawn straight into the map group, so the overlay re-appends them at the end when the lake
+    // comes back; choropleth moves them back beneath the highlight for exactly this reason.
     test("keeps the lake beneath the highlight when withLake is toggled off and on", () => {
       const collection = geoJson();
       const target = layer("lake-toggle");
@@ -449,13 +449,36 @@ describe("maps/choropleth", () => {
       expect(lake(node)).toHaveLength(1);
 
       // The lake must still be painted before the highlight, which the highlight renderer appends
-      // straight into the map group rather than into a wrapper of its own.
-      const lakeWrapper = node.querySelector(':scope > [data-d3-selectgroup="lake"]') as Element;
+      // straight into the map group as the lake overlay now does.
       const highlight = highlights(node)[0];
       expect(highlight).toBeDefined();
-      expect(
-        lakeWrapper.compareDocumentPosition(highlight) & Node.DOCUMENT_POSITION_FOLLOWING
-      ).toBeTruthy();
+      for (const path of [...lake(node), ...lakePaths(node)]) {
+        expect(
+          path.compareDocumentPosition(highlight) & Node.DOCUMENT_POSITION_FOLLOWING
+        ).toBeTruthy();
+      }
+    });
+
+    // The overlay clears itself, so choropleth no longer wraps it in a group of its own: the lake's
+    // paths and definitions sit directly in the map group, one level shallower than before.
+    test("draws the lake straight into the map group, with no wrapper", () => {
+      const node = render(fullData);
+      expect(node.querySelectorAll('[data-d3-selectgroup="lake"]')).toHaveLength(0);
+      expect(lake(node)[0].parentElement).toBe(node);
+      expect(lakePaths(node)[0].parentElement).toBe(node);
+      expect(node.querySelector("defs")?.parentElement).toBe(node);
+    });
+
+    // withLake defaults to true, but the overlay draws nothing without a lake shape - so a map
+    // that simply leaves the lake data out carries no lake markup at all.
+    test("draws no lake markup when withLake is on but no lake data is given", () => {
+      const collection = geoJson();
+      const node = layer()
+        .call(choropleth().features(collection).borders(mesh()).width(170).height(170))
+        .node() as SVGGElement;
+      expect(lake(node)).toHaveLength(0);
+      expect(lakePaths(node)).toHaveLength(0);
+      expect(node.querySelectorAll(`#lake-pattern-${lakeScope(node)}`)).toHaveLength(0);
     });
 
     test("delegates lakePathColor to the lake renderer", () => {
@@ -464,8 +487,8 @@ describe("maps/choropleth", () => {
     });
   });
 
-  // The lake is drawn into a group of the component's own, so turning it off removes everything
-  // the renderer drew - both paths and the definitions it emitted - rather than leaving the
+  // withLake off reaches the overlay as "no lake feature", which the overlay answers by removing
+  // everything it drew - both paths and the definitions it emitted - rather than leaving the
   // texture over the map. docs/map-standard/statistische-zonen.js documents withLake(false) as
   // the way to reveal the lake zones underneath.
   test("removes a previously rendered lake when withLake is turned off", () => {
@@ -813,20 +836,6 @@ describe("maps/choropleth", () => {
   });
 
   describe("known quirks", () => {
-    // NOTE: withLake defaults to true, so a map with no lake data still gets the lake renderer,
-    // which emits the pattern definition and two empty paths. Every non-Zurich map - switzerland
-    // included - has to remember .withLake(false) or it carries them.
-    test("renders empty lake paths when withLake is on but no lake data is given", () => {
-      const collection = geoJson();
-      const node = layer()
-        .call(choropleth().features(collection).borders(mesh()).width(170).height(170))
-        .node() as SVGGElement;
-      expect(lake(node)[0].getAttribute("d")).toBeNull();
-      expect(lakePaths(node)[0].getAttribute("d")).toBeNull();
-      const root = node.ownerSVGElement as SVGSVGElement;
-      expect(root.querySelectorAll(`#lake-pattern-${lakeScope(node)}`)).toHaveLength(1);
-    });
-
     // NOTE: the handlers are bound with selectAll("[data-event-target]"), which is scoped to the
     // rendered group but is otherwise indiscriminate: any descendant carrying the attribute is
     // bound, and the previous render's listeners are replaced rather than added to.
