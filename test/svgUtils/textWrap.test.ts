@@ -1,5 +1,5 @@
 import { select } from "d3";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import textWrap from "../../src/svgUtils/textWrap.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -125,6 +125,13 @@ describe("svgUtils/textWrap", () => {
         const text = appendText("aaa bbb");
         expect(textWrap(select(text), 100, 30)).toEqual([2]);
       });
+
+      test("should still break text when the horizontal padding is not a number", () => {
+        // NOTE: a NaN padding must not poison the available width, which would compare every
+        // measured line against NaN and silently disable wrapping altogether.
+        const text = appendText("aaaaa bbbbb ccccc");
+        expect(textWrap(select(text), 100, Number.NaN)).toEqual([3]);
+      });
     });
 
     describe("horizontal placement", () => {
@@ -187,6 +194,38 @@ describe("svgUtils/textWrap", () => {
         expect(tspansOf(text)[0].getAttribute("x")).toBe("20");
       });
 
+      test("should honor a negative horizontal padding", () => {
+        const text = appendText("aa");
+        textWrap(select(text), 100, -10);
+        expect(tspansOf(text)[0].getAttribute("x")).toBe("-10");
+      });
+
+      test("should fall back to the default for a horizontal padding that is not a number", () => {
+        const text = appendText("aa");
+        textWrap(select(text), 100, Number.NaN);
+        expect(tspansOf(text)[0].getAttribute("x")).toBe("5");
+      });
+
+      test("should fall back to the default for an infinite horizontal padding", () => {
+        const text = appendText("aa");
+        textWrap(select(text), 100, Number.POSITIVE_INFINITY);
+        expect(tspansOf(text)[0].getAttribute("x")).toBe("5");
+      });
+
+      test("should warn when a supplied horizontal padding is unusable", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        textWrap(select(appendText("aa")), 100, Number.NaN);
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
+      });
+
+      test("should not warn when the horizontal padding is omitted", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        textWrap(select(appendText("aa")), 100);
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+      });
+
       test("should treat a detached text node as not being a tick label", () => {
         const text = document.createElementNS(SVG_NS, "text");
         text.textContent = "aa";
@@ -214,6 +253,34 @@ describe("svgUtils/textWrap", () => {
         const text = appendText("aa");
         textWrap(select(text), 100, 5, 0);
         expect(tspansOf(text)[0].getAttribute("y")).toBe("-2");
+      });
+
+      test("should honor a negative vertical padding", () => {
+        // NOTE: the border adjustment of 2 still applies, so an explicit -10 yields -12.
+        const text = appendText("aa");
+        textWrap(select(text), 100, 5, -10);
+        expect(tspansOf(text)[0].getAttribute("y")).toBe("-12");
+      });
+
+      test("should fall back to the default for a vertical padding that is not a number", () => {
+        const text = appendText("aa");
+        textWrap(select(text), 100, 5, Number.NaN);
+        expect(tspansOf(text)[0].getAttribute("y")).toBe("3");
+      });
+
+      test("should fall back to the default for an infinite vertical padding", () => {
+        const text = appendText("aa");
+        textWrap(select(text), 100, 5, Number.POSITIVE_INFINITY);
+        expect(tspansOf(text)[0].getAttribute("y")).toBe("3");
+      });
+
+      test("should never write a non-numeric y or x attribute", () => {
+        const text = appendText("aaaaa bbbbb ccccc");
+        textWrap(select(text), 100, Number.NaN, Number.NaN);
+        for (const tspan of tspansOf(text)) {
+          expect(tspan.getAttribute("x")).not.toBe("NaN");
+          expect(tspan.getAttribute("y")).not.toBe("NaN");
+        }
       });
 
       test("should preserve the y attribute of the text element", () => {
