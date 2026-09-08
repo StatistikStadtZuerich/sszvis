@@ -2,7 +2,11 @@ import { type ScaleBand, type ScaleLinear, scaleBand, scaleLinear } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { cascade } from "../../src/cascade.js";
 import nestedStackedBarsVertical from "../../src/component/nestedStackedBar.js";
-import { type StackedBarLayout, stackedBarVerticalData } from "../../src/component/stackedBar.js";
+import {
+  type StackedBarSeries,
+  type StackedBarSeriesData,
+  stackedBarVerticalData,
+} from "../../src/component/stackedBar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
 
@@ -11,7 +15,7 @@ type Row = { year: string; category: string; nested: string; value: number };
 /** One slice of a stack: [y0, y1] plus the properties stackedBarVerticalData attaches. */
 type Slice = [number, number] & { data: Row; series: string; stack: string };
 /** One stack layout, tagged with the nested group it belongs to. */
-type NestedStack = StackedBarLayout<Row> & { nest: string | number };
+type NestedStack = StackedBarSeriesData<Row>;
 
 describe("component/nestedStackedBar", () => {
   let container: HTMLDivElement;
@@ -29,7 +33,7 @@ describe("component/nestedStackedBar", () => {
   ];
 
   /** Builds the two-level structure the component expects: cascade by nest, then stack by year. */
-  const nestedData = (data: Row[] = rows): NestedStack[] => {
+  const nestedData = (data: Row[] = rows, tag: "key" | "nest" = "key"): NestedStack[] => {
     const stackLayout = stackedBarVerticalData(
       (d: Row) => d.year,
       (d: Row) => d.category,
@@ -38,17 +42,20 @@ describe("component/nestedStackedBar", () => {
     return cascade<Row>()
       .arrayBy((d: Row) => d.nested)
       .apply<Row[][]>(data)
-      .map((group: Row[]): NestedStack => ({ ...stackLayout(group), nest: group[0].nested }));
+      .map(
+        (group: Row[]): NestedStack => Object.assign(stackLayout(group), { [tag]: group[0].nested })
+      );
   };
 
   /** A layout for a nested group that carries no stacks at all. */
-  const emptyLayout = (nest: string): NestedStack => ({
-    series: [],
-    keys: [],
-    maxValue: 0,
-    minValue: 0,
-    nest,
-  });
+  const emptyLayout = (key: string): NestedStack =>
+    Object.assign([] as StackedBarSeries<Row>[], { maxValue: 0, minValue: 0, key });
+
+  /** The same layouts with their group key stripped, which is what the fallback is about. */
+  const untaggedData = (data: Row[] = rows): NestedStack[] =>
+    nestedData(data).map((stack) =>
+      Object.assign(stack.slice(), { maxValue: stack.maxValue, minValue: stack.minValue })
+    );
 
   let offsetScale: ScaleBand<string>;
   let xScale: ScaleBand<string>;
@@ -88,7 +95,7 @@ describe("component/nestedStackedBar", () => {
   /** A component wired to the test row shape, with every required prop set. */
   const nestedOf = () =>
     nestedStackedBarsVertical()
-      .offset((d: NestedStack) => offsetScale(String(d.nest)))
+      .offset((d: NestedStack) => offsetScale(String(d.key)))
       .xScale(xScale)
       .yScale(yScale)
       .xAcc((d: Row) => d.year)
@@ -393,12 +400,12 @@ describe("component/nestedStackedBar", () => {
       });
     }
 
-    // `xAcc` is accepted but never read: the groups take their identity from the nest key, so
+    // `xAcc` is accepted but never read: the groups take their identity from the group key, so
     // a caller that omits the accessor gets the same chart instead of an error.
     test("should render without xAcc", () => {
       const node = render(
         nestedStackedBarsVertical()
-          .offset((d: NestedStack) => offsetScale(String(d.nest)))
+          .offset((d: NestedStack) => offsetScale(String(d.key)))
           .xScale(xScale)
           .yScale(yScale)
           .tooltip(() => undefined)
@@ -431,7 +438,7 @@ describe("component/nestedStackedBar", () => {
   });
 
   describe("group identity", () => {
-    test("should label every group with its own nest key", () => {
+    test("should label every group with its own group key", () => {
       const node = render(nestedOf());
       expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["F", "M"]);
     });
@@ -444,29 +451,45 @@ describe("component/nestedStackedBar", () => {
       }
     });
 
-    test("should throw a named error for a layout with no nest key", () => {
-      // The nest key is a declared field of the layout, and it both labels and positions the
-      // group, so a layout without one can never render correctly. It used to fall back to the
-      // group index, which labelled the group but still left `offset` reading undefined.
-      const untagged = nestedData().map(({ nest: _nest, ...stack }) => stack as NestedStack);
-      expect(() => render(nestedOf(), untagged)).toThrow(
-        "[nestedStackedBarsVertical] the layout at index 0 has no nest key"
+    test("should accept nest as the older name of the group key", () => {
+      // Most call sites tag the layout with `key`; a few use `nest`, which is what this
+      // component's own docs example used to do. Both are read, `key` first.
+      const node = render(
+        nestedOf().offset((d: NestedStack) => offsetScale(String(d.nest))),
+        nestedData(rows, "nest")
       );
+      expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["F", "M"]);
+      expect(rects(node).length).toBe(rows.length);
     });
 
-    test("should name the offending index when only a later layout has no nest key", () => {
-      const [first, second] = nestedData();
-      const { nest: _nest, ...untagged } = second;
-      expect(() => render(nestedOf(), [first, untagged as NestedStack])).toThrow(
-        "[nestedStackedBarsVertical] the layout at index 1 has no nest key"
+    test("should warn and label by index for a layout with no group key", () => {
+      // Neither name is required. The label falls back to the group index and the chart still
+      // renders: `offset` is the caller's own functor and need not read the key at all, so a
+      // missing key is a diagnostic rather than a reason to draw nothing.
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const node = render(nestedOf(), untaggedData());
+      expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["0", "1"]);
+      expect(rects(node).length).toBe(rows.length);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "[nestedStackedBarsVertical] the nested group at index 0 has no key"
+        )
       );
+      warn.mockRestore();
     });
 
-    test("should validate the nest keys before rendering anything", () => {
-      const empty = group("validate-nest-first");
-      const untagged = nestedData().map(({ nest: _nest, ...stack }) => stack as NestedStack);
-      expect(() => empty.datum(untagged).call(nestedOf() as never)).toThrow();
-      expect(groups(empty.node() as SVGGElement).length).toBe(0);
+    test("should name the offending index when only a later layout has no group key", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const [first] = nestedData();
+      const [, second] = untaggedData();
+      const node = render(nestedOf(), [first, second]);
+      expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["F", "1"]);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "[nestedStackedBarsVertical] the nested group at index 1 has no key"
+        )
+      );
+      warn.mockRestore();
     });
   });
 
