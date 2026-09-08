@@ -180,6 +180,13 @@ describe("svgUtils/textWrap", () => {
         textWrap(select(text), 100, 20);
         expect(tspansOf(text)[0].getAttribute("x")).toBe("20");
       });
+
+      test("should treat a detached text node as not being a tick label", () => {
+        const text = document.createElementNS(SVG_NS, "text");
+        text.textContent = "aa";
+        expect(() => textWrap(select(text), 100)).not.toThrow();
+        expect(tspansOf(text)[0].getAttribute("x")).toBe("5");
+      });
     });
 
     describe("vertical placement", () => {
