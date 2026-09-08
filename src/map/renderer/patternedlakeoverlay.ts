@@ -74,8 +74,12 @@
  * shape covering the lake - SVG's initial fill is black - and both paths swallow the base layer's
  * hover and click events.
  *
- * Note: both path selectors are scoped by the overlay's key, so two overlays rendered into one group
- * each draw their own pair of paths as long as they are given distinct keys.
+ * Note: both path selectors are scoped to the rendering group's own children and filtered by the
+ * overlay's key, and the joins are keyed by that scope too - so two overlays rendered into one
+ * group each draw their own pair of paths as long as they are given distinct keys, and an overlay
+ * in a nested group is left alone even if it carries the same key. Two unkeyed overlays in one
+ * group still share the scope generated for that group, and so share one pair of paths; that is
+ * what makes a re-render from a freshly constructed component reuse its elements.
  *
  * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
  * caches, and does not mutate the geoJson it is handed, so the whole centroid-caching family of
@@ -231,13 +235,25 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         selection.selectAll(`linearGradient#${gradientId}, mask#${maskId}`).remove();
       }
 
+      /**
+       * The paths of one class this overlay owns: scoped to the rendering group's own children, so
+       * an overlay in a nested group is never rebound, and filtered by key, which is what lets two
+       * overlays share one group. Read back through getAttribute rather than matched with an
+       * attribute selector, so a caller-supplied key needs no escaping.
+       */
+      const ownPaths = (className: string) =>
+        selection
+          .selectAll<SVGPathElement, GeoPermissibleObjects>(`:scope > path.${className}`)
+          .filter(function () {
+            return this.getAttribute(KEY_ATTRIBUTE) === scope;
+          });
+
+      /** Keyed by the overlay's scope, so a path is only ever rebound by the overlay that drew it. */
+      const joinKey = () => scope;
+
       // generate the Lake Zurich path
-      const zurichSee = selection
-        .selectAll<SVGPathElement, GeoPermissibleObjects>(".sszvis-map__lakezurich")
-        .filter(function () {
-          return this.getAttribute(KEY_ATTRIBUTE) === scope;
-        })
-        .data([props.lakeFeature])
+      const zurichSee = ownPaths("sszvis-map__lakezurich")
+        .data([props.lakeFeature], joinKey)
         .join("path")
         .classed("sszvis-map__lakezurich", true)
         .attr(KEY_ATTRIBUTE, scope)
@@ -249,12 +265,8 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
 
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
-      const lakePath = selection
-        .selectAll<SVGPathElement, GeoPermissibleObjects>(".sszvis-map__lakepath")
-        .filter(function () {
-          return this.getAttribute(KEY_ATTRIBUTE) === scope;
-        })
-        .data([props.lakeBounds])
+      const lakePath = ownPaths("sszvis-map__lakepath")
+        .data([props.lakeBounds], joinKey)
         .join("path")
         .classed("sszvis-map__lakepath", true)
         .attr(KEY_ATTRIBUTE, scope)
