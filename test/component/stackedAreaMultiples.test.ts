@@ -895,6 +895,23 @@ describe("component/stackedAreaMultiples", () => {
   });
 
   describe("transition", () => {
+    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+      const g = group("interrupted");
+      g.datum(oneLayer).call(areaOf() as never);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      // An updating band tweens, so this schedules one towards a different shape.
+      g.datum(twoLayers).call(areaOf() as never);
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      // Back to the one-band shape, which is NOT the tween's destination - writing the
+      // tween's own destination here would leave nothing to observe.
+      g.datum(oneLayer).call(staticAreaOf() as never);
+      // Past the 300ms default, so an uninterrupted tween would have reached its destination.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      expect(ds(g.node() as SVGGElement)).toEqual(ds(render(staticAreaOf(), oneLayer)));
+    });
+
     const settle = () => new Promise((resolve) => setTimeout(resolve, 400));
     /**
      * Resolves once a running tween has moved `attr` off the value it started from. Tests that

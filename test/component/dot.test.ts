@@ -424,6 +424,44 @@ describe("component/dot", () => {
   });
 
   describe("transition", () => {
+    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+      const g = group("interrupted");
+      g.datum([{ x: 0, y: 0, r: 2 }]).call(dotOf().transition(true) as never);
+      // Schedules a tween from 0 towards 500.
+      g.datum([{ x: 500, y: 400, r: 20 }]).call(dotOf().transition(true) as never);
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      g.datum([{ x: 0, y: 0, r: 2 }]).call(dotOf().transition(false) as never);
+      // Past the 300ms default, so an uninterrupted tween would have reached its destination.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "cx")).toEqual(["0"]);
+      expect(attrs(node, "cy")).toEqual(["0"]);
+      expect(attrs(node, "r")).toEqual(["2"]);
+    });
+
+    test("should not interrupt a transition the consumer scheduled on the same dots", async () => {
+      const g = group("consumer-tween");
+      g.datum([{ x: 0, y: 0, r: 2 }]).call(dotOf().transition(false) as never);
+
+      // A consumer fades the dots in with its own, unnamed transition - the name a bare
+      // selection.transition() uses, which the component's interrupt must not reach.
+      g.selectAll("circle.sszvis-circle")
+        .attr("opacity", 0)
+        .transition()
+        .duration(300)
+        .attr("opacity", 1);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      g.datum([{ x: 5, y: 5, r: 3 }]).call(dotOf().transition(false) as never);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "opacity")).toEqual(["1"]);
+      expect(attrs(node, "cx")).toEqual(["5"]);
+    });
+
     test("should render the same output whether or not transition is enabled", () => {
       const withTransition = render(dotOf().transition(true), testData);
       const withoutTransition = render(dotOf().transition(false), testData);

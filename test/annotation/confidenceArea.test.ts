@@ -335,6 +335,37 @@ describe("annotation/confidenceArea", () => {
     expect(areasWithTransition.length).toBe(1);
   });
 
+  test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+    const areaOf = (transition: boolean) =>
+      confidenceArea()
+        .x((d: unknown) => (d as TestDatum).x)
+        .y0((d: unknown) => (d as TestDatum).y0)
+        .y1((d: unknown) => (d as TestDatum).y1)
+        .transition(transition);
+    const shifted = testData.map((d) => ({ ...d, y0: d.y0 + 100, y1: d.y1 + 100 }));
+
+    const chartLayer = createSvgLayer("#chart-container", undefined, {
+      key: "interrupted",
+    }).selectGroup("areas");
+    chartLayer.datum([testData]).call(areaOf(true));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    // Schedules a tween towards the shifted outline.
+    chartLayer.datum([shifted]).call(areaOf(true));
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    chartLayer.datum([testData]).call(areaOf(false));
+    // Past the 300ms default, so an uninterrupted tween would have reached its destination.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    const reference = createSvgLayer("#chart-container", undefined, { key: "reference" })
+      .selectGroup("areas")
+      .datum([testData])
+      .call(areaOf(false));
+    expect(chartLayer.select("path.sszvis-area").attr("d")).toBe(
+      reference.select("path.sszvis-area").attr("d")
+    );
+  });
+
   test("schedules the default transition's duration and easing", () => {
     const areaComponent = confidenceArea()
       .x((d: unknown) => (d as TestDatum).x)
