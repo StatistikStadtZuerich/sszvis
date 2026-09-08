@@ -150,9 +150,12 @@ describe("viewport/resize", () => {
         throw boom;
       });
       viewport.trigger("resize");
-      expect(error).toHaveBeenCalledWith(boom);
-      expect(error.mock.calls.flat().join()).toContain(
-        '[sszvis.viewport] A "resize" listener threw'
+      // The message and its cause arrive as one console entry, so the cause stays attached to
+      // the message that explains it.
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(error).toHaveBeenCalledWith(
+        expect.stringContaining('[sszvis.viewport] A "resize" listener threw'),
+        boom
       );
     });
 
