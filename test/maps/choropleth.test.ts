@@ -289,11 +289,11 @@ describe("maps/choropleth", () => {
       expect(distinct(seen)).toEqual([{ kreis: "a" }, { kreis: "b" }, { kreis: "c" }]);
     });
 
-    // A layer where no entity has a datum encodes no data, so it is drawing geometry rather than
-    // values and keeps the caller's fill instead of texturing everything as missing.
+    // A map that says it encodes no data is drawing geometry rather than values, so it keeps the
+    // caller's fill instead of texturing everything as missing.
     // docs/map-extended/rastermap-bins.js relies on this: it draws the choropleth as a
     // transparent outline over a raster image, with fill("none") and no data at all.
-    test("keeps the caller's fill for a map with no data at all", () => {
+    test("keeps the caller's fill for a map that encodes no data", () => {
       const collection = geoJson();
       const seen: unknown[] = [];
       const node = layer()
@@ -305,6 +305,7 @@ describe("maps/choropleth", () => {
             .height(130)
             .withLake(false)
             .transitionColor(false)
+            .encodesData(false)
             .fill((d?: Datum) => {
               seen.push(d);
               return "#ff0000";
