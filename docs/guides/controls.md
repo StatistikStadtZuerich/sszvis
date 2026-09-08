@@ -24,6 +24,10 @@ The total width of the buttonGroup control. Each option will have 1/3rd of this 
 
 A callback/event handler function to call when the user clicks on a value. Note that clicking on a value does not necessarily change any state unless this callback function does something.
 
+#### `buttonGroup.[ariaLabel]`
+
+An accessible name for the group of buttons, written to the wrapper as `aria-label`. The group carries `role="radiogroup"`, which assistive technology announces without saying what is being chosen — so pass the name of the dimension the buttons select, for example `"Ansicht"` or `"Jahr"`. No default: with none supplied, no attribute is written.
+
 ### Example
 
 ```project
@@ -67,6 +71,10 @@ The total width of the select control. If text labels exceed this width they wil
 #### `selectMenu.change`
 
 A callback/event handler function to call when the user clicks on a value. Note that clicking on a value does not necessarily change any state unless this callback function does something.
+
+#### `selectMenu.[ariaLabel]`
+
+An accessible name for the menu, written to the `select` element as `aria-label`. No default: with none supplied, no attribute is written. Pass the same value you would give the equivalent `buttonGroup`, so the two stay interchangeable across breakpoints.
 
 ### Example
 
