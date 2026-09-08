@@ -54,7 +54,7 @@ describe("map/renderer/bubble", () => {
       key: key ?? `bubble-${++layerKey}`,
     }).selectGroup("map");
 
-  /** A fresh geojson each time, since getGeoJsonCenter caches onto the features. */
+  /** A fresh geojson each time, so a test that moves a feature's geometry cannot leak. */
   const geoJson = (): FeatureCollection<Polygon> => ({
     type: "FeatureCollection",
     features: [square("a"), square("b", 2), square("c", 4)],
@@ -792,10 +792,7 @@ describe("map/renderer/bubble", () => {
       expect(seen).toContain(undefined);
     });
 
-    // NOTE: the anchor positions go through getGeoJsonCenter, which caches a centre onto every
-    // feature's properties and never invalidates it - so moving a feature's geometry leaves its
-    // bubble behind. Shared with the base renderer, and documented in mapUtils.
-    test("keeps a bubble at the cached centre after the geometry moves", () => {
+    test("moves a bubble when the feature's geometry moves", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("bubble-cached-centre");
@@ -824,7 +821,7 @@ describe("map/renderer/bubble", () => {
           [8, 8],
         ],
       ];
-      expect(circles(renderWith())[0].getAttribute("transform")).toBe(before);
+      expect(circles(renderWith())[0].getAttribute("transform")).not.toBe(before);
     });
 
     // The other half of the "no datum" note above: an accessor that reads through the datum
