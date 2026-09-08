@@ -59,9 +59,20 @@
  * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
  *                                      unset, a 1px #FFFFFF stroke separates the segments -
  *                                      centred on the bar edge, so it overpaints half a pixel
- *                                      on each side. A truthy value such as "none" replaces the
- *                                      separator, but every falsy value falls back to it, so it
- *                                      cannot be removed by null or an empty string.
+ *                                      on each side. The default applies when the property is
+ *                                      undefined, whether it was never set or set to undefined
+ *                                      explicitly. Every other value is rendered as set: "none"
+ *                                      replaces the separator, null writes no stroke attribute
+ *                                      at all, and an empty string writes stroke="" - an empty
+ *                                      attribute, not a removed one. An accessor is always
+ *                                      called, and one that returns undefined for a slice
+ *                                      leaves that rect with no stroke attribute rather than
+ *                                      the white default.
+ * @property {boolean} transition       Optional, and forwarded to bar. Whether to animate the
+ *                                      segment geometry on an update. Defaults to bar's own
+ *                                      default of true; pass false for anything that measures
+ *                                      the chart synchronously, or that re-renders faster than
+ *                                      the animation can finish.
  *
  * Note: the two layout functions are the same computation and differ only in the stack order,
  * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
@@ -97,8 +108,7 @@
  * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
  * selector and no key function, so any pre-existing stack below the target group, at any depth,
  * is captured and re-bound, and surviving groups and rects are matched by index rather than by
- * series. The component also forwards neither bar's `transition` property nor its tooltip
- * anchor properties, so a caller cannot turn the segment animation off, and the tooltip anchor
+ * series. The component does not forward bar's tooltip anchor properties, so the tooltip anchor
  * is always at the top centre of a segment. See test/component/stackedBar.test.ts.
  *
  * @return {sszvis.component}
@@ -158,8 +168,9 @@ type StoredDimension<T, X extends string | number> = (slice?: StackedBarSlice<T,
 /** fill is stored exactly as set, and may be left unset, in which case no fill is written. */
 type FillValue<T, X extends string | number> = SliceValue<StackedBarSlice<T, X>, string | undefined>;
 /**
- * stroke is stored exactly as set. Every falsy value is accepted and means the same thing,
- * since the renderer falls back to the white default for all of them.
+ * stroke is stored exactly as set and rendered as set. Only undefined - never set, or set to
+ * undefined - falls back to the white default. null writes no stroke attribute; an empty
+ * string writes an empty one, stroke="".
  */
 type StrokeValue<T, X extends string | number> = string | null | undefined | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
 /**
@@ -179,6 +190,8 @@ export interface StackedBarVerticalComponent<T = unknown, X extends string | num
     fill<U = StackedBarSlice<T, X>>(value: SliceValue<U, string | undefined>): StackedBarVerticalComponent<T, X>;
     stroke(): StrokeValue<T, X>;
     stroke<U = StackedBarSlice<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarVerticalComponent<T, X>;
+    transition(): boolean;
+    transition(enabled: boolean): StackedBarVerticalComponent<T, X>;
 }
 export interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string> extends ComponentBuilder<StackedBarHorizontalComponent<T, X>> {
     xScale(): ValueScale;
@@ -193,6 +206,8 @@ export interface StackedBarHorizontalComponent<T = unknown, X extends string | n
     fill<U = StackedBarSlice<T, X>>(value: SliceValue<U, string | undefined>): StackedBarHorizontalComponent<T, X>;
     stroke(): StrokeValue<T, X>;
     stroke<U = StackedBarSlice<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarHorizontalComponent<T, X>;
+    transition(): boolean;
+    transition(enabled: boolean): StackedBarHorizontalComponent<T, X>;
 }
 export declare function stackedBarHorizontal<T = unknown, X extends string | number = string>(): StackedBarHorizontalComponent<T, X>;
 export declare function stackedBarVertical<T = unknown, X extends string | number = string>(): StackedBarVerticalComponent<T, X>;

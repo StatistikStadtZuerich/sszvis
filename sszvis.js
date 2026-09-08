@@ -5958,9 +5958,20 @@
      * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
      *                                      unset, a 1px #FFFFFF stroke separates the segments -
      *                                      centred on the bar edge, so it overpaints half a pixel
-     *                                      on each side. A truthy value such as "none" replaces the
-     *                                      separator, but every falsy value falls back to it, so it
-     *                                      cannot be removed by null or an empty string.
+     *                                      on each side. The default applies when the property is
+     *                                      undefined, whether it was never set or set to undefined
+     *                                      explicitly. Every other value is rendered as set: "none"
+     *                                      replaces the separator, null writes no stroke attribute
+     *                                      at all, and an empty string writes stroke="" - an empty
+     *                                      attribute, not a removed one. An accessor is always
+     *                                      called, and one that returns undefined for a slice
+     *                                      leaves that rect with no stroke attribute rather than
+     *                                      the white default.
+     * @property {boolean} transition       Optional, and forwarded to bar. Whether to animate the
+     *                                      segment geometry on an update. Defaults to bar's own
+     *                                      default of true; pass false for anything that measures
+     *                                      the chart synchronously, or that re-renders faster than
+     *                                      the animation can finish.
      *
      * Note: the two layout functions are the same computation and differ only in the stack order,
      * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
@@ -5996,8 +6007,7 @@
      * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
      * selector and no key function, so any pre-existing stack below the target group, at any depth,
      * is captured and re-bound, and surviving groups and rects are matched by index rather than by
-     * series. The component also forwards neither bar's `transition` property nor its tooltip
-     * anchor properties, so a caller cannot turn the segment animation off, and the tooltip anchor
+     * series. The component does not forward bar's tooltip anchor properties, so the tooltip anchor
      * is always at the top centre of a segment. See test/component/stackedBar.test.ts.
      *
      * @return {sszvis.component}
@@ -6101,27 +6111,37 @@
       if (typeof fill !== "function") return fill;
       return (slice, index) => slice.data === undefined ? undefined : fill(slice, index);
     }
+    /**
+     * The stroke as bar takes it. The white separator applies to undefined only - never set, or
+     * set to undefined - so that every other falsy stroke is rendered as set: a null becomes
+     * undefined because bar's setter does not accept null, and bar then writes no stroke
+     * attribute for it, while an empty string reaches the rect as stroke="".
+     */
+    function strokeOf(stroke) {
+      if (stroke === undefined) return "#FFFFFF";
+      return stroke !== null && stroke !== void 0 ? stroke : undefined;
+    }
     function stackedBarHorizontal() {
-      return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").render(function (data) {
+      return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
         requireProps("stackedBarHorizontal", props, ["xScale", "yScale", "height"]);
         const barGen = bar()
         // The lower of the two scaled bounds, so a segment whose value is negative is drawn
         // on the other side of the baseline rather than with a negative width.
-        .x(d => Math.min(props.xScale(d[0]), props.xScale(d[1]))).y(compose(props.yScale, stackAcc)).width(d => Math.abs(props.xScale(d[1]) - props.xScale(d[0]))).height(props.height).fill(fillOf(props.fill)).stroke(props.stroke || "#FFFFFF");
+        .x(d => Math.min(props.xScale(d[0]), props.xScale(d[1]))).y(compose(props.yScale, stackAcc)).width(d => Math.abs(props.xScale(d[1]) - props.xScale(d[0]))).height(props.height).fill(fillOf(props.fill)).stroke(strokeOf(props.stroke)).transition(props.transition);
         drawStacks(selection, data, barGen);
       });
     }
     function stackedBarVertical() {
-      return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").render(function (data) {
+      return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
         requireProps("stackedBarVertical", props, ["xScale", "yScale", "width"]);
         const barGen = bar().x(compose(props.xScale, stackAcc))
         // The upper edge is whichever bound scales smaller, which keeps the geometry valid
         // for a negative value and for a y-scale whose range ascends.
-        .y(d => Math.min(props.yScale(d[0]), props.yScale(d[1]))).width(props.width).height(d => Math.abs(props.yScale(d[0]) - props.yScale(d[1]))).fill(fillOf(props.fill)).stroke(props.stroke || "#FFFFFF");
+        .y(d => Math.min(props.yScale(d[0]), props.yScale(d[1]))).width(props.width).height(d => Math.abs(props.yScale(d[0]) - props.yScale(d[1]))).fill(fillOf(props.fill)).stroke(strokeOf(props.stroke)).transition(props.transition);
         drawStacks(selection, data, barGen);
       });
     }
@@ -6952,6 +6972,10 @@
      *                                                   should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels) and
      *                                                   return text. Optional: when unset the label elements are still created for every entry in
      *                                                   linkSourceLabels and linkTargetLabels, with no text in them.
+     * @property {Boolean} transition                    Whether to animate the node bars to their new geometry on an update. Forwarded to bar, and
+     *                                                   defaulted to bar's own default of true. Pass false for anything that measures the chart
+     *                                                   synchronously, or that re-renders faster than the animation can finish. Only the node bars
+     *                                                   are affected; the link paths interpolate their own geometry regardless.
      *
      * Note: the component always creates four sub-groups, in this order: nodes, links,
      * linklabels and nodelabels. The order is load-bearing, since it makes the links paint over
@@ -6992,9 +7016,9 @@
      * ends up bound to a different node. That matters for anything holding on to a rect, such as
      * a hover handler.
      *
-     * Note: the component never sets bar's transition property, so it keeps bar's default of
-     * true and the node rects ease to their new geometry over bar's transition. A caller cannot
-     * turn that off, since the property is not forwarded. See test/component/sankey.test.ts.
+     * Note: the transition property is forwarded to bar and defaults to bar's own default of
+     * true, so the node rects ease to their new geometry. Pass false to have them snap into
+     * place instead. See test/component/sankey.test.ts.
      *
      * @return {sszvis.component}
      */
@@ -7016,9 +7040,9 @@
     }
     /* Module
     ----------------------------------------------- */
-    function sankey () {
+    function sankey() {
       return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("columnLabelOpacity", functor).columnLabelOpacity(1).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort").linkSort((a, b) => b.value - a.value) // Descending, so the thinnest links paint on top
-      .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel", functor).nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
+      .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel", functor).nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).prop("transition").transition(true).render(function (data) {
         var _props$linkColor, _props$linkLabel, _props$linkLabel2;
         const selection = d3.select(this);
         const props = selection.props();
@@ -7040,7 +7064,7 @@
         const xExtent = () => Math.max(props.nodeThickness, 1);
         const yExtent = node => Math.ceil(Math.max(props.sizeScale(node.value), 1));
         // Draw the nodes
-        const barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor);
+        const barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor).transition(props.transition);
         const barGroup = selection.selectGroup("nodes").datum(data.nodes);
         barGroup.call(barGen);
         const barTooltipAnchor = tooltipAnchor().position(node => [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2]);
@@ -7819,14 +7843,15 @@
      * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
      * with pyramid.
      *
-     * Note: the reference path is classed .sszvis-path, which no rule in sszvis.css defines - its
-     * appearance comes from four inlined attributes instead, the opposite choice from pyramid, which
-     * sets only .sszvis-pyramid__referenceline and takes all four values from the stylesheet. The class
-     * collides with the one pie, stackedArea and stackedAreaMultiples use for their own paths, so a
-     * selector written for any of those also matches a stackedPyramid reference line, and since the
-     * join has no key function a foreign path that happens to carry the class is adopted as the
-     * reference line and repainted rather than left alone. That is harmless while each component owns
-     * its own selectGroup, which is how every example is written.
+     * Note: the reference path carries two classes: the generic .sszvis-path, which no rule in
+     * sszvis.css defines, and the component-owned .sszvis-stacked-pyramid__referenceline, which the
+     * join matches on. Writing both keeps a selector aimed at the generic class working while keeping
+     * a foreign path out of the join - pie, stackedArea and stackedAreaMultiples all draw paths under
+     * the generic class, and the join has no key function, so an unscoped selector would adopt one of
+     * theirs and repaint it. The appearance still comes from four inlined attributes, the opposite
+     * choice from pyramid, which sets only .sszvis-pyramid__referenceline and takes all four values
+     * from the stylesheet; the class here is deliberately not pyramid's, so the two components do not
+     * collide with each other in turn.
      *
      * Note: the reference datum is wrapped in an array, one array of points per path, so each side is
      * capped at a single line and, while a reference accessor is set, the join always has exactly one
@@ -8022,7 +8047,11 @@
         // Each half of a point is mapped by the property that owns it, so the outline lands in
         // the coordinate system the bars are drawn in.
         const lineGen = d3.line().x(d => props.barWidth(d.value)).y(d => props.barPosition(d.row));
-        const line = selection.selectAll(".sszvis-path").data(data).join("path").attr("class", "sszvis-path").attr("fill", "none").attr("stroke", "#aaa").attr("stroke-width", 2).attr("stroke-dasharray", "3 3");
+        // Matching on the component's own class rather than the generic .sszvis-path one, which
+        // pie, stackedArea and stackedAreaMultiples also use, keeps a foreign path in the same
+        // group out of the join. The generic class stays in the written attribute, so no
+        // selector written against it changes meaning.
+        const line = selection.selectAll("path.sszvis-stacked-pyramid__referenceline").data(data).join("path").attr("class", "sszvis-path sszvis-stacked-pyramid__referenceline").attr("fill", "none").attr("stroke", "#aaa").attr("stroke-width", 2).attr("stroke-dasharray", "3 3");
         line.attr("transform", props.mirror ? "scale(-1, 1)" : "").transition(defaultTransition()).attr("d", lineGen);
       });
     }

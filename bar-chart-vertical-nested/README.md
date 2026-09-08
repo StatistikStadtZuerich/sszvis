@@ -71,7 +71,7 @@ Specify a function or a string to fill the stack rectangles. If a function is pr
 
 #### `nestedStackedBarsVertical.stroke(stroke)`
 
-Specify a function or a string for the stroke that separates touching stack rectangles. Defaults to white. Pass `"none"` for stacks with no visible separator; a falsy value is coerced back to white. If a function is provided, it is called with the slice and its index and should return a color.
+Specify a function or a string for the stroke that separates touching stack rectangles. Defaults to white. Pass `"none"` for stacks with no visible separator, or `null` to leave the stroke unset entirely. If a function is provided, it is called with the slice and its index and should return a color.
 
 #### `nestedStackedBarsVertical.tooltip(tooltip)`
 

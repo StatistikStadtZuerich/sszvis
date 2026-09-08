@@ -291,7 +291,7 @@ interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbCo
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$g<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$f<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -323,7 +323,7 @@ interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$f<T = unknown>(): CircleComponent<T>;
+declare function export_default$e<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -403,7 +403,7 @@ interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<Confidenc
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$e<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$d<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -429,7 +429,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$d<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$c<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -468,7 +468,7 @@ interface LineComponent$1<T = unknown> extends ComponentBuilder<LineComponent$1<
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent$1<T>;
 }
-declare function export_default$c<T = unknown>(): LineComponent$1<T>;
+declare function export_default$b<T = unknown>(): LineComponent$1<T>;
 
 /**
  * Range Flag annotation
@@ -494,7 +494,7 @@ interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComp
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$b<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$a<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -531,7 +531,7 @@ interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerCo
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$a<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$9<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -565,7 +565,7 @@ interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComp
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$9<T = unknown>(): RectangleComponent<T>;
+declare function export_default$8<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -674,7 +674,7 @@ interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponen
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$8<T = unknown>(): TooltipComponent<T>;
+declare function export_default$7<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -1053,7 +1053,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBui
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$7<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$6<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -1103,7 +1103,7 @@ interface PanningComponent extends ComponentBuilder<PanningComponent> {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$6(): PanningComponent;
+declare function export_default$5(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -1165,7 +1165,7 @@ interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponen
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default$5<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$4<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -2010,9 +2010,20 @@ declare function line<P = unknown, L = unknown>(): LineComponent<P, L>;
  * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
  *                                      unset, a 1px #FFFFFF stroke separates the segments -
  *                                      centred on the bar edge, so it overpaints half a pixel
- *                                      on each side. A truthy value such as "none" replaces the
- *                                      separator, but every falsy value falls back to it, so it
- *                                      cannot be removed by null or an empty string.
+ *                                      on each side. The default applies when the property is
+ *                                      undefined, whether it was never set or set to undefined
+ *                                      explicitly. Every other value is rendered as set: "none"
+ *                                      replaces the separator, null writes no stroke attribute
+ *                                      at all, and an empty string writes stroke="" - an empty
+ *                                      attribute, not a removed one. An accessor is always
+ *                                      called, and one that returns undefined for a slice
+ *                                      leaves that rect with no stroke attribute rather than
+ *                                      the white default.
+ * @property {boolean} transition       Optional, and forwarded to bar. Whether to animate the
+ *                                      segment geometry on an update. Defaults to bar's own
+ *                                      default of true; pass false for anything that measures
+ *                                      the chart synchronously, or that re-renders faster than
+ *                                      the animation can finish.
  *
  * Note: the two layout functions are the same computation and differ only in the stack order,
  * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
@@ -2048,8 +2059,7 @@ declare function line<P = unknown, L = unknown>(): LineComponent<P, L>;
  * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
  * selector and no key function, so any pre-existing stack below the target group, at any depth,
  * is captured and re-bound, and surviving groups and rects are matched by index rather than by
- * series. The component also forwards neither bar's `transition` property nor its tooltip
- * anchor properties, so a caller cannot turn the segment animation off, and the tooltip anchor
+ * series. The component does not forward bar's tooltip anchor properties, so the tooltip anchor
  * is always at the top centre of a segment. See test/component/stackedBar.test.ts.
  *
  * @return {sszvis.component}
@@ -2108,8 +2118,9 @@ type StoredDimension<T, X extends string | number> = (slice?: StackedBarSlice<T,
 /** fill is stored exactly as set, and may be left unset, in which case no fill is written. */
 type FillValue$2<T, X extends string | number> = SliceValue<StackedBarSlice<T, X>, string | undefined>;
 /**
- * stroke is stored exactly as set. Every falsy value is accepted and means the same thing,
- * since the renderer falls back to the white default for all of them.
+ * stroke is stored exactly as set and rendered as set. Only undefined - never set, or set to
+ * undefined - falls back to the white default. null writes no stroke attribute; an empty
+ * string writes an empty one, stroke="".
  */
 type StrokeValue$1<T, X extends string | number> = string | null | undefined | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
 /**
@@ -2129,6 +2140,8 @@ interface StackedBarVerticalComponent<T = unknown, X extends string | number = s
     fill<U = StackedBarSlice<T, X>>(value: SliceValue<U, string | undefined>): StackedBarVerticalComponent<T, X>;
     stroke(): StrokeValue$1<T, X>;
     stroke<U = StackedBarSlice<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarVerticalComponent<T, X>;
+    transition(): boolean;
+    transition(enabled: boolean): StackedBarVerticalComponent<T, X>;
 }
 interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string> extends ComponentBuilder<StackedBarHorizontalComponent<T, X>> {
     xScale(): ValueScale;
@@ -2143,6 +2156,8 @@ interface StackedBarHorizontalComponent<T = unknown, X extends string | number =
     fill<U = StackedBarSlice<T, X>>(value: SliceValue<U, string | undefined>): StackedBarHorizontalComponent<T, X>;
     stroke(): StrokeValue$1<T, X>;
     stroke<U = StackedBarSlice<T, X>>(value: string | null | undefined | ((slice: U, index: number) => string | undefined)): StackedBarHorizontalComponent<T, X>;
+    transition(): boolean;
+    transition(enabled: boolean): StackedBarHorizontalComponent<T, X>;
 }
 declare function stackedBarHorizontal<T = unknown, X extends string | number = string>(): StackedBarHorizontalComponent<T, X>;
 declare function stackedBarVertical<T = unknown, X extends string | number = string>(): StackedBarVerticalComponent<T, X>;
@@ -2637,6 +2652,10 @@ declare function pyramid<T = unknown, D = unknown>(): PyramidComponent<T, D>;
  *                                                   should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels) and
  *                                                   return text. Optional: when unset the label elements are still created for every entry in
  *                                                   linkSourceLabels and linkTargetLabels, with no text in them.
+ * @property {Boolean} transition                    Whether to animate the node bars to their new geometry on an update. Forwarded to bar, and
+ *                                                   defaulted to bar's own default of true. Pass false for anything that measures the chart
+ *                                                   synchronously, or that re-renders faster than the animation can finish. Only the node bars
+ *                                                   are affected; the link paths interpolate their own geometry regardless.
  *
  * Note: the component always creates four sub-groups, in this order: nodes, links,
  * linklabels and nodelabels. The order is load-bearing, since it makes the links paint over
@@ -2677,9 +2696,9 @@ declare function pyramid<T = unknown, D = unknown>(): PyramidComponent<T, D>;
  * ends up bound to a different node. That matters for anything holding on to a rect, such as
  * a hover handler.
  *
- * Note: the component never sets bar's transition property, so it keeps bar's default of
- * true and the node rects ease to their new geometry over bar's transition. A caller cannot
- * turn that off, since the property is not forwarded. See test/component/sankey.test.ts.
+ * Note: the transition property is forwarded to bar and defaults to bar's own default of
+ * true, so the node rects ease to their new geometry. Pass false to have them snap into
+ * place instead. See test/component/sankey.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -2833,8 +2852,10 @@ interface SankeyComponent extends SankeyBuilder {
     linkTargetLabels(links: SankeyLink[]): SankeyComponent;
     linkLabel(): LabelAccessor<SankeyLink> | undefined;
     linkLabel<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
+    transition(): boolean;
+    transition(enabled: boolean): SankeyComponent;
 }
-declare function export_default$4(): SankeyComponent;
+declare function sankey(): SankeyComponent;
 
 /**
  * Stacked Area component
@@ -3431,14 +3452,15 @@ declare function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAreaMultip
  * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
  * with pyramid.
  *
- * Note: the reference path is classed .sszvis-path, which no rule in sszvis.css defines - its
- * appearance comes from four inlined attributes instead, the opposite choice from pyramid, which
- * sets only .sszvis-pyramid__referenceline and takes all four values from the stylesheet. The class
- * collides with the one pie, stackedArea and stackedAreaMultiples use for their own paths, so a
- * selector written for any of those also matches a stackedPyramid reference line, and since the
- * join has no key function a foreign path that happens to carry the class is adopted as the
- * reference line and repainted rather than left alone. That is harmless while each component owns
- * its own selectGroup, which is how every example is written.
+ * Note: the reference path carries two classes: the generic .sszvis-path, which no rule in
+ * sszvis.css defines, and the component-owned .sszvis-stacked-pyramid__referenceline, which the
+ * join matches on. Writing both keeps a selector aimed at the generic class working while keeping
+ * a foreign path out of the join - pie, stackedArea and stackedAreaMultiples all draw paths under
+ * the generic class, and the join has no key function, so an unscoped selector would adopt one of
+ * theirs and repaint it. The appearance still comes from four inlined attributes, the opposite
+ * choice from pyramid, which sets only .sszvis-pyramid__referenceline and takes all four values
+ * from the stylesheet; the class here is deliberately not pyramid's, so the two components do not
+ * collide with each other in turn.
  *
  * Note: the reference datum is wrapped in an array, one array of points per path, so each side is
  * capped at a single line and, while a reference accessor is set, the join always has exactly one
@@ -7373,5 +7395,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$f as annotationCircle, confidenceArea as annotationConfidenceArea, export_default$e as annotationConfidenceBar, export_default$c as annotationLine, export_default$b as annotationRangeFlag, export_default$a as annotationRangeRuler, export_default$9 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$g as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$d as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$2 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$1 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$7 as move, muchDarker, nestedStackedBarsVertical, not, pack, export_default$6 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$4 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$3 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$8 as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, treemap, valueFn, viewport, export_default$5 as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, confidenceArea as annotationConfidenceArea, export_default$d as annotationConfidenceBar, export_default$b as annotationLine, export_default$a as annotationRangeFlag, export_default$9 as annotationRangeRuler, export_default$8 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$f as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$c as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$2 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$1 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$6 as move, muchDarker, nestedStackedBarsVertical, not, pack, export_default$5 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$3 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$7 as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, treemap, valueFn, viewport, export_default$4 as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidReferencePoint, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };

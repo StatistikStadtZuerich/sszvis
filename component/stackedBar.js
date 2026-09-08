@@ -65,9 +65,20 @@ import bar from './bar.js';
  * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
  *                                      unset, a 1px #FFFFFF stroke separates the segments -
  *                                      centred on the bar edge, so it overpaints half a pixel
- *                                      on each side. A truthy value such as "none" replaces the
- *                                      separator, but every falsy value falls back to it, so it
- *                                      cannot be removed by null or an empty string.
+ *                                      on each side. The default applies when the property is
+ *                                      undefined, whether it was never set or set to undefined
+ *                                      explicitly. Every other value is rendered as set: "none"
+ *                                      replaces the separator, null writes no stroke attribute
+ *                                      at all, and an empty string writes stroke="" - an empty
+ *                                      attribute, not a removed one. An accessor is always
+ *                                      called, and one that returns undefined for a slice
+ *                                      leaves that rect with no stroke attribute rather than
+ *                                      the white default.
+ * @property {boolean} transition       Optional, and forwarded to bar. Whether to animate the
+ *                                      segment geometry on an update. Defaults to bar's own
+ *                                      default of true; pass false for anything that measures
+ *                                      the chart synchronously, or that re-renders faster than
+ *                                      the animation can finish.
  *
  * Note: the two layout functions are the same computation and differ only in the stack order,
  * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
@@ -103,8 +114,7 @@ import bar from './bar.js';
  * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
  * selector and no key function, so any pre-existing stack below the target group, at any depth,
  * is captured and re-bound, and surviving groups and rects are matched by index rather than by
- * series. The component also forwards neither bar's `transition` property nor its tooltip
- * anchor properties, so a caller cannot turn the segment animation off, and the tooltip anchor
+ * series. The component does not forward bar's tooltip anchor properties, so the tooltip anchor
  * is always at the top centre of a segment. See test/component/stackedBar.test.ts.
  *
  * @return {sszvis.component}
@@ -208,27 +218,37 @@ function fillOf(fill) {
   if (typeof fill !== "function") return fill;
   return (slice, index) => slice.data === undefined ? undefined : fill(slice, index);
 }
+/**
+ * The stroke as bar takes it. The white separator applies to undefined only - never set, or
+ * set to undefined - so that every other falsy stroke is rendered as set: a null becomes
+ * undefined because bar's setter does not accept null, and bar then writes no stroke
+ * attribute for it, while an empty string reaches the rect as stroke="".
+ */
+function strokeOf(stroke) {
+  if (stroke === undefined) return "#FFFFFF";
+  return stroke !== null && stroke !== void 0 ? stroke : undefined;
+}
 function stackedBarHorizontal() {
-  return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").render(function (data) {
+  return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").prop("transition").transition(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
     requireProps("stackedBarHorizontal", props, ["xScale", "yScale", "height"]);
     const barGen = bar()
     // The lower of the two scaled bounds, so a segment whose value is negative is drawn
     // on the other side of the baseline rather than with a negative width.
-    .x(d => Math.min(props.xScale(d[0]), props.xScale(d[1]))).y(compose(props.yScale, stackAcc)).width(d => Math.abs(props.xScale(d[1]) - props.xScale(d[0]))).height(props.height).fill(fillOf(props.fill)).stroke(props.stroke || "#FFFFFF");
+    .x(d => Math.min(props.xScale(d[0]), props.xScale(d[1]))).y(compose(props.yScale, stackAcc)).width(d => Math.abs(props.xScale(d[1]) - props.xScale(d[0]))).height(props.height).fill(fillOf(props.fill)).stroke(strokeOf(props.stroke)).transition(props.transition);
     drawStacks(selection, data, barGen);
   });
 }
 function stackedBarVertical() {
-  return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").render(function (data) {
+  return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").prop("transition").transition(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
     requireProps("stackedBarVertical", props, ["xScale", "yScale", "width"]);
     const barGen = bar().x(compose(props.xScale, stackAcc))
     // The upper edge is whichever bound scales smaller, which keeps the geometry valid
     // for a negative value and for a y-scale whose range ascends.
-    .y(d => Math.min(props.yScale(d[0]), props.yScale(d[1]))).width(props.width).height(d => Math.abs(props.yScale(d[0]) - props.yScale(d[1]))).fill(fillOf(props.fill)).stroke(props.stroke || "#FFFFFF");
+    .y(d => Math.min(props.yScale(d[0]), props.yScale(d[1]))).width(props.width).height(d => Math.abs(props.yScale(d[0]) - props.yScale(d[1]))).fill(fillOf(props.fill)).stroke(strokeOf(props.stroke)).transition(props.transition);
     drawStacks(selection, data, barGen);
   });
 }

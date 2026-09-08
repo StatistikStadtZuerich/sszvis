@@ -65,7 +65,11 @@ Specify a fill value for the rectangles (default black).
 
 #### `stackedBarHorizontal.stroke([stroke])`
 
-Specify a stroke value for the stack rectangles (default none).
+Specify a stroke value for the stack rectangles. Defaults to a white one-pixel line, which separates touching stack segments. Pass `"none"` for seamless stacks, or `null` to leave the stroke unset entirely.
+
+#### `stackedBarHorizontal.transition([transition])`
+
+Whether to animate the rectangles into their new geometry. Defaults to `true`. Pass `false` to write each render synchronously, which is what you want when another component drives the timing.
 
 ### Chart
 

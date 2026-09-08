@@ -116,6 +116,10 @@ import bar from './bar.js';
  *                                                   should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels) and
  *                                                   return text. Optional: when unset the label elements are still created for every entry in
  *                                                   linkSourceLabels and linkTargetLabels, with no text in them.
+ * @property {Boolean} transition                    Whether to animate the node bars to their new geometry on an update. Forwarded to bar, and
+ *                                                   defaulted to bar's own default of true. Pass false for anything that measures the chart
+ *                                                   synchronously, or that re-renders faster than the animation can finish. Only the node bars
+ *                                                   are affected; the link paths interpolate their own geometry regardless.
  *
  * Note: the component always creates four sub-groups, in this order: nodes, links,
  * linklabels and nodelabels. The order is load-bearing, since it makes the links paint over
@@ -156,9 +160,9 @@ import bar from './bar.js';
  * ends up bound to a different node. That matters for anything holding on to a rect, such as
  * a hover handler.
  *
- * Note: the component never sets bar's transition property, so it keeps bar's default of
- * true and the node rects ease to their new geometry over bar's transition. A caller cannot
- * turn that off, since the property is not forwarded. See test/component/sankey.test.ts.
+ * Note: the transition property is forwarded to bar and defaults to bar's own default of
+ * true, so the node rects ease to their new geometry. Pass false to have them snap into
+ * place instead. See test/component/sankey.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -180,9 +184,9 @@ function allFinite(values) {
 }
 /* Module
 ----------------------------------------------- */
-function sankey () {
+function sankey() {
   return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("columnLabelOpacity", functor).columnLabelOpacity(1).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort").linkSort((a, b) => b.value - a.value) // Descending, so the thinnest links paint on top
-  .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel", functor).nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
+  .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel", functor).nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).prop("transition").transition(true).render(function (data) {
     var _props$linkColor, _props$linkLabel, _props$linkLabel2;
     const selection = select(this);
     const props = selection.props();
@@ -204,7 +208,7 @@ function sankey () {
     const xExtent = () => Math.max(props.nodeThickness, 1);
     const yExtent = node => Math.ceil(Math.max(props.sizeScale(node.value), 1));
     // Draw the nodes
-    const barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor);
+    const barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor).transition(props.transition);
     const barGroup = selection.selectGroup("nodes").datum(data.nodes);
     barGroup.call(barGen);
     const barTooltipAnchor = tooltipAnchor().position(node => [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2]);

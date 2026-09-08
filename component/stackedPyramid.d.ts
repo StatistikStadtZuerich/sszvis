@@ -186,14 +186,15 @@
  * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
  * with pyramid.
  *
- * Note: the reference path is classed .sszvis-path, which no rule in sszvis.css defines - its
- * appearance comes from four inlined attributes instead, the opposite choice from pyramid, which
- * sets only .sszvis-pyramid__referenceline and takes all four values from the stylesheet. The class
- * collides with the one pie, stackedArea and stackedAreaMultiples use for their own paths, so a
- * selector written for any of those also matches a stackedPyramid reference line, and since the
- * join has no key function a foreign path that happens to carry the class is adopted as the
- * reference line and repainted rather than left alone. That is harmless while each component owns
- * its own selectGroup, which is how every example is written.
+ * Note: the reference path carries two classes: the generic .sszvis-path, which no rule in
+ * sszvis.css defines, and the component-owned .sszvis-stacked-pyramid__referenceline, which the
+ * join matches on. Writing both keeps a selector aimed at the generic class working while keeping
+ * a foreign path out of the join - pie, stackedArea and stackedAreaMultiples all draw paths under
+ * the generic class, and the join has no key function, so an unscoped selector would adopt one of
+ * theirs and repaint it. The appearance still comes from four inlined attributes, the opposite
+ * choice from pyramid, which sets only .sszvis-pyramid__referenceline and takes all four values
+ * from the stylesheet; the class here is deliberately not pyramid's, so the two components do not
+ * collide with each other in turn.
  *
  * Note: the reference datum is wrapped in an array, one array of points per path, so each side is
  * capped at a single line and, while a reference accessor is set, the join always has exactly one
