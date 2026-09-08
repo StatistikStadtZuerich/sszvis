@@ -1374,7 +1374,9 @@
      *   });
      * selection.call(tooltipAnchor);
      *
-     * @property {function} position A vector of the tooltip's [x, y] coordinates
+     * @property {function} position Accessor (datum, index) returning the tooltip's
+     *                               [x, y] coordinates. The index is d3's element
+     *                               index; accessors may take the datum alone.
      * @property {boolean}  debug    Renders a visible tooltip anchor when true
      *
      * @return {sszvis.component}
@@ -5578,10 +5580,6 @@
         } else {
           tooltipPosition = (d, i) => [xAt(d, i) + wAt(d, i) / 2, yAt(d, i)];
         }
-        // tooltipAnchor declares its position accessor as taking the datum alone, but d3 calls it
-        // with the index too and the anchors must line up with the bars - so the index is read here
-        // and the narrower declaration is widened. The cast encodes that gap; the real fix is in
-        // tooltipAnchor's own signature.
         const ta = tooltipAnchor().position(tooltipPosition);
         selection.call(ta);
       });
@@ -5699,10 +5697,6 @@
         }
         // Tooltip anchors
         const anchorPosition = (datum, index) => [xAt(datum, index), yAt(datum, index)];
-        // tooltipAnchor declares its position accessor as taking the datum alone, but d3 calls
-        // it with the index too and the anchors must line up with the circles - so the index is
-        // read here and the narrower declaration is widened. The cast encodes that gap; the real
-        // fix is in tooltipAnchor's own signature.
         const ta = tooltipAnchor().position(anchorPosition);
         selection.call(ta);
       });
@@ -6075,6 +6069,11 @@
      * rows passed in are not modified: the d3v3 stack layout used to write `y0` and `y` onto every
      * data object, but d3v7 returns pairs instead and leaves the source data alone.
      *
+     * stackedBarVerticalLayout and stackedBarHorizontalLayout are the same computation returning
+     * the metadata beside the series instead of on them - `{ series, keys, maxValue, minValue }` -
+     * which is the shape new code should use. The two shapes cannot be one return value: an
+     * ordinary array cannot also carry properties that survive being copied.
+     *
      * @module sszvis/component/stackedBar/horizontal
      * @module sszvis/component/stackedBar/vertical
      *
@@ -6143,11 +6142,12 @@
      * enumerates integer-like keys numerically regardless of insertion order; that part is only
      * cosmetic, since each slice is positioned by its own stack value.
      *
-     * Note: `keys`, `maxValue` and `minValue` are hung off the returned array rather than wrapped in
-     * an object, so any array operation - a spread, a map, a filter, a trip through JSON - drops
-     * them, and `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array.
-     * `maxValue` and `minValue` are the extent of the stacked bounds, so a negative value is
-     * included in them.
+     * Note: stackedBar*Data returns the series array with `maxValue` and `minValue` assigned onto
+     * it, so any array operation - a spread, a map, a filter, a trip through JSON - drops them. The
+     * series keys are no longer assigned: `keys` shadowed Array.prototype.keys and made the layout
+     * a badly behaved array, and no caller read it off the array. Use stackedBar*Layout to get all
+     * three beside the series. `maxValue` and `minValue` are the extent of the stacked bounds, so a
+     * negative value is included in them.
      *
      * Note: a negative value is drawn on the other side of the baseline: both orientations take
      * the lower of the two scaled bounds as the segment's origin and the absolute difference as
@@ -6222,15 +6222,38 @@
         // extent that covers it.
         const maxValue = (_max = d3.max(series, stack => d3.max(stack, d => Math.max(d[0], d[1])))) !== null && _max !== void 0 ? _max : 0;
         const minValue = (_min = d3.min(series, stack => d3.min(stack, d => Math.min(d[0], d[1])))) !== null && _min !== void 0 ? _min : 0;
-        return Object.assign(series, {
+        return {
+          series,
           keys,
+          maxValue,
+          minValue
+        };
+      };
+    }
+    /**
+     * The array-returning form of a layout function: the series themselves, with the extent
+     * assigned onto them so that `.datum(layout)` still binds a real array.
+     */
+    function stackedBarSeriesData(order) {
+      const layout = stackedBarData(order);
+      return (stackAcc, seriesAcc, valueAcc) => data => {
+        const {
+          series,
+          maxValue,
+          minValue
+        } = layout(stackAcc, seriesAcc, valueAcc)(data);
+        // `keys` is deliberately not assigned: it shadows Array.prototype.keys, and no caller
+        // reads it off the array. stackedBar*Layout returns it beside the series instead.
+        return Object.assign(series, {
           maxValue,
           minValue
         });
       };
     }
-    const stackedBarHorizontalData = stackedBarData(d3.stackOrderNone);
-    const stackedBarVerticalData = stackedBarData(d3.stackOrderReverse);
+    const stackedBarHorizontalData = stackedBarSeriesData(d3.stackOrderNone);
+    const stackedBarVerticalData = stackedBarSeriesData(d3.stackOrderReverse);
+    const stackedBarHorizontalLayout = stackedBarData(d3.stackOrderNone);
+    const stackedBarVerticalLayout = stackedBarData(d3.stackOrderReverse);
     /**
      * Throws for any of the named props the caller never set. The two orientations need
      * different ones, and each silently ignores the other's, so the message names the component
@@ -6305,8 +6328,8 @@
      *
      * This component renders a group of vertical stacked bar charts side by side. The input data
      * is an array of stack layouts, one per nested group, each as returned by
-     * stackedBarVerticalData; callers usually tag every layout with the key they cascaded by so
-     * that `offset` can read it. For each layout the component emits a group positioned by
+     * stackedBarVerticalData and each tagged with the group key the caller cascaded by - `key`,
+     * or `nest` under its older name. For each layout the component emits a group positioned by
      * `offset`, an ordinal x-axis, and a stackedBarVertical, and finally passes all tooltip
      * anchors of all groups to `tooltip` in a single call.
      *
@@ -6351,13 +6374,23 @@
      *                                          "diagonal"). Unset leaves them upright. The only prop that is not
      *                                          wrapped in fn.functor.
      *
-     * Each nested group carries its nest key in `data-nested-stacked-bars`, taken from the `nest`
-     * property callers tag the stack layout with (the same key `offset` reads), and falling back to
-     * the group's index when the layout is untagged. A nested group with no stacks is reported with
-     * a console warning and rendered as an empty group rather than taking the whole chart down.
+     * Each nested group carries its group key in `data-nested-stacked-bars`, read from the `key`
+     * field of its own stack layout, or from `nest` where the caller used that name - the same key
+     * `offset` reads. The field is a declared part of the layout type rather than an untyped tag,
+     * but it is not required: a layout with neither name is reported with a console warning and
+     * falls back to the group's index for its label, so the group still renders. `offset` is the
+     * caller's own functor and can position a group from anything it likes, the key included, so a
+     * missing key does not by itself stop a group being placed. A nested group with no stacks is
+     * likewise reported with a console warning and rendered as an empty group rather than taking
+     * the whole chart down.
      *
      * @return {sszvis.component}
      */
+    /** The group key of a layout: `key`, or `nest` under its older name. */
+    function nestKey(layout) {
+      var _layout$key;
+      return (_layout$key = layout.key) !== null && _layout$key !== void 0 ? _layout$key : layout.nest;
+    }
     /** Reports a required property the caller left unset, naming it. */
     function required$2(value, name) {
       if (value === undefined) {
@@ -6384,41 +6417,48 @@
       warn("[nestedStackedBarsVertical] the y-scale baseline ".concat(zero, " falls outside its range [").concat(low, ", ").concat(high, "]; placing the x-axis at ").concat(clamped));
       return clamped;
     }
-    const nestedStackedBarsVertical = () => component().prop("offset", functor).prop("xScale", functor).prop("yScale", functor).prop("fill", functor).prop("stroke").prop("tooltip", functor).prop("xAcc", functor).prop("xLabel", functor).prop("slant").render(function (data) {
-      const selection = d3.select(this);
-      const props = selection.props();
-      const offset = required$2(props.offset, "offset");
-      const xScale = required$2(props.xScale, "xScale");
-      const yScale = required$2(props.yScale, "yScale");
-      const tooltip = required$2(props.tooltip, "tooltip");
-      const {
-        fill,
-        stroke,
-        xLabel
-      } = props;
-      const xAxis = axisX.ordinal().scale(xScale).tickSize(0).orient("bottom").slant(props.slant)
-      // xLabel is wrapped by fn.functor, so it is always a function here; the axis binds its
-      // title as text data and never calls it, so evaluate it first.
-      .title(xLabel === null || xLabel === void 0 ? void 0 : xLabel());
-      const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
-      const nestedGroups = group.join("g").attr("data-nested-stacked-bars", (d, i) => {
-        if (d.length === 0) {
-          warn("[nestedStackedBarsVertical] the nested group at index ".concat(i, " has no stacks; rendering it empty"));
-        }
-        return d.nest === undefined ? i : d.nest;
+    function nestedStackedBarsVertical() {
+      return component().prop("offset", functor).prop("xScale", functor).prop("yScale", functor).prop("fill", functor).prop("stroke").prop("tooltip", functor).prop("xAcc", functor).prop("xLabel", functor).prop("slant").render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const offset = required$2(props.offset, "offset");
+        const xScale = required$2(props.xScale, "xScale");
+        const yScale = required$2(props.yScale, "yScale");
+        const tooltip = required$2(props.tooltip, "tooltip");
+        const {
+          fill,
+          stroke,
+          xLabel
+        } = props;
+        const xAxis = axisX.ordinal().scale(xScale).tickSize(0).orient("bottom").slant(props.slant)
+        // xLabel is wrapped by fn.functor, so it is always a function here; the axis binds its
+        // title as text data and never calls it, so evaluate it first.
+        .title(xLabel === null || xLabel === void 0 ? void 0 : xLabel());
+        const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
+        const nestedGroups = group.join("g").attr("data-nested-stacked-bars", (d, i) => {
+          if (d.length === 0) {
+            warn("[nestedStackedBarsVertical] the nested group at index ".concat(i, " has no stacks; rendering it empty"));
+          }
+          const key = nestKey(d);
+          if (key === undefined) {
+            warn("[nestedStackedBarsVertical] the nested group at index ".concat(i, " has no key; labelling it by index"));
+            return i;
+          }
+          return key;
+        });
+        nestedGroups.attr("transform", d => {
+          const x = offset(d);
+          if (!Number.isFinite(x)) {
+            warn("[nestedStackedBarsVertical] the offset accessor returned ".concat(x, "; positioning the group at 0"));
+          }
+          return translateString(Number.isFinite(x) ? x : 0, 0);
+        });
+        nestedGroups.selectGroup("nested-x-axis").attr("transform", translateString(0, baseline(yScale))).call(xAxis);
+        const stackedBars = stackedBarVertical().xScale(xScale).width(xScale.bandwidth()).yScale(yScale).fill(fill).stroke(stroke);
+        const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
+        bars.selectAll("[data-tooltip-anchor]").call(tooltip);
       });
-      nestedGroups.attr("transform", d => {
-        const x = offset(d);
-        if (!Number.isFinite(x)) {
-          warn("[nestedStackedBarsVertical] the offset accessor returned ".concat(x, "; positioning the group at 0"));
-        }
-        return translateString(Number.isFinite(x) ? x : 0, 0);
-      });
-      nestedGroups.selectGroup("nested-x-axis").attr("transform", translateString(0, baseline(yScale))).call(xAxis);
-      const stackedBars = stackedBarVertical().xScale(xScale).width(xScale.bandwidth()).yScale(yScale).fill(fill).stroke(stroke);
-      const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
-      bars.selectAll("[data-tooltip-anchor]").call(tooltip);
-    });
+    }
 
     function prepareHierarchyData(data, options) {
       if (data !== undefined && options !== undefined) {
@@ -6579,6 +6619,12 @@
       .prop("containerHeight").containerHeight(600) // Default height
       .prop("showLabels").showLabels(false) // Default disabled
       .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("minRadius").minRadius(20).prop("circleStroke").circleStroke("#ffffff").prop("circleStrokeWidth").circleStrokeWidth(1).prop("radiusScale", functor).prop("onClick").render(function (inputData) {
+        // The old datum is the render's own input: the component is called through
+        // selection.each, so the group's datum is exactly what was handed to the render.
+        // Deriving it with typeof rather than restating the type is what keeps the two from
+        // drifting apart, the way they did in #303. pack, treemap and sunburst all declare it
+        // this way. The anchors at the end of the render bind the flattened node array to the
+        // group and then restore this input, so the datum a caller sees is unchanged.
         const selection = d3.select(this);
         const props = selection.props();
         // Apply pack layout to hierarchical data
@@ -6655,6 +6701,12 @@
         // first while the circles are depth first, and nodes dropped by the minRadius filter
         // get an anchor with no circle under it.
         selection.datum(visibleData).call(ta);
+        // ...and put the hierarchy back, so the render is idempotent. The group's datum is the
+        // render's own input, and leaving the flattened array there breaks a caller who holds
+        // its own group selection and re-renders without re-binding: the layout above would be
+        // handed an array instead of a root. The docs examples never hit it, since they
+        // re-datum() on every render and selectGroup re-binds from the parent.
+        selection.datum(inputData);
       });
     }
 
@@ -6822,9 +6874,7 @@
         }
         const ta = tooltipAnchor().position(
         // The anchors are placed from the destination angles, so they describe the layout the
-        // wedges are heading for rather than the one they are leaving. d3 passes the index to
-        // every attr callback, which is how the anchor component invokes this; its own prop
-        // type just declares the datum, hence the assertion.
+        // wedges are heading for rather than the one they are leaving.
         (_d, i) => {
           var _layout$i;
           const {
@@ -8316,12 +8366,19 @@
      * @return {sszvis.component}
      */
     const TWO_PI = 2 * Math.PI;
-    function sunburst () {
-      // The chain is built on the component rather than returned from it: .prop() and .render()
-      // are declared to return the generic Component type, since the accessors they install only
-      // exist at runtime, so the typed instance has to come from the factory itself.
+    function sunburst() {
+      // The chain is held in a variable rather than returned inline only to keep the long
+      // configuration block readable: ComponentBuilder declares .prop() and .render() as
+      // returning the component interface itself, so the chain stays typed either way.
       const sunburstComponent = component();
       sunburstComponent.prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill", functor).prop("stroke").stroke("white").render(function (inputData) {
+        // The old datum is the render's own input: the component is called through
+        // selection.each, so the group's datum is exactly what was handed to the render -
+        // either a hierarchy root or an already flattened array. Deriving it with typeof
+        // rather than restating the type is what keeps the two from drifting apart, the way
+        // they did in #303. pack, treemap and sunburst all declare it this way. It is rebound
+        // to the flattened node array at the end of the render, and datum() types the new
+        // binding on its own.
         const selection = d3.select(this);
         const props = selection.props();
         // radiusScale, centerRadius and fill are required and have no defaults, and a render
@@ -8515,6 +8572,12 @@
       .prop("containerHeight").containerHeight(600) // Default height
       .prop("showLabels").showLabels(false) // Default disabled
       .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("labelPosition").labelPosition("center").prop("onClick").render(function (inputData) {
+        // The old datum is the render's own input: the component is called through
+        // selection.each, so the group's datum is exactly what was handed to the render.
+        // Deriving it with typeof rather than restating the type is what keeps the two from
+        // drifting apart, the way they did in #303. pack, treemap and sunburst all declare it
+        // this way. The anchors at the end of the render bind the flattened node array to the
+        // group and then restore this input, so the datum a caller sees is unchanged.
         const selection = d3.select(this);
         const props = selection.props();
         // Apply treemap layout to hierarchical data
@@ -8635,6 +8698,12 @@
         // descendant, so the root and every undrawn branch gain anchors of their own and the
         // anchors come out breadth first while the rectangles are depth first.
         selection.datum(visibleData).call(ta);
+        // ...and put the hierarchy back, so the render is idempotent. The group's datum is the
+        // render's own input, and leaving the flattened array there breaks a caller who holds
+        // its own group selection and re-renders without re-binding: the layout above would be
+        // handed an array instead of a root. The docs examples never hit it, since they
+        // re-datum() on every render and selectGroup re-binds from the parent.
+        selection.datum(inputData);
       });
     }
 
@@ -13541,8 +13610,10 @@
     exports.stackedAreaMultiples = stackedAreaMultiples;
     exports.stackedBarHorizontal = stackedBarHorizontal;
     exports.stackedBarHorizontalData = stackedBarHorizontalData;
+    exports.stackedBarHorizontalLayout = stackedBarHorizontalLayout;
     exports.stackedBarVertical = stackedBarVertical;
     exports.stackedBarVerticalData = stackedBarVerticalData;
+    exports.stackedBarVerticalLayout = stackedBarVerticalLayout;
     exports.stackedPyramid = stackedPyramid;
     exports.stackedPyramidData = stackedPyramidData;
     exports.stringEqual = stringEqual;

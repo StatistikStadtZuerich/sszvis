@@ -116,10 +116,6 @@ function dot() {
     }
     // Tooltip anchors
     const anchorPosition = (datum, index) => [xAt(datum, index), yAt(datum, index)];
-    // tooltipAnchor declares its position accessor as taking the datum alone, but d3 calls
-    // it with the index too and the anchors must line up with the circles - so the index is
-    // read here and the narrower declaration is widened. The cast encodes that gap; the real
-    // fix is in tooltipAnchor's own signature.
     const ta = tooltipAnchor().position(anchorPosition);
     selection.call(ta);
   });

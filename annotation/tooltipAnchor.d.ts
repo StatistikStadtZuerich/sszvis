@@ -35,7 +35,9 @@
  *   });
  * selection.call(tooltipAnchor);
  *
- * @property {function} position A vector of the tooltip's [x, y] coordinates
+ * @property {function} position Accessor (datum, index) returning the tooltip's
+ *                               [x, y] coordinates. The index is d3's element
+ *                               index; accessors may take the datum alone.
  * @property {boolean}  debug    Renders a visible tooltip anchor when true
  *
  * @return {sszvis.component}
@@ -43,7 +45,7 @@
 import { type ComponentBuilder } from "../d3-component.js";
 type Datum<T = unknown> = T;
 interface TooltipAnchorComponent<T = unknown> extends ComponentBuilder<TooltipAnchorComponent<T>> {
-    position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
+    position(accessor?: (d: Datum<T>, i: number) => [number, number]): TooltipAnchorComponent<T>;
     debug(value?: boolean): TooltipAnchorComponent<T>;
 }
 export default function tooltipAnchor<T = unknown>(): TooltipAnchorComponent<T>;

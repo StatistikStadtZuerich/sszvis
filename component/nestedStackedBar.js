@@ -11,8 +11,8 @@ import { stackedBarVertical } from './stackedBar.js';
  *
  * This component renders a group of vertical stacked bar charts side by side. The input data
  * is an array of stack layouts, one per nested group, each as returned by
- * stackedBarVerticalData; callers usually tag every layout with the key they cascaded by so
- * that `offset` can read it. For each layout the component emits a group positioned by
+ * stackedBarVerticalData and each tagged with the group key the caller cascaded by - `key`,
+ * or `nest` under its older name. For each layout the component emits a group positioned by
  * `offset`, an ordinal x-axis, and a stackedBarVertical, and finally passes all tooltip
  * anchors of all groups to `tooltip` in a single call.
  *
@@ -57,13 +57,23 @@ import { stackedBarVertical } from './stackedBar.js';
  *                                          "diagonal"). Unset leaves them upright. The only prop that is not
  *                                          wrapped in fn.functor.
  *
- * Each nested group carries its nest key in `data-nested-stacked-bars`, taken from the `nest`
- * property callers tag the stack layout with (the same key `offset` reads), and falling back to
- * the group's index when the layout is untagged. A nested group with no stacks is reported with
- * a console warning and rendered as an empty group rather than taking the whole chart down.
+ * Each nested group carries its group key in `data-nested-stacked-bars`, read from the `key`
+ * field of its own stack layout, or from `nest` where the caller used that name - the same key
+ * `offset` reads. The field is a declared part of the layout type rather than an untyped tag,
+ * but it is not required: a layout with neither name is reported with a console warning and
+ * falls back to the group's index for its label, so the group still renders. `offset` is the
+ * caller's own functor and can position a group from anything it likes, the key included, so a
+ * missing key does not by itself stop a group being placed. A nested group with no stacks is
+ * likewise reported with a console warning and rendered as an empty group rather than taking
+ * the whole chart down.
  *
  * @return {sszvis.component}
  */
+/** The group key of a layout: `key`, or `nest` under its older name. */
+function nestKey(layout) {
+  var _layout$key;
+  return (_layout$key = layout.key) !== null && _layout$key !== void 0 ? _layout$key : layout.nest;
+}
 /** Reports a required property the caller left unset, naming it. */
 function required(value, name) {
   if (value === undefined) {
@@ -90,41 +100,48 @@ function baseline(yScale) {
   warn("[nestedStackedBarsVertical] the y-scale baseline ".concat(zero, " falls outside its range [").concat(low, ", ").concat(high, "]; placing the x-axis at ").concat(clamped));
   return clamped;
 }
-const nestedStackedBarsVertical = () => component().prop("offset", functor).prop("xScale", functor).prop("yScale", functor).prop("fill", functor).prop("stroke").prop("tooltip", functor).prop("xAcc", functor).prop("xLabel", functor).prop("slant").render(function (data) {
-  const selection = select(this);
-  const props = selection.props();
-  const offset = required(props.offset, "offset");
-  const xScale = required(props.xScale, "xScale");
-  const yScale = required(props.yScale, "yScale");
-  const tooltip = required(props.tooltip, "tooltip");
-  const {
-    fill,
-    stroke,
-    xLabel
-  } = props;
-  const xAxis = axisX.ordinal().scale(xScale).tickSize(0).orient("bottom").slant(props.slant)
-  // xLabel is wrapped by fn.functor, so it is always a function here; the axis binds its
-  // title as text data and never calls it, so evaluate it first.
-  .title(xLabel === null || xLabel === void 0 ? void 0 : xLabel());
-  const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
-  const nestedGroups = group.join("g").attr("data-nested-stacked-bars", (d, i) => {
-    if (d.length === 0) {
-      warn("[nestedStackedBarsVertical] the nested group at index ".concat(i, " has no stacks; rendering it empty"));
-    }
-    return d.nest === undefined ? i : d.nest;
+function nestedStackedBarsVertical() {
+  return component().prop("offset", functor).prop("xScale", functor).prop("yScale", functor).prop("fill", functor).prop("stroke").prop("tooltip", functor).prop("xAcc", functor).prop("xLabel", functor).prop("slant").render(function (data) {
+    const selection = select(this);
+    const props = selection.props();
+    const offset = required(props.offset, "offset");
+    const xScale = required(props.xScale, "xScale");
+    const yScale = required(props.yScale, "yScale");
+    const tooltip = required(props.tooltip, "tooltip");
+    const {
+      fill,
+      stroke,
+      xLabel
+    } = props;
+    const xAxis = axisX.ordinal().scale(xScale).tickSize(0).orient("bottom").slant(props.slant)
+    // xLabel is wrapped by fn.functor, so it is always a function here; the axis binds its
+    // title as text data and never calls it, so evaluate it first.
+    .title(xLabel === null || xLabel === void 0 ? void 0 : xLabel());
+    const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
+    const nestedGroups = group.join("g").attr("data-nested-stacked-bars", (d, i) => {
+      if (d.length === 0) {
+        warn("[nestedStackedBarsVertical] the nested group at index ".concat(i, " has no stacks; rendering it empty"));
+      }
+      const key = nestKey(d);
+      if (key === undefined) {
+        warn("[nestedStackedBarsVertical] the nested group at index ".concat(i, " has no key; labelling it by index"));
+        return i;
+      }
+      return key;
+    });
+    nestedGroups.attr("transform", d => {
+      const x = offset(d);
+      if (!Number.isFinite(x)) {
+        warn("[nestedStackedBarsVertical] the offset accessor returned ".concat(x, "; positioning the group at 0"));
+      }
+      return translateString(Number.isFinite(x) ? x : 0, 0);
+    });
+    nestedGroups.selectGroup("nested-x-axis").attr("transform", translateString(0, baseline(yScale))).call(xAxis);
+    const stackedBars = stackedBarVertical().xScale(xScale).width(xScale.bandwidth()).yScale(yScale).fill(fill).stroke(stroke);
+    const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
+    bars.selectAll("[data-tooltip-anchor]").call(tooltip);
   });
-  nestedGroups.attr("transform", d => {
-    const x = offset(d);
-    if (!Number.isFinite(x)) {
-      warn("[nestedStackedBarsVertical] the offset accessor returned ".concat(x, "; positioning the group at 0"));
-    }
-    return translateString(Number.isFinite(x) ? x : 0, 0);
-  });
-  nestedGroups.selectGroup("nested-x-axis").attr("transform", translateString(0, baseline(yScale))).call(xAxis);
-  const stackedBars = stackedBarVertical().xScale(xScale).width(xScale.bandwidth()).yScale(yScale).fill(fill).stroke(stroke);
-  const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
-  bars.selectAll("[data-tooltip-anchor]").call(tooltip);
-});
+}
 
-export { nestedStackedBarsVertical };
+export { nestedStackedBarsVertical as default };
 //# sourceMappingURL=nestedStackedBar.js.map

@@ -103,12 +103,19 @@ import { defaultTransition } from '../transition.js';
  * @return {sszvis.component}
  */
 const TWO_PI = 2 * Math.PI;
-function sunburst () {
-  // The chain is built on the component rather than returned from it: .prop() and .render()
-  // are declared to return the generic Component type, since the accessors they install only
-  // exist at runtime, so the typed instance has to come from the factory itself.
+function sunburst() {
+  // The chain is held in a variable rather than returned inline only to keep the long
+  // configuration block readable: ComponentBuilder declares .prop() and .render() as
+  // returning the component interface itself, so the chain stays typed either way.
   const sunburstComponent = component();
   sunburstComponent.prop("angleScale").angleScale(scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill", functor).prop("stroke").stroke("white").render(function (inputData) {
+    // The old datum is the render's own input: the component is called through
+    // selection.each, so the group's datum is exactly what was handed to the render -
+    // either a hierarchy root or an already flattened array. Deriving it with typeof
+    // rather than restating the type is what keeps the two from drifting apart, the way
+    // they did in #303. pack, treemap and sunburst all declare it this way. It is rebound
+    // to the flattened node array at the end of the render, and datum() types the new
+    // binding on its own.
     const selection = select(this);
     const props = selection.props();
     // radiusScale, centerRadius and fill are required and have no defaults, and a render

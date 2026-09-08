@@ -2,7 +2,7 @@ export { default as bar } from "./bar.js";
 export { default as dot } from "./dot.js";
 export * from "./groupedBars.js";
 export { default as line } from "./line.js";
-export { nestedStackedBarsVertical } from "./nestedStackedBar.js";
+export { default as nestedStackedBarsVertical } from "./nestedStackedBar.js";
 export { default as pack } from "./pack.js";
 export { default as pie } from "./pie.js";
 export { default as pyramid } from "./pyramid.js";

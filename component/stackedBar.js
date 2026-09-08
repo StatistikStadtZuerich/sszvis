@@ -1,7 +1,7 @@
-import { stack, sum, max, min, stackOrderReverse, select, stackOrderNone } from 'd3';
+import { select, stack, sum, max, min, stackOrderReverse, stackOrderNone } from 'd3';
 import { cascade } from '../cascade.js';
 import { component } from '../d3-component.js';
-import { set, functor, compose, prop } from '../fn.js';
+import { functor, compose, prop, set } from '../fn.js';
 import bar from './bar.js';
 
 /**
@@ -27,6 +27,11 @@ import bar from './bar.js';
  * single source row it was computed from. That array is what gets bound to the chart layer. The
  * rows passed in are not modified: the d3v3 stack layout used to write `y0` and `y` onto every
  * data object, but d3v7 returns pairs instead and leaves the source data alone.
+ *
+ * stackedBarVerticalLayout and stackedBarHorizontalLayout are the same computation returning
+ * the metadata beside the series instead of on them - `{ series, keys, maxValue, minValue }` -
+ * which is the shape new code should use. The two shapes cannot be one return value: an
+ * ordinary array cannot also carry properties that survive being copied.
  *
  * @module sszvis/component/stackedBar/horizontal
  * @module sszvis/component/stackedBar/vertical
@@ -96,11 +101,12 @@ import bar from './bar.js';
  * enumerates integer-like keys numerically regardless of insertion order; that part is only
  * cosmetic, since each slice is positioned by its own stack value.
  *
- * Note: `keys`, `maxValue` and `minValue` are hung off the returned array rather than wrapped in
- * an object, so any array operation - a spread, a map, a filter, a trip through JSON - drops
- * them, and `keys` shadows Array.prototype.keys, which makes the layout a badly behaved array.
- * `maxValue` and `minValue` are the extent of the stacked bounds, so a negative value is
- * included in them.
+ * Note: stackedBar*Data returns the series array with `maxValue` and `minValue` assigned onto
+ * it, so any array operation - a spread, a map, a filter, a trip through JSON - drops them. The
+ * series keys are no longer assigned: `keys` shadowed Array.prototype.keys and made the layout
+ * a badly behaved array, and no caller read it off the array. Use stackedBar*Layout to get all
+ * three beside the series. `maxValue` and `minValue` are the extent of the stacked bounds, so a
+ * negative value is included in them.
  *
  * Note: a negative value is drawn on the other side of the baseline: both orientations take
  * the lower of the two scaled bounds as the segment's origin and the absolute difference as
@@ -175,15 +181,38 @@ function stackedBarData(order) {
     // extent that covers it.
     const maxValue = (_max = max(series, stack => max(stack, d => Math.max(d[0], d[1])))) !== null && _max !== void 0 ? _max : 0;
     const minValue = (_min = min(series, stack => min(stack, d => Math.min(d[0], d[1])))) !== null && _min !== void 0 ? _min : 0;
-    return Object.assign(series, {
+    return {
+      series,
       keys,
+      maxValue,
+      minValue
+    };
+  };
+}
+/**
+ * The array-returning form of a layout function: the series themselves, with the extent
+ * assigned onto them so that `.datum(layout)` still binds a real array.
+ */
+function stackedBarSeriesData(order) {
+  const layout = stackedBarData(order);
+  return (stackAcc, seriesAcc, valueAcc) => data => {
+    const {
+      series,
+      maxValue,
+      minValue
+    } = layout(stackAcc, seriesAcc, valueAcc)(data);
+    // `keys` is deliberately not assigned: it shadows Array.prototype.keys, and no caller
+    // reads it off the array. stackedBar*Layout returns it beside the series instead.
+    return Object.assign(series, {
       maxValue,
       minValue
     });
   };
 }
-const stackedBarHorizontalData = stackedBarData(stackOrderNone);
-const stackedBarVerticalData = stackedBarData(stackOrderReverse);
+const stackedBarHorizontalData = stackedBarSeriesData(stackOrderNone);
+const stackedBarVerticalData = stackedBarSeriesData(stackOrderReverse);
+const stackedBarHorizontalLayout = stackedBarData(stackOrderNone);
+const stackedBarVerticalLayout = stackedBarData(stackOrderReverse);
 /**
  * Throws for any of the named props the caller never set. The two orientations need
  * different ones, and each silently ignores the other's, so the message names the component
@@ -253,5 +282,5 @@ function stackedBarVertical() {
   });
 }
 
-export { stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData };
+export { stackedBarHorizontal, stackedBarHorizontalData, stackedBarHorizontalLayout, stackedBarVertical, stackedBarVerticalData, stackedBarVerticalLayout };
 //# sourceMappingURL=stackedBar.js.map

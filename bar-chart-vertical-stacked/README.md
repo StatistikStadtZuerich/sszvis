@@ -9,18 +9,27 @@ const stackedData = [
     [
         [0,10, data: {...}, series: "key1", stack: "A"],
         [0,8, data: {...}, series: "key1", stack: "B"],
-        [0,16, data: {...}, series:"key1"2, stack: "C"]
+        [0,16, data: {...}, series: "key1", stack: "C"],
         key: "key1"
     ],
     [
-        [10,16, data: {...}, series: "key1", stack: "A"],
-        [8,20, data: {...}, series: "key1", stack: "B"],
-        [16,18, data: {...}, series: "key1", stack: "C"]
+        [10,16, data: {...}, series: "key2", stack: "A"],
+        [8,20, data: {...}, series: "key2", stack: "B"],
+        [16,18, data: {...}, series: "key2", stack: "C"],
         key: "key2"
     ],
-    keys:["key1", "key2"],
-    maxValue: 20
 ]
+```
+
+`sszvis.stackedBarVerticalLayout` returns those series inside an object, alongside the metadata:
+
+```code
+const layout = {
+    series: stackedData,
+    keys: ["key1", "key2"],
+    maxValue: 20,
+    minValue: 0
+}
 ```
 
 #### Caution
@@ -29,14 +38,17 @@ Because it uses a [d3 stack](https://d3js.org/d3-shape/stack) under the hood, th
 
 ### Configuration
 
-In order to construct a stacked data structure we use the `sszvis.stackedBarVerticalData` function to build a generator function that takes the data and returns the stacked data. The generator function is then called with the data to get the stacked data. The generator function takes the _x_, _c_, and _y_ accessors as arguments. and returns data with aggregated values for the `.maxValue` and `keys`.
+In order to construct a stacked data structure we use `sszvis.stackedBarVerticalLayout` to build a generator function that takes the data and returns the stacked data. The generator function is then called with the data to get the stacked data. It takes the _x_, _c_, and _y_ accessors as arguments and returns an object with the series in `.series` and the aggregated `.keys`, `.maxValue` and `.minValue` beside them.
+
+`sszvis.stackedBarVerticalData` is the older form of the same generator. It returns the series array itself, with `.maxValue` and `.minValue` assigned onto it - deprecated, because every array operation drops them - and no `.keys`.
 
 ```code
-const stackLayout = sszvis.stackedBarVerticalData(xAcc, cAcc, yAcc);
-state.stackedData = stackLayout(data);
+const stackLayout = sszvis.stackedBarVerticalLayout(xAcc, cAcc, yAcc);
+const layout = stackLayout(data);
 
-state.categories = state.stackedData.keys;
-state.maxStacked = state.stackedData.maxValue;
+state.stackedData = layout.series;
+state.categories = layout.keys;
+state.maxStacked = layout.maxValue;
 ```
 
 #### `stackedBarVertical.xScale(xScale)`

@@ -42,6 +42,12 @@ function treemap() {
   .prop("containerHeight").containerHeight(600) // Default height
   .prop("showLabels").showLabels(false) // Default disabled
   .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("labelPosition").labelPosition("center").prop("onClick").render(function (inputData) {
+    // The old datum is the render's own input: the component is called through
+    // selection.each, so the group's datum is exactly what was handed to the render.
+    // Deriving it with typeof rather than restating the type is what keeps the two from
+    // drifting apart, the way they did in #303. pack, treemap and sunburst all declare it
+    // this way. The anchors at the end of the render bind the flattened node array to the
+    // group and then restore this input, so the datum a caller sees is unchanged.
     const selection = select(this);
     const props = selection.props();
     // Apply treemap layout to hierarchical data
@@ -162,6 +168,12 @@ function treemap() {
     // descendant, so the root and every undrawn branch gain anchors of their own and the
     // anchors come out breadth first while the rectangles are depth first.
     selection.datum(visibleData).call(ta);
+    // ...and put the hierarchy back, so the render is idempotent. The group's datum is the
+    // render's own input, and leaving the flattened array there breaks a caller who holds
+    // its own group selection and re-renders without re-binding: the layout above would be
+    // handed an array instead of a root. The docs examples never hit it, since they
+    // re-datum() on every render and selectGroup re-binds from the parent.
+    selection.datum(inputData);
   });
 }
 

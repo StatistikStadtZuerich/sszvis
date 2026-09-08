@@ -169,9 +169,7 @@ function pie() {
     }
     const ta = tooltipAnchor().position(
     // The anchors are placed from the destination angles, so they describe the layout the
-    // wedges are heading for rather than the one they are leaving. d3 passes the index to
-    // every attr callback, which is how the anchor component invokes this; its own prop
-    // type just declares the datum, hence the assertion.
+    // wedges are heading for rather than the one they are leaving.
     (_d, i) => {
       var _layout$i;
       const {

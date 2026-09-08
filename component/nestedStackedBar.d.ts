@@ -3,8 +3,8 @@
  *
  * This component renders a group of vertical stacked bar charts side by side. The input data
  * is an array of stack layouts, one per nested group, each as returned by
- * stackedBarVerticalData; callers usually tag every layout with the key they cascaded by so
- * that `offset` can read it. For each layout the component emits a group positioned by
+ * stackedBarVerticalData and each tagged with the group key the caller cascaded by - `key`,
+ * or `nest` under its older name. For each layout the component emits a group positioned by
  * `offset`, an ordinal x-axis, and a stackedBarVertical, and finally passes all tooltip
  * anchors of all groups to `tooltip` in a single call.
  *
@@ -49,10 +49,15 @@
  *                                          "diagonal"). Unset leaves them upright. The only prop that is not
  *                                          wrapped in fn.functor.
  *
- * Each nested group carries its nest key in `data-nested-stacked-bars`, taken from the `nest`
- * property callers tag the stack layout with (the same key `offset` reads), and falling back to
- * the group's index when the layout is untagged. A nested group with no stacks is reported with
- * a console warning and rendered as an empty group rather than taking the whole chart down.
+ * Each nested group carries its group key in `data-nested-stacked-bars`, read from the `key`
+ * field of its own stack layout, or from `nest` where the caller used that name - the same key
+ * `offset` reads. The field is a declared part of the layout type rather than an untyped tag,
+ * but it is not required: a layout with neither name is reported with a console warning and
+ * falls back to the group's index for its label, so the group still renders. `offset` is the
+ * caller's own functor and can position a group from anything it likes, the key included, so a
+ * missing key does not by itself stop a group being placed. A nested group with no stacks is
+ * likewise reported with a console warning and rendered as an empty group rather than taking
+ * the whole chart down.
  *
  * @return {sszvis.component}
  */
@@ -60,16 +65,15 @@ import { type ScaleBand } from "d3";
 import { type SlantDirection } from "../axis.js";
 import { type ComponentBuilder } from "../d3-component.js";
 import type { AnySelection } from "../types.js";
-import type { StackedBarSeries, StackedBarSlice } from "./stackedBar.js";
+import type { StackedBarSeriesData, StackedBarSlice } from "./stackedBar.js";
 export type { StackedBarSeries, StackedBarSlice } from "./stackedBar.js";
 /**
- * The stack layout of a single nested group, as returned by stackedBarVerticalData.
- * Callers usually tag it with the key they cascaded by, which is what `offset` reads.
+ * The stack layout of a single nested group, as returned by stackedBarVerticalData, tagged
+ * with the key the caller cascaded by. The key is what `offset` usually reads and what labels
+ * the group; `key` is its name, `nest` an accepted alias. Both are optional, and a layout
+ * carrying neither is warned about and labelled by its index.
  */
-export type NestedStack<T, X extends string | number = string> = StackedBarSeries<T, X>[] & {
-    /** The key the caller cascaded by, used to position and to label the group. */
-    nest?: string | number;
-};
+export type NestedStack<T, X extends string | number = string> = StackedBarSeriesData<T, X>;
 /**
  * Setters take `<U = T>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
@@ -96,5 +100,5 @@ export interface NestedStackedBarsVerticalComponent<T = unknown, X extends strin
     slant(): SlantDirection | undefined;
     slant(direction: SlantDirection): this;
 }
-export declare const nestedStackedBarsVertical: <T = unknown, X extends string | number = string>() => NestedStackedBarsVerticalComponent<T, X>;
+export default function nestedStackedBarsVertical<T = unknown, X extends string | number = string>(): NestedStackedBarsVerticalComponent<T, X>;
 //# sourceMappingURL=nestedStackedBar.d.ts.map

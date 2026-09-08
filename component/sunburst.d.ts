@@ -169,5 +169,5 @@ export interface SunburstComponent<T = unknown> extends ComponentBuilder<Sunburs
  * positions, but the type asks for whole nodes, since that is what prepareData hands back.
  */
 export type SunburstData<T = unknown> = HierarchyNode<NodeDatum<T>> | SunburstNode<T>[];
-export default function <T = unknown>(): SunburstComponent<T>;
+export default function sunburst<T = unknown>(): SunburstComponent<T>;
 //# sourceMappingURL=sunburst.d.ts.map
