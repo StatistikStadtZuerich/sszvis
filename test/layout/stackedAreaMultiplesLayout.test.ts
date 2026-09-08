@@ -112,24 +112,30 @@ describe("stackedAreaMultiplesLayout", () => {
     });
   });
 
-  describe("known quirks", () => {
-    test("the loop terminates on an absolute 1px tolerance, so small charts get extra bands", () => {
-      // BUG: the baseline loop runs `while (level - height < 1)`. The 1 is an absolute pixel
-      // slack, not a fraction of the step, so whenever a step is smaller than about 1px the
-      // loop emits more baselines than there are stacks.
-      // got: 5 baselines for 3 stacks in a 1px-high chart
-      // want: exactly `num` baselines at any height.
-      const layout = layoutStackedAreaMultiples(1, 3);
-      expect(layout.range).toHaveLength(5);
-      expect(layout.range.at(-1)).toBeGreaterThan(1);
+  describe("baseline count", () => {
+    test("returns exactly one baseline per stack, at any height", () => {
+      // The loop terminates on the stack count rather than on an absolute 1px slack, so a
+      // sub-pixel step no longer buys an extra iteration or two. A chart drawn into a few
+      // pixels - mid-entrance, or before a flex parent has settled - gets as many bands as
+      // it has series.
+      expect(layoutStackedAreaMultiples(1, 3).range).toHaveLength(3);
+      expect(layoutStackedAreaMultiples(0.001, 5).range).toHaveLength(5);
+      for (const [height, num] of [
+        [1, 3],
+        [9, 3],
+        [300, 3],
+        [400, 7],
+      ] as const) {
+        expect(layoutStackedAreaMultiples(height, num).range).toHaveLength(num);
+      }
     });
 
     test("the num-th baseline always lands exactly on the chart height", () => {
-      // NOTE: intended, and the reason the loop can use an absolute 1px slack at all:
-      // step * (num - pct) === height by construction, so baseline number `num` is always
-      // `height`. The slack only exists to survive the rounding error in that identity, and
-      // it is only visible when a step is smaller than 1px (see the small-chart BUG above).
+      // NOTE: step * (num - pct) === height by construction, so the last baseline is always
+      // `height`. Terminating on the count rather than on a pixel slack preserves that at
+      // every height, including the sub-pixel ones where the slack used to overshoot.
       for (const [height, num] of [
+        [1, 3], // step 0.345px: the sub-pixel case the old 1px slack overshot
         [9, 3],
         [300, 3],
         [400, 7],
