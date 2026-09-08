@@ -1,5 +1,6 @@
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { describe, expect, test, vi } from "vitest";
+import { MEMOIZE_CACHE_LIMIT } from "../../src/fn.js";
 import type { PointProjection } from "../../src/map/mapUtils.js";
 import {
   AGGLOMERATION_2012_KEY,
@@ -121,16 +122,24 @@ describe("map utils", () => {
       expect(swissMapProjection.cache.size).toBe(before);
     });
 
-    // NOTE: the memo cache is a module-level Map with no eviction, so every distinct
-    // width/height/key triple is retained for the lifetime of the page - a resizing chart
-    // accumulates one entry per resize tick. The cache is publicly reachable, which is the only
-    // way to clear it.
-    test("retains every distinct projection in a publicly reachable cache", () => {
+    test("caches each distinct projection in a publicly reachable cache", () => {
       const before = swissMapProjection.cache.size;
       swissMapProjection(321, 123, collection(square("a")), "growth");
       swissMapProjection(322, 123, collection(square("a")), "growth");
       expect(swissMapProjection.cache.size).toBe(before + 2);
       expect(swissMapProjection.cache.has("321,123,growth")).toBe(true);
+    });
+
+    test("does not grow past the memoize cache limit as a chart is resized", () => {
+      swissMapProjection.cache.clear();
+      // One distinct width per resize tick, as a drag across a few hundred pixels produces.
+      for (let width = 200; width < 500; width++) {
+        swissMapProjection(width, 400, collection(square("a")), "resize");
+      }
+      expect(swissMapProjection.cache.size).toBeLessThanOrEqual(MEMOIZE_CACHE_LIMIT);
+      // The size the chart settled at is still cached, so the projection is not refitted.
+      const settled = swissMapProjection(499, 400, collection(square("a")), "resize");
+      expect(swissMapProjection(499, 400, collection(square("a")), "resize")).toBe(settled);
     });
   });
 
