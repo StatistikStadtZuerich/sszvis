@@ -57,10 +57,15 @@
  *                                      Defaults to true, and eases over 300ms.
  *
  * Note: every consumer accessor - x, y, width, height, fill and stroke - is called with the bar's
- * index within its group, which is the index inGroupScale is keyed on. This is a deliberate change
- * from the pre-fix behaviour, where d3 supplied the index within the selection of bars that have a
- * defined value: the two agree for fully defined data and diverge only when a group contains missing
- * values, where the group index is the more meaningful answer.
+ * index within its group, which is the index inGroupScale is keyed on. That holds for every call
+ * site, including the cross-axis coordinate of the missing-value cross. This is a deliberate change
+ * from the pre-fix behaviour, where d3 supplied the index within the selection of bars it was
+ * applying the attribute to - the bars with a defined value, or the bars without one - so a group
+ * containing missing values could see the same datum handed two different indices in one render.
+ *
+ * Note: each orientation supplies the along-group dimensions itself, so it never calls the
+ * consumer's accessors for them. Vertical grouped bars ignore x and width; horizontal grouped bars
+ * ignore y and height. Passing one of those has no effect and raises no error.
  *
  * Note: entering bars receive their geometry on the join, before the transition starts, so they
  * appear in place rather than animating up from nothing. Only updates animate. fill and stroke are
@@ -139,23 +144,23 @@ type GroupedBarsConfig<T> = {
   x(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): (d: DatumWithIndex<T>, i: number) => number;
+  ): (d: DatumWithIndex<T>, groupIndex: number) => number;
   y(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): (d: DatumWithIndex<T>, i: number) => number;
+  ): (d: DatumWithIndex<T>, groupIndex: number) => number;
   width(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): number | ((d: DatumWithIndex<T>, i: number) => number);
+  ): number | ((d: DatumWithIndex<T>, groupIndex: number) => number);
   height(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): number | ((d: DatumWithIndex<T>, i: number) => number);
+  ): number | ((d: DatumWithIndex<T>, groupIndex: number) => number);
   missingTransform(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): (d: DatumWithIndex<T>, i: number) => string;
+  ): (d: DatumWithIndex<T>, groupIndex: number) => string;
   tooltipPosition(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
@@ -208,26 +213,31 @@ function createGroupedBarsComponent<T = unknown>(
         d.__sszvisGroupedBarIndex__ = i;
       });
 
-      // The geometry accessors are called with the bar's index within its group. A bar's own
-      // rect is joined one datum at a time, where d3 would pass 0, so the index recorded on
-      // the datum above is used instead.
-      const groupIndexOf = (d: DatumWithIndex<T>, i: number) => d.__sszvisGroupedBarIndex__ ?? i;
+      // Accessors are called with the bar's index within its group, which is never the index
+      // d3 would supply: a bar's own rect is joined one datum at a time, where d3 passes 0,
+      // and the missing-value cross is positioned on a filtered selection, where d3 passes
+      // the position among the missing bars only. The index recorded above is used instead.
+      // The `each` above tags every datum on every render, before any accessor runs, so the
+      // tag is always present here.
+      const groupIndexOf = (d: DatumWithIndex<T>) => d.__sszvisGroupedBarIndex__ as number;
       const configX = config.x(props, inGroupScale);
       const configY = config.y(props, inGroupScale);
       const configWidth = config.width(props, inGroupScale);
       const configHeight = config.height(props, inGroupScale);
       const configMissingTransform = config.missingTransform(props, inGroupScale);
-      const xAt = (d: DatumWithIndex<T>, i: number) => configX(d, groupIndexOf(d, i));
-      const yAt = (d: DatumWithIndex<T>, i: number) => configY(d, groupIndexOf(d, i));
-      const widthAt = (d: DatumWithIndex<T>, i: number) =>
-        typeof configWidth === "function" ? configWidth(d, groupIndexOf(d, i)) : configWidth;
-      const heightAt = (d: DatumWithIndex<T>, i: number) =>
-        typeof configHeight === "function" ? configHeight(d, groupIndexOf(d, i)) : configHeight;
-      const fillAt = (d: DatumWithIndex<T>, i: number) =>
-        typeof props.fill === "function" ? props.fill(d, groupIndexOf(d, i)) : props.fill;
-      const strokeAt = (d: DatumWithIndex<T>, i: number) =>
-        (typeof props.stroke === "function" ? props.stroke(d, groupIndexOf(d, i)) : props.stroke) ??
+      const xAt = (d: DatumWithIndex<T>) => configX(d, groupIndexOf(d));
+      const yAt = (d: DatumWithIndex<T>) => configY(d, groupIndexOf(d));
+      const widthAt = (d: DatumWithIndex<T>) =>
+        typeof configWidth === "function" ? configWidth(d, groupIndexOf(d)) : configWidth;
+      const heightAt = (d: DatumWithIndex<T>) =>
+        typeof configHeight === "function" ? configHeight(d, groupIndexOf(d)) : configHeight;
+      const fillAt = (d: DatumWithIndex<T>) =>
+        typeof props.fill === "function" ? props.fill(d, groupIndexOf(d)) : props.fill;
+      const strokeAt = (d: DatumWithIndex<T>) =>
+        (typeof props.stroke === "function" ? props.stroke(d, groupIndexOf(d)) : props.stroke) ??
         null;
+      const missingTransformAt = (d: DatumWithIndex<T>) =>
+        configMissingTransform(d, groupIndexOf(d));
 
       const unitsWithValue = barUnits.filter(props.defined);
       const unitsWithoutValue = barUnits.filter(fn.not(props.defined));
@@ -242,7 +252,7 @@ function createGroupedBarsComponent<T = unknown>(
       // The unit's translation only positions the missing-value cross. A unit that regains a
       // value has to lose it again, because its rect is positioned in the unit's own frame.
       unitsWithValue.attr("transform", () => translateString(0, 0));
-      unitsWithoutValue.attr("transform", configMissingTransform);
+      unitsWithoutValue.attr("transform", missingTransformAt);
 
       // Entering bars are given their geometry on the join, so they are in place before any
       // transition starts. The geometry is then applied exactly once more - to the transition
@@ -320,14 +330,14 @@ const createVerticalConfig = <T>(): GroupedBarsConfig<T> => ({
   height: ({ height }) => height,
   missingTransform:
     ({ groupScale, y }, inGroupScale) =>
-    (d, i) =>
+    (d, groupIndex) =>
       translateString(
         groupScale(d) +
           (d.__sszvisGroupedBarIndex__ !== undefined
             ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
             : 0) +
           inGroupScale.bandwidth() / 2,
-        y(d, i)
+        y(d, groupIndex)
       ),
   tooltipPosition:
     ({ groupScale, y }, inGroupScale) =>
@@ -363,9 +373,9 @@ const createHorizontalConfig = <T>(): GroupedBarsConfig<T> => ({
   height: (_, inGroupScale) => inGroupScale.bandwidth(),
   missingTransform:
     ({ groupScale, x }, inGroupScale) =>
-    (d, i) =>
+    (d, groupIndex) =>
       translateString(
-        x(d, i),
+        x(d, groupIndex),
         groupScale(d) +
           (d.__sszvisGroupedBarIndex__ !== undefined
             ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
