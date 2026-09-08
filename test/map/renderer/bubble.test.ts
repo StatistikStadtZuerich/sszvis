@@ -462,6 +462,19 @@ describe("map/renderer/bubble", () => {
   });
 
   describe("transition", () => {
+    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+      render(fullData, (c) => c.radius(5), "interrupted");
+      // Schedules a tween towards a larger radius.
+      render(fullData, (c) => c.radius(40), "interrupted");
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      const node = render(fullData, (c) => c.radius(5).transition(false), "interrupted");
+      // Past the 300ms default, so an uninterrupted tween would have reached its destination.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      for (const c of circles(node)) expect(c.getAttribute("r")).toBe("5");
+    });
+
     test("defaults to transitioning the radius", () => {
       expect(mapRendererBubble().transition()).toBe(true);
       const node = render(fullData);

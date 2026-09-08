@@ -94,7 +94,7 @@ import { dispatch, select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import translateString from "../../svgUtils/translateString.js";
-import { defaultTransition } from "../../transition.js";
+import { defaultTransition, OWN_TRANSITION } from "../../transition.js";
 import { type GeoPoint, getGeoJsonCenter, type MergedGeoDatum } from "../mapUtils.js";
 
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
@@ -329,9 +329,14 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
       // the final radius in the DOM before the tween started, and the tween would then interpolate
       // that radius onto itself.
       if (props.transition) {
-        anchoredCircles.transition(defaultTransition()).attr("r", radiusAcc);
+        anchoredCircles.transition(defaultTransition(OWN_TRANSITION)).attr("r", radiusAcc);
       } else {
-        anchoredCircles.attr("r", radiusAcc);
+        // An in-flight tween from an earlier render would overwrite the radius written here,
+        // so it is interrupted first - by name, so a transition the consumer scheduled on
+        // these circles keeps running. The exit transition above is deliberately left
+        // unnamed: it is on departing nodes, and giving it this name would let an interrupt
+        // cancel a pending .remove() and leave them behind.
+        anchoredCircles.interrupt(OWN_TRANSITION).attr("r", radiusAcc);
       }
     });
 

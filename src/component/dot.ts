@@ -60,7 +60,7 @@ import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { toFinite } from "../svgUtils/toFinite.js";
-import { defaultTransition } from "../transition.js";
+import { defaultTransition, OWN_TRANSITION } from "../transition.js";
 
 /**
  * An accessor as d3 calls it, with the datum and its index. Declaring fewer parameters is
@@ -169,9 +169,17 @@ export default function dot<T = unknown>(): DotComponent<T> {
         .attr("fill", fillAt);
 
       if (props.transition) {
-        dots.transition(defaultTransition()).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
+        dots
+          .transition(defaultTransition(OWN_TRANSITION))
+          .attr("cx", xAt)
+          .attr("cy", yAt)
+          .attr("r", rAt);
       } else {
-        dots.attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
+        // A transition scheduled by an earlier render would keep ticking and overwrite the
+        // geometry written here, so `transition(false)` is only deterministic once any
+        // in-flight tween is interrupted. Interrupted by name, so a transition the consumer
+        // scheduled on these circles keeps running.
+        dots.interrupt(OWN_TRANSITION).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
       }
 
       // Tooltip anchors

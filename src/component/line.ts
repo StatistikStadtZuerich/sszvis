@@ -70,7 +70,7 @@
 import { line as d3Line, select, type ValueFn } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
-import { defaultTransition } from "../transition.js";
+import { defaultTransition, OWN_TRANSITION } from "../transition.js";
 
 /**
  * Dimension accessors are handed to d3.line, which calls them with a single point, that
@@ -229,12 +229,19 @@ export default function line<P = unknown, L = unknown>(): LineComponent<P, L> {
         // d3 selection have separate types.
         if (props.transition) {
           path
-            .transition(defaultTransition())
+            .transition(defaultTransition(OWN_TRANSITION))
             .attr("d", pathData)
             .style("stroke", stroke)
             .style("stroke-width", strokeWidth);
         } else {
-          path.attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
+          // An in-flight tween from an earlier render would overwrite what is written here, so
+          // it is interrupted first - by name, so a transition the consumer scheduled on this
+          // path keeps running.
+          path
+            .interrupt(OWN_TRANSITION)
+            .attr("d", pathData)
+            .style("stroke", stroke)
+            .style("stroke-width", strokeWidth);
         }
       })
   );

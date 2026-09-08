@@ -615,6 +615,25 @@ describe("component/line", () => {
       expect(styles(node, "stroke-width")).toEqual(["3"]);
     });
 
+    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+      const animated = () =>
+        line()
+          .x((d: Point) => d.x)
+          .y((d: Point) => d.y);
+      const g = group("interrupted");
+      g.datum(oneLine).call(animated() as never);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      // Schedules a tween towards a different shape.
+      g.datum(twoLines).call(animated() as never);
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      g.datum(oneLine).call(animated().transition(false) as never);
+      // Past the 300ms default, so an uninterrupted tween would have reached its destination.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      expect(ds(g.node() as SVGGElement)).toEqual(["M0,0L10,20L20,10"]);
+    });
+
     test("should animate the geometry between renders when enabled", async () => {
       const component = line()
         .x((d: Point) => d.x)

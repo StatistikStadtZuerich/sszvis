@@ -663,6 +663,22 @@ describe("component/stackedArea", () => {
         .fill("#ff0000")
         .strokeWidth(3);
 
+    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+      const g = group("interrupted");
+      g.datum(oneLayer).call(animated() as never);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      // Schedules a tween towards a different shape.
+      g.datum(twoLayers).call(animated() as never);
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      g.datum(oneLayer).call(animated().transition(false) as never);
+      // Past the 300ms default, so an uninterrupted tween would have reached its destination.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const settled = ds(g.node() as SVGGElement);
+      expect(settled).toEqual(ds(render(areaOf(), oneLayer)));
+    });
+
     const settle = () => new Promise((resolve) => setTimeout(resolve, 400));
 
     test("should default to true", () => {

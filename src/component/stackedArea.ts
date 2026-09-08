@@ -132,7 +132,7 @@ import { area as d3Area, select, type ValueFn } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
-import { defaultTransition } from "../transition.js";
+import { defaultTransition, OWN_TRANSITION } from "../transition.js";
 
 /**
  * The dimension accessors are handed to d3.area, which calls them with a single point, that
@@ -347,13 +347,16 @@ export default function stackedArea<
       // selection have separate types.
       if (props.transition) {
         paths
-          .transition(defaultTransition())
+          .transition(defaultTransition(OWN_TRANSITION))
           .attr("d", pathData)
           .attr("fill", fill)
           .attr("stroke", stroke)
           .attr("stroke-width", strokeWidth);
       } else {
+        // An in-flight tween from an earlier render would overwrite these, so it is
+        // interrupted first - by name, so a consumer's own transition keeps running.
         paths
+          .interrupt(OWN_TRANSITION)
           .attr("d", pathData)
           .attr("fill", fill)
           .attr("stroke", stroke)
