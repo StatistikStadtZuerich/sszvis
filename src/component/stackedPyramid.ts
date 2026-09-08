@@ -9,12 +9,14 @@
  * This chart's horizontal point of origin is at its spine, i.e. the center of
  * the chart.
  *
- * The datum bound to the chart layer is the output of stackedPyramidData(sideAcc, rowAcc,
- * seriesAcc, valueAcc), which returns a function over a flat array of rows. stackedPyramidLayout
- * is the same computation returning the sides in `sides` with the maximum beside them. Each accessor is called
- * with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc into the
- * vertical positions within a side, seriesAcc into the layers of each row's stack, and valueAcc
- * supplies the number that is stacked.
+ * The datum bound to the chart layer is the sides array, never a wrapper around it: either the
+ * return value of stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc), which is that array,
+ * or the `sides` field of stackedPyramidLayout(...)(rows), which is the same array with the
+ * maximum beside it rather than assigned onto it. Binding the layout object itself draws nothing
+ * - d3's data join over a non-iterable yields an empty selection, without an error. Each accessor
+ * is called with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc
+ * into the vertical positions within a side, seriesAcc into the layers of each row's stack, and
+ * valueAcc supplies the number that is stacked.
  *
  * The result is an array of sides, each an array of the series d3.stack produced for that side,
  * each series an array of the [y0, y1] slices it computed - so a slice is addressed as
