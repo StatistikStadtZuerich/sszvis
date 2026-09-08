@@ -549,35 +549,25 @@ describe("component/stackedAreaMultiples", () => {
       expect(attrs(node, "stroke-width")).toEqual(["2", "2"]);
     });
 
-    test("should pass a falsy stroke through, unlike stackedArea", () => {
-      // There is no default to fall back to, so null and "" reach d3 as given: null removes
-      // the attribute, "" writes an invalid paint. Both compute to none, which is also what
-      // an unset stroke does.
+    test("should pass a falsy stroke through, so a caller can opt out of the hairline", () => {
+      // The default stands in for an unset stroke only, so null and "" reach d3 as given:
+      // null removes the attribute, "" writes an invalid paint. Both compute to none, which
+      // is how a caller asks for no outline.
       expect(attrs(render(areaOf().stroke(null), oneLayer), "stroke")).toEqual([null]);
       expect(attrs(render(areaOf().stroke(""), oneLayer), "stroke")).toEqual([""]);
     });
 
+    test("should default the stroke to the #ffffff hairline, as stackedArea does", () => {
+      // The two components are the two views of one chart, so an unset stroke outlines the
+      // bands the same way in both. Applied with an explicit undefined check, as strokeWidth
+      // is, so an explicitly falsy stroke still passes through - see the test above.
+      expect(attrs(render(areaOf(), twoLayers), "stroke")).toEqual(["#ffffff", "#ffffff"]);
+      expect(getComputedStyle(paths(render(areaOf(), oneLayer))[0]).stroke).toBe(
+        "rgb(255, 255, 255)"
+      );
+    });
+
     describe("known quirks", () => {
-      test("there is no default stroke, so the separating hairline is missing", () => {
-        // NOTE: stackedArea defaults the stroke to #ffffff, the hairline that visually
-        // separates two touching layers; this near-copy of it has no default at all, so
-        // touching bands run together. Harmless in the separated view, where the bands are
-        // spaced by stackedAreaMultiplesLayout and never touch, and the docs example does
-        // not set a stroke on either component - but it means the two views of the same
-        // chart are outlined differently.
-        expect(attrs(render(areaOf(), twoLayers), "stroke")).toEqual([null, null]);
-        expect(getComputedStyle(paths(render(areaOf(), oneLayer))[0]).stroke).toBe("none");
-      });
-
-      test("strokeWidth is written even when there is nothing to stroke", () => {
-        // NOTE: the width defaults to 1 while the stroke defaults to nothing, so every path
-        // carries an inert stroke-width. Setting only strokeWidth draws no line, which reads
-        // as the property not working.
-        const node = render(areaOf().strokeWidth(10), oneLayer);
-        expect(attrs(node, "stroke-width")).toEqual(["10"]);
-        expect(getComputedStyle(paths(node)[0]).stroke).toBe("none");
-      });
-
       test("a null strokeWidth removes the attribute where an unset one gives 1", () => {
         // NOTE: strokeWidth guards with `=== undefined`, so null is passed through to d3,
         // which reads a null-ish value as a removal. The two ways of saying "no width" thus
@@ -901,7 +891,6 @@ describe("component/stackedAreaMultiples", () => {
         const node = render(areaOf(), { values: oneLayer });
         expect(paths(node).length).toBe(0);
       });
-
     });
   });
 
