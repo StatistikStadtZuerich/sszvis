@@ -550,6 +550,65 @@ describe("component/groupedBars", () => {
       expect(svg.select("line.sszvis-bar--missing.line2").empty()).toBe(false);
     });
 
+    /** A single-group vertical component whose only value is missing. */
+    const missingOnly = () =>
+      groupedBarsVertical<TestDatum>()
+        .groupScale((d) => groupScale(d.group) || 0)
+        .groupSize(1)
+        .groupWidth(groupScale.bandwidth())
+        .y((d) => valueScale(d.value))
+        .height((d) => 200 - valueScale(d.value))
+        .fill("steelblue")
+        .defined((d) => !Number.isNaN(d.value));
+
+    const oneMissing: TestDatum[][] = [[{ category: "A", group: "G1", value: NaN }]];
+
+    test("a consumer-added line.line1 survives a render of a missing value", () => {
+      const bars = svg.selectGroup("bars").datum(oneMissing);
+      bars.call(missingOnly());
+
+      const unit = svg.select<SVGGElement>("g.sszvis-barunit").node();
+      expect(unit).not.toBeNull();
+      const consumerLine = select(unit)
+        .append("line")
+        .classed("line1", true)
+        .attr("data-consumer", "yes")
+        .attr("x1", 99);
+
+      bars.call(missingOnly());
+
+      expect(svg.selectAll("line[data-consumer]").size()).toBe(1);
+      expect(consumerLine.attr("x1")).toBe("99");
+      expect(consumerLine.node()?.parentNode).toBe(unit);
+      // The component still owns exactly one cross of its own.
+      expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2);
+    });
+
+    test("the cross geometry is reapplied on a second render", () => {
+      const bars = svg.selectGroup("bars").datum(oneMissing);
+      bars.call(missingOnly());
+
+      // Simulate anything that perturbs the constant geometry between renders.
+      svg.selectAll("line.sszvis-bar--missing").attr("x1", 0).attr("y1", 0);
+
+      bars.call(missingOnly());
+
+      const line1 = svg.select("line.sszvis-bar--missing.line1");
+      expect([line1.attr("x1"), line1.attr("y1"), line1.attr("x2"), line1.attr("y2")]).toEqual([
+        "-4",
+        "-4",
+        "4",
+        "4",
+      ]);
+      const line2 = svg.select("line.sszvis-bar--missing.line2");
+      expect([line2.attr("x1"), line2.attr("y1"), line2.attr("x2"), line2.attr("y2")]).toEqual([
+        "4",
+        "-4",
+        "-4",
+        "4",
+      ]);
+    });
+
     test("defined function should filter bars correctly", () => {
       const mixedData: TestDatum[][] = [
         [

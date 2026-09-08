@@ -284,31 +284,36 @@ function createGroupedBarsComponent<T = unknown>(
         bars.attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
       }
 
+      // The join selectors use component-owned marker classes so a consumer-added
+      // <line class="line1"> inside the unit is never adopted or overwritten. The public
+      // line1/line2 classes are kept on the component's own lines for styling.
+      // The geometry is constant, so it is reapplied on the merged selection: the lines are
+      // no longer re-appended on every render, and a mutated attribute must not persist.
       unitsWithoutValue
-        .selectAll("line.line1")
+        .selectAll("line.sszvis-bar--missing-cross-1")
         .data((d) => [d])
         .join((enter) =>
           enter
             .append("line")
-            .classed("sszvis-bar--missing line1", true)
-            .attr("x1", -4)
-            .attr("y1", -4)
-            .attr("x2", 4)
-            .attr("y2", 4)
-        );
+            .classed("sszvis-bar--missing sszvis-bar--missing-cross-1 line1", true)
+        )
+        .attr("x1", -4)
+        .attr("y1", -4)
+        .attr("x2", 4)
+        .attr("y2", 4);
 
       unitsWithoutValue
-        .selectAll("line.line2")
+        .selectAll("line.sszvis-bar--missing-cross-2")
         .data((d) => [d])
         .join((enter) =>
           enter
             .append("line")
-            .classed("sszvis-bar--missing line2", true)
-            .attr("x1", 4)
-            .attr("y1", -4)
-            .attr("x2", -4)
-            .attr("y2", 4)
-        );
+            .classed("sszvis-bar--missing sszvis-bar--missing-cross-2 line2", true)
+        )
+        .attr("x1", 4)
+        .attr("y1", -4)
+        .attr("x2", -4)
+        .attr("y2", 4);
 
       const ta = tooltipAnchor<T[]>().position(config.tooltipPosition(props, inGroupScale));
 
