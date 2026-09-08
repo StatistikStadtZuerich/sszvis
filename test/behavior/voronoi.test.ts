@@ -542,6 +542,143 @@ describe("behavior/voronoi", () => {
       }
     });
 
+    // A `Touch` can reach a handler without coordinates - a `TouchEvent` carries no position of
+    // its own, so it lives on the `Touch`, and a malformed one carries neither axis. Both consumers
+    // of the position reject a non-finite coordinate rather than degrading, so the guard is
+    // what keeps the handler from throwing: `pointer()` throws setting a non-finite
+    // `SVGPoint.x`, and `document.elementFromPoint` takes a WebIDL `double`.
+    //
+    // The throw has to be observed through `window.onerror`, not `expect().toThrow()`:
+    // `dispatchEvent` reports a listener's exception as an uncaught error and returns
+    // normally, so a `toThrow` assertion here passes whether or not the guard is present.
+    test("should ignore a touch that carries no coordinates", () => {
+      const overHandler = vi.fn();
+      const outHandler = vi.fn();
+      const layer = svg
+        .selectAll("g.voronoi-inset-coordless")
+        .data([insetData])
+        .join("g")
+        .attr("class", "voronoi-inset-coordless");
+      layer.call(
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
+          .bounds([100, 80, 400, 300])
+          .on("over", overHandler)
+          .on("out", outHandler)
+      );
+      const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
+      const firstPath = layer
+        .selectAll("[data-sszvis-behavior-voronoi]")
+        .nodes()[0] as SVGPathElement;
+
+      const touchWith = (type: string, touch: Record<string, number>) => {
+        const touchEvent = new Event(type, { bubbles: true, cancelable: true });
+        Object.defineProperty(touchEvent, "touches", {
+          value: [{ identifier: 0, ...touch }],
+          writable: false,
+        });
+        return touchEvent;
+      };
+      const uncaught: string[] = [];
+      const recordError = (errorEvent: ErrorEvent) => {
+        uncaught.push(errorEvent.message);
+        errorEvent.preventDefault();
+      };
+      window.addEventListener("error", recordError);
+
+      try {
+        // Neither axis, then each axis alone: a guard that checked only one of them would let
+        // the other through. An infinite coordinate is present but unusable, and separates a
+        // finiteness test from a mere missing-value or NaN test.
+        for (const touch of [
+          {},
+          { clientX: ctm.e + 200 },
+          { clientY: ctm.f + 150 },
+          { clientX: Number.POSITIVE_INFINITY, clientY: ctm.f + 150 },
+          { clientX: ctm.e + 200, clientY: Number.NEGATIVE_INFINITY },
+        ]) {
+          firstPath.dispatchEvent(touchWith("touchstart", touch));
+          expect(uncaught).toEqual([]);
+          expect(overHandler).not.toHaveBeenCalled();
+          expect(outHandler).not.toHaveBeenCalled();
+        }
+
+        // The same probe on the pan path, which needs a real `touchstart` to register first.
+        const touchstart = new Event("touchstart", { bubbles: true, cancelable: true });
+        Object.defineProperty(touchstart, "touches", {
+          value: [{ clientX: ctm.e + 200, clientY: ctm.f + 150, identifier: 0 }],
+          writable: false,
+        });
+        firstPath.dispatchEvent(touchstart);
+        expect(overHandler).toHaveBeenCalledTimes(1);
+        overHandler.mockClear();
+
+        for (const touch of [
+          {},
+          { clientX: ctm.e + 330 },
+          { clientY: ctm.f + 250 },
+          { clientX: Number.POSITIVE_INFINITY, clientY: ctm.f + 250 },
+          { clientX: ctm.e + 330, clientY: Number.NEGATIVE_INFINITY },
+        ]) {
+          firstPath.dispatchEvent(touchWith("touchmove", touch));
+          expect(uncaught).toEqual([]);
+          expect(overHandler).not.toHaveBeenCalled();
+          expect(outHandler).not.toHaveBeenCalled();
+        }
+      } finally {
+        window.removeEventListener("error", recordError);
+        firstPath.dispatchEvent(new Event("touchend", { bubbles: true }));
+      }
+    });
+
+    // Both `out` emitters hand over the event that actually fired. The `touchend` path used to
+    // apply the `touchstart` event its closure had captured, which is a plausible-looking
+    // object of the wrong type for any consumer that reads it.
+    test("should end a drag with the touchend event, not the touchstart it captured", () => {
+      const outHandler = vi.fn();
+      const layer = svg
+        .selectAll("g.voronoi-inset-end")
+        .data([insetData])
+        .join("g")
+        .attr("class", "voronoi-inset-end");
+      layer.call(
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
+          .bounds([100, 80, 400, 300])
+          .on("out", outHandler)
+      );
+      const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
+      const firstPath = layer
+        .selectAll("[data-sszvis-behavior-voronoi]")
+        .nodes()[0] as SVGPathElement;
+
+      const touchstart = new Event("touchstart", { bubbles: true, cancelable: true });
+      Object.defineProperty(touchstart, "touches", {
+        value: [{ clientX: ctm.e + 200, clientY: ctm.f + 150, identifier: 0 }],
+        writable: false,
+      });
+      firstPath.dispatchEvent(touchstart);
+
+      const touchend = new Event("touchend", { bubbles: true });
+      firstPath.dispatchEvent(touchend);
+
+      expect(outHandler).toHaveBeenCalledTimes(1);
+      expect(outHandler.mock.calls[0][0]).toBe(touchend);
+
+      // Ending the drag also unwires it: a leaked `touchmove` listener would keep reporting a
+      // datum after the finger lifted.
+      const strayMove = new Event("touchmove", { bubbles: true, cancelable: true });
+      Object.defineProperty(strayMove, "touches", {
+        value: [{ clientX: ctm.e + 330, clientY: ctm.f + 250, identifier: 0 }],
+        writable: false,
+      });
+      firstPath.dispatchEvent(strayMove);
+      firstPath.dispatchEvent(new Event("touchend", { bubbles: true }));
+      expect(outHandler).toHaveBeenCalledTimes(1);
+    });
+
     test("should miss when the pointer is outside the interaction radius of every datum", () => {
       const overHandler = vi.fn();
       const outHandler = vi.fn();
