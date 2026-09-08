@@ -420,6 +420,34 @@ describe("component/pack", () => {
           expect(cy + r).toBeLessThanOrEqual(250);
         });
     });
+
+    test("should re-render on a group the caller does not re-bind", () => {
+      // The render binds the flattened nodes to the group for the tooltip anchors and then
+      // restores the hierarchy, so the group's datum is still a root the next time round. A
+      // caller holding its own group selection can re-render without re-binding; leaving the
+      // array there made the pack layout throw on the second call - see #303.
+      const packComponent = pack<TestDatum>()
+        .colorScale(cScale)
+        .containerWidth(360)
+        .containerHeight(250)
+        .transition(false);
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(packComponent);
+      const first = svg.selectAll(".sszvis-pack-circle").size();
+
+      expect(() => {
+        svg.call(packComponent);
+      }).not.toThrow();
+      expect(svg.selectAll(".sszvis-pack-circle").size()).toBe(first);
+    });
   });
 
   describe("onClick functionality", () => {

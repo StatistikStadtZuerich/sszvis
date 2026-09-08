@@ -417,6 +417,34 @@ describe("component/treemap", () => {
         .transition(true);
       expect(treemapComponent.transition()).toBe(true);
     });
+
+    test("should re-render on a group the caller does not re-bind", () => {
+      // The render binds the flattened nodes to the group for the tooltip anchors and then
+      // restores the hierarchy, so the group's datum is still a root the next time round. A
+      // caller holding its own group selection can re-render without re-binding; leaving the
+      // array there made the treemap layout throw on the second call - see #303.
+      const treemapComponent = treemap<TestDatum>()
+        .colorScale(cScale)
+        .containerWidth(360)
+        .containerHeight(250)
+        .transition(false);
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(treemapComponent);
+      const first = svg.selectAll(".sszvis-treemap-rect").size();
+
+      expect(() => {
+        svg.call(treemapComponent);
+      }).not.toThrow();
+      expect(svg.selectAll(".sszvis-treemap-rect").size()).toBe(first);
+    });
   });
 
   describe("onClick functionality", () => {

@@ -123,8 +123,8 @@ export default function pack<T = unknown>(): PackComponent<T> {
       // selection.each, so the group's datum is exactly what was handed to the render.
       // Deriving it with typeof rather than restating the type is what keeps the two from
       // drifting apart, the way they did in #303. pack, treemap and sunburst all declare it
-      // this way. It is rebound to the flattened node array at the end of the render, and
-      // datum() types that new binding on its own.
+      // this way. The anchors at the end of the render bind the flattened node array to the
+      // group and then restore this input, so the datum a caller sees is unchanged.
       const selection = select<Element, typeof inputData>(this);
       const props = selection.props<PackProps<T>>();
 
@@ -253,5 +253,11 @@ export default function pack<T = unknown>(): PackComponent<T> {
       // first while the circles are depth first, and nodes dropped by the minRadius filter
       // get an anchor with no circle under it.
       selection.datum(visibleData).call(ta);
+      // ...and put the hierarchy back, so the render is idempotent. The group's datum is the
+      // render's own input, and leaving the flattened array there breaks a caller who holds
+      // its own group selection and re-renders without re-binding: the layout above would be
+      // handed an array instead of a root. The docs examples never hit it, since they
+      // re-datum() on every render and selectGroup re-binds from the parent.
+      selection.datum(inputData);
     });
 }
