@@ -650,7 +650,7 @@ describe("map/renderer/base", () => {
         )
         .node() as SVGGElement;
       const projection = swissMapProjection(100, 100, collection, "anchor-position");
-      // Computed independently of the component, which writes its own cachedCenter.
+      // Computed independently of the component.
       const expected = geoJson().features.map((f) => {
         const [x, y] = projection(geoCentroid(f)) as [number, number];
         return `translate(${x},${y})`;
@@ -658,11 +658,10 @@ describe("map/renderer/base", () => {
       expect(anchors(node).map((a) => a.getAttribute("transform"))).toEqual(expected);
     });
 
-    // NOTE: positioning goes through getGeoJsonCenter, which caches onto the feature - rendering a
-    // map mutates the geojson it was handed.
-    test("caches a centre onto every feature it renders", () => {
+    // getGeoJsonCenter computes the centre per render and caches nothing, so rendering a map
+    // leaves the geojson it was handed untouched.
+    test("writes no bookkeeping onto the features it renders", () => {
       const collection = geoJson();
-      expect(collection.features[0].properties?.cachedCenter).toBeUndefined();
       group()
         .call(
           mapRendererBase()
@@ -672,7 +671,7 @@ describe("map/renderer/base", () => {
         )
         .node();
       for (const feature of collection.features) {
-        expect(feature.properties?.cachedCenter).toBeDefined();
+        expect(feature.properties?.cachedCenter).toBeUndefined();
       }
     });
   });
