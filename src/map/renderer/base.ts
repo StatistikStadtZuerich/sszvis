@@ -23,7 +23,8 @@
  * @property {Boolean, Function} defined              A predicate used to determine whether a datum has a defined value. Map
  *                                                    entities that fail it display the missing value texture, as do entities
  *                                                    that matched no datum at all - the predicate is only consulted for a
- *                                                    datum that exists. It is wrapped in fn.functor and defaults to the
+ *                                                    datum that exists. It is stored through storeMapValue, which records whether the
+ *                                                    caller passed an accessor or a constant, and defaults to the
  *                                                    constant true, so a constant false textures the whole map. It is not
  *                                                    consulted at all on a geometry-only layer; see encodesData.
  * @property {Boolean} encodesData                    Whether this layer paints values or plain geometry. No default: left
@@ -98,7 +99,8 @@ import {
 } from "../mapUtils.js";
 
 /**
- * A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. The
+ * A constant or an accessor; both are accepted, since these props are stored through
+ * `storeMapValue`, which wraps either the way `fn.functor` would while recording which it was. The
  * accessor parameter includes undefined because MergedGeoDatum.datum is optional, so an accessor
  * written for the wrapper's datum slot type-checks. The render calls these accessors only for a
  * feature whose datum exists, except on a layer where no feature has one - there fill is called
