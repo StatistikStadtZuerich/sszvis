@@ -93,8 +93,9 @@ describe("component/stackedPyramid", () => {
   const ownStacks = (node: Element, key: string) => [
     ...(sideGroup(node, key)?.querySelectorAll(":scope > [data-sszvis-stack]") ?? []),
   ];
+  /** Only the rects bar owns, matched on the component-owned class it joins on. */
   const bars = (node: Element, key: string) => [
-    ...(sideGroup(node, key)?.querySelectorAll("rect.sszvis-bar") ?? []),
+    ...(sideGroup(node, key)?.querySelectorAll("rect.sszvis-bar-rect") ?? []),
   ];
   const attrs = (node: Element, key: string, attr: string) =>
     bars(node, key).map((b) => b.getAttribute(attr));
@@ -1347,6 +1348,27 @@ describe("component/stackedPyramid", () => {
       expect(() => g.datum(layout()).call(component as never)).not.toThrow();
       expect(ownStacks(node, "leftStack").length).toBe(2);
       expect(planted.isConnected).toBe(true);
+    });
+
+    test("should ignore a foreign rect.sszvis-bar planted in a stack group", () => {
+      // bar joins on its own .sszvis-bar-rect class, so a rect carrying only the generic
+      // class - drawn by another component, or left behind by an earlier chart - is not
+      // adopted as bar zero, which used to shift the whole row by one.
+      const component = pyramidOf();
+      const g = group("foreign-bar");
+      g.datum(layout()).call(component as never);
+      const node = g.node() as SVGGElement;
+
+      const foreign = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      foreign.setAttribute("class", "sszvis-bar");
+      foreign.setAttribute("width", "3");
+      ownStacks(node, "leftStack")[0].append(foreign);
+
+      g.datum(layout()).call(component as never);
+
+      expect(foreign.getAttribute("width")).toBe("3");
+      expect(foreign.getAttribute("class")).toBe("sszvis-bar");
+      expect(bars(node, "leftStack")).not.toContain(foreign);
     });
   });
 });
