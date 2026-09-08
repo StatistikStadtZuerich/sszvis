@@ -801,16 +801,41 @@ describe("component/groupedBars", () => {
             .transition(false)
         );
 
-      // "C" is the third bar of its group but the second one with a value; every accessor
-      // must agree on the group index, 2.
-      // `x` is also called for the tooltip anchor, so collect the distinct indices each
-      // accessor saw for a bar rather than the call count.
-      const indicesFor = (key: string, category: string) =>
-        new Set(seen[key].filter(([c]) => c === category).map(([, i]) => i));
-      for (const key of ["x", "width", "fill", "stroke"]) {
-        expect(indicesFor(key, "A"), key).toEqual(new Set([0]));
-        expect(indicesFor(key, "C"), key).toEqual(new Set([2]));
-      }
+      // Every consumer accessor must be called with the bar's index within its group, for
+      // the missing bar "B" (group index 1) as much as for the two bars that have a value.
+      // The exact sequences are pinned rather than a set of distinct indices, so a call site
+      // that passes the index within the filtered missing-value selection cannot hide behind
+      // a correct call elsewhere in the same render.
+      //
+      // `x` is reached from four call sites, in this order: the missing-value cross's
+      // transform ("B"), the entering rects' geometry, the same geometry re-applied to the
+      // plain selection because `transition` is off, and finally the tooltip anchor, which
+      // walks the whole group and so sees all three bars.
+      expect(seen.x).toEqual([
+        ["B", 1],
+        ["A", 0],
+        ["C", 2],
+        ["A", 0],
+        ["C", 2],
+        ["A", 0],
+        ["B", 1],
+        ["C", 2],
+      ]);
+      // `width`, `fill` and `stroke` are only applied to bars that have a value.
+      expect(seen.width).toEqual([
+        ["A", 0],
+        ["C", 2],
+        ["A", 0],
+        ["C", 2],
+      ]);
+      expect(seen.fill).toEqual([
+        ["A", 0],
+        ["C", 2],
+      ]);
+      expect(seen.stroke).toEqual([
+        ["A", 0],
+        ["C", 2],
+      ]);
       // The horizontal `y` and `height` are supplied by the component itself, so consumer
       // accessors for them are never called; only the four above reach the consumer.
       expect(seen.y).toEqual([]);
