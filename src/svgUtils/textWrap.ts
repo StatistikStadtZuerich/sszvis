@@ -22,21 +22,45 @@
  *        centred on the full width instead. On a tick label (<text> inside a translated
  *        <g class="tick">) 'x' is derived from the narrowed width alone, as -width/2, 0 or
  *        width/2 by anchor. Defaults to 5 when omitted or when the value is not a finite
- *        number, which logs a warning; an explicit 0 and a negative padding are honoured.
+ *        number, which logs a warning once per message; an explicit 0 and a negative
+ *        padding are honoured.
  * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the
  *        'invisible box' of 'width' width. Two pixels are subtracted from it to account for
  *        the borders, so the rendered 'y' is padding - 2: the default of 5 yields y="3" and
  *        an explicit 0 yields y="-2". It is used only when the <text> element carries no 'y'
  *        attribute of its own; otherwise that attribute wins and this argument is ignored.
  *        Defaults to 5 when omitted or when the value is not a finite number, which logs a
- *        warning; an explicit 0 and a negative padding are honoured.
+ *        warning once per message; an explicit 0 and a negative padding are honoured.
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
 
 import type { BaseType, Selection } from "d3";
 import { select } from "d3";
+import * as logger from "../logger.js";
 
 const DEFAULT_PADDING = 5;
+
+/**
+ * Messages already logged, so a bad padding warns once instead of once per render.
+ *
+ * `resolvePadding` runs on every `textWrap` call, and `textWrap` runs inside a component's
+ * render, so a resize handler or a transition would otherwise emit the same warning every
+ * frame. The latch is module-level because `resolvePadding` sees only the argument: it has
+ * no component instance and no element to hang per-chart state on, so it cannot latch per
+ * instance the way `sunburst` warns per chart. Keying on the message keeps the two padding
+ * arguments independent while collapsing the repeats.
+ */
+const warnedMessages = new Set<string>();
+
+/**
+ * Forgets which padding warnings have already been logged.
+ *
+ * Only exists so tests can exercise the first-warning path in isolation; production code
+ * has no reason to re-arm the latch.
+ */
+export function resetPaddingWarnings(): void {
+  warnedMessages.clear();
+}
 
 /**
  * Reads a padding argument, falling back to the default unless it is a usable number.
@@ -46,16 +70,23 @@ const DEFAULT_PADDING = 5;
  * available width non-finite, which compares every measured line against NaN and disables
  * wrapping entirely, and both are written straight into an `x`/`y` attribute, where "NaN"
  * or "Infinity" is invalid SVG. `Number.isFinite` does not coerce, so an explicit 0 and a
- * negative padding are honoured, while undefined, NaN, +/-Infinity and the ""/false that
- * only untyped JS callers can pass all take the default - matching what these inputs did
- * before an explicit 0 became meaningful. A supplied-but-unusable padding is a caller bug
- * that used to render silently, so it warns rather than throws: wrapping still produces a
- * readable label, and throwing would take down a chart that previously drew fine.
+ * negative padding are honoured, while undefined, NaN, +/-Infinity and the null/""/false
+ * that only untyped JS callers can pass all take the default - the same value these inputs
+ * produced before an explicit 0 became meaningful, though the old code took it silently and
+ * a supplied one now warns. A supplied-but-unusable padding is a caller bug that used to
+ * render silently, so it warns rather than throws: wrapping still produces a readable
+ * label, and throwing would take down a chart that previously drew fine. The check happens
+ * before the per-element pass, so a bad paddingTopBottom is reported even on a <text> that
+ * carries its own 'y' and would have discarded it.
  */
 function resolvePadding(padding: number | undefined, name: string): number {
   if (padding === undefined) return DEFAULT_PADDING;
   if (Number.isFinite(padding)) return padding;
-  console.warn(`sszvis.svgUtils.textWrap: ignoring a non-finite ${name}, using ${DEFAULT_PADDING}`);
+  const message = `sszvis.svgUtils.textWrap: ignoring a non-finite ${name}, using ${DEFAULT_PADDING}`;
+  if (!warnedMessages.has(message)) {
+    warnedMessages.add(message);
+    logger.warn(message);
+  }
   return DEFAULT_PADDING;
 }
 

@@ -1,6 +1,6 @@
 import { select } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import textWrap from "../../src/svgUtils/textWrap.js";
+import textWrap, { resetPaddingWarnings } from "../../src/svgUtils/textWrap.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -11,6 +11,8 @@ describe("svgUtils/textWrap", () => {
   let svg: SVGSVGElement;
 
   beforeEach(() => {
+    // NOTE: the padding warning is latched at module level, so every test starts unwarned.
+    resetPaddingWarnings();
     svg = document.createElementNS(SVG_NS, "svg");
     svg.setAttribute("width", "400");
     svg.setAttribute("height", "300");
@@ -226,6 +228,23 @@ describe("svgUtils/textWrap", () => {
         warn.mockRestore();
       });
 
+      test("should warn only once when the same bad padding is rendered repeatedly", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        for (let i = 0; i < 60; i++) {
+          textWrap(select(appendText("aa")), 100, Number.NaN);
+        }
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
+      });
+
+      test("should warn separately for each of the two bad paddings, once each", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        textWrap(select(appendText("aa")), 100, Number.NaN, Number.NaN);
+        textWrap(select(appendText("aa")), 100, Number.NaN, Number.NaN);
+        expect(warn).toHaveBeenCalledTimes(2);
+        warn.mockRestore();
+      });
+
       test("should treat a detached text node as not being a tick label", () => {
         const text = document.createElementNS(SVG_NS, "text");
         text.textContent = "aa";
@@ -274,7 +293,7 @@ describe("svgUtils/textWrap", () => {
         expect(tspansOf(text)[0].getAttribute("y")).toBe("3");
       });
 
-      test("should never write a non-numeric y or x attribute", () => {
+      test("should keep x and y numeric when both paddings are not finite", () => {
         const text = appendText("aaaaa bbbbb ccccc");
         textWrap(select(text), 100, Number.NaN, Number.NaN);
         for (const tspan of tspansOf(text)) {
