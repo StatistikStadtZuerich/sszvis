@@ -20,7 +20,7 @@ Each pane reports `<n> svg · <n> marks · <n> err`, and the row gets a verdict:
 
 | verdict | meaning |
 | --- | --- |
-| `matches baseline` | same rendered SVGs and marks, no new errors |
+| `matches baseline` | same number of rendered SVGs, no new errors, and marks on the candidate wherever the baseline had them - mark counts may still differ |
 | `new errors in candidate` | the working copy threw where the baseline did not |
 | `render count differs` | one side rendered a chart, the other did not |
 | `candidate renders no marks` | the SVG and axes are there, the data marks are gone |
