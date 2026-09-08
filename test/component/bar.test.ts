@@ -51,6 +51,18 @@ describe("component/bar", () => {
   const anchors = (node: Element) =>
     [...node.querySelectorAll("[data-tooltip-anchor]")].map((a) => a.getAttribute("transform"));
 
+  /**
+   * Resolves once a transition has actually moved `attr` on `node`, rather than after a fixed
+   * delay. A fixed delay can overshoot the whole 300ms transition under load, which would let
+   * these tests pass with the interrupt removed.
+   */
+  const untilMoved = (node: Element, attr: string) =>
+    new Promise<void>((resolve) => {
+      const from = node.getAttribute(attr);
+      const check = () => (node.getAttribute(attr) === from ? setTimeout(check, 0) : resolve());
+      check();
+    });
+
   /** The names of the tweens d3 scheduled on a node, e.g. ["attr.x"]. */
   const tweenNames = (node: Element) => {
     const schedules = (node as Element & { __transition?: Record<string, unknown> }).__transition;
@@ -458,8 +470,9 @@ describe("component/bar", () => {
       g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(barOf().transition(true) as never);
       // Schedules a tween from 0 towards 500.
       g.datum([{ x: 500, y: 400, w: 20, h: 30 }]).call(barOf().transition(true) as never);
-      // Let the tween start and run partway, so it holds an interpolated geometry.
-      await new Promise((resolve) => setTimeout(resolve, 60));
+      // Synchronised on the tween actually moving, so the tween is provably in flight when
+      // the synchronous render below lands.
+      await untilMoved(bars(g.node() as SVGGElement)[0], "x");
 
       g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(barOf().transition(false) as never);
       // The stale tween must have been interrupted: it may not tick again and reinstate its
@@ -487,7 +500,7 @@ describe("component/bar", () => {
         .transition()
         .duration(300)
         .attr("opacity", 1);
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await untilMoved(bars(g.node() as SVGGElement)[0], "opacity");
 
       g.datum([{ x: 5, y: 5, w: 20, h: 20 }]).call(barOf().transition(false) as never);
       // Past the consumer transition's own duration, so it has had time to finish.
