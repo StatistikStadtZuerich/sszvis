@@ -107,6 +107,10 @@
  *                                                   should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels) and
  *                                                   return text. Optional: when unset the label elements are still created for every entry in
  *                                                   linkSourceLabels and linkTargetLabels, with no text in them.
+ * @property {Boolean} transition                    Whether to animate the node bars to their new geometry on an update. Forwarded to bar, and
+ *                                                   defaulted to bar's own default of true. Pass false for anything that measures the chart
+ *                                                   synchronously, or that re-renders faster than the animation can finish. Only the node bars
+ *                                                   are affected; the link paths interpolate their own geometry regardless.
  *
  * Note: the component always creates four sub-groups, in this order: nodes, links,
  * linklabels and nodelabels. The order is load-bearing, since it makes the links paint over
@@ -147,9 +151,9 @@
  * ends up bound to a different node. That matters for anything holding on to a rect, such as
  * a hover handler.
  *
- * Note: the component never sets bar's transition property, so it keeps bar's default of
- * true and the node rects ease to their new geometry over bar's transition. A caller cannot
- * turn that off, since the property is not forwarded. See test/component/sankey.test.ts.
+ * Note: the transition property is forwarded to bar and defaults to bar's own default of
+ * true, so the node rects ease to their new geometry. Pass false to have them snap into
+ * place instead. See test/component/sankey.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -326,6 +330,8 @@ type SankeyProps = {
   linkSourceLabels: SankeyLink[];
   linkTargetLabels: SankeyLink[];
   linkLabel?: LabelAccessor<SankeyLink>;
+  /** Forwarded straight to bar, and defaulted here to bar's own default of true. */
+  transition: boolean;
 };
 
 /**
@@ -384,6 +390,8 @@ export interface SankeyComponent extends SankeyBuilder {
   linkTargetLabels(links: SankeyLink[]): SankeyComponent;
   linkLabel(): LabelAccessor<SankeyLink> | undefined;
   linkLabel<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
+  transition(): boolean;
+  transition(enabled: boolean): SankeyComponent;
 }
 
 /* Constants
@@ -423,7 +431,7 @@ function allFinite(values: number[]): boolean {
 
 /* Module
 ----------------------------------------------- */
-export default function (): SankeyComponent {
+export default function sankey(): SankeyComponent {
   return component<SankeyComponent>()
     .prop("sizeScale")
     .prop("columnPosition")
@@ -456,6 +464,8 @@ export default function (): SankeyComponent {
     .prop("linkTargetLabels")
     .linkTargetLabels([])
     .prop("linkLabel", fn.functor)
+    .prop("transition")
+    .transition(true)
     .render(function (this: Element, data: SankeyData) {
       const selection = select(this);
       const props = selection.props<SankeyProps>();
@@ -496,7 +506,8 @@ export default function (): SankeyComponent {
         .y(yPosition)
         .width(xExtent)
         .height(yExtent)
-        .fill(props.nodeColor);
+        .fill(props.nodeColor)
+        .transition(props.transition);
 
       const barGroup = selection.selectGroup("nodes").datum(data.nodes);
 

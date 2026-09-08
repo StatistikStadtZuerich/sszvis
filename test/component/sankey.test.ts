@@ -832,19 +832,16 @@ describe("component/sankey", () => {
       expect(all(node, "nodelabels", "text.sszvis-sankey-node-label").length).toBe(4);
     });
 
-    test("should update the geometry when the data changes", async () => {
-      // bar animates an update, so the destination height only lands once the transition
-      // has run; reading it synchronously would pin the start value.
-      const component = sankeyOf();
+    test("should update the geometry when the data changes", () => {
+      // The animation is turned off, so the destination height is on the DOM synchronously.
+      const component = sankeyOf().transition(false);
       const g = group("update");
       g.datum(makeData()).call(component as never);
       const next = makeData();
       next.nodes[0].value = 60;
       g.datum(next).call(component as never);
       const node = g.node() as SVGGElement;
-      await vi.waitFor(() => {
-        expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[0]).toBe("60");
-      });
+      expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[0]).toBe("60");
     });
 
     test("should remove elements when the data shrinks", () => {
@@ -866,10 +863,10 @@ describe("component/sankey", () => {
     });
 
     test("should animate the nodes to their new geometry", async () => {
-      // The sankey never sets bar's transition property, so it keeps bar's default of true.
-      // The node rects therefore ease to their new height rather than snapping: on the tick
-      // after the re-render the old height is still on the DOM, and the new one arrives when
-      // the transition finishes.
+      // transition defaults to bar's own default of true, so the node rects ease to their new
+      // height rather than snapping: on the tick after the re-render the old height is still
+      // on the DOM, and the new one arrives when the transition finishes.
+      expect(sankey().transition()).toBe(true);
       const component = sankeyOf();
       const g = group("animation");
       g.datum(makeData()).call(component as never);
@@ -904,6 +901,18 @@ describe("component/sankey", () => {
       await vi.waitFor(() => {
         expect(attrs(node, "nodes", "rect.sszvis-bar", "height")).toEqual(["15", "25", "10", "30"]);
       });
+    });
+
+    test("should snap the nodes into place when the transition is turned off", () => {
+      const component = sankeyOf().transition(false);
+      const g = group("no-transition");
+      g.datum(makeData()).call(component as never);
+      const node = g.node() as SVGGElement;
+
+      const next = makeData();
+      next.nodes[0].value = 90;
+      g.datum(next).call(component as never);
+      expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[0]).toBe("90");
     });
   });
 

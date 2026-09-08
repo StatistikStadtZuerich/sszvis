@@ -63,6 +63,11 @@
  *                                      was never set, so a falsy value is rendered as set: null
  *                                      and an empty string both clear the attribute, and "none"
  *                                      replaces the separator.
+ * @property {boolean} transition       Optional, and forwarded to bar. Whether to animate the
+ *                                      segment geometry on an update. Defaults to bar's own
+ *                                      default of true; pass false for anything that measures
+ *                                      the chart synchronously, or that re-renders faster than
+ *                                      the animation can finish.
  *
  * Note: the two layout functions are the same computation and differ only in the stack order,
  * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
@@ -98,8 +103,7 @@
  * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
  * selector and no key function, so any pre-existing stack below the target group, at any depth,
  * is captured and re-bound, and surviving groups and rects are matched by index rather than by
- * series. The component also forwards neither bar's `transition` property nor its tooltip
- * anchor properties, so a caller cannot turn the segment animation off, and the tooltip anchor
+ * series. The component does not forward bar's tooltip anchor properties, so the tooltip anchor
  * is always at the top centre of a segment. See test/component/stackedBar.test.ts.
  *
  * @return {sszvis.component}
@@ -280,10 +284,12 @@ type StrokeValue<T, X extends string | number> =
   | undefined
   | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
 
-/** The props the two orientations share, both stored exactly as they were set. */
+/** The props the two orientations share. fill and stroke are stored exactly as they were set. */
 type ColorProps<T, X extends string | number> = {
   fill: FillValue<T, X>;
   stroke: StrokeValue<T, X>;
+  /** Forwarded straight to bar, and defaulted here to bar's own default of true. */
+  transition: boolean;
 };
 
 /**
@@ -329,6 +335,8 @@ export interface StackedBarVerticalComponent<T = unknown, X extends string | num
   stroke<U = StackedBarSlice<T, X>>(
     value: string | null | undefined | ((slice: U, index: number) => string | undefined)
   ): StackedBarVerticalComponent<T, X>;
+  transition(): boolean;
+  transition(enabled: boolean): StackedBarVerticalComponent<T, X>;
 }
 
 export interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string>
@@ -353,6 +361,8 @@ export interface StackedBarHorizontalComponent<T = unknown, X extends string | n
   stroke<U = StackedBarSlice<T, X>>(
     value: string | null | undefined | ((slice: U, index: number) => string | undefined)
   ): StackedBarHorizontalComponent<T, X>;
+  transition(): boolean;
+  transition(enabled: boolean): StackedBarHorizontalComponent<T, X>;
 }
 
 /**
@@ -425,6 +435,8 @@ export function stackedBarHorizontal<
     .prop("height", fn.functor)
     .prop("fill")
     .prop("stroke")
+    .prop("transition")
+    .transition(true)
     .render(function (this: Element, data: StackedBarSeries<T, X>[]) {
       const selection = select(this);
       const props = selection.props<HorizontalProps<T, X>>();
@@ -438,7 +450,8 @@ export function stackedBarHorizontal<
         .width((d) => Math.abs(props.xScale(d[1]) - props.xScale(d[0])))
         .height(props.height)
         .fill(fillOf(props.fill))
-        .stroke(strokeOf(props.stroke));
+        .stroke(strokeOf(props.stroke))
+        .transition(props.transition);
 
       drawStacks(selection, data, barGen);
     });
@@ -455,6 +468,8 @@ export function stackedBarVertical<
     .prop("height", fn.functor)
     .prop("fill")
     .prop("stroke")
+    .prop("transition")
+    .transition(true)
     .render(function (this: Element, data: StackedBarSeries<T, X>[]) {
       const selection = select(this);
       const props = selection.props<VerticalProps<T, X>>();
@@ -468,7 +483,8 @@ export function stackedBarVertical<
         .width(props.width)
         .height((d) => Math.abs(props.yScale(d[0]) - props.yScale(d[1])))
         .fill(fillOf(props.fill))
-        .stroke(strokeOf(props.stroke));
+        .stroke(strokeOf(props.stroke))
+        .transition(props.transition);
 
       drawStacks(selection, data, barGen);
     });

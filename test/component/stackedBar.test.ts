@@ -512,20 +512,18 @@ describe("component/stackedBar", () => {
       expect(rects(node).length).toBe(2);
     });
 
-    test("should pick up a changed scale", async () => {
-      // bar animates the update, so the rescaled geometry arrives with the transition.
-      const component = verticalOf();
+    test("should pick up a changed scale", () => {
+      // The animation is turned off, so the rescaled geometry is on the DOM synchronously.
+      const component = verticalOf().transition(false);
       const g = group("rescale");
       g.datum(verticalData()).call(component as never);
       yLinear.range([150, 0]);
       g.datum(verticalData()).call(component as never);
       const node = g.node() as SVGGElement;
-      await vi.waitFor(() => {
-        expect(attrs(rects(stacks(node)[0]), "y")).toEqual([
-          String(yLinear(30)),
-          String(yLinear(40)),
-        ]);
-      });
+      expect(attrs(rects(stacks(node)[0]), "y")).toEqual([
+        String(yLinear(30)),
+        String(yLinear(40)),
+      ]);
     });
 
     test("should re-bind the surviving nodes by index rather than by series", async () => {
@@ -559,6 +557,58 @@ describe("component/stackedBar", () => {
       g.datum(verticalData()).call(component as never);
       g.datum(verticalData()).call(component as never);
       expect(anchors(g.node() as SVGGElement).length).toBe(4);
+    });
+  });
+
+  describe("transition", () => {
+    test("should default to bar's own default of true, so the animation is not lost", async () => {
+      expect(stackedBarVertical().transition()).toBe(true);
+      expect(stackedBarHorizontal().transition()).toBe(true);
+
+      const component = verticalOf();
+      const g = group("animates-by-default");
+      g.datum(verticalData()).call(component as never);
+      yLinear.range([150, 0]);
+      g.datum(verticalData()).call(component as never);
+      const node = g.node() as SVGGElement;
+      // Mid-animation the rects still hold their old geometry, and the destination only
+      // arrives once the transition has run.
+      expect(attrs(rects(stacks(node)[0]), "y")).not.toEqual([
+        String(yLinear(30)),
+        String(yLinear(40)),
+      ]);
+      await vi.waitFor(() => {
+        expect(attrs(rects(stacks(node)[0]), "y")).toEqual([
+          String(yLinear(30)),
+          String(yLinear(40)),
+        ]);
+      });
+    });
+
+    test("should put the destination geometry on the DOM synchronously when turned off", () => {
+      const component = verticalOf().transition(false);
+      const g = group("no-transition-vertical");
+      g.datum(verticalData()).call(component as never);
+      yLinear.range([150, 0]);
+      g.datum(verticalData()).call(component as never);
+      const node = g.node() as SVGGElement;
+      expect(attrs(rects(stacks(node)[0]), "y")).toEqual([
+        String(yLinear(30)),
+        String(yLinear(40)),
+      ]);
+    });
+
+    test("should be forwarded by the horizontal orientation too", () => {
+      const component = horizontalOf().transition(false);
+      const g = group("no-transition-horizontal");
+      g.datum(horizontalData()).call(component as never);
+      xLinear.range([0, 200]);
+      g.datum(horizontalData()).call(component as never);
+      const node = g.node() as SVGGElement;
+      expect(attrs(rects(stacks(node)[0]), "width")).toEqual([
+        String(xLinear(10)),
+        String(xLinear(15)),
+      ]);
     });
   });
 
@@ -709,20 +759,6 @@ describe("component/stackedBar", () => {
       const node = render(verticalOf().xScale(7).yScale(5));
       expect(new Set(attrs(rects(node), "x"))).toEqual(new Set(["7"]));
       expect(new Set(attrs(rects(node), "height"))).toEqual(new Set(["0"]));
-    });
-
-    test("attaches a discarded transition to every rect on every render", () => {
-      // NOTE: bar defaults `transition` to true and stackedBar neither sets it nor exposes
-      // it, so every render creates a d3 transition per rect and then overwrites the
-      // geometry on the plain selection immediately - nothing animates (see
-      // test/component/bar.test.ts), but the transition state is still attached and
-      // interrupts any transition already running on those rects. Not configurable from
-      // here.
-      expect(Reflect.get(stackedBarVertical(), "transition")).toBeUndefined();
-      const node = render(verticalOf());
-      for (const r of rects(node)) {
-        expect(Object.keys(r).some((key) => key.startsWith("__transition"))).toBe(true);
-      }
     });
 
     test("does not expose bar's tooltip anchor props", () => {
