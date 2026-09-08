@@ -426,13 +426,9 @@ export function stackedPyramidData<T, S extends string | number = string>(
   seriesAcc: (datum: T) => string | number,
   valueAcc: (datum: T) => number
 ) {
+  const layout = stackedPyramidLayout<T, S>(sideAcc, rowValueAcc, seriesAcc, valueAcc);
   return (data: T[]): StackedPyramidSidesData<T, S> => {
-    const { sides, maxValue } = stackedPyramidLayout<T, S>(
-      sideAcc,
-      rowValueAcc,
-      seriesAcc,
-      valueAcc
-    )(data);
+    const { sides, maxValue } = layout(data);
     return Object.assign(sides, { maxValue });
   };
 }

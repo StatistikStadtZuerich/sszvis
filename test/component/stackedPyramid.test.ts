@@ -151,6 +151,27 @@ describe("component/stackedPyramid", () => {
       expect(bars(node, "rightStack").length).toBe(4);
     });
 
+    test("reuses one generator across datasets without carrying state between them", () => {
+      // stackedPyramidData builds its layout generator once and closes over it, so the
+      // accessors are bound a single time rather than per call. Nothing mutable may be
+      // captured with them: applying the same generator to two datasets has to give the same
+      // answer as two fresh generators would.
+      const generate = stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc);
+      const other: Row[] = [
+        { side: "f", row: 0, series: "a", value: 3 },
+        { side: "m", row: 0, series: "a", value: 4 },
+      ];
+      const first = generate(rows);
+      const second = generate(other);
+      const third = generate(rows);
+
+      expect(first.maxValue).toBe(70);
+      expect(second.maxValue).toBe(4);
+      expect(third.maxValue).toBe(70);
+      expect(second.length).toBe(2);
+      expect(third.map((side) => side.length)).toEqual(first.map((side) => side.length));
+    });
+
     test("agrees on maxValue between the two forms", () => {
       expect(sidesDataOf().maxValue).toBe(layoutOf().maxValue);
     });
