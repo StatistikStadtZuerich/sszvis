@@ -16,3 +16,4 @@ __diff_output__
 .reference
 
 .claude/
+scripts/visual-regression/__report__/
