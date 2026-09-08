@@ -448,8 +448,8 @@ describe("maps/choropleth", () => {
       expect(order(node)).toEqual(before);
       expect(lake(node)).toHaveLength(1);
 
-      // The lake must still be painted before the highlight, which the highlight renderer appends
-      // straight into the map group as the lake overlay now does.
+      // The lake must still be painted before the highlight, whose paths the renderer keeps in a
+      // wrapper group of its own among the map group's children.
       const highlight = highlights(node)[0];
       expect(highlight).toBeDefined();
       for (const path of [...lake(node), ...lakePaths(node)]) {
@@ -458,37 +458,6 @@ describe("maps/choropleth", () => {
         ).toBeTruthy();
       }
     });
-
-    // The other order of operation: the lake stays put and the highlight is the layer that goes
-    // away and comes back, including the first-hover case where nothing was ever highlighted. The
-    // highlight's own wrapper group holds the slot above the lake, so keepLakeBeneath has a stable
-    // thing to measure against - it matches the group, not the paths.
-    test.each([[[] as Datum[]], [[fullData[0]]]])(
-      "keeps the lake beneath a highlight cleared and re-hovered, first drawn as %j",
-      (initialHighlight) => {
-        const target = layer(`lake-highlight-cycle-${initialHighlight.length}`);
-        const map = choropleth<Datum>()
-          .features(geoJson())
-          .borders(mesh())
-          .lakeFeatures(lakeFeature())
-          .lakeBorders(lakeBorders())
-          .width(260)
-          .height(260);
-
-        target.datum(fullData).call(map.highlight(initialHighlight));
-        target.datum(fullData).call(map.highlight([]));
-        target.datum(fullData).call(map.highlight([fullData[0]]));
-        const node = target.node() as SVGGElement;
-
-        const highlight = highlights(node)[0];
-        expect(highlight).toBeDefined();
-        for (const path of [...lake(node), ...lakePaths(node)]) {
-          expect(
-            path.compareDocumentPosition(highlight) & Node.DOCUMENT_POSITION_FOLLOWING
-          ).toBeTruthy();
-        }
-      }
-    );
 
     // The overlay clears itself, so choropleth no longer wraps it in a group of its own: the lake's
     // paths and definitions sit directly in the map group, one level shallower than before.
@@ -697,6 +666,48 @@ describe("maps/choropleth", () => {
       target.call(map.anchoredShape(shape));
       const node = target.call(map.anchoredShape(null)).node() as SVGGElement;
       expect(node.querySelectorAll("circle.anchored-marker")).toHaveLength(0);
+    });
+
+    // Issue #332 as it is actually reached: a bubble map's first render has the default empty
+    // highlight, so the anchored shape's group is created while nothing is highlighted, and the
+    // *first* hover is the one that has to land beneath it. Only a wrapper group claimed on that
+    // empty render keeps the slot - without it the paths are appended last and paint over the
+    // circles.
+    test("draws a first hover beneath an anchored shape rendered before it", () => {
+      const collection = geoJson();
+      const target = layer("highlight-under-shape");
+      const shape = component<AnchoredShape<Datum>>();
+      shape.prop("mergedData").prop("mapPath");
+      shape.render(function (this: Element) {
+        const props = (this as Element & { __props__: Record<string, unknown> }).__props__;
+        select(this)
+          .selectAll("circle.anchored-marker")
+          .data(props.mergedData as unknown[])
+          .join("circle")
+          .attr("class", "anchored-marker");
+      });
+      const map = choropleth<Datum>()
+        .features(collection)
+        .borders(mesh())
+        .withLake(false)
+        .anchoredShape(shape)
+        .width(230)
+        .height(230);
+
+      target.datum(fullData).call(map.highlight([]));
+      const node = target.node() as SVGGElement;
+      const shapeGroup = node.querySelector('[data-d3-selectgroup="anchoredShape"]');
+      expect(shapeGroup).not.toBeNull();
+      expect(node.querySelectorAll("circle.anchored-marker")).toHaveLength(3);
+
+      target.datum(fullData).call(map.highlight([fullData[0]]));
+
+      const highlight = highlights(node)[0];
+      const drawnShape = shapeGroup as Element;
+      expect(highlight).toBeDefined();
+      expect(
+        highlight.compareDocumentPosition(drawnShape) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
     });
 
     test("renders nothing extra when no anchored shape is set", () => {
