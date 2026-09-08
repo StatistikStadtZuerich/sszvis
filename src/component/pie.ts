@@ -184,9 +184,9 @@ export default function pie<T = unknown>(): PieComponent<T> {
       // arc only returns null when it renders into a canvas context, which this one never does.
       const arcPath = (angles: WedgeAngles) => arcGen(angles) ?? "";
 
-      // Matching on the component's own class rather than the generic .sszvis-path one, which
-      // stackedArea, stackedAreaMultiples and stackedPyramid also use, keeps a foreign path in
-      // the same group out of the join.
+      // Matching on the component's own class rather than the generic .sszvis-path one keeps a
+      // foreign path in the same group out of the join. The generic class stays on the node, so
+      // no CSS selector changes meaning.
       const segments = selection
         .selectAll<SVGPathElement, T>("path.sszvis-pie-path")
         .data(data)
