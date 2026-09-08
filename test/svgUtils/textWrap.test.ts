@@ -1,6 +1,6 @@
 import { select } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import textWrap, { resetPaddingWarnings } from "../../src/svgUtils/textWrap.js";
+import textWrap from "../../src/svgUtils/textWrap.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -11,8 +11,6 @@ describe("svgUtils/textWrap", () => {
   let svg: SVGSVGElement;
 
   beforeEach(() => {
-    // NOTE: the padding warning is latched at module level, so every test starts unwarned.
-    resetPaddingWarnings();
     svg = document.createElementNS(SVG_NS, "svg");
     svg.setAttribute("width", "400");
     svg.setAttribute("height", "300");
@@ -228,20 +226,25 @@ describe("svgUtils/textWrap", () => {
         warn.mockRestore();
       });
 
-      test("should warn only once when the same bad padding is rendered repeatedly", () => {
+      test("should warn once per render rather than latching across renders", () => {
+        // NOTE: the warning is scoped to the call, not to the module, so a second chart on
+        // the page still reports its own bad padding instead of being silenced by the first.
         const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-        for (let i = 0; i < 60; i++) {
-          textWrap(select(appendText("aa")), 100, Number.NaN);
-        }
-        expect(warn).toHaveBeenCalledTimes(1);
+        textWrap(select(appendText("aa")), 100, Number.NaN);
+        textWrap(select(appendText("aa")), 100, Number.NaN);
+        textWrap(select(appendText("aa")), 100, Number.NaN);
+        expect(warn).toHaveBeenCalledTimes(3);
         warn.mockRestore();
       });
 
-      test("should warn separately for each of the two bad paddings, once each", () => {
+      test("should warn separately for each of the two bad paddings", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
         textWrap(select(appendText("aa")), 100, Number.NaN, Number.NaN);
-        textWrap(select(appendText("aa")), 100, Number.NaN, Number.NaN);
         expect(warn).toHaveBeenCalledTimes(2);
+        expect(warn.mock.calls.map(([message]) => message)).toEqual([
+          "sszvis.svgUtils.textWrap: ignoring a non-finite paddingRightLeft, using 5",
+          "sszvis.svgUtils.textWrap: ignoring a non-finite paddingTopBottom, using 5",
+        ]);
         warn.mockRestore();
       });
 
