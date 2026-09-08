@@ -6212,8 +6212,8 @@ declare function mapRendererGeoJson<T extends Record<string, unknown> = Record<s
  * swallows the base layer's hover and click events - which matters more here than for the mesh,
  * since a highlight is normally driven by exactly that hover.
  *
- * Note: the paths are scoped by key and the join is keyed by map entity. Each layer selects
- * only paths carrying its own data-highlight-key, so two highlight layers rendered into one group
+ * Note: the paths are scoped by key and the join is keyed by map entity. Each layer joins only the
+ * paths inside its own wrapper group, so two highlight layers rendered into one group
  * coexist as long as they are given different keys - sharing the default key still means
  * sharing one set of paths, which is what makes an ordinary layer idempotent across renders even
  * though consumers build a fresh component every time. The keyed join means an element stays with
@@ -6223,6 +6223,21 @@ declare function mapRendererGeoJson<T extends Record<string, unknown> = Record<s
  *
  * Note: the empty-highlight branch used to return a decorative `true`. Nothing consumed it -
  * d3's selection.each ignores the render callback's return value - so the port returns nothing.
+ *
+ * Note: the paths are drawn into a wrapper group of this layer's own - one per key, classed
+ * sszvis-map__highlight-group and carrying the same data-highlight-key as the paths - rather than
+ * straight into the group they are rendered into. The wrapper is created on every render,
+ * including one with nothing to highlight, and a cleared layer empties it rather than removing it,
+ * because the wrapper is what holds the layer's place among its siblings: a highlight that empties
+ * and refills, or one hovered for the first time after the anchored shape group was drawn, comes
+ * back beneath whatever was drawn into the group meanwhile instead of painting over it. Holding a
+ * place rather than a remembered neighbour also survives that neighbour being moved, removed, or
+ * re-created. The cost is one extra `<g>` in the markup; consumers selecting
+ * .sszvis-map__highlight as a descendant are unaffected. See issue #332, and choropleth's ownGroup
+ * for the same pattern applied to the anchored shape. The class, paired with this layer's key, is
+ * reserved for this component's own wrapper: a direct child of the render group already carrying
+ * both is adopted rather than replaced, and a second one is removed along with its content - the
+ * same exposure ownGroup has.
  *
  * Note: no transition is scheduled, so a highlight appears and disappears instantly. Unlike the
  * base and geojson renderers this component keeps no caches, emits no missing-value pattern, and

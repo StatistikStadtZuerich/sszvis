@@ -11638,8 +11638,8 @@
      * swallows the base layer's hover and click events - which matters more here than for the mesh,
      * since a highlight is normally driven by exactly that hover.
      *
-     * Note: the paths are scoped by key and the join is keyed by map entity. Each layer selects
-     * only paths carrying its own data-highlight-key, so two highlight layers rendered into one group
+     * Note: the paths are scoped by key and the join is keyed by map entity. Each layer joins only the
+     * paths inside its own wrapper group, so two highlight layers rendered into one group
      * coexist as long as they are given different keys - sharing the default key still means
      * sharing one set of paths, which is what makes an ordinary layer idempotent across renders even
      * though consumers build a fresh component every time. The keyed join means an element stays with
@@ -11649,6 +11649,21 @@
      *
      * Note: the empty-highlight branch used to return a decorative `true`. Nothing consumed it -
      * d3's selection.each ignores the render callback's return value - so the port returns nothing.
+     *
+     * Note: the paths are drawn into a wrapper group of this layer's own - one per key, classed
+     * sszvis-map__highlight-group and carrying the same data-highlight-key as the paths - rather than
+     * straight into the group they are rendered into. The wrapper is created on every render,
+     * including one with nothing to highlight, and a cleared layer empties it rather than removing it,
+     * because the wrapper is what holds the layer's place among its siblings: a highlight that empties
+     * and refills, or one hovered for the first time after the anchored shape group was drawn, comes
+     * back beneath whatever was drawn into the group meanwhile instead of painting over it. Holding a
+     * place rather than a remembered neighbour also survives that neighbour being moved, removed, or
+     * re-created. The cost is one extra `<g>` in the markup; consumers selecting
+     * .sszvis-map__highlight as a descendant are unaffected. See issue #332, and choropleth's ownGroup
+     * for the same pattern applied to the anchored shape. The class, paired with this layer's key, is
+     * reserved for this component's own wrapper: a direct child of the render group already carrying
+     * both is adopted rather than replaced, and a second one is removed along with its content - the
+     * same exposure ownGroup has.
      *
      * Note: no transition is scheduled, so a highlight appears and disappears instantly. Unlike the
      * base and geojson renderers this component keeps no caches, emits no missing-value pattern, and
@@ -11666,6 +11681,12 @@
      * renderer's data-mesh-key and the raster renderer's data-raster-key.
      */
     const KEY_ATTRIBUTE$4 = "data-highlight-key";
+    /**
+     * Marks the wrapper group a highlight layer draws into, so it can be found again by class - safe
+     * to put in a selector, unlike an arbitrary caller-supplied key, which is matched off the same
+     * data-highlight-key attribute the paths carry.
+     */
+    const GROUP_CLASS = "sszvis-map__highlight-group";
     /**
      * Reads the entity id off a datum. Reflect.get is a property access, so it walks the prototype
      * chain and reads a falsy keyName as given, exactly as the JavaScript's datum[keyName] did. Only
@@ -11699,11 +11720,19 @@
       .prop("highlightStrokeWidth", functor).highlightStrokeWidth(2).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
-        // Scoped to this layer, so a second highlight layer in the same group draws its own paths
-        // instead of rebinding these.
-        const highlightBorders = selection.selectAll(".sszvis-map__highlight").filter(function () {
+        // This layer's own wrapper, joined against the direct children of the group rather than
+        // searched for with selectGroup, which matches any descendant - a group under the same key
+        // may well sit inside an anchored shape's arbitrary markup. It is created on every render,
+        // including one with nothing to highlight, and a cleared layer empties it rather than
+        // removing it: that is what holds its place among its siblings, so a first hover after the
+        // anchored shape group was drawn still lands beneath it. The same reasoning as choropleth's
+        // ownGroup; see issue #332.
+        const highlightGroup = selection.selectAll(":scope > g.".concat(GROUP_CLASS)).filter(function () {
           return this.getAttribute(KEY_ATTRIBUTE$4) === props.key;
-        });
+        }).data([null]).join("g").classed(GROUP_CLASS, true).attr(KEY_ATTRIBUTE$4, props.key);
+        // Scoped to this layer by its wrapper, so a second highlight layer in the same group draws
+        // its own paths instead of rebinding these.
+        const highlightBorders = highlightGroup.selectAll(".sszvis-map__highlight");
         if (props.highlight.length === 0) {
           highlightBorders.remove();
           // The JavaScript returned a decorative `true` here ("no highlight, no worry"); d3's
@@ -12725,8 +12754,12 @@
      * class rather than tracked, since this component only ever needs to know where they sit.
      */
     const LAKE_PATHS = ":scope > path.sszvis-map__lakezurich, :scope > path.sszvis-map__lakepath";
-    /** The layers the lake has to stay beneath, in the order this component draws them. */
-    const ABOVE_THE_LAKE = ":scope > path.sszvis-map__highlight, :scope > [data-d3-selectgroup=\"".concat(SHAPE_GROUP, "\"]");
+    /**
+     * The layers the lake has to stay beneath, in the order this component draws them. The highlight
+     * renderer keeps its paths in a wrapper group of its own - the same place-holding trick as
+     * ownGroup below, see issue #332 - so it is that group, not the paths, that follows the lake.
+     */
+    const ABOVE_THE_LAKE = ":scope > g.sszvis-map__highlight-group, :scope > [data-d3-selectgroup=\"".concat(SHAPE_GROUP, "\"]");
     /**
      * The wrapper this component owns for the anchored shape, joined against the direct children of
      * the map group rather than searched for with selectGroup, which matches any descendant: an

@@ -172,8 +172,12 @@ const SHAPE_GROUP = "anchoredShape";
  * class rather than tracked, since this component only ever needs to know where they sit.
  */
 const LAKE_PATHS = ":scope > path.sszvis-map__lakezurich, :scope > path.sszvis-map__lakepath";
-/** The layers the lake has to stay beneath, in the order this component draws them. */
-const ABOVE_THE_LAKE = ":scope > path.sszvis-map__highlight, :scope > [data-d3-selectgroup=\"".concat(SHAPE_GROUP, "\"]");
+/**
+ * The layers the lake has to stay beneath, in the order this component draws them. The highlight
+ * renderer keeps its paths in a wrapper group of its own - the same place-holding trick as
+ * ownGroup below, see issue #332 - so it is that group, not the paths, that follows the lake.
+ */
+const ABOVE_THE_LAKE = ":scope > g.sszvis-map__highlight-group, :scope > [data-d3-selectgroup=\"".concat(SHAPE_GROUP, "\"]");
 /**
  * The wrapper this component owns for the anchored shape, joined against the direct children of
  * the map group rather than searched for with selectGroup, which matches any descendant: an
