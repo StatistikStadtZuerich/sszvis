@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createHtmlLayer } from "../../../src/createHtmlLayer.js";
 import mapRendererRaster from "../../../src/map/renderer/raster.js";
 
@@ -20,9 +20,27 @@ describe("map/renderer/raster", () => {
     document.body.appendChild(container);
   });
 
+  const warnedSpies: { mockRestore: () => void }[] = [];
+
   afterEach(() => {
     container?.parentNode?.removeChild(container);
+    for (const spy of warnedSpies) spy.mockRestore();
+    warnedSpies.length = 0;
   });
+
+  /**
+   * Captures the warnings a render emits, restoring console.warn afterwards. The renderer warns
+   * through sszvis.logger, which delegates to console.warn - spying on the console rather than on
+   * the logger keeps the test on the observable output, and the same idiom as the highlight suite.
+   */
+  const captureWarnings = () => {
+    const warnings: string[] = [];
+    const spy = vi.spyOn(console, "warn").mockImplementation((...args: unknown[]) => {
+      warnings.push(args.map(String).join(" "));
+    });
+    warnedSpies.push(spy);
+    return warnings;
+  };
 
   const layer = (key?: string) =>
     createHtmlLayer("#chart-container", undefined, { key: key ?? `raster-${++layerKey}` });
@@ -454,6 +472,111 @@ describe("map/renderer/raster", () => {
     });
   });
 
+  // A projection that cannot place a datum fails two ways - d3's own projections answer a
+  // non-finite pair for a point outside the clip, a hand-written one may answer nothing at all -
+  // and both mean the same thing, so both are reported the same way: the cell is skipped and the
+  // render warns once, naming how many cells it could not place. Skipping a stray point silently
+  // is defensible; skipping a whole dataset silently is not.
+  describe("cells the projection could not place", () => {
+    test("skips a cell at a non-finite position and still draws the rest", () => {
+      captureWarnings();
+      const node = render([cell(Number.NaN, Number.NaN), cell(10, 10)], (c) => c.cellSide(4));
+      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
+      expect(pixelAt(node, 0, 0)).toEqual([0, 0, 0, 0]);
+    });
+
+    test("skips a null position rather than taking the whole render down with it", () => {
+      const warnings = captureWarnings();
+      const node = render([cell(1, 1), cell(10, 10)], (c) =>
+        c.cellSide(4).position((d: Cell) => (d.x === 1 ? null : [d.x, d.y]))
+      );
+      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
+      expect(warnings).toEqual([
+        "[mapRendererRaster] the position property could not place 1 of 2 cells; they were not drawn",
+      ]);
+    });
+
+    test("skips an undefined position the same way, so the two failures agree", () => {
+      const warnings = captureWarnings();
+      const node = render([cell(1, 1), cell(10, 10)], (c) =>
+        c
+          .cellSide(4)
+          // @ts-expect-error - the contract says a position accessor returns a pair or null; an
+          // accessor answering undefined is a caller error, tolerated as the same failure.
+          .position((d: Cell) => (d.x === 1 ? undefined : [d.x, d.y]))
+      );
+      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
+      expect(warnings).toEqual([
+        "[mapRendererRaster] the position property could not place 1 of 2 cells; they were not drawn",
+      ]);
+    });
+
+    test("warns once per render, naming how many cells could not be placed", () => {
+      const warnings = captureWarnings();
+      render(
+        [cell(Number.NaN, Number.NaN), cell(1, 1), cell(Number.POSITIVE_INFINITY, 2), cell(10, 10)],
+        (c) => c.cellSide(4).position((d: Cell) => (d.x === 1 ? null : [d.x, d.y]))
+      );
+      expect(warnings).toEqual([
+        "[mapRendererRaster] the position property could not place 3 of 4 cells; they were not drawn",
+      ]);
+    });
+
+    test("stays silent when every cell is placed", () => {
+      const warnings = captureWarnings();
+      render([cell(4, 4), cell(10, 10)], (c) => c.cellSide(4));
+      expect(warnings).toEqual([]);
+    });
+  });
+
+  // A cellSide of zero or less can never draw the cells asked for - zero draws nothing, and a
+  // negative side draws like its positive counterpart, since fillRect normalises a negative
+  // rectangle - so it is a misconfiguration rather than a datum that went stale, reported by name
+  // like the other required properties instead of leaving a blank or misleading canvas.
+  describe("cellSide validation", () => {
+    test("defaults to 2", () => {
+      expect(mapRendererRaster().cellSide()).toBe(2);
+    });
+
+    test("reports a zero cellSide", () => {
+      expect(() => render([cell(10, 10)], (c) => c.cellSide(0))).toThrow(
+        /\[mapRendererRaster\].*cellSide/
+      );
+    });
+
+    test("reports a negative cellSide, which used to draw its positive counterpart", () => {
+      expect(() => render([cell(10, 10)], (c) => c.cellSide(-4))).toThrow(
+        /\[mapRendererRaster\].*cellSide/
+      );
+    });
+
+    test("reports a non-finite cellSide", () => {
+      expect(() => render([cell(10, 10)], (c) => c.cellSide(Number.NaN))).toThrow(
+        /\[mapRendererRaster\].*cellSide/
+      );
+    });
+
+    test("reports the cellSide before any canvas is created", () => {
+      const target = layer("raster-bad-cellside");
+      expect(() =>
+        target.datum([cell(10, 10)]).call(
+          mapRendererRaster()
+            .width(20)
+            .height(20)
+            .position((d: Cell) => [d.x, d.y])
+            .fill("#ff0000")
+            .cellSide(0)
+        )
+      ).toThrow(/cellSide/);
+      expect(canvasOf(target.node() as HTMLElement)).toBeNull();
+    });
+
+    test("accepts a fractional cellSide, which is what pixelsFromGeoDistance returns", () => {
+      const node = render([cell(10, 10)], (c) => c.cellSide(3.5));
+      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
+    });
+  });
+
   describe("known quirks", () => {
     // BUG: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum -
     // so a layer the caller forgot to hand data to throws "data is not iterable" rather than
@@ -471,74 +594,6 @@ describe("map/renderer/raster", () => {
         )
       ).toThrow(TypeError);
       expect(canvasOf(target.node() as HTMLElement)).not.toBeNull();
-    });
-
-    // NOTE: a non-finite position is dropped by the canvas API rather than reported, so a datum
-    // the projection could not place leaves a hole in the raster with no indication.
-    test("silently skips a cell at a non-finite position", () => {
-      const node = render([cell(Number.NaN, Number.NaN), cell(10, 10)], (c) => c.cellSide(4));
-      expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
-      expect(pixelAt(node, 0, 0)).toEqual([0, 0, 0, 0]);
-    });
-
-    // A null position throws instead, from indexing it - so the two ways a projection can fail to
-    // place a point fail differently. The message is asserted because the guard is a strict null
-    // check on purpose: loosening it to a nullish check would swallow the undefined case below.
-    test("throws when position returns null", () => {
-      expect(() =>
-        layer()
-          .datum([cell(1, 1)])
-          .call(
-            mapRendererRaster()
-              .width(20)
-              .height(20)
-              .position(() => null)
-              .fill("#ff0000")
-          )
-      ).toThrow(new TypeError("Cannot read properties of null (reading '0')"));
-    });
-
-    // The other half of that distinction: an undefined position falls through the strict null check
-    // and is indexed, so the error comes from the engine and names undefined, not null. A nullish
-    // guard would report null for both and lose the difference.
-    test("throws the engine's own undefined error when position returns undefined", () => {
-      expect(() =>
-        layer()
-          .datum([cell(1, 1)])
-          .call(
-            mapRendererRaster()
-              .width(20)
-              .height(20)
-              // @ts-expect-error - a position accessor returning undefined is a caller error;
-              // pinned because it fails with a different error than the null case.
-              .position(() => undefined)
-              .fill("#ff0000")
-          )
-      ).toThrow(/Cannot read properties of undefined/);
-    });
-
-    // NOTE: a zero cellSide draws nothing at all, which is indistinguishable from data that fell
-    // outside the canvas.
-    test("draws nothing for a zero cellSide", () => {
-      const node = render([cell(10, 10)], (c) => c.cellSide(0));
-      expect(pixelAt(node, 10, 10)).toEqual([0, 0, 0, 0]);
-    });
-
-    // NOTE: a negative cellSide is neither rejected nor distinguishable: the half-side offset and
-    // the width negate each other, and fillRect normalises a negative rectangle - so cellSide(-4)
-    // paints exactly the pixels cellSide(4) does. Pinned because it is surprising, and because a
-    // future validation would change it.
-    test("draws a negative cellSide as the same cell as its positive counterpart", () => {
-      const negative = render([cell(10, 10)], (c) => c.cellSide(-4));
-      const positive = render([cell(10, 10)], (c) => c.cellSide(4));
-      for (const [x, y] of [
-        [8, 8],
-        [11, 11],
-        [12, 12],
-      ]) {
-        expect(pixelAt(negative, x, y)).toEqual(pixelAt(positive, x, y));
-      }
-      expect(pixelAt(negative, 8, 8)).toEqual([255, 0, 0, 255]);
     });
 
     // BUG: the component writes no position, so the canvas is only positioned because sszvis.css
