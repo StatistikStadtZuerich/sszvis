@@ -101,7 +101,7 @@ type SelectProps<T> = {
 export interface SelectComponent<T extends string = string>
   extends ComponentBuilder<SelectComponent<T>> {
   values(): T[];
-  values(values: T[]): SelectComponent<T>;
+  values(values: T[] | undefined): SelectComponent<T>;
   current(): T;
   current(current: T): SelectComponent<T>;
   width(): number;
