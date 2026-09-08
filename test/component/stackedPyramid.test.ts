@@ -15,7 +15,7 @@ type Row = { side: string; row: number; series: string; value: number };
 /** One side of the pyramid: the series d3.stack produced for it. */
 type Side = StackedPyramidSide<Row>;
 
-/** What stackedPyramidData returns: the sides, with the overall maximum hung off the array. */
+/** What stackedPyramidData returns: the sides in `sides`, with the overall maximum beside them. */
 type Layout = StackedPyramidLayout<Row>;
 
 describe("component/stackedPyramid", () => {
@@ -42,8 +42,11 @@ describe("component/stackedPyramid", () => {
     { side: "m", row: 1, series: "b", value: 2 },
   ];
 
-  const layout = (data: Row[] = rows): Layout =>
+  const layoutOf = (data: Row[] = rows): Layout =>
     stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc)(data);
+
+  /** The sides of the layout, i.e. the array the component is handed. */
+  const layout = (data: Row[] = rows): Side[] => layoutOf(data).sides;
 
   /** The [y0, y1] pairs of one side, series by series, without the attached properties. */
   const pairs = (s: Side) => s.map((series) => series.map((d) => [d[0], d[1]]));
@@ -81,8 +84,8 @@ describe("component/stackedPyramid", () => {
       .barHeight(10)
       .barWidth((v: number) => v)
       .barPosition((row: number) => row * 12)
-      .leftAccessor((d: Layout) => d[0])
-      .rightAccessor((d: Layout) => d[1]);
+      .leftAccessor((d: Side[]) => d[0])
+      .rightAccessor((d: Side[]) => d[1]);
 
   const sideGroup = (node: Element, key: string) =>
     node.querySelector(`[data-d3-selectgroup="${key}"]`) as SVGGElement | null;
@@ -188,13 +191,23 @@ describe("component/stackedPyramid", () => {
     });
 
     test("should report the highest stacked total across both sides as maxValue", () => {
-      expect(layout().maxValue).toBe(70);
+      expect(layoutOf().maxValue).toBe(70);
+    });
+
+    test("should keep maxValue when the layout is copied", () => {
+      // maxValue sits beside the sides rather than assigned onto them, so a spread, a map, a
+      // filter or a trip through JSON carries it along instead of dropping it.
+      const result = layoutOf();
+      const copy: Layout = { ...result, sides: result.sides.filter(() => true) };
+      expect(copy.maxValue).toBe(70);
+      expect(copy.sides.length).toBe(result.sides.length);
+      expect(JSON.parse(JSON.stringify(result)).maxValue).toBe(70);
     });
 
     test("should return an empty layout for empty data", () => {
       const sides = layout([]);
       expect(sides.length).toBe(0);
-      expect(sides.maxValue).toBe(0);
+      expect(layoutOf([]).maxValue).toBe(0);
     });
 
     test("should report maxValue as 0 for an empty layout", () => {
@@ -202,7 +215,7 @@ describe("component/stackedPyramid", () => {
       // feed maxValue straight into a scale domain - `domain([0, state.maxStackedValue])` -
       // where undefined would become NaN and the axis would lose its ticks. An empty data
       // state is ordinary, not an edge case: any filter that can match nothing reaches it.
-      expect(layout([]).maxValue).toBe(0);
+      expect(layoutOf([]).maxValue).toBe(0);
     });
 
     test("should not mutate the input rows", () => {
@@ -215,7 +228,7 @@ describe("component/stackedPyramid", () => {
     test("should accept sides of different shapes", () => {
       // The two sides are stacked independently, so they need neither the same rows nor the
       // same series count.
-      const sides = layout([
+      const { sides, maxValue } = layoutOf([
         { side: "f", row: 0, series: "a", value: 1 },
         { side: "m", row: 0, series: "a", value: 2 },
         { side: "m", row: 0, series: "b", value: 3 },
@@ -224,20 +237,20 @@ describe("component/stackedPyramid", () => {
       ]);
       expect(sides[0].length).toBe(1);
       expect(sides[1].length).toBe(2);
-      expect(sides.maxValue).toBe(9);
+      expect(maxValue).toBe(9);
     });
 
     test("should take a side's series keys from the union across all of its rows", () => {
       // A series that appears in only some of a side's rows still gets its own layer, and
       // its values reach both the chart and maxValue.
-      const sides = layout([
+      const { sides, maxValue } = layoutOf([
         { side: "f", row: 0, series: "a", value: 1 },
         { side: "f", row: 1, series: "a", value: 2 },
         { side: "f", row: 1, series: "b", value: 3 },
       ]);
       expect(sides[0].length).toBe(2);
       expect(sides[0].map((series) => series.key)).toEqual(["a", "b"]);
-      expect(sides.maxValue).toBe(5);
+      expect(maxValue).toBe(5);
     });
 
     test("should contribute zero for a row that carries no value for a series", () => {
@@ -385,28 +398,13 @@ describe("component/stackedPyramid", () => {
         ).toBe(3);
       });
 
-      test("hangs maxValue off the array, so any array operation drops it", () => {
-        // NOTE: maxValue is a property on the returned array rather than a field of a
-        // wrapper object, so a spread, a map, a filter or a trip through JSON loses it. The
-        // examples read it straight off the layout, so this only bites a caller who
-        // transforms the layout first. stackedBarData does the same and is filed as a bug for
-        // it, but it also hangs a `keys` property off the array, which shadows
-        // Array.prototype.keys and makes that layout actively badly behaved. This layout
-        // attaches only maxValue, so the loss on copy is all there is to it - hence a note
-        // here and a bug there.
-        const sides = layout();
-        expect(sides.maxValue).toBe(70);
-        expect(([...sides] as Layout).maxValue).toBeUndefined();
-        expect((JSON.parse(JSON.stringify(sides)) as Layout).maxValue).toBeUndefined();
-      });
-
       test("computes maxValue from the upper bounds only", () => {
         // NOTE: max over row[1], so only the upper bounds enter. Here the lower bound of
         // -50 is invisible and maxValue is -40, which is not the extent of the data. Neither
         // side of the pyramid supports values below the baseline anyway - see the
         // negative-value quirk below.
         expect(
-          layout([
+          layoutOf([
             { side: "f", row: 0, series: "a", value: -50 },
             { side: "f", row: 0, series: "b", value: 10 },
           ]).maxValue
@@ -797,7 +795,7 @@ describe("component/stackedPyramid", () => {
 
     test("should accept one of the layout's own series as a reference series", async () => {
       // A slice already carries a `row` and a `value`, so a series needs no mapping.
-      const node = render(pyramidOf().rightRefAccessor((d: Layout) => d[1][1]));
+      const node = render(pyramidOf().rightRefAccessor((d: Side[]) => d[1][1]));
       // Series "b" of the right side: values 40 on row 0 and 2 on row 1.
       expect(await lineD(node, "rightReference")).toBe("M40,0L2,12");
     });
@@ -876,8 +874,8 @@ describe("component/stackedPyramid", () => {
     /** Both side accessors wired up, but no bar dimensions set. */
     const bare = () =>
       stackedPyramid()
-        .leftAccessor((d: Layout) => d[0])
-        .rightAccessor((d: Layout) => d[1]);
+        .leftAccessor((d: Side[]) => d[0])
+        .rightAccessor((d: Side[]) => d[1]);
 
     test("should throw when leftAccessor is missing", () => {
       expect(() =>
@@ -946,8 +944,8 @@ describe("component/stackedPyramid", () => {
         .barHeight(10)
         .barWidth(20)
         .barPosition(0)
-        .leftAccessor((d: Layout) => d[0])
-        .rightAccessor((d: Layout) => d[1]);
+        .leftAccessor((d: Side[]) => d[0])
+        .rightAccessor((d: Side[]) => d[1]);
 
     test("should draw every segment at that width", () => {
       // A constant is a segment width rather than a scale over stacked values, so it is used

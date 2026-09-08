@@ -88,7 +88,7 @@ describe("population-pyramid", () => {
     const stackedLayout = stackedPyramidData(gAcc, yAcc, cAcc, xAcc);
     const stackedData = stackedLayout(stackedTidyData);
 
-    for (const side of stackedData) {
+    for (const side of stackedData.sides) {
       expect(side.flatMap((d) => d.map((d) => d.side)).every((d) => d === side[0][0].side)).toBe(
         true
       );
