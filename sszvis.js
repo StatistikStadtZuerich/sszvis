@@ -3629,26 +3629,34 @@
      * @module sszvis/scale
      */
     /**
-     * Scale range
+     * Range extent
      *
-     * Used to determine the extent of a scale's range. Mimics a function found in d3 source code.
+     * Used to determine the extent of a scale's range, i.e. how far the scale stretches in its
+     * output dimension. Mimics a function found in d3 source code.
      *
-     * @param  {array} scale    The scale to be measured
-     * @return {array}          The extent of the scale's range. Useful for determining how far
-     *                          a scale stretches in its output dimension.
+     * The result is always sorted, smaller value first, whichever direction the scale's own range
+     * runs in. It is therefore a measurement and not a range: passing it back to `scale.range()`
+     * would silently flip a descending scale, which is what every y scale is. Read the scale's own
+     * `range()` when direction matters.
      */
-    const range = scale => {
+    function rangeExtent(scale) {
       // borrowed from d3 source - svg.axis
       return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
-    };
+    }
+    /**
+     * Scale range
+     *
+     * @deprecated Renamed to `rangeExtent`, because the sorted extent and not the range is what
+     * comes back. Kept as an alias for one release; use `rangeExtent` instead.
+     */
+    const range = rangeExtent;
     /**
      * Helper function
      * Extent
      *
      * Used to determine the extent of an array. Mimics a function found in d3 source code.
-     *
-     * @param  {array} domain     an array, sorted in either ascending or descending order
-     * @return {array}            the extent of the array, with the smaller term first.
+     * The array is expected to be sorted in either ascending or descending order; the extent comes
+     * back with the smaller term first either way.
      */
     function extent(domain) {
       // borrowed from d3 source - svg.axis
@@ -4231,8 +4239,10 @@
      * @property {function} yScale                    The y-scale for the component. The extent of this scale, plus component padding, is the height of the
      *                                                component's active area.
      * @property {boolean} draggable                  Whether or not this component is draggable. This changes certain display properties of the component.
-     * @property {object} padding                     An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
-     *                                                The options are { top, right, bottom, left }
+     * @property {object} padding                     An object which specifies padding, in pixels, added around the scale's range to widen the component's
+     *                                                hit area beyond the scale itself. Defaults are all 0. The options are { top, right, bottom, left }.
+     *                                                Padding only grows the active area; it does not shift the coordinate space, so a pointer in the padded
+     *                                                margin inverts to a value just outside the scale's domain.
      * @property {boolean|function} cancelScrolling   A predicate function, or a constant boolean, that determines whether the browser's default scrolling
      *                                                behavior in response to a touch event should be canceled. In area charts and line charts, for example,
      *                                                you generally don't want to cancel scrolling, as this creates a scroll trap. However, in bar charts
@@ -4254,7 +4264,7 @@
      *
      * @return {sszvis.component}
      */
-    function move () {
+    function move() {
       const event = d3.dispatch("start", "move", "drag", "end");
       const moveComponent = component().prop("debug").prop("xScale").prop("yScale").prop("draggable").prop("cancelScrolling", functor).cancelScrolling(false).prop("fireOnPanOnly", functor).fireOnPanOnly(false).prop("padding", p => {
         const defaults = {
@@ -4273,12 +4283,20 @@
       }).padding({}).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
-        const xExtent = range(props.xScale).sort(d3.ascending);
-        const yExtent = range(props.yScale).sort(d3.ascending);
+        // Already sorted, smaller value first, so a descending y scale still yields a rect that
+        // grows downwards from its top edge.
+        const xExtent = rangeExtent(props.xScale);
+        const yExtent = rangeExtent(props.yScale);
         xExtent[0] -= props.padding.left;
         xExtent[1] += props.padding.right;
         yExtent[0] -= props.padding.top;
         yExtent[1] += props.padding.bottom;
+        // The rect below is positioned at the start of the padded range, so its `x`/`y`
+        // attributes carry the offset between the rect's own box and the coordinate space the
+        // scales are defined over. Both input paths resolve through `pointer()`, which inverts
+        // the rect's screen CTM and therefore ignores a rect's `x`/`y` geometry: positions
+        // arrive already in scale space, in the same user-space units the scales use, and
+        // `scaleInvert` and the band/point inverters read `scale.range()` directly.
         const layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]).join("rect").attr("data-sszvis-behavior-move", "").attr("class", "sszvis-interactive");
         if (props.draggable) {
           layer.classed("sszvis-interactive--draggable", true);
@@ -4356,10 +4374,10 @@
           if (typeof touch.clientX !== "number" || !Number.isFinite(touch.clientX) || typeof touch.clientY !== "number" || !Number.isFinite(touch.clientY)) {
             return;
           }
-          // Calculate coordinates relative to element manually using getBoundingClientRect
-          // instead of relying on d3.pointer() which fails on Safari mobile TouchEvents
-          const rect = target.getBoundingClientRect();
-          const xy = [touch.clientX - rect.left, touch.clientY - rect.top];
+          // Resolve through the extracted `Touch`, not the event: `pointer()` only needs
+          // clientX/clientY on its source, and inverting the rect's screen CTM keeps touch in
+          // the same user-space units as the mouse path under a scaled ancestor.
+          const xy = d3.pointer(touch, target);
           const x = scaleInvert(props.xScale, xy[0]);
           const y = scaleInvert(props.yScale, xy[1]);
           const cancelScrolling = props.cancelScrolling(x, y);
@@ -4390,9 +4408,7 @@
               if (typeof panTouch.clientX !== "number" || !Number.isFinite(panTouch.clientX) || typeof panTouch.clientY !== "number" || !Number.isFinite(panTouch.clientY)) {
                 return;
               }
-              // Calculate coordinates relative to element manually
-              const panRect = target.getBoundingClientRect();
-              const panXY = [panTouch.clientX - panRect.left, panTouch.clientY - panRect.top];
+              const panXY = d3.pointer(panTouch, target);
               const panX = scaleInvert(props.xScale, panXY[0]);
               const panY = scaleInvert(props.yScale, panXY[1]);
               const panCancelScrolling = props.cancelScrolling(panX, panY);
@@ -4418,6 +4434,9 @@
           layer.attr("fill", "rgba(255,0,0,0.2)");
         }
       });
+      // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
+      // callback to never. Narrowing to the four event names would type the callback properly but
+      // would also reject the namespaced typenames d3 accepts at runtime, such as "move.tooltip".
       moveComponent.on = function () {
         for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
           args[_key4] = arguments[_key4];
@@ -4709,7 +4728,7 @@
      *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
      *
      */
-    function voronoi () {
+    function voronoi() {
       const event = d3.dispatch("over", "out");
       const voronoiComponent = component().prop("x").prop("y").prop("bounds").prop("debug").render(function (data) {
         const selection = d3.select(this);
@@ -4724,15 +4743,15 @@
         polys.attr("d", d => "M".concat(d.join("L"), "Z")).attr("fill", "transparent").on("mouseover", function (e) {
           const parent = this.parentNode;
           if (!parent) return;
-          const cbox = parent.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
-          if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])]) && this) event.apply("over", this, [e, data[datumIdx]]);
+          const position = d3.pointer(e, parent);
+          const datumIdx = delaunay.find(position[0], position[1]);
+          if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])]) && this) event.apply("over", this, [e, data[datumIdx]]);
         }).on("mousemove", function (e) {
           const parent = this.parentNode;
           if (!parent) return;
-          const cbox = parent.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
-          if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
+          const position = d3.pointer(e, parent);
+          const datumIdx = delaunay.find(position[0], position[1]);
+          if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
             if (this) event.apply("over", this, [e, data[datumIdx]]);
           } else {
             if (this) event.apply("out", this, [e]);
@@ -4745,11 +4764,11 @@
         }).on("touchstart", function (e) {
           const parent = this.parentNode;
           if (!parent) return;
-          const cbox = parent.getBoundingClientRect();
           const firstTouch$1 = firstTouch(e);
           if (!firstTouch$1) return;
-          const datumIdx = delaunay.find(firstTouch$1.clientX - cbox.left, firstTouch$1.clientY - cbox.top);
-          if (eventNearPoint(firstTouch$1, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
+          const position = d3.pointer(firstTouch$1, parent);
+          const datumIdx = delaunay.find(position[0], position[1]);
+          if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
             e.preventDefault();
             if (this) event.apply("over", this, [e, data[datumIdx]]);
             const pan = () => {
@@ -4762,8 +4781,7 @@
               } else {
                 const panParent = element === null || element === void 0 ? void 0 : element.parentNode;
                 if (!panParent) return;
-                const panCbox = panParent.getBoundingClientRect();
-                if (eventNearPoint(touchEvent, [panCbox.left + props.x(panDatum.data), panCbox.top + props.y(panDatum.data)])) {
+                if (nearPoint(d3.pointer(touchEvent, panParent), [props.x(panDatum.data), props.y(panDatum.data)])) {
                   // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
                   // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
                   // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
@@ -4788,6 +4806,9 @@
           polys.attr("stroke", "#f00");
         }
       });
+      // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
+      // callback to never. Narrowing to "over" | "out" would type the callback properly but would
+      // also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
       voronoiComponent.on = function () {
         for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
           args[_key2] = arguments[_key2];
@@ -4799,9 +4820,15 @@
     }
     // Perform distance calculations in units squared to avoid a costly Math.sqrt
     const MAX_INTERACTION_RADIUS_SQUARED = 15 ** 2;
-    function eventNearPoint(event, point) {
-      const dx = event.clientX - point[0];
-      const dy = event.clientY - point[1];
+    /**
+     * Both points are in the coordinate space of the group the behaviour was called on, which is
+     * also the space the `x` and `y` accessors report positions in. Comparing them there rather
+     * than in screen pixels is what makes the hit test independent of where the group sits on the
+     * page, and correct when an ancestor transform scales the chart.
+     */
+    function nearPoint(position, point) {
+      const dx = position[0] - point[0];
+      const dy = position[1] - point[1];
       return dx * dx + dy * dy < MAX_INTERACTION_RADIUS_SQUARED;
     }
 
@@ -8965,7 +8992,7 @@
         if (props.value == null) {
           throw new Error("[sszvis.control.slider] the `value` property is required");
         }
-        const scaleRange = range(props.scale);
+        const scaleRange = rangeExtent(props.scale);
         // Inset each end of the configured range towards the middle rather than rebuilding
         // it from the sorted extent, so that a descending range keeps its direction.
         const [rangeStart, rangeEnd] = props.scale.range();
@@ -9044,8 +9071,11 @@
         // which d3-dispatch treats as removing the listener. The guard is equivalent.
         const sliderInteraction = move()
         // The same inset scale the handle is drawn with, so that pointing at a handle's
-        // pixel reports that handle's value. Padded back out by the inset so the
-        // interaction layer still spans the whole configured range.
+        // pixel reports that handle's value. The padding is a hit-area widening, not a
+        // coordinate correction: the handle overhangs each end of the inset track by
+        // HANDLE_SIDE_OFFSET, so without it the outer half-handle - including the pixel the
+        // domain's own minimum is drawn at - falls outside the interaction layer and can
+        // never be dragged to.
         .xScale(alteredScale).padding({
           left: HANDLE_SIDE_OFFSET,
           right: HANDLE_SIDE_OFFSET
@@ -10559,7 +10589,7 @@
         const selection = d3.select(this);
         const props = selection.props();
         const tickValues = props.tickValues || defaultTickValues(props.scale);
-        const maxRadius = range(props.scale)[1];
+        const maxRadius = rangeExtent(props.scale)[1];
         const group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]).join("g").attr("class", "sszvis-legend__elementgroup");
         group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
         const circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues).join("circle").classed("sszvis-legend__greyline", true);
@@ -13299,6 +13329,7 @@
     exports.propOr = propOr;
     exports.pyramid = pyramid;
     exports.range = range;
+    exports.rangeExtent = rangeExtent;
     exports.responsiveProps = responsiveProps;
     exports.roundTransformString = roundTransformString;
     exports.rulerLabelVerticalSeparate = rulerLabelVerticalSeparate;

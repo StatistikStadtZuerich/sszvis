@@ -76,7 +76,7 @@ export { measureAxisLabel, measureDimensions, measureLegendLabel, measureText } 
 export { parseDate, parseNumber, parseYear } from './parse.js';
 export { LAKE_FADE_GRADIENT_ID, dataAreaPattern, heatTableMissingValuePattern, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern } from './patterns.js';
 export { responsiveProps } from './responsiveProps.js';
-export { range } from './scale.js';
+export { range, rangeExtent } from './scale.js';
 export { halfPixel, roundTransformString, transformTranslateSubpixelShift } from './svgUtils/crisp.js';
 export { default as ensureDefsElement } from './svgUtils/ensureDefsElement.js';
 export { modularTextHTML, modularTextSVG } from './svgUtils/modularText.js';

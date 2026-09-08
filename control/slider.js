@@ -3,7 +3,7 @@ import { axisX } from '../axis.js';
 import move from '../behavior/move.js';
 import { component } from '../d3-component.js';
 import { functor, identity, set } from '../fn.js';
-import { range } from '../scale.js';
+import { rangeExtent } from '../scale.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
 
@@ -81,7 +81,7 @@ function slider() {
     if (props.value == null) {
       throw new Error("[sszvis.control.slider] the `value` property is required");
     }
-    const scaleRange = range(props.scale);
+    const scaleRange = rangeExtent(props.scale);
     // Inset each end of the configured range towards the middle rather than rebuilding
     // it from the sorted extent, so that a descending range keeps its direction.
     const [rangeStart, rangeEnd] = props.scale.range();
@@ -160,8 +160,11 @@ function slider() {
     // which d3-dispatch treats as removing the listener. The guard is equivalent.
     const sliderInteraction = move()
     // The same inset scale the handle is drawn with, so that pointing at a handle's
-    // pixel reports that handle's value. Padded back out by the inset so the
-    // interaction layer still spans the whole configured range.
+    // pixel reports that handle's value. The padding is a hit-area widening, not a
+    // coordinate correction: the handle overhangs each end of the inset track by
+    // HANDLE_SIDE_OFFSET, so without it the outer half-handle - including the pixel the
+    // domain's own minimum is drawn at - falls outside the interaction layer and can
+    // never be dragged to.
     .xScale(alteredScale).padding({
       left: HANDLE_SIDE_OFFSET,
       right: HANDLE_SIDE_OFFSET

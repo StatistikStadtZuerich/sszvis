@@ -21,8 +21,10 @@
  * @property {function} yScale                    The y-scale for the component. The extent of this scale, plus component padding, is the height of the
  *                                                component's active area.
  * @property {boolean} draggable                  Whether or not this component is draggable. This changes certain display properties of the component.
- * @property {object} padding                     An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
- *                                                The options are { top, right, bottom, left }
+ * @property {object} padding                     An object which specifies padding, in pixels, added around the scale's range to widen the component's
+ *                                                hit area beyond the scale itself. Defaults are all 0. The options are { top, right, bottom, left }.
+ *                                                Padding only grows the active area; it does not shift the coordinate space, so a pointer in the padded
+ *                                                margin inverts to a value just outside the scale's domain.
  * @property {boolean|function} cancelScrolling   A predicate function, or a constant boolean, that determines whether the browser's default scrolling
  *                                                behavior in response to a touch event should be canceled. In area charts and line charts, for example,
  *                                                you generally don't want to cancel scrolling, as this creates a scroll trap. However, in bar charts
@@ -76,6 +78,6 @@ export interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Compo
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-export default function <XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+export default function move<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 export {};
 //# sourceMappingURL=move.d.ts.map

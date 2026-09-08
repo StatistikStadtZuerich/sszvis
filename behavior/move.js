@@ -1,7 +1,7 @@
-import { dispatch, select, ascending, pointer } from 'd3';
+import { dispatch, select, pointer } from 'd3';
 import { component } from '../d3-component.js';
 import { functor, firstTouch } from '../fn.js';
-import { range } from '../scale.js';
+import { rangeExtent } from '../scale.js';
 
 /**
  * Move behavior
@@ -26,8 +26,10 @@ import { range } from '../scale.js';
  * @property {function} yScale                    The y-scale for the component. The extent of this scale, plus component padding, is the height of the
  *                                                component's active area.
  * @property {boolean} draggable                  Whether or not this component is draggable. This changes certain display properties of the component.
- * @property {object} padding                     An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
- *                                                The options are { top, right, bottom, left }
+ * @property {object} padding                     An object which specifies padding, in pixels, added around the scale's range to widen the component's
+ *                                                hit area beyond the scale itself. Defaults are all 0. The options are { top, right, bottom, left }.
+ *                                                Padding only grows the active area; it does not shift the coordinate space, so a pointer in the padded
+ *                                                margin inverts to a value just outside the scale's domain.
  * @property {boolean|function} cancelScrolling   A predicate function, or a constant boolean, that determines whether the browser's default scrolling
  *                                                behavior in response to a touch event should be canceled. In area charts and line charts, for example,
  *                                                you generally don't want to cancel scrolling, as this creates a scroll trap. However, in bar charts
@@ -49,7 +51,7 @@ import { range } from '../scale.js';
  *
  * @return {sszvis.component}
  */
-function move () {
+function move() {
   const event = dispatch("start", "move", "drag", "end");
   const moveComponent = component().prop("debug").prop("xScale").prop("yScale").prop("draggable").prop("cancelScrolling", functor).cancelScrolling(false).prop("fireOnPanOnly", functor).fireOnPanOnly(false).prop("padding", p => {
     const defaults = {
@@ -68,12 +70,20 @@ function move () {
   }).padding({}).render(function () {
     const selection = select(this);
     const props = selection.props();
-    const xExtent = range(props.xScale).sort(ascending);
-    const yExtent = range(props.yScale).sort(ascending);
+    // Already sorted, smaller value first, so a descending y scale still yields a rect that
+    // grows downwards from its top edge.
+    const xExtent = rangeExtent(props.xScale);
+    const yExtent = rangeExtent(props.yScale);
     xExtent[0] -= props.padding.left;
     xExtent[1] += props.padding.right;
     yExtent[0] -= props.padding.top;
     yExtent[1] += props.padding.bottom;
+    // The rect below is positioned at the start of the padded range, so its `x`/`y`
+    // attributes carry the offset between the rect's own box and the coordinate space the
+    // scales are defined over. Both input paths resolve through `pointer()`, which inverts
+    // the rect's screen CTM and therefore ignores a rect's `x`/`y` geometry: positions
+    // arrive already in scale space, in the same user-space units the scales use, and
+    // `scaleInvert` and the band/point inverters read `scale.range()` directly.
     const layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]).join("rect").attr("data-sszvis-behavior-move", "").attr("class", "sszvis-interactive");
     if (props.draggable) {
       layer.classed("sszvis-interactive--draggable", true);
@@ -151,10 +161,10 @@ function move () {
       if (typeof touch.clientX !== "number" || !Number.isFinite(touch.clientX) || typeof touch.clientY !== "number" || !Number.isFinite(touch.clientY)) {
         return;
       }
-      // Calculate coordinates relative to element manually using getBoundingClientRect
-      // instead of relying on d3.pointer() which fails on Safari mobile TouchEvents
-      const rect = target.getBoundingClientRect();
-      const xy = [touch.clientX - rect.left, touch.clientY - rect.top];
+      // Resolve through the extracted `Touch`, not the event: `pointer()` only needs
+      // clientX/clientY on its source, and inverting the rect's screen CTM keeps touch in
+      // the same user-space units as the mouse path under a scaled ancestor.
+      const xy = pointer(touch, target);
       const x = scaleInvert(props.xScale, xy[0]);
       const y = scaleInvert(props.yScale, xy[1]);
       const cancelScrolling = props.cancelScrolling(x, y);
@@ -185,9 +195,7 @@ function move () {
           if (typeof panTouch.clientX !== "number" || !Number.isFinite(panTouch.clientX) || typeof panTouch.clientY !== "number" || !Number.isFinite(panTouch.clientY)) {
             return;
           }
-          // Calculate coordinates relative to element manually
-          const panRect = target.getBoundingClientRect();
-          const panXY = [panTouch.clientX - panRect.left, panTouch.clientY - panRect.top];
+          const panXY = pointer(panTouch, target);
           const panX = scaleInvert(props.xScale, panXY[0]);
           const panY = scaleInvert(props.yScale, panXY[1]);
           const panCancelScrolling = props.cancelScrolling(panX, panY);
@@ -213,6 +221,9 @@ function move () {
       layer.attr("fill", "rgba(255,0,0,0.2)");
     }
   });
+  // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
+  // callback to never. Narrowing to the four event names would type the callback properly but
+  // would also reject the namespaced typenames d3 accepts at runtime, such as "move.tooltip".
   moveComponent.on = function () {
     for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
       args[_key4] = arguments[_key4];

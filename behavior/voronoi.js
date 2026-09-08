@@ -1,4 +1,4 @@
-import { dispatch, select, Delaunay } from 'd3';
+import { dispatch, select, Delaunay, pointer } from 'd3';
 import { component } from '../d3-component.js';
 import { firstTouch } from '../fn.js';
 import { error } from '../logger.js';
@@ -46,7 +46,7 @@ import { elementFromEvent, datumFromPannableElement } from './util.js';
  *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
  *
  */
-function voronoi () {
+function voronoi() {
   const event = dispatch("over", "out");
   const voronoiComponent = component().prop("x").prop("y").prop("bounds").prop("debug").render(function (data) {
     const selection = select(this);
@@ -61,15 +61,15 @@ function voronoi () {
     polys.attr("d", d => "M".concat(d.join("L"), "Z")).attr("fill", "transparent").on("mouseover", function (e) {
       const parent = this.parentNode;
       if (!parent) return;
-      const cbox = parent.getBoundingClientRect();
-      const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
-      if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])]) && this) event.apply("over", this, [e, data[datumIdx]]);
+      const position = pointer(e, parent);
+      const datumIdx = delaunay.find(position[0], position[1]);
+      if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])]) && this) event.apply("over", this, [e, data[datumIdx]]);
     }).on("mousemove", function (e) {
       const parent = this.parentNode;
       if (!parent) return;
-      const cbox = parent.getBoundingClientRect();
-      const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
-      if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
+      const position = pointer(e, parent);
+      const datumIdx = delaunay.find(position[0], position[1]);
+      if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
         if (this) event.apply("over", this, [e, data[datumIdx]]);
       } else {
         if (this) event.apply("out", this, [e]);
@@ -82,11 +82,11 @@ function voronoi () {
     }).on("touchstart", function (e) {
       const parent = this.parentNode;
       if (!parent) return;
-      const cbox = parent.getBoundingClientRect();
       const firstTouch$1 = firstTouch(e);
       if (!firstTouch$1) return;
-      const datumIdx = delaunay.find(firstTouch$1.clientX - cbox.left, firstTouch$1.clientY - cbox.top);
-      if (eventNearPoint(firstTouch$1, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
+      const position = pointer(firstTouch$1, parent);
+      const datumIdx = delaunay.find(position[0], position[1]);
+      if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
         e.preventDefault();
         if (this) event.apply("over", this, [e, data[datumIdx]]);
         const pan = () => {
@@ -99,8 +99,7 @@ function voronoi () {
           } else {
             const panParent = element === null || element === void 0 ? void 0 : element.parentNode;
             if (!panParent) return;
-            const panCbox = panParent.getBoundingClientRect();
-            if (eventNearPoint(touchEvent, [panCbox.left + props.x(panDatum.data), panCbox.top + props.y(panDatum.data)])) {
+            if (nearPoint(pointer(touchEvent, panParent), [props.x(panDatum.data), props.y(panDatum.data)])) {
               // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
               // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
               // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
@@ -125,6 +124,9 @@ function voronoi () {
       polys.attr("stroke", "#f00");
     }
   });
+  // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
+  // callback to never. Narrowing to "over" | "out" would type the callback properly but would
+  // also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
   voronoiComponent.on = function () {
     for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
       args[_key2] = arguments[_key2];
@@ -136,9 +138,15 @@ function voronoi () {
 }
 // Perform distance calculations in units squared to avoid a costly Math.sqrt
 const MAX_INTERACTION_RADIUS_SQUARED = 15 ** 2;
-function eventNearPoint(event, point) {
-  const dx = event.clientX - point[0];
-  const dy = event.clientY - point[1];
+/**
+ * Both points are in the coordinate space of the group the behaviour was called on, which is
+ * also the space the `x` and `y` accessors report positions in. Comparing them there rather
+ * than in screen pixels is what makes the hit test independent of where the group sits on the
+ * page, and correct when an ancestor transform scales the chart.
+ */
+function nearPoint(position, point) {
+  const dx = position[0] - point[0];
+  const dy = position[1] - point[1];
   return dx * dx + dy * dy < MAX_INTERACTION_RADIUS_SQUARED;
 }
 

@@ -8,14 +8,23 @@ interface Scale {
     rangeExtent?(): [number, number];
 }
 /**
+ * Range extent
+ *
+ * Used to determine the extent of a scale's range, i.e. how far the scale stretches in its
+ * output dimension. Mimics a function found in d3 source code.
+ *
+ * The result is always sorted, smaller value first, whichever direction the scale's own range
+ * runs in. It is therefore a measurement and not a range: passing it back to `scale.range()`
+ * would silently flip a descending scale, which is what every y scale is. Read the scale's own
+ * `range()` when direction matters.
+ */
+export declare function rangeExtent(scale: Scale): [number, number];
+/**
  * Scale range
  *
- * Used to determine the extent of a scale's range. Mimics a function found in d3 source code.
- *
- * @param  {array} scale    The scale to be measured
- * @return {array}          The extent of the scale's range. Useful for determining how far
- *                          a scale stretches in its output dimension.
+ * @deprecated Renamed to `rangeExtent`, because the sorted extent and not the range is what
+ * comes back. Kept as an alias for one release; use `rangeExtent` instead.
  */
-export declare const range: (scale: Scale) => [number, number];
+export declare const range: typeof rangeExtent;
 export {};
 //# sourceMappingURL=scale.d.ts.map

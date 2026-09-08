@@ -58,6 +58,6 @@ interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponen
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-export default function <T = unknown>(): VoronoiComponent<T>;
+export default function voronoi<T = unknown>(): VoronoiComponent<T>;
 export {};
 //# sourceMappingURL=voronoi.d.ts.map

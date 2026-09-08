@@ -1,7 +1,7 @@
 import { select, mean } from 'd3';
 import { component } from '../d3-component.js';
 import { identity } from '../fn.js';
-import { range } from '../scale.js';
+import { rangeExtent } from '../scale.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
 
@@ -39,7 +39,7 @@ function radius () {
     const selection = select(this);
     const props = selection.props();
     const tickValues = props.tickValues || defaultTickValues(props.scale);
-    const maxRadius = range(props.scale)[1];
+    const maxRadius = rangeExtent(props.scale)[1];
     const group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]).join("g").attr("class", "sszvis-legend__elementgroup");
     group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
     const circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues).join("circle").classed("sszvis-legend__greyline", true);
