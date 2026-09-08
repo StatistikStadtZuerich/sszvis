@@ -1,7 +1,7 @@
 import { type ScaleBand, type ScaleLinear, scaleBand, scaleLinear } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { cascade } from "../../src/cascade.js";
-import { nestedStackedBarsVertical } from "../../src/component/nestedStackedBar.js";
+import nestedStackedBarsVertical from "../../src/component/nestedStackedBar.js";
 import { type StackedBarLayout, stackedBarVerticalData } from "../../src/component/stackedBar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
@@ -420,6 +420,13 @@ describe("component/nestedStackedBar", () => {
       const node = render(component);
       expect(rects(node).length).toBe(rows.length);
       expect(attrs(rects(node), "fill")).toEqual(Array.from({ length: rows.length }, () => null));
+    });
+  });
+
+  describe("module shape", () => {
+    test("should be reachable from the library barrel as the same factory", async () => {
+      const sszvis = await import("../../src/index.js");
+      expect(sszvis.nestedStackedBarsVertical).toBe(nestedStackedBarsVertical);
     });
   });
 

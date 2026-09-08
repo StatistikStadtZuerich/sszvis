@@ -177,11 +177,11 @@ function baseline(yScale: (value: number) => number): number {
   return clamped;
 }
 
-export const nestedStackedBarsVertical = <
+export default function nestedStackedBarsVertical<
   T = unknown,
   X extends string | number = string,
->(): NestedStackedBarsVerticalComponent<T, X> =>
-  component<NestedStackedBarsVerticalComponent<T, X>>()
+>(): NestedStackedBarsVerticalComponent<T, X> {
+  return component<NestedStackedBarsVerticalComponent<T, X>>()
     .prop("offset", fn.functor)
     .prop("xScale", fn.functor)
     .prop("yScale", fn.functor)
@@ -254,4 +254,5 @@ export const nestedStackedBarsVertical = <
       const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
 
       bars.selectAll("[data-tooltip-anchor]").call(tooltip);
-    }) as NestedStackedBarsVerticalComponent<T, X>;
+    });
+}
