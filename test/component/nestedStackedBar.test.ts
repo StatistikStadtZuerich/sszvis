@@ -11,7 +11,7 @@ type Row = { year: string; category: string; nested: string; value: number };
 /** One slice of a stack: [y0, y1] plus the properties stackedBarVerticalData attaches. */
 type Slice = [number, number] & { data: Row; series: string; stack: string };
 /** One stack layout, tagged with the nested group it belongs to. */
-type NestedStack = StackedBarLayout<Row>;
+type NestedStack = StackedBarLayout<Row> & { nest: string | number };
 
 describe("component/nestedStackedBar", () => {
   let container: HTMLDivElement;
@@ -38,11 +38,7 @@ describe("component/nestedStackedBar", () => {
     return cascade<Row>()
       .arrayBy((d: Row) => d.nested)
       .apply<Row[][]>(data)
-      .map((group: Row[]) => {
-        const stack = stackLayout(group);
-        stack.nest = group[0].nested;
-        return stack;
-      });
+      .map((group: Row[]): NestedStack => ({ ...stackLayout(group), nest: group[0].nested }));
   };
 
   /** A layout for a nested group that carries no stacks at all. */
@@ -441,18 +437,29 @@ describe("component/nestedStackedBar", () => {
       }
     });
 
-    test("should fall back to the group index for an untagged layout", () => {
-      const untagged = nestedData().map((stack) => ({ ...stack, nest: undefined }));
-      const node = render(
-        nestedStackedBarsVertical()
-          .offset(() => 0)
-          .xScale(xScale)
-          .yScale(yScale)
-          .xAcc((d: Row) => d.year)
-          .tooltip(() => undefined),
-        untagged
+    test("should throw a named error for a layout with no nest key", () => {
+      // The nest key is a declared field of the layout, and it both labels and positions the
+      // group, so a layout without one can never render correctly. It used to fall back to the
+      // group index, which labelled the group but still left `offset` reading undefined.
+      const untagged = nestedData().map(({ nest: _nest, ...stack }) => stack as NestedStack);
+      expect(() => render(nestedOf(), untagged)).toThrow(
+        "[nestedStackedBarsVertical] the layout at index 0 has no nest key"
       );
-      expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["0", "1"]);
+    });
+
+    test("should name the offending index when only a later layout has no nest key", () => {
+      const [first, second] = nestedData();
+      const { nest: _nest, ...untagged } = second;
+      expect(() => render(nestedOf(), [first, untagged as NestedStack])).toThrow(
+        "[nestedStackedBarsVertical] the layout at index 1 has no nest key"
+      );
+    });
+
+    test("should validate the nest keys before rendering anything", () => {
+      const empty = group("validate-nest-first");
+      const untagged = nestedData().map(({ nest: _nest, ...stack }) => stack as NestedStack);
+      expect(() => empty.datum(untagged).call(nestedOf() as never)).toThrow();
+      expect(groups(empty.node() as SVGGElement).length).toBe(0);
     });
   });
 

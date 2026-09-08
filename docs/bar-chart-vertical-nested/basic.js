@@ -74,7 +74,7 @@ const actions = {
       .apply(state.data)
       .map((d) => {
         const stack = stackLayout(d);
-        stack.nest = d[0].nestedCategory;
+        stack.key = d[0].nestedCategory;
         return stack;
       });
 
@@ -201,7 +201,7 @@ function render(state) {
 
   const xaxis2Group = sszvis
     .nestedStackedBarsVertical()
-    .offset((d) => xaxis2Scale(d.nest))
+    .offset((d) => xaxis2Scale(d.key))
     .xScale(xScale)
     .xAcc(xjAcc)
     .yScale(yScale)

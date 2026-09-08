@@ -2,24 +2,28 @@
 
 ### Data structure
 
-The nestedStackedBarsVertical is a combination of the two data structures used in the [Stacked BarVertical](../#/bar-chart-vertical-stacked) and [Bar Vertical](../#/bar-chart-vertical) components. The first layer is a grouping based on the x-axis value, and the second layer is a computed layout based on the `sszvis.stackedBarVerticalData` function. The result is an array of arrays, where each array represents a group of bars, and each group is represented by computed slices. Each slice should be an array consist of two values for the _y0_ and _y1_ properties, followed a data object, series and stack properties.
+The nestedStackedBarsVertical is a combination of the two data structures used in the [Stacked BarVertical](../#/bar-chart-vertical-stacked) and [Bar Vertical](../#/bar-chart-vertical) components. The first layer is a grouping based on the x-axis value, and the second layer is a computed layout based on the `sszvis.stackedBarVerticalData` function. The result is an array of stack layouts, one per nested group, each tagged with the group key it belongs to. Each layout is the array of series `sszvis.stackedBarVerticalData` returns; each slice is an array of the _y0_ and _y1_ values, followed by a data object, a series and a stack property.
 
 ```code
 const stackedData = [
     [
-        [0,10, data: {...}, nest: "A",],
-        [0,20, data: {...}, nest: "B",],
-        [0,16, data: {...}, nest: "C",]
-        key: "key1"
+        [
+            [0,10, data: {...}, series: "key1", stack: "2020"],
+            [0,20, data: {...}, series: "key1", stack: "2021"],
+            key: "key1"
+        ],
+        [
+            [10,14, data: {...}, series: "key2", stack: "2020"],
+            [20,22, data: {...}, series: "key2", stack: "2021"],
+            key: "key2"
+        ],
+        key: "A"
     ],
-    [
-        [10,14, data: {...}, nest: "A",],
-        [20,22, data: {...}, nest: "B",],
-        [16,22, data: {...}, nest: "C",]
-        key: "key2"
-    ],
+    // ... one more layout per nested group
 ]
 ```
+
+The group key labels the nested group and is what `offset` usually reads to position it. `key` is its name and `nest` an accepted alias. Neither is required: a layout carrying no key is reported with a console warning and labelled by its index instead.
 
 #### One row per stack cell
 
@@ -45,7 +49,7 @@ state.stackedData = sszvis
   .apply(state.data)
   .map((d) => {
     const stack = stackLayout(d);
-    stack.nest = d[0].nestedCategory;
+    stack.key = d[0].nestedCategory;
     return stack;
   });
 
@@ -79,7 +83,7 @@ A function which returns the content for the tooltip. The function is called wit
 
 #### `nestedStackedBarsVertical.xAcc(xAcc)`
 
-Deprecated and optional. A function which returns the x-value for each data element. The component no longer reads it — each nested group is labelled from the `nest` key its own stack layout carries — so it can be omitted, and a future major version will remove it.
+Deprecated and optional. A function which returns the x-value for each data element. The component no longer reads it — each nested group is labelled from the `key` its own stack layout carries — so it can be omitted, and a future major version will remove it.
 
 #### `nestedStackedBarsVertical.xLabel(xLabel)`
 
