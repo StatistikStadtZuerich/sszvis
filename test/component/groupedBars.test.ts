@@ -577,6 +577,85 @@ describe("component/groupedBars", () => {
     });
   });
 
+  describe("transition", () => {
+    let groupScale: d3.ScaleBand<string>;
+    let valueScale: d3.ScaleLinear<number, number>;
+
+    beforeEach(() => {
+      groupScale = scaleBand<string>().domain(["G1"]).range([0, 200]).padding(0.1);
+      valueScale = scaleLinear().domain([0, 30]).range([200, 0]);
+    });
+
+    /** A single-group vertical component; `defined` keeps NaN values out. */
+    const verticalOf = () =>
+      groupedBarsVertical<TestDatum>()
+        .groupScale((d) => groupScale(d.group) || 0)
+        .groupSize(1)
+        .groupWidth(groupScale.bandwidth())
+        .y((d) => valueScale(d.value))
+        .height((d) => 200 - valueScale(d.value))
+        .fill("steelblue")
+        .defined((d) => !Number.isNaN(d.value));
+
+    const oneBar = (value: number): TestDatum[][] => [[{ category: "A", group: "G1", value }]];
+
+    test("should keep the same rect element across renders", () => {
+      const component = verticalOf();
+      const chartLayer = svg.selectGroup("bars");
+      chartLayer.datum(oneBar(10)).call(component);
+      const first = svg.select<SVGRectElement>("rect.sszvis-bar").node();
+      chartLayer.datum(oneBar(25)).call(component);
+      const second = svg.select<SVGRectElement>("rect.sszvis-bar").node();
+      expect(second).toBe(first);
+      svg.selectAll("*").interrupt();
+    });
+
+    test("should update the geometry synchronously when disabled", () => {
+      const component = verticalOf().transition(false);
+      const chartLayer = svg.selectGroup("bars");
+      chartLayer.datum(oneBar(10)).call(component);
+      chartLayer.datum(oneBar(30)).call(component);
+      const bar = svg.select<SVGRectElement>("rect.sszvis-bar");
+      expect(bar.attr("y")).toBe(String(valueScale(30)));
+      expect(bar.attr("height")).toBe(String(200 - valueScale(30)));
+    });
+
+    test("should start an updating bar from its previous geometry", () => {
+      const component = verticalOf();
+      const chartLayer = svg.selectGroup("bars");
+      chartLayer.datum(oneBar(10)).call(component);
+      // Entering bars are placed on the join, so the first render is correct synchronously.
+      expect(svg.select("rect.sszvis-bar").attr("y")).toBe(String(valueScale(10)));
+
+      chartLayer.datum(oneBar(30)).call(component);
+      // The update tweens, so on this tick the bar still holds its previous geometry. The
+      // rect is re-selected, so a torn-down and re-appended bar cannot pass this.
+      const bar = svg.select<SVGRectElement>("rect.sszvis-bar");
+      expect(bar.attr("y")).toBe(String(valueScale(10)));
+      expect(bar.attr("height")).toBe(String(200 - valueScale(10)));
+      svg.selectAll("*").interrupt();
+    });
+
+    test("should swap between a rect and the missing-value lines as `defined` changes", () => {
+      const component = verticalOf().transition(false);
+      const chartLayer = svg.selectGroup("bars");
+
+      chartLayer.datum(oneBar(10)).call(component);
+      expect(svg.selectAll("rect.sszvis-bar").size()).toBe(1);
+      expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(0);
+
+      chartLayer.datum(oneBar(Number.NaN)).call(component);
+      expect(svg.selectAll("rect.sszvis-bar").size()).toBe(0);
+      expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2);
+
+      chartLayer.datum(oneBar(20)).call(component);
+      expect(svg.selectAll("rect.sszvis-bar").size()).toBe(1);
+      expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(0);
+      // The unit's translation, set while the value was missing, is cleared again.
+      expect(svg.select("g.sszvis-barunit").attr("transform")).toBe("translate(0,0)");
+    });
+  });
+
   describe("stroke property", () => {
     let groupScale: d3.ScaleBand<string>;
     let valueScale: d3.ScaleLinear<number, number>;
