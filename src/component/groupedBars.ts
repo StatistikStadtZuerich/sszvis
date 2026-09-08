@@ -37,22 +37,30 @@
  * @property {number} groupHeight       The height of the groups (horizontal orientation). This value is treated as the same for all groups.
  *                                      The height available to the groups is divided up among the bars.
  * @property {number} groupSpace        The percentage of space between each bar within a group. (default: 0.05). Usually the default is fine here.
- * @property {function} x               The x-position of the bars (horizontal orientation). This function is given a data value and should return
- *                                      an x-value. Used for horizontal grouped bars.
- * @property {function} y               The y-position of the bars (vertical orientation). This function is given a data value and should return
- *                                      a y-value. Used for vertical grouped bars.
- * @property {function} width           The width of the bars (horizontal orientation). This function is given a data value and should return
- *                                      a width value. Used for horizontal grouped bars.
- * @property {function} height          The height of the bars (vertical orientation). This function is given a data value and should return
- *                                      a height value. Used for vertical grouped bars.
- * @property {string, function} fill    A functor which gives the color for each bar (often based on the bar's group). This can be a string or a function.
- * @property {string, function} stroke  The stroke color for each bar (default: none)
+ * @property {function} x               The x-position of the bars (horizontal orientation). This function is given a data value and the bar's
+ *                                      index within its group, and should return an x-value. Used for horizontal grouped bars.
+ * @property {function} y               The y-position of the bars (vertical orientation). This function is given a data value and the bar's
+ *                                      index within its group, and should return a y-value. Used for vertical grouped bars.
+ * @property {function} width           The width of the bars (horizontal orientation). This function is given a data value and the bar's
+ *                                      index within its group, and should return a width value. Used for horizontal grouped bars.
+ * @property {function} height          The height of the bars (vertical orientation). This function is given a data value and the bar's
+ *                                      index within its group, and should return a height value. Used for vertical grouped bars.
+ * @property {string, function} fill    A functor which gives the color for each bar (often based on the bar's group). This can be a string or a
+ *                                      function; a function is given a data value and the bar's index within its group.
+ * @property {string, function} stroke  The stroke color for each bar (default: none). As with fill, a function is given a data value and the
+ *                                      bar's index within its group.
  * @property {function} defined         A predicate function which can be used to determine whether a bar has a defined value. (default: true).
  *                                      Any bar for which this function returns false, meaning that it has an undefined (missing) value,
  *                                      will be displayed as a faint "x" in the grouped bar chart. This is in order to distinguish bars with
  *                                      missing values from bars with very small values, which would display as a very thin rectangle.
  * @property {boolean} transition       Whether or not to transition the geometry of the bars when it changes.
  *                                      Defaults to true, and eases over 300ms.
+ *
+ * Note: every consumer accessor - x, y, width, height, fill and stroke - is called with the bar's
+ * index within its group, which is the index inGroupScale is keyed on. This is a deliberate change
+ * from the pre-fix behaviour, where d3 supplied the index within the selection of bars that have a
+ * defined value: the two agree for fully defined data and diverge only when a group contains missing
+ * values, where the group index is the more meaningful answer.
  *
  * Note: entering bars receive their geometry on the join, before the transition starts, so they
  * appear in place rather than animating up from nothing. Only updates animate. fill and stroke are
@@ -84,10 +92,10 @@ type GroupedBarsProps<T = unknown> = {
   groupSpace: number;
   x: (datum: T, index: number) => number;
   y: (datum: T, index: number) => number;
-  width: number | ((datum: T) => number);
-  height: number | ((datum: T) => number);
-  fill: string | ((datum: T) => string);
-  stroke?: string | ((datum: T) => string);
+  width: number | ((datum: T, index: number) => number);
+  height: number | ((datum: T, index: number) => number);
+  fill: string | ((datum: T, index: number) => string);
+  stroke?: string | ((datum: T, index: number) => string);
   defined: (datum: T) => boolean;
   transition: boolean;
 };
@@ -109,14 +117,16 @@ interface GroupedBarsComponent<T = unknown> extends ComponentBuilder<GroupedBars
   x<U = T>(accessor: (datum: U, index: number) => number): GroupedBarsComponent<T>;
   y(): (datum: T, index: number) => number;
   y<U = T>(accessor: (datum: U, index: number) => number): GroupedBarsComponent<T>;
-  width(): number | ((datum: T) => number);
-  width<U = T>(value: number | ((datum: U) => number)): GroupedBarsComponent<T>;
-  height(): number | ((datum: T) => number);
-  height<U = T>(value: number | ((datum: U) => number)): GroupedBarsComponent<T>;
-  fill(): string | ((datum: T) => string);
-  fill<U = T>(value: string | ((datum: U) => string)): GroupedBarsComponent<T>;
-  stroke(): string | ((datum: T) => string) | undefined;
-  stroke<U = T>(value: string | ((datum: U) => string) | undefined): GroupedBarsComponent<T>;
+  width(): number | ((datum: T, index: number) => number);
+  width<U = T>(value: number | ((datum: U, index: number) => number)): GroupedBarsComponent<T>;
+  height(): number | ((datum: T, index: number) => number);
+  height<U = T>(value: number | ((datum: U, index: number) => number)): GroupedBarsComponent<T>;
+  fill(): string | ((datum: T, index: number) => string);
+  fill<U = T>(value: string | ((datum: U, index: number) => string)): GroupedBarsComponent<T>;
+  stroke(): string | ((datum: T, index: number) => string) | undefined;
+  stroke<U = T>(
+    value: string | ((datum: U, index: number) => string) | undefined
+  ): GroupedBarsComponent<T>;
   defined(): (datum: T) => boolean;
   defined<U = T>(predicate: boolean | ((datum: U) => boolean)): GroupedBarsComponent<T>;
   transition(): boolean;
@@ -137,11 +147,11 @@ type GroupedBarsConfig<T> = {
   width(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): number | ((d: DatumWithIndex<T>) => number);
+  ): number | ((d: DatumWithIndex<T>, i: number) => number);
   height(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): number | ((d: DatumWithIndex<T>) => number);
+  ): number | ((d: DatumWithIndex<T>, i: number) => number);
   missingTransform(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
@@ -209,10 +219,15 @@ function createGroupedBarsComponent<T = unknown>(
       const configMissingTransform = config.missingTransform(props, inGroupScale);
       const xAt = (d: DatumWithIndex<T>, i: number) => configX(d, groupIndexOf(d, i));
       const yAt = (d: DatumWithIndex<T>, i: number) => configY(d, groupIndexOf(d, i));
-      const widthAt = (d: DatumWithIndex<T>) =>
-        typeof configWidth === "function" ? configWidth(d) : configWidth;
-      const heightAt = (d: DatumWithIndex<T>) =>
-        typeof configHeight === "function" ? configHeight(d) : configHeight;
+      const widthAt = (d: DatumWithIndex<T>, i: number) =>
+        typeof configWidth === "function" ? configWidth(d, groupIndexOf(d, i)) : configWidth;
+      const heightAt = (d: DatumWithIndex<T>, i: number) =>
+        typeof configHeight === "function" ? configHeight(d, groupIndexOf(d, i)) : configHeight;
+      const fillAt = (d: DatumWithIndex<T>, i: number) =>
+        typeof props.fill === "function" ? props.fill(d, groupIndexOf(d, i)) : props.fill;
+      const strokeAt = (d: DatumWithIndex<T>, i: number) =>
+        (typeof props.stroke === "function" ? props.stroke(d, groupIndexOf(d, i)) : props.stroke) ??
+        null;
 
       const unitsWithValue = barUnits.filter(props.defined);
       const unitsWithoutValue = barUnits.filter(fn.not(props.defined));
@@ -245,8 +260,8 @@ function createGroupedBarsComponent<T = unknown>(
             .attr("width", widthAt)
             .attr("height", heightAt)
         )
-        .attr("fill", props.fill)
-        .attr("stroke", props.stroke ?? null);
+        .attr("fill", fillAt)
+        .attr("stroke", strokeAt);
 
       if (props.transition) {
         bars

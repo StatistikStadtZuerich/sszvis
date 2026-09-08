@@ -656,6 +656,168 @@ describe("component/groupedBars", () => {
     });
   });
 
+  describe("accessor indices", () => {
+    let groupScale: d3.ScaleBand<string>;
+    let valueScale: d3.ScaleLinear<number, number>;
+
+    beforeEach(() => {
+      groupScale = scaleBand<string>().domain(["G1"]).range([0, 200]).padding(0.1);
+      valueScale = scaleLinear().domain([0, 30]).range([200, 0]);
+    });
+
+    test("should give the vertical `height` accessor the bar's index within its group", () => {
+      const indices: unknown[] = [];
+      svg
+        .selectGroup("bars")
+        .datum([
+          [
+            { category: "A", group: "G1", value: 10 },
+            { category: "B", group: "G1", value: 20 },
+          ],
+        ] satisfies TestDatum[][])
+        .call(
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
+            .groupSize(2)
+            .groupWidth(groupScale.bandwidth())
+            .y((d) => valueScale(d.value))
+            .height((d, i) => {
+              indices.push(i);
+              return 200 - valueScale(d.value);
+            })
+            .fill("steelblue")
+            .transition(false)
+        );
+
+      expect(indices.length).toBeGreaterThan(0);
+      expect(indices.every((i) => typeof i === "number")).toBe(true);
+      expect(new Set(indices)).toEqual(new Set([0, 1]));
+    });
+
+    test("should give the horizontal `width` accessor the bar's index within its group", () => {
+      const indices: unknown[] = [];
+      svg
+        .selectGroup("bars")
+        .datum([
+          [
+            { category: "A", group: "G1", value: 10 },
+            { category: "B", group: "G1", value: 20 },
+          ],
+        ] satisfies TestDatum[][])
+        .call(
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
+            .groupSize(2)
+            .groupHeight(groupScale.bandwidth())
+            .x(() => 0)
+            .width((d, i) => {
+              indices.push(i);
+              return d.value;
+            })
+            .fill("steelblue")
+            .transition(false)
+        );
+
+      expect(indices.length).toBeGreaterThan(0);
+      expect(indices.every((i) => typeof i === "number")).toBe(true);
+      expect(new Set(indices)).toEqual(new Set([0, 1]));
+    });
+
+    test("should give the `fill` accessor the bar's index within its group", () => {
+      const seen: [string, number][] = [];
+      svg
+        .selectGroup("bars")
+        .datum([
+          [
+            { category: "A", group: "G1", value: 10 },
+            { category: "B", group: "G1", value: 20 },
+          ],
+        ] satisfies TestDatum[][])
+        .call(
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
+            .groupSize(2)
+            .groupWidth(groupScale.bandwidth())
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
+            .fill((d, i) => {
+              seen.push([d.category, i]);
+              return "steelblue";
+            })
+            .transition(false)
+        );
+
+      expect(seen).toEqual([
+        ["A", 0],
+        ["B", 1],
+      ]);
+    });
+
+    test("should give every accessor the same index when a group has missing values", () => {
+      const seen: Record<string, [string, unknown][]> = {
+        x: [],
+        y: [],
+        width: [],
+        height: [],
+        fill: [],
+        stroke: [],
+      };
+      const recordInto = (key: string, value: number) => (d: TestDatum, i: number) => {
+        seen[key].push([d.category, i]);
+        return value;
+      };
+
+      // The middle bar of the group is missing, so its index within the group differs from
+      // its position in the filtered selection of bars that do have a value.
+      const mixedData: TestDatum[][] = [
+        [
+          { category: "A", group: "G1", value: 10 },
+          { category: "B", group: "G1", value: Number.NaN },
+          { category: "C", group: "G1", value: 20 },
+        ],
+      ];
+
+      svg
+        .selectGroup("bars")
+        .datum(mixedData)
+        .call(
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
+            .groupSize(3)
+            .groupHeight(groupScale.bandwidth())
+            .x(recordInto("x", 0))
+            .y(recordInto("y", 0))
+            .width(recordInto("width", 10))
+            .height(recordInto("height", 10))
+            .fill((d, i) => {
+              seen.fill.push([d.category, i]);
+              return "steelblue";
+            })
+            .stroke((d, i) => {
+              seen.stroke.push([d.category, i]);
+              return "red";
+            })
+            .defined((d) => !Number.isNaN(d.value))
+            .transition(false)
+        );
+
+      // "C" is the third bar of its group but the second one with a value; every accessor
+      // must agree on the group index, 2.
+      // `x` is also called for the tooltip anchor, so collect the distinct indices each
+      // accessor saw for a bar rather than the call count.
+      const indicesFor = (key: string, category: string) =>
+        new Set(seen[key].filter(([c]) => c === category).map(([, i]) => i));
+      for (const key of ["x", "width", "fill", "stroke"]) {
+        expect(indicesFor(key, "A"), key).toEqual(new Set([0]));
+        expect(indicesFor(key, "C"), key).toEqual(new Set([2]));
+      }
+      // The horizontal `y` and `height` are supplied by the component itself, so consumer
+      // accessors for them are never called; only the four above reach the consumer.
+      expect(seen.y).toEqual([]);
+      expect(seen.height).toEqual([]);
+    });
+  });
+
   describe("stroke property", () => {
     let groupScale: d3.ScaleBand<string>;
     let valueScale: d3.ScaleLinear<number, number>;
