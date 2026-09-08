@@ -5,7 +5,7 @@ against the sszvis release each page pins, once against this working copy's
 `build/` output — so breaking changes show up as a visible difference rather
 than a bug report from downstream.
 
-## Run it
+## Run it locally
 
 ```bash
 npm run build:ts && npm run build:lib   # refresh build/ (the candidate side)
@@ -56,6 +56,31 @@ Verdicts separate our breakage from breakage that was already there:
 | `fixed` | the baseline raised errors the candidate does not |
 
 Flags: `--limit N`, `--concurrency N`, `--widths 400,900`, `--settle MS`, `--shots`.
+
+## Sharing it
+
+```bash
+npm run regression:export              # all 711 charts   -> 60MB folder, 12MB zip
+npm run regression:export -- --flagged # only what a sweep flagged -> 23MB, 3.8MB zip
+```
+
+Writes a self-contained folder plus a zip under `__export__/`, with a `START-HERE.md`
+for whoever receives it. No checkout of this repo or of the reference charts is needed
+to view it — the URL rewriting the server does per request is done once at export time,
+and both copies of each page sit beside their data as `<name>.baseline.html` and
+`<name>.candidate.html`, pointing at a `lib/` folder by relative path.
+
+It does still have to be served over HTTP (`npx serve .`), because the charts fetch
+their CSV and TopoJSON and a browser refuses to do that from a `file://` page. The
+included instructions say so.
+
+`--flagged` reads `__report__/report.json` and narrows the export to the charts a sweep
+found wanting, which is the difference between an emailable zip and something that
+needs hosting. Other flags: `--out DIR`, `--limit N`, `--no-zip`.
+
+For a hosted copy, the folder is a plain static site — any static host will do. Note
+that GitHub Pages allows one site per repository, and this repo's is already the docs
+site, so a subpath there means teaching the docs deploy not to delete it.
 
 ## How the swap works
 
