@@ -24,6 +24,10 @@ import { identity } from '../fn.js';
  *                                  necessarily change any state unless this callback function does
  *                                  something. (default: fn.identity, which returns the event and
  *                                  silently discards the value)
+ * @property {string} ariaLabel     An accessible name for the group of options, naming what the
+ *                                  control filters rather than what the options are. Written as
+ *                                  `aria-label` on the radiogroup. (default: undefined, which writes
+ *                                  no attribute, leaving the group unnamed)
  *
  * Note: both optionSelectable controls join their wrapper element on the
  * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
@@ -46,6 +50,11 @@ import { identity } from '../fn.js';
  * which is the standard radio-group behaviour; the component still holds no state of its own. The
  * `selected` class is kept as the visual hook alongside `aria-checked`.
  *
+ * Note: `ariaLabel` is unset by default rather than defaulting to an empty string. A form control is
+ * never decorative, so there is no meaningful "no name wanted" value: an unset `ariaLabel` means the
+ * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
+ * existing call site is unnamed and a per-render warning would be noise rather than a signal.
+ *
  * Note: `values` has no default, so rendering before the data is available throws while computing
  * the button width - before any DOM is created, so no partial control is left behind.
  *
@@ -54,11 +63,14 @@ import { identity } from '../fn.js';
  * @return {sszvis.component}
  */
 function buttonGroup() {
-  return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).render(function () {
+  return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
+    var _props$ariaLabel;
     const selection = select(this);
     const props = selection.props();
     const buttonWidth = props.width / props.values.length;
-    const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true).attr("role", "radiogroup");
+    const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true).attr("role", "radiogroup")
+    // `??` rather than `||`, so an explicitly empty name stays an empty name.
+    .attr("aria-label", (_props$ariaLabel = props.ariaLabel) !== null && _props$ariaLabel !== void 0 ? _props$ariaLabel : null);
     container.style("width", "".concat(props.width, "px"));
     const buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values).join("button").classed("sszvis-control-buttonGroup__item", true).attr("type", "button").attr("role", "radio");
     // Roving tabindex: exactly one option is in the tab order. That is the current one, or

@@ -20,6 +20,10 @@
  *                                  necessarily change any state unless this callback function does
  *                                  something. (default: fn.identity, which returns the event and
  *                                  silently discards the value)
+ * @property {string} ariaLabel     An accessible name for the group of options, naming what the
+ *                                  control filters rather than what the options are. Written as
+ *                                  `aria-label` on the radiogroup. (default: undefined, which writes
+ *                                  no attribute, leaving the group unnamed)
  *
  * Note: both optionSelectable controls join their wrapper element on the
  * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
@@ -41,6 +45,11 @@
  * the group stays reachable either way. Arrow keys call `change` immediately, the same as a click,
  * which is the standard radio-group behaviour; the component still holds no state of its own. The
  * `selected` class is kept as the visual hook alongside `aria-checked`.
+ *
+ * Note: `ariaLabel` is unset by default rather than defaulting to an empty string. A form control is
+ * never decorative, so there is no meaningful "no name wanted" value: an unset `ariaLabel` means the
+ * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
+ * existing call site is unnamed and a per-render warning would be noise rather than a signal.
  *
  * Note: `values` has no default, so rendering before the data is available throws while computing
  * the button width - before any DOM is created, so no partial control is left behind.
@@ -64,6 +73,8 @@ export interface ButtonGroupComponent<T extends string | number = string | numbe
     width(width: number): ButtonGroupComponent<T>;
     change(): ButtonGroupChangeHandler<T>;
     change(handler: ButtonGroupChangeHandler<T>): ButtonGroupComponent<T>;
+    ariaLabel(): string | undefined;
+    ariaLabel(label: string): ButtonGroupComponent<T>;
 }
 export default function buttonGroup<T extends string | number = string | number>(): ButtonGroupComponent<T>;
 //# sourceMappingURL=buttonGroup.d.ts.map

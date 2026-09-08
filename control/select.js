@@ -25,6 +25,10 @@ import { warn } from '../logger.js';
  *                                  the user selects an option. Selecting a value does not change any
  *                                  state unless this callback does something. (default: fn.identity,
  *                                  which returns the event and silently discards the value)
+ * @property {string} ariaLabel     An accessible name for the control, naming what it filters rather
+ *                                  than what the options are. Written as `aria-label` on the select
+ *                                  element. (default: undefined, which writes no attribute, leaving
+ *                                  the control unnamed)
  *
  * Note: both optionSelectable controls join their wrapper element on the
  * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
@@ -42,9 +46,21 @@ import { warn } from '../logger.js';
  * the second-to-last character as well). Values are coerced with `String()` before measuring, so
  * non-string values are trimmed rather than throwing.
  *
- * Note: a selection whose stored index no longer resolves to a value - an empty select value, or an
- * index left behind by a shorter `values` array - is ignored with a warning instead of invoking
- * `change` with `undefined`.
+ * Note: each option carries its own value, coerced with `String()`, and a selection is resolved
+ * back by that coercion rather than by array position, so a selection recorded against an older
+ * `values` array cannot resolve to a different value. The options are joined on the same key, so an
+ * option element follows its value across a re-render. A value repeated verbatim still renders once
+ * per occurrence, but two *distinct* values that coerce to the same string are indistinguishable:
+ * both render, a selection resolves to the first of them, and the component warns. A selection that
+ * matches no configured value is ignored with a warning instead of invoking `change` with
+ * `undefined`.
+ *
+ * Note: `ariaLabel` is unset by default rather than defaulting to an empty string. A form control is
+ * never decorative, so there is no meaningful "no name wanted" value: an unset `ariaLabel` means the
+ * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
+ * existing call site is unnamed and a per-render warning would be noise rather than a signal. The
+ * attribute goes on the `select` element itself, not on the wrapper `div`, which carries no role and
+ * so cannot be named; `buttonGroup` names its `radiogroup` wrapper instead.
  *
  * Note: `values` has no default, so rendering before the data is available throws mid-render from
  * d3's data join - after the wrapper and select have been created and styled, leaving an empty,
@@ -59,24 +75,25 @@ const SELECT_WIDTH_PADDING = 30;
 /** Width reserved for the select's own chrome when measuring whether a label fits. */
 const LABEL_WIDTH_ALLOWANCE = 40;
 function selectMenu() {
-  return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).render(function () {
+  return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
+    var _props$ariaLabel;
     const selection = select(this);
     const props = selection.props();
     const wrapperEl = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-select"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-select", true);
     wrapperEl.style("width", "".concat(props.width, "px"));
     const metricsEl = wrapperEl.selectDiv("selectMetrics").classed("sszvis-control-select__metrics", true);
     const selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]).join("select").classed("sszvis-control-select__element", true).on("change", function (e) {
-      // We store the index in the select's value instead of the datum
-      // because an option's value can only hold strings. An empty value means
-      // nothing is selected, which must not be read as index 0.
+      // An option's value can only hold a string, so it holds `String(value)` and the
+      // selection is resolved back by comparing that coercion. Storing the array
+      // position instead let a selection recorded against an older `values` array
+      // resolve to whatever had since moved into that position.
       const value = this.value;
-      const i = value === "" ? -1 : Number(value);
-      const selected = props.values[i];
+      const selected = props.values.find(d => String(d) === value);
       if (selected === undefined) {
-        // The recorded index can go stale between renders - a shorter `values` array
-        // removes options but leaves the browser's selection pointing at an index
-        // that is gone. A selection that maps to no value is not a selection.
-        warn("[selectMenu] ignoring a selection whose option value \"".concat(value, "\" does not resolve to one of the ").concat(props.values.length, " configured values."));
+        // Still reachable: a select with no options at all reports "", and an option
+        // value written by something other than this component matches nothing. A
+        // selection that maps to no value is not a selection.
+        warn("[selectMenu] ignoring a selection whose option value \"".concat(value, "\" does not match any of the ").concat(props.values.length, " configured values."));
         return;
       }
       props.change(e, selected);
@@ -87,7 +104,24 @@ function selectMenu() {
       }, 0);
     });
     selectEl.style("width", "".concat(props.width + SELECT_WIDTH_PADDING, "px"));
-    selectEl.selectAll("option").data(props.values).join("option").property("selected", d => d === props.current).attr("value", (_d, i) => i).text(d => truncateToWidth(metricsEl, props.width - LABEL_WIDTH_ALLOWANCE, d));
+    // `??` rather than `||`, so an explicitly empty name stays an empty name.
+    selectEl.attr("aria-label", (_props$ariaLabel = props.ariaLabel) !== null && _props$ariaLabel !== void 0 ? _props$ariaLabel : null);
+    // Options are keyed by their own value, so an option element follows its value
+    // across a re-render rather than being positionally re-labelled. Values repeated
+    // verbatim are fine - they key the same and resolve to the same thing - but two
+    // *distinct* values that coerce to the same string are indistinguishable, and the
+    // first of them wins when a selection is resolved. Say so rather than guessing.
+    const keyOf = d => String(d);
+    const firstByKey = new Map();
+    const collisions = [];
+    for (const d of props.values) {
+      const key = keyOf(d);
+      if (!firstByKey.has(key)) firstByKey.set(key, d);else if (firstByKey.get(key) !== d) collisions.push(key);
+    }
+    if (collisions.length > 0) {
+      warn("[selectMenu] values contains distinct entries that are indistinguishable as strings (".concat(collisions.join(", "), "); a selection resolves to the first of each."));
+    }
+    selectEl.selectAll("option").data(props.values, keyOf).join("option").property("selected", d => d === props.current).attr("value", keyOf).text(d => truncateToWidth(metricsEl, props.width - LABEL_WIDTH_ALLOWANCE, d));
   });
 }
 /**

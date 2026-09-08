@@ -3837,6 +3837,10 @@ declare function treemap<T = unknown>(): TreemapComponent<T>;
  *                                  necessarily change any state unless this callback function does
  *                                  something. (default: fn.identity, which returns the event and
  *                                  silently discards the value)
+ * @property {string} ariaLabel     An accessible name for the group of options, naming what the
+ *                                  control filters rather than what the options are. Written as
+ *                                  `aria-label` on the radiogroup. (default: undefined, which writes
+ *                                  no attribute, leaving the group unnamed)
  *
  * Note: both optionSelectable controls join their wrapper element on the
  * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
@@ -3858,6 +3862,11 @@ declare function treemap<T = unknown>(): TreemapComponent<T>;
  * the group stays reachable either way. Arrow keys call `change` immediately, the same as a click,
  * which is the standard radio-group behaviour; the component still holds no state of its own. The
  * `selected` class is kept as the visual hook alongside `aria-checked`.
+ *
+ * Note: `ariaLabel` is unset by default rather than defaulting to an empty string. A form control is
+ * never decorative, so there is no meaningful "no name wanted" value: an unset `ariaLabel` means the
+ * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
+ * existing call site is unnamed and a per-render warning would be noise rather than a signal.
  *
  * Note: `values` has no default, so rendering before the data is available throws while computing
  * the button width - before any DOM is created, so no partial control is left behind.
@@ -3881,6 +3890,8 @@ interface ButtonGroupComponent<T extends string | number = string | number> exte
     width(width: number): ButtonGroupComponent<T>;
     change(): ButtonGroupChangeHandler<T>;
     change(handler: ButtonGroupChangeHandler<T>): ButtonGroupComponent<T>;
+    ariaLabel(): string | undefined;
+    ariaLabel(label: string): ButtonGroupComponent<T>;
 }
 declare function buttonGroup<T extends string | number = string | number>(): ButtonGroupComponent<T>;
 
@@ -3964,6 +3975,10 @@ declare function handleRuler<T = unknown>(): HandleRulerComponent<T>;
  *                                  the user selects an option. Selecting a value does not change any
  *                                  state unless this callback does something. (default: fn.identity,
  *                                  which returns the event and silently discards the value)
+ * @property {string} ariaLabel     An accessible name for the control, naming what it filters rather
+ *                                  than what the options are. Written as `aria-label` on the select
+ *                                  element. (default: undefined, which writes no attribute, leaving
+ *                                  the control unnamed)
  *
  * Note: both optionSelectable controls join their wrapper element on the
  * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
@@ -3981,9 +3996,21 @@ declare function handleRuler<T = unknown>(): HandleRulerComponent<T>;
  * the second-to-last character as well). Values are coerced with `String()` before measuring, so
  * non-string values are trimmed rather than throwing.
  *
- * Note: a selection whose stored index no longer resolves to a value - an empty select value, or an
- * index left behind by a shorter `values` array - is ignored with a warning instead of invoking
- * `change` with `undefined`.
+ * Note: each option carries its own value, coerced with `String()`, and a selection is resolved
+ * back by that coercion rather than by array position, so a selection recorded against an older
+ * `values` array cannot resolve to a different value. The options are joined on the same key, so an
+ * option element follows its value across a re-render. A value repeated verbatim still renders once
+ * per occurrence, but two *distinct* values that coerce to the same string are indistinguishable:
+ * both render, a selection resolves to the first of them, and the component warns. A selection that
+ * matches no configured value is ignored with a warning instead of invoking `change` with
+ * `undefined`.
+ *
+ * Note: `ariaLabel` is unset by default rather than defaulting to an empty string. A form control is
+ * never decorative, so there is no meaningful "no name wanted" value: an unset `ariaLabel` means the
+ * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
+ * existing call site is unnamed and a per-render warning would be noise rather than a signal. The
+ * attribute goes on the `select` element itself, not on the wrapper `div`, which carries no role and
+ * so cannot be named; `buttonGroup` names its `radiogroup` wrapper instead.
  *
  * Note: `values` has no default, so rendering before the data is available throws mid-render from
  * d3's data join - after the wrapper and select have been created and styled, leaving an empty,
@@ -4004,6 +4031,8 @@ interface SelectComponent<T extends string = string> extends ComponentBuilder<Se
     width(width: number): SelectComponent<T>;
     change(): SelectChangeHandler<T>;
     change(handler: SelectChangeHandler<T>): SelectComponent<T>;
+    ariaLabel(): string | undefined;
+    ariaLabel(label: string): SelectComponent<T>;
 }
 declare function selectMenu<T extends string = string>(): SelectComponent<T>;
 
