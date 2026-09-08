@@ -48,6 +48,30 @@ An accessible name for the group of buttons, written to the wrapper as `aria-lab
 }
 ```
 
+### Example with many long labels
+
+With many options, each one only gets `width / values.length`. Labels too long for
+that share wrap onto as many lines as they need inside their own button, so the
+group still measures `width`.
+
+```project
+{
+    "name": "bar-chart-horizontal-long-labels",
+    "files": {
+        "index.html": {
+            "source": "bar-chart-horizontal/long-labels.html",
+            "template": "template.html"
+        },
+        "data.csv": "bar-chart-horizontal/data/SHB_13Categories_longNames.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "fallback.png",
+
+    },
+    "sourceView": ["index.html", "data.csv"]
+}
+```
+
 ## Select Control
 
 ### sszvis.selectMenu
