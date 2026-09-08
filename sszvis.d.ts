@@ -6594,9 +6594,13 @@ declare function mapRendererPatternedLakeOverlay(): MapRendererPatternedLakeOver
  *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
  *                                   index, no array - unlike a d3 accessor, though the render callback itself
  *                                   does receive d3's (data, index, group). Required: a missing position
- *                                   throws. A null result throws and a non-finite one is silently dropped;
+ *                                   throws. A result that does not place the datum - nothing, or a
+ *                                   non-finite pair - skips that cell and is reported once per render;
  *                                   see the notes below.
- * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2. A
+ * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2.
+ *                                   Must be a finite number greater than zero; zero or less throws,
+ *                                   since zero draws nothing and a negative side silently draws its
+ *                                   positive counterpart instead of the size asked for. A
  *                                   fractional side antialiases; see the notes below.
  *                                   sszvis.pixelsFromGeoDistance is the intended source for this value, and it
  *                                   returns a float.
@@ -6656,12 +6660,19 @@ declare function mapRendererPatternedLakeOverlay(): MapRendererPatternedLakeOver
  * properties are checked before that: width, height, position and fill are all validated before the
  * canvas is created, so a missing one is named whether or not there are data to draw.
  *
- * Note: a non-finite position is dropped by the canvas API rather than reported, so a datum the
- * projection could not place leaves a hole in the raster with no indication; a null position throws
- * a TypeError instead, from the same point in the loop the JavaScript's index threw from. A zero cellSide draws nothing at all, and a negative one is
- * indistinguishable from its positive counterpart, since the half-side offset and the width negate
- * each other. A fractional cellSide puts the cell edges on half pixels, so they antialias rather
- * than tiling exactly - and pixelsFromGeoDistance returns a float.
+ * Note: a projection has two ways of failing to place a datum - d3's own answer a pair of NaNs for
+ * a point outside the clip, a hand-written one may answer nothing at all - and both now mean the
+ * same thing: the cell is skipped and the render warns once through sszvis.logger, naming how many
+ * cells it could not place. The JavaScript dropped the non-finite pair silently inside fillRect and
+ * threw a bare TypeError from indexing the null, so one stray datum could take down a whole render
+ * while a whole unplaceable dataset drew a blank canvas indistinguishable from data that had not
+ * loaded. The warning is per render rather than per datum, since a raster redraws on every resize
+ * and holds tens of thousands of cells. A cellSide of zero or less is a misconfiguration rather
+ * than a stale datum, so it is reported by name instead: zero drew nothing at all, and a negative
+ * one drew exactly what its positive counterpart did, since the half-side offset and the width
+ * negate each other. A fractional cellSide is accepted, and puts the cell edges on half pixels, so
+ * they antialias rather than tiling exactly - and pixelsFromGeoDistance, the intended source for
+ * the value, returns a float.
  *
  * Note: the component writes no position, so the canvas is only positioned because sszvis.css sets
  * position: absolute on the class - the same dependency as the image renderer, along with

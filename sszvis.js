@@ -12139,9 +12139,13 @@
      *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
      *                                   index, no array - unlike a d3 accessor, though the render callback itself
      *                                   does receive d3's (data, index, group). Required: a missing position
-     *                                   throws. A null result throws and a non-finite one is silently dropped;
+     *                                   throws. A result that does not place the datum - nothing, or a
+     *                                   non-finite pair - skips that cell and is reported once per render;
      *                                   see the notes below.
-     * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2. A
+     * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2.
+     *                                   Must be a finite number greater than zero; zero or less throws,
+     *                                   since zero draws nothing and a negative side silently draws its
+     *                                   positive counterpart instead of the size asked for. A
      *                                   fractional side antialiases; see the notes below.
      *                                   sszvis.pixelsFromGeoDistance is the intended source for this value, and it
      *                                   returns a float.
@@ -12201,12 +12205,19 @@
      * properties are checked before that: width, height, position and fill are all validated before the
      * canvas is created, so a missing one is named whether or not there are data to draw.
      *
-     * Note: a non-finite position is dropped by the canvas API rather than reported, so a datum the
-     * projection could not place leaves a hole in the raster with no indication; a null position throws
-     * a TypeError instead, from the same point in the loop the JavaScript's index threw from. A zero cellSide draws nothing at all, and a negative one is
-     * indistinguishable from its positive counterpart, since the half-side offset and the width negate
-     * each other. A fractional cellSide puts the cell edges on half pixels, so they antialias rather
-     * than tiling exactly - and pixelsFromGeoDistance returns a float.
+     * Note: a projection has two ways of failing to place a datum - d3's own answer a pair of NaNs for
+     * a point outside the clip, a hand-written one may answer nothing at all - and both now mean the
+     * same thing: the cell is skipped and the render warns once through sszvis.logger, naming how many
+     * cells it could not place. The JavaScript dropped the non-finite pair silently inside fillRect and
+     * threw a bare TypeError from indexing the null, so one stray datum could take down a whole render
+     * while a whole unplaceable dataset drew a blank canvas indistinguishable from data that had not
+     * loaded. The warning is per render rather than per datum, since a raster redraws on every resize
+     * and holds tens of thousands of cells. A cellSide of zero or less is a misconfiguration rather
+     * than a stale datum, so it is reported by name instead: zero drew nothing at all, and a negative
+     * one drew exactly what its positive counterpart did, since the half-side offset and the width
+     * negate each other. A fractional cellSide is accepted, and puts the cell edges on half pixels, so
+     * they antialias rather than tiling exactly - and pixelsFromGeoDistance, the intended source for
+     * the value, returns a float.
      *
      * Note: the component writes no position, so the canvas is only positioned because sszvis.css sets
      * position: absolute on the class - the same dependency as the image renderer, along with
@@ -12252,18 +12263,15 @@
     /** The default key, so a caller who never asks for a second raster need not name the first. */
     const DEFAULT_KEY = "raster";
     /**
-     * Reads one axis of a position. The JavaScript indexed the accessor's result directly, so a null
-     * result threw from that index; this reproduces the same failure with the message V8 produced for
-     * it. Note the strict null check: an accessor returning undefined falls through to the index on the
-     * next line, which throws the genuine "Cannot read properties of undefined" TypeError, again as the
-     * JavaScript did. A non-finite coordinate passes through untouched, since fillRect is what drops
-     * it.
+     * Whether the position accessor managed to place this datum. A projection has two ways of failing
+     * to: d3's own answer a pair of NaNs for a point outside the clip, and a hand-written one may
+     * answer nothing at all. Both mean the same thing, so both answer false here and the cell is
+     * skipped - where the JavaScript dropped the non-finite pair inside fillRect and threw a bare
+     * TypeError from indexing the null. The nullish check covers undefined too, which the contract
+     * does not admit but a caller can still return.
      */
-    function coordinate(position, axis) {
-      if (position === null) {
-        throw new TypeError("Cannot read properties of null (reading '".concat(axis, "')"));
-      }
-      return position[axis];
+    function isPlaced(position) {
+      return position != null && Number.isFinite(position[0]) && Number.isFinite(position[1]);
     }
     /**
      * Reads the drawing context, throwing as the JavaScript did when there is none. That happens when
@@ -12323,6 +12331,19 @@
       return value;
     }
     /**
+     * Reads the cell side, reporting a value that can never draw anything. Zero drew an empty canvas
+     * and a negative one drew exactly what its positive counterpart did - the half-side offset and the
+     * width negate each other, and fillRect normalises a negative rectangle - so both were blank or
+     * misleading rather than reported. A fraction is fine, and is what pixelsFromGeoDistance, the
+     * intended source for this value, returns.
+     */
+    function cellSide(value) {
+      if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+        throw new Error("[mapRendererRaster] the cellSide property must be a finite number greater than zero");
+      }
+      return value;
+    }
+    /**
      * Reads a required accessor, reporting a missing one the way dimension() reports a missing
      * dimension. Without this the property is read straight out of props inside the per-datum loop, so
      * a missing one raised a bare TypeError naming nothing - and only when the data were non-empty, so
@@ -12351,6 +12372,7 @@
         // before anything is created and whether or not there are data to draw.
         const position = accessor(props.position, "position", "a function");
         const fill = accessor(props.fill, "fill", "a color string or an accessor returning one");
+        const side = cellSide(props.cellSide);
         const canvas = selection.selectAll(":scope > canvas.sszvis-map__rasterimage").filter(function () {
           return this.getAttribute(KEY_ATTRIBUTE) === props.key;
         }).data([0]).join("canvas").classed("sszvis-map__rasterimage", true).attr(KEY_ATTRIBUTE, props.key);
@@ -12373,14 +12395,19 @@
           ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
           ctx.fillRect(0, 0, width, height);
         }
-        const halfSide = props.cellSide / 2;
+        const halfSide = side / 2;
         // A colour scale usually yields only a handful of distinct values, so parsing each one once
         // per render keeps the probe off the hot path.
         const parsed = new Map();
+        let unplaced = 0;
         for (const datum of data) {
           const at = position(datum);
-          const x = coordinate(at, 0) - halfSide;
-          const y = coordinate(at, 1) - halfSide;
+          if (!isPlaced(at)) {
+            unplaced += 1;
+            continue;
+          }
+          const x = at[0] - halfSide;
+          const y = at[1] - halfSide;
           const colour = fill(datum);
           let parses = parsed.get(colour);
           if (parses === undefined) {
@@ -12389,7 +12416,14 @@
           }
           if (!parses) continue;
           ctx.fillStyle = colour;
-          ctx.fillRect(x, y, props.cellSide, props.cellSide);
+          ctx.fillRect(x, y, side, side);
+        }
+        // One warning per render rather than one per datum: a raster redraws on every resize and
+        // holds tens of thousands of cells, so per-datum reporting would flood the console. Goes
+        // through sszvis.logger rather than console directly, like every other diagnostic in the
+        // library.
+        if (unplaced > 0) {
+          warn("[mapRendererRaster] the position property could not place ".concat(unplaced, " of ").concat(data.length, " cells; they were not drawn"));
         }
       });
     }
