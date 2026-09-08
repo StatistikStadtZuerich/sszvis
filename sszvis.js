@@ -3682,18 +3682,60 @@
      *
      * @param selection d3 selection for one or more <text> object
      * @param width number - global width in which the text will be word-wrapped.
-     * @param paddingRightLeft integer - Padding right and left between the wrapped text and the 'invisible bax' of 'width' width
-     * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
+     * @param paddingRightLeft number - Padding right and left between the wrapped text and the
+     *        'invisible box' of 'width' width. It always narrows the width the text is measured
+     *        against, but only reaches the rendered 'x' on untranslated <text>, and only for
+     *        text-anchor 'start' (x = padding) and 'end' (x = width - padding); 'middle' is
+     *        centred on the full width instead. On a tick label (<text> inside a translated
+     *        <g class="tick">) 'x' is derived from the narrowed width alone, as -width/2, 0 or
+     *        width/2 by anchor. Defaults to 5 when omitted or when the value is not a finite
+     *        number, which logs a warning on each such call; an explicit 0 and a negative
+     *        padding are honoured.
+     * @param paddingTopBottom number - Padding top and bottom between the wrapped text and the
+     *        'invisible box' of 'width' width. Two pixels are subtracted from it to account for
+     *        the borders, so the rendered 'y' is padding - 2: the default of 5 yields y="3" and
+     *        an explicit 0 yields y="-2". It is used only when the <text> element carries no 'y'
+     *        attribute of its own; otherwise that attribute wins and this argument is ignored.
+     *        Defaults to 5 when omitted or when the value is not a finite number, which logs a
+     *        warning on each such call; an explicit 0 and a negative padding are honoured.
      * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
      */
+    const DEFAULT_PADDING = 5;
+    /**
+     * Reads a padding argument, falling back to the default unless it is a usable number.
+     *
+     * Both padding arguments get the same guard: either can be computed upstream, and either
+     * poisons the render when it is not finite - a non-finite paddingRightLeft makes the
+     * available width non-finite, which compares every measured line against NaN and disables
+     * wrapping entirely, and both are written straight into an `x`/`y` attribute, where "NaN"
+     * or "Infinity" is invalid SVG. `Number.isFinite` does not coerce, so an explicit 0 and a
+     * negative padding are honoured, while undefined, NaN, +/-Infinity and the null/""/false
+     * that only untyped JS callers can pass all take the default - the same value these inputs
+     * produced before an explicit 0 became meaningful, though the old code took it silently and
+     * a supplied one now warns. A supplied-but-unusable padding is a caller bug that used to
+     * render silently, so it warns rather than throws: wrapping still produces a readable
+     * label, and throwing would take down a chart that previously drew fine. The check happens
+     * before the per-element pass, so a bad paddingTopBottom is reported even on a <text> that
+     * carries its own 'y' and would have discarded it. Each unusable argument warns once per
+     * `textWrap` call, the same cadence `sunburst` uses for its own malformed-input warning: a
+     * render-scoped warning needs no state, so the second chart on a page still reports its own
+     * bad padding, which a module-level latch would have swallowed for the lifetime of the page.
+     */
+    function resolvePadding(padding, name) {
+      if (padding === undefined) return DEFAULT_PADDING;
+      if (Number.isFinite(padding)) return padding;
+      warn("sszvis.svgUtils.textWrap: ignoring a non-finite ".concat(name, ", using ").concat(DEFAULT_PADDING));
+      return DEFAULT_PADDING;
+    }
     function textWrap(
     // Wrapping reads and rewrites the <text> nodes themselves, so the element parameter is
     // fixed; the rest stay generic so any text selection can be passed.
     selection, width, paddingRightLeft, paddingTopBottom) {
-      const padRightLeft = paddingRightLeft || 5; //Default padding (5px)
-      const padTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
-      const maxWidth = width; //I store the tooltip max width
-      const innerWidth = width - padRightLeft * 2; //Take the padding into account
+      const padRightLeft = resolvePadding(paddingRightLeft, "paddingRightLeft");
+      // Remove 2 pixels because of the borders
+      const padTopBottom = resolvePadding(paddingTopBottom, "paddingTopBottom") - 2;
+      const maxWidth = width; // I store the tooltip max width
+      const innerWidth = width - padRightLeft * 2; // Take the padding into account
       const arrLineCreatedCount = [];
       selection.each(function () {
         var _text$attr;
