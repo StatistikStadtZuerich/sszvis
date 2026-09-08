@@ -247,7 +247,7 @@ function createGroupedBarsComponent<T = unknown>(
       // data, which removes them. That is what lets a bar switch between a rect and the
       // missing-value cross without the unit being emptied.
       unitsWithValue.selectAll("line.sszvis-bar--missing").data([]).exit().remove();
-      unitsWithoutValue.selectAll("rect.sszvis-bar").data([]).exit().remove();
+      unitsWithoutValue.selectAll("rect.sszvis-bar-rect").data([]).exit().remove();
 
       // The unit's translation only positions the missing-value cross. A unit that regains a
       // value has to lose it again, because its rect is positioned in the unit's own frame.
@@ -258,13 +258,18 @@ function createGroupedBarsComponent<T = unknown>(
       // transition starts. The geometry is then applied exactly once more - to the transition
       // when there is one, and to the plain selection otherwise - so an update tweens from its
       // previous value instead of from the value it already holds.
+      //
+      // The join selector uses the component-owned marker class, as bar() does, so a
+      // consumer-added <rect class="sszvis-bar"> inside the unit is never adopted by the
+      // join nor removed by its exit. The public sszvis-bar class stays on the component's
+      // own rect for styling and consumer selection.
       const bars = unitsWithValue
-        .selectAll<SVGRectElement, DatumWithIndex<T>>("rect.sszvis-bar")
+        .selectAll<SVGRectElement, DatumWithIndex<T>>("rect.sszvis-bar-rect")
         .data((d) => [d])
         .join((enter) =>
           enter
             .append("rect")
-            .classed("sszvis-bar", true)
+            .classed("sszvis-bar sszvis-bar-rect", true)
             .attr("x", xAt)
             .attr("y", yAt)
             .attr("width", widthAt)
