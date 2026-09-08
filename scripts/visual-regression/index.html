@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>sszvis side-by-side regression</title>
+    <style>
+      :root {
+        --bg: #f7f7f8;
+        --panel: #fff;
+        --line: #e2e2e6;
+        --ink: #1b1b1f;
+        --muted: #6b6b73;
+        --ok: #1a7f4b;
+        --warn: #b06000;
+        --bad: #c02121;
+        --accent: #0b64a0;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 10px 16px;
+      }
+      .row1 { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+      h1 { font-size: 15px; margin: 0; }
+      .controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+      label { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
+      input[type="search"], select {
+        font: inherit;
+        padding: 4px 7px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: #fff;
+        color: var(--ink);
+      }
+      input[type="search"] { width: 260px; }
+      .stats { color: var(--muted); }
+      .stats b { color: var(--ink); }
+      .stats .bad { color: var(--bad); }
+
+      main { padding: 16px; display: flex; flex-direction: column; gap: 18px; }
+
+      .chart {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .chart.flagged { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+      .chart-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--line);
+        flex-wrap: wrap;
+      }
+      .chart-head .name { font-weight: 600; }
+      .chart-head .group { color: var(--muted); font-size: 12px; }
+      .chart-head .spacer { flex: 1; }
+      .tag {
+        font-size: 11px;
+        padding: 1px 6px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .tag.ok { color: var(--ok); border-color: currentColor; }
+      .tag.warn { color: var(--warn); border-color: currentColor; }
+      .tag.bad { color: var(--bad); border-color: currentColor; }
+      a { color: var(--accent); }
+
+      .panes { display: grid; grid-template-columns: 1fr 1fr; }
+      .pane { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; }
+      .pane:last-child { border-right: 0; }
+      .pane-head {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 5px 10px;
+        background: #fafafb;
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+      }
+      .pane-head .side { font-weight: 600; }
+      iframe { width: 100%; border: 0; display: block; background: #fff; }
+      .placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        background: repeating-linear-gradient(45deg, #fbfbfc, #fbfbfc 10px, #f4f4f6 10px, #f4f4f6 20px);
+      }
+      .errors {
+        border-top: 1px solid var(--line);
+        background: #fff6f6;
+        color: var(--bad);
+        font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+        padding: 6px 10px;
+        max-height: 120px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+      .errors:empty { display: none; }
+      #empty { color: var(--muted); padding: 40px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="row1">
+        <h1>sszvis side-by-side regression</h1>
+        <span class="stats" id="stats">loading manifest…</span>
+      </div>
+      <div class="controls">
+        <input type="search" id="q" placeholder="Filter by id, folder or title…" />
+        <label>
+          Library
+          <select id="version"></select>
+        </label>
+        <label>
+          Show
+          <select id="flagged">
+            <option value="all">all charts</option>
+            <option value="flagged">only flagged</option>
+            <option value="clean">only clean (reported)</option>
+          </select>
+        </label>
+        <label>
+          Pane height
+          <select id="height">
+            <option>420</option>
+            <option selected>560</option>
+            <option>720</option>
+            <option>900</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="autoheight" checked /> fit to content</label>
+      </div>
+    </header>
+    <main id="list"></main>
+    <div id="empty" hidden>No charts match the current filters.</div>
+
+    <script>
+      const SIDES = ["baseline", "candidate"];
+      const list = document.getElementById("list");
+      const state = new Map(); // path -> { baseline: report, candidate: report }
+      let charts = [];
+      let paneHeight = 560;
+      let autoHeight = true;
+
+      /* --------------------------------------------------------- reporting */
+
+      /**
+       * A chart is flagged when the candidate errors where the baseline did not,
+       * or when the two sides disagree on how many SVGs got rendered.
+       */
+      function flagOf(path) {
+        const s = state.get(path);
+        if (!s || !s.baseline || !s.candidate) return null;
+        if (s.candidate.errorCount > s.baseline.errorCount) return "errors";
+        if (s.candidate.svgCount !== s.baseline.svgCount) return "render";
+        if (s.candidate.svgCount === 0) return "empty";
+        return "ok";
+      }
+
+      window.addEventListener("message", (event) => {
+        const report = event.data;
+        if (!report || report.type !== "sszvis-regression") return;
+        const entry = state.get(report.path) || {};
+        entry[report.side] = report;
+        state.set(report.path, entry);
+        try {
+          paint(report.path);
+          renderStats();
+        } catch (error) {
+          console.error("failed to paint", report.path, error);
+        }
+      });
+
+      function paint(path) {
+        const row = list.querySelector(`[data-path="${CSS.escape(path)}"]`);
+        if (!row) return;
+        const entry = state.get(path) || {};
+        for (const side of SIDES) {
+          const report = entry[side];
+          const badge = row.querySelector(`.pane[data-side="${side}"] .tag`);
+          const errors = row.querySelector(`.pane[data-side="${side}"] .errors`);
+          if (!badge) continue;
+          if (!report) {
+            badge.textContent = "…";
+            badge.className = "tag";
+            continue;
+          }
+          badge.textContent = `${report.svgCount} svg · ${report.errorCount} err`;
+          badge.className =
+            "tag " + (report.errorCount > 0 ? "bad" : report.svgCount > 0 ? "ok" : "warn");
+          errors.textContent = report.errors.join("\n");
+          if (autoHeight && report.height > 0) {
+            const frame = row.querySelector(`.pane[data-side="${side}"] iframe`);
+            if (frame) frame.style.height = Math.min(Math.max(report.height, 200), 1400) + "px";
+          }
+        }
+        const flag = flagOf(path);
+        row.classList.toggle("flagged", flag !== null && flag !== "ok");
+        const verdict = row.querySelector(".verdict");
+        const labels = {
+          errors: ["bad", "new errors in candidate"],
+          render: ["bad", "render count differs"],
+          empty: ["warn", "nothing rendered on either side"],
+          ok: ["ok", "matches baseline"],
+        };
+        const [cls, text] = labels[flag] || ["", "waiting…"];
+        verdict.className = "tag verdict " + cls;
+        verdict.textContent = text;
+      }
+
+      function renderStats() {
+        const shown = charts.filter(matches);
+        let reported = 0;
+        let flagged = 0;
+        for (const c of shown) {
+          const flag = flagOf(c.path);
+          if (flag === null) continue;
+          reported++;
+          if (flag !== "ok") flagged++;
+        }
+        document.getElementById("stats").innerHTML =
+          `<b>${shown.length}</b> charts shown · <b>${reported}</b> compared · ` +
+          `<span class="${flagged ? "bad" : ""}"><b>${flagged}</b> flagged</span>`;
+      }
+
+      /* ----------------------------------------------------------- filters */
+
+      const q = document.getElementById("q");
+      const versionSel = document.getElementById("version");
+      const flaggedSel = document.getElementById("flagged");
+
+      function matches(chart) {
+        const needle = q.value.trim().toLowerCase();
+        if (needle && !(chart.path + " " + chart.title).toLowerCase().includes(needle)) return false;
+        const version = versionSel.value;
+        if (version === "comparable" ? !chart.comparable : version !== "all" && chart.version !== version)
+          return false;
+        const flag = flagOf(chart.path);
+        if (flaggedSel.value === "flagged" && (flag === null || flag === "ok")) return false;
+        if (flaggedSel.value === "clean" && flag !== "ok") return false;
+        return true;
+      }
+
+      /* -------------------------------------------------------------- rows */
+
+      function rowMarkup(chart) {
+        const panes = SIDES.map(
+          (side) => `
+          <div class="pane" data-side="${side}">
+            <div class="pane-head">
+              <span class="side">${side === "baseline" ? "current " + chart.version : "working copy"}</span>
+              <span class="tag">…</span>
+              <span class="spacer" style="flex:1"></span>
+              <a href="/chart/${chart.path}?side=${side}" target="_blank" rel="noreferrer">open</a>
+            </div>
+            <div class="placeholder" style="height:${paneHeight}px">not loaded</div>
+            <div class="errors"></div>
+          </div>`
+        ).join("");
+        return `
+          <div class="chart-head">
+            <span class="name">${chart.name}</span>
+            <span class="group">${chart.group}</span>
+            <span class="spacer"></span>
+            <span class="tag">v${chart.version}</span>
+            <span class="tag verdict">waiting…</span>
+          </div>
+          <div class="panes">${panes}</div>`;
+      }
+
+      function mount(row) {
+        if (row.dataset.mounted === "1") return;
+        row.dataset.mounted = "1";
+        for (const pane of row.querySelectorAll(".pane")) {
+          const placeholder = pane.querySelector(".placeholder");
+          if (!placeholder) continue;
+          const frame = document.createElement("iframe");
+          frame.loading = "lazy";
+          frame.style.height = paneHeight + "px";
+          frame.src = `/chart/${row.dataset.path}?side=${pane.dataset.side}`;
+          placeholder.replaceWith(frame);
+        }
+      }
+
+      function unmount(row) {
+        if (row.dataset.mounted !== "1") return;
+        row.dataset.mounted = "0";
+        for (const pane of row.querySelectorAll(".pane")) {
+          const frame = pane.querySelector("iframe");
+          if (!frame) continue;
+          const placeholder = document.createElement("div");
+          placeholder.className = "placeholder";
+          placeholder.style.height = frame.style.height || paneHeight + "px";
+          placeholder.textContent = "not loaded";
+          frame.replaceWith(placeholder);
+        }
+      }
+
+      // Only charts near the viewport hold live iframes: 700 charts x 2 frames
+      // would exhaust the browser otherwise. A re-render throws the old rows
+      // away, so the observer is rebuilt with them rather than reused - a
+      // disconnected observer does not reliably re-deliver for new targets.
+      let observer = null;
+
+      function newObserver() {
+        return new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) mount(entry.target);
+              else unmount(entry.target);
+            }
+          },
+          { rootMargin: "1200px 0px" }
+        );
+      }
+
+      function render() {
+        observer?.disconnect();
+        observer = newObserver();
+        list.textContent = "";
+        const shown = charts.filter(matches);
+        for (const chart of shown) {
+          const row = document.createElement("section");
+          row.className = "chart";
+          row.dataset.path = chart.path;
+          row.innerHTML = rowMarkup(chart);
+          list.append(row);
+          observer.observe(row);
+          paint(chart.path);
+        }
+        document.getElementById("empty").hidden = shown.length > 0;
+        // The observer callback is async; mount what is already on screen now so
+        // a freshly filtered list is never left blank.
+        for (const row of list.children) {
+          const box = row.getBoundingClientRect();
+          if (box.top < innerHeight + 1200 && box.bottom > -1200) mount(row);
+        }
+        renderStats();
+      }
+
+      /* -------------------------------------------------------------- setup */
+
+      for (const el of [q, versionSel, flaggedSel]) {
+        el.addEventListener("input", render);
+      }
+      document.getElementById("height").addEventListener("change", (e) => {
+        paneHeight = Number(e.target.value);
+        render();
+      });
+      document.getElementById("autoheight").addEventListener("change", (e) => {
+        autoHeight = e.target.checked;
+        render();
+      });
+
+      fetch("/api/manifest.json")
+        .then((r) => r.json())
+        .then((data) => {
+          charts = data;
+          const versions = [...new Set(data.map((c) => c.version))].sort().reverse();
+          versionSel.innerHTML =
+            `<option value="comparable">comparable (d3 v7)</option>` +
+            `<option value="all">all versions</option>` +
+            versions.map((v) => `<option value="${v}">${v}</option>`).join("");
+          render();
+        })
+        .catch((err) => {
+          document.getElementById("stats").textContent = "failed to load manifest: " + err;
+        });
+    </script>
+  </body>
+</html>

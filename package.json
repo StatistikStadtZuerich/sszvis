@@ -98,6 +98,8 @@
     "lint:fix": "npx biome lint --write .",
     "check": "npx biome check . --error-on-warnings",
     "check:fix": "npx biome check --write .",
-    "postversion": "npx echo-cli Don't forget to push the new version's tag with \"git push --follow-tags\"."
+    "postversion": "npx echo-cli Don't forget to push the new version's tag with \"git push --follow-tags\".",
+    "regression": "node scripts/visual-regression/server.mjs",
+    "regression:crawl": "node scripts/visual-regression/crawl.mjs"
   }
 }
