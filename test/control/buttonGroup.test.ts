@@ -187,6 +187,29 @@ describe("control/buttonGroup", () => {
       expect(document.activeElement).toBe(button);
     });
 
+    test("should carry no aria-label when ariaLabel is unset", () => {
+      render(buttonGroup().values(["A", "B"]).current("A"));
+      expect(wrapper()?.hasAttribute("aria-label")).toBe(false);
+    });
+
+    test("should name the radiogroup with the given ariaLabel", () => {
+      render(buttonGroup().values(["A", "B"]).current("A").ariaLabel("Year"));
+      expect(wrapper()?.getAttribute("aria-label")).toBe("Year");
+    });
+
+    test("should keep an explicitly empty ariaLabel rather than dropping it", () => {
+      // `??`, not `||`: an empty string is a value the caller supplied, not an absence.
+      render(buttonGroup().values(["A", "B"]).current("A").ariaLabel(""));
+      expect(wrapper()?.getAttribute("aria-label")).toBe("");
+    });
+
+    test("should remove the name again when a later render omits ariaLabel", () => {
+      const sel = d3Select(container);
+      sel.call(buttonGroup().values(["A", "B"]).current("A").ariaLabel("Year") as never);
+      sel.call(buttonGroup().values(["A", "B"]).current("A") as never);
+      expect(wrapper()?.hasAttribute("aria-label")).toBe(false);
+    });
+
     test("should keep exactly one option in the tab order, and it is the current one", () => {
       render(buttonGroup().values(["A", "B", "C"]).current("B"));
       expect(tabindexes()).toEqual(["-1", "0", "-1"]);
