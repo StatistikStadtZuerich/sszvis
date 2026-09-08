@@ -176,13 +176,16 @@
 
       /**
        * A chart is flagged when the candidate errors where the baseline did not,
-       * or when the two sides disagree on how many SVGs got rendered.
+       * when the two sides disagree on how many SVGs got rendered, or when the
+       * candidate draws its SVG but none of the marks the baseline drew in it -
+       * an empty d3 join throws nothing and still leaves the frame and axes.
        */
       function flagOf(path) {
         const s = state.get(path);
         if (!s || !s.baseline || !s.candidate) return null;
         if (s.candidate.errorCount > s.baseline.errorCount) return "errors";
         if (s.candidate.svgCount !== s.baseline.svgCount) return "render";
+        if (s.baseline.markCount > 0 && s.candidate.markCount === 0) return "marks";
         if (s.candidate.svgCount === 0) return "empty";
         return "ok";
       }
@@ -216,9 +219,11 @@
             continue;
           }
           const dead = report.resourceCount > 0 ? ` · ${report.resourceCount} 404` : "";
-          badge.textContent = `${report.svgCount} svg · ${report.errorCount} err${dead}`;
+          badge.textContent =
+            `${report.svgCount} svg · ${report.markCount} marks · ${report.errorCount} err${dead}`;
           badge.className =
-            "tag " + (report.errorCount > 0 ? "bad" : report.svgCount > 0 ? "ok" : "warn");
+            "tag " +
+            (report.errorCount > 0 ? "bad" : report.markCount > 0 ? "ok" : "warn");
           errors.textContent = [...report.errors, ...(report.resources || [])].join("\n");
           if (autoHeight && report.height > 0) {
             const frame = row.querySelector(`.pane[data-side="${side}"] iframe`);
@@ -231,6 +236,7 @@
         const labels = {
           errors: ["bad", "new errors in candidate"],
           render: ["bad", "render count differs"],
+          marks: ["bad", "candidate renders no marks"],
           empty: ["warn", "nothing rendered on either side"],
           ok: ["ok", "matches baseline"],
         };
