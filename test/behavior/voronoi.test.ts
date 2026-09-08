@@ -347,4 +347,165 @@ describe("behavior/voronoi", () => {
     const [, datum] = overHandler.mock.calls[0];
     expect(datum).toEqual(nestedData[0]);
   });
+  describe("resolving the pointer into the group's coordinate space", () => {
+    // The `x`/`y` accessors report positions in the coordinate space of the group the
+    // behaviour is called on. The hit test therefore has to resolve the pointer into that
+    // same space. Reading it off the group's `getBoundingClientRect()` instead measures from
+    // the bounding box of the group's *contents* - which is the clipped voronoi mesh, i.e.
+    // the `bounds` rectangle - so it only agrees with the group's origin when `bounds` starts
+    // at 0,0. Every 0-based case above pins that agreement; this one pins the inset case.
+    const insetData: TestDataPoint[] = [
+      { id: 1, name: "Point A", value: 10, x: 200, y: 150 },
+      { id: 2, name: "Point B", value: 20, x: 330, y: 250 },
+    ];
+
+    function renderInset(overHandler: () => void) {
+      const layer = svg
+        .selectAll("g.voronoi-inset")
+        .data([insetData])
+        .join("g")
+        .attr("class", "voronoi-inset");
+      layer.call(
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
+          .bounds([100, 80, 400, 300])
+          .on("over", overHandler)
+      );
+      // The screen position of the group's user-space origin. `getBoundingClientRect()` would
+      // report the mesh's box, which starts 100px right and 80px down from here.
+      const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
+      return { origin: [ctm.e, ctm.f] as [number, number], layer };
+    }
+
+    test("should hit the datum under the pointer when bounds do not start at the origin", () => {
+      const overHandler = vi.fn();
+      const { origin, layer } = renderInset(overHandler);
+      const paths = layer.selectAll("[data-sszvis-behavior-voronoi]").nodes();
+      (paths[0] as SVGPathElement).dispatchEvent(
+        new MouseEvent("mouseover", {
+          clientX: origin[0] + 200,
+          clientY: origin[1] + 150,
+          bubbles: true,
+        })
+      );
+      expect(overHandler).toHaveBeenCalledTimes(1);
+      expect(overHandler.mock.calls[0][1]).toEqual(insetData[0]);
+    });
+
+    // `touchstart` resolves its position through the same `pointer()` call as the mouse, but
+    // from the `Touch` rather than the event, so it needs its own case: with the mouse cases
+    // alone, reverting the touch branch to the old `getBoundingClientRect()` subtraction goes
+    // unnoticed.
+    test("should hit the datum under a touch when bounds do not start at the origin", () => {
+      const overHandler = vi.fn();
+      const { origin, layer } = renderInset(overHandler);
+      const firstPath = layer
+        .selectAll("[data-sszvis-behavior-voronoi]")
+        .nodes()[0] as SVGPathElement;
+
+      const touchAt = (offsetX: number, offsetY: number) => {
+        const touchstart = new Event("touchstart", { bubbles: true, cancelable: true });
+        Object.defineProperty(touchstart, "touches", {
+          value: [{ clientX: origin[0] + offsetX, clientY: origin[1] + offsetY, identifier: 0 }],
+          writable: false,
+        });
+        firstPath.dispatchEvent(touchstart);
+        firstPath.dispatchEvent(new Event("touchend", { bubbles: true }));
+      };
+
+      // The datum's own position in the group's coordinate space.
+      touchAt(200, 150);
+      expect(overHandler).toHaveBeenCalledTimes(1);
+      expect(overHandler.mock.calls[0][1]).toEqual(insetData[0]);
+
+      // The position the old, `bounds`-relative subtraction would have read as the datum.
+      overHandler.mockClear();
+      touchAt(300, 230);
+      expect(overHandler).not.toHaveBeenCalled();
+    });
+
+    test("should miss when the pointer is outside the interaction radius of every datum", () => {
+      const overHandler = vi.fn();
+      const outHandler = vi.fn();
+      const layer = svg
+        .selectAll("g.voronoi-inset-miss")
+        .data([insetData])
+        .join("g")
+        .attr("class", "voronoi-inset-miss");
+      layer.call(
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
+          .bounds([100, 80, 400, 300])
+          .on("over", overHandler)
+          .on("out", outHandler)
+      );
+      const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
+      const paths = layer.selectAll("[data-sszvis-behavior-voronoi]").nodes();
+      (paths[0] as SVGPathElement).dispatchEvent(
+        new MouseEvent("mousemove", {
+          clientX: ctm.e + 130,
+          clientY: ctm.f + 100,
+          bubbles: true,
+        })
+      );
+      expect(overHandler).not.toHaveBeenCalled();
+      expect(outHandler).toHaveBeenCalledTimes(1);
+    });
+
+    // The interaction radius is 15 units in the group's coordinate space, not 15 CSS pixels:
+    // `pointer()` divides the client delta by the ancestor scale, so a chart drawn at
+    // `scale(2)` keeps the same hit area in chart units and doubles it on screen. Comparing
+    // undivided client deltas against the radius would halve it in user space, and both
+    // boundary cases below would land on the wrong side of it.
+    describe.each(["mouse", "touch"] as const)("under a scale(2) ancestor, over %s", (path) => {
+      function overAt(offsetX: number, offsetY: number) {
+        const overHandler = vi.fn();
+        container.style.transform = "scale(2)";
+        container.style.transformOrigin = "top left";
+        const { layer } = renderInset(overHandler);
+        const node = layer.node() as SVGGElement;
+        const ctm = node.getScreenCTM() as DOMMatrix;
+        // Guards the premise: without the transform every assertion below would pass for the
+        // wrong reason.
+        expect(ctm.a).toBe(2);
+        const clientX = ctm.e + ctm.a * offsetX;
+        const clientY = ctm.f + ctm.d * offsetY;
+        const firstPath = layer
+          .selectAll("[data-sszvis-behavior-voronoi]")
+          .nodes()[0] as SVGPathElement;
+        if (path === "mouse") {
+          firstPath.dispatchEvent(new MouseEvent("mouseover", { clientX, clientY, bubbles: true }));
+        } else {
+          const touchstart = new Event("touchstart", { bubbles: true, cancelable: true });
+          Object.defineProperty(touchstart, "touches", {
+            value: [{ clientX, clientY, identifier: 0 }],
+            writable: false,
+          });
+          firstPath.dispatchEvent(touchstart);
+          firstPath.dispatchEvent(new Event("touchend", { bubbles: true }));
+        }
+        return overHandler;
+      }
+
+      test("should select the datum under the pointer", () => {
+        const overHandler = overAt(200, 150);
+        expect(overHandler).toHaveBeenCalledTimes(1);
+        expect(overHandler.mock.calls[0][1]).toEqual(insetData[0]);
+      });
+
+      // 14 user units is 28 CSS pixels away, so a radius applied to the client delta would
+      // reject it.
+      test("should hit just inside the 15-unit radius", () => {
+        const overHandler = overAt(214, 150);
+        expect(overHandler).toHaveBeenCalledTimes(1);
+        expect(overHandler.mock.calls[0][1]).toEqual(insetData[0]);
+      });
+
+      test("should miss just outside the 15-unit radius", () => {
+        expect(overAt(216, 150)).not.toHaveBeenCalled();
+      });
+    });
+  });
 });
