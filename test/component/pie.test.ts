@@ -62,6 +62,18 @@ describe("component/pie", () => {
       .fill((d: Datum) => d.color);
 
   const wedges = (node: Element) => [...node.querySelectorAll("path.sszvis-path")];
+
+  /**
+   * Resolves once a transition has actually moved `attr` on `node`, rather than after a fixed
+   * delay. A fixed delay can overshoot the whole 300ms transition under load, which would let
+   * these tests pass with the interrupt removed.
+   */
+  const untilMoved = (node: Element, attr: string) =>
+    new Promise<void>((resolve) => {
+      const from = node.getAttribute(attr);
+      const check = () => (node.getAttribute(attr) === from ? setTimeout(check, 0) : resolve());
+      check();
+    });
   const attrs = (node: Element, attr: string) => wedges(node).map((w) => w.getAttribute(attr));
   const anchorNodes = (node: Element) => [...node.querySelectorAll("[data-tooltip-anchor]")];
   const anchors = (node: Element) => anchorNodes(node).map((a) => a.getAttribute("transform"));
@@ -583,7 +595,7 @@ describe("component/pie", () => {
         .transition()
         .duration(300)
         .attr("opacity", 1);
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await untilMoved(wedges(node)[0], "opacity");
 
       g.datum([{ value: 1 }, { value: 3 }]).call(component.transition(false) as never);
       await new Promise((resolve) => setTimeout(resolve, 400));

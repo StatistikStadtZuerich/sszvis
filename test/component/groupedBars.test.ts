@@ -29,6 +29,18 @@ describe("component/groupedBars", () => {
     container?.parentNode?.removeChild(container);
   });
 
+  /**
+   * Resolves once a transition has actually moved `attr` on `node`, rather than after a fixed
+   * delay. A fixed delay can overshoot the whole 300ms transition under load, which would let
+   * these tests pass with the interrupt removed.
+   */
+  const untilMoved = (node: Element, attr: string) =>
+    new Promise<void>((resolve) => {
+      const from = node.getAttribute(attr);
+      const check = () => (node.getAttribute(attr) === from ? setTimeout(check, 0) : resolve());
+      check();
+    });
+
   const testData: TestDatum[][] = [
     [
       { category: "A", group: "G1", value: 10 },
@@ -776,7 +788,7 @@ describe("component/groupedBars", () => {
         .transition()
         .duration(300)
         .attr("opacity", 1);
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await untilMoved(svg.select<SVGRectElement>("rect.sszvis-bar").node() as Element, "opacity");
 
       chartLayer.datum(oneBar(0)).call(verticalOf().transition(false));
       await new Promise((resolve) => setTimeout(resolve, 400));
