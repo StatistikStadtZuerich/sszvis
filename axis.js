@@ -50,7 +50,7 @@ import translateString from './svgUtils/translateString.js';
  *                                                      Use "horizontal" to reset to a horizontal slant.
  * @property {number} textWrap                          Specify a width at which to wrap the axis label text.
  * @property {number, function} tickLength              specify a number or a function which returns a number for setting the tick length.
- * @property {string} title                             Specify a string to use as the title of this chart. Default title position depends on the chart orientation
+ * @property {string, function} title                   Specify a string, or a function returning one, to use as the title of this chart. Default title position depends on the chart orientation
  * @property {string} titleAnchor                       specify the title text-anchor. Values are 'start', 'middle', and 'end'. Corresponds to the 'text-anchor' svg styling attribute
  *                                                      the default depends on the axis orient property
  * @property {boolean} titleCenter                      whether or not to center the axis title along the axis. If true, this sets the title anchor point
@@ -295,7 +295,9 @@ function axis() {
       }
     }
     if (props.title) {
-      const title = group.selectAll(".sszvis-axis__title").data([props.title]).join("text").classed("sszvis-axis__title", true);
+      // Accept a value or an accessor, like every other property in the library: an
+      // unwrapped function would otherwise be stringified into the chart.
+      const title = group.selectAll(".sszvis-axis__title").data([functor(props.title)()]).join("text").classed("sszvis-axis__title", true);
       title.text(d => d).attr("transform", () => {
         const orient = props.orient,
           axisScaleExtent = range(axisScale);
@@ -365,7 +367,9 @@ const setOrdinalTicks = function (count) {
   // in this function, the 'this' context should be an sszvis.axis
   const domain = this.scale().domain(),
     values = [],
-    step = Math.round(domain.length / count);
+    // A stride of at least one: Math.round(3 / 10) is 0, and a loop advancing by 0 never
+    // terminates. Asking for more ticks than there are categories degrades to one per category.
+    step = Math.max(1, Math.round(domain.length / count));
   // include the first value
   if (domain[0] !== undefined) values.push(domain[0]);
   for (let i = step, l = domain.length; i < l - 1; i += step) {

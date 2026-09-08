@@ -40,7 +40,7 @@
  *                                                      Use "horizontal" to reset to a horizontal slant.
  * @property {number} textWrap                          Specify a width at which to wrap the axis label text.
  * @property {number, function} tickLength              specify a number or a function which returns a number for setting the tick length.
- * @property {string} title                             Specify a string to use as the title of this chart. Default title position depends on the chart orientation
+ * @property {string, function} title                   Specify a string, or a function returning one, to use as the title of this chart. Default title position depends on the chart orientation
  * @property {string} titleAnchor                       specify the title text-anchor. Values are 'start', 'middle', and 'end'. Corresponds to the 'text-anchor' svg styling attribute
  *                                                      the default depends on the axis orient property
  * @property {boolean} titleCenter                      whether or not to center the axis title along the axis. If true, this sets the title anchor point
@@ -79,7 +79,7 @@ interface AxisComponent extends ComponentBuilder<AxisComponent> {
     slant(direction?: SlantDirection): AxisComponent;
     textWrap(width?: number): AxisComponent;
     tickLength(length?: number): AxisComponent;
-    title(title?: string): AxisComponent;
+    title(title?: string | (() => string)): AxisComponent;
     titleAnchor(anchor?: TextAnchor): AxisComponent;
     titleCenter(center?: boolean): AxisComponent;
     dxTitle(offset?: number): AxisComponent;
