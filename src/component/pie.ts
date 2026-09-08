@@ -246,17 +246,15 @@ export default function pie<T = unknown>(): PieComponent<T> {
 
       const ta = tooltipAnchor<T>().position(
         // The anchors are placed from the destination angles, so they describe the layout the
-        // wedges are heading for rather than the one they are leaving. d3 passes the index to
-        // every attr callback, which is how the anchor component invokes this; its own prop
-        // type just declares the datum, hence the assertion.
-        ((_d: T, i: number): [number, number] => {
+        // wedges are heading for rather than the one they are leaving.
+        (_d: T, i: number): [number, number] => {
           const { a0, a1 } = layout[i] ?? { a0: 0, a1: 0 };
           // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
           // makes the same correction to svg.arc() angles :o
           const a = a0 + Math.abs(a1 - a0) / 2 - Math.PI / 2;
           const r = (radius * 2) / 3;
           return [radius + Math.cos(a) * r, radius + Math.sin(a) * r];
-        }) as (d: T) => [number, number]
+        }
       );
 
       selection.datum(data).call(ta);

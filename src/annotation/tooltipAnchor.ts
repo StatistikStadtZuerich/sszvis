@@ -50,12 +50,12 @@ import translateString from "../svgUtils/translateString.js";
 type Datum<T = unknown> = T;
 
 interface TooltipAnchorProps<T = unknown> {
-  position: (d: Datum<T>) => [number, number];
+  position: (d: Datum<T>, i: number) => [number, number];
   debug?: boolean;
 }
 
 interface TooltipAnchorComponent<T = unknown> extends ComponentBuilder<TooltipAnchorComponent<T>> {
-  position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
+  position(accessor?: (d: Datum<T>, i: number) => [number, number]): TooltipAnchorComponent<T>;
   debug(value?: boolean): TooltipAnchorComponent<T>;
 }
 
