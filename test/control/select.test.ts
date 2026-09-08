@@ -58,11 +58,7 @@ describe("control/select", () => {
   test("should render an empty control when values is set to undefined", () => {
     // The shape the issue was filed against: a chart hands the control a state key that is only
     // assigned when its CSV resolves, so the setter is called with undefined rather than skipped.
-    render(
-      selectMenu()
-        .width(200)
-        .values(undefined as never)
-    );
+    render(selectMenu().width(200).values(undefined));
     expect(wrapper()).toBeTruthy();
     expect(options()).toHaveLength(0);
   });
@@ -76,11 +72,7 @@ describe("control/select", () => {
   });
 
   test("should render an undefined values the same as an empty one", () => {
-    render(
-      selectMenu()
-        .width(200)
-        .values(undefined as never)
-    );
+    render(selectMenu().width(200).values(undefined));
     const undef = container.innerHTML;
     container.innerHTML = "";
     render(selectMenu().width(200).values([]));
