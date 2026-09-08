@@ -35,9 +35,27 @@ npm run regression:crawl -- --concurrency 8 --shots
 ```
 
 Loads every comparable chart on both sides in headless Chromium and writes
-`__report__/report.json` (per-chart verdict, error messages, SVG counts), plus
-before/after screenshots of flagged charts under `__report__/shots/` when
-`--shots` is passed. Flags: `--limit N`, `--concurrency N`, `--settle MS`.
+`__report__/report.json` (per-chart and per-width verdicts, error messages, SVG
+counts), plus before/after screenshots of flagged charts under `__report__/shots/`
+when `--shots` is passed.
+
+Each chart is loaded at several widths (`400,560,900` by default, straddling the
+breakpoints the reference charts declare) because a fault often lives in one
+breakpoint only — every layout and choropleth fault found in the first sweep
+appeared at some widths and not others. A chart's verdict is the worst of them.
+
+Verdicts separate our breakage from breakage that was already there:
+
+| verdict | |
+| --- | --- |
+| `new-errors` | the candidate raised errors the baseline did not |
+| `render-differs` | the sides disagree on how many SVGs were drawn |
+| `load-failed` | the page never loaded far enough to report |
+| `renders-nothing` | neither side drew anything |
+| `shared-errors` | both sides raised the same errors — predates the working copy |
+| `fixed` | the baseline raised errors the candidate does not |
+
+Flags: `--limit N`, `--concurrency N`, `--widths 400,900`, `--settle MS`, `--shots`.
 
 ## How the swap works
 
