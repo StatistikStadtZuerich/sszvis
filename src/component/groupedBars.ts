@@ -89,7 +89,7 @@ import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { toFinite } from "../svgUtils/toFinite.js";
 import translateString from "../svgUtils/translateString.js";
-import { defaultTransition } from "../transition.js";
+import { defaultTransition, OWN_TRANSITION } from "../transition.js";
 
 type GroupedBarsProps<T = unknown> = {
   groupScale: (datum: T) => number;
@@ -324,7 +324,7 @@ function createGroupedBarsComponent<T = unknown>(
 
       if (props.transition) {
         bars
-          .transition(defaultTransition())
+          .transition(defaultTransition(OWN_TRANSITION))
           .attr("x", xAt)
           .attr("y", yAt)
           .attr("width", widthAt)
@@ -334,8 +334,10 @@ function createGroupedBarsComponent<T = unknown>(
         // geometry written here, so `transition(false)` is only deterministic once any
         // in-flight tween is interrupted. This matters on a resize or an event that lands
         // mid-animation.
+        // Interrupted by name, so a transition the consumer scheduled on these rects keeps
+        // running; only the geometry this component owns is stopped.
         bars
-          .interrupt()
+          .interrupt(OWN_TRANSITION)
           .attr("x", xAt)
           .attr("y", yAt)
           .attr("width", widthAt)

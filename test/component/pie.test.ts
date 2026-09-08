@@ -570,6 +570,29 @@ describe("component/pie", () => {
       expectAngles(wedges(node)[1], [1, 4]);
     });
 
+    test("should not interrupt a transition the consumer scheduled on the same wedges", async () => {
+      const g = group("consumer-tween");
+      const component = pieOf(50);
+      g.datum([{ value: 1 }, { value: 1 }]).call(component.transition(false) as never);
+      const node = g.node() as SVGGElement;
+
+      // A consumer fades the wedges in with its own, unnamed transition - the name a bare
+      // selection.transition() uses, which the component's interrupt used to reach as well.
+      g.selectAll("path.sszvis-path")
+        .attr("opacity", 0)
+        .transition()
+        .duration(300)
+        .attr("opacity", 1);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      g.datum([{ value: 1 }, { value: 3 }]).call(component.transition(false) as never);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      expect(wedges(node).map((w) => w.getAttribute("opacity"))).toEqual(["1", "1"]);
+      // The component's own geometry still landed synchronously.
+      expectAngles(wedges(node)[1], [1, 4]);
+    });
+
     test("should schedule a d3 transition on every wedge", () => {
       const node = render(pieOf(), [{ value: 1 }]);
       const withState = wedges(node)[0] as SVGPathElement & { __transition?: unknown };
