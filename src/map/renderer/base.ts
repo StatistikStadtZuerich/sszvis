@@ -54,10 +54,11 @@
  * of that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
  * element so re-renders reuse it. The id is not part of the public API; do not select on it.
  *
- * Note: rendering mutates the geojson it is handed. Anchor positions go through getGeoJsonCenter,
- * which caches a center onto every feature's properties. A malformed `center` property parses to
- * NaN coordinates and the anchor is emitted with a transform of translate(NaN,NaN) rather than
- * being skipped, so a typo in an authored map file silently detaches that entity's tooltip.
+ * Note: rendering does not mutate the geojson it is handed. Anchor positions go through
+ * getGeoJsonCenter, which computes the centre on every call and writes nothing back, so a feature
+ * whose geometry or `center` changes between renders gets an anchor that follows it. A malformed
+ * `center` property is warned about and ignored in favour of the computed centroid, so a typo in
+ * an authored map file is visible in the console rather than detaching that entity's tooltip.
  *
  * Note: a mapPath that is a bare path function renders all of the areas and then throws a
  * TypeError from the anchor positions, which read mapPath.projection(). An empty mergedData never
