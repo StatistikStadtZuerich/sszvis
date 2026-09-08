@@ -1,7 +1,7 @@
 import { select } from 'd3';
 import tooltipAnchor from '../../annotation/tooltipAnchor.js';
 import { component } from '../../d3-component.js';
-import { functor, defined } from '../../fn.js';
+import { defined } from '../../fn.js';
 import { mapMissingValuePattern } from '../../patterns.js';
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { slowTransition } from '../../transition.js';
@@ -32,14 +32,23 @@ import { missingPatternId, getGeoJsonCenter, isPaintServer } from '../mapUtils.j
  * @property {Boolean, Function} defined              A predicate used to determine whether a datum has a defined value. Map
  *                                                    entities that fail it display the missing value texture, as do entities
  *                                                    that matched no datum at all - the predicate is only consulted for a
- *                                                    datum that exists. It is wrapped in fn.functor and defaults to the
- *                                                    constant true, so a constant false textures the whole map. The
- *                                                    exception is a layer where no entity has a datum; see the note below.
- * @property {String, Function} fill                  A string or function for the fill of the map entities. An accessor is
+ *                                                    datum that exists. It is stored through storeMapValue, which records whether the
+ *                                                    caller passed an accessor or a constant, and defaults to the
+ *                                                    constant true, so a constant false textures the whole map. It is not
+ *                                                    consulted at all on a geometry-only layer; see encodesData.
+ * @property {Boolean} encodesData                    Whether this layer paints values or plain geometry. No default: left
+ *                                                    unset it is inferred, per the note below. Set true to texture every
+ *                                                    entity the dataset does not cover; set false to draw shapes rather
+ *                                                    than values, where nothing is textured, nothing is classed
+ *                                                    --undefined, and the fill accessor is called with undefined
+ *                                                    throughout.
+ * @property {String, Function} fill                  A string or function for the fill of the map entities. Defaults to the
+ *                                                    constant black - a constant, so that the default layer draws geometry
+ *                                                    until a datum matches rather than encoding data from the start. An accessor is
  *                                                    called with the entity's datum, and is not called at all for an entity
  *                                                    the dataset does not cover - that one is textured instead. On a layer
- *                                                    where no entity has a datum, though, nothing is textured and the
- *                                                    accessor is called with undefined for every entity; see the note below.
+ *                                                    that draws geometry, though, nothing is textured and the accessor is
+ *                                                    called with undefined for every entity.
  * @property {Boolean} transitionColor                Whether to transition the fill color of the map entities.
  *                                                    (default: true) With it set, the fill is only applied through the
  *                                                    transition, so a color change fades from the previous color; with it
@@ -51,13 +60,14 @@ import { missingPatternId, getGeoJsonCenter, isPaintServer } from '../mapUtils.j
  *
  * Note: the fill transition runs for 500ms with easePolyOut, the slow transition's timing.
  *
- * Note: "missing" only means something relative to a dataset, so a layer where no entity has a
- * datum is taken to be drawing geometry rather than encoding values - it keeps the caller's fill,
- * is not classed --undefined, and calls the fill accessor with undefined for every entity. One
- * matched datum is enough to make it a data layer, and then the entities the dataset does not
- * cover are textured and the accessor is not called for them. A dataset that is supplied but
- * matches nothing is indistinguishable from no dataset here, since this renderer receives only
- * mergedData; such a map renders with the caller's fill rather than an all-textured map.
+ * Note: "missing" only means something relative to a dataset, so a layer drawing geometry rather
+ * than values has nothing to be missing from. Which one a layer is can be declared outright with
+ * encodesData; left unset, it is inferred from what the layer's own accessors need. A fill or
+ * defined supplied as a function has to be handed a datum, so the layer encodes values even before
+ * its data arrives - the case that used to call that accessor with undefined and crash. Supplied
+ * as constants they need nothing, so the layer draws geometry until a datum actually matches, and
+ * an outline over a raster keeps its fill as it always has. rastermap-bins.js is the canonical
+ * geometry-only layer and says so with encodesData(false) rather than relying on the inference.
  *
  * Note: the missing value pattern is written into a defs element inside each map layer, under an id
  * of that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
@@ -80,24 +90,38 @@ import { missingPatternId, getGeoJsonCenter, isPaintServer } from '../mapUtils.j
  *
  * @return {sszvis.component}
  */
+/**
+ * Wraps a constant or an accessor the way fn.functor does, recording which it was. Written out
+ * rather than delegating to fn.functor, whose accessor is nullary while these take the datum.
+ */
+function storeMapValue(value) {
+  const needsDatum = typeof value === "function";
+  const accessor = value;
+  const stored = needsDatum ? datum => accessor(datum) : () => value;
+  stored.needsDatum = needsDatum;
+  return stored;
+}
 function mapRendererBase() {
-  return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true) // a predicate function to determine whether a datum has a defined value
-  .prop("fill", functor).fill(() => "black") // a function for the entity fill color. default is black
+  return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", storeMapValue).defined(true) // a predicate function to determine whether a datum has a defined value
+  .prop("encodesData").prop("fill", storeMapValue).fill("black") // a constant: an accessor would make every default layer encode data
   .prop("transitionColor").transitionColor(true).render(function () {
+    var _props$encodesData;
     const selection = select(this);
     const props = selection.props();
     // render the missing value pattern, under an id of this layer's own
     const patternId = missingPatternId(selection);
     ensureDefsElement(selection, "pattern", patternId).call(mapMissingValuePattern);
-    // "Missing" only means something relative to a dataset. A layer where no entity has a datum
-    // is being used for its geometry rather than to encode data - rastermap-bins.js draws the
-    // choropleth as a transparent outline over a raster, with fill("none") and no data at all -
-    // so texturing every entity there would paint over what the layer is meant to reveal. Such a
-    // layer keeps the caller's fill and is not classed --undefined.
-    const encodesData = props.mergedData.some(d => defined(d.datum));
-    // Where a dataset is present, one notion of a missing value is shared by the fill and the
-    // --undefined class: an entity the dataset does not cover is as missing as one the predicate
-    // rejects. Short-circuiting also keeps both accessors from being called with undefined.
+    // Whether this layer paints values or plain geometry. The caller can say so outright; left
+    // unset it is inferred, and the inference asks what the layer's own accessors need rather
+    // than what its data happens to contain. An accessor for the fill or the predicate has to be
+    // handed a datum, so the layer is encoding values whether or not its data has arrived yet -
+    // which is the case that used to crash. Constants need nothing, so a layer built from them
+    // is drawing geometry until a datum actually matches.
+    const encodesData = (_props$encodesData = props.encodesData) !== null && _props$encodesData !== void 0 ? _props$encodesData : props.fill.needsDatum || props.defined.needsDatum || props.mergedData.some(d => defined(d.datum));
+    // On a data layer, one notion of a missing value is shared by the fill and the --undefined
+    // class: an entity the dataset does not cover is as missing as one the predicate rejects.
+    // Short-circuiting also keeps both accessors from being called with undefined. A layer
+    // drawing geometry has nothing to be missing from, so it skips both.
     function hasValue(d) {
       return !encodesData || defined(d.datum) && props.defined(d.datum);
     }

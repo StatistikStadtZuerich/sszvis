@@ -14,7 +14,8 @@ import { identity } from '../fn.js';
  * @module sszvis/control/buttonGroup
  *
  * @property {array} values         an array of values which are the options available in the control.
- *                                  Each one will become a button. Required - there is no default.
+ *                                  Each one will become a button. (default: [], which renders an
+ *                                  empty group)
  * @property {string|number} current the current value of the button group. Should be one of the
  *                                  options passed to .values(). Compared with ===.
  * @property {number} width         The total width of the button group, divided evenly between the
@@ -55,18 +56,27 @@ import { identity } from '../fn.js';
  * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
  * existing call site is unnamed and a per-render warning would be noise rather than a signal.
  *
- * Note: `values` has no default, so rendering before the data is available throws while computing
- * the button width - before any DOM is created, so no partial control is left behind.
+ * Note: `values` is coerced to the empty array, so a render that lands before the data
+ * draws an empty group rather than throwing - whether the prop was never set or was set to `undefined`
+ * from a state key the fetch has not filled in yet. "Not configured yet" and "nothing to offer
+ * yet" are the same state for a control fed from a fetch, and they render the same way.
+ * `selectMenu` does this the same way.
  *
  * See test/control/buttonGroup.test.ts.
  *
  * @return {sszvis.component}
  */
 function buttonGroup() {
-  return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
+  return component()
+  // Coerced rather than merely defaulted: a chart hands this a state key that is only
+  // populated when its data arrives, so the value actually passed is `undefined`, which a
+  // plain default would not catch - `.prop()` stores whatever the setter is given.
+  .prop("values", values => values !== null && values !== void 0 ? values : []).values([]).prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
     var _props$ariaLabel;
     const selection = select(this);
     const props = selection.props();
+    // Divided by zero for an empty group, which is only ever written onto buttons - of which
+    // there are then none - so the infinity never reaches the DOM.
     const buttonWidth = props.width / props.values.length;
     const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true).attr("role", "radiogroup")
     // `??` rather than `||`, so an explicitly empty name stays an empty name.

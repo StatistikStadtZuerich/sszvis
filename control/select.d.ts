@@ -9,18 +9,19 @@
  *
  * @module sszvis/control/select
  *
- * @property {array} values         an array of string values which are the options available in
- *                                  the control. Required - there is no default.
- * @property {string} current       the currently selected value of the select control. Should be one
+ * @property values         an array of string values which are the options available in
+ *                                  the control. Unset or undefined is read as the empty array,
+ *                                  which renders a select with no options.
+ * @property current       the currently selected value of the select control. Should be one
  *                                  of the options passed to .values(). Compared with ===.
- * @property {number} width         The total width of the select control. If text labels exceed this
- *                                  width they will be trimmed to fit using an ellipsis mark.
- *                                  (default: 300px)
- * @property {function} change      A callback/event handler function called as (event, value) when
+ * @property width         The total width of the select control. Labels wider than
+ *                                  `width - 40` are trimmed to fit with an ellipsis mark, the 40px
+ *                                  covering the select's own chrome. (default: 300px)
+ * @property change      A callback/event handler function called as (event, value) when
  *                                  the user selects an option. Selecting a value does not change any
  *                                  state unless this callback does something. (default: fn.identity,
  *                                  which returns the event and silently discards the value)
- * @property {string} ariaLabel     An accessible name for the control, naming what it filters rather
+ * @property ariaLabel     An accessible name for the control, naming what it filters rather
  *                                  than what the options are. Written as `aria-label` on the select
  *                                  element. (default: undefined, which writes no attribute, leaving
  *                                  the control unnamed)
@@ -29,6 +30,16 @@
  * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
  * into a container that already holds the other replaces the other's DOM. This is what makes them
  * interchangeable.
+ *
+ * Note: the two controls do not show an overlong label the same way, because they cannot. A native
+ * select element is laid out by the browser: its options can neither wrap onto a second line nor
+ * grow the control, so this control measures each label and trims it with an ellipsis to fit
+ * `width - 40` (`LABEL_WIDTH_ALLOWANCE`, which reserves room for the select's own chrome). The
+ * button group draws ordinary elements it does control, so it wraps a long label over more lines
+ * instead of shortening it. Swapping one control for the other across a breakpoint therefore keeps
+ * the same values and the same callback, but not the same label *text*: expect ellipses here, and
+ * the full string on two or three lines there. This says nothing about which control takes more
+ * room - see the note below on the 30px this one adds to `width`.
  *
  * Note: `current` is written as each option's `selected` DOM property, so it stays authoritative
  * across re-renders even after the user has picked an option themselves. A value duplicated in
@@ -57,9 +68,10 @@
  * attribute goes on the `select` element itself, not on the wrapper `div`, which carries no role and
  * so cannot be named; `buttonGroup` names its `radiogroup` wrapper instead.
  *
- * Note: `values` has no default, so rendering before the data is available throws mid-render from
- * d3's data join - after the wrapper and select have been created and styled, leaving an empty,
- * width-styled control behind rather than nothing at all.
+ * Note: `values` resolves to the empty array when it is unset or set to undefined, so a render that
+ * lands before the data does draws an empty control rather than throwing. A chart fed from a fetch
+ * passes a state key that is undefined until the data arrives, so the two spellings of "nothing to
+ * offer yet" have to mean the same thing. `buttonGroup` coerces its `values` the same way.
  *
  * See test/control/select.test.ts.
  *
@@ -69,7 +81,7 @@ import { type ComponentBuilder } from "../d3-component.js";
 export type SelectChangeHandler<T> = (event: Event, value: T) => void;
 export interface SelectComponent<T extends string = string> extends ComponentBuilder<SelectComponent<T>> {
     values(): T[];
-    values(values: T[]): SelectComponent<T>;
+    values(values: T[] | undefined): SelectComponent<T>;
     current(): T;
     current(current: T): SelectComponent<T>;
     width(): number;

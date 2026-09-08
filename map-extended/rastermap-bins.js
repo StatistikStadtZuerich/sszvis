@@ -199,6 +199,9 @@ function render(state) {
     .lakeFadeOut(true)
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
+    // This map is drawn for its outline over the raster below it, not to paint values, so its
+    // entities are never missing anything and must not be textured.
+    .encodesData(false)
     .fill("none")
     .borderColor("#fff");
 

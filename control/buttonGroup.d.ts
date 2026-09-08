@@ -10,7 +10,8 @@
  * @module sszvis/control/buttonGroup
  *
  * @property {array} values         an array of values which are the options available in the control.
- *                                  Each one will become a button. Required - there is no default.
+ *                                  Each one will become a button. (default: [], which renders an
+ *                                  empty group)
  * @property {string|number} current the current value of the button group. Should be one of the
  *                                  options passed to .values(). Compared with ===.
  * @property {number} width         The total width of the button group, divided evenly between the
@@ -51,8 +52,11 @@
  * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
  * existing call site is unnamed and a per-render warning would be noise rather than a signal.
  *
- * Note: `values` has no default, so rendering before the data is available throws while computing
- * the button width - before any DOM is created, so no partial control is left behind.
+ * Note: `values` is coerced to the empty array, so a render that lands before the data
+ * draws an empty group rather than throwing - whether the prop was never set or was set to `undefined`
+ * from a state key the fetch has not filled in yet. "Not configured yet" and "nothing to offer
+ * yet" are the same state for a control fed from a fetch, and they render the same way.
+ * `selectMenu` does this the same way.
  *
  * See test/control/buttonGroup.test.ts.
  *
@@ -66,7 +70,7 @@ import { type ComponentBuilder } from "../d3-component.js";
 export type ButtonGroupChangeHandler<T> = (event: Event, value: T) => void;
 export interface ButtonGroupComponent<T extends string | number = string | number> extends ComponentBuilder<ButtonGroupComponent<T>> {
     values(): T[];
-    values(values: T[]): ButtonGroupComponent<T>;
+    values(values: T[] | undefined): ButtonGroupComponent<T>;
     current(): T;
     current(current: T): ButtonGroupComponent<T>;
     width(): number;

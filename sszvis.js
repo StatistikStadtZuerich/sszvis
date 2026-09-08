@@ -8597,7 +8597,8 @@
      * @module sszvis/control/buttonGroup
      *
      * @property {array} values         an array of values which are the options available in the control.
-     *                                  Each one will become a button. Required - there is no default.
+     *                                  Each one will become a button. (default: [], which renders an
+     *                                  empty group)
      * @property {string|number} current the current value of the button group. Should be one of the
      *                                  options passed to .values(). Compared with ===.
      * @property {number} width         The total width of the button group, divided evenly between the
@@ -8638,18 +8639,27 @@
      * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
      * existing call site is unnamed and a per-render warning would be noise rather than a signal.
      *
-     * Note: `values` has no default, so rendering before the data is available throws while computing
-     * the button width - before any DOM is created, so no partial control is left behind.
+     * Note: `values` is coerced to the empty array, so a render that lands before the data
+     * draws an empty group rather than throwing - whether the prop was never set or was set to `undefined`
+     * from a state key the fetch has not filled in yet. "Not configured yet" and "nothing to offer
+     * yet" are the same state for a control fed from a fetch, and they render the same way.
+     * `selectMenu` does this the same way.
      *
      * See test/control/buttonGroup.test.ts.
      *
      * @return {sszvis.component}
      */
     function buttonGroup() {
-      return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
+      return component()
+      // Coerced rather than merely defaulted: a chart hands this a state key that is only
+      // populated when its data arrives, so the value actually passed is `undefined`, which a
+      // plain default would not catch - `.prop()` stores whatever the setter is given.
+      .prop("values", values => values !== null && values !== void 0 ? values : []).values([]).prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
         var _props$ariaLabel;
         const selection = d3.select(this);
         const props = selection.props();
+        // Divided by zero for an empty group, which is only ever written onto buttons - of which
+        // there are then none - so the infinity never reaches the DOM.
         const buttonWidth = props.width / props.values.length;
         const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true).attr("role", "radiogroup")
         // `??` rather than `||`, so an explicitly empty name stays an empty name.
@@ -8806,18 +8816,19 @@
      *
      * @module sszvis/control/select
      *
-     * @property {array} values         an array of string values which are the options available in
-     *                                  the control. Required - there is no default.
-     * @property {string} current       the currently selected value of the select control. Should be one
+     * @property values         an array of string values which are the options available in
+     *                                  the control. Unset or undefined is read as the empty array,
+     *                                  which renders a select with no options.
+     * @property current       the currently selected value of the select control. Should be one
      *                                  of the options passed to .values(). Compared with ===.
-     * @property {number} width         The total width of the select control. If text labels exceed this
-     *                                  width they will be trimmed to fit using an ellipsis mark.
-     *                                  (default: 300px)
-     * @property {function} change      A callback/event handler function called as (event, value) when
+     * @property width         The total width of the select control. Labels wider than
+     *                                  `width - 40` are trimmed to fit with an ellipsis mark, the 40px
+     *                                  covering the select's own chrome. (default: 300px)
+     * @property change      A callback/event handler function called as (event, value) when
      *                                  the user selects an option. Selecting a value does not change any
      *                                  state unless this callback does something. (default: fn.identity,
      *                                  which returns the event and silently discards the value)
-     * @property {string} ariaLabel     An accessible name for the control, naming what it filters rather
+     * @property ariaLabel     An accessible name for the control, naming what it filters rather
      *                                  than what the options are. Written as `aria-label` on the select
      *                                  element. (default: undefined, which writes no attribute, leaving
      *                                  the control unnamed)
@@ -8826,6 +8837,16 @@
      * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
      * into a container that already holds the other replaces the other's DOM. This is what makes them
      * interchangeable.
+     *
+     * Note: the two controls do not show an overlong label the same way, because they cannot. A native
+     * select element is laid out by the browser: its options can neither wrap onto a second line nor
+     * grow the control, so this control measures each label and trims it with an ellipsis to fit
+     * `width - 40` (`LABEL_WIDTH_ALLOWANCE`, which reserves room for the select's own chrome). The
+     * button group draws ordinary elements it does control, so it wraps a long label over more lines
+     * instead of shortening it. Swapping one control for the other across a breakpoint therefore keeps
+     * the same values and the same callback, but not the same label *text*: expect ellipses here, and
+     * the full string on two or three lines there. This says nothing about which control takes more
+     * room - see the note below on the 30px this one adds to `width`.
      *
      * Note: `current` is written as each option's `selected` DOM property, so it stays authoritative
      * across re-renders even after the user has picked an option themselves. A value duplicated in
@@ -8854,9 +8875,10 @@
      * attribute goes on the `select` element itself, not on the wrapper `div`, which carries no role and
      * so cannot be named; `buttonGroup` names its `radiogroup` wrapper instead.
      *
-     * Note: `values` has no default, so rendering before the data is available throws mid-render from
-     * d3's data join - after the wrapper and select have been created and styled, leaving an empty,
-     * width-styled control behind rather than nothing at all.
+     * Note: `values` resolves to the empty array when it is unset or set to undefined, so a render that
+     * lands before the data does draws an empty control rather than throwing. A chart fed from a fetch
+     * passes a state key that is undefined until the data arrives, so the two spellings of "nothing to
+     * offer yet" have to mean the same thing. `buttonGroup` coerces its `values` the same way.
      *
      * See test/control/select.test.ts.
      *
@@ -8867,7 +8889,11 @@
     /** Width reserved for the select's own chrome when measuring whether a label fits. */
     const LABEL_WIDTH_ALLOWANCE = 40;
     function selectMenu() {
-      return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
+      return component()
+      // Coerced rather than merely defaulted: a chart hands this a state key that is only
+      // populated when its data arrives, so the value actually passed is `undefined`, which a
+      // plain default would not catch - `.prop()` stores whatever the setter is given.
+      .prop("values", values => values !== null && values !== void 0 ? values : []).values([]).prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
         var _props$ariaLabel;
         const selection = d3.select(this);
         const props = selection.props();
@@ -11007,14 +11033,23 @@
      * @property {Boolean, Function} defined              A predicate used to determine whether a datum has a defined value. Map
      *                                                    entities that fail it display the missing value texture, as do entities
      *                                                    that matched no datum at all - the predicate is only consulted for a
-     *                                                    datum that exists. It is wrapped in fn.functor and defaults to the
-     *                                                    constant true, so a constant false textures the whole map. The
-     *                                                    exception is a layer where no entity has a datum; see the note below.
-     * @property {String, Function} fill                  A string or function for the fill of the map entities. An accessor is
+     *                                                    datum that exists. It is stored through storeMapValue, which records whether the
+     *                                                    caller passed an accessor or a constant, and defaults to the
+     *                                                    constant true, so a constant false textures the whole map. It is not
+     *                                                    consulted at all on a geometry-only layer; see encodesData.
+     * @property {Boolean} encodesData                    Whether this layer paints values or plain geometry. No default: left
+     *                                                    unset it is inferred, per the note below. Set true to texture every
+     *                                                    entity the dataset does not cover; set false to draw shapes rather
+     *                                                    than values, where nothing is textured, nothing is classed
+     *                                                    --undefined, and the fill accessor is called with undefined
+     *                                                    throughout.
+     * @property {String, Function} fill                  A string or function for the fill of the map entities. Defaults to the
+     *                                                    constant black - a constant, so that the default layer draws geometry
+     *                                                    until a datum matches rather than encoding data from the start. An accessor is
      *                                                    called with the entity's datum, and is not called at all for an entity
      *                                                    the dataset does not cover - that one is textured instead. On a layer
-     *                                                    where no entity has a datum, though, nothing is textured and the
-     *                                                    accessor is called with undefined for every entity; see the note below.
+     *                                                    that draws geometry, though, nothing is textured and the accessor is
+     *                                                    called with undefined for every entity.
      * @property {Boolean} transitionColor                Whether to transition the fill color of the map entities.
      *                                                    (default: true) With it set, the fill is only applied through the
      *                                                    transition, so a color change fades from the previous color; with it
@@ -11026,13 +11061,14 @@
      *
      * Note: the fill transition runs for 500ms with easePolyOut, the slow transition's timing.
      *
-     * Note: "missing" only means something relative to a dataset, so a layer where no entity has a
-     * datum is taken to be drawing geometry rather than encoding values - it keeps the caller's fill,
-     * is not classed --undefined, and calls the fill accessor with undefined for every entity. One
-     * matched datum is enough to make it a data layer, and then the entities the dataset does not
-     * cover are textured and the accessor is not called for them. A dataset that is supplied but
-     * matches nothing is indistinguishable from no dataset here, since this renderer receives only
-     * mergedData; such a map renders with the caller's fill rather than an all-textured map.
+     * Note: "missing" only means something relative to a dataset, so a layer drawing geometry rather
+     * than values has nothing to be missing from. Which one a layer is can be declared outright with
+     * encodesData; left unset, it is inferred from what the layer's own accessors need. A fill or
+     * defined supplied as a function has to be handed a datum, so the layer encodes values even before
+     * its data arrives - the case that used to call that accessor with undefined and crash. Supplied
+     * as constants they need nothing, so the layer draws geometry until a datum actually matches, and
+     * an outline over a raster keeps its fill as it always has. rastermap-bins.js is the canonical
+     * geometry-only layer and says so with encodesData(false) rather than relying on the inference.
      *
      * Note: the missing value pattern is written into a defs element inside each map layer, under an id
      * of that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
@@ -11055,24 +11091,38 @@
      *
      * @return {sszvis.component}
      */
+    /**
+     * Wraps a constant or an accessor the way fn.functor does, recording which it was. Written out
+     * rather than delegating to fn.functor, whose accessor is nullary while these take the datum.
+     */
+    function storeMapValue(value) {
+      const needsDatum = typeof value === "function";
+      const accessor = value;
+      const stored = needsDatum ? datum => accessor(datum) : () => value;
+      stored.needsDatum = needsDatum;
+      return stored;
+    }
     function mapRendererBase() {
-      return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true) // a predicate function to determine whether a datum has a defined value
-      .prop("fill", functor).fill(() => "black") // a function for the entity fill color. default is black
+      return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", storeMapValue).defined(true) // a predicate function to determine whether a datum has a defined value
+      .prop("encodesData").prop("fill", storeMapValue).fill("black") // a constant: an accessor would make every default layer encode data
       .prop("transitionColor").transitionColor(true).render(function () {
+        var _props$encodesData;
         const selection = d3.select(this);
         const props = selection.props();
         // render the missing value pattern, under an id of this layer's own
         const patternId = missingPatternId(selection);
         ensureDefsElement(selection, "pattern", patternId).call(mapMissingValuePattern);
-        // "Missing" only means something relative to a dataset. A layer where no entity has a datum
-        // is being used for its geometry rather than to encode data - rastermap-bins.js draws the
-        // choropleth as a transparent outline over a raster, with fill("none") and no data at all -
-        // so texturing every entity there would paint over what the layer is meant to reveal. Such a
-        // layer keeps the caller's fill and is not classed --undefined.
-        const encodesData = props.mergedData.some(d => defined(d.datum));
-        // Where a dataset is present, one notion of a missing value is shared by the fill and the
-        // --undefined class: an entity the dataset does not cover is as missing as one the predicate
-        // rejects. Short-circuiting also keeps both accessors from being called with undefined.
+        // Whether this layer paints values or plain geometry. The caller can say so outright; left
+        // unset it is inferred, and the inference asks what the layer's own accessors need rather
+        // than what its data happens to contain. An accessor for the fill or the predicate has to be
+        // handed a datum, so the layer is encoding values whether or not its data has arrived yet -
+        // which is the case that used to crash. Constants need nothing, so a layer built from them
+        // is drawing geometry until a datum actually matches.
+        const encodesData = (_props$encodesData = props.encodesData) !== null && _props$encodesData !== void 0 ? _props$encodesData : props.fill.needsDatum || props.defined.needsDatum || props.mergedData.some(d => defined(d.datum));
+        // On a data layer, one notion of a missing value is shared by the fill and the --undefined
+        // class: an entity the dataset does not cover is as missing as one the predicate rejects.
+        // Short-circuiting also keeps both accessors from being called with undefined. A layer
+        // drawing geometry has nothing to be missing from, so it skips both.
         function hasValue(d) {
           return !encodesData || defined(d.datum) && props.defined(d.datum);
         }
@@ -12644,11 +12694,22 @@
      * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
      *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
      *                                                    Defaults to a constant true, so nothing is textured unless it is set.
+     * @property {Boolean} encodesData                    Whether this map paints values or plain geometry. No default: left
+     *                                                    unset it is inferred, first from whether fill and defined are
+     *                                                    accessors or constants - either one supplied as an accessor makes the
+     *                                                    map encode data even before its data arrives - and, when both are
+     *                                                    constants, from the data itself: the map encodes data as soon as any
+     *                                                    feature matches a datum. So a map built from constants alone draws
+     *                                                    geometry while its data is empty and starts texturing unmatched
+     *                                                    features once data arrives. Set false for a map drawn for its shapes alone - an outline
+     *                                                    over a raster, say: nothing is textured as missing and the fill
+     *                                                    accessor is called with undefined throughout.
+     *                                                    See src/map/renderer/base.ts.
      * @property {String, Function} fill                  A string or function for the fill of the map entities. Default black.
      *                                                    A feature that matched no datum shows the missing value texture, so an
-     *                                                    accessor is not called for it. The exception is a map where no feature
-     *                                                    matched a datum: that draws geometry rather than values, keeps this
-     *                                                    fill, and calls an accessor with undefined. See src/map/renderer/base.ts.
+     *                                                    accessor is not called for it - including on a map whose data has not
+     *                                                    arrived yet, which is textured throughout. The exception is a map
+     *                                                    drawing geometry. See src/map/renderer/base.ts.
      * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
      *                                                    mesh, for the border color of the map entities. Default white. An
      *                                                    accessor that resolves to nothing keeps that default rather than
@@ -12815,7 +12876,7 @@
       const meshRenderer = mapRendererMesh();
       const lakeRenderer = mapRendererPatternedLakeOverlay();
       const highlightRenderer = mapRendererHighlight();
-      const mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
+      const mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("encodesData", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
         // create a map path generator function.

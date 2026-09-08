@@ -150,6 +150,9 @@ function render(state) {
     .lakeFadeOut(true)
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
+    // Drawn for its outline over the layer below it, not to paint values, so its entities are
+    // never missing anything and must not be textured.
+    .encodesData(false)
     .fill("none")
     .borderColor("#fff");
 

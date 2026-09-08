@@ -44,11 +44,22 @@ import mapRendererPatternedLakeOverlay from '../map/renderer/patternedlakeoverla
  * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
  *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
  *                                                    Defaults to a constant true, so nothing is textured unless it is set.
+ * @property {Boolean} encodesData                    Whether this map paints values or plain geometry. No default: left
+ *                                                    unset it is inferred, first from whether fill and defined are
+ *                                                    accessors or constants - either one supplied as an accessor makes the
+ *                                                    map encode data even before its data arrives - and, when both are
+ *                                                    constants, from the data itself: the map encodes data as soon as any
+ *                                                    feature matches a datum. So a map built from constants alone draws
+ *                                                    geometry while its data is empty and starts texturing unmatched
+ *                                                    features once data arrives. Set false for a map drawn for its shapes alone - an outline
+ *                                                    over a raster, say: nothing is textured as missing and the fill
+ *                                                    accessor is called with undefined throughout.
+ *                                                    See src/map/renderer/base.ts.
  * @property {String, Function} fill                  A string or function for the fill of the map entities. Default black.
  *                                                    A feature that matched no datum shows the missing value texture, so an
- *                                                    accessor is not called for it. The exception is a map where no feature
- *                                                    matched a datum: that draws geometry rather than values, keeps this
- *                                                    fill, and calls an accessor with undefined. See src/map/renderer/base.ts.
+ *                                                    accessor is not called for it - including on a map whose data has not
+ *                                                    arrived yet, which is textured throughout. The exception is a map
+ *                                                    drawing geometry. See src/map/renderer/base.ts.
  * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
  *                                                    mesh, for the border color of the map entities. Default white. An
  *                                                    accessor that resolves to nothing keeps that default rather than
@@ -215,7 +226,7 @@ function choropleth() {
   const meshRenderer = mapRendererMesh();
   const lakeRenderer = mapRendererPatternedLakeOverlay();
   const highlightRenderer = mapRendererHighlight();
-  const mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
+  const mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("encodesData", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
     const selection = select(this);
     const props = selection.props();
     // create a map path generator function.
