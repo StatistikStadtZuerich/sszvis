@@ -26,33 +26,28 @@ import { type NumberValue, range, scaleBand, select } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 
-// Type definitions for confidence bar component
-type Datum<T = unknown> = T & {
-  __sszvisGroupedBarConfidenceIndex__?: number;
-};
-
 interface ConfidenceBarProps<T = unknown> {
-  x?: (d: Datum<T>) => NumberValue;
-  y?: (d: Datum<T>) => NumberValue;
-  confidenceLow: (d: Datum<T>) => NumberValue;
-  confidenceHigh: (d: Datum<T>) => NumberValue;
+  x?: (d: T) => NumberValue;
+  y?: (d: T) => NumberValue;
+  confidenceLow: (d: T) => NumberValue;
+  confidenceHigh: (d: T) => NumberValue;
   width: number;
   groupSize: number;
   groupWidth: number;
   groupSpace: number;
-  groupScale: (d: Datum<T>) => number;
+  groupScale: (d: T) => number;
 }
 
 interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<ConfidenceBarComponent<T>> {
-  x(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
-  y(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
-  confidenceLow(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
-  confidenceHigh(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
+  x(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
+  y(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
+  confidenceLow(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
+  confidenceHigh(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
   width(width?: number): ConfidenceBarComponent<T>;
   groupSize(size?: number): ConfidenceBarComponent<T>;
   groupWidth(width?: number): ConfidenceBarComponent<T>;
   groupSpace(space?: number): ConfidenceBarComponent<T>;
-  groupScale(scale?: (d: Datum<T>) => number): ConfidenceBarComponent<T>;
+  groupScale(scale?: (d: T) => number): ConfidenceBarComponent<T>;
 }
 
 export default function <T = unknown>(): ConfidenceBarComponent<T> {
@@ -67,8 +62,8 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
     .prop("groupSpace")
     .groupSpace(0.05)
     .prop("groupScale", fn.functor)
-    .render(function (this: Element, data: Datum<T>[][]) {
-      const selection = select<Element, Datum<T>>(this);
+    .render(function (this: Element, data: T[][]) {
+      const selection = select<Element, T>(this);
       const props = selection.props<ConfidenceBarProps<T>>();
 
       const inGroupScale = scaleBand()
@@ -78,21 +73,47 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
         .paddingOuter(0);
 
       const groups = selection
-        .selectAll("g.sszvis-confidence-bargroup")
+        .selectAll<SVGGElement, T[]>("g.sszvis-confidence-bargroup")
         .data(data)
         .join("g")
         .classed("sszvis-confidence-bargroup", true);
 
       const barUnits = groups
-        .selectAll("g.sszvis-confidence-barunit")
+        .selectAll<SVGGElement, T>("g.sszvis-confidence-barunit")
         .data((d) => d)
         .join("g")
         .classed("sszvis-confidence-barunit", true);
 
-      barUnits.each((d, i) => {
-        // necessary for the within-group scale
-        d.__sszvisGroupedBarConfidenceIndex__ = i;
+      // The bar's index within its group is recorded against the unit element rather than
+      // written onto the datum, so a datum object reused across groups is not aliased: it is
+      // the element that is unique per bar, not the caller's object. These datum objects are
+      // the consumer's own and are shared with the bar component drawn underneath, which
+      // compares them by identity, so they must come back unmodified.
+      const indexByUnit = new WeakMap<Element, number>();
+      barUnits.each(function (_d, i) {
+        indexByUnit.set(this, i);
       });
+
+      // The along-group centre of a bar's slot. Resolved from the element the callback is
+      // running on - a line whose parent is the bar unit - because the index is no longer on
+      // the datum. Every unit is in the map before any of these run, so the lookup is
+      // asserted rather than defaulted.
+      //
+      // Called once per attribute rather than once per unit: groupScale is a consumer
+      // accessor and a stateful one is observable, so the number and order of calls is part
+      // of the existing behaviour and is left alone.
+      const centreAt = function (this: Element, d: T): number {
+        const index = indexByUnit.get(this.parentNode as Element) as number;
+        return (
+          props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2
+        );
+      };
+      const capLeftAt = function (this: Element, d: T): number {
+        return centreAt.call(this, d) - props.width / 2;
+      };
+      const capRightAt = function (this: Element, d: T): number {
+        return centreAt.call(this, d) + props.width / 2;
+      };
 
       const unitsWithValue = barUnits.filter((): boolean => {
         return true;
@@ -104,26 +125,10 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
       unitsWithValue
         .append("line")
         .classed("sszvis-confidence-bar", true)
-        .attr("x1", (d): number => {
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
-          return (
-            props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2
-          );
-        })
-        .attr("y1", (d) => {
-          return Number(props.confidenceHigh(d));
-        })
-        .attr("x2", (d) => {
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
-          return (
-            props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2
-          );
-        })
-        .attr("y2", (d) => {
-          return Number(props.confidenceLow(d));
-        })
+        .attr("x1", centreAt)
+        .attr("y1", (d) => Number(props.confidenceHigh(d)))
+        .attr("x2", centreAt)
+        .attr("y2", (d) => Number(props.confidenceLow(d)))
         .attr("stroke", "#767676")
         .attr("stroke-width", "1");
 
@@ -131,32 +136,10 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
       unitsWithValue
         .append("line")
         .classed("sszvis-confidence-bar", true)
-        .attr("x1", (d) => {
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
-          return (
-            props.groupScale(d) +
-            (inGroupScale(String(index)) || 0) +
-            inGroupScale.bandwidth() / 2 -
-            props.width / 2
-          );
-        })
-        .attr("y1", (d) => {
-          return Number(props.confidenceHigh(d));
-        })
-        .attr("x2", (d) => {
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
-          return (
-            props.groupScale(d) +
-            (inGroupScale(String(index)) || 0) +
-            inGroupScale.bandwidth() / 2 +
-            props.width / 2
-          );
-        })
-        .attr("y2", (d) => {
-          return Number(props.confidenceHigh(d));
-        })
+        .attr("x1", capLeftAt)
+        .attr("y1", (d) => Number(props.confidenceHigh(d)))
+        .attr("x2", capRightAt)
+        .attr("y2", (d) => Number(props.confidenceHigh(d)))
         .attr("stroke", "#767676")
         .attr("stroke-width", "1");
 
@@ -164,32 +147,10 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
       unitsWithValue
         .append("line")
         .classed("sszvis-confidence-bar", true)
-        .attr("x1", (d) => {
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
-          return (
-            props.groupScale(d) +
-            (inGroupScale(String(index)) || 0) +
-            inGroupScale.bandwidth() / 2 -
-            props.width / 2
-          );
-        })
-        .attr("y1", (d) => {
-          return Number(props.confidenceLow(d));
-        })
-        .attr("x2", (d) => {
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
-          return (
-            props.groupScale(d) +
-            (inGroupScale(String(index)) || 0) +
-            inGroupScale.bandwidth() / 2 +
-            props.width / 2
-          );
-        })
-        .attr("y2", (d) => {
-          return Number(props.confidenceLow(d));
-        })
+        .attr("x1", capLeftAt)
+        .attr("y1", (d) => Number(props.confidenceLow(d)))
+        .attr("x2", capRightAt)
+        .attr("y2", (d) => Number(props.confidenceLow(d)))
         .attr("stroke", "#767676")
         .attr("stroke-width", "1");
     });

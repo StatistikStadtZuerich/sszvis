@@ -1,4 +1,4 @@
-import { select } from "d3";
+import { range, scaleBand, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import confidenceBar from "../../src/annotation/confidenceBar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
@@ -146,6 +146,81 @@ describe("annotation/confidenceBar", () => {
     const secondX = Number(select(barUnits[1]).select("line.sszvis-confidence-bar").attr("x1"));
     expect(firstX).not.toBe(secondX);
     expect(secondX).toBeGreaterThan(firstX);
+  });
+
+  describe("shared datum objects", () => {
+    const GROUP_SIZE = 3;
+    const GROUP_WIDTH = 90;
+
+    /** The in-group band the component builds internally, to assert absolute slots against. */
+    const band = () =>
+      scaleBand()
+        .domain(range(GROUP_SIZE).map(String))
+        .rangeRound([0, GROUP_WIDTH])
+        .paddingInner(0.05)
+        .paddingOuter(0);
+
+    const componentOf = () =>
+      confidenceBar<TestDatum>()
+        .confidenceLow((d) => d.low)
+        .confidenceHigh((d) => d.high)
+        .width(10)
+        .groupSize(GROUP_SIZE)
+        .groupWidth(GROUP_WIDTH)
+        .groupScale(() => 0);
+
+    /** The x of each unit's vertical line, which sits at its slot's centre. */
+    const centres = (layer: ReturnType<typeof createSvgLayer>) =>
+      [...layer.selectAll<SVGGElement, unknown>("g.sszvis-confidence-barunit").nodes()].map((u) =>
+        Number(select(u).select("line.sszvis-confidence-bar").attr("x1"))
+      );
+
+    const sharedData = () => {
+      const shared = { value: 10, low: 5, high: 15 };
+      const data: TestDatum[][] = [
+        [{ value: 20, low: 15, high: 25 }, { value: 12, low: 8, high: 16 }, shared],
+        [shared, { value: 30, low: 25, high: 35 }],
+      ];
+      return { shared, data };
+    };
+
+    test("should offset a datum object reused across groups by each bar's own index", () => {
+      // The same object at index 2 of the first group and index 0 of the second. Asserted
+      // against absolute slots, so an off-by-one or a reversed in-group order cannot pass:
+      // with groupSize 3 neither permutation maps {2, 0} back onto itself.
+      const { data } = sharedData();
+      const layer = createSvgLayer("#chart-container", undefined, { key: "test-layer" });
+      layer.selectGroup("confidenceBars").datum(data).call(componentOf());
+
+      const b = band();
+      const halfBand = b.bandwidth() / 2;
+      const [a, second, sharedInFirst, sharedInSecond, last] = centres(layer);
+
+      expect(a).toBeCloseTo((b("0") ?? 0) + halfBand, 5);
+      expect(second).toBeCloseTo((b("1") ?? 0) + halfBand, 5);
+      // The shared object's bar in the first group is at index 2 ...
+      expect(sharedInFirst).toBeCloseTo((b("2") ?? 0) + halfBand, 5);
+      // ... and its bar in the second group at index 0. Writing the index onto the datum
+      // gave the object a single value, so both of its bars landed in the same slot.
+      expect(sharedInSecond).toBeCloseTo((b("0") ?? 0) + halfBand, 5);
+      expect(last).toBeCloseTo((b("1") ?? 0) + halfBand, 5);
+    });
+
+    test("should not mutate the caller's datum objects", () => {
+      const { shared, data } = sharedData();
+      const before = data.flat().map((d) => Object.keys(d).sort());
+
+      createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+        .selectGroup("confidenceBars")
+        .datum(data)
+        .call(componentOf());
+
+      // Asserted on the key set rather than on a named property, so this still catches any
+      // future bookkeeping the component decides to hang off the caller's data. These objects
+      // are shared with the bar component drawn underneath, which compares them by identity.
+      expect(data.flat().map((d) => Object.keys(d).sort())).toEqual(before);
+      expect(Object.keys(shared).sort()).toEqual(["high", "low", "value"]);
+    });
   });
 
   test("should work with custom accessor functions", () => {
