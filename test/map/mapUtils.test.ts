@@ -405,24 +405,27 @@ describe("map utils", () => {
       expect(getGeoJsonCenter(feature)).toEqual([8.54, 47.37]);
     });
 
-    // NOTE: the result is cached onto the feature's own properties - this function mutates its
-    // argument.
-    test("caches the result on the feature's properties", () => {
+    test("writes nothing back to the feature it was given", () => {
       const feature = square("a");
-      const center = getGeoJsonCenter(feature);
-      expect(feature.properties?.cachedCenter).toBe(center);
-      expect(getGeoJsonCenter(feature)).toBe(center);
+      feature.properties = { center: "1,2" };
+      getGeoJsonCenter(feature);
+      // The library keeps no bookkeeping of its own on the caller's objects.
+      expect(Object.keys(feature.properties)).toEqual(["center"]);
     });
 
-    // NOTE: the cache is never invalidated, which follows directly from the caching the JSDoc
-    // advertises. Features are treated as immutable map data, so changing `center` after the first
-    // read has no effect for the lifetime of the feature object.
-    test("ignores a center property changed after the first call", () => {
+    test("follows a center property changed after the first call", () => {
       const feature = square("a");
       feature.properties = { center: "1,2" };
       expect(getGeoJsonCenter(feature)).toEqual([1, 2]);
       feature.properties.center = "3,4";
-      expect(getGeoJsonCenter(feature)).toEqual([1, 2]);
+      expect(getGeoJsonCenter(feature)).toEqual([3, 4]);
+    });
+
+    test("follows a geometry moved after the first call", () => {
+      const feature = square("a");
+      expect(getGeoJsonCenter(feature)[0]).toBeCloseTo(0.5, 3);
+      feature.geometry = square("a", 50).geometry;
+      expect(getGeoJsonCenter(feature)[0]).toBeCloseTo(50.5, 3);
     });
 
     test("warns and falls back to the centroid for an unparseable center property", () => {
@@ -504,16 +507,14 @@ describe("map utils", () => {
       warn.mockRestore();
     });
 
-    // BUG: `properties: null` is spec-legal GeoJSON, but the centre has nowhere to be cached, so a
-    // valid feature crashes the render. The JavaScript dereferenced it unguarded and produced a
-    // bare "Cannot read properties of null (reading 'cachedCenter')"; the port raises the same
-    // class with a message that names the cause.
-    test("throws a descriptive TypeError for a feature with null properties", () => {
+    // `properties: null` is spec-legal GeoJSON. It used to throw, because the centre had nowhere
+    // to be cached; with nothing being cached there is nothing to store and it simply works.
+    test("computes the centroid for a feature with null properties", () => {
       const feature = square("a");
       feature.properties = null;
-      expect(() => getGeoJsonCenter(feature)).toThrow(
-        new TypeError("getGeoJsonCenter: the feature has no properties object to cache onto")
-      );
+      const [lon, lat] = getGeoJsonCenter(feature);
+      expect(lon).toBeCloseTo(0.5, 3);
+      expect(lat).toBeCloseTo(0.5, 3);
     });
   });
 

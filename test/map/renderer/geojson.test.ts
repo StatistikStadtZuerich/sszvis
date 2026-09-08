@@ -1,4 +1,4 @@
-import { easePolyOut, geoCentroid, geoPath } from "d3";
+import { easePolyOut, type GeoProjection, geoCentroid, geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
@@ -50,7 +50,7 @@ describe("map/renderer/geojson", () => {
       key: key ?? `geojson-${++layerKey}`,
     }).selectGroup("map");
 
-  /** A fresh geojson each time, since the renderer caches a centroid onto the features. */
+  /** A fresh geojson each time, so no test can see another's mutations of the features. */
   const geoJson = (): FeatureCollection<Polygon> => ({
     type: "FeatureCollection",
     features: [square("a"), square("b", 2), square("c", 4)],
@@ -239,9 +239,7 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), "#ff0000"]);
     });
 
-    // The anchor's `properties || (properties = {})` guard is reachable now that a feature with
-    // null properties renders, and it gives the centroid cache somewhere to live.
-    test("anchors a feature with null properties through the anchor's own guard", () => {
+    test("anchors a feature with null properties", () => {
       const collection = geoJson();
       collection.features[0].properties = null;
       const node = group()
@@ -249,10 +247,10 @@ describe("map/renderer/geojson", () => {
         .call(mapRendererGeoJson().geoJson(collection).mapPath(mapPathOf(collection)))
         .node() as SVGGElement;
       expect(anchors(node)).toHaveLength(3);
-      // Read back through `at`, so the assignment above does not narrow the type to null.
+      // NOTE: the renderer still substitutes an object for null properties of its own accord.
+      // getGeoJsonCenter no longer needs it to - it reads through and caches nothing.
       const properties = collection.features.at(0)?.properties;
-      expect(properties).not.toBeNull();
-      expect(properties?.cachedCenter).toBeDefined();
+      expect(properties?.cachedCenter).toBeUndefined();
     });
 
     // A datum with no key is skipped rather than filed under the string "undefined", so it does
@@ -353,23 +351,33 @@ describe("map/renderer/geojson", () => {
     });
 
     // Both renderers go through getGeoJsonCenter, so an overlay and a base layer over the same
-    // features share one cache under one key, and the same entity's tooltip sits in one place.
-    test("caches the same centre as the base renderer for the same feature", async () => {
+    // features place the same entity's tooltip in one place - now by both computing it rather than
+    // by sharing a cache written onto the feature.
+    test("anchors the same centre as the base renderer for the same feature", async () => {
       const mapRendererBase = (await import("../../../src/map/renderer/base.js")).default;
       const collection = geoJson();
       collection.features[0].properties = { id: "a", center: "0.9,0.9" };
       const mapPath = mapPathOf(collection);
       const merged = collection.features.map((f) => ({ geoJson: f, datum: { value: 1 } }));
 
-      group("cross-base").call(mapRendererBase().mergedData(merged).mapPath(mapPath)).node();
-      group("cross-geojson")
+      const baseNode = group("cross-base")
+        .call(mapRendererBase().mergedData(merged).mapPath(mapPath))
+        .node() as SVGGElement;
+      const geojsonNode = group("cross-geojson")
         .datum(fullData)
         .call(mapRendererGeoJson().geoJson(collection).mapPath(mapPath))
-        .node();
+        .node() as SVGGElement;
 
+      // The authored center is what both must honour, and both must land on the same pixel.
+      const projected = mapPath.projection<GeoProjection>()([0.9, 0.9]);
+      if (!projected) throw new Error("the authored center has no projected position");
+      const expected = `translate(${projected.join(",")})`;
+      expect(anchors(geojsonNode)[0].getAttribute("transform")).toBe(expected);
+      expect(anchors(baseNode)[0].getAttribute("transform")).toBe(expected);
+
+      // Neither renderer leaves bookkeeping of its own behind on the caller's feature.
       const properties = collection.features[0].properties as Record<string, unknown>;
-      expect(properties.cachedCenter).toEqual([0.9, 0.9]);
-      expect(properties.sphericalCentroid).toBeUndefined();
+      expect(Object.keys(properties)).toEqual(["id", "center"]);
     });
   });
 
@@ -682,11 +690,8 @@ describe("map/renderer/geojson", () => {
       ]);
     });
 
-    // NOTE: the centre is cached onto each feature's properties, so rendering mutates the geojson
-    // it was handed - under cachedCenter, the same key the base renderer uses.
-    test("caches a cachedCenter onto every feature, and never invalidates it", () => {
+    test("writes nothing onto the features, and follows a geometry that moves", () => {
       const collection = geoJson();
-      expect(collection.features[0].properties?.cachedCenter).toBeUndefined();
 
       const mapPath = mapPathOf(collection);
       const layer = group("centroid-cache");
@@ -698,11 +703,11 @@ describe("map/renderer/geojson", () => {
 
       renderInto();
       for (const feature of collection.features) {
-        expect(feature.properties?.cachedCenter).toBeDefined();
+        expect(feature.properties?.cachedCenter).toBeUndefined();
       }
 
-      // Move the first feature somewhere else entirely and re-render: the anchor does not follow,
-      // because the cached centroid is never recomputed.
+      // Move the first feature somewhere else entirely and re-render: the anchor follows, because
+      // the centroid is recomputed from the geometry the feature currently has.
       const before = anchors(renderInto())[0].getAttribute("transform");
       collection.features[0].geometry.coordinates = [
         [
@@ -713,7 +718,7 @@ describe("map/renderer/geojson", () => {
           [50, 50],
         ],
       ];
-      expect(anchors(renderInto())[0].getAttribute("transform")).toBe(before);
+      expect(anchors(renderInto())[0].getAttribute("transform")).not.toBe(before);
     });
 
     // An authored `center` is the documented way to nudge a tooltip off a concave shape's true
