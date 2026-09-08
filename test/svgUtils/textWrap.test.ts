@@ -175,6 +175,12 @@ describe("svgUtils/textWrap", () => {
         expect(tspansOf(text).map((t) => t.getAttribute("x"))).toEqual(["5", "5", "5"]);
       });
 
+      test("should honor a zero horizontal padding", () => {
+        const text = appendText("aa");
+        textWrap(select(text), 100, 0);
+        expect(tspansOf(text)[0].getAttribute("x")).toBe("0");
+      });
+
       test("should honor a custom horizontal padding", () => {
         const text = appendText("aa");
         textWrap(select(text), 100, 20);
@@ -201,6 +207,13 @@ describe("svgUtils/textWrap", () => {
         const text = appendText("aa");
         textWrap(select(text), 100, 5, 10);
         expect(tspansOf(text)[0].getAttribute("y")).toBe("8");
+      });
+
+      test("should honor a zero vertical padding", () => {
+        // NOTE: the border adjustment of 2 still applies, so an explicit 0 yields -2.
+        const text = appendText("aa");
+        textWrap(select(text), 100, 5, 0);
+        expect(tspansOf(text)[0].getAttribute("y")).toBe("-2");
       });
 
       test("should preserve the y attribute of the text element", () => {
