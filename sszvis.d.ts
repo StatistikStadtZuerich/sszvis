@@ -291,7 +291,7 @@ interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbCo
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$c<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$b<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -314,16 +314,16 @@ declare function export_default$c<T = unknown>(): BreadcrumbComponent<T>;
  * @returns {sszvis.component} a circular data area component
  */
 
-type Datum$9<T = unknown> = T;
+type Datum$8<T = unknown> = T;
 interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<T>> {
-    x(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
-    y(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
-    r(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
-    dx(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
-    dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
-    caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
+    x(accessor?: NumberAccessor$1<Datum$8<T>>): CircleComponent<T>;
+    y(accessor?: NumberAccessor$1<Datum$8<T>>): CircleComponent<T>;
+    r(accessor?: NumberAccessor$1<Datum$8<T>>): CircleComponent<T>;
+    dx(accessor?: NumberAccessor$1<Datum$8<T>>): CircleComponent<T>;
+    dy(accessor?: NumberAccessor$1<Datum$8<T>>): CircleComponent<T>;
+    caption(accessor?: StringAccessor<Datum$8<T>>): CircleComponent<T>;
 }
-declare function export_default$b<T = unknown>(): CircleComponent<T>;
+declare function export_default$a<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -349,18 +349,18 @@ declare function export_default$b<T = unknown>(): CircleComponent<T>;
  * @returns {sszvis.component} a confidence area component
  */
 
-type Datum$8<T = unknown> = T;
+type Datum$7<T = unknown> = T;
 /** The data-join key. d3 hands it the datum and its index. */
-type KeyAccessor$3<T> = (d: Datum$8<T>, i: number) => string | number;
+type KeyAccessor$3<T> = (d: Datum$7<T>, i: number) => string | number;
 interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<ConfidenceAreaComponent<T>> {
-    x(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
-    y0(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
-    y1(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
+    x(accessor?: NumberAccessor$1<Datum$7<T>>): ConfidenceAreaComponent<T>;
+    y0(accessor?: NumberAccessor$1<Datum$7<T>>): ConfidenceAreaComponent<T>;
+    y1(accessor?: NumberAccessor$1<Datum$7<T>>): ConfidenceAreaComponent<T>;
     stroke(stroke?: string): ConfidenceAreaComponent<T>;
     strokeWidth(width?: number): ConfidenceAreaComponent<T>;
     fill(fill?: string): ConfidenceAreaComponent<T>;
     key(accessor?: KeyAccessor$3<T>): ConfidenceAreaComponent<T>;
-    valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
+    valuesAccessor(accessor?: (d: Datum$7<T>[]) => Datum$7<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
 declare function confidenceArea<T = unknown>(): ConfidenceAreaComponent<T>;
@@ -389,21 +389,18 @@ declare function confidenceArea<T = unknown>(): ConfidenceAreaComponent<T>;
  * @returns {sszvis.component} An confidence bar annotation component
  */
 
-type Datum$7<T = unknown> = T & {
-    __sszvisGroupedBarConfidenceIndex__?: number;
-};
 interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<ConfidenceBarComponent<T>> {
-    x(accessor?: (d: Datum$7<T>) => NumberValue): ConfidenceBarComponent<T>;
-    y(accessor?: (d: Datum$7<T>) => NumberValue): ConfidenceBarComponent<T>;
-    confidenceLow(accessor?: (d: Datum$7<T>) => NumberValue): ConfidenceBarComponent<T>;
-    confidenceHigh(accessor?: (d: Datum$7<T>) => NumberValue): ConfidenceBarComponent<T>;
+    x(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
+    y(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
+    confidenceLow(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
+    confidenceHigh(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
     width(width?: number): ConfidenceBarComponent<T>;
     groupSize(size?: number): ConfidenceBarComponent<T>;
     groupWidth(width?: number): ConfidenceBarComponent<T>;
     groupSpace(space?: number): ConfidenceBarComponent<T>;
-    groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
+    groupScale(scale?: (d: T) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$a<T = unknown>(): ConfidenceBarComponent<T>;
+declare function confidenceBar<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -1819,6 +1816,12 @@ declare function dot<T = unknown>(): DotComponent<T>;
  * from the pre-fix behaviour, where d3 supplied the index within the selection of bars it was
  * applying the attribute to - the bars with a defined value, or the bars without one - so a group
  * containing missing values could see the same datum handed two different indices in one render.
+ *
+ * Note: the geometry accessors are guarded. A value that is not a finite number - NaN,
+ * Infinity, undefined, null, or anything that does not coerce - becomes 0 rather than being
+ * written into an attribute, so a bad accessor return parks a bar at 0 instead of producing
+ * an invalid rect. The missing-value cross's translation is guarded the same way. fill and
+ * stroke are not guarded, because they are colours. This matches bar and dot.
  *
  * Note: each orientation supplies the along-group dimensions itself, so it never calls the
  * consumer's accessors for them. Vertical grouped bars ignore x and width; horizontal grouped bars
@@ -7585,12 +7588,29 @@ declare function translateString(x: number, y: number): string;
  *
  * fastTransition provides an alternate transition duration for certain situations where the standard duration is
  * too slow, and slowTransition for where it is too fast.
+ *
+ * defaultTransition takes an optional name. A component that has to interrupt its own transition must pass one and
+ * interrupt by it: `selection.interrupt()` with no name stops the unnamed transition, which is also the one a consumer
+ * gets from a bare `selection.transition()`, so an unnamed interrupt cancels a consumer's animation on the same
+ * elements as well. Naming scopes both halves to the component. Only the components that interrupt need it, so the
+ * argument is optional and every other caller is unchanged.
  */
 /**
+ * The transition name a component uses for geometry it owns and may need to interrupt.
+ *
+ * Shared rather than per-component: these components never animate the same elements, and one name keeps the
+ * interrupt and the transition it is meant to stop from drifting apart. Exported so a consumer can deliberately
+ * interrupt or inspect the library's own transitions.
+ */
+declare const OWN_TRANSITION = "sszvis-own";
+/**
  * Creates a default transition with standard easing and duration
+ * @param name Optional transition name. Pass OWN_TRANSITION when the component also interrupts this transition, so
+ *             the interrupt cannot reach a transition the consumer scheduled. Omitted, the transition is unnamed,
+ *             which is d3's default and what every non-interrupting component uses.
  * @returns A d3 transition with 300ms duration and polynomial ease-out
  */
-declare const defaultTransition: () => d3_transition.Transition<d3_selection.BaseType, unknown, null, undefined>;
+declare const defaultTransition: (name?: string) => d3_transition.Transition<d3_selection.BaseType, unknown, null, undefined>;
 /**
  * Creates a fast transition for quick animations
  * @returns A d3 transition with 50ms duration and polynomial ease-out
@@ -7673,5 +7693,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, MEMOIZE_CACHE_LIMIT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$b as annotationCircle, confidenceArea as annotationConfidenceArea, export_default$a as annotationConfidenceBar, export_default$8 as annotationLine, export_default$7 as annotationRangeFlag, export_default$6 as annotationRangeRuler, export_default$5 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$c as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$9 as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$2 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$1 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, move, muchDarker, nestedStackedBarsVertical, not, pack, export_default$3 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, rangeExtent, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarHorizontalLayout, stackedBarVertical, stackedBarVerticalData, stackedBarVerticalLayout, stackedPyramid, stackedPyramidData, stackedPyramidLayout, stringEqual, sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$4 as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, treemap, valueFn, viewport, voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, MEMOIZE_CACHE_LIMIT, OWN_TRANSITION, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$a as annotationCircle, confidenceArea as annotationConfidenceArea, confidenceBar as annotationConfidenceBar, export_default$8 as annotationLine, export_default$7 as annotationRangeFlag, export_default$6 as annotationRangeRuler, export_default$5 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$b as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$9 as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$2 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$1 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, move, muchDarker, nestedStackedBarsVertical, not, pack, export_default$3 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, rangeExtent, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarHorizontalLayout, stackedBarVertical, stackedBarVerticalData, stackedBarVerticalLayout, stackedPyramid, stackedPyramidData, stackedPyramidLayout, stringEqual, sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$4 as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, treemap, valueFn, viewport, voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSeriesData, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidReferencePoint, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSidesData, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };

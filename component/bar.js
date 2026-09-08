@@ -2,7 +2,8 @@ import { select } from 'd3';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
 import { functor } from '../fn.js';
-import { defaultTransition } from '../transition.js';
+import { toFinite } from '../svgUtils/toFinite.js';
+import { defaultTransition, OWN_TRANSITION } from '../transition.js';
 
 /**
  * Bar component
@@ -59,18 +60,6 @@ import { defaultTransition } from '../transition.js';
  *
  * @return {sszvis.component}
  */
-/**
- * Coerces a geometry value to a finite number, substituting 0 for anything else.
- *
- * Coercion first, so a numeric string still works; the finiteness check then catches NaN
- * and Infinity as well as the values that do not coerce at all. Shared in substance with
- * dot's guard - the two components are expected to agree, and there is no home for the
- * helper short of a new module.
- */
-function toFinite(value) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : 0;
-}
 function bar() {
   return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("fill", functor).prop("stroke", functor).prop("centerTooltip").prop("tooltipAnchor").prop("transition").transition(true).render(function (data) {
     const selection = select(this);
@@ -99,9 +88,23 @@ function bar() {
     // The generic class stays on the node, so no CSS selector changes meaning.
     const bars = selection.selectAll("rect.sszvis-bar-rect").data(data).join(enter => enter.append("rect").attr("class", "sszvis-bar sszvis-bar-rect").attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt)).attr("fill", fillAt).attr("stroke", strokeAt);
     if (props.transition) {
-      bars.transition(defaultTransition()).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+      bars.transition(defaultTransition(OWN_TRANSITION)).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
     } else {
-      bars.attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+      // A transition scheduled by an earlier render would keep ticking and overwrite the
+      // geometry written here, so `transition(false)` is only deterministic once any
+      // in-flight tween is interrupted. This matters on a resize or an event that lands
+      // mid-animation. groupedBars and pie both do this.
+      //
+      // Only the interrupt is needed here, because every geometry attribute is recomputed
+      // from the data, which makes this write authoritative once the stale tween is
+      // stopped; see pie.ts for the attrTween case, which additionally has to resume from
+      // the in-flight value. The transition branch needs nothing: d3 replaces a transition
+      // of the same name on the same element, so scheduling supersedes the previous one.
+      //
+      // Interrupted by name, so a transition the consumer scheduled on these rects - which
+      // is unnamed, as a bare selection.transition() is - keeps running. Only the geometry
+      // this component owns is stopped.
+      bars.interrupt(OWN_TRANSITION).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
     }
     // Tooltip anchors
     let tooltipPosition;

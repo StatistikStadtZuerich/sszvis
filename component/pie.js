@@ -3,7 +3,7 @@ import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
 import { functor } from '../fn.js';
 import { warn } from '../logger.js';
-import { defaultTransition } from '../transition.js';
+import { defaultTransition, OWN_TRANSITION } from '../transition.js';
 
 /**
  * Pie component
@@ -140,7 +140,7 @@ function pie() {
       return arcPath(start);
     });
     if (props.transition) {
-      segments.transition(defaultTransition()).attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor).attrTween("d", function (_d, i) {
+      segments.transition(defaultTransition(OWN_TRANSITION)).attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor).attrTween("d", function (_d, i) {
         var _onScreen$get2;
         const from = (_onScreen$get2 = onScreen.get(this)) !== null && _onScreen$get2 !== void 0 ? _onScreen$get2 : layout[i];
         const to = layout[i];
@@ -161,7 +161,9 @@ function pie() {
       // A render that turns transitions off has to stop whatever the last one started:
       // the attrTween below writes both the path and onScreen on every frame, so an
       // uninterrupted transition would overwrite these attributes after they are set.
-      segments.interrupt();
+      // Interrupted by name, so a transition the consumer scheduled on these paths keeps
+      // running; only the geometry this component owns is stopped.
+      segments.interrupt(OWN_TRANSITION);
       segments.attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor).attr("d", function (_d, i) {
         onScreen.set(this, layout[i]);
         return arcPath(layout[i]);

@@ -23,20 +23,17 @@
  */
 import { type NumberValue } from "d3";
 import { type ComponentBuilder } from "../d3-component.js";
-type Datum<T = unknown> = T & {
-    __sszvisGroupedBarConfidenceIndex__?: number;
-};
 interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<ConfidenceBarComponent<T>> {
-    x(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
-    y(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
-    confidenceLow(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
-    confidenceHigh(accessor?: (d: Datum<T>) => NumberValue): ConfidenceBarComponent<T>;
+    x(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
+    y(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
+    confidenceLow(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
+    confidenceHigh(accessor?: (d: T) => NumberValue): ConfidenceBarComponent<T>;
     width(width?: number): ConfidenceBarComponent<T>;
     groupSize(size?: number): ConfidenceBarComponent<T>;
     groupWidth(width?: number): ConfidenceBarComponent<T>;
     groupSpace(space?: number): ConfidenceBarComponent<T>;
-    groupScale(scale?: (d: Datum<T>) => number): ConfidenceBarComponent<T>;
+    groupScale(scale?: (d: T) => number): ConfidenceBarComponent<T>;
 }
-export default function <T = unknown>(): ConfidenceBarComponent<T>;
+export default function confidenceBar<T = unknown>(): ConfidenceBarComponent<T>;
 export {};
 //# sourceMappingURL=confidenceBar.d.ts.map

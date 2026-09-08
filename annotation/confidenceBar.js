@@ -25,69 +25,53 @@ import { functor } from '../fn.js';
  *
  * @returns {sszvis.component} An confidence bar annotation component
  */
-function confidenceBar () {
+function confidenceBar() {
   return component().prop("x", functor).prop("y", functor).prop("confidenceLow", functor).prop("confidenceHigh", functor).prop("width").prop("groupSize").prop("groupWidth").prop("groupSpace").groupSpace(0.05).prop("groupScale", functor).render(function (data) {
     const selection = select(this);
     const props = selection.props();
     const inGroupScale = scaleBand().domain(range(props.groupSize).map(String)).rangeRound([0, props.groupWidth]).paddingInner(props.groupSpace).paddingOuter(0);
     const groups = selection.selectAll("g.sszvis-confidence-bargroup").data(data).join("g").classed("sszvis-confidence-bargroup", true);
     const barUnits = groups.selectAll("g.sszvis-confidence-barunit").data(d => d).join("g").classed("sszvis-confidence-barunit", true);
-    barUnits.each((d, i) => {
-      // necessary for the within-group scale
-      d.__sszvisGroupedBarConfidenceIndex__ = i;
+    // The bar's index within its group is recorded against the unit element rather than
+    // written onto the datum, so a datum object reused across groups is not aliased: it is
+    // the element that is unique per bar, not the caller's object. These datum objects are
+    // the consumer's own and are shared with the bar component drawn underneath, which
+    // compares them by identity, so they must come back unmodified.
+    const indexByUnit = new WeakMap();
+    barUnits.each(function (_d, i) {
+      indexByUnit.set(this, i);
     });
+    // The along-group centre of a bar's slot. Resolved from the element the callback is
+    // running on - a line whose parent is the bar unit - because the index is no longer on
+    // the datum. Every unit is in the map before any of these run, so a miss means the DOM
+    // was changed underneath the component, and it throws rather than defaulting to slot 0.
+    //
+    // Called once per attribute rather than once per unit: groupScale is a consumer
+    // accessor and a stateful one is observable, so the number and order of calls is part
+    // of the existing behaviour and is left alone.
+    const centreAt = function (d) {
+      const index = indexByUnit.get(this.parentNode);
+      if (index === undefined) {
+        throw new Error("[confidenceBar] a bar unit is missing its in-group index");
+      }
+      return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2;
+    };
+    const capLeftAt = function (d) {
+      return centreAt.call(this, d) - props.width / 2;
+    };
+    const capRightAt = function (d) {
+      return centreAt.call(this, d) + props.width / 2;
+    };
     const unitsWithValue = barUnits.filter(() => {
       return true;
     });
     unitsWithValue.selectAll("*").remove();
     // Vertical lines connecting confidence bounds
-    unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", d => {
-      var _d$__sszvisGroupedBar;
-      // first term is the x-position of the group, the second term is the x-position of the bar within the group
-      const index = (_d$__sszvisGroupedBar = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar !== void 0 ? _d$__sszvisGroupedBar : 0;
-      return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2;
-    }).attr("y1", d => {
-      return Number(props.confidenceHigh(d));
-    }).attr("x2", d => {
-      var _d$__sszvisGroupedBar2;
-      // first term is the x-position of the group, the second term is the x-position of the bar within the group
-      const index = (_d$__sszvisGroupedBar2 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar2 !== void 0 ? _d$__sszvisGroupedBar2 : 0;
-      return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2;
-    }).attr("y2", d => {
-      return Number(props.confidenceLow(d));
-    }).attr("stroke", "#767676").attr("stroke-width", "1");
+    unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", centreAt).attr("y1", d => Number(props.confidenceHigh(d))).attr("x2", centreAt).attr("y2", d => Number(props.confidenceLow(d))).attr("stroke", "#767676").attr("stroke-width", "1");
     // Horizontal top caps
-    unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", d => {
-      var _d$__sszvisGroupedBar3;
-      // first term is the x-position of the group, the second term is the x-position of the bar within the group
-      const index = (_d$__sszvisGroupedBar3 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar3 !== void 0 ? _d$__sszvisGroupedBar3 : 0;
-      return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2 - props.width / 2;
-    }).attr("y1", d => {
-      return Number(props.confidenceHigh(d));
-    }).attr("x2", d => {
-      var _d$__sszvisGroupedBar4;
-      // first term is the x-position of the group, the second term is the x-position of the bar within the group
-      const index = (_d$__sszvisGroupedBar4 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar4 !== void 0 ? _d$__sszvisGroupedBar4 : 0;
-      return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2 + props.width / 2;
-    }).attr("y2", d => {
-      return Number(props.confidenceHigh(d));
-    }).attr("stroke", "#767676").attr("stroke-width", "1");
+    unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", capLeftAt).attr("y1", d => Number(props.confidenceHigh(d))).attr("x2", capRightAt).attr("y2", d => Number(props.confidenceHigh(d))).attr("stroke", "#767676").attr("stroke-width", "1");
     // Horizontal bottom caps
-    unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", d => {
-      var _d$__sszvisGroupedBar5;
-      // first term is the x-position of the group, the second term is the x-position of the bar within the group
-      const index = (_d$__sszvisGroupedBar5 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar5 !== void 0 ? _d$__sszvisGroupedBar5 : 0;
-      return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2 - props.width / 2;
-    }).attr("y1", d => {
-      return Number(props.confidenceLow(d));
-    }).attr("x2", d => {
-      var _d$__sszvisGroupedBar6;
-      // first term is the x-position of the group, the second term is the x-position of the bar within the group
-      const index = (_d$__sszvisGroupedBar6 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar6 !== void 0 ? _d$__sszvisGroupedBar6 : 0;
-      return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2 + props.width / 2;
-    }).attr("y2", d => {
-      return Number(props.confidenceLow(d));
-    }).attr("stroke", "#767676").attr("stroke-width", "1");
+    unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", capLeftAt).attr("y1", d => Number(props.confidenceLow(d))).attr("x2", capRightAt).attr("y2", d => Number(props.confidenceLow(d))).attr("stroke", "#767676").attr("stroke-width", "1");
   });
 }
 

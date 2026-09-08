@@ -1,0 +1,1 @@
+{"version":3,"file":"toFinite.js","sources":["../../src/svgUtils/toFinite.ts"],"sourcesContent":[null],"names":["toFinite","value","numeric","Number","isFinite"],"mappings":"AAAA;;;;;;;;;;;AAWG;AACG,SAAUA,QAAQA,CAACC,KAAc,EAAA;AACrC,EAAA,MAAMC,OAAO,GAAGC,MAAM,CAACF,KAAK,CAAC;EAC7B,OAAOE,MAAM,CAACC,QAAQ,CAACF,OAAO,CAAC,GAAGA,OAAO,GAAG,CAAC;AAC/C;;;;"}

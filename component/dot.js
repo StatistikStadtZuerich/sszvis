@@ -2,7 +2,8 @@ import { select } from 'd3';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
 import { functor } from '../fn.js';
-import { defaultTransition } from '../transition.js';
+import { toFinite } from '../svgUtils/toFinite.js';
+import { defaultTransition, OWN_TRANSITION } from '../transition.js';
 
 /**
  * Dot component
@@ -72,18 +73,6 @@ function required(value, name) {
   }
   return value;
 }
-/**
- * Coerces a geometry value to a finite number, substituting 0 for anything else.
- *
- * Coercion first, so a numeric string still works; the finiteness check then catches NaN
- * and Infinity as well as the values that do not coerce at all. Shared in substance with
- * bar's guard - the two components are expected to agree, and there is no home for the
- * helper short of a new module.
- */
-function toFinite(value) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : 0;
-}
 function dot() {
   return component().prop("x", functor).prop("y", functor).prop("radius", functor).prop("stroke", functor).prop("fill", functor).prop("transition").transition(true).render(function (data) {
     const selection = select(this);
@@ -110,9 +99,13 @@ function dot() {
     // tweens from its previous value instead of from the value it already holds.
     const dots = selection.selectAll(".sszvis-circle").data(data).join(enter => enter.append("circle").classed("sszvis-circle", true).attr("cx", xAt).attr("cy", yAt).attr("r", rAt)).attr("stroke", strokeAt).attr("fill", fillAt);
     if (props.transition) {
-      dots.transition(defaultTransition()).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
+      dots.transition(defaultTransition(OWN_TRANSITION)).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
     } else {
-      dots.attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
+      // A transition scheduled by an earlier render would keep ticking and overwrite the
+      // geometry written here, so `transition(false)` is only deterministic once any
+      // in-flight tween is interrupted. Interrupted by name, so a transition the consumer
+      // scheduled on these circles keeps running.
+      dots.interrupt(OWN_TRANSITION).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
     }
     // Tooltip anchors
     const anchorPosition = (datum, index) => [xAt(datum, index), yAt(datum, index)];

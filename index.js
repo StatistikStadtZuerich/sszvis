@@ -82,6 +82,6 @@ export { default as ensureDefsElement } from './svgUtils/ensureDefsElement.js';
 export { modularTextHTML, modularTextSVG } from './svgUtils/modularText.js';
 export { default as textWrap } from './svgUtils/textWrap.js';
 export { default as translateString } from './svgUtils/translateString.js';
-export { defaultTransition, fastTransition, slowTransition } from './transition.js';
+export { OWN_TRANSITION, defaultTransition, fastTransition, slowTransition } from './transition.js';
 export { viewport } from './viewport/resize.js';
 //# sourceMappingURL=index.js.map

@@ -2,7 +2,7 @@ import { select, area } from 'd3';
 import { component } from '../d3-component.js';
 import { identity, valueFn } from '../fn.js';
 import { warn } from '../logger.js';
-import { defaultTransition } from '../transition.js';
+import { defaultTransition, OWN_TRANSITION } from '../transition.js';
 
 /**
  * Stacked Area Multiples component
@@ -271,10 +271,12 @@ function stackedAreaMultiples() {
     // attribute, so no CSS selector changes meaning.
     selection.selectAll("path.sszvis-stacked-area-path").data(data, props.key).join(enter => enter.append("path").attr("class", "sszvis-path sszvis-stacked-area-path").attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth), update => {
       if (props.transition) {
-        update.transition(defaultTransition()).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+        update.transition(defaultTransition(OWN_TRANSITION)).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
         return update;
       }
-      return update.attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+      // An in-flight tween from an earlier render would overwrite these, so it is
+      // interrupted first - by name, so a consumer's own transition keeps running.
+      return update.interrupt(OWN_TRANSITION).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
     });
   });
 }

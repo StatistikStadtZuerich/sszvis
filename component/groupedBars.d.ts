@@ -63,6 +63,12 @@
  * applying the attribute to - the bars with a defined value, or the bars without one - so a group
  * containing missing values could see the same datum handed two different indices in one render.
  *
+ * Note: the geometry accessors are guarded. A value that is not a finite number - NaN,
+ * Infinity, undefined, null, or anything that does not coerce - becomes 0 rather than being
+ * written into an attribute, so a bad accessor return parks a bar at 0 instead of producing
+ * an invalid rect. The missing-value cross's translation is guarded the same way. fill and
+ * stroke are not guarded, because they are colours. This matches bar and dot.
+ *
  * Note: each orientation supplies the along-group dimensions itself, so it never calls the
  * consumer's accessors for them. Vertical grouped bars ignore x and width; horizontal grouped bars
  * ignore y and height. Passing one of those has no effect and raises no error.

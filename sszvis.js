@@ -1003,13 +1003,30 @@
      *
      * fastTransition provides an alternate transition duration for certain situations where the standard duration is
      * too slow, and slowTransition for where it is too fast.
+     *
+     * defaultTransition takes an optional name. A component that has to interrupt its own transition must pass one and
+     * interrupt by it: `selection.interrupt()` with no name stops the unnamed transition, which is also the one a consumer
+     * gets from a bare `selection.transition()`, so an unnamed interrupt cancels a consumer's animation on the same
+     * elements as well. Naming scopes both halves to the component. Only the components that interrupt need it, so the
+     * argument is optional and every other caller is unchanged.
      */
     const defaultEase = d3.easePolyOut;
     /**
+     * The transition name a component uses for geometry it owns and may need to interrupt.
+     *
+     * Shared rather than per-component: these components never animate the same elements, and one name keeps the
+     * interrupt and the transition it is meant to stop from drifting apart. Exported so a consumer can deliberately
+     * interrupt or inspect the library's own transitions.
+     */
+    const OWN_TRANSITION = "sszvis-own";
+    /**
      * Creates a default transition with standard easing and duration
+     * @param name Optional transition name. Pass OWN_TRANSITION when the component also interrupts this transition, so
+     *             the interrupt cannot reach a transition the consumer scheduled. Omitted, the transition is unnamed,
+     *             which is d3's default and what every non-interrupting component uses.
      * @returns A d3 transition with 300ms duration and polynomial ease-out
      */
-    const defaultTransition = () => d3.transition().ease(defaultEase).duration(300);
+    const defaultTransition = name => d3.transition(name).ease(defaultEase).duration(300);
     /**
      * Creates a fast transition for quick animations
      * @returns A d3 transition with 50ms duration and polynomial ease-out
@@ -1058,7 +1075,10 @@
           path.style("stroke", props.stroke);
         }
         path.attr("fill", "url(#data-area-pattern)").order();
-        const finalPath = props.transition ? path.transition(defaultTransition()) : path;
+        // Without a transition the attributes below are written synchronously, so an in-flight
+        // tween from an earlier render has to be interrupted or it overwrites them. Interrupted
+        // by name, so a transition the consumer scheduled on this path keeps running.
+        const finalPath = props.transition ? path.transition(defaultTransition(OWN_TRANSITION)) : path.interrupt(OWN_TRANSITION);
         finalPath.attr("d", d => area(props.valuesAccessor(d)));
         if (props.stroke) {
           finalPath.style("stroke", props.stroke);
@@ -1093,69 +1113,53 @@
      *
      * @returns {sszvis.component} An confidence bar annotation component
      */
-    function confidenceBar () {
+    function confidenceBar() {
       return component().prop("x", functor).prop("y", functor).prop("confidenceLow", functor).prop("confidenceHigh", functor).prop("width").prop("groupSize").prop("groupWidth").prop("groupSpace").groupSpace(0.05).prop("groupScale", functor).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
         const inGroupScale = d3.scaleBand().domain(d3.range(props.groupSize).map(String)).rangeRound([0, props.groupWidth]).paddingInner(props.groupSpace).paddingOuter(0);
         const groups = selection.selectAll("g.sszvis-confidence-bargroup").data(data).join("g").classed("sszvis-confidence-bargroup", true);
         const barUnits = groups.selectAll("g.sszvis-confidence-barunit").data(d => d).join("g").classed("sszvis-confidence-barunit", true);
-        barUnits.each((d, i) => {
-          // necessary for the within-group scale
-          d.__sszvisGroupedBarConfidenceIndex__ = i;
+        // The bar's index within its group is recorded against the unit element rather than
+        // written onto the datum, so a datum object reused across groups is not aliased: it is
+        // the element that is unique per bar, not the caller's object. These datum objects are
+        // the consumer's own and are shared with the bar component drawn underneath, which
+        // compares them by identity, so they must come back unmodified.
+        const indexByUnit = new WeakMap();
+        barUnits.each(function (_d, i) {
+          indexByUnit.set(this, i);
         });
+        // The along-group centre of a bar's slot. Resolved from the element the callback is
+        // running on - a line whose parent is the bar unit - because the index is no longer on
+        // the datum. Every unit is in the map before any of these run, so a miss means the DOM
+        // was changed underneath the component, and it throws rather than defaulting to slot 0.
+        //
+        // Called once per attribute rather than once per unit: groupScale is a consumer
+        // accessor and a stateful one is observable, so the number and order of calls is part
+        // of the existing behaviour and is left alone.
+        const centreAt = function (d) {
+          const index = indexByUnit.get(this.parentNode);
+          if (index === undefined) {
+            throw new Error("[confidenceBar] a bar unit is missing its in-group index");
+          }
+          return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2;
+        };
+        const capLeftAt = function (d) {
+          return centreAt.call(this, d) - props.width / 2;
+        };
+        const capRightAt = function (d) {
+          return centreAt.call(this, d) + props.width / 2;
+        };
         const unitsWithValue = barUnits.filter(() => {
           return true;
         });
         unitsWithValue.selectAll("*").remove();
         // Vertical lines connecting confidence bounds
-        unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", d => {
-          var _d$__sszvisGroupedBar;
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = (_d$__sszvisGroupedBar = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar !== void 0 ? _d$__sszvisGroupedBar : 0;
-          return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2;
-        }).attr("y1", d => {
-          return Number(props.confidenceHigh(d));
-        }).attr("x2", d => {
-          var _d$__sszvisGroupedBar2;
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = (_d$__sszvisGroupedBar2 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar2 !== void 0 ? _d$__sszvisGroupedBar2 : 0;
-          return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2;
-        }).attr("y2", d => {
-          return Number(props.confidenceLow(d));
-        }).attr("stroke", "#767676").attr("stroke-width", "1");
+        unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", centreAt).attr("y1", d => Number(props.confidenceHigh(d))).attr("x2", centreAt).attr("y2", d => Number(props.confidenceLow(d))).attr("stroke", "#767676").attr("stroke-width", "1");
         // Horizontal top caps
-        unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", d => {
-          var _d$__sszvisGroupedBar3;
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = (_d$__sszvisGroupedBar3 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar3 !== void 0 ? _d$__sszvisGroupedBar3 : 0;
-          return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2 - props.width / 2;
-        }).attr("y1", d => {
-          return Number(props.confidenceHigh(d));
-        }).attr("x2", d => {
-          var _d$__sszvisGroupedBar4;
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = (_d$__sszvisGroupedBar4 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar4 !== void 0 ? _d$__sszvisGroupedBar4 : 0;
-          return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2 + props.width / 2;
-        }).attr("y2", d => {
-          return Number(props.confidenceHigh(d));
-        }).attr("stroke", "#767676").attr("stroke-width", "1");
+        unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", capLeftAt).attr("y1", d => Number(props.confidenceHigh(d))).attr("x2", capRightAt).attr("y2", d => Number(props.confidenceHigh(d))).attr("stroke", "#767676").attr("stroke-width", "1");
         // Horizontal bottom caps
-        unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", d => {
-          var _d$__sszvisGroupedBar5;
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = (_d$__sszvisGroupedBar5 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar5 !== void 0 ? _d$__sszvisGroupedBar5 : 0;
-          return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2 - props.width / 2;
-        }).attr("y1", d => {
-          return Number(props.confidenceLow(d));
-        }).attr("x2", d => {
-          var _d$__sszvisGroupedBar6;
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          const index = (_d$__sszvisGroupedBar6 = d.__sszvisGroupedBarConfidenceIndex__) !== null && _d$__sszvisGroupedBar6 !== void 0 ? _d$__sszvisGroupedBar6 : 0;
-          return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2 + props.width / 2;
-        }).attr("y2", d => {
-          return Number(props.confidenceLow(d));
-        }).attr("stroke", "#767676").attr("stroke-width", "1");
+        unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", capLeftAt).attr("y1", d => Number(props.confidenceLow(d))).attr("x2", capRightAt).attr("y2", d => Number(props.confidenceLow(d))).attr("stroke", "#767676").attr("stroke-width", "1");
       });
     }
 
@@ -5497,6 +5501,23 @@
     };
 
     /**
+     * @module sszvis/svgUtils/toFinite
+     *
+     * Coerces a geometry value to a finite number, substituting 0 for anything else.
+     *
+     * Coercion first, so a numeric string still works; the finiteness check then catches NaN
+     * and Infinity as well as the values that do not coerce at all.
+     *
+     * Shared by the mark components - bar, dot and groupedBars - which are expected to agree on
+     * what an unusable geometry value means. It is deliberately not re-exported from
+     * svgUtils/index.js: that barrel is public API, and this is an internal guard.
+     */
+    function toFinite(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : 0;
+    }
+
+    /**
      * Bar component
      *
      * The bar component is a general-purpose component used to render rectangles, including
@@ -5551,26 +5572,14 @@
      *
      * @return {sszvis.component}
      */
-    /**
-     * Coerces a geometry value to a finite number, substituting 0 for anything else.
-     *
-     * Coercion first, so a numeric string still works; the finiteness check then catches NaN
-     * and Infinity as well as the values that do not coerce at all. Shared in substance with
-     * dot's guard - the two components are expected to agree, and there is no home for the
-     * helper short of a new module.
-     */
-    function toFinite$1(value) {
-      const numeric = Number(value);
-      return Number.isFinite(numeric) ? numeric : 0;
-    }
     function bar() {
       return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("fill", functor).prop("stroke", functor).prop("centerTooltip").prop("tooltipAnchor").prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-        const xAt = (datum, index) => toFinite$1(props.x(datum, index));
-        const yAt = (datum, index) => toFinite$1(props.y(datum, index));
-        const wAt = (datum, index) => toFinite$1(props.width(datum, index));
-        const hAt = (datum, index) => toFinite$1(props.height(datum, index));
+        const xAt = (datum, index) => toFinite(props.x(datum, index));
+        const yAt = (datum, index) => toFinite(props.y(datum, index));
+        const wAt = (datum, index) => toFinite(props.width(datum, index));
+        const hAt = (datum, index) => toFinite(props.height(datum, index));
         const fillAt = (datum, index) => {
           var _props$fill, _props$fill2;
           return (_props$fill = (_props$fill2 = props.fill) === null || _props$fill2 === void 0 ? void 0 : _props$fill2.call(props, datum, index)) !== null && _props$fill !== void 0 ? _props$fill : null;
@@ -5591,9 +5600,23 @@
         // The generic class stays on the node, so no CSS selector changes meaning.
         const bars = selection.selectAll("rect.sszvis-bar-rect").data(data).join(enter => enter.append("rect").attr("class", "sszvis-bar sszvis-bar-rect").attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt)).attr("fill", fillAt).attr("stroke", strokeAt);
         if (props.transition) {
-          bars.transition(defaultTransition()).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+          bars.transition(defaultTransition(OWN_TRANSITION)).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
         } else {
-          bars.attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+          // A transition scheduled by an earlier render would keep ticking and overwrite the
+          // geometry written here, so `transition(false)` is only deterministic once any
+          // in-flight tween is interrupted. This matters on a resize or an event that lands
+          // mid-animation. groupedBars and pie both do this.
+          //
+          // Only the interrupt is needed here, because every geometry attribute is recomputed
+          // from the data, which makes this write authoritative once the stale tween is
+          // stopped; see pie.ts for the attrTween case, which additionally has to resume from
+          // the in-flight value. The transition branch needs nothing: d3 replaces a transition
+          // of the same name on the same element, so scheduling supersedes the previous one.
+          //
+          // Interrupted by name, so a transition the consumer scheduled on these rects - which
+          // is unnamed, as a bare selection.transition() is - keeps running. Only the geometry
+          // this component owns is stopped.
+          bars.interrupt(OWN_TRANSITION).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
         }
         // Tooltip anchors
         let tooltipPosition;
@@ -5678,18 +5701,6 @@
       }
       return value;
     }
-    /**
-     * Coerces a geometry value to a finite number, substituting 0 for anything else.
-     *
-     * Coercion first, so a numeric string still works; the finiteness check then catches NaN
-     * and Infinity as well as the values that do not coerce at all. Shared in substance with
-     * bar's guard - the two components are expected to agree, and there is no home for the
-     * helper short of a new module.
-     */
-    function toFinite(value) {
-      const numeric = Number(value);
-      return Number.isFinite(numeric) ? numeric : 0;
-    }
     function dot() {
       return component().prop("x", functor).prop("y", functor).prop("radius", functor).prop("stroke", functor).prop("fill", functor).prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
@@ -5716,9 +5727,13 @@
         // tweens from its previous value instead of from the value it already holds.
         const dots = selection.selectAll(".sszvis-circle").data(data).join(enter => enter.append("circle").classed("sszvis-circle", true).attr("cx", xAt).attr("cy", yAt).attr("r", rAt)).attr("stroke", strokeAt).attr("fill", fillAt);
         if (props.transition) {
-          dots.transition(defaultTransition()).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
+          dots.transition(defaultTransition(OWN_TRANSITION)).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
         } else {
-          dots.attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
+          // A transition scheduled by an earlier render would keep ticking and overwrite the
+          // geometry written here, so `transition(false)` is only deterministic once any
+          // in-flight tween is interrupted. Interrupted by name, so a transition the consumer
+          // scheduled on these circles keeps running.
+          dots.interrupt(OWN_TRANSITION).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
         }
         // Tooltip anchors
         const anchorPosition = (datum, index) => [xAt(datum, index), yAt(datum, index)];
@@ -5792,6 +5807,12 @@
      * applying the attribute to - the bars with a defined value, or the bars without one - so a group
      * containing missing values could see the same datum handed two different indices in one render.
      *
+     * Note: the geometry accessors are guarded. A value that is not a finite number - NaN,
+     * Infinity, undefined, null, or anything that does not coerce - becomes 0 rather than being
+     * written into an attribute, so a bad accessor return parks a bar at 0 instead of producing
+     * an invalid rect. The missing-value cross's translation is guarded the same way. fill and
+     * stroke are not guarded, because they are colours. This matches bar and dot.
+     *
      * Note: each orientation supplies the along-group dimensions itself, so it never calls the
      * consumer's accessors for them. Vertical grouped bars ignore x and width; horizontal grouped bars
      * ignore y and height. Passing one of those has no effect and raises no error.
@@ -5812,31 +5833,74 @@
         const inGroupScale = d3.scaleBand().domain(d3.range(props.groupSize)).padding(props.groupSpace).paddingOuter(0).rangeRound(config.inGroupRange(props));
         const groups = selection.selectAll("g.sszvis-bargroup").data(data).join("g").classed("sszvis-bargroup", true);
         const barUnits = groups.selectAll("g.sszvis-barunit").data(d => d).join("g").classed("sszvis-barunit", true);
-        barUnits.each((d, i) => {
-          d.__sszvisGroupedBarIndex__ = i;
+        // The bar's index within its group is recorded against the unit element rather than
+        // written onto the datum, so a datum object reused across groups is not aliased: it is
+        // the element that is unique per bar, not the caller's object. This also keeps the datum
+        // bound to .sszvis-barunit and to the bar's rect exactly the caller's own object, which
+        // consumers rely on - a mouseover handler on `.sszvis-barunit rect` receives it and may
+        // compare it by identity.
+        const groupIndexByUnit = new WeakMap();
+        barUnits.each(function (_d, i) {
+          groupIndexByUnit.set(this, i);
         });
         // Accessors are called with the bar's index within its group, which is never the index
         // d3 would supply: a bar's own rect is joined one datum at a time, where d3 passes 0,
         // and the missing-value cross is positioned on a filtered selection, where d3 passes
         // the position among the missing bars only. The index recorded above is used instead.
-        // The `each` above tags every datum on every render, before any accessor runs, so the
-        // tag is always present here.
-        const groupIndexOf = d => d.__sszvisGroupedBarIndex__;
+        //
+        // It is resolved from the element the callback is running on, so there are two shapes.
+        // A callback on the bar unit - the missing-value cross's transform - reads the unit
+        // directly; a callback on the bar's rect reads the rect's parent, which is the unit.
+        // The `each` above covers the whole barUnits join before any accessor runs, so every
+        // unit is in the map by the time an accessor can ask. A miss therefore means the DOM
+        // was changed underneath the component, and it throws rather than defaulting: a `?? 0`
+        // here would place the bar at its group's left edge, on top of whichever bar belongs
+        // there, which is the silent misrender the configs stopped risking.
+        //
+        // Note this is only about the index lookup. The configs still apply `?? 0` to the
+        // inGroupScale result, whose domain is range(groupSize), so a group holding more
+        // members than groupSize leaves its trailing bars with no band and stacks them at the
+        // group's left edge. That is long-standing behaviour for a group larger than declared
+        // - the component documents the under-full case as visible gaps and does not define
+        // the over-full one - and it is unchanged here.
+        const indexOfUnit = unit => {
+          const index = groupIndexByUnit.get(unit);
+          if (index === undefined) {
+            throw new Error("[groupedBars] a bar unit is missing its in-group index");
+          }
+          return index;
+        };
+        const indexOfRect = rect => indexOfUnit(rect.parentNode);
         const configX = config.x(props, inGroupScale);
         const configY = config.y(props, inGroupScale);
         const configWidth = config.width(props, inGroupScale);
         const configHeight = config.height(props, inGroupScale);
         const configMissingTransform = config.missingTransform(props, inGroupScale);
-        const xAt = d => configX(d, groupIndexOf(d));
-        const yAt = d => configY(d, groupIndexOf(d));
-        const widthAt = d => typeof configWidth === "function" ? configWidth(d, groupIndexOf(d)) : configWidth;
-        const heightAt = d => typeof configHeight === "function" ? configHeight(d, groupIndexOf(d)) : configHeight;
-        const fillAt = d => typeof props.fill === "function" ? props.fill(d, groupIndexOf(d)) : props.fill;
-        const strokeAt = d => {
-          var _ref;
-          return (_ref = typeof props.stroke === "function" ? props.stroke(d, groupIndexOf(d)) : props.stroke) !== null && _ref !== void 0 ? _ref : null;
+        // Guarded the way bar and dot guard theirs, so a consumer accessor returning NaN cannot
+        // reach an attribute. fill and stroke are deliberately not guarded - they are colours,
+        // and neither bar nor dot guards those either.
+        const xAt = function (d) {
+          return toFinite(configX(d, indexOfRect(this)));
         };
-        const missingTransformAt = d => configMissingTransform(d, groupIndexOf(d));
+        const yAt = function (d) {
+          return toFinite(configY(d, indexOfRect(this)));
+        };
+        const widthAt = function (d) {
+          return toFinite(typeof configWidth === "function" ? configWidth(d, indexOfRect(this)) : configWidth);
+        };
+        const heightAt = function (d) {
+          return toFinite(typeof configHeight === "function" ? configHeight(d, indexOfRect(this)) : configHeight);
+        };
+        const fillAt = function (d) {
+          return typeof props.fill === "function" ? props.fill(d, indexOfRect(this)) : props.fill;
+        };
+        const strokeAt = function (d) {
+          var _ref;
+          return (_ref = typeof props.stroke === "function" ? props.stroke(d, indexOfRect(this)) : props.stroke) !== null && _ref !== void 0 ? _ref : null;
+        };
+        const missingTransformAt = function (d) {
+          return configMissingTransform(d, indexOfUnit(this));
+        };
         const unitsWithValue = barUnits.filter(props.defined);
         const unitsWithoutValue = barUnits.filter(not(props.defined));
         // A unit keeps its children across renders so they can tween, so each shape is joined
@@ -5860,13 +5924,15 @@
         // own rect for styling and consumer selection.
         const bars = unitsWithValue.selectAll("rect.sszvis-bar-rect").data(d => [d]).join(enter => enter.append("rect").classed("sszvis-bar sszvis-bar-rect", true).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt)).attr("fill", fillAt).attr("stroke", strokeAt);
         if (props.transition) {
-          bars.transition(defaultTransition()).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
+          bars.transition(defaultTransition(OWN_TRANSITION)).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
         } else {
           // A transition scheduled by an earlier render would keep ticking and overwrite the
           // geometry written here, so `transition(false)` is only deterministic once any
           // in-flight tween is interrupted. This matters on a resize or an event that lands
           // mid-animation.
-          bars.interrupt().attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
+          // Interrupted by name, so a transition the consumer scheduled on these rects keeps
+          // running; only the geometry this component owns is stopped.
+          bars.interrupt(OWN_TRANSITION).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
         }
         // The join selectors use component-owned marker classes so a consumer-added
         // <line class="line1"> inside the unit is never adopted or overwritten. The public
@@ -5890,9 +5956,9 @@
         let {
           groupScale
         } = _ref3;
-        return (d, _i) => {
+        return (d, groupIndex) => {
           var _inGroupScale;
-          return groupScale(d) + (d.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale = inGroupScale(d.__sszvisGroupedBarIndex__)) !== null && _inGroupScale !== void 0 ? _inGroupScale : 0 : 0);
+          return groupScale(d) + ((_inGroupScale = inGroupScale(groupIndex)) !== null && _inGroupScale !== void 0 ? _inGroupScale : 0);
         };
       },
       y: _ref4 => {
@@ -5915,7 +5981,12 @@
         } = _ref6;
         return (d, groupIndex) => {
           var _inGroupScale2;
-          return translateString(groupScale(d) + (d.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale2 = inGroupScale(d.__sszvisGroupedBarIndex__)) !== null && _inGroupScale2 !== void 0 ? _inGroupScale2 : 0 : 0) + inGroupScale.bandwidth() / 2, y(d, groupIndex));
+          return (
+            // Both coordinates are guarded as a whole, not just the consumer accessor: translateString
+            // interpolates its arguments into a string, so one non-finite term anywhere in the
+            // expression would yield transform="translate(NaN,0)" rather than a placed cross.
+            translateString(toFinite(groupScale(d) + ((_inGroupScale2 = inGroupScale(groupIndex)) !== null && _inGroupScale2 !== void 0 ? _inGroupScale2 : 0) + inGroupScale.bandwidth() / 2), toFinite(y(d, groupIndex)))
+          );
         };
       },
       tooltipPosition: (_ref7, inGroupScale) => {
@@ -5928,10 +5999,9 @@
           let tallest = Infinity;
           for (const [i, d] of group.entries()) {
             var _inGroupScale3;
-            const datum = d;
-            xTotal += groupScale(datum) + (datum.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale3 = inGroupScale(datum.__sszvisGroupedBarIndex__)) !== null && _inGroupScale3 !== void 0 ? _inGroupScale3 : 0 : 0) + inGroupScale.bandwidth() / 2;
+            xTotal += groupScale(d) + ((_inGroupScale3 = inGroupScale(i)) !== null && _inGroupScale3 !== void 0 ? _inGroupScale3 : 0) + inGroupScale.bandwidth() / 2;
             // smaller y is higher
-            tallest = Math.min(tallest, y(datum, i));
+            tallest = Math.min(tallest, y(d, i));
           }
           return [xTotal / group.length, tallest];
         };
@@ -5949,9 +6019,9 @@
         let {
           groupScale
         } = _ref9;
-        return d => {
+        return (d, groupIndex) => {
           var _inGroupScale4;
-          return groupScale(d) + (d.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale4 = inGroupScale(d.__sszvisGroupedBarIndex__)) !== null && _inGroupScale4 !== void 0 ? _inGroupScale4 : 0 : 0);
+          return groupScale(d) + ((_inGroupScale4 = inGroupScale(groupIndex)) !== null && _inGroupScale4 !== void 0 ? _inGroupScale4 : 0);
         };
       },
       width: _ref0 => {
@@ -5968,7 +6038,10 @@
         } = _ref1;
         return (d, groupIndex) => {
           var _inGroupScale5;
-          return translateString(x(d, groupIndex), groupScale(d) + (d.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale5 = inGroupScale(d.__sszvisGroupedBarIndex__)) !== null && _inGroupScale5 !== void 0 ? _inGroupScale5 : 0 : 0) + inGroupScale.bandwidth() / 2);
+          return (
+            // Guarded as a whole, as in the vertical config.
+            translateString(toFinite(x(d, groupIndex)), toFinite(groupScale(d) + ((_inGroupScale5 = inGroupScale(groupIndex)) !== null && _inGroupScale5 !== void 0 ? _inGroupScale5 : 0) + inGroupScale.bandwidth() / 2))
+          );
         };
       },
       tooltipPosition: (_ref10, inGroupScale) => {
@@ -5981,10 +6054,9 @@
           let rightmost = -Infinity;
           for (const [i, d] of group.entries()) {
             var _inGroupScale6;
-            const datum = d;
-            yTotal += groupScale(datum) + (datum.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale6 = inGroupScale(datum.__sszvisGroupedBarIndex__)) !== null && _inGroupScale6 !== void 0 ? _inGroupScale6 : 0 : 0) + inGroupScale.bandwidth() / 2;
+            yTotal += groupScale(d) + ((_inGroupScale6 = inGroupScale(i)) !== null && _inGroupScale6 !== void 0 ? _inGroupScale6 : 0) + inGroupScale.bandwidth() / 2;
             // larger x is more to the right
-            rightmost = Math.max(rightmost, x(datum, i));
+            rightmost = Math.max(rightmost, x(d, i));
           }
           return [rightmost, yTotal / group.length];
         };
@@ -6133,9 +6205,12 @@
         // branches are spelled out rather than sharing a variable - a d3 transition and a
         // d3 selection have separate types.
         if (props.transition) {
-          path.transition(defaultTransition()).attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
+          path.transition(defaultTransition(OWN_TRANSITION)).attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
         } else {
-          path.attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
+          // An in-flight tween from an earlier render would overwrite what is written here, so
+          // it is interrupted first - by name, so a transition the consumer scheduled on this
+          // path keeps running.
+          path.interrupt(OWN_TRANSITION).attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
         }
       });
     }
@@ -6940,7 +7015,7 @@
           return arcPath(start);
         });
         if (props.transition) {
-          segments.transition(defaultTransition()).attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor).attrTween("d", function (_d, i) {
+          segments.transition(defaultTransition(OWN_TRANSITION)).attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor).attrTween("d", function (_d, i) {
             var _onScreen$get2;
             const from = (_onScreen$get2 = onScreen.get(this)) !== null && _onScreen$get2 !== void 0 ? _onScreen$get2 : layout[i];
             const to = layout[i];
@@ -6961,7 +7036,9 @@
           // A render that turns transitions off has to stop whatever the last one started:
           // the attrTween below writes both the path and onScreen on every frame, so an
           // uninterrupted transition would overwrite these attributes after they are set.
-          segments.interrupt();
+          // Interrupted by name, so a transition the consumer scheduled on these paths keeps
+          // running; only the geometry this component owns is stopped.
+          segments.interrupt(OWN_TRANSITION);
           segments.attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor).attr("d", function (_d, i) {
             onScreen.set(this, layout[i]);
             return arcPath(layout[i]);
@@ -7681,9 +7758,11 @@
         // branches are spelled out rather than sharing a variable - a d3 transition and a d3
         // selection have separate types.
         if (props.transition) {
-          paths.transition(defaultTransition()).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+          paths.transition(defaultTransition(OWN_TRANSITION)).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
         } else {
-          paths.attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+          // An in-flight tween from an earlier render would overwrite these, so it is
+          // interrupted first - by name, so a consumer's own transition keeps running.
+          paths.interrupt(OWN_TRANSITION).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
         }
       });
     }
@@ -7955,10 +8034,12 @@
         // attribute, so no CSS selector changes meaning.
         selection.selectAll("path.sszvis-stacked-area-path").data(data, props.key).join(enter => enter.append("path").attr("class", "sszvis-path sszvis-stacked-area-path").attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth), update => {
           if (props.transition) {
-            update.transition(defaultTransition()).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+            update.transition(defaultTransition(OWN_TRANSITION)).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
             return update;
           }
-          return update.attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+          // An in-flight tween from an earlier render would overwrite these, so it is
+          // interrupted first - by name, so a consumer's own transition keeps running.
+          return update.interrupt(OWN_TRANSITION).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
         });
       });
     }
@@ -11655,9 +11736,14 @@
         // the final radius in the DOM before the tween started, and the tween would then interpolate
         // that radius onto itself.
         if (props.transition) {
-          anchoredCircles.transition(defaultTransition()).attr("r", radiusAcc);
+          anchoredCircles.transition(defaultTransition(OWN_TRANSITION)).attr("r", radiusAcc);
         } else {
-          anchoredCircles.attr("r", radiusAcc);
+          // An in-flight tween from an earlier render would overwrite the radius written here,
+          // so it is interrupted first - by name, so a transition the consumer scheduled on
+          // these circles keeps running. The exit transition above is deliberately left
+          // unnamed: it is on departing nodes, and giving it this name would let an interrupt
+          // cancel a pending .remove() and leave them behind.
+          anchoredCircles.interrupt(OWN_TRANSITION).attr("r", radiusAcc);
         }
       });
       // The argument tuple is typed as geojson.ts and src/behavior/panning.ts type their own on():
@@ -13565,6 +13651,7 @@
     exports.GEO_KEY_DEFAULT = GEO_KEY_DEFAULT;
     exports.LAKE_FADE_GRADIENT_ID = LAKE_FADE_GRADIENT_ID;
     exports.MEMOIZE_CACHE_LIMIT = MEMOIZE_CACHE_LIMIT;
+    exports.OWN_TRANSITION = OWN_TRANSITION;
     exports.RATIO = RATIO;
     exports.STADT_KREISE_KEY = STADT_KREISE_KEY;
     exports.STATISTISCHE_QUARTIERE_KEY = STATISTISCHE_QUARTIERE_KEY;

@@ -1,7 +1,7 @@
 import { select, line as line$1 } from 'd3';
 import { component } from '../d3-component.js';
 import { functor, identity, valueFn } from '../fn.js';
-import { defaultTransition } from '../transition.js';
+import { defaultTransition, OWN_TRANSITION } from '../transition.js';
 
 /**
  * Line component
@@ -137,9 +137,12 @@ function line() {
     // branches are spelled out rather than sharing a variable - a d3 transition and a
     // d3 selection have separate types.
     if (props.transition) {
-      path.transition(defaultTransition()).attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
+      path.transition(defaultTransition(OWN_TRANSITION)).attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
     } else {
-      path.attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
+      // An in-flight tween from an earlier render would overwrite what is written here, so
+      // it is interrupted first - by name, so a transition the consumer scheduled on this
+      // path keeps running.
+      path.interrupt(OWN_TRANSITION).attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
     }
   });
 }

@@ -2,7 +2,7 @@ import { select, area } from 'd3';
 import { component } from '../d3-component.js';
 import { valueFn } from '../fn.js';
 import { warn } from '../logger.js';
-import { defaultTransition } from '../transition.js';
+import { defaultTransition, OWN_TRANSITION } from '../transition.js';
 
 /**
  * Stacked Area component
@@ -231,9 +231,11 @@ function stackedArea() {
     // branches are spelled out rather than sharing a variable - a d3 transition and a d3
     // selection have separate types.
     if (props.transition) {
-      paths.transition(defaultTransition()).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+      paths.transition(defaultTransition(OWN_TRANSITION)).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
     } else {
-      paths.attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+      // An in-flight tween from an earlier render would overwrite these, so it is
+      // interrupted first - by name, so a consumer's own transition keeps running.
+      paths.interrupt(OWN_TRANSITION).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
     }
   });
 }

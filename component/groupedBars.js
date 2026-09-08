@@ -2,8 +2,9 @@ import { select, scaleBand, range } from 'd3';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
 import { functor, not } from '../fn.js';
+import { toFinite } from '../svgUtils/toFinite.js';
 import translateString from '../svgUtils/translateString.js';
-import { defaultTransition } from '../transition.js';
+import { defaultTransition, OWN_TRANSITION } from '../transition.js';
 
 /**
  * Grouped Bars component
@@ -70,6 +71,12 @@ import { defaultTransition } from '../transition.js';
  * applying the attribute to - the bars with a defined value, or the bars without one - so a group
  * containing missing values could see the same datum handed two different indices in one render.
  *
+ * Note: the geometry accessors are guarded. A value that is not a finite number - NaN,
+ * Infinity, undefined, null, or anything that does not coerce - becomes 0 rather than being
+ * written into an attribute, so a bad accessor return parks a bar at 0 instead of producing
+ * an invalid rect. The missing-value cross's translation is guarded the same way. fill and
+ * stroke are not guarded, because they are colours. This matches bar and dot.
+ *
  * Note: each orientation supplies the along-group dimensions itself, so it never calls the
  * consumer's accessors for them. Vertical grouped bars ignore x and width; horizontal grouped bars
  * ignore y and height. Passing one of those has no effect and raises no error.
@@ -90,31 +97,74 @@ function createGroupedBarsComponent(config) {
     const inGroupScale = scaleBand().domain(range(props.groupSize)).padding(props.groupSpace).paddingOuter(0).rangeRound(config.inGroupRange(props));
     const groups = selection.selectAll("g.sszvis-bargroup").data(data).join("g").classed("sszvis-bargroup", true);
     const barUnits = groups.selectAll("g.sszvis-barunit").data(d => d).join("g").classed("sszvis-barunit", true);
-    barUnits.each((d, i) => {
-      d.__sszvisGroupedBarIndex__ = i;
+    // The bar's index within its group is recorded against the unit element rather than
+    // written onto the datum, so a datum object reused across groups is not aliased: it is
+    // the element that is unique per bar, not the caller's object. This also keeps the datum
+    // bound to .sszvis-barunit and to the bar's rect exactly the caller's own object, which
+    // consumers rely on - a mouseover handler on `.sszvis-barunit rect` receives it and may
+    // compare it by identity.
+    const groupIndexByUnit = new WeakMap();
+    barUnits.each(function (_d, i) {
+      groupIndexByUnit.set(this, i);
     });
     // Accessors are called with the bar's index within its group, which is never the index
     // d3 would supply: a bar's own rect is joined one datum at a time, where d3 passes 0,
     // and the missing-value cross is positioned on a filtered selection, where d3 passes
     // the position among the missing bars only. The index recorded above is used instead.
-    // The `each` above tags every datum on every render, before any accessor runs, so the
-    // tag is always present here.
-    const groupIndexOf = d => d.__sszvisGroupedBarIndex__;
+    //
+    // It is resolved from the element the callback is running on, so there are two shapes.
+    // A callback on the bar unit - the missing-value cross's transform - reads the unit
+    // directly; a callback on the bar's rect reads the rect's parent, which is the unit.
+    // The `each` above covers the whole barUnits join before any accessor runs, so every
+    // unit is in the map by the time an accessor can ask. A miss therefore means the DOM
+    // was changed underneath the component, and it throws rather than defaulting: a `?? 0`
+    // here would place the bar at its group's left edge, on top of whichever bar belongs
+    // there, which is the silent misrender the configs stopped risking.
+    //
+    // Note this is only about the index lookup. The configs still apply `?? 0` to the
+    // inGroupScale result, whose domain is range(groupSize), so a group holding more
+    // members than groupSize leaves its trailing bars with no band and stacks them at the
+    // group's left edge. That is long-standing behaviour for a group larger than declared
+    // - the component documents the under-full case as visible gaps and does not define
+    // the over-full one - and it is unchanged here.
+    const indexOfUnit = unit => {
+      const index = groupIndexByUnit.get(unit);
+      if (index === undefined) {
+        throw new Error("[groupedBars] a bar unit is missing its in-group index");
+      }
+      return index;
+    };
+    const indexOfRect = rect => indexOfUnit(rect.parentNode);
     const configX = config.x(props, inGroupScale);
     const configY = config.y(props, inGroupScale);
     const configWidth = config.width(props, inGroupScale);
     const configHeight = config.height(props, inGroupScale);
     const configMissingTransform = config.missingTransform(props, inGroupScale);
-    const xAt = d => configX(d, groupIndexOf(d));
-    const yAt = d => configY(d, groupIndexOf(d));
-    const widthAt = d => typeof configWidth === "function" ? configWidth(d, groupIndexOf(d)) : configWidth;
-    const heightAt = d => typeof configHeight === "function" ? configHeight(d, groupIndexOf(d)) : configHeight;
-    const fillAt = d => typeof props.fill === "function" ? props.fill(d, groupIndexOf(d)) : props.fill;
-    const strokeAt = d => {
-      var _ref;
-      return (_ref = typeof props.stroke === "function" ? props.stroke(d, groupIndexOf(d)) : props.stroke) !== null && _ref !== void 0 ? _ref : null;
+    // Guarded the way bar and dot guard theirs, so a consumer accessor returning NaN cannot
+    // reach an attribute. fill and stroke are deliberately not guarded - they are colours,
+    // and neither bar nor dot guards those either.
+    const xAt = function (d) {
+      return toFinite(configX(d, indexOfRect(this)));
     };
-    const missingTransformAt = d => configMissingTransform(d, groupIndexOf(d));
+    const yAt = function (d) {
+      return toFinite(configY(d, indexOfRect(this)));
+    };
+    const widthAt = function (d) {
+      return toFinite(typeof configWidth === "function" ? configWidth(d, indexOfRect(this)) : configWidth);
+    };
+    const heightAt = function (d) {
+      return toFinite(typeof configHeight === "function" ? configHeight(d, indexOfRect(this)) : configHeight);
+    };
+    const fillAt = function (d) {
+      return typeof props.fill === "function" ? props.fill(d, indexOfRect(this)) : props.fill;
+    };
+    const strokeAt = function (d) {
+      var _ref;
+      return (_ref = typeof props.stroke === "function" ? props.stroke(d, indexOfRect(this)) : props.stroke) !== null && _ref !== void 0 ? _ref : null;
+    };
+    const missingTransformAt = function (d) {
+      return configMissingTransform(d, indexOfUnit(this));
+    };
     const unitsWithValue = barUnits.filter(props.defined);
     const unitsWithoutValue = barUnits.filter(not(props.defined));
     // A unit keeps its children across renders so they can tween, so each shape is joined
@@ -138,13 +188,15 @@ function createGroupedBarsComponent(config) {
     // own rect for styling and consumer selection.
     const bars = unitsWithValue.selectAll("rect.sszvis-bar-rect").data(d => [d]).join(enter => enter.append("rect").classed("sszvis-bar sszvis-bar-rect", true).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt)).attr("fill", fillAt).attr("stroke", strokeAt);
     if (props.transition) {
-      bars.transition(defaultTransition()).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
+      bars.transition(defaultTransition(OWN_TRANSITION)).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
     } else {
       // A transition scheduled by an earlier render would keep ticking and overwrite the
       // geometry written here, so `transition(false)` is only deterministic once any
       // in-flight tween is interrupted. This matters on a resize or an event that lands
       // mid-animation.
-      bars.interrupt().attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
+      // Interrupted by name, so a transition the consumer scheduled on these rects keeps
+      // running; only the geometry this component owns is stopped.
+      bars.interrupt(OWN_TRANSITION).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
     }
     // The join selectors use component-owned marker classes so a consumer-added
     // <line class="line1"> inside the unit is never adopted or overwritten. The public
@@ -168,9 +220,9 @@ const createVerticalConfig = () => ({
     let {
       groupScale
     } = _ref3;
-    return (d, _i) => {
+    return (d, groupIndex) => {
       var _inGroupScale;
-      return groupScale(d) + (d.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale = inGroupScale(d.__sszvisGroupedBarIndex__)) !== null && _inGroupScale !== void 0 ? _inGroupScale : 0 : 0);
+      return groupScale(d) + ((_inGroupScale = inGroupScale(groupIndex)) !== null && _inGroupScale !== void 0 ? _inGroupScale : 0);
     };
   },
   y: _ref4 => {
@@ -193,7 +245,12 @@ const createVerticalConfig = () => ({
     } = _ref6;
     return (d, groupIndex) => {
       var _inGroupScale2;
-      return translateString(groupScale(d) + (d.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale2 = inGroupScale(d.__sszvisGroupedBarIndex__)) !== null && _inGroupScale2 !== void 0 ? _inGroupScale2 : 0 : 0) + inGroupScale.bandwidth() / 2, y(d, groupIndex));
+      return (
+        // Both coordinates are guarded as a whole, not just the consumer accessor: translateString
+        // interpolates its arguments into a string, so one non-finite term anywhere in the
+        // expression would yield transform="translate(NaN,0)" rather than a placed cross.
+        translateString(toFinite(groupScale(d) + ((_inGroupScale2 = inGroupScale(groupIndex)) !== null && _inGroupScale2 !== void 0 ? _inGroupScale2 : 0) + inGroupScale.bandwidth() / 2), toFinite(y(d, groupIndex)))
+      );
     };
   },
   tooltipPosition: (_ref7, inGroupScale) => {
@@ -206,10 +263,9 @@ const createVerticalConfig = () => ({
       let tallest = Infinity;
       for (const [i, d] of group.entries()) {
         var _inGroupScale3;
-        const datum = d;
-        xTotal += groupScale(datum) + (datum.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale3 = inGroupScale(datum.__sszvisGroupedBarIndex__)) !== null && _inGroupScale3 !== void 0 ? _inGroupScale3 : 0 : 0) + inGroupScale.bandwidth() / 2;
+        xTotal += groupScale(d) + ((_inGroupScale3 = inGroupScale(i)) !== null && _inGroupScale3 !== void 0 ? _inGroupScale3 : 0) + inGroupScale.bandwidth() / 2;
         // smaller y is higher
-        tallest = Math.min(tallest, y(datum, i));
+        tallest = Math.min(tallest, y(d, i));
       }
       return [xTotal / group.length, tallest];
     };
@@ -227,9 +283,9 @@ const createHorizontalConfig = () => ({
     let {
       groupScale
     } = _ref9;
-    return d => {
+    return (d, groupIndex) => {
       var _inGroupScale4;
-      return groupScale(d) + (d.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale4 = inGroupScale(d.__sszvisGroupedBarIndex__)) !== null && _inGroupScale4 !== void 0 ? _inGroupScale4 : 0 : 0);
+      return groupScale(d) + ((_inGroupScale4 = inGroupScale(groupIndex)) !== null && _inGroupScale4 !== void 0 ? _inGroupScale4 : 0);
     };
   },
   width: _ref0 => {
@@ -246,7 +302,10 @@ const createHorizontalConfig = () => ({
     } = _ref1;
     return (d, groupIndex) => {
       var _inGroupScale5;
-      return translateString(x(d, groupIndex), groupScale(d) + (d.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale5 = inGroupScale(d.__sszvisGroupedBarIndex__)) !== null && _inGroupScale5 !== void 0 ? _inGroupScale5 : 0 : 0) + inGroupScale.bandwidth() / 2);
+      return (
+        // Guarded as a whole, as in the vertical config.
+        translateString(toFinite(x(d, groupIndex)), toFinite(groupScale(d) + ((_inGroupScale5 = inGroupScale(groupIndex)) !== null && _inGroupScale5 !== void 0 ? _inGroupScale5 : 0) + inGroupScale.bandwidth() / 2))
+      );
     };
   },
   tooltipPosition: (_ref10, inGroupScale) => {
@@ -259,10 +318,9 @@ const createHorizontalConfig = () => ({
       let rightmost = -Infinity;
       for (const [i, d] of group.entries()) {
         var _inGroupScale6;
-        const datum = d;
-        yTotal += groupScale(datum) + (datum.__sszvisGroupedBarIndex__ !== undefined ? (_inGroupScale6 = inGroupScale(datum.__sszvisGroupedBarIndex__)) !== null && _inGroupScale6 !== void 0 ? _inGroupScale6 : 0 : 0) + inGroupScale.bandwidth() / 2;
+        yTotal += groupScale(d) + ((_inGroupScale6 = inGroupScale(i)) !== null && _inGroupScale6 !== void 0 ? _inGroupScale6 : 0) + inGroupScale.bandwidth() / 2;
         // larger x is more to the right
-        rightmost = Math.max(rightmost, x(datum, i));
+        rightmost = Math.max(rightmost, x(d, i));
       }
       return [rightmost, yTotal / group.length];
     };

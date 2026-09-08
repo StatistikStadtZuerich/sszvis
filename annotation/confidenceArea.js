@@ -3,7 +3,7 @@ import { component } from '../d3-component.js';
 import { functor, identity } from '../fn.js';
 import { dataAreaPattern } from '../patterns.js';
 import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
-import { defaultTransition } from '../transition.js';
+import { defaultTransition, OWN_TRANSITION } from '../transition.js';
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -42,7 +42,10 @@ function confidenceArea() {
       path.style("stroke", props.stroke);
     }
     path.attr("fill", "url(#data-area-pattern)").order();
-    const finalPath = props.transition ? path.transition(defaultTransition()) : path;
+    // Without a transition the attributes below are written synchronously, so an in-flight
+    // tween from an earlier render has to be interrupted or it overwrites them. Interrupted
+    // by name, so a transition the consumer scheduled on this path keeps running.
+    const finalPath = props.transition ? path.transition(defaultTransition(OWN_TRANSITION)) : path.interrupt(OWN_TRANSITION);
     finalPath.attr("d", d => area$1(props.valuesAccessor(d)));
     if (props.stroke) {
       finalPath.style("stroke", props.stroke);
