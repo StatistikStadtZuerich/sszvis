@@ -375,6 +375,31 @@ describe("map/renderer/patternedlakeoverlay", () => {
       ).toEqual(["rgb(255, 0, 0)", "rgb(0, 255, 0)"]);
     });
 
+    // The path selectors are scoped to the rendering group's own children, so an overlay drawn
+    // into a nested group is left alone even when it happens to carry the same key: two groups
+    // are two overlays, whatever they are called.
+    test("leaves an overlay in a nested group alone", () => {
+      const outer = group("nested-parent");
+      const inner = outer.append("g");
+      const renderWith = (target: typeof outer) =>
+        target.call(
+          mapRendererPatternedLakeOverlay()
+            .key("shared")
+            .mapPath(mapPathOf())
+            .lakeFeature(lake())
+            .lakeBounds(bounds())
+        );
+      renderWith(inner);
+      renderWith(outer);
+      const node = outer.node() as SVGGElement;
+      expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(2);
+      expect(defs(node, "path.sszvis-map__lakepath")).toHaveLength(2);
+      expect(defs(node, ":scope > path.sszvis-map__lakezurich")).toHaveLength(1);
+      expect(
+        defs(inner.node() as SVGGElement, ":scope > path.sszvis-map__lakezurich")
+      ).toHaveLength(1);
+    });
+
     test("re-renders a keyed overlay into its own existing paths", () => {
       const layer = group("keyed-rerender");
       const renderWith = () =>
