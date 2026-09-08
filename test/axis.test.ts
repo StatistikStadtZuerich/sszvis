@@ -261,6 +261,19 @@ describe("axis", () => {
       expect(titleElement.text()).toBe(titleText);
     });
 
+    test("should call a function-valued axis title instead of stringifying it", () => {
+      const xAxis = axisX()
+        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
+        .orient("bottom")
+        .title(() => "Jahr");
+      const titleElement = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+        .selectGroup("xAxis")
+        .call(xAxis)
+        .select(".sszvis-axis")
+        .select(".sszvis-axis__title");
+      expect(titleElement.text()).toBe("Jahr");
+    });
+
     test("should apply vertical title rotation", () => {
       const yAxis = axisY()
         .scale(scaleLinear().domain([0, 100]).range([200, 0]))
