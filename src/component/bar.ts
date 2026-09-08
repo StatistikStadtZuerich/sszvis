@@ -59,7 +59,7 @@ import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { toFinite } from "../svgUtils/toFinite.js";
-import { defaultTransition } from "../transition.js";
+import { defaultTransition, OWN_TRANSITION } from "../transition.js";
 
 /**
  * Every visual property is wrapped by fn.functor on set, so it is always stored as a
@@ -165,7 +165,7 @@ export default function bar<T = unknown>(): BarComponent<T> {
 
       if (props.transition) {
         bars
-          .transition(defaultTransition())
+          .transition(defaultTransition(OWN_TRANSITION))
           .attr("x", xAt)
           .attr("y", yAt)
           .attr("width", wAt)
@@ -182,10 +182,15 @@ export default function bar<T = unknown>(): BarComponent<T> {
         // the in-flight value. The transition branch needs nothing: d3 replaces a transition
         // of the same name on the same element, so scheduling supersedes the previous one.
         //
-        // The interrupt is unnamed, matching the component's own transition, so it also
-        // stops an unnamed transition a consumer scheduled on these rects. groupedBars and
-        // pie have the same property; naming the transitions is the fix for all three.
-        bars.interrupt().attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+        // Interrupted by name, so a transition the consumer scheduled on these rects - which
+        // is unnamed, as a bare selection.transition() is - keeps running. Only the geometry
+        // this component owns is stopped.
+        bars
+          .interrupt(OWN_TRANSITION)
+          .attr("x", xAt)
+          .attr("y", yAt)
+          .attr("width", wAt)
+          .attr("height", hAt);
       }
 
       // Tooltip anchors

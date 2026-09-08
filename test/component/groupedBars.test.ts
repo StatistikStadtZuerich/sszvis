@@ -764,6 +764,29 @@ describe("component/groupedBars", () => {
       expect(bar.attr("height")).toBe(String(200 - valueScale(0)));
     });
 
+    test("should not interrupt a transition the consumer scheduled on the same bars", async () => {
+      const chartLayer = svg.selectGroup("bars");
+      chartLayer.datum(oneBar(10)).call(verticalOf().transition(false));
+
+      // A consumer fades the bars in with its own, unnamed transition - the name a bare
+      // selection.transition() uses, which the component's interrupt used to reach as well.
+      svg
+        .selectAll("rect.sszvis-bar")
+        .attr("opacity", 0)
+        .transition()
+        .duration(300)
+        .attr("opacity", 1);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      chartLayer.datum(oneBar(0)).call(verticalOf().transition(false));
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const bar = svg.select<SVGRectElement>("rect.sszvis-bar");
+      expect(bar.attr("opacity")).toBe("1");
+      // The component's own geometry still landed synchronously.
+      expect(bar.attr("y")).toBe(String(valueScale(0)));
+    });
+
     test("should swap between a rect and the missing-value lines as `defined` changes", () => {
       const component = verticalOf().transition(false);
       const chartLayer = svg.selectGroup("bars");

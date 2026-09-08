@@ -14,6 +14,12 @@
  *
  * fastTransition provides an alternate transition duration for certain situations where the standard duration is
  * too slow, and slowTransition for where it is too fast.
+ *
+ * defaultTransition takes an optional name. A component that has to interrupt its own transition must pass one and
+ * interrupt by it: `selection.interrupt()` with no name stops the unnamed transition, which is also the one a consumer
+ * gets from a bare `selection.transition()`, so an unnamed interrupt cancels a consumer's animation on the same
+ * elements as well. Naming scopes both halves to the component. Only the components that interrupt need it, so the
+ * argument is optional and every other caller is unchanged.
  */
 
 import { transition as d3Transition, easePolyOut } from "d3";
@@ -21,10 +27,23 @@ import { transition as d3Transition, easePolyOut } from "d3";
 const defaultEase = easePolyOut;
 
 /**
+ * The transition name a component uses for geometry it owns and may need to interrupt.
+ *
+ * Shared rather than per-component: these components never animate the same elements, and one name keeps the
+ * interrupt and the transition it is meant to stop from drifting apart. Exported so a consumer can deliberately
+ * interrupt or inspect the library's own transitions.
+ */
+export const OWN_TRANSITION = "sszvis-own";
+
+/**
  * Creates a default transition with standard easing and duration
+ * @param name Optional transition name. Pass OWN_TRANSITION when the component also interrupts this transition, so
+ *             the interrupt cannot reach a transition the consumer scheduled. Omitted, the transition is unnamed,
+ *             which is d3's default and what every non-interrupting component uses.
  * @returns A d3 transition with 300ms duration and polynomial ease-out
  */
-export const defaultTransition = () => d3Transition().ease(defaultEase).duration(300);
+export const defaultTransition = (name?: string) =>
+  d3Transition(name).ease(defaultEase).duration(300);
 
 /**
  * Creates a fast transition for quick animations

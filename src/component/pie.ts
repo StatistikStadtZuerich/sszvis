@@ -52,7 +52,7 @@ import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
-import { defaultTransition } from "../transition.js";
+import { defaultTransition, OWN_TRANSITION } from "../transition.js";
 
 /** The angles of one wedge, in radians, as d3's arc generator wants them. */
 interface WedgeAngles {
@@ -212,7 +212,7 @@ export default function pie<T = unknown>(): PieComponent<T> {
 
       if (props.transition) {
         segments
-          .transition(defaultTransition())
+          .transition(defaultTransition(OWN_TRANSITION))
           .attr("transform", transform)
           .attr("fill", fillAccessor)
           .attr("stroke", strokeAccessor)
@@ -233,7 +233,9 @@ export default function pie<T = unknown>(): PieComponent<T> {
         // A render that turns transitions off has to stop whatever the last one started:
         // the attrTween below writes both the path and onScreen on every frame, so an
         // uninterrupted transition would overwrite these attributes after they are set.
-        segments.interrupt();
+        // Interrupted by name, so a transition the consumer scheduled on these paths keeps
+        // running; only the geometry this component owns is stopped.
+        segments.interrupt(OWN_TRANSITION);
         segments
           .attr("transform", transform)
           .attr("fill", fillAccessor)

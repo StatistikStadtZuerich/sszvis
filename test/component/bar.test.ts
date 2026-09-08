@@ -474,6 +474,31 @@ describe("component/bar", () => {
       expect(attrs(node, "height")).toEqual(["10"]);
     });
 
+    test("should not interrupt a transition the consumer scheduled on the same bars", async () => {
+      const g = group("consumer-tween");
+      g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(barOf().transition(false) as never);
+      const node = g.node() as SVGGElement;
+
+      // A consumer fades the bars in with its own transition, which is unnamed - that is what
+      // a bare selection.transition() gives you, and it used to be the same name the
+      // component's interrupt reached, so this animation was killed mid-flight.
+      g.selectAll("rect.sszvis-bar-rect")
+        .attr("opacity", 0)
+        .transition()
+        .duration(300)
+        .attr("opacity", 1);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      g.datum([{ x: 5, y: 5, w: 20, h: 20 }]).call(barOf().transition(false) as never);
+      // Past the consumer transition's own duration, so it has had time to finish.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      expect(attrs(node, "opacity")).toEqual(["1"]);
+      // The component's own geometry still landed synchronously.
+      expect(attrs(node, "x")).toEqual(["5"]);
+      expect(attrs(node, "width")).toEqual(["20"]);
+    });
+
     test("should schedule one tween per geometry attribute and no more", () => {
       // The transition used to be created and discarded, which attached d3 state to every
       // bar without ever scheduling a tween. There is now exactly one tween per geometry
