@@ -15,7 +15,7 @@
  *
  * @param selection d3 selection for one or more <text> object
  * @param width number - global width in which the text will be word-wrapped.
- * @param paddingRightLeft integer - Padding right and left between the wrapped text and the
+ * @param paddingRightLeft number - Padding right and left between the wrapped text and the
  *        'invisible box' of 'width' width. It always narrows the width the text is measured
  *        against, but only reaches the rendered 'x' on untranslated <text>, and only for
  *        text-anchor 'start' (x = padding) and 'end' (x = width - padding); 'middle' is
@@ -24,7 +24,7 @@
  *        width/2 by anchor. Defaults to 5 when omitted or when the value is not a finite
  *        number, which logs a warning on each such call; an explicit 0 and a negative
  *        padding are honoured.
- * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the
+ * @param paddingTopBottom number - Padding top and bottom between the wrapped text and the
  *        'invisible box' of 'width' width. Two pixels are subtracted from it to account for
  *        the borders, so the rendered 'y' is padding - 2: the default of 5 yields y="3" and
  *        an explicit 0 yields y="-2". It is used only when the <text> element carries no 'y'
@@ -76,10 +76,10 @@ export default function textWrap<D, P extends BaseType, PD>(
   paddingTopBottom?: number
 ): number[] {
   const padRightLeft = resolvePadding(paddingRightLeft, "paddingRightLeft");
-  //Remove 2 pixels because of the borders
+  // Remove 2 pixels because of the borders
   const padTopBottom = resolvePadding(paddingTopBottom, "paddingTopBottom") - 2;
-  const maxWidth = width; //I store the tooltip max width
-  const innerWidth = width - padRightLeft * 2; //Take the padding into account
+  const maxWidth = width; // I store the tooltip max width
+  const innerWidth = width - padRightLeft * 2; // Take the padding into account
 
   const arrLineCreatedCount: number[] = [];
   selection.each(function (this: SVGTextElement) {
