@@ -16,9 +16,9 @@ import { stackedBarVertical } from './stackedBar.js';
  * `offset`, an ordinal x-axis, and a stackedBarVertical, and finally passes all tooltip
  * anchors of all groups to `tooltip` in a single call.
  *
- * `offset`, `xScale`, `yScale`, `xAcc` and `tooltip` are required and are validated before
- * anything is rendered: a missing one throws an error naming the component and the property.
- * `fill`, `stroke`, `xLabel` and `slant` are optional.
+ * `offset`, `xScale`, `yScale` and `tooltip` are required and are validated before anything is
+ * rendered: a missing one throws an error naming the component and the property. `fill`,
+ * `stroke`, `xAcc`, `xLabel` and `slant` are optional.
  *
  * @module sszvis/component/nestedStackedBarsVertical
  * @template T The type of the data objects behind the stack slices
@@ -41,10 +41,10 @@ import { stackedBarVertical } from './stackedBar.js';
  *                                          fn.functor) is used as-is.
  * @property {function} tooltip             Required. A tooltip component, called once with the tooltip
  *                                          anchors of every nested group in one selection.
- * @property {function} xAcc                Required. An x-accessor over a slice datum. Kept for backwards
- *                                          compatibility and validated, but no longer read: the nested
- *                                          groups are labelled from their own nest key. Deprecation
- *                                          candidate.
+ * @property {function} xAcc                Optional and never read. An x-accessor over a slice datum,
+ *                                          kept so that the existing call sites keep working: the nested
+ *                                          groups are labelled from their own nest key instead.
+ *                                          Deprecated; a major version will remove it.
  * @property {string, function} fill        Optional. A fill value for the rectangles. When unset, no fill
  *                                          attribute is written at all and the rectangles fall back to the
  *                                          SVG/CSS default.
@@ -97,7 +97,6 @@ const nestedStackedBarsVertical = () => component().prop("offset", functor).prop
   const xScale = required(props.xScale, "xScale");
   const yScale = required(props.yScale, "yScale");
   const tooltip = required(props.tooltip, "tooltip");
-  required(props.xAcc, "xAcc");
   const {
     fill,
     stroke,
