@@ -53,15 +53,26 @@ describe("control/select", () => {
     expect(options().map((o) => o.textContent)).toEqual(["A", "B", "C"]);
   });
 
-  test("should store the index rather than the value in each option", () => {
+  test("should store the value itself in each option", () => {
     render(selectMenu().values(["A", "B", "C"]).current("A"));
-    expect(options().map((o) => o.getAttribute("value"))).toEqual(["0", "1", "2"]);
+    expect(options().map((o) => o.getAttribute("value"))).toEqual(["A", "B", "C"]);
+  });
+
+  test("should coerce a non-string value when writing it as the option value", () => {
+    render(
+      selectMenu()
+        // @ts-expect-error - the ported types constrain values to strings; this pins the
+        // runtime coercion that protects JS consumers and the built bundle.
+        .values([42])
+        .current("")
+    );
+    expect(options()[0]?.getAttribute("value")).toBe("42");
   });
 
   test("should mark the current value as selected", () => {
     render(selectMenu().values(["A", "B", "C"]).current("B"));
     expect(options().map((o) => o.selected)).toEqual([false, true, false]);
-    expect(selectEl()?.value).toBe("1");
+    expect(selectEl()?.value).toBe("B");
   });
 
   test("should compare the current value strictly, not by rendered label", () => {
@@ -76,15 +87,41 @@ describe("control/select", () => {
     render(selectMenu().values(["A", "B"]).current("Z"));
     expect(options().map((o) => o.selected)).toEqual([true, false]);
     // With no option marked selected the browser falls back to the first one.
-    expect(selectEl()?.value).toBe("0");
+    expect(selectEl()?.value).toBe("A");
   });
 
-  test("a duplicated value selects the last match", () => {
+  test("a duplicated value renders twice and selects the last match", () => {
     // Selectedness is written per option with no notion of uniqueness, but a
-    // single-select element holds exactly one selection, so the last write wins.
+    // single-select element holds exactly one selection, so the last write wins. Options
+    // are keyed by value, yet a repeated value still gets one option per occurrence.
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render(selectMenu().values(["A", "B", "A"]).current("A"));
+    expect(options().map((o) => o.textContent)).toEqual(["A", "B", "A"]);
     expect(options().map((o) => o.selected)).toEqual([false, false, true]);
-    expect(selectEl()?.value).toBe("2");
+    expect(selectEl()?.value).toBe("A");
+    // A value repeated verbatim resolves to itself either way, so nothing is ambiguous.
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  test("two distinct values that coerce to the same string resolve to the first", () => {
+    // NOTE: the option key is `String(d)`, so distinct values sharing a coercion are
+    // indistinguishable and the first of them wins. Only reachable from JS consumers and
+    // the built bundle, since the types require strings.
+    const change = vi.fn();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      selectMenu()
+        // @ts-expect-error - see above; pins the collision for the built bundle.
+        .values(["1", 1])
+        .current("1")
+        .change(change)
+    );
+    expect(options().map((o) => o.textContent)).toEqual(["1", "1"]);
+    expect(warn).toHaveBeenCalled();
+    const el = selectEl() as HTMLSelectElement;
+    el.selectedIndex = 1;
+    el.dispatchEvent(new Event("change"));
+    expect(change).toHaveBeenCalledWith(expect.any(Event), "1");
   });
 
   test("should render a metrics element used for measuring label widths", () => {
@@ -99,7 +136,7 @@ describe("control/select", () => {
       const change = vi.fn();
       render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
       const el = selectEl() as HTMLSelectElement;
-      el.value = "2";
+      el.value = "C";
       el.dispatchEvent(new Event("change"));
       expect(change).toHaveBeenCalledTimes(1);
       expect(change.mock.calls[0][0]).toBeInstanceOf(Event);
@@ -110,7 +147,7 @@ describe("control/select", () => {
       const menu = selectMenu().values(["A", "B"]).current("A").change(vi.fn());
       render(menu);
       const el = selectEl() as HTMLSelectElement;
-      el.value = "1";
+      el.value = "B";
       el.dispatchEvent(new Event("change"));
       expect(menu.current()).toBe("A");
     });
@@ -119,28 +156,28 @@ describe("control/select", () => {
       const focus = vi.spyOn(window, "focus");
       render(selectMenu().values(["A", "B"]).current("A").change(vi.fn()));
       const el = selectEl() as HTMLSelectElement;
-      el.value = "1";
+      el.value = "B";
       el.dispatchEvent(new Event("change"));
       expect(focus).not.toHaveBeenCalled();
       await new Promise((resolve) => setTimeout(resolve, 0));
       expect(focus).toHaveBeenCalled();
     });
 
-    test("should ignore a selection whose index no longer maps to a value", () => {
+    test("should ignore a selection that matches none of the configured values", () => {
       const change = vi.fn();
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
       const el = selectEl() as HTMLSelectElement;
-      // Drive the handler the way a shrunk list would: an option whose index no
-      // longer exists in `values`.
-      el.querySelectorAll("option")[2]?.setAttribute("value", "9");
-      el.value = "9";
+      // An option value the component did not write - the only way a selection can now
+      // fail to resolve, since options carry their own value.
+      el.querySelectorAll("option")[2]?.setAttribute("value", "Z");
+      el.value = "Z";
       el.dispatchEvent(new Event("change"));
       expect(change).not.toHaveBeenCalled();
       expect(warn).toHaveBeenCalled();
     });
 
-    test("should ignore an empty select value rather than reading it as index 0", () => {
+    test("should ignore an empty select value when no value is an empty string", () => {
       const change = vi.fn();
       vi.spyOn(console, "warn").mockImplementation(() => {});
       render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
@@ -151,21 +188,21 @@ describe("control/select", () => {
       expect(change).not.toHaveBeenCalled();
     });
 
-    test("should ignore a non-numeric option value", () => {
+    test("should resolve an empty string that is itself one of the values", () => {
+      // Resolution is by value, so "" is a value like any other rather than standing for
+      // "nothing selected" as it did when the value attribute held an index.
       const change = vi.fn();
-      vi.spyOn(console, "warn").mockImplementation(() => {});
-      render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
+      render(selectMenu().values(["", "B"]).current("B").change(change));
       const el = selectEl() as HTMLSelectElement;
-      el.querySelectorAll("option")[1]?.setAttribute("value", "nope");
-      el.value = "nope";
+      el.value = "";
       el.dispatchEvent(new Event("change"));
-      expect(change).not.toHaveBeenCalled();
+      expect(change).toHaveBeenCalledWith(expect.any(Event), "");
     });
 
     test("should default to a no-op-ish handler that does not throw", () => {
       render(selectMenu().values(["A", "B"]).current("A"));
       const el = selectEl() as HTMLSelectElement;
-      el.value = "1";
+      el.value = "B";
       expect(() => el.dispatchEvent(new Event("change"))).not.toThrow();
     });
   });
@@ -287,7 +324,7 @@ describe("control/select", () => {
       sel.call(selectMenu().values(["A", "B"]).current("A").change(first) as never);
       sel.call(selectMenu().values(["A", "B"]).current("A").change(second) as never);
       const el = selectEl() as HTMLSelectElement;
-      el.value = "1";
+      el.value = "B";
       el.dispatchEvent(new Event("change"));
       expect(first).not.toHaveBeenCalled();
       expect(second).toHaveBeenCalledWith(expect.any(Event), "B");
@@ -297,10 +334,10 @@ describe("control/select", () => {
       const sel = d3Select(container);
       sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
       const el = selectEl() as HTMLSelectElement;
-      el.value = "2";
+      el.value = "C";
       el.dispatchEvent(new Event("change"));
       sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
-      expect(el.value).toBe("0");
+      expect(el.value).toBe("A");
       expect(options().map((o) => o.selected)).toEqual([true, false, false]);
     });
 
@@ -308,12 +345,33 @@ describe("control/select", () => {
       const sel = d3Select(container);
       sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
       const el = selectEl() as HTMLSelectElement;
-      el.value = "2";
+      el.value = "C";
       el.dispatchEvent(new Event("change"));
       sel.call(selectMenu().values(["A", "B", "C"]).current("B") as never);
-      expect(el.value).toBe("1");
+      expect(el.value).toBe("B");
       sel.call(selectMenu().values(["A", "B", "C"]).current("C") as never);
-      expect(el.value).toBe("2");
+      expect(el.value).toBe("C");
+    });
+
+    test("should not resolve a stale selection to whatever now sits at that index", () => {
+      const change = vi.fn();
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const sel = d3Select(container);
+      sel.call(selectMenu().values(["A", "B", "C"]).current("A").change(change) as never);
+      const el = selectEl() as HTMLSelectElement;
+      // the user picks the third option
+      el.value = options()[2]?.value as string;
+      el.dispatchEvent(new Event("change"));
+      expect(change).toHaveBeenLastCalledWith(expect.any(Event), "C");
+      change.mockClear();
+
+      // the app re-renders with a different list of the same length
+      sel.call(selectMenu().values(["X", "Y", "Z"]).current("X").change(change) as never);
+      // a selection the browser recorded against the old list must not be read as the
+      // value that happens to occupy that position now
+      el.value = "2";
+      el.dispatchEvent(new Event("change"));
+      expect(change).not.toHaveBeenCalledWith(expect.any(Event), "Z");
     });
   });
 
