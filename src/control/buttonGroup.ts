@@ -5,7 +5,7 @@
  * options which affect the state of the chart. This component should be rendered into an html layer.
  *
  * This control is part of the `optionSelectable` class of controls and can be used interchangeably
- * with other controls of this class (sszvis.control.select).
+ * with other controls of this class (`sszvis.control.selectMenu`).
  *
  * @module sszvis/control/buttonGroup
  *
