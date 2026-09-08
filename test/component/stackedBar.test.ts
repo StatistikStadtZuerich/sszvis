@@ -676,17 +676,29 @@ describe("component/stackedBar", () => {
       expect(layout[0][0].data?.category).toBe("X");
     });
 
-    test("falls back to the white separator stroke for every falsy value", () => {
-      // NOTE: the stroke is applied as `props.stroke || "#FFFFFF"`, so every falsy value -
-      // including the null and the empty string that would remove the attribute - falls
-      // back to white. A truthy "none" does remove the separator, so the prop is usable;
-      // what is wrong is the JSDoc, which documents the default as "none" while the code
-      // draws a white 1px stroke centred on the bar edge, overpainting half a pixel of
-      // whatever is behind it on each side.
-      for (const value of [null, undefined, ""]) {
-        const node = render(verticalOf().stroke(value));
+    test("renders a falsy stroke as configured rather than falling back to white", () => {
+      // The default applies only when the property was never set, so an empty string and a
+      // null - the two values that remove the attribute rather than paint it - survive.
+      const empty = render(verticalOf().stroke(""));
+      expect(new Set(attrs(rects(empty), "stroke"))).toEqual(new Set([""]));
+      const emptyFromAccessor = render(verticalOf().stroke(() => ""));
+      expect(new Set(attrs(rects(emptyFromAccessor), "stroke"))).toEqual(new Set([""]));
+      const cleared = render(verticalOf().stroke(null));
+      expect(new Set(attrs(rects(cleared), "stroke"))).toEqual(new Set([null]));
+    });
+
+    test("still defaults an unset stroke to the white separator", () => {
+      for (const component of [verticalOf(), verticalOf().stroke(undefined)]) {
+        const node = render(component);
         expect(new Set(attrs(rects(node), "stroke"))).toEqual(new Set(["#FFFFFF"]));
       }
+      const horizontal = render(horizontalOf(), horizontalData());
+      expect(new Set(attrs(rects(horizontal), "stroke"))).toEqual(new Set(["#FFFFFF"]));
+    });
+
+    test("renders a falsy stroke as configured on the horizontal orientation too", () => {
+      const node = render(horizontalOf().stroke(""), horizontalData());
+      expect(new Set(attrs(rects(node), "stroke"))).toEqual(new Set([""]));
     });
 
     test("silently boxes a non-function scale into a constant", () => {

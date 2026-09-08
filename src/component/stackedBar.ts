@@ -59,9 +59,10 @@
  * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
  *                                      unset, a 1px #FFFFFF stroke separates the segments -
  *                                      centred on the bar edge, so it overpaints half a pixel
- *                                      on each side. A truthy value such as "none" replaces the
- *                                      separator, but every falsy value falls back to it, so it
- *                                      cannot be removed by null or an empty string.
+ *                                      on each side. The default applies only when the property
+ *                                      was never set, so a falsy value is rendered as set: null
+ *                                      and an empty string both clear the attribute, and "none"
+ *                                      replaces the separator.
  *
  * Note: the two layout functions are the same computation and differ only in the stack order,
  * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
@@ -269,8 +270,9 @@ type FillValue<T, X extends string | number> = SliceValue<
 >;
 
 /**
- * stroke is stored exactly as set. Every falsy value is accepted and means the same thing,
- * since the renderer falls back to the white default for all of them.
+ * stroke is stored exactly as set and rendered as set. Only undefined - the property never
+ * having been set - falls back to the white default; null and an empty string clear the
+ * attribute instead.
  */
 type StrokeValue<T, X extends string | number> =
   | string
@@ -400,6 +402,18 @@ function fillOf<T, X extends string | number>(fill: FillValue<T, X> | undefined)
     slice.data === undefined ? undefined : fill(slice, index);
 }
 
+/**
+ * The stroke as bar takes it. The white separator applies only when the property was never
+ * set, so that a falsy stroke is rendered as set; a null becomes undefined because bar's
+ * setter does not accept null, and both leave the rect with no stroke attribute at all.
+ */
+function strokeOf<T, X extends string | number>(
+  stroke: StrokeValue<T, X>
+): FillValue<T, X> | string {
+  if (stroke === undefined) return "#FFFFFF";
+  return stroke ?? undefined;
+}
+
 export function stackedBarHorizontal<
   T = unknown,
   X extends string | number = string,
@@ -424,7 +438,7 @@ export function stackedBarHorizontal<
         .width((d) => Math.abs(props.xScale(d[1]) - props.xScale(d[0])))
         .height(props.height)
         .fill(fillOf(props.fill))
-        .stroke(props.stroke || "#FFFFFF");
+        .stroke(strokeOf(props.stroke));
 
       drawStacks(selection, data, barGen);
     });
@@ -454,7 +468,7 @@ export function stackedBarVertical<
         .width(props.width)
         .height((d) => Math.abs(props.yScale(d[0]) - props.yScale(d[1])))
         .fill(fillOf(props.fill))
-        .stroke(props.stroke || "#FFFFFF");
+        .stroke(strokeOf(props.stroke));
 
       drawStacks(selection, data, barGen);
     });
