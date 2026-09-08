@@ -2,7 +2,7 @@
 
 ### Data structure
 
-The nestedStackedBarsVertical is a combination of the two data structures used in the [Stacked BarVertical](../#/bar-chart-vertical-stacked) and [Bar Vertical](../#/bar-chart-vertical) components. The first layer is a grouping based on the x-axis value, and the second layer is a computed layout based on the `sszvis.stackedBarVerticalData` function. The result is an array of stack layouts, one per nested group, each tagged with the group key it belongs to. Each layout is the array of series `sszvis.stackedBarVerticalData` returns; each slice is an array of the _y0_ and _y1_ values, followed by a data object, a series and a stack property.
+The nestedStackedBarsVertical is a combination of the two data structures used in the [Stacked BarVertical](../#/bar-chart-vertical-stacked) and [Bar Vertical](../#/bar-chart-vertical) components. The first layer is a grouping by the nested-group key - the value you cascade by, and the one `offset` usually reads - and the second layer is a computed layout based on the `sszvis.stackedBarVerticalData` function, inside which the x-axis value is the stack dimension. The result is an array of stack layouts, one per nested group, each tagged with the group key it belongs to. Each layout is the array of series `sszvis.stackedBarVerticalData` returns; each slice is an array of the _y0_ and _y1_ values, followed by a data object, a series and a stack property.
 
 ```code
 const stackedData = [
