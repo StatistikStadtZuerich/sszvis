@@ -74,6 +74,10 @@ Works the same as linkSourceLabels, but used for labels on the 'target' end of t
 
 A string or function returning a string to use for the label of each link.
 
+#### `sankey.transition`
+
+Whether to animate the bars into their new geometry. Defaults to `true`. Pass `false` to write each render synchronously, which is what you want when another component drives the timing.
+
 ## Sankey Diagram - Two Columns
 
 ```project
