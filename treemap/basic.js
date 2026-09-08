@@ -57,6 +57,33 @@ const state = {
   originalData: null,
 };
 
+// Builds the hierarchy shown for the currently focused node. The result is cached
+// on the state because the tooltip identifies its datum by reference: rebuilding the
+// hierarchy on every render would hand the treemap new node objects and drop the
+// selection made by the panning behavior.
+function buildDisplayData(focusedNode) {
+  if (!focusedNode) return state.originalData;
+
+  const findNode = (root, targetData) => {
+    if (root.data === targetData) return root;
+    if (!root.children) return null;
+    for (const child of root.children) {
+      const found = findNode(child, targetData);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  return d3
+    .hierarchy(focusedNode.data, (d) => {
+      if (d._tag !== "root" && d._tag !== "branch") {
+        return null;
+      }
+      return findNode(state.originalData, d)?.children?.map((c) => c.data);
+    })
+    .sum((d) => (d._tag === "leaf" ? valueAcc(d.data) : 0));
+}
+
 // State transitions
 // -----------------------------------------------
 const actions = {
@@ -71,9 +98,9 @@ const actions = {
       .value(valueAcc)
       .calculate(data);
 
-    state.data = state.originalData;
-    state.categories = Array.from(new Set(data.map(categoryAcc)));
     state.focusedNode = null;
+    state.data = buildDisplayData(state.focusedNode);
+    state.categories = Array.from(new Set(data.map(categoryAcc)));
     render(state);
   },
 
@@ -116,12 +143,14 @@ const actions = {
     }
 
     state.focusedNode = zoomTarget;
+    state.data = buildDisplayData(zoomTarget);
     state.selection = []; // Clear tooltip on zoom
     render(state);
   },
 
   onBreadcrumbClick(node) {
     state.focusedNode = node;
+    state.data = buildDisplayData(node);
     state.selection = [];
     render(state);
   },
@@ -156,27 +185,6 @@ function render(state) {
   const colorScale = legendLayout.scale;
   const colorLegend = legendLayout.legend;
 
-  const displayData = state.focusedNode
-    ? d3
-        .hierarchy(state.focusedNode.data, (d) => {
-          if (d._tag !== "root" && d._tag !== "branch") {
-            return null;
-          }
-          const findNode = (root, targetData) => {
-            if (root.data === targetData) return root;
-            if (!root.children) {
-              return null;
-            }
-            for (const child of root.children) {
-              const found = findNode(child, targetData);
-              if (found) return found;
-            }
-          };
-          return findNode(state.originalData, d)?.children?.map((c) => c.data);
-        })
-        .sum((d) => (d._tag === "leaf" ? valueAcc(d.data) : 0))
-    : state.originalData;
-
   // Build breadcrumb trail using the helper function
   const breadcrumbItems = sszvis.createBreadcrumbItems(state.focusedNode);
 
@@ -208,7 +216,7 @@ function render(state) {
     .visible(isSelected);
 
   // Rendering
-  chartLayer.selectGroup("treemap").datum(displayData).call(treemap);
+  chartLayer.selectGroup("treemap").datum(state.data).call(treemap);
 
   chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
 
