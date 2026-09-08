@@ -63,6 +63,6 @@ interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponen
  *
  * @template T The type of the original flat data objects
  */
-export default function <T = unknown>(): TreemapComponent<T>;
+export default function treemap<T = unknown>(): TreemapComponent<T>;
 export {};
 //# sourceMappingURL=treemap.d.ts.map

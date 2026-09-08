@@ -37,7 +37,7 @@ import { defaultTransition } from '../transition.js';
  *
  * @template T The type of the original flat data objects
  */
-function treemap () {
+function treemap() {
   return component().prop("colorScale", functor).prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
   .prop("containerHeight").containerHeight(600) // Default height
   .prop("showLabels").showLabels(false) // Default disabled
@@ -156,7 +156,12 @@ function treemap () {
     // Add tooltip anchors at the center of each rectangle
     const tooltipPosition = d => [(d.x0 + d.x1) / 2, (d.y0 + d.y1) / 2];
     const ta = tooltipAnchor().position(tooltipPosition);
-    selection.call(ta);
+    // Rebind the group to the drawn node array before rendering the anchors, the way
+    // sunburst and pie do. Without it the anchors are joined to whatever datum the caller
+    // bound - for a hierarchy that is the root node, which d3 iterates into every
+    // descendant, so the root and every undrawn branch gain anchors of their own and the
+    // anchors come out breadth first while the rectangles are depth first.
+    selection.datum(visibleData).call(ta);
   });
 }
 

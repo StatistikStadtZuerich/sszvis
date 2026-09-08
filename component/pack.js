@@ -40,7 +40,7 @@ import { defaultTransition } from '../transition.js';
  *
  * @template T The type of the original flat data objects
  */
-function pack () {
+function pack() {
   return component().prop("colorScale", functor).prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
   .prop("containerHeight").containerHeight(600) // Default height
   .prop("showLabels").showLabels(false) // Default disabled
@@ -68,13 +68,14 @@ function pack () {
     const packData = flatten(inputData);
     // Filter out very small circles - include both branches (categories) and leaves
     const visibleData = packData.filter(d => d.r > (props.minRadius || 1));
-    const circles = selection.selectAll(".sszvis-pack-circle").data(visibleData).join("circle").classed("sszvis-pack-circle", true).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r).attr("fill", d => {
-      if (d.children) {
-        // Branch nodes should have a light fill to be able to click them
-        return "white";
-      }
-      return nodeColor(d, props.colorScale);
-    }).attr("stroke", d => {
+    // The one expression for what a circle is painted. The label colour is derived from
+    // this rather than recomputing nodeColor, so the contrast can never be calculated
+    // against a colour other than the one on screen - today the label data is filtered to
+    // leaves and the two agree, but a branch label would otherwise come out white on white.
+    const circleFillAcc = d =>
+    // Branch nodes get a light fill so they stay clickable.
+    d.children ? "white" : nodeColor(d, props.colorScale);
+    const circles = selection.selectAll(".sszvis-pack-circle").data(visibleData).join("circle").classed("sszvis-pack-circle", true).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r).attr("fill", circleFillAcc).attr("stroke", d => {
       // Branches carry the category colour; leaves fall back to the configured stroke.
       const inherited = inheritedColorKey(d);
       if (inherited !== undefined) return props.colorScale(inherited);
@@ -98,9 +99,7 @@ function pack () {
       const labelAcc = d => typeof props.label === "function" ? props.label(d) : props.label || "";
       const labelXAcc = d => d.x;
       const labelYAcc = d => d.y + fontSize / 3;
-      const labelFillAcc = d => {
-        return getAccessibleTextColor(nodeColor(d, props.colorScale));
-      };
+      const labelFillAcc = d => getAccessibleTextColor(circleFillAcc(d));
       // Filter data for labels - only show labels on leaf nodes that are large enough
       const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < d.r / 3);
       const labels = selection.selectAll(".sszvis-pack-label").data(labelData).join("text").classed("sszvis-pack-label", true).attr("x", labelXAcc).attr("y", labelYAcc).attr("fill", labelFillAcc).attr("font-size", fontSize).attr("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').attr("text-anchor", "middle").attr("dominant-baseline", "middle").style("pointer-events", "none").text(labelAcc);
@@ -115,7 +114,13 @@ function pack () {
     // Add tooltip anchors at the center of each circle
     const tooltipPosition = d => [d.x, d.y];
     const ta = tooltipAnchor().position(tooltipPosition);
-    selection.call(ta);
+    // Rebind the group to the filtered node array before rendering the anchors, the way
+    // sunburst and pie do. Without it the anchors are joined to whatever datum the caller
+    // bound - for a hierarchy that is the root node, which d3 iterates into every
+    // descendant, so the root gains an anchor of its own, the anchors come out breadth
+    // first while the circles are depth first, and nodes dropped by the minRadius filter
+    // get an anchor with no circle under it.
+    selection.datum(visibleData).call(ta);
   });
 }
 

@@ -70,6 +70,6 @@ interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> 
  *
  * @template T The type of the original flat data objects
  */
-export default function <T = unknown>(): PackComponent<T>;
+export default function pack<T = unknown>(): PackComponent<T>;
 export {};
 //# sourceMappingURL=pack.d.ts.map
