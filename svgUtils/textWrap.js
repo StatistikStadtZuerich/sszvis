@@ -47,7 +47,10 @@ selection, width, paddingRightLeft, paddingTopBottom) {
     const parsedDy = Number.parseFloat((_text$attr = text.attr("dy")) !== null && _text$attr !== void 0 ? _text$attr : "");
     const dy = Number.isNaN(parsedDy) ? 0 : parsedDy; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
     //Offset the text position based on the text-anchor
-    const wrapTickLabels = select(this.parentElement).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
+    // Don't wrap the 'normal untranslated' <text> element and the translated
+    // <g class='tick'><text></text></g> elements the same way. A detached <text> has no
+    // parent to read the class off, and cannot be a tick label, so answer false.
+    const wrapTickLabels = this.parentElement ? select(this.parentElement).classed("tick") : false;
     // An unrecognised text-anchor yields undefined, which d3 treats as "remove the
     // attribute" - the same outcome as the original switch statements' empty default case.
     const xByAnchor = wrapTickLabels ? {

@@ -58,7 +58,7 @@ export { getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLa
 export { default as dimensionsVerticalBarChart } from './layout/verticalBarChartDimensions.js';
 export { default as legendColorBinned } from './legend/binnedColorScale.js';
 export { default as legendColorLinear } from './legend/linearColorScale.js';
-export { DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, legendColorOrdinal } from './legend/ordinalColorScale.js';
+export { DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, default as legendColorOrdinal } from './legend/ordinalColorScale.js';
 export { default as legendRadius } from './legend/radius.js';
 export { loadError } from './loadError.js';
 export { formatLocale, timeLocale } from './locale.js';

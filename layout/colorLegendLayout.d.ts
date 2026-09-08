@@ -1,3 +1,12 @@
+/**
+ * Color Legend Layout
+ *
+ * Sizes an ordinal color legend to the available width: it picks the number of
+ * rows and columns, the label slant, and the bottom padding the chart needs to
+ * leave for it.
+ *
+ * @module sszvis/layout/colorLegendLayout
+ */
 import { type ExtendedOrdinalScale } from "../color.js";
 import { type LegendOrientation, type OrdinalColorScaleComponent } from "../legend/ordinalColorScale.js";
 import { type MeasurableElement } from "../measure.js";

@@ -2913,12 +2913,9 @@
       return function () {
         var _console;
         if ((_console = console) !== null && _console !== void 0 && _console[type]) {
-          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-          }
-          for (const msg of args) {
-            console[type](msg);
-          }
+          // The console API formats multiple arguments as one entry, which keeps a message
+          // and its cause visually linked; logging them one at a time would split them up.
+          console[type](...arguments);
         }
       };
     }
@@ -3661,7 +3658,10 @@
         const parsedDy = Number.parseFloat((_text$attr = text.attr("dy")) !== null && _text$attr !== void 0 ? _text$attr : "");
         const dy = Number.isNaN(parsedDy) ? 0 : parsedDy; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
         //Offset the text position based on the text-anchor
-        const wrapTickLabels = d3.select(this.parentElement).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
+        // Don't wrap the 'normal untranslated' <text> element and the translated
+        // <g class='tick'><text></text></g> elements the same way. A detached <text> has no
+        // parent to read the class off, and cannot be a tick label, so answer false.
+        const wrapTickLabels = this.parentElement ? d3.select(this.parentElement).classed("tick") : false;
         // An unrecognised text-anchor yields undefined, which d3 treats as "remove the
         // attribute" - the same outcome as the original switch statements' empty default case.
         const xByAnchor = wrapTickLabels ? {
@@ -9108,7 +9108,12 @@
      *
      * @property {d3.scaleOrdinal()} scale         An ordinal scale which will be transformed into the legend.
      * @property {Number} rowHeight                 The height of the rows of the legend.
-     * @property {Number} columnWidth               The width of the columns of the legend.
+     * @property {Number} columnWidth               The width of the columns of the legend. null reads as a
+     *                                              column offset of zero; it does not by itself reduce the
+     *                                              column count, so with more than one column the entries of a
+     *                                              row land on top of each other. `colorLegendLayout` passes
+     *                                              null only once it has already settled on one column, where
+     *                                              the horizontal offset is irrelevant.
      * @property {Number} rows                      The target number of rows for the legend.
      * @property {Number} columns                    The target number of columns for the legend.
      * @property {String} orientation               The orientation (layout order) of the legend. Must be either "horizontal" or "vertical".
@@ -9130,7 +9135,8 @@
      * Because the labels are svg elements positioned with translate (and do not use the html box model layout algorithm),
      * rowHeight is necessary to provide the vertical height of each row. Generally speaking, 20px is fine for the default text size.
      * In the default layout, labels are organized into rows and columns in a gridded fashion. columnWidth is the total width of
-     * any resulting columns. Note that if there is only one column, columnWidth is irrelevant.
+     * any resulting columns. Note that if there is only one column, columnWidth is irrelevant, and null is accepted
+     * for it rather than being rejected: it is read as a column offset of zero.
      *
      * There are two orientation options for the row/column layout. The 'horizontal' orientation lays out elements from the input
      * domain into rows, creating new rows as necessary. For example, with three columns, the first three elements will form
@@ -9254,6 +9260,15 @@
       });
     }
 
+    /**
+     * Color Legend Layout
+     *
+     * Sizes an ordinal color legend to the available width: it picks the number of
+     * rows and columns, the label slant, and the bottom padding the chart needs to
+     * leave for it.
+     *
+     * @module sszvis/layout/colorLegendLayout
+     */
     const SLANTS = ["horizontal", "vertical", "diagonal"];
     const DEFAULT_COLUMN_COUNT = 2;
     const LABEL_PADDING = 40;

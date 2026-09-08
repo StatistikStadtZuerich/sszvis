@@ -12,7 +12,12 @@ import translateString from '../svgUtils/translateString.js';
  *
  * @property {d3.scaleOrdinal()} scale         An ordinal scale which will be transformed into the legend.
  * @property {Number} rowHeight                 The height of the rows of the legend.
- * @property {Number} columnWidth               The width of the columns of the legend.
+ * @property {Number} columnWidth               The width of the columns of the legend. null reads as a
+ *                                              column offset of zero; it does not by itself reduce the
+ *                                              column count, so with more than one column the entries of a
+ *                                              row land on top of each other. `colorLegendLayout` passes
+ *                                              null only once it has already settled on one column, where
+ *                                              the horizontal offset is irrelevant.
  * @property {Number} rows                      The target number of rows for the legend.
  * @property {Number} columns                    The target number of columns for the legend.
  * @property {String} orientation               The orientation (layout order) of the legend. Must be either "horizontal" or "vertical".
@@ -34,7 +39,8 @@ import translateString from '../svgUtils/translateString.js';
  * Because the labels are svg elements positioned with translate (and do not use the html box model layout algorithm),
  * rowHeight is necessary to provide the vertical height of each row. Generally speaking, 20px is fine for the default text size.
  * In the default layout, labels are organized into rows and columns in a gridded fashion. columnWidth is the total width of
- * any resulting columns. Note that if there is only one column, columnWidth is irrelevant.
+ * any resulting columns. Note that if there is only one column, columnWidth is irrelevant, and null is accepted
+ * for it rather than being rejected: it is read as a column offset of zero.
  *
  * There are two orientation options for the row/column layout. The 'horizontal' orientation lays out elements from the input
  * domain into rows, creating new rows as necessary. For example, with three columns, the first three elements will form
@@ -158,5 +164,5 @@ function legendColorOrdinal() {
   });
 }
 
-export { DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, legendColorOrdinal };
+export { DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, legendColorOrdinal as default };
 //# sourceMappingURL=ordinalColorScale.js.map

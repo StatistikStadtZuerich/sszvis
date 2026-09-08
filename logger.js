@@ -51,12 +51,9 @@ function logger(type) {
   return function () {
     var _console;
     if ((_console = console) !== null && _console !== void 0 && _console[type]) {
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-      for (const msg of args) {
-        console[type](msg);
-      }
+      // The console API formats multiple arguments as one entry, which keeps a message
+      // and its cause visually linked; logging them one at a time would split them up.
+      console[type](...arguments);
     }
   };
 }
