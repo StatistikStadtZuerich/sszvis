@@ -52,8 +52,8 @@
  * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
  * existing call site is unnamed and a per-render warning would be noise rather than a signal.
  *
- * Note: `values` is coerced to the empty array, so a render that lands before the data does draws
- * an empty group rather than throwing - whether the prop was never set or was set to `undefined`
+ * Note: `values` is coerced to the empty array, so a render that lands before the data
+ * draws an empty group rather than throwing - whether the prop was never set or was set to `undefined`
  * from a state key the fetch has not filled in yet. "Not configured yet" and "nothing to offer
  * yet" are the same state for a control fed from a fetch, and they render the same way.
  * `selectMenu` does this the same way.
