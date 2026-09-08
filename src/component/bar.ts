@@ -58,6 +58,7 @@ import { select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import { toFinite } from "../svgUtils/toFinite.js";
 import { defaultTransition } from "../transition.js";
 
 /**
@@ -112,19 +113,6 @@ export interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent
   tooltipAnchor(anchor: (number | string)[]): BarComponent<T>;
   transition(): boolean;
   transition(enabled: boolean): BarComponent<T>;
-}
-
-/**
- * Coerces a geometry value to a finite number, substituting 0 for anything else.
- *
- * Coercion first, so a numeric string still works; the finiteness check then catches NaN
- * and Infinity as well as the values that do not coerce at all. Shared in substance with
- * dot's guard - the two components are expected to agree, and there is no home for the
- * helper short of a new module.
- */
-function toFinite(value: unknown): number {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 export default function bar<T = unknown>(): BarComponent<T> {

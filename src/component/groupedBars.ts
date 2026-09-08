@@ -63,6 +63,12 @@
  * applying the attribute to - the bars with a defined value, or the bars without one - so a group
  * containing missing values could see the same datum handed two different indices in one render.
  *
+ * Note: the geometry accessors are guarded. A value that is not a finite number - NaN,
+ * Infinity, undefined, null, or anything that does not coerce - becomes 0 rather than being
+ * written into an attribute, so a bad accessor return parks a bar at 0 instead of producing
+ * an invalid rect. The missing-value cross's translation is guarded the same way. fill and
+ * stroke are not guarded, because they are colours. This matches bar and dot.
+ *
  * Note: each orientation supplies the along-group dimensions itself, so it never calls the
  * consumer's accessors for them. Vertical grouped bars ignore x and width; horizontal grouped bars
  * ignore y and height. Passing one of those has no effect and raises no error.
@@ -81,13 +87,9 @@ import { range, type ScaleBand, scaleBand, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import { toFinite } from "../svgUtils/toFinite.js";
 import translateString from "../svgUtils/translateString.js";
 import { defaultTransition } from "../transition.js";
-
-// Extended datum type that includes the internal index property
-type DatumWithIndex<T> = T & {
-  __sszvisGroupedBarIndex__?: number;
-};
 
 type GroupedBarsProps<T = unknown> = {
   groupScale: (datum: T) => number;
@@ -144,23 +146,23 @@ type GroupedBarsConfig<T> = {
   x(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): (d: DatumWithIndex<T>, groupIndex: number) => number;
+  ): (d: T, groupIndex: number) => number;
   y(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): (d: DatumWithIndex<T>, groupIndex: number) => number;
+  ): (d: T, groupIndex: number) => number;
   width(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): number | ((d: DatumWithIndex<T>, groupIndex: number) => number);
+  ): number | ((d: T, groupIndex: number) => number);
   height(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): number | ((d: DatumWithIndex<T>, groupIndex: number) => number);
+  ): number | ((d: T, groupIndex: number) => number);
   missingTransform(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
-  ): (d: DatumWithIndex<T>, groupIndex: number) => string;
+  ): (d: T, groupIndex: number) => string;
   tooltipPosition(
     props: GroupedBarsProps<T>,
     inGroupScale: ScaleBand<number>
@@ -204,40 +206,82 @@ function createGroupedBarsComponent<T = unknown>(
         .classed("sszvis-bargroup", true);
 
       const barUnits = groups
-        .selectAll<SVGGElement, DatumWithIndex<T>>("g.sszvis-barunit")
-        .data((d) => d as DatumWithIndex<T>[])
+        .selectAll<SVGGElement, T>("g.sszvis-barunit")
+        .data((d) => d)
         .join("g")
         .classed("sszvis-barunit", true);
 
-      barUnits.each((d, i) => {
-        d.__sszvisGroupedBarIndex__ = i;
+      // The bar's index within its group is recorded against the unit element rather than
+      // written onto the datum, so a datum object reused across groups is not aliased: it is
+      // the element that is unique per bar, not the caller's object. This also keeps the datum
+      // bound to .sszvis-barunit and to the bar's rect exactly the caller's own object, which
+      // consumers rely on - a mouseover handler on `.sszvis-barunit rect` receives it and may
+      // compare it by identity.
+      const groupIndexByUnit = new WeakMap<Element, number>();
+      barUnits.each(function (_d, i) {
+        groupIndexByUnit.set(this, i);
       });
 
       // Accessors are called with the bar's index within its group, which is never the index
       // d3 would supply: a bar's own rect is joined one datum at a time, where d3 passes 0,
       // and the missing-value cross is positioned on a filtered selection, where d3 passes
       // the position among the missing bars only. The index recorded above is used instead.
-      // The `each` above tags every datum on every render, before any accessor runs, so the
-      // tag is always present here.
-      const groupIndexOf = (d: DatumWithIndex<T>) => d.__sszvisGroupedBarIndex__ as number;
+      //
+      // It is resolved from the element the callback is running on, so there are two shapes.
+      // A callback on the bar unit - the missing-value cross's transform - reads the unit
+      // directly; a callback on the bar's rect reads the rect's parent, which is the unit.
+      // The `each` above covers the whole barUnits join before any accessor runs, so every
+      // unit is in the map by the time an accessor can ask, which is why the lookup is
+      // asserted rather than defaulted - a `?? 0` here would mean a missing entry silently
+      // placed a bar at its group's left edge instead of failing.
+      //
+      // Note this is only about the index lookup. The configs still apply `?? 0` to the
+      // inGroupScale result, whose domain is range(groupSize), so a group holding more
+      // members than groupSize leaves its trailing bars with no band and stacks them at the
+      // group's left edge. That is long-standing behaviour for a group larger than declared
+      // - the component documents the under-full case as visible gaps and does not define
+      // the over-full one - and it is unchanged here.
+      const indexOfUnit = (unit: Element) => groupIndexByUnit.get(unit) as number;
+      const indexOfRect = (rect: Element) => indexOfUnit(rect.parentNode as Element);
+
       const configX = config.x(props, inGroupScale);
       const configY = config.y(props, inGroupScale);
       const configWidth = config.width(props, inGroupScale);
       const configHeight = config.height(props, inGroupScale);
       const configMissingTransform = config.missingTransform(props, inGroupScale);
-      const xAt = (d: DatumWithIndex<T>) => configX(d, groupIndexOf(d));
-      const yAt = (d: DatumWithIndex<T>) => configY(d, groupIndexOf(d));
-      const widthAt = (d: DatumWithIndex<T>) =>
-        typeof configWidth === "function" ? configWidth(d, groupIndexOf(d)) : configWidth;
-      const heightAt = (d: DatumWithIndex<T>) =>
-        typeof configHeight === "function" ? configHeight(d, groupIndexOf(d)) : configHeight;
-      const fillAt = (d: DatumWithIndex<T>) =>
-        typeof props.fill === "function" ? props.fill(d, groupIndexOf(d)) : props.fill;
-      const strokeAt = (d: DatumWithIndex<T>) =>
-        (typeof props.stroke === "function" ? props.stroke(d, groupIndexOf(d)) : props.stroke) ??
-        null;
-      const missingTransformAt = (d: DatumWithIndex<T>) =>
-        configMissingTransform(d, groupIndexOf(d));
+
+      // Guarded the way bar and dot guard theirs, so a consumer accessor returning NaN cannot
+      // reach an attribute. fill and stroke are deliberately not guarded - they are colours,
+      // and neither bar nor dot guards those either.
+      const xAt = function (this: SVGRectElement, d: T) {
+        return toFinite(configX(d, indexOfRect(this)));
+      };
+      const yAt = function (this: SVGRectElement, d: T) {
+        return toFinite(configY(d, indexOfRect(this)));
+      };
+      const widthAt = function (this: SVGRectElement, d: T) {
+        return toFinite(
+          typeof configWidth === "function" ? configWidth(d, indexOfRect(this)) : configWidth
+        );
+      };
+      const heightAt = function (this: SVGRectElement, d: T) {
+        return toFinite(
+          typeof configHeight === "function" ? configHeight(d, indexOfRect(this)) : configHeight
+        );
+      };
+      const fillAt = function (this: SVGRectElement, d: T) {
+        return typeof props.fill === "function" ? props.fill(d, indexOfRect(this)) : props.fill;
+      };
+      const strokeAt = function (this: SVGRectElement, d: T) {
+        return (
+          (typeof props.stroke === "function"
+            ? props.stroke(d, indexOfRect(this))
+            : props.stroke) ?? null
+        );
+      };
+      const missingTransformAt = function (this: SVGGElement, d: T) {
+        return configMissingTransform(d, indexOfUnit(this));
+      };
 
       const unitsWithValue = barUnits.filter(props.defined);
       const unitsWithoutValue = barUnits.filter(fn.not(props.defined));
@@ -264,7 +308,7 @@ function createGroupedBarsComponent<T = unknown>(
       // join nor removed by its exit. The public sszvis-bar class stays on the component's
       // own rect for styling and consumer selection.
       const bars = unitsWithValue
-        .selectAll<SVGRectElement, DatumWithIndex<T>>("rect.sszvis-bar-rect")
+        .selectAll<SVGRectElement, T>("rect.sszvis-bar-rect")
         .data((d) => [d])
         .join((enter) =>
           enter
@@ -339,24 +383,20 @@ const createVerticalConfig = <T>(): GroupedBarsConfig<T> => ({
   inGroupRange: ({ groupWidth }) => [0, groupWidth],
   x:
     ({ groupScale }, inGroupScale) =>
-    (d, _i) =>
-      groupScale(d) +
-      (d.__sszvisGroupedBarIndex__ !== undefined
-        ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
-        : 0),
+    (d, groupIndex) =>
+      groupScale(d) + (inGroupScale(groupIndex) ?? 0),
   y: ({ y }) => y,
   width: (_, inGroupScale) => inGroupScale.bandwidth(),
   height: ({ height }) => height,
   missingTransform:
     ({ groupScale, y }, inGroupScale) =>
     (d, groupIndex) =>
+      // Both coordinates are guarded as a whole, not just the consumer accessor: translateString
+      // interpolates its arguments into a string, so one non-finite term anywhere in the
+      // expression would yield transform="translate(NaN,0)" rather than a placed cross.
       translateString(
-        groupScale(d) +
-          (d.__sszvisGroupedBarIndex__ !== undefined
-            ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
-            : 0) +
-          inGroupScale.bandwidth() / 2,
-        y(d, groupIndex)
+        toFinite(groupScale(d) + (inGroupScale(groupIndex) ?? 0) + inGroupScale.bandwidth() / 2),
+        toFinite(y(d, groupIndex))
       ),
   tooltipPosition:
     ({ groupScale, y }, inGroupScale) =>
@@ -364,15 +404,9 @@ const createVerticalConfig = <T>(): GroupedBarsConfig<T> => ({
       let xTotal = 0;
       let tallest = Infinity;
       for (const [i, d] of group.entries()) {
-        const datum = d as DatumWithIndex<T>;
-        xTotal +=
-          groupScale(datum) +
-          (datum.__sszvisGroupedBarIndex__ !== undefined
-            ? (inGroupScale(datum.__sszvisGroupedBarIndex__) ?? 0)
-            : 0) +
-          inGroupScale.bandwidth() / 2;
+        xTotal += groupScale(d) + (inGroupScale(i) ?? 0) + inGroupScale.bandwidth() / 2;
         // smaller y is higher
-        tallest = Math.min(tallest, y(datum, i));
+        tallest = Math.min(tallest, y(d, i));
       }
       return [xTotal / group.length, tallest];
     },
@@ -383,23 +417,17 @@ const createHorizontalConfig = <T>(): GroupedBarsConfig<T> => ({
   x: ({ x }) => x,
   y:
     ({ groupScale }, inGroupScale) =>
-    (d) =>
-      groupScale(d) +
-      (d.__sszvisGroupedBarIndex__ !== undefined
-        ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
-        : 0),
+    (d, groupIndex) =>
+      groupScale(d) + (inGroupScale(groupIndex) ?? 0),
   width: ({ width }) => width,
   height: (_, inGroupScale) => inGroupScale.bandwidth(),
   missingTransform:
     ({ groupScale, x }, inGroupScale) =>
     (d, groupIndex) =>
+      // Guarded as a whole, as in the vertical config.
       translateString(
-        x(d, groupIndex),
-        groupScale(d) +
-          (d.__sszvisGroupedBarIndex__ !== undefined
-            ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
-            : 0) +
-          inGroupScale.bandwidth() / 2
+        toFinite(x(d, groupIndex)),
+        toFinite(groupScale(d) + (inGroupScale(groupIndex) ?? 0) + inGroupScale.bandwidth() / 2)
       ),
   tooltipPosition:
     ({ groupScale, x }, inGroupScale) =>
@@ -407,15 +435,9 @@ const createHorizontalConfig = <T>(): GroupedBarsConfig<T> => ({
       let yTotal = 0;
       let rightmost = -Infinity;
       for (const [i, d] of group.entries()) {
-        const datum = d as DatumWithIndex<T>;
-        yTotal +=
-          groupScale(datum) +
-          (datum.__sszvisGroupedBarIndex__ !== undefined
-            ? (inGroupScale(datum.__sszvisGroupedBarIndex__) ?? 0)
-            : 0) +
-          inGroupScale.bandwidth() / 2;
+        yTotal += groupScale(d) + (inGroupScale(i) ?? 0) + inGroupScale.bandwidth() / 2;
         // larger x is more to the right
-        rightmost = Math.max(rightmost, x(datum, i));
+        rightmost = Math.max(rightmost, x(d, i));
       }
       return [rightmost, yTotal / group.length];
     },

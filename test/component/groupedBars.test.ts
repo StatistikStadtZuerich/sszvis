@@ -784,6 +784,217 @@ describe("component/groupedBars", () => {
     });
   });
 
+  describe("shared datum objects", () => {
+    let groupScale: d3.ScaleBand<string>;
+    let valueScale: d3.ScaleLinear<number, number>;
+
+    beforeEach(() => {
+      groupScale = scaleBand<string>().domain(["G1", "G2"]).range([0, 200]).padding(0.1);
+      valueScale = scaleLinear().domain([0, 30]).range([200, 0]);
+    });
+
+    const GROUP_SIZE = 3;
+
+    const componentOf = () =>
+      groupedBarsVertical<TestDatum>()
+        .groupScale((d) => groupScale(d.group) || 0)
+        .groupSize(GROUP_SIZE)
+        .groupWidth(groupScale.bandwidth())
+        .y((d) => valueScale(d.value))
+        .height((d) => 200 - valueScale(d.value))
+        .fill("steelblue");
+
+    /** The in-group band the component builds internally, to assert absolute slots against. */
+    const inGroupScale = () =>
+      scaleBand<number>()
+        .domain([0, 1, 2])
+        .padding(0.05)
+        .paddingOuter(0)
+        .rangeRound([0, groupScale.bandwidth()]);
+
+    const xs = () =>
+      [...svg.selectAll<SVGRectElement, unknown>("rect.sszvis-bar").nodes()].map((r) =>
+        Number(r.getAttribute("x"))
+      );
+
+    test("should offset a datum object reused across groups by each bar's own index", () => {
+      // The same object at index 2 of the first group and index 0 of the second. Asserted
+      // against absolute slots rather than by comparing the bars to each other, so that an
+      // off-by-one or a reversed in-group order cannot satisfy the test - with groupSize 3
+      // neither permutation maps {2, 0} back onto itself.
+      const shared = { category: "S", group: "G1", value: 10 };
+      const data: TestDatum[][] = [
+        [
+          { category: "A", group: "G1", value: 20 },
+          { category: "B", group: "G1", value: 12 },
+          shared,
+        ],
+        [shared, { category: "C", group: "G2", value: 15 }],
+      ];
+
+      svg.selectGroup("bars").datum(data).call(componentOf());
+      const band = inGroupScale();
+      const g1 = groupScale("G1") ?? 0;
+      const g2 = groupScale("G2") ?? 0;
+      const [a, b, sharedInFirst, sharedInSecond, c] = xs();
+
+      expect(a).toBeCloseTo(g1 + (band(0) ?? 0), 5);
+      expect(b).toBeCloseTo(g1 + (band(1) ?? 0), 5);
+      // The shared object's bar in the first group is at index 2 ...
+      expect(sharedInFirst).toBeCloseTo(g1 + (band(2) ?? 0), 5);
+      // ... and its bar in the second group at index 0. groupScale reads the datum, so both
+      // resolve to G1's offset; the in-group index is the only thing distinguishing them,
+      // and recording it on the datum gave the object a single value for both bars.
+      expect(sharedInSecond).toBeCloseTo(g1 + (band(0) ?? 0), 5);
+      expect(c).toBeCloseTo(g2 + (band(1) ?? 0), 5);
+    });
+
+    test("should not mutate the caller's datum objects", () => {
+      const shared = { category: "S", group: "G1", value: 10 };
+      const data: TestDatum[][] = [
+        [{ category: "A", group: "G1", value: 20 }, shared],
+        [shared, { category: "B", group: "G2", value: 15 }],
+      ];
+      const before = data.flat().map((d) => Object.keys(d).sort());
+
+      svg.selectGroup("bars").datum(data).call(componentOf());
+
+      // Asserted on the key set rather than on a named property, so this still catches any
+      // future bookkeeping the component decides to hang off the caller's data.
+      expect(data.flat().map((d) => Object.keys(d).sort())).toEqual(before);
+      expect(Object.keys(shared).sort()).toEqual(["category", "group", "value"]);
+    });
+  });
+
+  describe("non-finite geometry", () => {
+    let groupScale: d3.ScaleBand<string>;
+
+    beforeEach(() => {
+      groupScale = scaleBand<string>().domain(["G1"]).range([0, 200]).padding(0.1);
+    });
+
+    const oneBar: TestDatum[][] = [[{ category: "A", group: "G1", value: 10 }]];
+
+    /**
+     * The centre of the single bar's slot, which is where the component translates the
+     * missing-value cross to: the group offset plus the in-group band's centre.
+     */
+    const slotCentre = () => {
+      const band = scaleBand<number>()
+        .domain([0])
+        .padding(0.05)
+        .paddingOuter(0)
+        .rangeRound([0, groupScale.bandwidth()]);
+      return (groupScale("G1") ?? 0) + (band(0) ?? 0) + band.bandwidth() / 2;
+    };
+
+    test("should keep the vertical geometry finite when the accessors return NaN", () => {
+      svg
+        .selectGroup("bars")
+        .datum(oneBar)
+        .call(
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
+            .groupSize(1)
+            .groupWidth(groupScale.bandwidth())
+            .y(() => Number.NaN)
+            .height(() => Number.NaN)
+            .fill("steelblue")
+        );
+
+      const bar = svg.select<SVGRectElement>("rect.sszvis-bar");
+      expect(bar.attr("y")).toBe("0");
+      expect(bar.attr("height")).toBe("0");
+    });
+
+    test("should keep the horizontal geometry finite when the accessors return NaN", () => {
+      svg
+        .selectGroup("bars")
+        .datum(oneBar)
+        .call(
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
+            .groupSize(1)
+            .groupHeight(groupScale.bandwidth())
+            .x(() => Number.NaN)
+            .width(() => Number.NaN)
+            .fill("steelblue")
+        );
+
+      const bar = svg.select<SVGRectElement>("rect.sszvis-bar");
+      expect(bar.attr("x")).toBe("0");
+      expect(bar.attr("width")).toBe("0");
+    });
+
+    test("should keep the vertical missing-value cross's transform finite", () => {
+      // The cross is positioned by a translation on the bar unit, and translateString
+      // interpolates its arguments into a string, so an unguarded NaN would survive as text.
+      svg
+        .selectGroup("bars")
+        .datum(oneBar)
+        .call(
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
+            .groupSize(1)
+            .groupWidth(groupScale.bandwidth())
+            .y(() => Number.NaN)
+            .height(() => Number.NaN)
+            .fill("steelblue")
+            .defined(() => false)
+        );
+
+      const unit = svg.select<SVGGElement>("g.sszvis-barunit");
+      expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2);
+      // Both coordinates are pinned, not merely screened for the substring NaN: the
+      // along-group one keeps its real value, and only the guarded accessor falls back to 0.
+      expect(unit.attr("transform")).toBe(`translate(${slotCentre()},0)`);
+    });
+
+    test("should keep the cross's along-group coordinate finite when groupScale returns NaN", () => {
+      // groupScale is a consumer prop, so it is the along-group coordinate's reachable path
+      // to a non-finite value - the rest of that expression is computed internally.
+      svg
+        .selectGroup("bars")
+        .datum(oneBar)
+        .call(
+          groupedBarsVertical<TestDatum>()
+            .groupScale(() => Number.NaN)
+            .groupSize(1)
+            .groupWidth(groupScale.bandwidth())
+            .y(() => 10)
+            .height(() => 10)
+            .fill("steelblue")
+            .defined(() => false)
+        );
+
+      const unit = svg.select<SVGGElement>("g.sszvis-barunit");
+      expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2);
+      expect(unit.attr("transform")).toBe("translate(0,10)");
+    });
+
+    test("should keep the horizontal missing-value cross's transform finite", () => {
+      // The horizontal config is the one where a consumer accessor - x - feeds the guarded
+      // cross-axis coordinate, so it is the orientation most likely to go non-finite.
+      svg
+        .selectGroup("bars")
+        .datum(oneBar)
+        .call(
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
+            .groupSize(1)
+            .groupHeight(groupScale.bandwidth())
+            .x(() => Number.NaN)
+            .width(() => Number.NaN)
+            .fill("steelblue")
+            .defined(() => false)
+        );
+
+      const unit = svg.select<SVGGElement>("g.sszvis-barunit");
+      expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2);
+      expect(unit.attr("transform")).toBe(`translate(0,${slotCentre()})`);
+    });
+  });
+
   describe("accessor indices", () => {
     let groupScale: d3.ScaleBand<string>;
     let valueScale: d3.ScaleLinear<number, number>;
