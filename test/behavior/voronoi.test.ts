@@ -425,6 +425,58 @@ describe("behavior/voronoi", () => {
       expect(overHandler).not.toHaveBeenCalled();
     });
 
+    // Dragging a finger across the cells has to report the datum under the finger's *current*
+    // position: the pan handler reads the incoming `touchmove`, not the `touchstart` it was
+    // registered from, and resolves the datum from the panned position rather than from the
+    // `{data}` container the cells - joined to `voronoi.cellPolygons()` - never carried.
+    test("should follow the datum under the finger while panning", () => {
+      const overHandler = vi.fn();
+      const outHandler = vi.fn();
+      const layer = svg
+        .selectAll("g.voronoi-inset")
+        .data([insetData])
+        .join("g")
+        .attr("class", "voronoi-inset");
+      layer.call(
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
+          .bounds([100, 80, 400, 300])
+          .on("over", overHandler)
+          .on("out", outHandler)
+      );
+      const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
+      const firstPath = layer
+        .selectAll("[data-sszvis-behavior-voronoi]")
+        .nodes()[0] as SVGPathElement;
+
+      const touchEventAt = (type: string, offsetX: number, offsetY: number) => {
+        const touchEvent = new Event(type, { bubbles: true, cancelable: true });
+        Object.defineProperty(touchEvent, "touches", {
+          value: [{ clientX: ctm.e + offsetX, clientY: ctm.f + offsetY, identifier: 0 }],
+          writable: false,
+        });
+        return touchEvent;
+      };
+
+      firstPath.dispatchEvent(touchEventAt("touchstart", 200, 150));
+      expect(overHandler).toHaveBeenCalledTimes(1);
+      expect(overHandler.mock.calls[0][1]).toEqual(insetData[0]);
+
+      // Onto the second datum: a pan that re-read the `touchstart` position would report the
+      // first datum again.
+      firstPath.dispatchEvent(touchEventAt("touchmove", 330, 250));
+      expect(overHandler).toHaveBeenCalledTimes(2);
+      expect(overHandler.mock.calls[1][1]).toEqual(insetData[1]);
+
+      // Between the two, outside either interaction radius.
+      firstPath.dispatchEvent(touchEventAt("touchmove", 265, 200));
+      expect(overHandler).toHaveBeenCalledTimes(2);
+      expect(outHandler).toHaveBeenCalledTimes(1);
+
+      firstPath.dispatchEvent(new Event("touchend", { bubbles: true }));
+    });
+
     test("should miss when the pointer is outside the interaction radius of every datum", () => {
       const overHandler = vi.fn();
       const outHandler = vi.fn();
