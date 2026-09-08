@@ -197,29 +197,106 @@ describe("map/renderer/base", () => {
       expect(attrs(node, "fill")).toEqual(["#00ff00", missingFill(node), missingFill(node)]);
     });
 
-    // "Missing" is relative to a dataset: a layer where nothing has a datum encodes no data, so it
-    // is drawing geometry rather than values. docs/map-extended/rastermap-bins.js depends on this,
-    // drawing the map as a transparent outline over a raster with fill("none") and no data at all -
-    // texturing those entities would paint over the raster the outline exists to frame.
-    test("keeps the caller's fill when no entity has a datum", () => {
+    // "Missing" is relative to a dataset, and a layer drawing geometry rather than values says so
+    // with encodesData. docs/map-extended/rastermap-bins.js depends on this, drawing the map as a
+    // transparent outline over a raster with fill("none") and no data at all - texturing those
+    // entities would paint over the raster the outline exists to frame.
+    test("keeps the caller's fill on a layer that encodes no data", () => {
+      const node = render([], (c) => c.transitionColor(false).encodesData(false).fill("none"));
+      expect(attrs(node, "fill")).toEqual(["none", "none", "none"]);
+      expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
+    });
+
+    // Undeclared, a layer whose fill is a constant is inferred to be drawing geometry, so an
+    // outline over a raster keeps its fill without having to say anything. This is what keeps the
+    // change from retexturing every such map already in production.
+    test("infers a geometry layer from a constant fill when nothing is declared", () => {
       const node = render([], (c) => c.transitionColor(false).fill("none"));
       expect(attrs(node, "fill")).toEqual(["none", "none", "none"]);
       expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
     });
 
+    // A constant fill with an accessor `defined` is still a data layer: the predicate needs a
+    // datum, so the inference has to consider both accessors, not only the fill.
+    test("infers a data layer from an accessor defined even with a constant fill", () => {
+      const node = render([], (c) =>
+        c
+          .transitionColor(false)
+          .defined((d?: Datum) => d?.value !== undefined)
+          .fill("none")
+      );
+      expect(attrs(node, "fill")).toEqual([
+        missingFill(node),
+        missingFill(node),
+        missingFill(node),
+      ]);
+    });
+
     // The corollary of the rule above: with nothing textured, every entity goes through the fill
     // accessor, and there is no datum to hand it. An accessor that dereferences its argument has
     // to tolerate undefined on a geometry-only layer - the docs on `fill` say so.
-    test("calls the fill accessor with undefined when no entity has a datum", () => {
+    test("calls the fill accessor with undefined on a layer that encodes no data", () => {
+      const seen: unknown[] = [];
+      const node = render([], (c) =>
+        c
+          .transitionColor(false)
+          .encodesData(false)
+          .fill((d?: Datum) => {
+            seen.push(d);
+            return "none";
+          })
+      );
+      expect(seen).toEqual([undefined, undefined, undefined]);
+      expect(attrs(node, "fill")).toEqual(["none", "none", "none"]);
+    });
+
+    // The discriminating case for the prop: with data present, the inference would call this a
+    // data layer and texture the entities it does not cover. Declaring encodesData(false) has to
+    // override that, or the prop is only ever agreeing with what would have happened anyway.
+    test("suppresses texturing on a declared geometry layer even when data is present", () => {
+      const seen: unknown[] = [];
+      const node = render([{ geoId: "a", value: 1 }], (c) =>
+        c
+          .transitionColor(false)
+          .encodesData(false)
+          .fill((d?: Datum) => {
+            seen.push(d);
+            return "#123456";
+          })
+      );
+      expect(seen).toEqual([{ geoId: "a", value: 1 }, undefined, undefined]);
+      expect(attrs(node, "fill")).toEqual(["#123456", "#123456", "#123456"]);
+      expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
+    });
+
+    // The other half of the override: a layer built from constants alone is inferred to be drawing
+    // geometry, and encodesData(true) says otherwise, texturing it before its data arrives.
+    test("textures a declared data layer built from constants alone", () => {
+      const node = render([], (c) => c.transitionColor(false).encodesData(true).fill("none"));
+      expect(attrs(node, "fill")).toEqual([
+        missingFill(node),
+        missingFill(node),
+        missingFill(node),
+      ]);
+    });
+
+    // The inference: an accessor fill is a promise that the entity has a datum to read, so the
+    // layer encodes values whether or not its data has arrived. This is the crash #351 closed.
+    test("textures a data layer whose data has not arrived, without calling its accessor", () => {
       const seen: unknown[] = [];
       const node = render([], (c) =>
         c.transitionColor(false).fill((d?: Datum) => {
           seen.push(d);
-          return "none";
+          return String(d?.value);
         })
       );
-      expect(seen).toEqual([undefined, undefined, undefined]);
-      expect(attrs(node, "fill")).toEqual(["none", "none", "none"]);
+      expect(seen).toEqual([]);
+      expect(attrs(node, "fill")).toEqual([
+        missingFill(node),
+        missingFill(node),
+        missingFill(node),
+      ]);
+      expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(3);
     });
 
     // One matched datum is enough to make the layer a data layer, and then the entities it does
