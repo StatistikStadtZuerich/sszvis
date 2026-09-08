@@ -37,6 +37,27 @@ describe("annotation/tooltipAnchor", () => {
     expect(anchors[0].getAttribute("transform")).toBe("translate(10,20)");
   });
 
+  test("should pass the element index to the position accessor", () => {
+    const group = select(svg).append("g");
+    const seen: number[] = [];
+    const layout: [number, number][] = [
+      [5, 6],
+      [7, 8],
+      [9, 10],
+    ];
+    group.datum(["a", "b", "c"]).call(
+      tooltipAnchor<string>().position((_d, i) => {
+        seen.push(i);
+        return layout[i];
+      })
+    );
+
+    expect(seen).toEqual([0, 1, 2]);
+    expect(
+      [...svg.querySelectorAll("[data-tooltip-anchor]")].map((el) => el.getAttribute("transform"))
+    ).toEqual(["translate(5,6)", "translate(7,8)", "translate(9,10)"]);
+  });
+
   test("should not write a visibility attribute", () => {
     // NOTE: visibility only accepts visible/hidden/collapse/inherit. The rects are already
     // invisible through fill="none" and stroke="none", so no value is written at all.

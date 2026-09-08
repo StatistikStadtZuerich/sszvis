@@ -197,11 +197,7 @@ export default function bar<T = unknown>(): BarComponent<T> {
         tooltipPosition = (d, i) => [xAt(d, i) + wAt(d, i) / 2, yAt(d, i)];
       }
 
-      // tooltipAnchor declares its position accessor as taking the datum alone, but d3 calls it
-      // with the index too and the anchors must line up with the bars - so the index is read here
-      // and the narrower declaration is widened. The cast encodes that gap; the real fix is in
-      // tooltipAnchor's own signature.
-      const ta = tooltipAnchor<T>().position(tooltipPosition as (datum: T) => [number, number]);
+      const ta = tooltipAnchor<T>().position(tooltipPosition);
 
       selection.call(ta);
     });
