@@ -453,6 +453,27 @@ describe("component/bar", () => {
       expect(attrs(node, "height")).toEqual(["30"]);
     });
 
+    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+      const g = group("interrupted");
+      g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(barOf().transition(true) as never);
+      // Schedules a tween from 0 towards 500.
+      g.datum([{ x: 500, y: 400, w: 20, h: 30 }]).call(barOf().transition(true) as never);
+      // Let the tween start and run partway, so it holds an interpolated geometry.
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(barOf().transition(false) as never);
+      // The stale tween must have been interrupted: it may not tick again and reinstate its
+      // own interpolation over the geometry the synchronous render just wrote. Waited out
+      // past the 300ms default, so an uninterrupted tween would have reached its destination.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const node = g.node() as SVGGElement;
+      expect(attrs(node, "x")).toEqual(["0"]);
+      expect(attrs(node, "y")).toEqual(["0"]);
+      expect(attrs(node, "width")).toEqual(["10"]);
+      expect(attrs(node, "height")).toEqual(["10"]);
+    });
+
     test("should schedule one tween per geometry attribute and no more", () => {
       // The transition used to be created and discarded, which attached d3 state to every
       // bar without ever scheduling a tween. There is now exactly one tween per geometry
