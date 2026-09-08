@@ -48,6 +48,45 @@ describe("control/select", () => {
     expect(selectEl()?.style.width).toBe("230px");
   });
 
+  test("should render an empty control when values is left unset", () => {
+    render(selectMenu());
+    expect(wrapper()).toBeTruthy();
+    expect(selectEl()).toBeTruthy();
+    expect(options()).toHaveLength(0);
+  });
+
+  test("should render an empty control when values is set to undefined", () => {
+    // The shape the issue was filed against: a chart hands the control a state key that is only
+    // assigned when its CSV resolves, so the setter is called with undefined rather than skipped.
+    render(
+      selectMenu()
+        .width(200)
+        .values(undefined as never)
+    );
+    expect(wrapper()).toBeTruthy();
+    expect(options()).toHaveLength(0);
+  });
+
+  test("should render an unset values the same as an empty one", () => {
+    render(selectMenu().width(200));
+    const unset = container.innerHTML;
+    container.innerHTML = "";
+    render(selectMenu().width(200).values([]));
+    expect(container.innerHTML).toBe(unset);
+  });
+
+  test("should render an undefined values the same as an empty one", () => {
+    render(
+      selectMenu()
+        .width(200)
+        .values(undefined as never)
+    );
+    const undef = container.innerHTML;
+    container.innerHTML = "";
+    render(selectMenu().width(200).values([]));
+    expect(container.innerHTML).toBe(undef);
+  });
+
   test("should render one option per value, in order", () => {
     render(selectMenu().values(["A", "B", "C"]).current("A"));
     expect(options().map((o) => o.textContent)).toEqual(["A", "B", "C"]);
@@ -411,19 +450,6 @@ describe("control/select", () => {
       const menu = selectMenu().values(["A", "B"]).current("A");
       const event = new Event("change");
       expect(menu.change()(event, "value")).toBe(event);
-    });
-
-    test("a missing values prop throws mid-render and leaves a partial control behind", () => {
-      // NOTE: `values` has no default, so a control rendered before its data is
-      // available throws from d3's data join. Every sszvis control shares this "required
-      // props are not defaulted" contract, so the throw itself is intended - but the
-      // wrapper is styled before the throw, so the failed render leaves an empty,
-      // width-styled control in the DOM rather than nothing at all.
-      expect(() => render(selectMenu().current("A"))).toThrow(TypeError);
-      expect(wrapper()).toBeTruthy();
-      expect(wrapper()?.style.width).toBe("300px");
-      expect(selectEl()).toBeTruthy();
-      expect(options()).toEqual([]);
     });
 
     test("truncation drops two characters in its first step, not one", () => {
