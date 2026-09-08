@@ -574,7 +574,9 @@ const setOrdinalTicks = function (this: AxisComponent, count: number): number {
   // in this function, the 'this' context should be an sszvis.axis
   const domain = this.scale().domain(),
     values: AxisDomain[] = [],
-    step = Math.round(domain.length / count);
+    // A stride of at least one: Math.round(3 / 10) is 0, and a loop advancing by 0 never
+    // terminates. Asking for more ticks than there are categories degrades to one per category.
+    step = Math.max(1, Math.round(domain.length / count));
 
   // include the first value
   if (domain[0] !== undefined) values.push(domain[0] as AxisDomain);
