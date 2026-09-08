@@ -371,23 +371,36 @@ describe("component/nestedStackedBar", () => {
         offset: () => component.offset(() => 0),
         xScale: () => component.xScale(xScale),
         yScale: () => component.yScale(yScale),
-        xAcc: () => component.xAcc((d: Row) => d.year),
         tooltip: () => component.tooltip(() => undefined),
       };
       for (const [name, set] of Object.entries(setters)) if (name !== skip) set();
       return component;
     };
 
-    // Five of the nine props are required; `fill`, `stroke`, `xLabel` and `slant` may be
-    // omitted. Each required prop is validated before any element is created, and the error
+    // Four of the nine props are required; `fill`, `stroke`, `xAcc`, `xLabel` and `slant` may
+    // be omitted. Each required prop is validated before any element is created, and the error
     // names the component and the property.
-    for (const prop of ["offset", "xScale", "yScale", "xAcc", "tooltip"]) {
+    for (const prop of ["offset", "xScale", "yScale", "tooltip"]) {
       test(`should throw a named error when ${prop} is not set`, () => {
         expect(() => render(withoutProp(prop))).toThrow(
           `[nestedStackedBarsVertical] the ${prop} property is required`
         );
       });
     }
+
+    // `xAcc` is accepted but never read: the groups take their identity from the nest key, so
+    // a caller that omits the accessor gets the same chart instead of an error.
+    test("should render without xAcc", () => {
+      const node = render(
+        nestedStackedBarsVertical()
+          .offset((d: NestedStack) => offsetScale(d.nest))
+          .xScale(xScale)
+          .yScale(yScale)
+          .tooltip(() => undefined)
+      );
+      expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["F", "M"]);
+      expect(rects(node).length).toBe(rows.length);
+    });
 
     test("should validate before rendering anything", () => {
       const node = render(nestedOf());
