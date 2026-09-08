@@ -13,12 +13,11 @@
  * datum[keyName] is a valid map ID which is matched with the available map entities.
  *
  * @property {Number} width                           The width of the map. Used to create the map projection function.
- *                                                    No default and unvalidated: leaving it out fits the projection to
- *                                                    undefined, so every area is drawn with NaN coordinates.
- * @property {Number} height                          The height of the map. Used to create the map projection function.
- *                                                    No default, and fails the same way as width.
+ *                                                    Required: no default, and a missing or non-finite width throws
+ *                                                    before anything is drawn.
+ * @property {Number} height                          The height of the map. Same as width, and validated the same way.
  * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
- *                                                    Required and unguarded: its absence throws, as borders' does.
+ *                                                    Required: its absence throws, as width's and borders' do.
  * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default, and
  *                                                    required in practice: the mesh renderer throws a TypeError naming
  *                                                    its geoJson property if it is left out.
@@ -60,26 +59,24 @@
  * @function on(String, function)                     This component has an event handler interface for binding events to the map entities.
  *                                                    The available events are 'over', 'out', and 'click'. These are triggered on map
  *                                                    elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
- *                                                    A handler is called with undefined rather than with the entity's
- *                                                    datum; see the note below.
+ *                                                    A handler is called with the datum of the entity the event happened
+ *                                                    on; see the note below.
  *
- * Note: the projection cache key is the literal string "zurichStadtfeatures" for every choropleth
- * on the page, whatever it is a map of - and it names no map id in src/map/mapUtils.ts.
- * swissMapProjection memoizes on width, height and that string alone, so two maps of different
- * areas rendered at the same size share the projection fitted to whichever rendered first, and the
- * second is projected outside its destination box.
+ * Note: no projection cache key is passed, so swissMapProjection skips its bounds cache and fits
+ * the projection to the features this map was given. Two maps of different areas rendered at the
+ * same size are therefore projected independently. The cost is that the bounds calculation is
+ * redone on every render; sharing a key would trade that for the wrong fit.
  *
- * Note: features and borders are the two properties whose absence throws - features because
- * prepareMergedGeoData reads geoJson.features, borders because the mesh renderer now validates its
- * own geoJson. width and height have no defaults either, but a missing size degrades silently:
- * fitSize gets undefined, the scale is NaN, and every area carries a path of NaN coordinates that
- * the browser drops, leaving a blank map instead of an error.
+ * Note: width, height, features and borders are all required and all now fail loudly. This
+ * component validates the first three itself, before it renders anything, and the mesh renderer
+ * validates its own geoJson for the fourth. A missing size used to degrade silently - fitSize got
+ * undefined, the scale was NaN, and every area carried a path of NaN coordinates that the browser
+ * dropped, leaving a blank map with nothing in the console.
  *
- * Note: the lake and the anchored shape are not removed once drawn. Turning withLake off, or
- * clearing anchoredShape, only stops the renderer being called; the lake, its border path, the
- * pattern definition and the shape's own elements stay in the DOM from the previous render. The
- * highlight is the exception - the highlight renderer removes its paths for an empty highlight
- * array - which is what makes the other two read as oversights rather than as house style.
+ * Note: the lake and the anchored shape are each drawn into a group of this component's own, so
+ * that turning withLake off, or clearing anchoredShape, removes what the previous render drew
+ * rather than merely skipping the renderer. Every layer that can be switched off therefore clears
+ * itself: the highlight through its own renderer, these two through their groups.
  *
  * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
  * renderer's own default of true, so the fade mask and its gradient are not created unless the
@@ -89,6 +86,13 @@
  * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
  * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
  * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
+ *
+ * Note: a handler receives the datum of the map entity the event fired on, which this component
+ * recognises by identity: the value bound to the event target has to be one of the merged entries
+ * it produced for this render. The base layer's areas carry exactly those, so a handler gets the
+ * entity's own datum, undefined where the entity matched no data. An event target an anchored
+ * shape contributed yields undefined unless that shape bound one of the same merged entries to it,
+ * in which case it names an entity like any other target and the handler gets its datum.
  *
  * Note: the event dispatch is created once per choropleth() call and closed over, while the four
  * renderers keep their props on the element they rendered into. So one instance can draw into two
@@ -104,6 +108,7 @@
  */
 import { type BaseType, type ExtendedFeatureCollection, type GeoPath, type GeoPermissibleObjects, type ValueFn } from "d3";
 import { type ComponentBuilder } from "../d3-component.js";
+import "../d3-selectgroup.js";
 import { type MergedGeoDatum } from "../map/index.js";
 /**
  * What the render needs of an anchored shape: the two properties it configures before calling it.
@@ -130,10 +135,12 @@ type GeoStyleValue<R extends string | number> = R | ValueFn<BaseType, GeoPermiss
  */
 type MeshStyleValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
 /**
- * A handler as this component's event API delivers it - which is to say, with undefined. See the
- * note on legacyDatum below.
+ * A handler as this component's event API delivers it: with the datum of the map entity the event
+ * happened on, which is undefined for an entity that matched no data - and for an event target
+ * bound to anything other than one of this render's merged entries, an anchored shape's own markup
+ * included, unless that shape bound those entries itself.
  */
-export type ChoroplethEventHandler = (datum: undefined) => void;
+export type ChoroplethEventHandler<T = object> = (datum: T | undefined) => void;
 /**
  * The getters return whatever was last set, which is why width, height, features, borders, the two
  * lake shapes and anchoredShape report undefined: none of them has a default. The delegated
@@ -186,12 +193,12 @@ export interface ChoroplethComponent<T extends object = object> extends Componen
     lakePathColor(value: GeoStyleValue<string>): ChoroplethComponent<T>;
     /**
      * Registers a handler for "over", "out" or "click", returning the component so it can be
-     * chained; called with an event name alone it returns that handler. Note that a handler is
-     * called with undefined rather than with the map entity's datum; see the module note.
+     * chained; called with an event name alone it returns that handler. A handler is called with
+     * the datum of the entity the event happened on; see the module note.
      */
-    on(eventName: string, handler: ChoroplethEventHandler | null): ChoroplethComponent<T>;
-    on(eventName: string): ChoroplethEventHandler | undefined;
+    on(eventName: string, handler: ChoroplethEventHandler<T> | null): ChoroplethComponent<T>;
+    on(eventName: string): ChoroplethEventHandler<T> | undefined;
 }
-export default function <T extends object = object>(): ChoroplethComponent<T>;
+export default function choropleth<T extends object = object>(): ChoroplethComponent<T>;
 export {};
 //# sourceMappingURL=choropleth.d.ts.map

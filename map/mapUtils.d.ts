@@ -24,38 +24,10 @@ export type GeoPoint = [number, number];
  * coordinates, or null where the point is clipped away.
  */
 export type PointProjection = (point: GeoPoint) => [number, number] | null;
-/**
- * swissMapProjection
- *
- * A function for creating d3 projection functions, customized for the dimensions of the map you need.
- * Because this projection generator involves calculating the boundary of the features that will be
- * projected, the result of these calculations is cached internally. Hence the featureBoundsCacheKey.
- *
- * Note: the cache key is width, height and featureBoundsCacheKey only. Reusing a key for a
- * different feature collection returns the projection fitted to the first collection, which places
- * the second collection outside the destination box.
- *
- * Note: featureBoundsCacheKey is optional, and every call that omits it shares the single key
- * "<width>,<height>,undefined". Two different maps rendered at the same size collide silently.
- *
- * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
- * distinct width/height/key triple for the lifetime of the page - a chart that reprojects on resize
- * accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
- * release them.
- *
- * See test/map/mapUtils.test.ts.
- *
- * @param  {Number} width                           The width of the projection destination space.
- * @param  {Number} height                          The height of the projection destination space.
- * @param  {Object} featureCollection               The feature collection that will be projected by the returned function. Needed to calculated a good size.
- * @param  {String} [featureBoundsCacheKey]         The cache key for the expensive bounds calculation.
- *                                                  Must identify the feature collection: the collection
- *                                                  itself is not part of the key.
- * @return {Function}                               The projection function.
- */
-export declare const swissMapProjection: ((width: number, height: number, featureCollection: MapGeoObject, _featureBoundsCacheKey?: string) => GeoProjection) & {
-    cache: Map<unknown, GeoProjection>;
-};
+export declare function swissMapProjection(width: number, height: number, featureCollection: MapGeoObject, featureBoundsCacheKey?: string): GeoProjection;
+export declare namespace swissMapProjection {
+    var cache: Map<unknown, GeoProjection>;
+}
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
  * Switzerland. The values are chosen specifically to optimize path generation for
@@ -117,14 +89,12 @@ export interface MergedGeoDatum<Datum> {
  * which has a features array. Each feature is mapped to one data object, or to undefined where no
  * data object matched.
  *
- * Note: matching goes through a plain object literal, so ids are stringified - a numeric data key
- * matches a string feature id - and a feature whose id names an Object.prototype member
- * ("constructor", "toString", ...) is handed the inherited property as its datum even though no
- * such datum was supplied.
+ * Note: matching goes through a Map keyed by the stringified id, so a numeric data key still
+ * matches a string feature id, but only data that was actually passed in can ever be matched -
+ * ids such as "constructor" or "__proto__" are ordinary keys here.
  *
- * Note: a datum keyed "__proto__" replaces the lookup object's prototype instead of creating an
- * entry. That datum still reads back correctly, but every unmatched feature afterwards is handed a
- * field of it rather than undefined. Do not feed untrusted ids to this function.
+ * Note: a datum whose key property is missing is not filed under any entry, and a feature with no
+ * id is not looked up, so the two never meet under a shared "undefined" key.
  *
  * Note: a symbol data key stays a symbol property, so it can never be matched by a feature id,
  * which GeoJSON allows only as a string or a number. Two symbols with the same description stay
@@ -149,12 +119,6 @@ export interface MergedGeoDatum<Datum> {
  */
 export declare function prepareMergedGeoData<Datum extends object>(dataset: readonly Datum[] | null | undefined, geoJson: ExtendedFeatureCollection, keyName?: string): MergedGeoDatum<Datum>[];
 /**
- * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
- * symbols with the same description remain distinct and can never be matched by a string or numeric
- * feature id. Everything else stringifies, which is how a missing key becomes the string
- * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
- */
-/**
  * The key a feature id or datum value is looked up under. Symbols pass through; everything
  * else is stringified, so numeric and string ids that print the same collide deliberately.
  */
@@ -164,7 +128,7 @@ export interface MapFeatureProperties {
     /** An authored centre, as the string "longitude,latitude". */
     center?: string;
     /** Where the computed centre is memoized, on the feature itself. */
-    cachedCenter?: number[];
+    cachedCenter?: GeoPoint;
     [key: string]: unknown;
 }
 /** A map feature whose properties this module is allowed to read and cache onto. */
@@ -184,30 +148,29 @@ export type MapFeature = ExtendedFeature<GeoGeometryObjects | null, MapFeaturePr
  * argument, and the cache is never invalidated - changing `center` after the first call has no
  * effect for the lifetime of the feature object.
  *
- * Note: the `center` string is split on "," and mapped through parseFloat with no validation. A
- * value that does not parse becomes NaN coordinates, and a wrong number of components becomes a
- * wrongly sized array; both reach the projection silently.
+ * Note: a `center` that is not exactly two finite numbers is reported with logger.warn and ignored
+ * in favour of the computed centroid, so a typo in the topojson -e output is visible rather than
+ * silently placing marks at NaN. A warning rather than a throw: the value is authored map data that
+ * the rest of the feature can still render without.
  *
  * See test/map/mapUtils.test.ts.
  *
  * @param  {Object} geoJson                 The geoJson object for which you want the center.
- * @return {number[]}                       The geographical coordinates (in the form [lon, lat]) of the centroid
- *                                          (or user-specified center) of the object. Typed as number[] rather
- *                                          than a [lon, lat] tuple because a malformed `center` property is
- *                                          parsed without validation and can yield a shorter or longer array.
+ * @return {GeoPoint}                       The geographical coordinates (in the form [lon, lat]) of the centroid
+ *                                          (or user-specified center) of the object.
  * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
  *                                          but has never been supported here, since the cache is written to
  *                                          the properties object.
  */
-export declare function getGeoJsonCenter(geoJson: MapFeature): number[];
+export declare function getGeoJsonCenter(geoJson: MapFeature): GeoPoint;
 /**
  * widthAdaptiveMapPathStroke
  *
  * A little "magic" function for automatically calculating map stroke sizes based on
  * the width of the container they're in. Used for responsive designs.
  *
- * Note: the clamp does not rescue NaN - Math.max(0.8, NaN) is NaN - so an unmeasured container
- * width produces a NaN stroke width that reaches the DOM.
+ * Note: a width that is not a finite number - an unmeasured container - yields the 0.8 minimum
+ * rather than NaN, so the result is always within the documented range.
  *
  * See test/map/mapUtils.test.ts.
  *

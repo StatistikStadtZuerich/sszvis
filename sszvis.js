@@ -7223,7 +7223,7 @@
      * dimension therefore still resolves to NaN, and a value that cannot be coerced still
      * throws before the data join rather than after it.
      */
-    const dimension$2 = value => {
+    const dimension$3 = value => {
       if (typeof value === "function") return value;
       // An unset dimension is spelled out because TypeScript will not coerce undefined, and
       // +undefined is NaN.
@@ -7264,8 +7264,8 @@
           }
         }
         // Layouts
-        const y0 = dimension$2(props.y0);
-        const y1Given = props.y1 == null ? undefined : dimension$2(props.y1);
+        const y0 = dimension$3(props.y0);
+        const y1Given = props.y1 == null ? undefined : dimension$3(props.y1);
         // The default guards both vertical bounds, the way src/component/line.ts guards both
         // of its dimensions by hand. It is deliberately not composed: the expression this
         // replaces - `fn.compose(fn.not(isNaN), props.y0) && fn.compose(..., props.y1)` -
@@ -7282,7 +7282,7 @@
           return !missing;
         };
         const defined = props.defined === undefined ? guardMissing : typeof props.defined === "function" ? props.defined : () => Boolean(props.defined);
-        const areaGen = d3.area().defined(defined).x(dimension$2(props.x)).y0(y0);
+        const areaGen = d3.area().defined(defined).x(dimension$3(props.x)).y0(y0);
         // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
         // why an unset y1 collapses every layer onto its own baseline. Its typings admit only
         // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
@@ -7484,7 +7484,7 @@
      * value whose coercion itself throws - a Symbol, a BigInt - raises, before the data join
      * rather than after it.
      */
-    const dimension$1 = value => {
+    const dimension$2 = value => {
       if (typeof value === "function") return value;
       // An unset dimension is spelled out because TypeScript will not coerce undefined, and
       // +undefined is NaN.
@@ -7528,8 +7528,8 @@
           }
         }
         // Layouts
-        const y0 = dimension$1(props.y0);
-        const y1Given = props.y1 == null ? undefined : dimension$1(props.y1);
+        const y0 = dimension$2(props.y0);
+        const y1Given = props.y1 == null ? undefined : dimension$2(props.y1);
         // The default guards both vertical bounds, the way src/component/line.ts guards both
         // of its dimensions by hand. It is deliberately not composed: the expression this
         // replaces - `fn.compose(fn.not(isNaN), props.y0) && fn.compose(..., props.y1)` -
@@ -7546,7 +7546,7 @@
           return !missing;
         };
         const defined = props.defined === undefined ? guardMissing : typeof props.defined === "function" ? props.defined : () => Boolean(props.defined);
-        const areaGen = d3.area().defined(defined).x(dimension$1(props.x)).y0(y0);
+        const areaGen = d3.area().defined(defined).x(dimension$2(props.x)).y0(y0);
         // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
         // why an unset y1 collapses every band onto its own baseline. Its typings admit only
         // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
@@ -10430,14 +10430,12 @@
      *
      * Note: the cache key is width, height and featureBoundsCacheKey only. Reusing a key for a
      * different feature collection returns the projection fitted to the first collection, which places
-     * the second collection outside the destination box.
-     *
-     * Note: featureBoundsCacheKey is optional, and every call that omits it shares the single key
-     * "<width>,<height>,undefined". Two different maps rendered at the same size collide silently.
+     * the second collection outside the destination box. Omitting the key is therefore safe rather than
+     * shared: with no key the cache is bypassed and the collection is always fitted afresh.
      *
      * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
-     * distinct width/height/key triple for the lifetime of the page - a chart that reprojects on resize
-     * accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
+     * distinct width/height/key triple for the lifetime of the page - a keyed chart that reprojects on
+     * resize accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
      * release them.
      *
      * See test/map/mapUtils.test.ts.
@@ -10447,14 +10445,25 @@
      * @param  {Object} featureCollection               The feature collection that will be projected by the returned function. Needed to calculated a good size.
      * @param  {String} [featureBoundsCacheKey]         The cache key for the expensive bounds calculation.
      *                                                  Must identify the feature collection: the collection
-     *                                                  itself is not part of the key.
+     *                                                  itself is not part of the key. Omit it to skip the
+     *                                                  cache entirely.
      * @return {Function}                               The projection function.
      */
-    const swissMapProjection = memoize((width, height, featureCollection,
+    const memoizedSwissMapProjection = memoize((width, height, featureCollection,
     // Part of the signature only so that the memoize resolver below can read it.
     _featureBoundsCacheKey) => d3.geoMercator().fitSize([width, height], featureCollection),
     // Memoize resolver
     (width, height, _, featureBoundsCacheKey) => "".concat(width, ",").concat(height, ",").concat(featureBoundsCacheKey));
+    function swissMapProjection(width, height, featureCollection, featureBoundsCacheKey) {
+      // Without a key there is nothing that identifies the collection, so caching would hand a second
+      // map the first map's fit. An uncached fitSize is always correct.
+      if (featureBoundsCacheKey === undefined) {
+        return d3.geoMercator().fitSize([width, height], featureCollection);
+      }
+      return memoizedSwissMapProjection(width, height, featureCollection, featureBoundsCacheKey);
+    }
+    /** The bounds cache backing keyed calls. Clearing it is the only way to release its entries. */
+    swissMapProjection.cache = memoizedSwissMapProjection.cache;
     /**
      * This is a special d3.geoPath generator function tailored for rendering maps of
      * Switzerland. The values are chosen specifically to optimize path generation for
@@ -10536,14 +10545,12 @@
      * which has a features array. Each feature is mapped to one data object, or to undefined where no
      * data object matched.
      *
-     * Note: matching goes through a plain object literal, so ids are stringified - a numeric data key
-     * matches a string feature id - and a feature whose id names an Object.prototype member
-     * ("constructor", "toString", ...) is handed the inherited property as its datum even though no
-     * such datum was supplied.
+     * Note: matching goes through a Map keyed by the stringified id, so a numeric data key still
+     * matches a string feature id, but only data that was actually passed in can ever be matched -
+     * ids such as "constructor" or "__proto__" are ordinary keys here.
      *
-     * Note: a datum keyed "__proto__" replaces the lookup object's prototype instead of creating an
-     * entry. That datum still reads back correctly, but every unmatched feature afterwards is handed a
-     * field of it rather than undefined. Do not feed untrusted ids to this function.
+     * Note: a datum whose key property is missing is not filed under any entry, and a feature with no
+     * id is not looked up, so the two never meet under a shared "undefined" key.
      *
      * Note: a symbol data key stays a symbol property, so it can never be matched by a feature id,
      * which GeoJSON allows only as a string or a number. Two symbols with the same description stay
@@ -10570,22 +10577,21 @@
       // Any falsy key name, the empty string included, falls back to the default.
       const key = keyName || GEO_KEY_DEFAULT;
       // group the input data by map entity id
-      const groupedInputData = Array.isArray(dataset) ? dataset.reduce((m, v) => {
-        m[toLookupKey(Reflect.get(v, key))] = v;
-        return m;
-      }, {}) : {};
+      const groupedInputData = new Map();
+      if (Array.isArray(dataset)) {
+        for (const datum of dataset) {
+          const value = Reflect.get(datum, key);
+          // A datum with no key is filed under no entry at all, rather than under "undefined".
+          if (value === undefined) continue;
+          groupedInputData.set(toLookupKey(value), datum);
+        }
+      }
       // merge the map features and the input data into new objects that include both
       return geoJson.features.map(feature => ({
         geoJson: feature,
-        datum: groupedInputData[toLookupKey(feature.id)]
+        datum: feature.id === undefined ? undefined : groupedInputData.get(toLookupKey(feature.id))
       }));
     }
-    /**
-     * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
-     * symbols with the same description remain distinct and can never be matched by a string or numeric
-     * feature id. Everything else stringifies, which is how a missing key becomes the string
-     * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
-     */
     /**
      * The key a feature id or datum value is looked up under. Symbols pass through; everything
      * else is stringified, so numeric and string ids that print the same collide deliberately.
@@ -10608,17 +10614,16 @@
      * argument, and the cache is never invalidated - changing `center` after the first call has no
      * effect for the lifetime of the feature object.
      *
-     * Note: the `center` string is split on "," and mapped through parseFloat with no validation. A
-     * value that does not parse becomes NaN coordinates, and a wrong number of components becomes a
-     * wrongly sized array; both reach the projection silently.
+     * Note: a `center` that is not exactly two finite numbers is reported with logger.warn and ignored
+     * in favour of the computed centroid, so a typo in the topojson -e output is visible rather than
+     * silently placing marks at NaN. A warning rather than a throw: the value is authored map data that
+     * the rest of the feature can still render without.
      *
      * See test/map/mapUtils.test.ts.
      *
      * @param  {Object} geoJson                 The geoJson object for which you want the center.
-     * @return {number[]}                       The geographical coordinates (in the form [lon, lat]) of the centroid
-     *                                          (or user-specified center) of the object. Typed as number[] rather
-     *                                          than a [lon, lat] tuple because a malformed `center` property is
-     *                                          parsed without validation and can yield a shorter or longer array.
+     * @return {GeoPoint}                       The geographical coordinates (in the form [lon, lat]) of the centroid
+     *                                          (or user-specified center) of the object.
      * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
      *                                          but has never been supported here, since the cache is written to
      *                                          the properties object.
@@ -10629,10 +10634,39 @@
         throw new TypeError("getGeoJsonCenter: the feature has no properties object to cache onto");
       }
       if (!properties.cachedCenter) {
-        const setCenter = properties.center;
-        properties.cachedCenter = setCenter ? setCenter.split(",").map(Number.parseFloat) : d3.geoCentroid(geoJson);
+        var _parseCenter;
+        properties.cachedCenter = (_parseCenter = parseCenter(properties.center, geoJson.id)) !== null && _parseCenter !== void 0 ? _parseCenter : d3.geoCentroid(geoJson);
       }
       return properties.cachedCenter;
+    }
+    /**
+     * An authored "longitude,latitude" centre, or undefined where none was given or it is not exactly
+     * two finite numbers - the malformed case is warned about, naming the offending feature.
+     *
+     * Each token is parsed whole with Number rather than with parseFloat, which stops at the first
+     * character it cannot read: parseFloat("8.54oops") is 8.54, so a typo would pass the finite check
+     * and place the anchor as though the author had written something they did not. Number("") is 0,
+     * so an empty token is rejected before it can become a coordinate - which also means an authored
+     * empty string reaches the warning instead of being treated as an absent property.
+     */
+    function parseCenter(center, featureId) {
+      // Only an absent property passes silently. An authored null is a value, and a malformed one, so
+      // it is reported like any other non-string.
+      if (center === undefined) return undefined;
+      // Declared a string on MapFeatureProperties, which says what an author should write, but the
+      // properties of a loaded map file are runtime data and nothing checks them on the way in. A
+      // number or an object would otherwise throw from split() rather than degrading to the centroid,
+      // which is what this function exists to guarantee.
+      if (typeof center !== "string") {
+        warn("getGeoJsonCenter: ignoring the center property of feature ".concat(String(featureId), ", whose ") + "type is ".concat(center === null ? "null" : typeof center, " rather than a ") + '"longitude,latitude" string. Falling back to the computed centroid.');
+        return undefined;
+      }
+      const parsed = center.split(",").map(token => token.trim() === "" ? Number.NaN : Number(token));
+      if (parsed.length === 2 && parsed.every(n => Number.isFinite(n))) {
+        return [parsed[0], parsed[1]];
+      }
+      warn("getGeoJsonCenter: ignoring the center property \"".concat(center, "\" of feature ").concat(String(featureId), ", ") + "which is not two finite numbers. Falling back to the computed centroid.");
+      return undefined;
     }
     /**
      * widthAdaptiveMapPathStroke
@@ -10640,8 +10674,8 @@
      * A little "magic" function for automatically calculating map stroke sizes based on
      * the width of the container they're in. Used for responsive designs.
      *
-     * Note: the clamp does not rescue NaN - Math.max(0.8, NaN) is NaN - so an unmeasured container
-     * width produces a NaN stroke width that reaches the DOM.
+     * Note: a width that is not a finite number - an unmeasured container - yields the 0.8 minimum
+     * rather than NaN, so the result is always within the documented range.
      *
      * See test/map/mapUtils.test.ts.
      *
@@ -10649,6 +10683,8 @@
      * @return {number}          The stroke width that the map elements should have, clamped to [0.8, 1.1].
      */
     function widthAdaptiveMapPathStroke(width) {
+      // Math.max(0.8, NaN) is NaN, so the clamp alone cannot rescue an unmeasured width.
+      if (!Number.isFinite(width)) return 0.8;
       return Math.min(Math.max(0.8, width / 400), 1.1);
     }
     /**
@@ -10879,63 +10915,56 @@
      * @property {Number, Function} strokeWidth         The stroke width of the circles. Can be a function. Default 1.
      *                                                  Documented nowhere else: docs/map-signature/README.md omits it.
      * @property {Boolean} transition                   Whether or not to transition the sizes of the circles when data
-     *                                                  changes. Default true - but it never actually animates a radius, and
-     *                                                  never affects a departing circle; see the notes below.
+     *                                                  changes. Default true. An entering circle grows from zero, an
+     *                                                  updating one interpolates to its new radius, and a departing one
+     *                                                  shrinks to zero before it is removed.
      *
      * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are all
      * required in practice, and each fails differently when left out.
      *
-     * Note: the over, out and click handlers registered through .on() are called with undefined rather
-     * than with the map entity's datum. The listeners are written for d3 v3, where a listener received
-     * the datum first; since d3 v6 it receives the event first, so what they read as `d.datum` is a
-     * property of a PointerEvent. The dispatch itself works, unlike the geojson renderer's, so a
-     * handler does fire - it just learns nothing about which entity was hovered.
+     * Note: the over, out and click handlers registered through .on() are called with the hovered map
+     * entity's datum - undefined for a feature that matched no data. The circles carry
+     * pointer-events: none (see below), so these handlers are only reachable by dispatching an event
+     * on a circle directly; a real pointer reaches the base layer underneath instead.
      *
      * Note: on() forwards straight to a d3 dispatch, so it inherits its semantics: it returns the
      * component for chaining and the handler when called with a name alone, an unknown event name
      * throws, a namespaced name such as "over.tooltip" is accepted, and null removes a handler.
      *
      * Note: the circles are drawn into a group appended after the base layer's areas, so they paint on
-     * top - and they carry neither a data-event-target attribute nor a pointer-events override. As
-     * choropleth binds its own handlers to [data-event-target] after calling the anchored shape, the
-     * circles are never bound, so a pointer over a bubble reaches neither the base layer's handler nor,
-     * usefully, the bubble's own.
+     * top of them. Where no handler is registered on this component they are decoration rather than a
+     * hit area, so they carry pointer-events: none and let the pointer through to the area beneath -
+     * which is what keeps the base layer's handlers, and so choropleth's tooltips, working over the
+     * middle of a bubble. Registering over, out or click restores hit testing on the circles, since a
+     * consumer who wants those handlers is asking for the bubbles to be the target; the base layer's
+     * handlers are then shadowed over each bubble, as they were before this note was written.
      *
      * Note: the circles are sorted by radius descending, so the largest paint first and smaller ones sit
      * on top of them. That is a DOM reordering, so the rendered order does not follow mergedData.
      *
-     * Note: the exit selection is read off the merged selection that join() returned, where it does not
-     * exist - so both exit branches are dead code, the shrink-to-zero transition and the plain remove
-     * alike. join() has already removed the departing circles synchronously, so a bubble leaving the
-     * data disappears instantly rather than shrinking away, whatever `transition` says.
+     * Note: the exit selection is handled inside join()'s third argument, since join() removes the
+     * departing nodes itself and returns only the merged enter+update selection.
      *
-     * Note: the join is keyed on geoJson.id, which GeoJSON does not require. Features that have one keep
-     * their circles across a data change; features without one all key to "undefined", so on every
-     * re-render the first node matches and every node past it is exited and replaced by a fresh enter
-     * node - the count stays right, but all but one circle is destroyed and recreated each time, losing
-     * any transition in flight.
+     * Note: the join is keyed on geoJson.id. A feature without one is given an identity of its own,
+     * held against the feature object, so a keyless collection keeps its circles across renders too.
+     * The identity is the object, not its contents: a caller who rebuilds equivalent feature objects
+     * between renders gets fresh circles rather than the previous ones, and should author ids if it
+     * needs the circles to persist.
      *
-     * Note: the radius accessor is called for every circle twice over - once for the attribute and once
-     * for the transition - and again for each comparison the size sort makes, so it runs several times
-     * more often than there are data.
-     *
-     * Note: the class is written with attr rather than classed, so it is replaced wholesale on every
-     * render and any class a consumer added to a circle is destroyed.
+     * Note: the radius accessor is called once per circle for the radius itself and again for each
+     * comparison the size sort makes, so it runs several times more often than there are data.
      *
      * Note: nothing in sszvis.css styles .sszvis-anchored-circle, so the fill, stroke and stroke width
      * come entirely from the inline styles this component writes - and a consumer cannot restyle them
      * from their own stylesheet, since an inline style beats any author rule short of !important.
      *
-     * Note: this renderer shares four quirks with the base renderer, documented at length in
-     * src/map/renderer/base.ts: the radius transition interpolates a value onto itself, so nothing
-     * animates on enter or on update; the --entering modifier is added and removed within the same
-     * render, so it is never observable and offers no enter-only styling hook; the anchor positions go
-     * through getGeoJsonCenter, which caches a centre onto every feature's properties and never
-     * invalidates it, so moving a feature's geometry leaves its bubble behind; and mapPath must be a
-     * real d3.geoPath, since the positions read mapPath.projection(). Unlike base, though, the
-     * transition itself is the intended one - defaultTransition() is passed as `t` to .transition(t)
-     * rather than through the no-op `.transition().call(slowTransition)` pattern - so its 300ms and
-     * easePolyOut survive.
+     * Note: this renderer shares three quirks with the base renderer, documented at length in
+     * src/map/renderer/base.ts: the --entering modifier is added and removed within the same render, so
+     * it is never observable and offers no enter-only styling hook; the anchor positions go through
+     * getGeoJsonCenter, which caches a centre onto every feature's properties and never invalidates it,
+     * so moving a feature's geometry leaves its bubble behind; and mapPath must be a real d3.geoPath,
+     * since the positions read mapPath.projection(). The transition is the intended one:
+     * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
      *
      * Note: this component adds no tooltip anchors of its own; a bubble map's tooltips are anchored by
      * the base renderer underneath it.
@@ -10943,27 +10972,41 @@
      *
      * @return {sszvis.component}
      */
+    function parseTypename(typename) {
+      const dot = typename.indexOf(".");
+      const type = dot < 0 ? typename : typename.slice(0, dot);
+      const name = dot < 0 ? "" : typename.slice(dot + 1);
+      return {
+        type,
+        name,
+        key: "".concat(type, ".").concat(name)
+      };
+    }
+    /** The name half of a canonical key, which is everything after its single separating dot. */
+    function nameOfKey(key) {
+      return key.slice(key.indexOf(".") + 1);
+    }
+    const anonymousKeys = new WeakMap();
+    let anonymousCount = 0;
+    function anonymousKey(feature) {
+      const existing = anonymousKeys.get(feature);
+      if (existing !== undefined) return existing;
+      const key = "anonymous:".concat(++anonymousCount);
+      anonymousKeys.set(feature, key);
+      return key;
+    }
     /**
-     * The join key, as d3 receives it: the feature id, or the string "undefined" for a feature without
-     * one - which is why keyless features all collide. d3 appends "" to whatever this returns, so a
-     * plain d.geoJson.id would already be stringified; String() only makes the "undefined" fallback
-     * explicit for the type. The one divergence is a symbol id, on which d3's `+ ""` would have thrown
-     * and String() does not - GeoJSON does not allow one, and no test covers it.
+     * The join key: the feature id, which GeoJSON does not require. A feature without one falls back to
+     * an identity of its own, so a keyless collection still keeps each circle across renders instead of
+     * collapsing every feature onto the key "undefined". The two namespaces are disjoint, so no real id
+     * - not even the string "anonymous:1" - can be read as a fallback key. d3 appends "" to whatever
+     * this returns, so an id is stringified either way; String() only makes that explicit for the type.
      */
     function keyOf(d) {
-      return String(d.geoJson.id);
+      return d.geoJson.id == null ? anonymousKey(d.geoJson) : "id:".concat(String(d.geoJson.id));
     }
     /** Reads the datum off a merged entry, as the JavaScript's module-level accessor did. */
     const datumAcc = prop("datum");
-    /**
-     * What the mouse listeners actually read. They were written for d3 v3, where a listener was called
-     * with the datum; since d3 v6 the first argument is the event, so `datum` here is a property of a
-     * PointerEvent and is always undefined. Transcribed rather than corrected so the port does not
-     * change behaviour - the fix is to take the datum from d3's second argument.
-     */
-    function legacyDatum$1(event) {
-      return event.datum;
-    }
     /**
      * Reads the anchor position for a feature, as the JavaScript did: through mapPath.projection(),
      * which is why a bare path function throws here rather than being reported. The projection's own
@@ -10991,8 +11034,16 @@
       }
       return projected;
     }
-    function bubble () {
+    function mapRendererBubble() {
       const event = d3.dispatch("over", "out", "click");
+      /**
+       * The typenames a consumer registered, tallied in on() below because d3's dispatch cannot be
+       * asked what it holds: dispatch.on("over") reports only the handler registered under the bare
+       * name, and returns undefined for one registered as "over.tooltip".
+       */
+      const registered = new Set();
+      /** Whether any of this component's handlers is registered, under any namespace. */
+      const hasListeners = () => registered.size > 0;
       const anchoredCirclesComponent = component().prop("mergedData").prop("mapPath").prop("radius", functor).prop("fill", functor).prop("strokeColor", functor).strokeColor("#ffffff").prop("strokeWidth", functor).strokeWidth(1).prop("transition").transition(true).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
@@ -11000,30 +11051,50 @@
         // so a radius accessor written as a function receives d3's circle node as `this`, exactly as
         // the JavaScript did. An arrow here would call it with `this === undefined`.
         const radiusAcc = compose(props.radius, datumAcc);
-        const anchoredCircles = selection.selectGroup("anchoredCircles").selectAll(".sszvis-anchored-circle")
-        // The key is the feature id, stringified by d3 - which is how every feature without one
-        // collides on "undefined". See the module note.
-        .data(props.mergedData, keyOf).join("circle").attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering").attr("r", radiusAcc).on("mouseover", function (e) {
-          event.call("over", this, legacyDatum$1(e));
-        }).on("mouseout", function (e) {
-          event.call("out", this, legacyDatum$1(e));
-        }).on("click", function (e) {
-          event.call("click", this, legacyDatum$1(e));
+        const anchoredCircles = selection.selectGroup("anchoredCircles").selectAll(".sszvis-anchored-circle").data(props.mergedData, keyOf).join(enter => enter.append("circle")
+        // classed, not attr: the component owns these two class names and leaves whatever
+        // else is on the element alone.
+        .classed("sszvis-anchored-circle sszvis-anchored-circle--entering", true)
+        // Entering circles start at zero so the radius transition has somewhere to come
+        // from; without a starting value the tween would interpolate from null.
+        .attr("r", 0), update => update,
+        // The exit selection has to be handled here: join() removes the departing nodes itself
+        // and returns only the merged enter+update selection, so an .exit() read off its result
+        // is always empty.
+        exit => props.transition ? exit.transition(defaultTransition()).attr("r", 0).remove() : exit.remove())
+        // d3 calls a listener with the event first and the bound datum second; the datum here is
+        // the merged entry, so the handler is handed the map entity's own datum off it.
+        .on("mouseover", function (_event, d) {
+          event.call("over", this, d.datum);
+        }).on("mouseout", function (_event, d) {
+          event.call("out", this, d.datum);
+        }).on("click", function (_event, d) {
+          event.call("click", this, d.datum);
         }).attr("transform", d => {
           const position = anchorPosition(props.mapPath, d.geoJson);
           return translateString(position[0], position[1]);
-        }).style("fill", d => props.fill(d.datum)).style("stroke", d => props.strokeColor(d.datum)).style("stroke-width", d => props.strokeWidth(d.datum)).sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
+        }).style("fill", d => props.fill(d.datum)).style("stroke", d => props.strokeColor(d.datum)).style("stroke-width", d => props.strokeWidth(d.datum))
+        // The circles paint over the base layer's areas, which carry the map's event targets. Where
+        // this component has no listeners of its own they are decoration, not a hit area, so they
+        // let the pointer through to the area beneath - the same way the mesh and lake overlay
+        // layers stay out of the way. Without that the middle of every bubble is a dead zone:
+        // choropleth binds its handlers to [data-event-target], which a circle is not.
+        //
+        // A consumer who registered over/out/click on the bubbles themselves is asking for exactly
+        // that hit area, though, so it is left in place for them rather than silently withdrawing
+        // the public on() API. Removing the property restores the inherited default.
+        // Written through a value function because d3 types style() as accepting either a value or
+        // null, never a union of the two.
+        .style("pointer-events", () => hasListeners() ? null : "none").sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
         // Remove the --entering modifier from the updating circles
         anchoredCircles.classed("sszvis-anchored-circle--entering", false);
+        // The radius is written exactly once, so the transition has the previous value - zero for an
+        // entering circle - to interpolate from. Writing it to the plain selection first would put
+        // the final radius in the DOM before the tween started, and the tween would then interpolate
+        // that radius onto itself.
         if (props.transition) {
-          const t = defaultTransition();
-          // Note: join() has already removed the exiting nodes and returns the merged selection, so
-          // this exit selection is empty and the shrink-away transition never runs. Kept as the
-          // JavaScript had it; see the module note.
-          anchoredCircles.exit().transition(t).attr("r", 0).remove();
-          anchoredCircles.transition(t).attr("r", radiusAcc);
+          anchoredCircles.transition(defaultTransition()).attr("r", radiusAcc);
         } else {
-          anchoredCircles.exit().remove();
           anchoredCircles.attr("r", radiusAcc);
         }
       });
@@ -11037,7 +11108,32 @@
           args[_key] = arguments[_key];
         }
         const value = event.on.apply(event, args);
-        return value === event ? anchoredCirclesComponent : value;
+        if (value !== event) return value;
+        // A setter call, and d3 validated the typenames by returning the dispatch. It accepts a
+        // space-separated list of them, and a null handler removes rather than registers. The rest are
+        // d3's own rules, checked against it rather than read off its source: an empty or
+        // whitespace-only list does nothing at all, and for a typename carrying a name but no type a
+        // null handler removes that name from every event type while a non-null one is ignored.
+        const [typenames, handler] = args;
+        const list = String(typenames).trim();
+        if (list === "") return anchoredCirclesComponent;
+        for (const typename of list.split(/\s+/)) {
+          const {
+            type,
+            name,
+            key
+          } = parseTypename(typename);
+          if (handler == null) {
+            if (type === "") {
+              for (const held of [...registered]) if (nameOfKey(held) === name) registered.delete(held);
+            } else {
+              registered.delete(key);
+            }
+          } else if (type !== "") {
+            registered.add(key);
+          }
+        }
+        return anchoredCirclesComponent;
       };
       return anchoredCirclesComponent;
     }
@@ -12083,7 +12179,7 @@
      * fall back to its intrinsic 300x150 size - which also stopped it clearing between renders, since
      * clearRect was then called with NaN.
      */
-    function dimension(value, name) {
+    function dimension$1(value, name) {
       if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
         throw new Error("[mapRendererRaster] the ".concat(name, " property is required, and must be a finite, non-negative number"));
       }
@@ -12112,8 +12208,8 @@
         // The bitmap is a whole number of pixels, and every caller passes a bounds dimension, which
         // is routinely fractional - so round up, to cover the layers the raster has to line up with
         // rather than falling a hairline short of them at the right and bottom edges.
-        const width = Math.ceil(dimension(props.width, "width"));
-        const height = Math.ceil(dimension(props.height, "height"));
+        const width = Math.ceil(dimension$1(props.width, "width"));
+        const height = Math.ceil(dimension$1(props.height, "height"));
         // Validated here rather than where they are called, so a misconfigured raster is reported
         // before anything is created and whether or not there are data to draw.
         const position = accessor(props.position, "position", "a function");
@@ -12176,12 +12272,11 @@
      * datum[keyName] is a valid map ID which is matched with the available map entities.
      *
      * @property {Number} width                           The width of the map. Used to create the map projection function.
-     *                                                    No default and unvalidated: leaving it out fits the projection to
-     *                                                    undefined, so every area is drawn with NaN coordinates.
-     * @property {Number} height                          The height of the map. Used to create the map projection function.
-     *                                                    No default, and fails the same way as width.
+     *                                                    Required: no default, and a missing or non-finite width throws
+     *                                                    before anything is drawn.
+     * @property {Number} height                          The height of the map. Same as width, and validated the same way.
      * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
-     *                                                    Required and unguarded: its absence throws, as borders' does.
+     *                                                    Required: its absence throws, as width's and borders' do.
      * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default, and
      *                                                    required in practice: the mesh renderer throws a TypeError naming
      *                                                    its geoJson property if it is left out.
@@ -12223,26 +12318,24 @@
      * @function on(String, function)                     This component has an event handler interface for binding events to the map entities.
      *                                                    The available events are 'over', 'out', and 'click'. These are triggered on map
      *                                                    elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
-     *                                                    A handler is called with undefined rather than with the entity's
-     *                                                    datum; see the note below.
+     *                                                    A handler is called with the datum of the entity the event happened
+     *                                                    on; see the note below.
      *
-     * Note: the projection cache key is the literal string "zurichStadtfeatures" for every choropleth
-     * on the page, whatever it is a map of - and it names no map id in src/map/mapUtils.ts.
-     * swissMapProjection memoizes on width, height and that string alone, so two maps of different
-     * areas rendered at the same size share the projection fitted to whichever rendered first, and the
-     * second is projected outside its destination box.
+     * Note: no projection cache key is passed, so swissMapProjection skips its bounds cache and fits
+     * the projection to the features this map was given. Two maps of different areas rendered at the
+     * same size are therefore projected independently. The cost is that the bounds calculation is
+     * redone on every render; sharing a key would trade that for the wrong fit.
      *
-     * Note: features and borders are the two properties whose absence throws - features because
-     * prepareMergedGeoData reads geoJson.features, borders because the mesh renderer now validates its
-     * own geoJson. width and height have no defaults either, but a missing size degrades silently:
-     * fitSize gets undefined, the scale is NaN, and every area carries a path of NaN coordinates that
-     * the browser drops, leaving a blank map instead of an error.
+     * Note: width, height, features and borders are all required and all now fail loudly. This
+     * component validates the first three itself, before it renders anything, and the mesh renderer
+     * validates its own geoJson for the fourth. A missing size used to degrade silently - fitSize got
+     * undefined, the scale was NaN, and every area carried a path of NaN coordinates that the browser
+     * dropped, leaving a blank map with nothing in the console.
      *
-     * Note: the lake and the anchored shape are not removed once drawn. Turning withLake off, or
-     * clearing anchoredShape, only stops the renderer being called; the lake, its border path, the
-     * pattern definition and the shape's own elements stay in the DOM from the previous render. The
-     * highlight is the exception - the highlight renderer removes its paths for an empty highlight
-     * array - which is what makes the other two read as oversights rather than as house style.
+     * Note: the lake and the anchored shape are each drawn into a group of this component's own, so
+     * that turning withLake off, or clearing anchoredShape, removes what the previous render drew
+     * rather than merely skipping the renderer. Every layer that can be switched off therefore clears
+     * itself: the highlight through its own renderer, these two through their groups.
      *
      * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
      * renderer's own default of true, so the fade mask and its gradient are not created unless the
@@ -12252,6 +12345,13 @@
      * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
      * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
      * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
+     *
+     * Note: a handler receives the datum of the map entity the event fired on, which this component
+     * recognises by identity: the value bound to the event target has to be one of the merged entries
+     * it produced for this render. The base layer's areas carry exactly those, so a handler gets the
+     * entity's own datum, undefined where the entity matched no data. An event target an anchored
+     * shape contributed yields undefined unless that shape bound one of the same merged entries to it,
+     * in which case it names an entity like any other target and the handler gets its datum.
      *
      * Note: the event dispatch is created once per choropleth() call and closed over, while the four
      * renderers keep their props on the element they rendered into. So one instance can draw into two
@@ -12266,16 +12366,66 @@
      * @return {sszvis.component}
      */
     /**
-     * What the mouse listeners actually read. They were written for d3 v3, where a listener was called
-     * with the datum; since d3 v6 the first argument is the event, so `datum` here is a property of a
-     * PointerEvent and is always undefined. Transcribed rather than corrected so the port does not
-     * change behaviour - the fix is to take the datum from d3's second argument. The same defect as
-     * the bubble renderer's own handlers.
+     * The entity datum behind an event target, read off the value d3 has bound to it. The base renderer
+     * binds a merged entry to every area, so the entity's own datum is its `datum` property - undefined
+     * where nothing matched.
+     *
+     * An event target contributed by an anchored shape carries whatever that shape bound, which may
+     * well be an application object with a `datum` property of its own, or one inherited from an
+     * ancestor. Recognising a merged entry by its shape would hand such a value to the handler as
+     * though it were an entity's datum, so membership is tested by identity against the entries this
+     * render actually produced; anything else is reported as undefined.
      */
-    function legacyDatum(event) {
-      return event.datum;
+    function entityDatum(bound, entities) {
+      if (!entities.has(bound)) return undefined;
+      return bound.datum;
     }
-    function choropleth () {
+    /**
+     * Reads a required dimension, reporting a missing or nonsensical one rather than fitting the
+     * projection to undefined - which gives it a NaN scale and draws every entity with a path of NaN
+     * coordinates that the browser silently drops, leaving a blank map and nothing in the console.
+     * Thrown before anything is rendered, so a misconfigured map draws nothing at all. The message
+     * follows the raster renderer's.
+     */
+    function dimension(value, name) {
+      if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+        throw new Error("[choropleth] the ".concat(name, " property is required, and must be a finite, non-negative number"));
+      }
+      return value;
+    }
+    /**
+     * Reads the required feature collection. Without it prepareMergedGeoData already threw, on
+     * geoJson.features - a bare TypeError naming neither the component nor the property - so this only
+     * changes what the failure says, and says it in the same shape as the missing-dimension one.
+     */
+    function requireFeatures(value) {
+      if (value === undefined || value === null || value.type !== "FeatureCollection" || !Array.isArray(value.features)) {
+        throw new Error("[choropleth] the features property is required, and must be a GeoJSON feature collection");
+      }
+      return value;
+    }
+    /**
+     * The group keys the two removable layers are drawn under. A group carries everything its renderer
+     * produced - the lake's two paths and its pattern, gradient and mask definitions among them - so
+     * emptying it removes the layer whole.
+     */
+    const LAKE_GROUP = "lake";
+    const SHAPE_GROUP = "anchoredShape";
+    /**
+     * The wrapper this component owns for one of those layers, joined against the direct children of
+     * the map group rather than searched for with selectGroup, which matches any descendant: an
+     * anchored shape is arbitrary caller markup and may well contain a group of its own under the same
+     * key.
+     *
+     * The wrapper is created whether or not its layer is drawn, and a disabled layer empties it rather
+     * than removing it. Removing it would give up its place among its siblings - selectGroup and this
+     * helper both append on a miss - so re-enabling the lake would insert it after the highlight mesh
+     * drawn later in the same render, and the lake would then paint over the highlight.
+     */
+    function ownGroup(selection, key) {
+      return selection.selectAll(":scope > [data-d3-selectgroup=\"".concat(key, "\"]")).data(d => [d]).join("g").attr("data-d3-selectgroup", key);
+    }
+    function choropleth() {
       const event = d3.dispatch("over", "out", "click");
       const baseRenderer = mapRendererBase();
       const meshRenderer = mapRendererMesh();
@@ -12284,36 +12434,58 @@
       const mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-        // create a map path generator function
-        // Note: the cache key is the same literal string for every choropleth on the page, whatever
-        // it is a map of. Transcribed as it stands; see the module note.
-        const mapPath = swissMapPath(props.width, props.height, props.features, "zurichStadtfeatures");
-        const mergedData = prepareMergedGeoData(data, props.features, props.keyName);
+        // create a map path generator function.
+        // No cache key: the bounds cache is keyed on width, height and the key alone, so any key
+        // this component could invent would be shared by every choropleth of that size, whatever it
+        // is a map of. Without one the projection is fitted to the features actually given.
+        // Validated before anything is drawn: a map with no size, or none to draw, can never render
+        // correctly, and both used to fail silently or namelessly.
+        const width = dimension(props.width, "width");
+        const height = dimension(props.height, "height");
+        const features = requireFeatures(props.features);
+        const mapPath = swissMapPath(width, height, features);
+        const mergedData = prepareMergedGeoData(data, features, props.keyName);
         // Base shape
-        baseRenderer.geoJson(props.features).mergedData(mergedData).mapPath(mapPath);
+        baseRenderer.geoJson(features).mergedData(mergedData).mapPath(mapPath);
         // Border mesh
         meshRenderer.geoJson(props.borders).mapPath(mapPath);
         // Lake Zurich shape
         lakeRenderer.lakeFeature(props.lakeFeatures).lakeBounds(props.lakeBorders).mapPath(mapPath).fadeOut(props.lakeFadeOut);
         // Highlight mesh
-        highlightRenderer.geoJson(props.features).keyName(props.keyName).mapPath(mapPath);
+        highlightRenderer.geoJson(features).keyName(props.keyName).mapPath(mapPath);
         // Rendering
         selection.call(baseRenderer).call(meshRenderer);
+        // The lake and the anchored shape are both optional, and a render that switches one off must
+        // undo what an earlier render drew, the way the highlight renderer clears its paths for an
+        // empty highlight. Each is drawn into a group of this component's own, so switching it off is
+        // emptying that group - which works for an anchored shape whose markup this component knows
+        // nothing about. The group itself stays, to hold its place among its siblings; see ownGroup.
+        const lakeGroup = ownGroup(selection, LAKE_GROUP);
         if (props.withLake) {
-          selection.call(lakeRenderer);
+          lakeGroup.call(lakeRenderer);
+        } else {
+          lakeGroup.selectAll("*").remove();
         }
         selection.call(highlightRenderer);
+        const shapeGroup = ownGroup(selection, SHAPE_GROUP);
         if (props.anchoredShape) {
           props.anchoredShape.mergedData(mergedData).mapPath(mapPath);
-          selection.call(props.anchoredShape);
+          shapeGroup.call(props.anchoredShape);
+        } else {
+          shapeGroup.selectAll("*").remove();
         }
         // Event Binding
-        selection.selectAll("[data-event-target]").on("mouseover", function (e) {
-          event.call("over", this, legacyDatum(e));
-        }).on("mouseout", function (e) {
-          event.call("out", this, legacyDatum(e));
-        }).on("click", function (e) {
-          event.call("click", this, legacyDatum(e));
+        // The entries this render bound to the areas, held by identity so an anchored shape's own
+        // event targets cannot be mistaken for them.
+        const entities = new Set(mergedData);
+        selection.selectAll("[data-event-target]")
+        // d3 calls a listener with the event first and the bound datum second.
+        .on("mouseover", function (_event, d) {
+          event.call("over", this, entityDatum(d, entities));
+        }).on("mouseout", function (_event, d) {
+          event.call("out", this, entityDatum(d, entities));
+        }).on("click", function (_event, d) {
+          event.call("click", this, entityDatum(d, entities));
         });
       });
       // The argument tuple is typed as the map renderers type their own on(): d3's dispatch.on derives
@@ -12805,7 +12977,7 @@
     exports.mapLakePattern = mapLakePattern;
     exports.mapMissingValuePattern = mapMissingValuePattern;
     exports.mapRendererBase = mapRendererBase;
-    exports.mapRendererBubble = bubble;
+    exports.mapRendererBubble = mapRendererBubble;
     exports.mapRendererGeoJson = mapRendererGeoJson;
     exports.mapRendererHighlight = mapRendererHighlight;
     exports.mapRendererImage = mapRendererImage;

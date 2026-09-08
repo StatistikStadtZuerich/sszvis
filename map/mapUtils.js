@@ -1,5 +1,6 @@
-import { geoCentroid, geoMercator, geoPath } from 'd3';
+import { geoMercator, geoCentroid, geoPath } from 'd3';
 import { memoize } from '../fn.js';
+import { warn } from '../logger.js';
 
 /**
  * A collection of utilities used by the map modules
@@ -21,14 +22,12 @@ const SWITZERLAND_KEY = "switzerland";
  *
  * Note: the cache key is width, height and featureBoundsCacheKey only. Reusing a key for a
  * different feature collection returns the projection fitted to the first collection, which places
- * the second collection outside the destination box.
- *
- * Note: featureBoundsCacheKey is optional, and every call that omits it shares the single key
- * "<width>,<height>,undefined". Two different maps rendered at the same size collide silently.
+ * the second collection outside the destination box. Omitting the key is therefore safe rather than
+ * shared: with no key the cache is bypassed and the collection is always fitted afresh.
  *
  * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
- * distinct width/height/key triple for the lifetime of the page - a chart that reprojects on resize
- * accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
+ * distinct width/height/key triple for the lifetime of the page - a keyed chart that reprojects on
+ * resize accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
  * release them.
  *
  * See test/map/mapUtils.test.ts.
@@ -38,14 +37,25 @@ const SWITZERLAND_KEY = "switzerland";
  * @param  {Object} featureCollection               The feature collection that will be projected by the returned function. Needed to calculated a good size.
  * @param  {String} [featureBoundsCacheKey]         The cache key for the expensive bounds calculation.
  *                                                  Must identify the feature collection: the collection
- *                                                  itself is not part of the key.
+ *                                                  itself is not part of the key. Omit it to skip the
+ *                                                  cache entirely.
  * @return {Function}                               The projection function.
  */
-const swissMapProjection = memoize((width, height, featureCollection,
+const memoizedSwissMapProjection = memoize((width, height, featureCollection,
 // Part of the signature only so that the memoize resolver below can read it.
 _featureBoundsCacheKey) => geoMercator().fitSize([width, height], featureCollection),
 // Memoize resolver
 (width, height, _, featureBoundsCacheKey) => "".concat(width, ",").concat(height, ",").concat(featureBoundsCacheKey));
+function swissMapProjection(width, height, featureCollection, featureBoundsCacheKey) {
+  // Without a key there is nothing that identifies the collection, so caching would hand a second
+  // map the first map's fit. An uncached fitSize is always correct.
+  if (featureBoundsCacheKey === undefined) {
+    return geoMercator().fitSize([width, height], featureCollection);
+  }
+  return memoizedSwissMapProjection(width, height, featureCollection, featureBoundsCacheKey);
+}
+/** The bounds cache backing keyed calls. Clearing it is the only way to release its entries. */
+swissMapProjection.cache = memoizedSwissMapProjection.cache;
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
  * Switzerland. The values are chosen specifically to optimize path generation for
@@ -127,14 +137,12 @@ const GEO_KEY_DEFAULT = "geoId";
  * which has a features array. Each feature is mapped to one data object, or to undefined where no
  * data object matched.
  *
- * Note: matching goes through a plain object literal, so ids are stringified - a numeric data key
- * matches a string feature id - and a feature whose id names an Object.prototype member
- * ("constructor", "toString", ...) is handed the inherited property as its datum even though no
- * such datum was supplied.
+ * Note: matching goes through a Map keyed by the stringified id, so a numeric data key still
+ * matches a string feature id, but only data that was actually passed in can ever be matched -
+ * ids such as "constructor" or "__proto__" are ordinary keys here.
  *
- * Note: a datum keyed "__proto__" replaces the lookup object's prototype instead of creating an
- * entry. That datum still reads back correctly, but every unmatched feature afterwards is handed a
- * field of it rather than undefined. Do not feed untrusted ids to this function.
+ * Note: a datum whose key property is missing is not filed under any entry, and a feature with no
+ * id is not looked up, so the two never meet under a shared "undefined" key.
  *
  * Note: a symbol data key stays a symbol property, so it can never be matched by a feature id,
  * which GeoJSON allows only as a string or a number. Two symbols with the same description stay
@@ -161,22 +169,21 @@ function prepareMergedGeoData(dataset, geoJson, keyName) {
   // Any falsy key name, the empty string included, falls back to the default.
   const key = keyName || GEO_KEY_DEFAULT;
   // group the input data by map entity id
-  const groupedInputData = Array.isArray(dataset) ? dataset.reduce((m, v) => {
-    m[toLookupKey(Reflect.get(v, key))] = v;
-    return m;
-  }, {}) : {};
+  const groupedInputData = new Map();
+  if (Array.isArray(dataset)) {
+    for (const datum of dataset) {
+      const value = Reflect.get(datum, key);
+      // A datum with no key is filed under no entry at all, rather than under "undefined".
+      if (value === undefined) continue;
+      groupedInputData.set(toLookupKey(value), datum);
+    }
+  }
   // merge the map features and the input data into new objects that include both
   return geoJson.features.map(feature => ({
     geoJson: feature,
-    datum: groupedInputData[toLookupKey(feature.id)]
+    datum: feature.id === undefined ? undefined : groupedInputData.get(toLookupKey(feature.id))
   }));
 }
-/**
- * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
- * symbols with the same description remain distinct and can never be matched by a string or numeric
- * feature id. Everything else stringifies, which is how a missing key becomes the string
- * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
- */
 /**
  * The key a feature id or datum value is looked up under. Symbols pass through; everything
  * else is stringified, so numeric and string ids that print the same collide deliberately.
@@ -199,17 +206,16 @@ function toLookupKey(value) {
  * argument, and the cache is never invalidated - changing `center` after the first call has no
  * effect for the lifetime of the feature object.
  *
- * Note: the `center` string is split on "," and mapped through parseFloat with no validation. A
- * value that does not parse becomes NaN coordinates, and a wrong number of components becomes a
- * wrongly sized array; both reach the projection silently.
+ * Note: a `center` that is not exactly two finite numbers is reported with logger.warn and ignored
+ * in favour of the computed centroid, so a typo in the topojson -e output is visible rather than
+ * silently placing marks at NaN. A warning rather than a throw: the value is authored map data that
+ * the rest of the feature can still render without.
  *
  * See test/map/mapUtils.test.ts.
  *
  * @param  {Object} geoJson                 The geoJson object for which you want the center.
- * @return {number[]}                       The geographical coordinates (in the form [lon, lat]) of the centroid
- *                                          (or user-specified center) of the object. Typed as number[] rather
- *                                          than a [lon, lat] tuple because a malformed `center` property is
- *                                          parsed without validation and can yield a shorter or longer array.
+ * @return {GeoPoint}                       The geographical coordinates (in the form [lon, lat]) of the centroid
+ *                                          (or user-specified center) of the object.
  * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
  *                                          but has never been supported here, since the cache is written to
  *                                          the properties object.
@@ -220,10 +226,39 @@ function getGeoJsonCenter(geoJson) {
     throw new TypeError("getGeoJsonCenter: the feature has no properties object to cache onto");
   }
   if (!properties.cachedCenter) {
-    const setCenter = properties.center;
-    properties.cachedCenter = setCenter ? setCenter.split(",").map(Number.parseFloat) : geoCentroid(geoJson);
+    var _parseCenter;
+    properties.cachedCenter = (_parseCenter = parseCenter(properties.center, geoJson.id)) !== null && _parseCenter !== void 0 ? _parseCenter : geoCentroid(geoJson);
   }
   return properties.cachedCenter;
+}
+/**
+ * An authored "longitude,latitude" centre, or undefined where none was given or it is not exactly
+ * two finite numbers - the malformed case is warned about, naming the offending feature.
+ *
+ * Each token is parsed whole with Number rather than with parseFloat, which stops at the first
+ * character it cannot read: parseFloat("8.54oops") is 8.54, so a typo would pass the finite check
+ * and place the anchor as though the author had written something they did not. Number("") is 0,
+ * so an empty token is rejected before it can become a coordinate - which also means an authored
+ * empty string reaches the warning instead of being treated as an absent property.
+ */
+function parseCenter(center, featureId) {
+  // Only an absent property passes silently. An authored null is a value, and a malformed one, so
+  // it is reported like any other non-string.
+  if (center === undefined) return undefined;
+  // Declared a string on MapFeatureProperties, which says what an author should write, but the
+  // properties of a loaded map file are runtime data and nothing checks them on the way in. A
+  // number or an object would otherwise throw from split() rather than degrading to the centroid,
+  // which is what this function exists to guarantee.
+  if (typeof center !== "string") {
+    warn("getGeoJsonCenter: ignoring the center property of feature ".concat(String(featureId), ", whose ") + "type is ".concat(center === null ? "null" : typeof center, " rather than a ") + '"longitude,latitude" string. Falling back to the computed centroid.');
+    return undefined;
+  }
+  const parsed = center.split(",").map(token => token.trim() === "" ? Number.NaN : Number(token));
+  if (parsed.length === 2 && parsed.every(n => Number.isFinite(n))) {
+    return [parsed[0], parsed[1]];
+  }
+  warn("getGeoJsonCenter: ignoring the center property \"".concat(center, "\" of feature ").concat(String(featureId), ", ") + "which is not two finite numbers. Falling back to the computed centroid.");
+  return undefined;
 }
 /**
  * widthAdaptiveMapPathStroke
@@ -231,8 +266,8 @@ function getGeoJsonCenter(geoJson) {
  * A little "magic" function for automatically calculating map stroke sizes based on
  * the width of the container they're in. Used for responsive designs.
  *
- * Note: the clamp does not rescue NaN - Math.max(0.8, NaN) is NaN - so an unmeasured container
- * width produces a NaN stroke width that reaches the DOM.
+ * Note: a width that is not a finite number - an unmeasured container - yields the 0.8 minimum
+ * rather than NaN, so the result is always within the documented range.
  *
  * See test/map/mapUtils.test.ts.
  *
@@ -240,6 +275,8 @@ function getGeoJsonCenter(geoJson) {
  * @return {number}          The stroke width that the map elements should have, clamped to [0.8, 1.1].
  */
 function widthAdaptiveMapPathStroke(width) {
+  // Math.max(0.8, NaN) is NaN, so the clamp alone cannot rescue an unmeasured width.
+  if (!Number.isFinite(width)) return 0.8;
   return Math.min(Math.max(0.8, width / 400), 1.1);
 }
 /**

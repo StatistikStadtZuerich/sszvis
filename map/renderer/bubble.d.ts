@@ -29,63 +29,56 @@
  * @property {Number, Function} strokeWidth         The stroke width of the circles. Can be a function. Default 1.
  *                                                  Documented nowhere else: docs/map-signature/README.md omits it.
  * @property {Boolean} transition                   Whether or not to transition the sizes of the circles when data
- *                                                  changes. Default true - but it never actually animates a radius, and
- *                                                  never affects a departing circle; see the notes below.
+ *                                                  changes. Default true. An entering circle grows from zero, an
+ *                                                  updating one interpolates to its new radius, and a departing one
+ *                                                  shrinks to zero before it is removed.
  *
  * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are all
  * required in practice, and each fails differently when left out.
  *
- * Note: the over, out and click handlers registered through .on() are called with undefined rather
- * than with the map entity's datum. The listeners are written for d3 v3, where a listener received
- * the datum first; since d3 v6 it receives the event first, so what they read as `d.datum` is a
- * property of a PointerEvent. The dispatch itself works, unlike the geojson renderer's, so a
- * handler does fire - it just learns nothing about which entity was hovered.
+ * Note: the over, out and click handlers registered through .on() are called with the hovered map
+ * entity's datum - undefined for a feature that matched no data. The circles carry
+ * pointer-events: none (see below), so these handlers are only reachable by dispatching an event
+ * on a circle directly; a real pointer reaches the base layer underneath instead.
  *
  * Note: on() forwards straight to a d3 dispatch, so it inherits its semantics: it returns the
  * component for chaining and the handler when called with a name alone, an unknown event name
  * throws, a namespaced name such as "over.tooltip" is accepted, and null removes a handler.
  *
  * Note: the circles are drawn into a group appended after the base layer's areas, so they paint on
- * top - and they carry neither a data-event-target attribute nor a pointer-events override. As
- * choropleth binds its own handlers to [data-event-target] after calling the anchored shape, the
- * circles are never bound, so a pointer over a bubble reaches neither the base layer's handler nor,
- * usefully, the bubble's own.
+ * top of them. Where no handler is registered on this component they are decoration rather than a
+ * hit area, so they carry pointer-events: none and let the pointer through to the area beneath -
+ * which is what keeps the base layer's handlers, and so choropleth's tooltips, working over the
+ * middle of a bubble. Registering over, out or click restores hit testing on the circles, since a
+ * consumer who wants those handlers is asking for the bubbles to be the target; the base layer's
+ * handlers are then shadowed over each bubble, as they were before this note was written.
  *
  * Note: the circles are sorted by radius descending, so the largest paint first and smaller ones sit
  * on top of them. That is a DOM reordering, so the rendered order does not follow mergedData.
  *
- * Note: the exit selection is read off the merged selection that join() returned, where it does not
- * exist - so both exit branches are dead code, the shrink-to-zero transition and the plain remove
- * alike. join() has already removed the departing circles synchronously, so a bubble leaving the
- * data disappears instantly rather than shrinking away, whatever `transition` says.
+ * Note: the exit selection is handled inside join()'s third argument, since join() removes the
+ * departing nodes itself and returns only the merged enter+update selection.
  *
- * Note: the join is keyed on geoJson.id, which GeoJSON does not require. Features that have one keep
- * their circles across a data change; features without one all key to "undefined", so on every
- * re-render the first node matches and every node past it is exited and replaced by a fresh enter
- * node - the count stays right, but all but one circle is destroyed and recreated each time, losing
- * any transition in flight.
+ * Note: the join is keyed on geoJson.id. A feature without one is given an identity of its own,
+ * held against the feature object, so a keyless collection keeps its circles across renders too.
+ * The identity is the object, not its contents: a caller who rebuilds equivalent feature objects
+ * between renders gets fresh circles rather than the previous ones, and should author ids if it
+ * needs the circles to persist.
  *
- * Note: the radius accessor is called for every circle twice over - once for the attribute and once
- * for the transition - and again for each comparison the size sort makes, so it runs several times
- * more often than there are data.
- *
- * Note: the class is written with attr rather than classed, so it is replaced wholesale on every
- * render and any class a consumer added to a circle is destroyed.
+ * Note: the radius accessor is called once per circle for the radius itself and again for each
+ * comparison the size sort makes, so it runs several times more often than there are data.
  *
  * Note: nothing in sszvis.css styles .sszvis-anchored-circle, so the fill, stroke and stroke width
  * come entirely from the inline styles this component writes - and a consumer cannot restyle them
  * from their own stylesheet, since an inline style beats any author rule short of !important.
  *
- * Note: this renderer shares four quirks with the base renderer, documented at length in
- * src/map/renderer/base.ts: the radius transition interpolates a value onto itself, so nothing
- * animates on enter or on update; the --entering modifier is added and removed within the same
- * render, so it is never observable and offers no enter-only styling hook; the anchor positions go
- * through getGeoJsonCenter, which caches a centre onto every feature's properties and never
- * invalidates it, so moving a feature's geometry leaves its bubble behind; and mapPath must be a
- * real d3.geoPath, since the positions read mapPath.projection(). Unlike base, though, the
- * transition itself is the intended one - defaultTransition() is passed as `t` to .transition(t)
- * rather than through the no-op `.transition().call(slowTransition)` pattern - so its 300ms and
- * easePolyOut survive.
+ * Note: this renderer shares three quirks with the base renderer, documented at length in
+ * src/map/renderer/base.ts: the --entering modifier is added and removed within the same render, so
+ * it is never observable and offers no enter-only styling hook; the anchor positions go through
+ * getGeoJsonCenter, which caches a centre onto every feature's properties and never invalidates it,
+ * so moving a feature's geometry leaves its bubble behind; and mapPath must be a real d3.geoPath,
+ * since the positions read mapPath.projection(). The transition is the intended one:
+ * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
  *
  * Note: this component adds no tooltip anchors of its own; a bubble map's tooltips are anchored by
  * the base renderer underneath it.
@@ -100,8 +93,11 @@ import { type MergedGeoDatum } from "../mapUtils.js";
 type BubbleValue<T, R> = R | ((datum: T) => R);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredBubbleValue<T, R> = (datum?: T) => R;
-/** A handler as this component's own event API delivers it - which is to say, with undefined. */
-type BubbleEventHandler = (datum: undefined) => void;
+/**
+ * A handler as this component's own event API delivers it: with the hovered entity's datum, which
+ * is undefined for a feature that matched no data.
+ */
+type BubbleEventHandler<T = unknown> = (datum: T | undefined) => void;
 export interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilder<MapRendererBubbleComponent<T>> {
     mergedData(): MergedGeoDatum<T>[] | undefined;
     mergedData(value: MergedGeoDatum<T>[]): MapRendererBubbleComponent<T>;
@@ -119,12 +115,12 @@ export interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilde
     transition(enabled: boolean): MapRendererBubbleComponent<T>;
     /**
      * Registers a handler for "over", "out" or "click", returning the component so it can be
-     * chained; called with an event name alone it returns that handler. Note that a handler is
-     * called with undefined rather than with the hovered entity's datum; see the module note.
+     * chained; called with an event name alone it returns that handler. A handler is called with
+     * the hovered entity's datum, which is undefined for a feature that matched no data.
      */
-    on(eventName: string, handler: BubbleEventHandler | null): MapRendererBubbleComponent<T>;
-    on(eventName: string): BubbleEventHandler | undefined;
+    on(eventName: string, handler: BubbleEventHandler<T> | null): MapRendererBubbleComponent<T>;
+    on(eventName: string): BubbleEventHandler<T> | undefined;
 }
-export default function <T = unknown>(): MapRendererBubbleComponent<T>;
+export default function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T>;
 export {};
 //# sourceMappingURL=bubble.d.ts.map

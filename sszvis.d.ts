@@ -291,7 +291,7 @@ interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<BreadcrumbCo
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$m<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$k<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -323,7 +323,7 @@ interface CircleComponent<T = unknown> extends ComponentBuilder<CircleComponent<
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$l<T = unknown>(): CircleComponent<T>;
+declare function export_default$j<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -363,7 +363,7 @@ interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<Confiden
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$k<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function export_default$i<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -403,7 +403,7 @@ interface ConfidenceBarComponent<T = unknown> extends ComponentBuilder<Confidenc
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$j<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$h<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -429,7 +429,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$i<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$g<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -468,7 +468,7 @@ interface LineComponent$1<T = unknown> extends ComponentBuilder<LineComponent$1<
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent$1<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent$1<T>;
 }
-declare function export_default$h<T = unknown>(): LineComponent$1<T>;
+declare function export_default$f<T = unknown>(): LineComponent$1<T>;
 
 /**
  * Range Flag annotation
@@ -494,7 +494,7 @@ interface RangeFlagComponent<T = unknown> extends ComponentBuilder<RangeFlagComp
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$g<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$e<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -531,7 +531,7 @@ interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerCo
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$f<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$d<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -565,7 +565,7 @@ interface RectangleComponent<T = unknown> extends ComponentBuilder<RectangleComp
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$e<T = unknown>(): RectangleComponent<T>;
+declare function export_default$c<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -670,7 +670,7 @@ interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponen
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$d<T = unknown>(): TooltipComponent<T>;
+declare function export_default$b<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -1046,7 +1046,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBui
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$c<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$a<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -1096,7 +1096,7 @@ interface PanningComponent extends ComponentBuilder<PanningComponent> {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$b(): PanningComponent;
+declare function export_default$9(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -1158,7 +1158,7 @@ interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponen
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default$a<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$8<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -2302,7 +2302,7 @@ interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> 
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$9<T = unknown>(): PackComponent<T>;
+declare function export_default$7<T = unknown>(): PackComponent<T>;
 
 /**
  * Pie component
@@ -2825,7 +2825,7 @@ interface SankeyComponent extends SankeyBuilder {
     linkLabel(): LabelAccessor<SankeyLink> | undefined;
     linkLabel<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
 }
-declare function export_default$8(): SankeyComponent;
+declare function export_default$6(): SankeyComponent;
 
 /**
  * Stacked Area component
@@ -3749,7 +3749,7 @@ interface SunburstComponent<T = unknown> extends ComponentBuilder<SunburstCompon
     stroke(): StrokeValue<T>;
     stroke<U = T>(stroke: StrokeValue<U>): SunburstComponent<T>;
 }
-declare function export_default$7<T = unknown>(): SunburstComponent<T>;
+declare function export_default$5<T = unknown>(): SunburstComponent<T>;
 
 /**
  * Treemap component
@@ -3813,7 +3813,7 @@ interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponen
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$6<T = unknown>(): TreemapComponent<T>;
+declare function export_default$4<T = unknown>(): TreemapComponent<T>;
 
 /**
  * Button Group control
@@ -5195,7 +5195,7 @@ interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGr
     titleY(): number;
     titleY(y: number): SmallMultiplesComponent<G>;
 }
-declare function export_default$5<G extends SmallMultipleGroup = SmallMultipleGroup>(): SmallMultiplesComponent<G>;
+declare function export_default$3<G extends SmallMultipleGroup = SmallMultipleGroup>(): SmallMultiplesComponent<G>;
 
 /**
  * Stacked Area Multiples Layout
@@ -5388,7 +5388,7 @@ interface BinnedColorScaleComponent extends ComponentBuilder<BinnedColorScaleCom
     labelFormat(): BinLabelFormatter;
     labelFormat(format: BinLabelFormatter): BinnedColorScaleComponent;
 }
-declare function export_default$4(): BinnedColorScaleComponent;
+declare function export_default$2(): BinnedColorScaleComponent;
 
 /**
  * Linear Color Scale Legend
@@ -5478,7 +5478,7 @@ interface RadiusLegendComponent extends ComponentBuilder<RadiusLegendComponent> 
     tickValues(): NumberValue[] | undefined;
     tickValues(values: NumberValue[]): RadiusLegendComponent;
 }
-declare function export_default$3(): RadiusLegendComponent;
+declare function export_default$1(): RadiusLegendComponent;
 
 /**
  * Handle data load errors in a standardized way
@@ -5526,38 +5526,10 @@ type GeoPoint = [number, number];
  * coordinates, or null where the point is clipped away.
  */
 type PointProjection = (point: GeoPoint) => [number, number] | null;
-/**
- * swissMapProjection
- *
- * A function for creating d3 projection functions, customized for the dimensions of the map you need.
- * Because this projection generator involves calculating the boundary of the features that will be
- * projected, the result of these calculations is cached internally. Hence the featureBoundsCacheKey.
- *
- * Note: the cache key is width, height and featureBoundsCacheKey only. Reusing a key for a
- * different feature collection returns the projection fitted to the first collection, which places
- * the second collection outside the destination box.
- *
- * Note: featureBoundsCacheKey is optional, and every call that omits it shares the single key
- * "<width>,<height>,undefined". Two different maps rendered at the same size collide silently.
- *
- * Note: the memo cache is a module-level Map with no eviction, so one entry is retained per
- * distinct width/height/key triple for the lifetime of the page - a chart that reprojects on resize
- * accumulates an entry per resize tick. Clearing swissMapProjection.cache is the only way to
- * release them.
- *
- * See test/map/mapUtils.test.ts.
- *
- * @param  {Number} width                           The width of the projection destination space.
- * @param  {Number} height                          The height of the projection destination space.
- * @param  {Object} featureCollection               The feature collection that will be projected by the returned function. Needed to calculated a good size.
- * @param  {String} [featureBoundsCacheKey]         The cache key for the expensive bounds calculation.
- *                                                  Must identify the feature collection: the collection
- *                                                  itself is not part of the key.
- * @return {Function}                               The projection function.
- */
-declare const swissMapProjection: ((width: number, height: number, featureCollection: MapGeoObject, _featureBoundsCacheKey?: string) => GeoProjection) & {
-    cache: Map<unknown, GeoProjection>;
-};
+declare function swissMapProjection(width: number, height: number, featureCollection: MapGeoObject, featureBoundsCacheKey?: string): GeoProjection;
+declare namespace swissMapProjection {
+    var cache: Map<unknown, GeoProjection>;
+}
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
  * Switzerland. The values are chosen specifically to optimize path generation for
@@ -5619,14 +5591,12 @@ interface MergedGeoDatum<Datum> {
  * which has a features array. Each feature is mapped to one data object, or to undefined where no
  * data object matched.
  *
- * Note: matching goes through a plain object literal, so ids are stringified - a numeric data key
- * matches a string feature id - and a feature whose id names an Object.prototype member
- * ("constructor", "toString", ...) is handed the inherited property as its datum even though no
- * such datum was supplied.
+ * Note: matching goes through a Map keyed by the stringified id, so a numeric data key still
+ * matches a string feature id, but only data that was actually passed in can ever be matched -
+ * ids such as "constructor" or "__proto__" are ordinary keys here.
  *
- * Note: a datum keyed "__proto__" replaces the lookup object's prototype instead of creating an
- * entry. That datum still reads back correctly, but every unmatched feature afterwards is handed a
- * field of it rather than undefined. Do not feed untrusted ids to this function.
+ * Note: a datum whose key property is missing is not filed under any entry, and a feature with no
+ * id is not looked up, so the two never meet under a shared "undefined" key.
  *
  * Note: a symbol data key stays a symbol property, so it can never be matched by a feature id,
  * which GeoJSON allows only as a string or a number. Two symbols with the same description stay
@@ -5651,12 +5621,6 @@ interface MergedGeoDatum<Datum> {
  */
 declare function prepareMergedGeoData<Datum extends object>(dataset: readonly Datum[] | null | undefined, geoJson: ExtendedFeatureCollection, keyName?: string): MergedGeoDatum<Datum>[];
 /**
- * Normalises a lookup key exactly as a property access does: a symbol stays a symbol key, so two
- * symbols with the same description remain distinct and can never be matched by a string or numeric
- * feature id. Everything else stringifies, which is how a missing key becomes the string
- * "undefined". Shared in substance with the geojson and highlight renderers' own lookups.
- */
-/**
  * The key a feature id or datum value is looked up under. Symbols pass through; everything
  * else is stringified, so numeric and string ids that print the same collide deliberately.
  */
@@ -5666,7 +5630,7 @@ interface MapFeatureProperties {
     /** An authored centre, as the string "longitude,latitude". */
     center?: string;
     /** Where the computed centre is memoized, on the feature itself. */
-    cachedCenter?: number[];
+    cachedCenter?: GeoPoint;
     [key: string]: unknown;
 }
 /** A map feature whose properties this module is allowed to read and cache onto. */
@@ -5686,30 +5650,29 @@ type MapFeature = ExtendedFeature<GeoGeometryObjects | null, MapFeaturePropertie
  * argument, and the cache is never invalidated - changing `center` after the first call has no
  * effect for the lifetime of the feature object.
  *
- * Note: the `center` string is split on "," and mapped through parseFloat with no validation. A
- * value that does not parse becomes NaN coordinates, and a wrong number of components becomes a
- * wrongly sized array; both reach the projection silently.
+ * Note: a `center` that is not exactly two finite numbers is reported with logger.warn and ignored
+ * in favour of the computed centroid, so a typo in the topojson -e output is visible rather than
+ * silently placing marks at NaN. A warning rather than a throw: the value is authored map data that
+ * the rest of the feature can still render without.
  *
  * See test/map/mapUtils.test.ts.
  *
  * @param  {Object} geoJson                 The geoJson object for which you want the center.
- * @return {number[]}                       The geographical coordinates (in the form [lon, lat]) of the centroid
- *                                          (or user-specified center) of the object. Typed as number[] rather
- *                                          than a [lon, lat] tuple because a malformed `center` property is
- *                                          parsed without validation and can yield a shorter or longer array.
+ * @return {GeoPoint}                       The geographical coordinates (in the form [lon, lat]) of the centroid
+ *                                          (or user-specified center) of the object.
  * @throws {TypeError}                      If the feature's properties are null, which is spec-legal GeoJSON
  *                                          but has never been supported here, since the cache is written to
  *                                          the properties object.
  */
-declare function getGeoJsonCenter(geoJson: MapFeature): number[];
+declare function getGeoJsonCenter(geoJson: MapFeature): GeoPoint;
 /**
  * widthAdaptiveMapPathStroke
  *
  * A little "magic" function for automatically calculating map stroke sizes based on
  * the width of the container they're in. Used for responsive designs.
  *
- * Note: the clamp does not rescue NaN - Math.max(0.8, NaN) is NaN - so an unmeasured container
- * width produces a NaN stroke width that reaches the DOM.
+ * Note: a width that is not a finite number - an unmeasured container - yields the 0.8 minimum
+ * rather than NaN, so the result is always within the documented range.
  *
  * See test/map/mapUtils.test.ts.
  *
@@ -5848,7 +5811,7 @@ interface MapRendererBaseComponent<T = unknown> extends ComponentBuilder<MapRend
     transitionColor(): boolean;
     transitionColor(enabled: boolean): MapRendererBaseComponent<T>;
 }
-declare function export_default$2<T = unknown>(): MapRendererBaseComponent<T>;
+declare function export_default<T = unknown>(): MapRendererBaseComponent<T>;
 
 /**
  * bubble renderer component
@@ -5881,63 +5844,56 @@ declare function export_default$2<T = unknown>(): MapRendererBaseComponent<T>;
  * @property {Number, Function} strokeWidth         The stroke width of the circles. Can be a function. Default 1.
  *                                                  Documented nowhere else: docs/map-signature/README.md omits it.
  * @property {Boolean} transition                   Whether or not to transition the sizes of the circles when data
- *                                                  changes. Default true - but it never actually animates a radius, and
- *                                                  never affects a departing circle; see the notes below.
+ *                                                  changes. Default true. An entering circle grows from zero, an
+ *                                                  updating one interpolates to its new radius, and a departing one
+ *                                                  shrinks to zero before it is removed.
  *
  * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are all
  * required in practice, and each fails differently when left out.
  *
- * Note: the over, out and click handlers registered through .on() are called with undefined rather
- * than with the map entity's datum. The listeners are written for d3 v3, where a listener received
- * the datum first; since d3 v6 it receives the event first, so what they read as `d.datum` is a
- * property of a PointerEvent. The dispatch itself works, unlike the geojson renderer's, so a
- * handler does fire - it just learns nothing about which entity was hovered.
+ * Note: the over, out and click handlers registered through .on() are called with the hovered map
+ * entity's datum - undefined for a feature that matched no data. The circles carry
+ * pointer-events: none (see below), so these handlers are only reachable by dispatching an event
+ * on a circle directly; a real pointer reaches the base layer underneath instead.
  *
  * Note: on() forwards straight to a d3 dispatch, so it inherits its semantics: it returns the
  * component for chaining and the handler when called with a name alone, an unknown event name
  * throws, a namespaced name such as "over.tooltip" is accepted, and null removes a handler.
  *
  * Note: the circles are drawn into a group appended after the base layer's areas, so they paint on
- * top - and they carry neither a data-event-target attribute nor a pointer-events override. As
- * choropleth binds its own handlers to [data-event-target] after calling the anchored shape, the
- * circles are never bound, so a pointer over a bubble reaches neither the base layer's handler nor,
- * usefully, the bubble's own.
+ * top of them. Where no handler is registered on this component they are decoration rather than a
+ * hit area, so they carry pointer-events: none and let the pointer through to the area beneath -
+ * which is what keeps the base layer's handlers, and so choropleth's tooltips, working over the
+ * middle of a bubble. Registering over, out or click restores hit testing on the circles, since a
+ * consumer who wants those handlers is asking for the bubbles to be the target; the base layer's
+ * handlers are then shadowed over each bubble, as they were before this note was written.
  *
  * Note: the circles are sorted by radius descending, so the largest paint first and smaller ones sit
  * on top of them. That is a DOM reordering, so the rendered order does not follow mergedData.
  *
- * Note: the exit selection is read off the merged selection that join() returned, where it does not
- * exist - so both exit branches are dead code, the shrink-to-zero transition and the plain remove
- * alike. join() has already removed the departing circles synchronously, so a bubble leaving the
- * data disappears instantly rather than shrinking away, whatever `transition` says.
+ * Note: the exit selection is handled inside join()'s third argument, since join() removes the
+ * departing nodes itself and returns only the merged enter+update selection.
  *
- * Note: the join is keyed on geoJson.id, which GeoJSON does not require. Features that have one keep
- * their circles across a data change; features without one all key to "undefined", so on every
- * re-render the first node matches and every node past it is exited and replaced by a fresh enter
- * node - the count stays right, but all but one circle is destroyed and recreated each time, losing
- * any transition in flight.
+ * Note: the join is keyed on geoJson.id. A feature without one is given an identity of its own,
+ * held against the feature object, so a keyless collection keeps its circles across renders too.
+ * The identity is the object, not its contents: a caller who rebuilds equivalent feature objects
+ * between renders gets fresh circles rather than the previous ones, and should author ids if it
+ * needs the circles to persist.
  *
- * Note: the radius accessor is called for every circle twice over - once for the attribute and once
- * for the transition - and again for each comparison the size sort makes, so it runs several times
- * more often than there are data.
- *
- * Note: the class is written with attr rather than classed, so it is replaced wholesale on every
- * render and any class a consumer added to a circle is destroyed.
+ * Note: the radius accessor is called once per circle for the radius itself and again for each
+ * comparison the size sort makes, so it runs several times more often than there are data.
  *
  * Note: nothing in sszvis.css styles .sszvis-anchored-circle, so the fill, stroke and stroke width
  * come entirely from the inline styles this component writes - and a consumer cannot restyle them
  * from their own stylesheet, since an inline style beats any author rule short of !important.
  *
- * Note: this renderer shares four quirks with the base renderer, documented at length in
- * src/map/renderer/base.ts: the radius transition interpolates a value onto itself, so nothing
- * animates on enter or on update; the --entering modifier is added and removed within the same
- * render, so it is never observable and offers no enter-only styling hook; the anchor positions go
- * through getGeoJsonCenter, which caches a centre onto every feature's properties and never
- * invalidates it, so moving a feature's geometry leaves its bubble behind; and mapPath must be a
- * real d3.geoPath, since the positions read mapPath.projection(). Unlike base, though, the
- * transition itself is the intended one - defaultTransition() is passed as `t` to .transition(t)
- * rather than through the no-op `.transition().call(slowTransition)` pattern - so its 300ms and
- * easePolyOut survive.
+ * Note: this renderer shares three quirks with the base renderer, documented at length in
+ * src/map/renderer/base.ts: the --entering modifier is added and removed within the same render, so
+ * it is never observable and offers no enter-only styling hook; the anchor positions go through
+ * getGeoJsonCenter, which caches a centre onto every feature's properties and never invalidates it,
+ * so moving a feature's geometry leaves its bubble behind; and mapPath must be a real d3.geoPath,
+ * since the positions read mapPath.projection(). The transition is the intended one:
+ * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
  *
  * Note: this component adds no tooltip anchors of its own; a bubble map's tooltips are anchored by
  * the base renderer underneath it.
@@ -5950,8 +5906,11 @@ declare function export_default$2<T = unknown>(): MapRendererBaseComponent<T>;
 type BubbleValue<T, R> = R | ((datum: T) => R);
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
 type StoredBubbleValue<T, R> = (datum?: T) => R;
-/** A handler as this component's own event API delivers it - which is to say, with undefined. */
-type BubbleEventHandler = (datum: undefined) => void;
+/**
+ * A handler as this component's own event API delivers it: with the hovered entity's datum, which
+ * is undefined for a feature that matched no data.
+ */
+type BubbleEventHandler<T = unknown> = (datum: T | undefined) => void;
 interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilder<MapRendererBubbleComponent<T>> {
     mergedData(): MergedGeoDatum<T>[] | undefined;
     mergedData(value: MergedGeoDatum<T>[]): MapRendererBubbleComponent<T>;
@@ -5969,13 +5928,13 @@ interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilder<MapRe
     transition(enabled: boolean): MapRendererBubbleComponent<T>;
     /**
      * Registers a handler for "over", "out" or "click", returning the component so it can be
-     * chained; called with an event name alone it returns that handler. Note that a handler is
-     * called with undefined rather than with the hovered entity's datum; see the module note.
+     * chained; called with an event name alone it returns that handler. A handler is called with
+     * the hovered entity's datum, which is undefined for a feature that matched no data.
      */
-    on(eventName: string, handler: BubbleEventHandler | null): MapRendererBubbleComponent<T>;
-    on(eventName: string): BubbleEventHandler | undefined;
+    on(eventName: string, handler: BubbleEventHandler<T> | null): MapRendererBubbleComponent<T>;
+    on(eventName: string): BubbleEventHandler<T> | undefined;
 }
-declare function export_default$1<T = unknown>(): MapRendererBubbleComponent<T>;
+declare function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T>;
 
 /**
  * geojson renderer component
@@ -6712,12 +6671,11 @@ declare function mapRendererRaster<T = unknown>(): MapRendererRasterComponent<T>
  * datum[keyName] is a valid map ID which is matched with the available map entities.
  *
  * @property {Number} width                           The width of the map. Used to create the map projection function.
- *                                                    No default and unvalidated: leaving it out fits the projection to
- *                                                    undefined, so every area is drawn with NaN coordinates.
- * @property {Number} height                          The height of the map. Used to create the map projection function.
- *                                                    No default, and fails the same way as width.
+ *                                                    Required: no default, and a missing or non-finite width throws
+ *                                                    before anything is drawn.
+ * @property {Number} height                          The height of the map. Same as width, and validated the same way.
  * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
- *                                                    Required and unguarded: its absence throws, as borders' does.
+ *                                                    Required: its absence throws, as width's and borders' do.
  * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default, and
  *                                                    required in practice: the mesh renderer throws a TypeError naming
  *                                                    its geoJson property if it is left out.
@@ -6759,26 +6717,24 @@ declare function mapRendererRaster<T = unknown>(): MapRendererRasterComponent<T>
  * @function on(String, function)                     This component has an event handler interface for binding events to the map entities.
  *                                                    The available events are 'over', 'out', and 'click'. These are triggered on map
  *                                                    elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
- *                                                    A handler is called with undefined rather than with the entity's
- *                                                    datum; see the note below.
+ *                                                    A handler is called with the datum of the entity the event happened
+ *                                                    on; see the note below.
  *
- * Note: the projection cache key is the literal string "zurichStadtfeatures" for every choropleth
- * on the page, whatever it is a map of - and it names no map id in src/map/mapUtils.ts.
- * swissMapProjection memoizes on width, height and that string alone, so two maps of different
- * areas rendered at the same size share the projection fitted to whichever rendered first, and the
- * second is projected outside its destination box.
+ * Note: no projection cache key is passed, so swissMapProjection skips its bounds cache and fits
+ * the projection to the features this map was given. Two maps of different areas rendered at the
+ * same size are therefore projected independently. The cost is that the bounds calculation is
+ * redone on every render; sharing a key would trade that for the wrong fit.
  *
- * Note: features and borders are the two properties whose absence throws - features because
- * prepareMergedGeoData reads geoJson.features, borders because the mesh renderer now validates its
- * own geoJson. width and height have no defaults either, but a missing size degrades silently:
- * fitSize gets undefined, the scale is NaN, and every area carries a path of NaN coordinates that
- * the browser drops, leaving a blank map instead of an error.
+ * Note: width, height, features and borders are all required and all now fail loudly. This
+ * component validates the first three itself, before it renders anything, and the mesh renderer
+ * validates its own geoJson for the fourth. A missing size used to degrade silently - fitSize got
+ * undefined, the scale was NaN, and every area carried a path of NaN coordinates that the browser
+ * dropped, leaving a blank map with nothing in the console.
  *
- * Note: the lake and the anchored shape are not removed once drawn. Turning withLake off, or
- * clearing anchoredShape, only stops the renderer being called; the lake, its border path, the
- * pattern definition and the shape's own elements stay in the DOM from the previous render. The
- * highlight is the exception - the highlight renderer removes its paths for an empty highlight
- * array - which is what makes the other two read as oversights rather than as house style.
+ * Note: the lake and the anchored shape are each drawn into a group of this component's own, so
+ * that turning withLake off, or clearing anchoredShape, removes what the previous render drew
+ * rather than merely skipping the renderer. Every layer that can be switched off therefore clears
+ * itself: the highlight through its own renderer, these two through their groups.
  *
  * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
  * renderer's own default of true, so the fade mask and its gradient are not created unless the
@@ -6788,6 +6744,13 @@ declare function mapRendererRaster<T = unknown>(): MapRendererRasterComponent<T>
  * Note: withLake defaults to true, so a map with no lake data still gets the lake renderer, which
  * emits its lake pattern definition - under an id scoped to the overlay - and two empty paths.
  * Every non-Zurich map - switzerland included - has to set .withLake(false) or it carries them.
+ *
+ * Note: a handler receives the datum of the map entity the event fired on, which this component
+ * recognises by identity: the value bound to the event target has to be one of the merged entries
+ * it produced for this render. The base layer's areas carry exactly those, so a handler gets the
+ * entity's own datum, undefined where the entity matched no data. An event target an anchored
+ * shape contributed yields undefined unless that shape bound one of the same merged entries to it,
+ * in which case it names an entity like any other target and the handler gets its datum.
  *
  * Note: the event dispatch is created once per choropleth() call and closed over, while the four
  * renderers keep their props on the element they rendered into. So one instance can draw into two
@@ -6827,10 +6790,12 @@ type GeoStyleValue<R extends string | number> = R | ValueFn<BaseType, GeoPermiss
  */
 type MeshStyleValue<R extends string | number> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
 /**
- * A handler as this component's event API delivers it - which is to say, with undefined. See the
- * note on legacyDatum below.
+ * A handler as this component's event API delivers it: with the datum of the map entity the event
+ * happened on, which is undefined for an entity that matched no data - and for an event target
+ * bound to anything other than one of this render's merged entries, an anchored shape's own markup
+ * included, unless that shape bound those entries itself.
  */
-type ChoroplethEventHandler = (datum: undefined) => void;
+type ChoroplethEventHandler<T = object> = (datum: T | undefined) => void;
 /**
  * The getters return whatever was last set, which is why width, height, features, borders, the two
  * lake shapes and anchoredShape report undefined: none of them has a default. The delegated
@@ -6883,13 +6848,13 @@ interface ChoroplethComponent<T extends object = object> extends ComponentBuilde
     lakePathColor(value: GeoStyleValue<string>): ChoroplethComponent<T>;
     /**
      * Registers a handler for "over", "out" or "click", returning the component so it can be
-     * chained; called with an event name alone it returns that handler. Note that a handler is
-     * called with undefined rather than with the map entity's datum; see the module note.
+     * chained; called with an event name alone it returns that handler. A handler is called with
+     * the datum of the entity the event happened on; see the module note.
      */
-    on(eventName: string, handler: ChoroplethEventHandler | null): ChoroplethComponent<T>;
-    on(eventName: string): ChoroplethEventHandler | undefined;
+    on(eventName: string, handler: ChoroplethEventHandler<T> | null): ChoroplethComponent<T>;
+    on(eventName: string): ChoroplethEventHandler<T> | undefined;
 }
-declare function export_default<T extends object = object>(): ChoroplethComponent<T>;
+declare function choropleth<T extends object = object>(): ChoroplethComponent<T>;
 
 /**
  * Parsing functions
@@ -7367,5 +7332,5 @@ interface Viewport {
 }
 declare const viewport: Viewport;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$l as annotationCircle, export_default$k as annotationConfidenceArea, export_default$j as annotationConfidenceBar, export_default$h as annotationLine, export_default$g as annotationRangeFlag, export_default$f as annotationRangeRuler, export_default$e as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$m as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, export_default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$i as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$5 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$4 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$3 as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default$2 as mapRendererBase, export_default$1 as mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$c as move, muchDarker, nestedStackedBarsVertical, not, export_default$9 as pack, export_default$b as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$8 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$7 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$d as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$6 as treemap, valueFn, viewport, export_default$a as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, LAKE_FADE_GRADIENT_ID, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$j as annotationCircle, export_default$i as annotationConfidenceArea, export_default$h as annotationConfidenceBar, export_default$f as annotationLine, export_default$e as annotationRangeFlag, export_default$d as annotationRangeRuler, export_default$c as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, bar, bounds, export_default$k as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, buttonGroup, cascade, choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, dimensionsHeatTable, dimensionsHorizontalBarChart, dimensionsVerticalBarChart, dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$g as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isPaintServer, isSelection, isString, last, layoutPopulationPyramid, export_default$3 as layoutSmallMultiples, layoutStackedAreaMultiples, export_default$2 as legendColorBinned, legendColorLinear, legendColorOrdinal, export_default$1 as legendRadius, line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, export_default as mapRendererBase, mapRendererBubble, mapRendererGeoJson, mapRendererHighlight, mapRendererImage, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, missingPatternId, modularTextHTML, modularTextSVG, export_default$a as move, muchDarker, nestedStackedBarsVertical, not, export_default$7 as pack, export_default$9 as panning, parseDate, parseNumber, parseYear, pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, export_default$6 as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, selectMenu, set, slider, slightlyDarker, slowTransition, some, stackedArea, stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, export_default$5 as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, toLookupKey, export_default$b as tooltip, tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$4 as treemap, valueFn, viewport, export_default$8 as voronoi, widthAdaptiveMapPathStroke, withAlpha, withRootSelection };
 export type { Action, ActionDispatchers, AnchoredShape, AppFallback, AppHandle, AppProps, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, ButtonGroupChangeHandler, ButtonGroupComponent, CascadeInstance, CascadeResult, ChoroplethComponent, ChoroplethEventHandler, ColorLegendDimensions, ColorLegendLayout, ColorLegendLayoutOptions, ColorLegendSlant, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, GeoPoint, HandleRulerComponent, HighlightPath, KeyAccessor$2 as KeyAccessor, KeySorter, LayerMetadata, LegendOrientation, LinearColorScaleComponent, MapFeature, MapFeatureProperties, MapGeoObject, MapId, MapRendererBaseComponent, MapRendererBubbleComponent, MapRendererGeoJsonComponent, MapRendererHighlightComponent, MapRendererImageComponent, MapRendererMeshComponent, MapRendererPatternedLakeOverlayComponent, MapRendererRasterComponent, MeasurableElement, MergedGeoDatum, OrdinalColorScaleComponent, Padding, PartialBreakpoint, PointProjection, RadiusLegendComponent, ResizeListener, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SelectChangeHandler, SelectComponent, SlantDirection, SliderChangeHandler, SliderComponent, SliderScale, SliderValue, SmallMultipleGroup, SmallMultiplesComponent, StackedBarHorizontalComponent, StackedBarLayout, StackedBarSeries, StackedBarSlice, StackedBarVerticalComponent, StackedPyramidComponent, StackedPyramidLayout, StackedPyramidReferencePoint, StackedPyramidSeries, StackedPyramidSide, StackedPyramidSlice, SvgLayerMetadata, TitleAnchor, ValueSorter, Viewport, ViewportListener };
