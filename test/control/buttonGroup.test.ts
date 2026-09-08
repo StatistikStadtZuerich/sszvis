@@ -38,7 +38,7 @@ describe("control/buttonGroup", () => {
     return event;
   };
 
-  test("should render an unset values the same as an empty one", () => {
+  test("should render an unset values list the same as an empty one", () => {
     render(buttonGroup().width(200));
     const unset = container.innerHTML;
     container.innerHTML = "";
@@ -58,7 +58,7 @@ describe("control/buttonGroup", () => {
     expect(buttons()).toHaveLength(0);
   });
 
-  test("should render an undefined values the same as an empty one", () => {
+  test("should render an undefined values list the same as an empty one", () => {
     render(
       buttonGroup()
         .width(200)
