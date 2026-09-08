@@ -48,7 +48,6 @@
  */
 
 import {
-  ascending,
   dispatch,
   pointer,
   type ScaleBand,
@@ -59,7 +58,7 @@ import {
 } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
-import { range } from "../scale.js";
+import { rangeExtent } from "../scale.js";
 
 // Type definitions for move behavior component
 type MoveScale<T = number | string> =
@@ -149,8 +148,10 @@ export default function move<XDomain = number | string, YDomain = number | strin
       const selection = select(this);
       const props = selection.props<MoveProps<XDomain, YDomain>>();
 
-      const xExtent = range(props.xScale).sort(ascending);
-      const yExtent = range(props.yScale).sort(ascending);
+      // Already sorted, smaller value first, so a descending y scale still yields a rect that
+      // grows downwards from its top edge.
+      const xExtent = rangeExtent(props.xScale);
+      const yExtent = rangeExtent(props.yScale);
 
       xExtent[0] -= props.padding.left;
       xExtent[1] += props.padding.right;
