@@ -135,9 +135,9 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "defs > pattern > line")).toHaveLength(2);
     });
 
-    // NOTE: the defs element is created inside the map group rather than at the svg root, and
-    // ensureDefsElement selects it with an unscoped descendant selector - so this component shares
-    // one defs with the base renderer's #missing-pattern when both draw into the same group.
+    // NOTE: the defs element is created inside the map group rather than at the svg root - so this
+    // component shares one defs with the base renderer's #missing-pattern when both draw into the
+    // same group.
     test("puts the defs inside the map group, not at the svg root", () => {
       const node = render();
       const defsElement = node.querySelector("defs");
@@ -441,17 +441,179 @@ describe("map/renderer/patternedlakeoverlay", () => {
     });
   });
 
-  describe("known quirks", () => {
-    // BUG: neither geoJson property is validated, and neither omission is reported. The join is
-    // `[props.lakeFeature]`, so exactly one datum is always bound - undefined included - and
-    // geoPath(undefined) returns null, which d3 turns into a removed attribute. The result is a
-    // classed, pattern-filled path with no geometry. The same root defect as the mesh renderer's.
-    test("renders styled but empty paths when the geoJson properties are missing", () => {
+  describe("no lake to draw", () => {
+    test("draws nothing at all when there is no lake feature", () => {
       const node = group()
         .call(mapRendererPatternedLakeOverlay().mapPath(mapPathOf()))
         .node() as SVGGElement;
-      expect(lakeShape(node)?.hasAttribute("d")).toBe(false);
+      expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(0);
+      expect(defs(node, "path.sszvis-map__lakepath")).toHaveLength(0);
+      expect(defs(node, "defs > pattern")).toHaveLength(0);
+      expect(defs(node, "defs > linearGradient")).toHaveLength(0);
+      expect(defs(node, "defs > mask")).toHaveLength(0);
+    });
+
+    // The renderer clears its own output, the way the highlight renderer does for an empty
+    // highlight, so a caller can ask it for "no lake" instead of wrapping it in a group to empty.
+    test("removes a lake it drew earlier when the feature goes away", () => {
+      const layer = group("lake-cleared");
+      const renderWith = (lakeFeature: ReturnType<typeof lake> | null) =>
+        layer
+          .call(
+            mapRendererPatternedLakeOverlay()
+              .mapPath(mapPathOf())
+              .lakeFeature(lakeFeature)
+              .lakeBounds(bounds())
+          )
+          .node() as SVGGElement;
+      const drawn = renderWith(lake());
+      const patternId = idOf(drawn, "defs > pattern");
+      expect(patternId).toBeTruthy();
+      const node = renderWith(null);
+      expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(0);
+      expect(defs(node, "path.sszvis-map__lakepath")).toHaveLength(0);
+      expect(node.querySelectorAll(`#${patternId}`)).toHaveLength(0);
+    });
+
+    test("removes the fade definitions along with the lake", () => {
+      const layer = group("lake-cleared-fade");
+      const renderWith = (lakeFeature: ReturnType<typeof lake> | null) =>
+        layer
+          .call(
+            mapRendererPatternedLakeOverlay()
+              .mapPath(mapPathOf())
+              .lakeFeature(lakeFeature)
+              .lakeBounds(bounds())
+              .fadeOut(true)
+          )
+          .node() as SVGGElement;
+      renderWith(lake());
+      const node = renderWith(null);
+      expect(defs(node, "defs > linearGradient")).toHaveLength(0);
+      expect(defs(node, "defs > mask")).toHaveLength(0);
+    });
+
+    // Definitions are owned exactly like paths: an inner overlay keeps the pattern and mask its
+    // own paths reference even when an outer overlay renders with the same key and then clears.
+    test("leaves a nested overlay's definitions alone when clearing", () => {
+      const outer = group("nested-clear");
+      const inner = outer.append("g");
+      const renderWith = (target: typeof outer, lakeFeature: ReturnType<typeof lake> | null) =>
+        target.call(
+          mapRendererPatternedLakeOverlay()
+            .key("shared")
+            .mapPath(mapPathOf())
+            .lakeFeature(lakeFeature)
+            .lakeBounds(bounds())
+            .fadeOut(true)
+        );
+      renderWith(inner, lake());
+      renderWith(outer, lake());
+
+      const innerNode = inner.node() as SVGGElement;
+      const innerPattern = innerNode.querySelector(":scope > defs > pattern");
+      const innerFill = lakeShape(innerNode)?.getAttribute("fill");
+      expect(innerPattern).not.toBeNull();
+      expect(innerFill).toBe(`url(#${innerPattern?.getAttribute("id")})`);
+
+      renderWith(outer, null);
+
+      expect(defs(innerNode, ":scope > path.sszvis-map__lakezurich")).toHaveLength(1);
+      expect(innerNode.querySelector(":scope > defs > pattern")).toBe(innerPattern);
+      expect(defs(innerNode, ":scope > defs > mask")).toHaveLength(1);
+    });
+
+    // Definitions are created into the group's own defs element and removed from the same place,
+    // so the two scopes agree even when an inner overlay rendered first: with a descendant lookup
+    // on either side the outer overlay's definitions would be written into - or left behind in -
+    // the inner group's defs. Distinct keys are what makes that visible; with one shared key the
+    // ids collide and the leak reads as the inner overlay's own definitions.
+    test("removes its own definitions when an inner overlay rendered first", () => {
+      const outer = group("nested-distinct-clear");
+      const inner = outer.append("g");
+      const renderWith = (
+        target: typeof outer,
+        key: string,
+        lakeFeature: ReturnType<typeof lake> | null
+      ) =>
+        target.call(
+          mapRendererPatternedLakeOverlay()
+            .key(key)
+            .mapPath(mapPathOf())
+            .lakeFeature(lakeFeature)
+            .lakeBounds(bounds())
+            .fadeOut(true)
+        );
+      renderWith(inner, "inner", lake());
+      renderWith(outer, "outer", lake());
+
+      const node = outer.node() as SVGGElement;
+      const outerIds = ["lake-pattern-outer", "lake-fade-gradient-outer", "lake-fade-mask-outer"];
+      // The outer definitions belong to the outer group's own defs, not to the inner group's.
+      expect(defs(node, ":scope > defs > [id]").map((n) => n.getAttribute("id"))).toEqual(outerIds);
+
+      renderWith(outer, "outer", null);
+
+      // Nowhere in the subtree, so a leak into the inner defs would be caught too.
+      expect(outerIds.filter((id) => defs(node, `[id="${id}"]`).length > 0)).toEqual([]);
+      expect(
+        defs(inner.node() as SVGGElement, ":scope > defs > [id]").map((n) => n.getAttribute("id"))
+      ).toEqual(["lake-pattern-inner", "lake-fade-gradient-inner", "lake-fade-mask-inner"]);
+    });
+
+    test("draws the lake again when the feature comes back", () => {
+      const layer = group("lake-restored");
+      const renderWith = (lakeFeature: ReturnType<typeof lake> | null) =>
+        layer
+          .call(
+            mapRendererPatternedLakeOverlay()
+              .mapPath(mapPathOf())
+              .lakeFeature(lakeFeature)
+              .lakeBounds(bounds())
+          )
+          .node() as SVGGElement;
+      renderWith(lake());
+      renderWith(null);
+      const node = renderWith(lake());
+      expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(1);
+      expect(defs(node, "path.sszvis-map__lakepath")).toHaveLength(1);
       expect(lakeShape(node)?.getAttribute("fill")).toBe(`url(#${idOf(node, "defs > pattern")})`);
+    });
+
+    // The removal is scoped by key like the paths: clearing one overlay must not take a sibling
+    // overlay's paths or its definitions with it.
+    test("leaves a sibling overlay's paths and definitions in place", () => {
+      const layer = group("lake-cleared-sibling");
+      const renderWith = (key: string, lakeFeature: ReturnType<typeof lake> | null) =>
+        layer.call(
+          mapRendererPatternedLakeOverlay()
+            .key(key)
+            .mapPath(mapPathOf())
+            .lakeFeature(lakeFeature)
+            .lakeBounds(bounds())
+        );
+      renderWith("keeper", lake());
+      renderWith("goner", lake(2));
+      renderWith("goner", null);
+      const node = layer.node() as SVGGElement;
+      expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(1);
+      expect(lakeShape(node)?.getAttribute("data-lake-key")).toBe("keeper");
+      expect(defs(node, "defs > pattern").map((p) => p.getAttribute("id"))).toEqual([
+        "lake-pattern-keeper",
+      ]);
+    });
+  });
+
+  describe("known quirks", () => {
+    // BUG: lakeBounds is not validated, and its omission is not reported. The join is
+    // `[props.lakeBounds]`, so exactly one datum is always bound - undefined included - and
+    // geoPath(undefined) returns null, which d3 turns into a removed attribute. The result is a
+    // classed border path with no geometry. The same root defect as the mesh renderer's.
+    test("renders a styled but empty border path when lakeBounds is missing", () => {
+      const node = group()
+        .call(mapRendererPatternedLakeOverlay().mapPath(mapPathOf()).lakeFeature(lake()))
+        .node() as SVGGElement;
+      expect(lakeShape(node)?.hasAttribute("d")).toBe(true);
       expect(lakeBorder(node)?.hasAttribute("d")).toBe(false);
     });
 
@@ -509,8 +671,8 @@ describe("map/renderer/patternedlakeoverlay", () => {
         );
     };
 
-    // A quote used to make the id selector unparseable and throw from inside ensureDefsElement,
-    // which named neither the property nor the cause.
+    // A quote cannot be spelled in a url(#...) fragment, so the definitions would be written but
+    // never referenced - silent at render time. This names the property and the cause instead.
     test("rejects a key that cannot be spelled in an id, naming the property", () => {
       expect(renderKeyed("quoted-key", 'a"b')).toThrow(
         /\[mapRendererPatternedLakeOverlay\] the key property/

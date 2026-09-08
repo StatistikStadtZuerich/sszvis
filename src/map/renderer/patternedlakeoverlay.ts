@@ -12,8 +12,9 @@
  *                                      feature. Never validated; see the note below.
  * @property {GeoJson} lakeFeature      A GeoJson object which provides data for the outline shape of Lake Zurich. This shape will
  *                                      be filled with a special texture fill and masked with an alpha gradient fade.
- *                                      Never validated, which is why the getter reports it as possibly undefined; see
- *                                      the note below.
+ *                                      Left out - or set to null - it means "no lake": the overlay then removes the
+ *                                      paths and the definitions it drew earlier, so it can be switched off without
+ *                                      being wrapped in a group the caller empties.
  * @property {GeoJson} lakeBounds       A GeoJson object which provides data for the shape of map entity borders which lie over the
  *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
  *                                      Never validated, like lakeFeature.
@@ -51,10 +52,16 @@
  * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
  * defs with the base renderer's missing value pattern when both draw into the same group.
  *
- * Note: neither geoJson property is validated. Omitting either leaves a classed, pattern-filled
- * path with no geometry - invisible, silent, and indistinguishable from having no lake to draw. A
- * missing property reaches the path generator as undefined, which returns null; a missing mapPath
- * has d3 remove the attribute without calling anything. The same root defect as the mesh renderer.
+ * Note: an absent lakeFeature is an instruction rather than a mistake - it clears the overlay - so
+ * it is neither validated nor reported. lakeBounds is still unvalidated in the older sense:
+ * omitting it while there is a lake to draw leaves a classed border path with no geometry, because
+ * the missing property reaches the path generator as undefined, which returns null. A missing
+ * mapPath has d3 remove the attribute without calling anything. The same root defect as the mesh
+ * renderer.
+ *
+ * Note: the clearing branch removes only this overlay's own paths and only the three definitions
+ * carrying its scope, so clearing one overlay leaves a sibling overlay in the same group intact.
+ * The shared defs element itself is left in place, since the base renderer may be using it too.
  *
  * Note: lakePathColor is not wrapped in fn.functor, unlike the colour properties of the base,
  * geojson and highlight renderers. An accessor is handed straight to d3 and called with the
@@ -115,14 +122,24 @@ type LakePathColor = string | ValueFn<BaseType, GeoPermissibleObjects, string | 
 
 /**
  * The props as this component's contract describes them, which is deliberately narrower than what
- * the runtime tolerates: mapPath, lakeFeature and lakeBounds are required here even though none is
- * validated, because omitting one leaves a classed, styled path with no geometry rather than
- * raising. The characterization tests pin that behaviour, which is why the getters report these
- * three as possibly undefined. Following the same split as src/map/renderer/mesh.ts.
+ * the runtime tolerates. None of the three geometry props is validated, but their absences differ:
+ *
+ * - lakeFeature is optional here, because absent means "no lake". The render then removes this
+ *   overlay's two paths and its three scoped definitions and returns, drawing nothing else.
+ * - mapPath is required here even though it is only ever handed to d3 as the "d" attribute
+ *   callback. Absent, d3 removes "d" from both paths without calling anything, leaving two classed,
+ *   styled paths - fill, mask and stroke are still written - with no geometry.
+ * - lakeBounds is required here for the same reason. Absent, only the border path is affected: it
+ *   reaches the path generator as undefined, and a d3.geoPath returns null for an undefined
+ *   feature, so "d" is removed from that one path while the lake shape itself still draws.
+ *
+ * The characterization tests pin that behaviour, which is why the getters report all three as
+ * possibly undefined. Following the same split as src/map/renderer/mesh.ts.
  */
 type LakeOverlayProps = {
   mapPath: LakePath;
-  lakeFeature: GeoPermissibleObjects;
+  /** Absent - undefined or null - means "no lake": the overlay then removes what it drew. */
+  lakeFeature?: GeoPermissibleObjects | null;
   lakeBounds: GeoPermissibleObjects;
   /** Undefined until set: this prop has no default, and an unset colour writes no inline style. */
   lakePathColor?: LakePathColor;
@@ -135,8 +152,10 @@ export interface MapRendererPatternedLakeOverlayComponent
   extends ComponentBuilder<MapRendererPatternedLakeOverlayComponent> {
   mapPath(): LakePath | undefined;
   mapPath(value: LakePath): MapRendererPatternedLakeOverlayComponent;
-  lakeFeature(): GeoPermissibleObjects | undefined;
-  lakeFeature(value: GeoPermissibleObjects): MapRendererPatternedLakeOverlayComponent;
+  lakeFeature(): GeoPermissibleObjects | undefined | null;
+  lakeFeature(
+    value: GeoPermissibleObjects | null | undefined
+  ): MapRendererPatternedLakeOverlayComponent;
   lakeBounds(): GeoPermissibleObjects | undefined;
   lakeBounds(value: GeoPermissibleObjects): MapRendererPatternedLakeOverlayComponent;
   lakePathColor(): LakePathColor | undefined;
@@ -218,6 +237,35 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
       const gradientId = `lake-fade-gradient-${scope}`;
       const maskId = `lake-fade-mask-${scope}`;
 
+      /**
+       * The paths of one class this overlay owns: scoped to the rendering group's own children, so
+       * an overlay in a nested group is never rebound, and filtered by key, which is what lets two
+       * overlays share one group. Read back through getAttribute rather than matched with an
+       * attribute selector, so a caller-supplied key needs no escaping.
+       */
+      const ownPaths = (className: string) =>
+        selection
+          .selectAll<SVGPathElement, GeoPermissibleObjects>(`:scope > path.${className}`)
+          .filter(function () {
+            return this.getAttribute(KEY_ATTRIBUTE) === scope;
+          });
+
+      /** Keyed by the overlay's scope, so a path is only ever rebound by the overlay that drew it. */
+      const joinKey = () => scope;
+
+      // No lake to draw: remove what an earlier render left, so a caller can ask this component
+      // for "no lake" rather than wrapping it in a group to empty. Only this overlay's own
+      // definitions are removed - the ids carry its scope - so a sibling overlay keeps its own.
+      // The shared defs element itself is left alone: the base renderer may be using it too.
+      if (props.lakeFeature == null) {
+        ownPaths("sszvis-map__lakezurich").remove();
+        ownPaths("sszvis-map__lakepath").remove();
+        selection
+          .selectAll(`pattern#${patternId}, linearGradient#${gradientId}, mask#${maskId}`)
+          .remove();
+        return;
+      }
+
       // the lake texture. The helpers join their contents, so calling them on every render updates
       // the definition rather than growing it.
       ensureDefsElement(selection, "pattern", patternId).call(mapLakePattern);
@@ -234,22 +282,6 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         // Turning the fade off must undo an existing one, not merely skip writing it.
         selection.selectAll(`linearGradient#${gradientId}, mask#${maskId}`).remove();
       }
-
-      /**
-       * The paths of one class this overlay owns: scoped to the rendering group's own children, so
-       * an overlay in a nested group is never rebound, and filtered by key, which is what lets two
-       * overlays share one group. Read back through getAttribute rather than matched with an
-       * attribute selector, so a caller-supplied key needs no escaping.
-       */
-      const ownPaths = (className: string) =>
-        selection
-          .selectAll<SVGPathElement, GeoPermissibleObjects>(`:scope > path.${className}`)
-          .filter(function () {
-            return this.getAttribute(KEY_ATTRIBUTE) === scope;
-          });
-
-      /** Keyed by the overlay's scope, so a path is only ever rebound by the overlay that drew it. */
-      const joinKey = () => scope;
 
       // generate the Lake Zurich path
       const zurichSee = ownPaths("sszvis-map__lakezurich")
