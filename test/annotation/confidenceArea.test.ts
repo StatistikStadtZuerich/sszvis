@@ -39,6 +39,18 @@ describe("annotation/confidenceArea", () => {
     container?.parentNode?.removeChild(container);
   });
 
+  /**
+   * Resolves once a transition has actually moved `attr` on `node`, rather than after a fixed
+   * delay. A fixed delay can overshoot the whole 300ms transition under load, which would let
+   * these tests pass with the interrupt removed.
+   */
+  const untilMoved = (node: Element, attr: string) =>
+    new Promise<void>((resolve) => {
+      const from = node.getAttribute(attr);
+      const check = () => (node.getAttribute(attr) === from ? setTimeout(check, 0) : resolve());
+      check();
+    });
+
   const testData: TestDatum[] = [
     { x: 0, y0: 50, y1: 80 },
     { x: 50, y0: 60, y1: 90 },
@@ -351,7 +363,7 @@ describe("annotation/confidenceArea", () => {
     await new Promise((resolve) => setTimeout(resolve, 400));
     // Schedules a tween towards the shifted outline.
     chartLayer.datum([shifted]).call(areaOf(true));
-    await new Promise((resolve) => setTimeout(resolve, 60));
+    await untilMoved(chartLayer.select("path.sszvis-area").node() as Element, "d");
 
     chartLayer.datum([testData]).call(areaOf(false));
     // Past the 300ms default, so an uninterrupted tween would have reached its destination.

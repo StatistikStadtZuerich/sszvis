@@ -83,6 +83,18 @@ describe("map/renderer/bubble", () => {
   const datumOf = (circle: Element) =>
     select(circle).datum() as { geoJson: Feature<Polygon>; datum: Datum };
 
+  /**
+   * Resolves once a transition has actually moved `attr` on `node`, rather than after a fixed
+   * delay. A fixed delay can overshoot the whole 300ms transition under load, which would let
+   * these tests pass with the interrupt removed.
+   */
+  const untilMoved = (node: Element, attr: string) =>
+    new Promise<void>((resolve) => {
+      const from = node.getAttribute(attr);
+      const check = () => (node.getAttribute(attr) === from ? setTimeout(check, 0) : resolve());
+      check();
+    });
+
   /** Renders the bubbles over `data`, returning the group node they drew into. */
   const render = (
     data: Datum[],
@@ -465,8 +477,8 @@ describe("map/renderer/bubble", () => {
     test("should not let an in-flight tween overwrite a later synchronous render", async () => {
       render(fullData, (c) => c.radius(5), "interrupted");
       // Schedules a tween towards a larger radius.
-      render(fullData, (c) => c.radius(40), "interrupted");
-      await new Promise((resolve) => setTimeout(resolve, 60));
+      const inflight = render(fullData, (c) => c.radius(40), "interrupted");
+      await untilMoved(circles(inflight)[0], "r");
 
       const node = render(fullData, (c) => c.radius(5).transition(false), "interrupted");
       // Past the 300ms default, so an uninterrupted tween would have reached its destination.
