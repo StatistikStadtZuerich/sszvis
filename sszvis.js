@@ -4823,6 +4823,7 @@
           if (!parent) return;
           const firstTouch$1 = firstTouch(e);
           if (!firstTouch$1) return;
+          if (!hasFiniteCoordinates(firstTouch$1)) return;
           const position = d3.pointer(firstTouch$1, parent);
           const datumIdx = delaunay.find(position[0], position[1]);
           if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
@@ -4832,10 +4833,20 @@
               // Extract the touch from the new touchmove event, not the original touchstart event
               const touchEvent = firstTouch(panEvent);
               if (!touchEvent) return;
-              // Is the finger still over a cell of *this* layer? The shared
-              // `data-sszvis-behavior-pannable` attribute cannot answer that - `behavior/panning`
-              // writes it too, so any other pannable element in the chart would read as "still
-              // here" - so test for a voronoi cell whose parent is this layer's own group.
+              // Ahead of the presence test below, which throws rather than misses on a
+              // non-finite coordinate: `document.elementFromPoint` takes a WebIDL `double`
+              // and rejects a non-finite one.
+              if (!hasFiniteCoordinates(touchEvent)) return;
+              // Is the finger still over a cell of *this* layer? The pan has to answer that
+              // for itself, because touch capture keeps delivering `touchmove` to the
+              // `touchstart` target no matter what is under the finger, while the browser
+              // retargets the mouse for free. Dropping the test would not align the two paths
+              // but part them: an overlay over the mesh stops the mouse path dead - the cell's
+              // handler never fires - and the pan would keep reporting a datum through it.
+              // The shared `data-sszvis-behavior-pannable` attribute cannot answer the question
+              // either - `behavior/panning` writes it too, so any other pannable element in the
+              // chart would read as "still here" - so test for a voronoi cell whose parent is
+              // this layer's own group.
               const panTarget = elementFromEvent(touchEvent);
               if (panTarget === null || !panTarget.hasAttribute("data-sszvis-behavior-voronoi") || panTarget.parentNode !== parent) {
                 if (this) event.apply("out", this, [panEvent]);
@@ -4863,8 +4874,8 @@
                 if (this) event.apply("out", this, [panEvent]);
               }
             };
-            const end = () => {
-              if (this) event.apply("out", this, [e]);
+            const end = endEvent => {
+              if (this) event.apply("out", this, [endEvent]);
               d3.select(this).on("touchmove", null).on("touchend", null);
             };
             d3.select(this).on("touchmove", pan).on("touchend", end);
@@ -4885,6 +4896,20 @@
         return value === event ? voronoiComponent : value;
       };
       return voronoiComponent;
+    }
+    /**
+     * A `TouchEvent` carries no `clientX`/`clientY` of its own in any browser - it extends `UIEvent`,
+     * not `MouseEvent`, so the position lives on the `Touch` inside `event.touches` - and a malformed
+     * `Touch` can reach a handler carrying neither. Both consumers of a touch position here reject a
+     * non-finite coordinate rather than degrading: `pointer()` throws setting a non-finite
+     * `SVGPoint.x`, and `document.elementFromPoint` takes a WebIDL `double`. `behavior/move` guards
+     * the same shape for the same reason.
+     *
+     * `Number.isFinite` does not coerce, so it rejects a missing coordinate as well as an infinite
+     * one; a `typeof` test alongside it would never change the answer.
+     */
+    function hasFiniteCoordinates(touch) {
+      return Number.isFinite(touch.clientX) && Number.isFinite(touch.clientY);
     }
     // Perform distance calculations in units squared to avoid a costly Math.sqrt
     const MAX_INTERACTION_RADIUS_SQUARED = 15 ** 2;
