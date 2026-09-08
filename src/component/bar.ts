@@ -171,7 +171,21 @@ export default function bar<T = unknown>(): BarComponent<T> {
           .attr("width", wAt)
           .attr("height", hAt);
       } else {
-        bars.attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+        // A transition scheduled by an earlier render would keep ticking and overwrite the
+        // geometry written here, so `transition(false)` is only deterministic once any
+        // in-flight tween is interrupted. This matters on a resize or an event that lands
+        // mid-animation. groupedBars and pie both do this.
+        //
+        // Only the interrupt is needed here, because every geometry attribute is recomputed
+        // from the data, which makes this write authoritative once the stale tween is
+        // stopped; see pie.ts for the attrTween case, which additionally has to resume from
+        // the in-flight value. The transition branch needs nothing: d3 replaces a transition
+        // of the same name on the same element, so scheduling supersedes the previous one.
+        //
+        // The interrupt is unnamed, matching the component's own transition, so it also
+        // stops an unnamed transition a consumer scheduled on these rects. groupedBars and
+        // pie have the same property; naming the transitions is the fix for all three.
+        bars.interrupt().attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
       }
 
       // Tooltip anchors
