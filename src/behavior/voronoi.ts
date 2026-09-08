@@ -41,7 +41,7 @@
  *
  */
 
-import { Delaunay, dispatch, select } from "d3";
+import { Delaunay, dispatch, pointer, select } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
@@ -79,10 +79,10 @@ interface VoronoiComponent<T = unknown> extends ComponentBuilder<VoronoiComponen
   on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
 
-export default function <T = unknown>(): VoronoiComponent<T> {
+export default function voronoi<T = unknown>(): VoronoiComponent<T> {
   const event = dispatch("over", "out");
 
-  const voronoiComponent = component()
+  const voronoiComponent = component<VoronoiComponent<T>>()
     .prop("x")
     .prop("y")
     .prop("bounds")
@@ -114,32 +114,21 @@ export default function <T = unknown>(): VoronoiComponent<T> {
         .attr("d", (d) => `M${d.join("L")}Z`)
         .attr("fill", "transparent")
         .on("mouseover", function (e) {
-          const parent = this.parentNode as Element | null;
+          const parent = this.parentNode as SVGElement | null;
           if (!parent) return;
 
-          const cbox = parent.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
-          if (
-            eventNearPoint(e, [
-              cbox.left + props.x(data[datumIdx]),
-              cbox.top + props.y(data[datumIdx]),
-            ]) &&
-            this
-          )
+          const position = pointer(e, parent);
+          const datumIdx = delaunay.find(position[0], position[1]);
+          if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])]) && this)
             event.apply("over", this, [e, data[datumIdx]]);
         })
         .on("mousemove", function (e) {
           const parent = this.parentNode as SVGElement;
           if (!parent) return;
 
-          const cbox = parent.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
-          if (
-            eventNearPoint(e, [
-              cbox.left + props.x(data[datumIdx]),
-              cbox.top + props.y(data[datumIdx]),
-            ])
-          ) {
+          const position = pointer(e, parent);
+          const datumIdx = delaunay.find(position[0], position[1]);
+          if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
             if (this) event.apply("over", this, [e, data[datumIdx]]);
           } else {
             if (this) event.apply("out", this, [e]);
@@ -152,21 +141,13 @@ export default function <T = unknown>(): VoronoiComponent<T> {
           const parent = this.parentNode as SVGElement;
           if (!parent) return;
 
-          const cbox = parent.getBoundingClientRect();
           const firstTouch = fn.firstTouch(e);
           if (!firstTouch) return;
 
-          const datumIdx = delaunay.find(
-            firstTouch.clientX - cbox.left,
-            firstTouch.clientY - cbox.top
-          );
+          const position = pointer(firstTouch, parent);
+          const datumIdx = delaunay.find(position[0], position[1]);
 
-          if (
-            eventNearPoint(firstTouch, [
-              cbox.left + props.x(data[datumIdx]),
-              cbox.top + props.y(data[datumIdx]),
-            ])
-          ) {
+          if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
             e.preventDefault();
             if (this) event.apply("over", this, [e, data[datumIdx]]);
             const pan = () => {
@@ -181,11 +162,10 @@ export default function <T = unknown>(): VoronoiComponent<T> {
                 const panParent = element?.parentNode as SVGElement;
                 if (!panParent) return;
 
-                const panCbox = panParent.getBoundingClientRect();
                 if (
-                  eventNearPoint(touchEvent, [
-                    panCbox.left + props.x(panDatum.data),
-                    panCbox.top + props.y(panDatum.data),
+                  nearPoint(pointer(touchEvent, panParent), [
+                    props.x(panDatum.data),
+                    props.y(panDatum.data),
                   ])
                 ) {
                   // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
@@ -216,22 +196,28 @@ export default function <T = unknown>(): VoronoiComponent<T> {
       }
     });
 
-  voronoiComponent.on = function (this: VoronoiComponent<T>, ...args: [string, never]) {
+  // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
+  // callback to never. Narrowing to "over" | "out" would type the callback properly but would
+  // also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
+  voronoiComponent.on = ((...args: [string, never]) => {
     const value = (event.on as (...args: unknown[]) => unknown).apply(event, args);
     return value === event ? voronoiComponent : value;
-  };
+  }) as VoronoiComponent<T>["on"];
 
-  return voronoiComponent as VoronoiComponent<T>;
+  return voronoiComponent;
 }
 
 // Perform distance calculations in units squared to avoid a costly Math.sqrt
 const MAX_INTERACTION_RADIUS_SQUARED = 15 ** 2;
 
-function eventNearPoint(
-  event: { clientX: number; clientY: number },
-  point: [number, number]
-): boolean {
-  const dx = event.clientX - point[0];
-  const dy = event.clientY - point[1];
+/**
+ * Both points are in the coordinate space of the group the behaviour was called on, which is
+ * also the space the `x` and `y` accessors report positions in. Comparing them there rather
+ * than in screen pixels is what makes the hit test independent of where the group sits on the
+ * page, and correct when an ancestor transform scales the chart.
+ */
+function nearPoint(position: [number, number], point: [number, number]): boolean {
+  const dx = position[0] - point[0];
+  const dy = position[1] - point[1];
   return dx * dx + dy * dy < MAX_INTERACTION_RADIUS_SQUARED;
 }

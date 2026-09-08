@@ -344,8 +344,11 @@ export default function slider(): SliderComponent {
         // which d3-dispatch treats as removing the listener. The guard is equivalent.
         const sliderInteraction = move<SliderValue>()
           // The same inset scale the handle is drawn with, so that pointing at a handle's
-          // pixel reports that handle's value. Padded back out by the inset so the
-          // interaction layer still spans the whole configured range.
+          // pixel reports that handle's value. The padding is a hit-area widening, not a
+          // coordinate correction: the handle overhangs each end of the inset track by
+          // HANDLE_SIDE_OFFSET, so without it the outer half-handle - including the pixel the
+          // domain's own minimum is drawn at - falls outside the interaction layer and can
+          // never be dragged to.
           .xScale(alteredScale)
           .padding({ left: HANDLE_SIDE_OFFSET, right: HANDLE_SIDE_OFFSET })
           // range goes from the text top (text is 11px tall) to the bottom of the axis

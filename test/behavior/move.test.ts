@@ -1,6 +1,6 @@
 import { scaleBand, scaleLinear, scalePoint } from "d3";
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from "vitest";
-import move from "../../src/behavior/move.js";
+import move, { type MoveComponent } from "../../src/behavior/move.js";
 import { bounds } from "../../src/bounds.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
@@ -470,6 +470,188 @@ describe("behavior/move", () => {
       // Handlers should not be called when coordinates are invalid
       expect(startHandler).not.toHaveBeenCalled();
       expect(moveHandler).not.toHaveBeenCalled();
+    });
+  });
+  describe("resolving the pointer into the scale's coordinate space", () => {
+    /**
+     * Dispatches a pointer at an offset measured from the interaction rect's own box, and
+     * returns the [x, y] pair the behaviour reports for it. `path` selects which of the two
+     * coordinate paths in the behaviour is exercised: `pointer(event, target)` for the mouse,
+     * `pointer(touch, target)` for touch.
+     */
+    function dispatchTouch(
+      node: SVGRectElement,
+      type: "touchstart" | "touchmove",
+      clientX: number,
+      clientY: number
+    ) {
+      const touchEvent = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(touchEvent, "touches", {
+        value: [{ clientX, clientY, identifier: 0 }],
+        writable: false,
+      });
+      node.dispatchEvent(touchEvent);
+    }
+
+    function valueAt<XDomain, YDomain>(
+      moveComponent: MoveComponent<XDomain, YDomain>,
+      path: "mouse" | "touch",
+      offsetX: number,
+      offsetY: number
+    ): [unknown, unknown] {
+      let seen: [unknown, unknown] = [undefined, undefined];
+      svg.call(
+        moveComponent.on("move", (_e, x, y) => {
+          seen = [x, y];
+        })
+      );
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      const box = rectNode?.getBoundingClientRect() as DOMRect;
+      const clientX = box.left + offsetX;
+      const clientY = box.top + offsetY;
+      if (path === "mouse") {
+        rectNode?.dispatchEvent(new MouseEvent("mousemove", { clientX, clientY, bubbles: true }));
+      } else if (rectNode) {
+        dispatchTouch(rectNode, "touchstart", clientX, clientY);
+      }
+      return seen;
+    }
+
+    // The 0-based baseline. A 0-based range is the common case - it is what the library's own
+    // components build and what most live consumer charts pass - but it is not universal: the
+    // consumer survey behind this fix found 64 live non-zero x ranges and 22 non-zero y ranges.
+    // These cases pin the values a 0-based caller sees, so that the inset fix is demonstrably
+    // a no-op for them.
+    describe.each(["mouse", "touch"] as const)("with a 0-based range, over %s", (path) => {
+      test("should report the domain start at the start of the range", () => {
+        expect(valueAt(move<number, number>().xScale(xScale).yScale(yScale), path, 0, 200)).toEqual(
+          [0, 0]
+        );
+      });
+
+      test("should report the domain end at the end of the range", () => {
+        expect(valueAt(move<number, number>().xScale(xScale).yScale(yScale), path, 300, 0)).toEqual(
+          [100, 50]
+        );
+      });
+    });
+
+    // The regression: a scale whose range starts away from 0. The interaction rect is drawn
+    // at the range start, so a position measured from the rect's own box has to have that
+    // origin added back before it is inverted.
+    describe.each(["mouse", "touch"] as const)("with an inset range, over %s", (path) => {
+      const insetX = () => scaleLinear().domain([0, 10]).range([100, 400]);
+      const insetY = () => scaleLinear().domain([0, 20]).range([250, 50]);
+
+      test("should report the domain start at the start of the range", () => {
+        expect(
+          valueAt(move<number, number>().xScale(insetX()).yScale(insetY()), path, 0, 200)
+        ).toEqual([0, 0]);
+      });
+
+      test("should report the domain end at the end of the range", () => {
+        expect(
+          valueAt(move<number, number>().xScale(insetX()).yScale(insetY()), path, 300, 0)
+        ).toEqual([10, 20]);
+      });
+
+      test("should report the midpoint of the domain at the middle of the range", () => {
+        expect(
+          valueAt(move<number, number>().xScale(insetX()).yScale(insetY()), path, 150, 100)
+        ).toEqual([5, 10]);
+      });
+    });
+
+    // The pan path resolves its own coordinates from each `touchmove` through a second
+    // `pointer()` call, and is only reachable by a touch that starts and then moves. Without a
+    // moving touch, breaking the resolution in the pan branch alone would still pass every
+    // case above.
+    test("should report the moved-to domain value when a touch pans over an inset range", () => {
+      const seen: [unknown, unknown][] = [];
+      svg.call(
+        move<number, number>()
+          .xScale(scaleLinear().domain([0, 10]).range([100, 400]))
+          .yScale(scaleLinear().domain([0, 20]).range([250, 50]))
+          .on("move", (_e, x, y) => {
+            seen.push([x, y]);
+          })
+      );
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node() as
+        | SVGRectElement
+        | undefined;
+      assert(rectNode);
+      const box = rectNode.getBoundingClientRect();
+
+      dispatchTouch(rectNode, "touchstart", box.left, box.top + 200);
+      expect(seen.at(-1)).toEqual([0, 0]);
+
+      dispatchTouch(rectNode, "touchmove", box.left + 150, box.top + 100);
+      expect(seen.at(-1)).toEqual([5, 10]);
+
+      dispatchTouch(rectNode, "touchmove", box.left + 300, box.top);
+      expect(seen.at(-1)).toEqual([10, 20]);
+    });
+
+    // The band and point inverters read `scale.range()` themselves, so they already work in
+    // the scale's coordinate space, which is also the space `pointer()` reports in. If either
+    // path shifted its position by the range's start before handing it over, an inset band
+    // scale would be wrong by twice the offset and these would report the wrong band.
+    describe.each(["mouse", "touch"] as const)("with an inset band range, over %s", (path) => {
+      test("should report the band under the pointer without double-counting the origin", () => {
+        const xBand = scaleBand<string>().domain(["A", "B", "C"]).range([90, 390]);
+        const seen = valueAt(move<string, string>().xScale(xBand).yScale(yScale), path, 10, 200);
+        expect(seen[0]).toBe("A");
+        const seenLast = valueAt(
+          move<string, string>()
+            .xScale(scaleBand<string>().domain(["A", "B", "C"]).range([90, 390]))
+            .yScale(yScale),
+          path,
+          290,
+          200
+        );
+        expect(seenLast[0]).toBe("C");
+      });
+    });
+
+    // `padding` widens the hit area without moving the coordinate space, so a pointer in the
+    // padded margin reads as a value just outside the domain rather than as the domain's end.
+    test("should keep padding a hit-area widening rather than an origin shift", () => {
+      const scale = scaleLinear().domain([0, 10]).range([100, 400]);
+      const seen = valueAt(
+        move<number, number>().xScale(scale).yScale(yScale).padding({ left: 20, right: 20 }),
+        "touch",
+        0,
+        220
+      );
+      // The rect now starts 20px before the range, so its own left edge is one padding
+      // width outside the domain: 20px is 10/300 * 20 of the domain.
+      expect(seen[0]).toBeCloseTo(-20 / 30, 10);
+    });
+
+    // Under a scaled ancestor the touch path must resolve through the same inverse CTM the
+    // mouse path uses. Measuring client deltas against `getBoundingClientRect()` mixes CSS
+    // pixels into user-space values, and at scale(2) the visual midpoint of an inset range
+    // read as the domain's end.
+    test("should agree with the mouse path under a scaled ancestor", () => {
+      container.style.transform = "scale(2)";
+      container.style.transformOrigin = "top left";
+      const scale = () => scaleLinear().domain([0, 100]).range([100, 400]);
+      // 300 visual pixels past the rect's left edge is 150 user-space pixels, the midpoint of
+      // the 300px-wide range.
+      const overTouch = valueAt(
+        move<number, number>().xScale(scale()).yScale(yScale),
+        "touch",
+        300,
+        0
+      );
+      const overMouse = valueAt(
+        move<number, number>().xScale(scale()).yScale(yScale),
+        "mouse",
+        300,
+        0
+      );
+      expect(overTouch[0]).toBeCloseTo(50, 10);
+      expect(overTouch[0]).toBeCloseTo(overMouse[0] as number, 10);
     });
   });
 });

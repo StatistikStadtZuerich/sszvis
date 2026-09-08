@@ -21,8 +21,10 @@
  * @property {function} yScale                    The y-scale for the component. The extent of this scale, plus component padding, is the height of the
  *                                                component's active area.
  * @property {boolean} draggable                  Whether or not this component is draggable. This changes certain display properties of the component.
- * @property {object} padding                     An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
- *                                                The options are { top, right, bottom, left }
+ * @property {object} padding                     An object which specifies padding, in pixels, added around the scale's range to widen the component's
+ *                                                hit area beyond the scale itself. Defaults are all 0. The options are { top, right, bottom, left }.
+ *                                                Padding only grows the active area; it does not shift the coordinate space, so a pointer in the padded
+ *                                                margin inverts to a value just outside the scale's domain.
  * @property {boolean|function} cancelScrolling   A predicate function, or a constant boolean, that determines whether the browser's default scrolling
  *                                                behavior in response to a touch event should be canceled. In area charts and line charts, for example,
  *                                                you generally don't want to cancel scrolling, as this creates a scroll trap. However, in bar charts
@@ -117,13 +119,13 @@ export interface MoveComponent<XDomain = Domain, YDomain = Domain>
   on(eventName: string): EventHandler | undefined;
 }
 
-export default function <XDomain = number | string, YDomain = number | string>(): MoveComponent<
+export default function move<XDomain = number | string, YDomain = number | string>(): MoveComponent<
   XDomain,
   YDomain
 > {
   const event = dispatch("start", "move", "drag", "end");
 
-  const moveComponent = component()
+  const moveComponent = component<MoveComponent<XDomain, YDomain>>()
     .prop("debug")
     .prop("xScale")
     .prop("yScale")
@@ -154,6 +156,13 @@ export default function <XDomain = number | string, YDomain = number | string>()
       xExtent[1] += props.padding.right;
       yExtent[0] -= props.padding.top;
       yExtent[1] += props.padding.bottom;
+
+      // The rect below is positioned at the start of the padded range, so its `x`/`y`
+      // attributes carry the offset between the rect's own box and the coordinate space the
+      // scales are defined over. Both input paths resolve through `pointer()`, which inverts
+      // the rect's screen CTM and therefore ignores a rect's `x`/`y` geometry: positions
+      // arrive already in scale space, in the same user-space units the scales use, and
+      // `scaleInvert` and the band/point inverters read `scale.range()` directly.
 
       const layer = selection
         .selectAll("[data-sszvis-behavior-move]")
@@ -263,10 +272,10 @@ export default function <XDomain = number | string, YDomain = number | string>()
             return;
           }
 
-          // Calculate coordinates relative to element manually using getBoundingClientRect
-          // instead of relying on d3.pointer() which fails on Safari mobile TouchEvents
-          const rect = target.getBoundingClientRect();
-          const xy: [number, number] = [touch.clientX - rect.left, touch.clientY - rect.top];
+          // Resolve through the extracted `Touch`, not the event: `pointer()` only needs
+          // clientX/clientY on its source, and inverting the rect's screen CTM keeps touch in
+          // the same user-space units as the mouse path under a scaled ancestor.
+          const xy = pointer(touch, target) as [number, number];
 
           const x = scaleInvert(props.xScale, xy[0]);
           const y = scaleInvert(props.yScale, xy[1]);
@@ -309,12 +318,7 @@ export default function <XDomain = number | string, YDomain = number | string>()
                 return;
               }
 
-              // Calculate coordinates relative to element manually
-              const panRect = target.getBoundingClientRect();
-              const panXY: [number, number] = [
-                panTouch.clientX - panRect.left,
-                panTouch.clientY - panRect.top,
-              ];
+              const panXY = pointer(panTouch, target) as [number, number];
 
               const panX = scaleInvert(props.xScale, panXY[0]);
               const panY = scaleInvert(props.yScale, panXY[1]);
@@ -348,10 +352,13 @@ export default function <XDomain = number | string, YDomain = number | string>()
       }
     });
 
-  moveComponent.on = (...args: [string, never]) => {
+  // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
+  // callback to never. Narrowing to the four event names would type the callback properly but
+  // would also reject the namespaced typenames d3 accepts at runtime, such as "move.tooltip".
+  moveComponent.on = ((...args: [string, never]) => {
     const value = event.on.apply(event, args);
     return value === event ? moveComponent : value;
-  };
+  }) as MoveComponent<XDomain, YDomain>["on"];
 
   return moveComponent;
 }
