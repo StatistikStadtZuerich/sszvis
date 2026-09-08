@@ -48,9 +48,9 @@
  * only useful together. Both helpers take the gradient id as a trailing argument, so this overlay's
  * scoped id is handed to them directly rather than rewritten afterwards.
  *
- * Note: the defs element is created inside the map group rather than at the svg root, and
- * ensureDefsElement selects it with an unscoped descendant selector - so this component shares one
- * defs with the base renderer's missing value pattern when both draw into the same group.
+ * Note: the defs element is created inside the map group rather than at the svg root - so this
+ * component shares one defs with the base renderer's missing value pattern when both draw into
+ * the same group. Only the definitions carrying this overlay's scope are ever removed from it.
  *
  * Note: an absent lakeFeature is an instruction rather than a mistake - it clears the overlay - so
  * it is neither validated nor reported. lakeBounds is still unvalidated in the older sense:
@@ -82,9 +82,9 @@
  * hover and click events.
  *
  * Note: both path selectors are scoped to the rendering group's own children and filtered by the
- * overlay's key, and the joins are keyed by that scope too - so two overlays rendered into one
- * group each draw their own pair of paths as long as they are given distinct keys, and an overlay
- * in a nested group is left alone even if it carries the same key. Two unkeyed overlays in one
+ * overlay's key - so two overlays rendered into one group each draw their own pair of paths as
+ * long as they are given distinct keys, and an overlay in a nested group is left alone even if it
+ * carries the same key. Two unkeyed overlays in one
  * group still share the scope generated for that group, and so share one pair of paths; that is
  * what makes a re-render from a freshly constructed component reuse its elements.
  *
@@ -185,10 +185,10 @@ let generatedScopes = 0;
 const KEY_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
 
 /**
- * Rejects a key that cannot be spelled in an id. Without this a key such as "a b" builds the valid
- * but unmatchable selector "pattern#lake-pattern-a b", so every render appends another definition
- * and the url(#...) reference is inert, while a quote makes the selector unparseable and throws
- * from inside ensureDefsElement. Both were silent or obscure; this names the property instead.
+ * Rejects a key that cannot be spelled in an id. The scope is written into the definition ids, and
+ * those ids are named back from the paths as url(#...) references - a fragment that cannot spell a
+ * space or a quote. A key such as "a b" therefore yields definitions no path can reference, which
+ * is silent at render time; this names the property instead.
  */
 function requireSpellableKey(key: string): string {
   if (!KEY_PATTERN.test(key)) {
@@ -250,8 +250,17 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
             return this.getAttribute(KEY_ATTRIBUTE) === scope;
           });
 
-      /** Keyed by the overlay's scope, so a path is only ever rebound by the overlay that drew it. */
-      const joinKey = () => scope;
+      /**
+       * This overlay's definitions: matched inside the group's own defs element, the one
+       * ensureDefsElement writes into. A descendant lookup would reach into a nested group's
+       * defs, where an inner overlay rendered with the same key owns definitions of the same
+       * id - clearing the outer overlay would then strip the definitions the inner overlay's
+       * paths still reference. Scoped like ownPaths, so ownership is the same on both sides.
+       */
+      const ownDefs = (...selectors: string[]) =>
+        selection
+          .selectAll(":scope > defs")
+          .selectAll(selectors.map((selector) => `:scope > ${selector}`).join(", "));
 
       // No lake to draw: remove what an earlier render left, so a caller can ask this component
       // for "no lake" rather than wrapping it in a group to empty. Only this overlay's own
@@ -260,9 +269,7 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
       if (props.lakeFeature == null) {
         ownPaths("sszvis-map__lakezurich").remove();
         ownPaths("sszvis-map__lakepath").remove();
-        selection
-          .selectAll(`pattern#${patternId}, linearGradient#${gradientId}, mask#${maskId}`)
-          .remove();
+        ownDefs(`pattern#${patternId}`, `linearGradient#${gradientId}`, `mask#${maskId}`).remove();
         return;
       }
 
@@ -280,12 +287,12 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         ensureDefsElement(selection, "mask", maskId).call(mapLakeGradientMask, gradientId);
       } else {
         // Turning the fade off must undo an existing one, not merely skip writing it.
-        selection.selectAll(`linearGradient#${gradientId}, mask#${maskId}`).remove();
+        ownDefs(`linearGradient#${gradientId}`, `mask#${maskId}`).remove();
       }
 
       // generate the Lake Zurich path
       const zurichSee = ownPaths("sszvis-map__lakezurich")
-        .data([props.lakeFeature], joinKey)
+        .data([props.lakeFeature])
         .join("path")
         .classed("sszvis-map__lakezurich", true)
         .attr(KEY_ATTRIBUTE, scope)
@@ -298,7 +305,7 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
       const lakePath = ownPaths("sszvis-map__lakepath")
-        .data([props.lakeBounds], joinKey)
+        .data([props.lakeBounds])
         .join("path")
         .classed("sszvis-map__lakepath", true)
         .attr(KEY_ATTRIBUTE, scope)
