@@ -322,6 +322,22 @@ describe("axis", () => {
       expect(labels.at(-1)).toBe("2023");
     });
 
+    test("should render one tick per category when more ticks are requested than the domain holds", () => {
+      const xAxis = axisX
+        .ordinal()
+        .scale(scaleBand().domain(["2020", "2021", "2022"]).range([0, 300]))
+        .ticks(10);
+      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+        .selectGroup("xAxis")
+        .call(xAxis)
+        .select(".sszvis-axis");
+      const labels = axisGroup
+        .selectAll("g.tick text")
+        .nodes()
+        .map((n) => (n as SVGTextElement).textContent);
+      expect(labels).toEqual(["2020", "2021", "2022"]);
+    }, 1000);
+
     test("should skip a last domain value that is genuinely undefined", () => {
       // NOTE: a domain hole is not expressible through scaleBand's own types, but it is
       // exactly the case the undefined guard in setOrdinalTicks was written for.
