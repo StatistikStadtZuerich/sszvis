@@ -1,41 +1,4 @@
 {
-  "compilerOptions": {
-    "target": "es2024",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "lib": ["es2024", "DOM", "DOM.Iterable"],
-    "outDir": "./build",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "preserveConstEnums": true,
-    "removeComments": false,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": false,
-    "noUncheckedIndexedAccess": false,
-    "allowJs": true,
-    "checkJs": false,
-    "noEmit": false
-  },
-  "include": ["src/**/*"],
-  "exclude": [
-    "node_modules",
-    "build",
-    "docs",
-    "test",
-    "contrib",
-    "geodata",
-    "playwright-report"
-  ]
+  "$schema": "./node_modules/@effect/tsgo/schema.json",
+  "files": []
 }

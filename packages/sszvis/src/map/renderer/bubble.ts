@@ -119,8 +119,9 @@ type BubbleProps<T> = {
   transition: boolean;
 };
 
-export interface MapRendererBubbleComponent<T = unknown>
-  extends ComponentBuilder<MapRendererBubbleComponent<T>> {
+export interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilder<
+  MapRendererBubbleComponent<T>
+> {
   mergedData(): MergedGeoDatum<T>[] | undefined;
   mergedData(value: MergedGeoDatum<T>[]): MapRendererBubbleComponent<T>;
   mapPath(): GeoPath | undefined;
@@ -209,7 +210,7 @@ const datumAcc = fn.prop("datum");
  */
 function anchorPosition(
   mapPath: GeoPath,
-  geoJson: MergedGeoDatum<never>["geoJson"]
+  geoJson: MergedGeoDatum<never>["geoJson"],
 ): [number, number] {
   // The type argument is unchecked, as in base.ts: GeoPath types projection() as a union that
   // includes shapes with no call signature, and only the caller knows which one was set.
@@ -287,7 +288,7 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
           (exit) =>
             props.transition
               ? exit.transition(defaultTransition()).attr("r", 0).remove()
-              : exit.remove()
+              : exit.remove(),
         )
         // d3 calls a listener with the event first and the bound datum second; the datum here is
         // the merged entry, so the handler is handed the map entity's own datum off it.
@@ -362,6 +363,7 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
       const { type, name, key } = parseTypename(typename);
       if (handler == null) {
         if (type === "") {
+          // oxlint-disable-next-line unicorn/no-useless-spread -- the copy is required: the loop body deletes from `registered`.
           for (const held of [...registered]) if (nameOfKey(held) === name) registered.delete(held);
         } else {
           registered.delete(key);

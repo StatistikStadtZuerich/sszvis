@@ -4,24 +4,56 @@ Authoritative instructions for coding agents working on SSZVIS, the D3-based dat
 
 ## Commands
 
-| Task                | Command                                                |
-| ------------------- | ------------------------------------------------------ |
-| Install             | `npm install`                                          |
-| Test (all)          | `npm test`                                             |
-| Test (unit only)    | `npm run test:unit`                                    |
-| Test (one file)     | `npm test -- test/color.test.ts`                       |
-| Test (watch)        | `npm run test:watch`                                   |
-| Visual regression   | `npm run test:snapshot`                                |
-| Type check          | `npm run type-check` (tsc over `src/` **and** `test/`) |
-| Lint + format check | `npm run check` (fails on warnings)                    |
-| Autofix             | `npm run check:fix`                                    |
-| Docs server         | `npm start` (port 8000)                                |
-| Full build          | `npm run build`                                        |
-| Search              | `rg "pattern"` — always ripgrep, never grep/find       |
+This is a pnpm + Turborepo monorepo. Root commands fan out across workspaces; use
+`--filter` to target one.
 
-CI runs `check`, `type-check`, `test:unit`, and the snapshot suite; all four must pass. Publishing re-runs the first three (not snapshots) before `npm publish`.
+| Task                | Command                                                     |
+| ------------------- | ----------------------------------------------------------- |
+| Install             | `pnpm install`                                              |
+| Test (all)          | `pnpm test`                                                 |
+| Test (unit only)    | `pnpm run test:unit`                                        |
+| Test (one file)     | `pnpm --filter sszvis exec vitest run test/color.test.ts`   |
+| Test (watch)        | `pnpm --filter sszvis run test:watch`                       |
+| Visual regression   | `pnpm run test:snapshot` (needs the docs server, see below) |
+| Type check          | `pnpm run type-check` (tsc over `src/` **and** `test/`)     |
+| Lint                | `pnpm run lint` (oxlint)                                    |
+| Format              | `pnpm run format` (oxfmt)                                   |
+| Lint + format check | `pnpm run check`                                            |
+| Autofix             | `pnpm run lint:fix && pnpm run format`                      |
+| Docs server         | `pnpm --filter @sszvis/docs run dev` (port 8000)            |
+| Full build          | `pnpm run build`                                            |
+| Search              | `rg "pattern"` — always ripgrep, never grep/find            |
 
-Dev environment is Nix + direnv (`nix develop`); npm is the package manager.
+CI runs `check`, `type-check`, `test:unit`, and the snapshot suite; all four must pass.
+Publishing re-runs the first three (not snapshots) before `pnpm publish` from
+`packages/sszvis`.
+
+Dev environment is Nix + direnv (`nix develop`); pnpm is the package manager.
+
+## Layout
+
+```txt
+apps/
+  docs/            # 11ty documentation site (@sszvis/docs)
+    docs/          # eleventy input: guides, _includes, static, one dir per chart type
+    dist/          # eleventy output, also what gh-pages deploys
+packages/
+  sszvis/          # the published library
+    src/           # 100% TypeScript
+    test/          # unit tests + test/snapshot (Playwright)
+    build/         # rollup + tsc output, what npm publishes
+  config-typescript/ # shared tsconfig base (@repo/config-typescript)
+geodata/           # Swiss geographic source data
+scripts/           # topo processing and the visual-regression harness
+contrib/           # example projects and experiments
+```
+
+The library build and the docs build write to **separate** directories
+(`packages/sszvis/build` and `apps/docs/dist`). The docs site pulls `sszvis.js` in
+through an eleventy passthrough copy; turbo guarantees `sszvis#build` runs first.
+
+The snapshot suite serves `apps/docs/dist` on port 8000 and screenshots every
+example, so it needs `pnpm run build` and a running docs server first.
 
 ## Philosophy
 
@@ -34,7 +66,7 @@ Dev environment is Nix + direnv (`nix develop`); npm is the package manager.
 
 ## Structure
 
-`src/` is 100% TypeScript. `test/` is TypeScript apart from seven legacy `.js` files.
+`packages/sszvis/src/` is 100% TypeScript. `packages/sszvis/test/` is TypeScript apart from seven legacy `.js` files.
 
 ```txt
 src/
@@ -72,7 +104,9 @@ const barChart = sszvis
 
 ## TypeScript conventions
 
-Biome enforces filename case, `.js` import extensions, `import type`, `T[]` array syntax, no inferrable annotations, no `any`, and no non-null `!`. Run `npm run check`; do not restate those rules here. What follows is what tooling **cannot** check.
+oxlint enforces the correctness category and a curated set of `unicorn`/`typescript`/`import` rules. Run `pnpm run check`; do not restate those rules here. What follows is what tooling **cannot** check.
+
+Note: the Biome rules that enforced `.js` import extensions, `import type`, `T[]` array syntax and no non-null `!` have no oxlint equivalent yet. Keep following them by hand — relative imports **must** carry the `.js` extension, because the package ships ESM.
 
 ### Module shape
 
@@ -87,14 +121,14 @@ Biome enforces filename case, `.js` import extensions, `import type`, `T[]` arra
 - Object shapes are `interface`. Reserve `type` for unions, intersections, mapped/conditional types, and function aliases.
 - Suffixes are vocabulary, not decoration — use these and no synonyms (`Config`, `Options`, `Dimensions` are not interchangeable):
 
-  | Suffix | Means |
-  | --- | --- |
-  | `…Props` | the component's internal prop bag (module-private) |
+  | Suffix       | Means                                                                  |
+  | ------------ | ---------------------------------------------------------------------- |
+  | `…Props`     | the component's internal prop bag (module-private)                     |
   | `…Component` | the public chainable interface (exported, re-exported from `index.ts`) |
-  | `…Accessor` | a function from datum to value |
-  | `…Datum` | a single data record |
-  | `…Value` | a scalar a prop may hold or return |
-  | `…Layout` | the return of a `layout/` function |
+  | `…Accessor`  | a function from datum to value                                         |
+  | `…Datum`     | a single data record                                                   |
+  | `…Value`     | a scalar a prop may hold or return                                     |
+  | `…Layout`    | the return of a `layout/` function                                     |
 
 - Generic parameters are fixed by role: `T` datum, `P` point/inner datum, `L` layer/series, `S` series key, `D` domain. Give each a default (`<T = unknown>`) so call sites need not name them.
 
@@ -114,7 +148,7 @@ export default function dot<T = unknown>(): DotComponent<T> {
 
 ### Escape hatches
 
-- `$IntentionalAny` (in `types.ts`) is the only sanctioned `any`. Use it solely where a type genuinely cannot be expressed — d3 internals, variadic combinators, the untyped component core — and always with a comment saying which. `rg '\$IntentionalAny' src` lists every hatch; keep the list short and defensible. Lint-ignore comments are similarly rare — `rg 'biome-ignore' src` should stay a short, individually justified list.
+- `$IntentionalAny` (in `types.ts`) is the only sanctioned `any`. Use it solely where a type genuinely cannot be expressed — d3 internals, variadic combinators, the untyped component core — and always with a comment saying which. `rg '\$IntentionalAny' src` lists every hatch; keep the list short and defensible. Lint-ignore comments are similarly rare — `rg 'oxlint-disable' src` should stay a short, individually justified list.
 - Prefer `unknown` and narrow.
 - **`as unknown as X` is a smell, not a tool.** In this codebase it has almost always meant a declaration was lying rather than a type being inexpressible — fix the signature first. The one case that genuinely needs care: d3's `Selection` is invariant in all four type parameters, so no single type — not `BaseType`, not `any` in the datum slot, not a union — accepts every selection. A function taking "any selection" must be **generic over d3's four parameters**; see `textWrap`, `ensureDefsElement`, `createSvgLayer`. `rg 'as unknown as' src` should stay near-empty.
 - No `@ts-ignore`. `@ts-expect-error` with a one-line reason if truly stuck.
@@ -124,11 +158,11 @@ export default function dot<T = unknown>(): DotComponent<T> {
 - Every module should open with `@module sszvis/<path>`, barrels included. Not all do yet; add the tag to any file you touch that is missing it.
 - JSDoc carries **prose, not types** — no `@param {Type}`; TypeScript owns types. Document units, defaults, and behavioural quirks instead.
 - Examples in JSDoc use `const`.
-- Every component needs a working example in `docs/`.
+- Every component needs a working example in `apps/docs/docs/`.
 
 ## Testing
 
-Vitest in browser mode (Playwright/Chromium) — tests run against real DOM/SVG. Test files are `test/**/*.test.{js,ts}`. Playwright snapshots in `test/snapshot/snapshot.spec.js` compare every docs example, including interactive states, against stored screenshots.
+Vitest in browser mode (Playwright/Chromium) — tests run against real DOM/SVG. Test files are `packages/sszvis/test/**/*.test.{js,ts}`. Playwright snapshots in `packages/sszvis/test/snapshot/snapshot.spec.js` compare every docs example in `apps/docs/dist`, including interactive states, against stored screenshots.
 
 No feature is complete without tests. When pinning existing behaviour that looks wrong, keep it and mark it `// NOTE:` as a known quirk rather than silently fixing it.
 

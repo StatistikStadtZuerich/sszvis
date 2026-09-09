@@ -1,5 +1,5 @@
 name: Setup with Node
-description: Perform standard setup and install dependencies using npm.
+description: Perform standard setup and install dependencies using pnpm.
 inputs:
   node-version:
     description: The version of Node.js to install
@@ -9,12 +9,16 @@ inputs:
 runs:
   using: composite
   steps:
-      - name: Set Node.js (${{ inputs.node-version }})
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-          registry-url: https://registry.npmjs.com
+    - name: Set up pnpm
+      uses: pnpm/action-setup@v4
 
-      - name: Install dependencies
-        shell: bash
-        run: npm install --frozen-lockfile --silent
+    - name: Set Node.js (${{ inputs.node-version }})
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+        registry-url: https://registry.npmjs.com
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile

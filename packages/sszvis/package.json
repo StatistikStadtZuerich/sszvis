@@ -1,0 +1,83 @@
+{
+  "name": "sszvis",
+  "version": "3.5.0",
+  "description": "Statistik Stadt Zürich Visualization Library",
+  "keywords": [
+    "d3",
+    "visualization",
+    "data visualization"
+  ],
+  "homepage": "https://statistikstadtzuerich.github.io/sszvis/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StatistikStadtZuerich/sszvis.git",
+    "directory": "packages/sszvis"
+  },
+  "license": "BSD-3-Clause",
+  "main": "build/sszvis.js",
+  "module": "build/index.js",
+  "types": "build/index.d.ts",
+  "jsnext:main": "build/index.js",
+  "unpkg": "build/sszvis.js",
+  "jsdelivr": "build/sszvis.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./build/index.d.ts",
+        "default": "./build/index.js"
+      },
+      "require": {
+        "types": "./build/sszvis.d.ts",
+        "default": "./build/sszvis.js"
+      }
+    }
+  },
+  "files": [
+    "src",
+    "build"
+  ],
+  "peerDependencies": {
+    "d3": ">=7.9.0"
+  },
+  "dependencies": {
+    "immer": "^10.1.1",
+    "nano-throttle": "^1.0.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/plugin-transform-modules-commonjs": "^7.27.1",
+    "@babel/preset-env": "^7.28.3",
+    "@playwright/test": "^1.55.0",
+    "@repo/config-typescript": "workspace:*",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@types/d3": "^7.4.3",
+    "@types/geojson": "^7946.0.16",
+    "@vitest/browser": "^3.2.4",
+    "d3": "^7.9.0",
+    "glob": "^11.0.3",
+    "happy-dom": "^20.0.11",
+    "playwright": "^1.55.0",
+    "rollup": "^4.50.2",
+    "rollup-plugin-dts": "^6.2.3",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "scripts": {
+    "clean": "rm -rf build && mkdir -p build",
+    "build": "pnpm run clean && pnpm run build:ts && pnpm run build:lib",
+    "build:ts": "tsc",
+    "build:lib": "rollup -c --bundleConfigAsCjs",
+    "build:watch": "pnpm run build:ts -- --watch & pnpm run build:lib -- --watch",
+    "type-check": "tsc --noEmit && tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "test:snapshot": "rm -rf test/snapshot/__results__ && playwright test"
+  }
+}

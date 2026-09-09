@@ -8,5 +8,5 @@
     "rootDir": "."
   },
   "include": ["src/**/*", "test/**/*"],
-  "exclude": ["node_modules", "build", "docs", "contrib", "geodata", "playwright-report"]
+  "exclude": ["node_modules", "build", "dist"]
 }
