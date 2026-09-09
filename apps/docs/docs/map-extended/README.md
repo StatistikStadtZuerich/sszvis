@@ -136,7 +136,7 @@ New settlements, topographic maps, and raster maps
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json",
+        "stadt-zurich.json": "topo/stadt-zurich.json",
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -155,7 +155,7 @@ New settlements, topographic maps, and raster maps
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json",
+        "stadt-zurich.json": "topo/stadt-zurich.json",
     },
     "sourceView": ["index.html"]
 }
@@ -175,7 +175,7 @@ New settlements, topographic maps, and raster maps
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json",
+        "stadt-zurich.json": "topo/stadt-zurich.json",
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -195,7 +195,7 @@ New settlements, topographic maps, and raster maps
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json",
+        "stadt-zurich.json": "topo/stadt-zurich.json",
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -215,7 +215,7 @@ New settlements, topographic maps, and raster maps
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json",
+        "stadt-zurich.json": "topo/stadt-zurich.json",
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -235,7 +235,7 @@ New settlements, topographic maps, and raster maps
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json",
+        "stadt-zurich.json": "topo/stadt-zurich.json",
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -255,7 +255,7 @@ New settlements, topographic maps, and raster maps
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json",
+        "stadt-zurich.json": "topo/stadt-zurich.json",
     },
     "sourceView": ["index.html", "data.csv"]
 }

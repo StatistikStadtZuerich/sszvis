@@ -143,7 +143,7 @@ A map of Zürich's Stadtkreise.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json"
+        "stadt-zurich.json": "topo/stadt-zurich.json"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -165,7 +165,7 @@ A map of Zürich's Wahlkreise.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json"
+        "stadt-zurich.json": "topo/stadt-zurich.json"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -187,7 +187,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json"
+        "stadt-zurich.json": "topo/stadt-zurich.json"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -209,7 +209,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json"
+        "stadt-zurich.json": "topo/stadt-zurich.json"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -231,7 +231,7 @@ A map of the "statistical zones" of Zürich
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json"
+        "stadt-zurich.json": "topo/stadt-zurich.json"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -250,11 +250,11 @@ A map of Zürich's agglomeration.
             "template": "template.html"
         },
         "data.csv": "map-standard/data/agglomeration_2012.csv",
-        "agglomeration-zurich.json": "/topo/agglomeration-zurich.json",
+        "agglomeration-zurich.json": "topo/agglomeration-zurich.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json"
+        "stadt-zurich.json": "topo/stadt-zurich.json"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -273,11 +273,11 @@ A map of Switzerland.
             "template": "template.html"
         },
         "data.csv": "map-standard/data/M_swiss_fake.csv",
-        "switzerland.json": "/topo/switzerland.json",
+        "switzerland.json": "topo/switzerland.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "stadt-zurich.json": "/topo/stadt-zurich.json"
+        "stadt-zurich.json": "topo/stadt-zurich.json"
     },
     "sourceView": ["index.html", "data.csv"]
 }
