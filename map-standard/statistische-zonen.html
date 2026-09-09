@@ -22,9 +22,9 @@
         // Configuration
         // -----------------------------------------------
 
-        const queryProps = sszvis.responsiveProps().prop("bounds", {
-          _(width) {
-            const innerHeight = sszvis.aspectRatioSquare(width);
+        var queryProps = sszvis.responsiveProps().prop("bounds", {
+          _: function _(width) {
+            var innerHeight = sszvis.aspectRatioSquare(width);
             return {
               top: 30,
               bottom: 30,
@@ -40,11 +40,11 @@
           };
         }
 
-        const vAcc = sszvis.prop("value");
+        var vAcc = sszvis.prop("value");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: null,
           mapData: null,
           valueDomain: [0, 0],
@@ -52,15 +52,15 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
 
             render(state);
           },
 
-          prepareMapData(topo) {
+          prepareMapData: function prepareMapData(topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.statistische_zonen),
               borders: topojson.mesh(topo, topo.objects.statistische_zonen),
@@ -68,7 +68,7 @@
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -91,16 +91,16 @@
             return true;
           }
 
-          const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-          const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+          var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+          var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
           // Scales
 
-          const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+          var colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer("#sszvis-chart", bounds)
             .datum(state.data);
 
@@ -108,7 +108,7 @@
 
           // You can optionally use .withLake(false) to hide the textured lake shape and reveal
           // the four lake zones underneath
-          const choroplethMap = sszvis
+          var choroplethMap = sszvis
             .choropleth()
             .features(state.mapData.features)
             .borders(state.mapData.borders)

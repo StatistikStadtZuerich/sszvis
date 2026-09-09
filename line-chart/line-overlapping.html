@@ -29,19 +29,24 @@
         // Configuration
         // -----------------------------------------------
 
-        const queryProps = sszvis
+        var queryProps = sszvis
           .responsiveProps()
           .prop("rulerLabel", {
-            _: () =>
-              sszvis
+            _: function _() {
+              return sszvis
                 .modularTextSVG()
                 .bold(
                   sszvis.compose(
-                    (d) => sszvis.formatPercent(yAcc(d) / 100),
-                    (d) => d,
+                    function (d) {
+                      return sszvis.formatPercent(yAcc(d) / 100);
+                    },
+                    function (d) {
+                      return d;
+                    },
                   ),
                 )
-                .plain(cAcc),
+                .plain(cAcc);
+            },
           })
           .prop("xLabel", {
             _: "",
@@ -58,9 +63,15 @@
             _: 6,
           })
           .prop("colorLegendColumnWidth", {
-            palm: (width) => width / 2,
-            lap: (width) => width / 3,
-            _: (width) => width / 4,
+            palm: function palm(width) {
+              return width / 2;
+            },
+            lap: function lap(width) {
+              return width / 3;
+            },
+            _: function _(width) {
+              return width / 4;
+            },
           });
 
         function parseRow(d) {
@@ -75,14 +86,14 @@
           };
         }
 
-        const xAcc = sszvis.prop("xValue");
-        const yAcc = sszvis.prop("yValue");
-        const cAcc = sszvis.prop("category");
-        const kreisNumAcc = sszvis.prop("kreisNum");
+        var xAcc = sszvis.prop("xValue");
+        var yAcc = sszvis.prop("yValue");
+        var cAcc = sszvis.prop("category");
+        var kreisNumAcc = sszvis.prop("kreisNum");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           lineData: [],
           categories: [],
@@ -93,30 +104,42 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             // Filter out null values (non-Stadtkreis data)
-            const filteredData = data.filter((d) => d !== null);
+            var filteredData = data.filter(function (d) {
+              return d !== null;
+            });
 
             state.data = filteredData;
 
             // Group data by category and sort by Kreis number
-            const grouped = sszvis
+            var grouped = sszvis
               .cascade()
               .arrayBy(cAcc, d3.ascending)
               .apply(filteredData);
 
             // Sort groups by Kreis number and then sort each group's values by year
             state.lineData = grouped
-              .map((g) => ({
-                values: g.sort((a, b) => xAcc(a) - xAcc(b)),
-                kreisNum: kreisNumAcc(g[0]),
-              }))
-              .sort((a, b) => a.kreisNum - b.kreisNum)
-              .map((g) => g.values);
+              .map(function (g) {
+                return {
+                  values: g.sort(function (a, b) {
+                    return xAcc(a) - xAcc(b);
+                  }),
+                  kreisNum: kreisNumAcc(g[0]),
+                };
+              })
+              .sort(function (a, b) {
+                return a.kreisNum - b.kreisNum;
+              })
+              .map(function (g) {
+                return g.values;
+              });
 
             // Get sorted categories
-            state.categories = state.lineData.map((g) => cAcc(g[0]));
+            state.categories = state.lineData.map(function (g) {
+              return cAcc(g[0]);
+            });
 
             // Get x-axis domain (all years)
             state.xValues = d3.extent(filteredData, xAcc);
@@ -127,17 +150,16 @@
             render(state);
           },
 
-          showTooltip(_e, inputDate) {
+          showTooltip: function showTooltip(_e, inputDate) {
             // Find the closest date to the mouse position
-            const closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
+            var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
 
             // Find all data points at that date
-            const closestData = state.lineData.map((linePoints) =>
-              sszvis.find(
-                (d) => xAcc(d).toString() === closestDate.toString(),
-                linePoints,
-              ),
-            );
+            var closestData = state.lineData.map(function (linePoints) {
+              return sszvis.find(function (d) {
+                return xAcc(d).toString() === closestDate.toString();
+              }, linePoints);
+            });
 
             state.selection = closestData.filter(
               sszvis.compose(sszvis.not(isNaN), yAcc),
@@ -145,22 +167,21 @@
             render(state);
           },
 
-          hideTooltip() {
+          hideTooltip: function hideTooltip() {
             // Find the most recent date and show that
-            const mostRecentDate = d3.max(state.data, xAcc);
-            const closestData = state.lineData.map((linePoints) =>
-              sszvis.find(
-                (d) => xAcc(d).toString() === mostRecentDate.toString(),
-                linePoints,
-              ),
-            );
+            var mostRecentDate = d3.max(state.data, xAcc);
+            var closestData = state.lineData.map(function (linePoints) {
+              return sszvis.find(function (d) {
+                return xAcc(d).toString() === mostRecentDate.toString();
+              }, linePoints);
+            });
             state.selection = closestData.filter(
               sszvis.compose(sszvis.not(isNaN), yAcc),
             );
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -174,11 +195,11 @@
         // Render
         // -----------------------------------------------
         function render(state) {
-          const props = queryProps(sszvis.measureDimensions(config.id));
+          var props = queryProps(sszvis.measureDimensions(config.id));
 
-          const cScale = sszvis.scaleQual12().domain(state.categories);
+          var cScale = sszvis.scaleQual12().domain(state.categories);
 
-          const bounds = sszvis.bounds(
+          var bounds = sszvis.bounds(
             {
               top:
                 typeof props.yLabel === "string" && props.yLabel.length > 0
@@ -190,23 +211,23 @@
           );
 
           // Scales
-          const xScale = d3
+          var xScale = d3
             .scaleLinear()
             .domain(state.xValues)
             .range([0, bounds.innerWidth]);
 
-          const yScale = d3
+          var yScale = d3
             .scaleLinear()
             .domain([0, state.maxY])
             .range([bounds.innerHeight, 0]);
 
           // Layers
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer(config.id, bounds)
             .datum(state.lineData);
 
           // Components
-          const line = sszvis
+          var line = sszvis
             .line()
             .x(sszvis.compose(xScale, xAcc))
             .y(sszvis.compose(yScale, yAcc))
@@ -214,42 +235,46 @@
             .stroke(sszvis.compose(cScale, cAcc, sszvis.first));
 
           // Ruler annotation for hover
-          const highlightLayer = sszvis
+          var highlightLayer = sszvis
             .annotationRuler()
             .top(0)
             .bottom(bounds.innerHeight)
             .x(sszvis.compose(xScale, xAcc))
             .y(sszvis.compose(yScale, yAcc))
             .label(props.rulerLabel)
-            .flip((d) => xScale(xAcc(d)) >= bounds.innerWidth / 2)
+            .flip(function (d) {
+              return xScale(xAcc(d)) >= bounds.innerWidth / 2;
+            })
             .color(sszvis.compose(cScale, cAcc));
 
           // Axes
-          const xAxis = sszvis
+          var xAxis = sszvis
             .axisX()
             .scale(xScale)
             .orient("bottom")
             .tickFormat(d3.format("d"))
             .ticks(props.ticks)
-            .highlightTick((d) =>
-              state.selection.length > 0
+            .highlightTick(function (d) {
+              return state.selection.length > 0
                 ? String(d) === String(xAcc(state.selection[0]))
-                : false,
-            )
+                : false;
+            })
             .alignOuterLabels(true);
 
-          const yAxis = sszvis
+          var yAxis = sszvis
             .axisY()
             .scale(yScale)
             .orient("right")
             .ticks(5)
-            .tickFormat((d) => d + "%")
+            .tickFormat(function (d) {
+              return d + "%";
+            })
             .contour(true)
             .title(props.yLabel)
             .dyTitle(-20);
 
           // Legend
-          const colorLegend = sszvis
+          var colorLegend = sszvis
             .legendColorOrdinal()
             .scale(cScale)
             .columnWidth(props.colorLegendColumnWidth)
@@ -280,7 +305,7 @@
             .call(highlightLayer);
 
           // Interaction
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .move()
             .xScale(xScale)
             .yScale(yScale)
@@ -295,9 +320,9 @@
         // Helper functions
         // -----------------------------------------------
         function closestDatum(data, accessor, datum) {
-          const i = d3.bisector(accessor).left(data, datum, 1);
-          const d0 = data[i - 1];
-          const d1 = data[i] || d0;
+          var i = d3.bisector(accessor).left(data, datum, 1);
+          var d0 = data[i - 1];
+          var d1 = data[i] || d0;
           return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
         }
       })(d3, sszvis, EXTERNAL_CONFIG);

@@ -31,9 +31,9 @@
 
         /* Configuration
   ----------------------------------------------- */
-        const MAX_CONTROL_WIDTH = 300;
+        var MAX_CONTROL_WIDTH = 300;
 
-        const queryProps = sszvis
+        var queryProps = sszvis
           .responsiveProps()
           .prop("targetNumColumns", {
             palm: 1,
@@ -48,7 +48,7 @@
             _: 12,
           })
           .prop("controlWidth", {
-            _(width) {
+            _: function _(width) {
               return Math.min(width, MAX_CONTROL_WIDTH);
             },
           });
@@ -67,16 +67,16 @@
 
         /* Shortcuts
   ----------------------------------------------- */
-        const xjAcc = sszvis.prop("year");
-        const yAcc = sszvis.prop("value");
-        const cAcc = sszvis.prop("category");
-        const aAcc = sszvis.prop("nestedCategory");
-        const AGE_GROUP = "18 bis 29 Jahre";
-        const kAcc = sszvis.prop("konfvalue");
+        var xjAcc = sszvis.prop("year");
+        var yAcc = sszvis.prop("value");
+        var cAcc = sszvis.prop("category");
+        var aAcc = sszvis.prop("nestedCategory");
+        var AGE_GROUP = "18 bis 29 Jahre";
+        var kAcc = sszvis.prop("konfvalue");
 
         /* Application state
   ----------------------------------------------- */
-        const state = {
+        var state = {
           data: [],
           nestedCategories: [],
           categories: [],
@@ -88,25 +88,23 @@
 
         /* State transitions
   ----------------------------------------------- */
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             // The source data breaks every share down by age as well as by year, gender and
             // answer, and the shares within one age group sum to 100%. Stacking across age
             // groups would therefore add percentages that do not belong in one bar, so the
             // example shows a single age group. Change AGE_GROUP to show another one.
-            state.data = data.filter((d) => d.ageGroup === AGE_GROUP);
+            state.data = data.filter(function (d) {
+              return d.ageGroup === AGE_GROUP;
+            });
 
-            const stackLayout = sszvis.stackedBarVerticalData(
-              xjAcc,
-              cAcc,
-              yAcc,
-            );
+            var stackLayout = sszvis.stackedBarVerticalData(xjAcc, cAcc, yAcc);
             state.stackedData = sszvis
               .cascade()
               .arrayBy(aAcc)
               .apply(state.data)
-              .map((d) => {
-                const stack = stackLayout(d);
+              .map(function (d) {
+                var stack = stackLayout(d);
                 stack.key = d[0].nestedCategory;
                 return stack;
               });
@@ -118,16 +116,16 @@
             render(state);
           },
 
-          showTooltip(_e, datum) {
+          showTooltip: function showTooltip(_e, datum) {
             state.selection = [datum];
             render(state);
           },
-          hideTooltip() {
+          hideTooltip: function hideTooltip() {
             state.selection = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -141,9 +139,9 @@
         /* Render
   ----------------------------------------------- */
         function render(state) {
-          const props = queryProps(sszvis.measureDimensions(config.id));
+          var props = queryProps(sszvis.measureDimensions(config.id));
 
-          const legendLayout = sszvis.colorLegendLayout(
+          var legendLayout = sszvis.colorLegendLayout(
             {
               axisLabels: state.categories,
               legendLabels: state.stackGroup,
@@ -152,65 +150,67 @@
             config.id,
           );
 
-          const bounds = sszvis.bounds(
+          var bounds = sszvis.bounds(
             { top: 10, bottom: props.bottomPadding, left: 10, right: 10 },
             config.id,
           );
 
           // Scales
 
-          const xaxis2Scale = d3
+          var xaxis2Scale = d3
             .scaleBand()
             .domain(state.nestedCategories)
             .range([50, bounds.innerWidth])
             .paddingInner(0.2)
             .paddingOuter(0);
 
-          const xScale = d3
+          var xScale = d3
             .scaleBand()
             .domain(state.categories)
             .range([0, xaxis2Scale.bandwidth()])
             .paddingInner(0.2)
             .paddingOuter(0);
 
-          const yScale = d3
+          var yScale = d3
             .scaleLinear()
             .domain([0, 100])
             .range([bounds.innerHeight - 10, 0]);
 
-          const cScale = legendLayout.scale;
-          const colorLegend = legendLayout.legend;
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer(config.id, bounds, {
               title: "",
               description: "",
             })
             .datum(state.stackedData);
 
-          const tooltipLayer = sszvis
+          var tooltipLayer = sszvis
             .createHtmlLayer(config.id)
             .datum(state.selection);
 
           // Components
 
-          const xAxis = sszvis.axisX
+          var xAxis = sszvis.axisX
             .ordinal()
             .scale(xaxis2Scale)
             .orient("bottom")
             .tickSize(0)
-            .tickFormat((d) => d)
+            .tickFormat(function (d) {
+              return d;
+            })
             .title(config.xLabel);
 
-          const yAxis = sszvis
+          var yAxis = sszvis
             .axisY()
             .scale(yScale)
             .orient("right")
             .title(config.yLabel)
             .ticks(config.ticks)
-            .tickFormat((d) => {
+            .tickFormat(function (d) {
               if (d === 0) {
                 return sszvis.formatPercent(d);
               }
@@ -219,38 +219,48 @@
             .dyTitle(-20)
             .title("Anteil");
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .header(
               sszvis
                 .modularTextHTML()
-                .bold((d) => cAcc(d.data))
+                .bold(function (d) {
+                  return cAcc(d.data);
+                })
                 .plain("/")
-                .plain((d) => xjAcc(d.data)),
+                .plain(function (d) {
+                  return xjAcc(d.data);
+                }),
             )
-            .body((d) => [
-              ["Anteil", sszvis.formatPercent(yAcc(d.data))],
-              [
-                "95 % Konfidenzintervall",
-                kAcc(d.data).replace(" bis", " % bis") + " %",
-              ],
-            ])
+            .body(function (d) {
+              return [
+                ["Anteil", sszvis.formatPercent(yAcc(d.data))],
+                [
+                  "95 % Konfidenzintervall",
+                  kAcc(d.data).replace(" bis", " % bis") + " %",
+                ],
+              ];
+            })
             .visible(isSelected);
 
-          const xaxis2Group = sszvis
+          var xaxis2Group = sszvis
             .nestedStackedBarsVertical()
-            .offset((d) => xaxis2Scale(d.key))
+            .offset(function (d) {
+              return xaxis2Scale(d.key);
+            })
             .xScale(xScale)
             .xAcc(xjAcc)
             .yScale(yScale)
-            .fill((d) => cScale(cAcc(d.data)))
+            .fill(function (d) {
+              return cScale(cAcc(d.data));
+            })
             .tooltip(tooltip);
 
           // Rendering
 
-          const nestedCategories = chartLayer
+          var nestedCategories = chartLayer
             .selectGroup("age-groups")
             .call(xaxis2Group);
 
@@ -276,7 +286,7 @@
 
           // Interaction
 
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .panning()
             .elementSelector(".sszvis-bar")
             .on("start", actions.showTooltip)

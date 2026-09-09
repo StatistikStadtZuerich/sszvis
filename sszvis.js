@@ -6,11 +6,11 @@
 })(this, (function (exports, d3) { 'use strict';
 
     d3.selection.prototype.selectDiv = function (key) {
-      return this.selectAll("[data-d3-selectdiv=\"".concat(key, "\"]")).data(d => [d]).join("div").attr("data-d3-selectdiv", key).style("position", "absolute");
+      return this.selectAll(`[data-d3-selectdiv="${key}"]`).data(d => [d]).join("div").attr("data-d3-selectdiv", key).style("position", "absolute");
     };
 
     d3.selection.prototype.selectGroup = function (key) {
-      return this.selectAll("[data-d3-selectgroup=\"".concat(key, "\"]")).data(d => [d]).join("g").attr("data-d3-selectgroup", key);
+      return this.selectAll(`[data-d3-selectgroup="${key}"]`).data(d => [d]).join("g").attr("data-d3-selectgroup", key);
     };
 
     /**
@@ -68,8 +68,7 @@
        *         sszvis.component. Sets the returned value to the given property
        * @return {sszvis.component}
        */
-      sszvisComponent.prop = function (prop) {
-        let setter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : identity$1;
+      sszvisComponent.prop = (prop, setter = identity$1) => {
         // The accessor is created from a runtime prop name, so it cannot be assigned through
         // a statically known key.
         Reflect.set(sszvisComponent, prop, accessor$1(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent));
@@ -84,11 +83,8 @@
        */
       sszvisComponent.delegate = (prop, delegate) => {
         // Same as in prop(): a runtime prop name on both the component and the delegate.
-        const delegated = function () {
+        const delegated = (...args) => {
           const target = Reflect.get(delegate, prop);
-          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-          }
           const result = target.apply(delegate, slice(args));
           return args.length === 0 ? result : sszvisComponent;
         };
@@ -155,14 +151,10 @@
      * @param  {Function} [setter] Transforms the data on set
      * @return {Function} The accessor function
      */
-    function accessor$1(props, prop) {
-      let setter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : identity$1;
+    function accessor$1(props, prop, setter = identity$1) {
       // Getter when called with no arguments, setter otherwise - the two return different
       // things, and the prop's own declaration in the component interface states which.
-      return function () {
-        for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          args[_key2] = arguments[_key2];
-        }
+      return function (...args) {
         if (args.length === 0) return props[prop];
         props[prop] = setter.apply(null, args);
         return this;
@@ -223,10 +215,7 @@
       // untouched for anything else, so n > 10, negative and non-integer n do no limiting at
       // all. That passthrough is preserved here, quirk and all.
       if (!Number.isInteger(n) || n < 0 || n > 10) return callWithAnyArgs;
-      const limited = function () {
-        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
-        }
+      const limited = function (...args) {
         // Build exactly n slots, so the wrapped function sees arguments.length === n whether
         // the caller passed too many or too few.
         const slots = Array.from({
@@ -256,16 +245,10 @@
      */
     // The chain's intermediate types depend on how many functions were passed and cannot be
     // related to one another without a fixed-arity overload per length.
-    const compose = function () {
-      for (var _len2 = arguments.length, fns = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        fns[_key2] = arguments[_key2];
-      }
+    const compose = (...fns) => {
       const start = fns.length - 1;
-      return function () {
+      return function (...args) {
         let i = start;
-        for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-          args[_key3] = arguments[_key3];
-        }
         let result = Reflect.apply(fns[i], this, args);
         while (i--) result = fns[i].call(this, result);
         return result;
@@ -401,7 +384,7 @@
       if (typeof result === "function") {
         return result();
       }
-      throw new Error("[foldPattern] No definition provided for key: ".concat(key));
+      throw new Error(`[foldPattern] No definition provided for key: ${key}`);
     };
     /**
      * fn.hashableSet
@@ -472,10 +455,7 @@
      * which calls f on its arguments and returns the
      * boolean opposite of f's return value.
      */
-    const not = f => function () {
-      for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        args[_key4] = arguments[_key4];
-      }
+    const not = f => function (...args) {
       return !Reflect.apply(f, this, args);
     };
     /**
@@ -601,18 +581,15 @@
      * now reflects use rather than first insertion. Every call trims, hit or miss, so a cache filled
      * past the limit from outside is brought back to it by the next call.
      */
-    const memoize = (func, resolver
-    // The cache key is whatever the resolver returned, or - with no resolver - the first
-    // argument itself, which may be any value including an object compared by identity.
-    ) => {
+    const memoize = (func, resolver) => {
       if (typeof func !== "function" || resolver != null && typeof resolver !== "function") {
         throw new TypeError("Expected a function");
       }
-      const memoized = function () {
-        if (!resolver && arguments.length > 1) {
+      const memoized = (...args) => {
+        if (!resolver && args.length > 1) {
           throw new TypeError("[fn.memoize] A function called with more than one argument needs a resolver: the " + "default cache key is the first argument alone, so differing later arguments would " + "return the first call's result.");
         }
-        const key = resolver ? resolver(...arguments) : arguments.length <= 0 ? undefined : arguments[0];
+        const key = resolver ? resolver(...args) : args[0];
         const cache = memoized.cache;
         let result;
         if (cache.has(key)) {
@@ -622,7 +599,7 @@
           cache.delete(key);
           cache.set(key, result);
         } else {
-          result = func(...arguments);
+          result = func(...args);
           memoized.cache = cache.set(key, result) || cache;
         }
         // Iteration starts at the oldest entry, so the first key is the least recently used one. A
@@ -692,7 +669,7 @@
           node: null
         }, ...props.items];
         // Create or select breadcrumb container
-        const breadcrumbContainer = props.renderInto.selectDiv("breadcrumbs").style("position", "absolute").style("top", "-40px").style("left", "0px").style("width", "".concat(props.width, "px")).style("height", "30px").style("display", "flex").style("align-items", "center").style("gap", "8px").style("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').style("font-size", "14px");
+        const breadcrumbContainer = props.renderInto.selectDiv("breadcrumbs").style("position", "absolute").style("top", "-40px").style("left", "0px").style("width", `${props.width}px`).style("height", "30px").style("display", "flex").style("align-items", "center").style("gap", "8px").style("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').style("font-size", "14px");
         // Data join for breadcrumb items
         const crumbs = breadcrumbContainer.selectAll("span.sszvis-breadcrumb-item").data(allItems, d => props.label(d));
         // Enter: create new breadcrumb elements
@@ -837,8 +814,7 @@
      * @param selection A d3 selection of SVG linear gradient elements
      * @param gradientId The id to write on the gradient. Defaults to `lake-fade-gradient`.
      */
-    const mapLakeFadeGradient = function (selection) {
-      let gradientId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : LAKE_FADE_GRADIENT_ID;
+    const mapLakeFadeGradient = (selection, gradientId = LAKE_FADE_GRADIENT_ID) => {
       const stops = [{
         offset: 0.74,
         opacity: 1
@@ -860,10 +836,9 @@
      * @param selection A d3 selection of SVG mask elements
      * @param gradientId The id of the gradient to fill the mask with. Defaults to `lake-fade-gradient`.
      */
-    const mapLakeGradientMask = function (selection) {
-      let gradientId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : LAKE_FADE_GRADIENT_ID;
+    const mapLakeGradientMask = (selection, gradientId = LAKE_FADE_GRADIENT_ID) => {
       selection.attr("maskContentUnits", "objectBoundingBox");
-      selection.selectAll("rect").data([0]).join("rect").attr("fill", "url(#".concat(gradientId, ")")).attr("width", 1).attr("height", 1);
+      selection.selectAll("rect").data([0]).join("rect").attr("fill", `url(#${gradientId})`).attr("width", 1).attr("height", 1);
     };
     /**
      * The pattern for the data area texture
@@ -923,7 +898,7 @@
      * parameters - no single non-generic type accepts every selection.
      */
     function ensureDefsElement(selection, type, elementId) {
-      return ensureDefsSelection(selection).selectAll(":scope > ".concat(type)).filter(function () {
+      return ensureDefsSelection(selection).selectAll(`:scope > ${type}`).filter(function () {
         return this.getAttribute("id") === elementId;
       }).data([0])
       // join() reports the union of the elements it entered and those selectAll found.
@@ -973,16 +948,7 @@
         dataArea.attr("cx", d => Number(props.x(d))).attr("cy", d => Number(props.y(d))).attr("r", d => Number(props.r(d))).attr("fill", "url(#data-area-pattern)");
         if (props.caption) {
           const dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data).join("text").classed("sszvis-dataareacircle__caption", true);
-          dataCaptions.attr("x", d => Number(props.x(d))).attr("y", d => Number(props.y(d))).attr("dx", props.dx ? d => {
-            var _props$dx;
-            return Number((_props$dx = props.dx) === null || _props$dx === void 0 ? void 0 : _props$dx.call(props, d));
-          } : null).attr("dy", props.dy ? d => {
-            var _props$dy;
-            return Number((_props$dy = props.dy) === null || _props$dy === void 0 ? void 0 : _props$dy.call(props, d));
-          } : null).text(props.caption ? d => {
-            var _props$caption;
-            return ((_props$caption = props.caption) === null || _props$caption === void 0 ? void 0 : _props$caption.call(props, d)) || "";
-          } : null);
+          dataCaptions.attr("x", d => Number(props.x(d))).attr("y", d => Number(props.y(d))).attr("dx", props.dx ? d => Number(props.dx?.(d)) : null).attr("dy", props.dy ? d => Number(props.dy?.(d)) : null).text(props.caption ? d => props.caption?.(d) || "" : null);
         }
       });
     }
@@ -1227,7 +1193,7 @@
             const vx = x2 - x1;
             const vy = y2 - y1;
             const angle = Math.atan2(vy, vx) * 180 / Math.PI;
-            return "translate(".concat((x1 + x2) / 2, ",").concat((y1 + y2) / 2, ") rotate(").concat(angle, ")");
+            return `translate(${(x1 + x2) / 2},${(y1 + y2) / 2}) rotate(${angle})`;
           }).attr("dx", props.dx ? Number(props.dx(data[0])) : null).attr("dy", props.dy ? Number(props.dy(data[0])) : null).text(props.caption ? props.caption(data[0]) : null);
         }
       });
@@ -1292,7 +1258,7 @@
       const roundNumber = compose(Math.floor, Number);
       return transformStr.replace(/(translate\()\s*([\d ,.-]+?)\s*(\))/i, (_, left, vecStr, right) => {
         const roundVec = vecStr.split(/[\s,]+/).map(roundNumber).join(",");
-        return "".concat(left).concat(roundVec).concat(right);
+        return `${left}${roundVec}${right}`;
       });
     };
     /**
@@ -1338,7 +1304,7 @@
      * @return {string}       The translate string
      */
     function translateString(x, y) {
-      return "translate(".concat(x, ",").concat(y, ")");
+      return `translate(${x},${y})`;
     }
 
     /**
@@ -1519,7 +1485,7 @@
      */
     const formatNumber = d => {
       let p;
-      const dAbs = Math.abs(d !== null && d !== void 0 ? d : 0);
+      const dAbs = Math.abs(d ?? 0);
       if (d == null || Number.isNaN(d)) {
         return "–"; // This is an en-dash
       }
@@ -1536,7 +1502,7 @@
         p = Math.min(1, decimalPlaces(d));
         // Where there are decimals, round to 1 position
         // To display more precision, use the preciseNumber function.
-        return stripTrailingZeroes(format(".".concat(p, "f"))(d));
+        return stripTrailingZeroes(format(`.${p}f`)(d));
       }
       // 41       -> "41"
       // 41.1     -> "41.1"
@@ -1545,7 +1511,7 @@
         p = Math.min(2, decimalPlaces(d));
         // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
         // but not more. To display more precision, use the preciseNumber function.
-        return stripTrailingZeroes(format(".".concat(p, "f"))(d));
+        return stripTrailingZeroes(format(`.${p}f`)(d));
       }
       // If abs(num) is not > 0, num is 0
       // 0       -> "0"
@@ -1558,7 +1524,7 @@
       if (arguments.length > 1 && d !== undefined) return formatPreciseNumber(p)(d);
       return x => {
         const dAbs = Math.abs(x);
-        return dAbs >= 100 && dAbs < 1e4 ? format(".".concat(p, "f"))(x) : format(",.".concat(p, "f"))(x);
+        return dAbs >= 100 && dAbs < 1e4 ? format(`.${p}f`)(x) : format(`,.${p}f`)(x);
       };
     }
     /**
@@ -1566,14 +1532,14 @@
      */
     const formatPercent = d => {
       // Uses unix thin space
-      return "".concat(formatNumber(d), " %");
+      return `${formatNumber(d)} %`;
     };
     /**
      * Format percentages on the range 0 - 1
      */
     const formatFractionPercent = d => {
       // Uses unix thin space
-      return "".concat(formatNumber(d * 100), " %");
+      return `${formatNumber(d * 100)} %`;
     };
     /**
      * Default formatter for text
@@ -1682,7 +1648,7 @@
           return crispX(d) + offset;
         }).attr("y", props.top - 10).style("text-anchor", d => {
           return props.flip(d) ? "end" : "start";
-        }).text("Total ".concat(formatNumber(props.total)));
+        }).text(`Total ${formatNumber(props.total)}`);
         const totalNode = total.node();
         let totalContour = selection.select(".sszvis-rangeRuler__total-contour");
         if (totalContour.empty()) {
@@ -1743,16 +1709,7 @@
         dataArea.attr("x", d => Number(props.x(d))).attr("y", d => Number(props.y(d))).attr("width", d => Number(props.width(d))).attr("height", d => Number(props.height(d))).attr("fill", "url(#data-area-pattern)");
         if (props.caption) {
           const dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data).join("text").classed("sszvis-dataarearectangle__caption", true);
-          dataCaptions.attr("x", d => Number(props.x(d)) + Number(props.width(d)) / 2).attr("y", d => Number(props.y(d)) + Number(props.height(d)) / 2).attr("dx", props.dx ? d => {
-            var _props$dx;
-            return Number((_props$dx = props.dx) === null || _props$dx === void 0 ? void 0 : _props$dx.call(props, d));
-          } : null).attr("dy", props.dy ? d => {
-            var _props$dy;
-            return Number((_props$dy = props.dy) === null || _props$dy === void 0 ? void 0 : _props$dy.call(props, d));
-          } : null).text(d => {
-            var _props$caption;
-            return ((_props$caption = props.caption) === null || _props$caption === void 0 ? void 0 : _props$caption.call(props, d)) || "";
-          });
+          dataCaptions.attr("x", d => Number(props.x(d)) + Number(props.width(d)) / 2).attr("y", d => Number(props.y(d)) + Number(props.height(d)) / 2).attr("dx", props.dx ? d => Number(props.dx?.(d)) : null).attr("dy", props.dy ? d => Number(props.dy?.(d)) : null).text(d => props.caption?.(d) || "");
         }
       });
     }
@@ -1797,16 +1754,15 @@
     /** Vertical nudge that drops a label's baseline clear of its dot. */
     const LABEL_BASELINE_NUDGE$1 = 5;
     const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
-      var _props$top;
       const selection = d3.select(this);
       const props = selection.props();
-      const labelId = props.labelId || (d => "".concat(props.x(d), "_").concat(props.y(d)));
+      const labelId = props.labelId || (d => `${props.x(d)}_${props.y(d)}`);
       // `top` is an upper bound on the rule, not its anchor: the rule still starts at its
       // datum, but a datum above `top` is clamped there so the rule stays inside the chart
       // area. `??` rather than `||` so that a `top` of 0 - what every caller passes - binds.
       // Unlike control/handleRuler, which draws a single full-height rule anchored at `top`,
       // this component draws one rule per datum, so it clamps instead of anchoring.
-      const top = (_props$top = props.top) !== null && _props$top !== void 0 ? _props$top : Number.NEGATIVE_INFINITY;
+      const top = props.top ?? Number.NEGATIVE_INFINITY;
       const ruler = selection.selectAll(".sszvis-ruler__rule").data(data, d => labelId(d)).join("line").classed("sszvis-ruler__rule", true);
       ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", d => Math.max(Number(props.y(d)), top)).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
       const dot = selection.selectAll(".sszvis-ruler__dot").data(data, d => labelId(d)).join("circle").classed("sszvis-ruler__dot", true);
@@ -2006,7 +1962,7 @@
         const isSmall = isDef(props.header) && !isDef(props.body) || !isDef(props.header) && isDef(props.body);
         // Select tooltip elements
         const tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData).join("div");
-        tooltip.style("pointer-events", "none").style("opacity", d => String(props.opacity(d))).style("padding-top", d => props.orientation(d) === "top" ? "".concat(TIP_SIZE, "px") : null).style("padding-right", d => props.orientation(d) === "right" ? "".concat(TIP_SIZE, "px") : null).style("padding-bottom", d => props.orientation(d) === "bottom" ? "".concat(TIP_SIZE, "px") : null).style("padding-left", d => props.orientation(d) === "left" ? "".concat(TIP_SIZE, "px") : null).classed("sszvis-tooltip", true);
+        tooltip.style("pointer-events", "none").style("opacity", d => String(props.opacity(d))).style("padding-top", d => props.orientation(d) === "top" ? `${TIP_SIZE}px` : null).style("padding-right", d => props.orientation(d) === "right" ? `${TIP_SIZE}px` : null).style("padding-bottom", d => props.orientation(d) === "bottom" ? `${TIP_SIZE}px` : null).style("padding-left", d => props.orientation(d) === "left" ? `${TIP_SIZE}px` : null).classed("sszvis-tooltip", true);
         // Enter: tooltip background
         const enterBackground = tooltip.selectAll(".sszvis-tooltip__background").data([0]).join("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
         const enterBackgroundPath = enterBackground.selectAll("path").data([0]).join("path");
@@ -2044,29 +2000,29 @@
           switch (orientation) {
             case "top":
               {
-                tip.style("left", "".concat(d.x - dimensions.width / 2, "px")).style("top", "".concat(d.y + Number(props.dy(d)), "px"));
+                tip.style("left", `${d.x - dimensions.width / 2}px`).style("top", `${d.y + Number(props.dy(d))}px`);
                 break;
               }
             case "bottom":
               {
-                tip.style("left", "".concat(d.x - dimensions.width / 2, "px")).style("top", "".concat(d.y - Number(props.dy(d)) - dimensions.height, "px"));
+                tip.style("left", `${d.x - dimensions.width / 2}px`).style("top", `${d.y - Number(props.dy(d)) - dimensions.height}px`);
                 break;
               }
             case "left":
               {
-                tip.style("left", "".concat(d.x + Number(props.dx(d)), "px")).style("top", "".concat(d.y - dimensions.height / 2, "px"));
+                tip.style("left", `${d.x + Number(props.dx(d))}px`).style("top", `${d.y - dimensions.height / 2}px`);
                 break;
               }
             case "right":
               {
-                tip.style("left", "".concat(d.x - Number(props.dx(d)) - dimensions.width, "px")).style("top", "".concat(d.y - dimensions.height / 2, "px"));
+                tip.style("left", `${d.x - Number(props.dx(d)) - dimensions.width}px`).style("top", `${d.y - dimensions.height / 2}px`);
                 break;
               }
           }
           // Position background element
           const bgHeight = dimensions.height + 2 * BLUR_PADDING;
           const bgWidth = dimensions.width + 2 * BLUR_PADDING;
-          tip.select(".sszvis-tooltip__background").attr("height", bgHeight).attr("width", bgWidth).style("left", "".concat(-BLUR_PADDING, "px")).style("top", "".concat(-BLUR_PADDING, "px")).select("path").attr("d", tooltipBackgroundGenerator([BLUR_PADDING, BLUR_PADDING], [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING], orientation, isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS));
+          tip.select(".sszvis-tooltip__background").attr("height", bgHeight).attr("width", bgWidth).style("left", `${-BLUR_PADDING}px`).style("top", `${-BLUR_PADDING}px`).select("path").attr("d", tooltipBackgroundGenerator([BLUR_PADDING, BLUR_PADDING], [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING], orientation, isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS));
         });
       });
     };
@@ -2074,8 +2030,8 @@
      * formatTable
      */
     function formatTable(rows) {
-      const tableBody = rows.map(row => "<tr>".concat(row.map(cell => "<td>".concat(cell, "</td>")).join(""), "</tr>")).join("");
-      return "<table class=\"sszvis-tooltip__body__table\">".concat(tableBody, "</table>");
+      const tableBody = rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("");
+      return `<table class="sszvis-tooltip__body__table">${tableBody}</table>`;
     }
     function x(d) {
       return d[0];
@@ -2905,10 +2861,9 @@
       const supportsCanvas = !!document.createElement("canvas").getContext;
       return !supportsCanvas;
     };
-    const fallbackRender = function (selector) {
-      let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
-        src: "fallback.png"
-      };
+    const fallbackRender = (selector, options = {
+      src: "fallback.png"
+    }) => {
       const selection = isSelection(selector) ? selector : d3.select(selector);
       selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
     };
@@ -2962,12 +2917,11 @@
     /* Helper functions
     ----------------------------------------------- */
     function logger(type) {
-      return function () {
-        var _console;
-        if ((_console = console) !== null && _console !== void 0 && _console[type]) {
+      return (...args) => {
+        if (console?.[type]) {
           // The console API formats multiple arguments as one entry, which keeps a message
           // and its cause visually linked; logging them one at a time would split them up.
-          console[type](...arguments);
+          console[type](...args);
         }
       };
     }
@@ -2983,7 +2937,8 @@
     	if (hasRequiredNanoThrottle) return nanoThrottle;
     	hasRequiredNanoThrottle = 1;
     	nanoThrottle = function (callback, ms, trailing) {
-    	  var t = 0, call;
+    	  var t = 0,
+    	    call;
     	  arguments.length < 3 && (trailing = true);
     	  return function () {
     	    var args = arguments;
@@ -2997,7 +2952,7 @@
     	      }, ms);
     	    };
     	    if (new Date().getTime() > t) call();
-    	  }
+    	  };
     	};
     	return nanoThrottle;
     }
@@ -3077,7 +3032,7 @@
       // Registering a non-callable listener can never work, so it is rejected here rather than
       // left to fail inside `trigger` one resize event later, far from the call that caused it.
       if (typeof cb !== "function") {
-        throw new TypeError("[sszvis.viewport] The listener for \"".concat(name, "\" must be a function, got ").concat(typeof cb, "."));
+        throw new TypeError(`[sszvis.viewport] The listener for "${name}" must be a function, got ${typeof cb}.`);
       }
       if (!callbacks[name]) {
         callbacks[name] = [];
@@ -3092,19 +3047,17 @@
       callbacks[name] = cb === undefined ? [] : callbacks[name].filter(fn => fn !== cb);
       return this;
     }
-    function trigger(name) {
+    function trigger(name, ...evtArgs) {
       if (callbacks[name]) {
-        for (var _len = arguments.length, evtArgs = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          evtArgs[_key - 1] = arguments[_key];
-        }
         // A copy, so that a listener which registers or releases listeners cannot change the
         // list being iterated. Each call is isolated: one failing chart must not silence the
         // charts after it, nor let the error escape into the throttled window handler.
+        // oxlint-disable-next-line unicorn/no-useless-spread -- the copy is required: a handler may register or remove callbacks while we iterate.
         for (const fn of [...callbacks[name]]) {
           try {
             Reflect.apply(fn, null, evtArgs);
           } catch (error$1) {
-            error("[sszvis.viewport] A \"".concat(name, "\" listener threw:"), error$1);
+            error(`[sszvis.viewport] A "${name}" listener threw:`, error$1);
           }
         }
       }
@@ -3160,13 +3113,12 @@
      *
      * @module sszvis/app
      */
-    const app = _ref => {
-      let {
-        init,
-        render,
-        actions,
-        fallback
-      } = _ref;
+    const app = ({
+      init,
+      render,
+      actions,
+      fallback
+    }) => {
       let renderScheduled = false;
       // Whether `render` is on the stack right now, which is what tells a dispatch made from
       // inside render apart from one that should coalesce into the frame already queued.
@@ -3184,10 +3136,7 @@
       // The dispatchers mirror the keys of the actions object, which is what
       // ActionDispatchers<Actions> describes but Object.keys cannot express.
       const actionDispatchers = Object.keys(actionMap).reduce((acc, key) => {
-        acc[key] = function () {
-          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-          }
+        acc[key] = (...args) => {
           dispatch(key, args);
         };
         return acc;
@@ -3203,7 +3152,7 @@
           // painting, so it needs one of its own - and a render that dispatches unconditionally
           // would then never stop, which is what this cap is for.
           if (cascadedRenders >= MAX_CASCADED_RENDERS) {
-            warn("[sszvis.app] Stopped after ".concat(MAX_CASCADED_RENDERS, " renders scheduled from inside \"render\". Dispatch from render only on a condition that eventually becomes false."));
+            warn(`[sszvis.app] Stopped after ${MAX_CASCADED_RENDERS} renders scheduled from inside "render". Dispatch from render only on a condition that eventually becomes false.`);
             return;
           }
           cascadedRenders += 1;
@@ -3248,7 +3197,7 @@
           // function and fails in the caller's own code. The names that reach here as strings come
           // from effects, at an arbitrary later point, so this is reported like any other runtime
           // failure instead of thrown: one mistyped dispatch should not take the chart down.
-          reportError("Dispatch failed", new Error("Action \"".concat(action, "\" is not defined, add it to \"actions\".")));
+          reportError("Dispatch failed", new Error(`Action "${action}" is not defined, add it to "actions".`));
           return;
         }
         const draft = createDraft(state);
@@ -3307,14 +3256,14 @@
     const MAX_CASCADED_RENDERS = 10;
     function invariant(condition, message) {
       if (!condition) {
-        throw new Error("[sszvis.app] ".concat(message));
+        throw new Error(`[sszvis.app] ${message}`);
       }
     }
     /** Reports a runtime failure without escaping as an unhandled rejection. The original error
      * is kept as the `cause` so its message and stack are not lost. */
     function reportError(context, cause) {
       const message = cause instanceof Error ? cause.message : String(cause);
-      error(new Error("[sszvis.app] ".concat(context, ": ").concat(message), {
+      error(new Error(`[sszvis.app] ${context}: ${message}`, {
         cause
       }));
     }
@@ -3625,7 +3574,7 @@
     };
     const aspectRatioAuto = measurement => {
       const bp = breakpointFind(breakpointDefaultSpec(), measurement);
-      const ar = defaultAspectRatios[(bp === null || bp === void 0 ? void 0 : bp.name) || "_"];
+      const ar = defaultAspectRatios[bp?.name || "_"];
       return ar(measurement.width);
     };
 
@@ -3730,7 +3679,7 @@
     function resolvePadding(padding, name) {
       if (padding === undefined) return DEFAULT_PADDING;
       if (Number.isFinite(padding)) return padding;
-      warn("sszvis.svgUtils.textWrap: ignoring a non-finite ".concat(name, ", using ").concat(DEFAULT_PADDING));
+      warn(`sszvis.svgUtils.textWrap: ignoring a non-finite ${name}, using ${DEFAULT_PADDING}`);
       return DEFAULT_PADDING;
     }
     function textWrap(
@@ -3744,7 +3693,6 @@
       const innerWidth = width - padRightLeft * 2; // Take the padding into account
       const arrLineCreatedCount = [];
       selection.each(function () {
-        var _text$attr;
         const text = d3.select(this);
         const words = text.text().split(/[\t\n\v\f\r ]+/)
         // Splitting text with leading or trailing whitespace yields empty tokens, which
@@ -3757,7 +3705,7 @@
         let createdLineCount = 1; //Total line created count
         const textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
         //Clean the data in case <text> does not define those values
-        const parsedDy = Number.parseFloat((_text$attr = text.attr("dy")) !== null && _text$attr !== void 0 ? _text$attr : "");
+        const parsedDy = Number.parseFloat(text.attr("dy") ?? "");
         const dy = Number.isNaN(parsedDy) ? 0 : parsedDy; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
         //Offset the text position based on the text-anchor
         // Don't wrap the 'normal untranslated' <text> element and the translated
@@ -3779,10 +3727,9 @@
         const x = xByAnchor[textAlign];
         const yAttr = text.attr("y");
         const y = +(yAttr === null ? padTopBottom : yAttr);
-        let tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", "".concat(dy, "em"));
+        let tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", `${dy}em`);
         while (words.length > 0) {
-          var _words$pop;
-          const word = (_words$pop = words.pop()) !== null && _words$pop !== void 0 ? _words$pop : ""; // the loop guard guarantees a value
+          const word = words.pop() ?? ""; // the loop guard guarantees a value
           line.push(word);
           tspan.text(line.join(" "));
           const tspanNode = tspan.node();
@@ -3790,7 +3737,7 @@
             line.pop();
             tspan.text(line.join(" "));
             line = [word];
-            tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", "".concat(++lineNumber * lineHeight + dy, "em")).text(word);
+            tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", `${++lineNumber * lineHeight + dy}em`).text(word);
             ++createdLineCount;
           }
         }
@@ -3871,7 +3818,6 @@
       //this property is typically used for the x-axis, but not for the y axis
       //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels
       .prop("yOffset").yOffset(0).render(function () {
-        var _slantLabel$props$ori;
         const selection = d3.select(this);
         const props = selection.props();
         const isBottom = !props.vertical && props.orient === "bottom";
@@ -3938,12 +3884,9 @@
             // `null` is named outright: it is d3's own idiom for "reset to the default format",
             // and "got object" is the least useful thing that could be said about it.
             const got = tickFormat === null ? "null" : typeof tickFormat;
-            throw new TypeError("axis: tickFormat must be a function from a tick value to its label, got ".concat(got));
+            throw new TypeError(`axis: tickFormat must be a function from a tick value to its label, got ${got}`);
           }
-          axisDelegate.tickFormat(d => {
-            var _tickFormat;
-            return (_tickFormat = tickFormat(d)) !== null && _tickFormat !== void 0 ? _tickFormat : "";
-          });
+          axisDelegate.tickFormat(d => tickFormat(d) ?? "");
         }
         if (props.tickSize !== undefined) {
           axisDelegate.tickSize(props.tickSize);
@@ -3987,8 +3930,7 @@
         // hide ticks which are too close to one endpoint
         const rangeExtent = range(axisScale);
         tickGroups.selectAll("line").each(function (d) {
-          var _axisScale;
-          const pos = (_axisScale = axisScale(d)) !== null && _axisScale !== void 0 ? _axisScale : 0,
+          const pos = axisScale(d) ?? 0,
             d3this = d3.select(this);
           const min = rangeExtent[0];
           const max = rangeExtent[1];
@@ -4040,10 +3982,9 @@
           const min = alignmentBounds[0];
           const max = alignmentBounds[1];
           tickTexts.style("text-anchor", d => {
-            var _axisScale2;
-            const value = (_axisScale2 = axisScale(d)) !== null && _axisScale2 !== void 0 ? _axisScale2 : 0;
-            const minVal = min !== null && min !== void 0 ? min : 0;
-            const maxVal = max !== null && max !== void 0 ? max : 0;
+            const value = axisScale(d) ?? 0;
+            const minVal = min ?? 0;
+            const maxVal = max ?? 0;
             if (absDistance(value, minVal) < TICK_END_THRESHOLD) {
               return "start";
             } else if (absDistance(value, maxVal) < TICK_END_THRESHOLD) {
@@ -4055,22 +3996,18 @@
         if (defined(props.textWrap)) {
           tickTexts.call(textWrap, props.textWrap);
         }
-        if (props.slant && props.orient && (_slantLabel$props$ori = slantLabel[props.orient]) !== null && _slantLabel$props$ori !== void 0 && _slantLabel$props$ori[props.slant]) {
+        if (props.slant && props.orient && slantLabel[props.orient]?.[props.slant]) {
           tickTexts.call(slantLabel[props.orient][props.slant]);
         }
         // Highlight axis labels that return true for props.highlightTick.
         if (props.highlightTick) {
           const activeBounds = [];
           const passiveBounds = [];
-          tickTexts.classed("hidden", false).classed("active", d => {
-            var _props$highlightTick;
-            return ((_props$highlightTick = props.highlightTick) === null || _props$highlightTick === void 0 ? void 0 : _props$highlightTick.call(props, d)) || false;
-          });
+          tickTexts.classed("hidden", false).classed("active", d => props.highlightTick?.(d) || false);
           // Hide axis labels that overlap with highlighted labels unless
           // the labels are slanted (in which case the bounding boxes overlap)
           if ((props.hideLabelThreshold || 0) > 0 && !props.slant) {
             tickTexts.each(function (d) {
-              var _props$highlightTick2;
               // although getBoundingClientRect returns coordinates relative to the window, not the document,
               // this should still work, since all tick bounds are affected equally by scroll position changes.
               const bcr = this.getBoundingClientRect();
@@ -4083,7 +4020,7 @@
                   left: bcr.left
                 }
               };
-              if ((_props$highlightTick2 = props.highlightTick) !== null && _props$highlightTick2 !== void 0 && _props$highlightTick2.call(props, d)) {
+              if (props.highlightTick?.(d)) {
                 b.bounds.left -= props.hideLabelThreshold || 0;
                 b.bounds.right += props.hideLabelThreshold || 0;
                 activeBounds.push(b);
@@ -4362,15 +4299,9 @@
         if (props.draggable) {
           layer.classed("sszvis-interactive--draggable", true);
         }
-        layer.attr("x", xExtent[0]).attr("y", yExtent[0]).attr("width", xExtent[1] - xExtent[0]).attr("height", yExtent[1] - yExtent[0]).attr("fill", "transparent").on("mouseover", function () {
-          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-          }
+        layer.attr("x", xExtent[0]).attr("y", yExtent[0]).attr("width", xExtent[1] - xExtent[0]).attr("height", yExtent[1] - yExtent[0]).attr("fill", "transparent").on("mouseover", function (...args) {
           if (this) event.apply("start", this, args);
-        }).on("mousedown", function () {
-          for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-            args[_key2] = arguments[_key2];
-          }
+        }).on("mousedown", function (...args) {
           const target = this;
           const doc = d3.select(document);
           const win = d3.select(window);
@@ -4400,11 +4331,11 @@
           // Skip touch-originated mouse events on devices that support both
           // This check helps avoid duplicate event handling on touch devices
           const sourceCapabilities = e.sourceCapabilities;
-          if (sourceCapabilities !== null && sourceCapabilities !== void 0 && sourceCapabilities.firesTouchEvents) return;
+          if (sourceCapabilities?.firesTouchEvents) return;
           let xy;
           try {
             xy = d3.pointer(e);
-          } catch (_unused) {
+          } catch {
             // Silently fail on invalid events (e.g., when pointer() throws due to invalid coordinates)
             return;
           }
@@ -4417,10 +4348,7 @@
           } else {
             event.apply("move", target, [e, x, y]);
           }
-        }).on("mouseout", function () {
-          for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-            args[_key3] = arguments[_key3];
-          }
+        }).on("mouseout", function (...args) {
           if (this) event.apply("end", this, args);
         }).on("touchstart", function (e) {
           const target = this;
@@ -4498,10 +4426,7 @@
       // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
       // callback to never. Narrowing to the four event names would type the callback properly but
       // would also reject the namespaced typenames d3 accepts at runtime, such as "move.tooltip".
-      moveComponent.on = function () {
-        for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-          args[_key4] = arguments[_key4];
-        }
+      moveComponent.on = (...args) => {
         const value = event.on.apply(event, args);
         return value === event ? moveComponent : value;
       };
@@ -4698,31 +4623,16 @@
         const selection = d3.select(this);
         const props = selection.props();
         const elements = selection.selectAll(props.elementSelector);
-        elements.attr("data-sszvis-behavior-pannable", "").classed("sszvis-interactive", true).on("mouseenter", function () {
-          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-          }
+        elements.attr("data-sszvis-behavior-pannable", "").classed("sszvis-interactive", true).on("mouseenter", function (...args) {
           if (this) event.apply("start", this, args);
-        }).on("mousemove", function () {
-          for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-            args[_key2] = arguments[_key2];
-          }
+        }).on("mousemove", function (...args) {
           if (this) event.apply("pan", this, args);
-        }).on("mouseleave", function () {
-          for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-            args[_key3] = arguments[_key3];
-          }
+        }).on("mouseleave", function (...args) {
           if (this) event.apply("end", this, args);
-        }).on("touchstart", function () {
-          for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-            args[_key4] = arguments[_key4];
-          }
+        }).on("touchstart", function (...args) {
           args[0].preventDefault();
           if (this) event.apply("start", this, args);
-        }).on("touchmove", function () {
-          for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-            args[_key5] = arguments[_key5];
-          }
+        }).on("touchmove", function (...args) {
           args[0].preventDefault();
           const datum = datumFromPanEvent(firstTouch(args[0]));
           if (datum === null) {
@@ -4730,17 +4640,11 @@
           } else {
             if (this) event.apply("pan", this, args);
           }
-        }).on("touchend", function () {
-          for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-            args[_key6] = arguments[_key6];
-          }
+        }).on("touchend", function (...args) {
           if (this) event.apply("end", this, args);
         });
       });
-      panningComponent.on = function () {
-        for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-          args[_key7] = arguments[_key7];
-        }
+      panningComponent.on = function (...args) {
         const value = event.on.apply(event, args);
         return value === event ? panningComponent : value;
       };
@@ -4801,7 +4705,7 @@
         const delaunay = d3.Delaunay.from(data, d => props.x(d), d => props.y(d));
         const voronoi = delaunay.voronoi(props.bounds);
         const polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoi.cellPolygons()).join("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
-        polys.attr("d", d => "M".concat(d.join("L"), "Z")).attr("fill", "transparent").on("mouseover", function (e) {
+        polys.attr("d", d => `M${d.join("L")}Z`).attr("fill", "transparent").on("mouseover", function (e) {
           const parent = this.parentNode;
           if (!parent) return;
           const position = d3.pointer(e, parent);
@@ -4817,10 +4721,7 @@
           } else {
             if (this) event.apply("out", this, [e]);
           }
-        }).on("mouseout", function () {
-          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-          }
+        }).on("mouseout", function (...args) {
           if (this) event.apply("out", this, args);
         }).on("touchstart", function (e) {
           const parent = this.parentNode;
@@ -4892,10 +4793,7 @@
       // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
       // callback to never. Narrowing to "over" | "out" would type the callback properly but would
       // also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
-      voronoiComponent.on = function () {
-        for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          args[_key2] = arguments[_key2];
-        }
+      voronoiComponent.on = (...args) => {
         const value = event.on.apply(event, args);
         return value === event ? voronoiComponent : value;
       };
@@ -4996,7 +4894,7 @@
       const cache = {};
       return (fontSize, fontFace, text) => {
         const key = [fontSize, fontFace, text].join("-");
-        context.font = "".concat(fontSize, "px ").concat(fontFace);
+        context.font = `${fontSize}px ${fontFace}`;
         return cache[key] || context.measureText(text).width;
       };
     })();
@@ -5062,7 +4960,6 @@
      */
     const DEFAULT_WIDTH = 516;
     function bounds(arg1, arg2) {
-      var _dimensions$width;
       let _bounds = {};
       let selection = null;
       if (arguments.length === 0) {
@@ -5094,7 +4991,7 @@
         screenWidth: window.innerWidth,
         screenHeight: window.innerHeight
       };
-      const width = either(_bounds.width, (_dimensions$width = dimensions.width) !== null && _dimensions$width !== void 0 ? _dimensions$width : DEFAULT_WIDTH);
+      const width = either(_bounds.width, dimensions.width ?? DEFAULT_WIDTH);
       // Create measurement object for aspectRatioAuto that matches the Measurement interface
       const measurement = {
         width: width,
@@ -5411,7 +5308,7 @@
     const muchDarker = c => d3.hsl(c).darker(0.7);
     const withAlpha = (c, a) => {
       const rgbColor = d3.rgb(c);
-      return "rgba(".concat(rgbColor.r, ",").concat(rgbColor.g, ",").concat(rgbColor.b, ",").concat(a, ")");
+      return `rgba(${rgbColor.r},${rgbColor.g},${rgbColor.b},${a})`;
     };
     /* Scale extensions
     ----------------------------------------------- */
@@ -5580,14 +5477,8 @@
         const yAt = (datum, index) => toFinite(props.y(datum, index));
         const wAt = (datum, index) => toFinite(props.width(datum, index));
         const hAt = (datum, index) => toFinite(props.height(datum, index));
-        const fillAt = (datum, index) => {
-          var _props$fill, _props$fill2;
-          return (_props$fill = (_props$fill2 = props.fill) === null || _props$fill2 === void 0 ? void 0 : _props$fill2.call(props, datum, index)) !== null && _props$fill !== void 0 ? _props$fill : null;
-        };
-        const strokeAt = (datum, index) => {
-          var _props$stroke, _props$stroke2;
-          return (_props$stroke = (_props$stroke2 = props.stroke) === null || _props$stroke2 === void 0 ? void 0 : _props$stroke2.call(props, datum, index)) !== null && _props$stroke !== void 0 ? _props$stroke : null;
-        };
+        const fillAt = (datum, index) => props.fill?.(datum, index) ?? null;
+        const strokeAt = (datum, index) => props.stroke?.(datum, index) ?? null;
         // Entering bars are given their geometry on the join, so they are in place before any
         // transition starts. The geometry is then applied exactly once more - to the transition
         // when there is one, and to the plain selection otherwise - so an update tweens from its
@@ -5697,7 +5588,7 @@
      */
     function required$4(value, name) {
       if (value === undefined) {
-        throw new Error("[dot] the ".concat(name, " property is required"));
+        throw new Error(`[dot] the ${name} property is required`);
       }
       return value;
     }
@@ -5713,14 +5604,8 @@
         // A negative r is invalid per the SVG spec and drops the circle, so it is clamped
         // rather than passed on.
         const rAt = (datum, index) => Math.max(0, toFinite(radiusProp(datum, index)));
-        const strokeAt = (datum, index) => {
-          var _props$stroke, _props$stroke2;
-          return (_props$stroke = (_props$stroke2 = props.stroke) === null || _props$stroke2 === void 0 ? void 0 : _props$stroke2.call(props, datum, index)) !== null && _props$stroke !== void 0 ? _props$stroke : null;
-        };
-        const fillAt = (datum, index) => {
-          var _props$fill, _props$fill2;
-          return (_props$fill = (_props$fill2 = props.fill) === null || _props$fill2 === void 0 ? void 0 : _props$fill2.call(props, datum, index)) !== null && _props$fill !== void 0 ? _props$fill : null;
-        };
+        const strokeAt = (datum, index) => props.stroke?.(datum, index) ?? null;
+        const fillAt = (datum, index) => props.fill?.(datum, index) ?? null;
         // Entering circles are given their geometry on the join, so they are in place before
         // any transition starts. The geometry is then applied exactly once more - to the
         // transition when there is one, and to the plain selection otherwise - so an update
@@ -5895,8 +5780,7 @@
           return typeof props.fill === "function" ? props.fill(d, indexOfRect(this)) : props.fill;
         };
         const strokeAt = function (d) {
-          var _ref;
-          return (_ref = typeof props.stroke === "function" ? props.stroke(d, indexOfRect(this)) : props.stroke) !== null && _ref !== void 0 ? _ref : null;
+          return (typeof props.stroke === "function" ? props.stroke(d, indexOfRect(this)) : props.stroke) ?? null;
         };
         const missingTransformAt = function (d) {
           return configMissingTransform(d, indexOfUnit(this));
@@ -5946,120 +5830,71 @@
       });
     }
     const createVerticalConfig = () => ({
-      inGroupRange: _ref2 => {
-        let {
-          groupWidth
-        } = _ref2;
-        return [0, groupWidth];
-      },
-      x: (_ref3, inGroupScale) => {
-        let {
-          groupScale
-        } = _ref3;
-        return (d, groupIndex) => {
-          var _inGroupScale;
-          return groupScale(d) + ((_inGroupScale = inGroupScale(groupIndex)) !== null && _inGroupScale !== void 0 ? _inGroupScale : 0);
-        };
-      },
-      y: _ref4 => {
-        let {
-          y
-        } = _ref4;
-        return y;
-      },
+      inGroupRange: ({
+        groupWidth
+      }) => [0, groupWidth],
+      x: ({
+        groupScale
+      }, inGroupScale) => (d, groupIndex) => groupScale(d) + (inGroupScale(groupIndex) ?? 0),
+      y: ({
+        y
+      }) => y,
       width: (_, inGroupScale) => inGroupScale.bandwidth(),
-      height: _ref5 => {
-        let {
-          height
-        } = _ref5;
-        return height;
-      },
-      missingTransform: (_ref6, inGroupScale) => {
-        let {
-          groupScale,
-          y
-        } = _ref6;
-        return (d, groupIndex) => {
-          var _inGroupScale2;
-          return (
-            // Both coordinates are guarded as a whole, not just the consumer accessor: translateString
-            // interpolates its arguments into a string, so one non-finite term anywhere in the
-            // expression would yield transform="translate(NaN,0)" rather than a placed cross.
-            translateString(toFinite(groupScale(d) + ((_inGroupScale2 = inGroupScale(groupIndex)) !== null && _inGroupScale2 !== void 0 ? _inGroupScale2 : 0) + inGroupScale.bandwidth() / 2), toFinite(y(d, groupIndex)))
-          );
-        };
-      },
-      tooltipPosition: (_ref7, inGroupScale) => {
-        let {
-          groupScale,
-          y
-        } = _ref7;
-        return group => {
-          let xTotal = 0;
-          let tallest = Infinity;
-          for (const [i, d] of group.entries()) {
-            var _inGroupScale3;
-            xTotal += groupScale(d) + ((_inGroupScale3 = inGroupScale(i)) !== null && _inGroupScale3 !== void 0 ? _inGroupScale3 : 0) + inGroupScale.bandwidth() / 2;
-            // smaller y is higher
-            tallest = Math.min(tallest, y(d, i));
-          }
-          return [xTotal / group.length, tallest];
-        };
+      height: ({
+        height
+      }) => height,
+      missingTransform: ({
+        groupScale,
+        y
+      }, inGroupScale) => (d, groupIndex) =>
+      // Both coordinates are guarded as a whole, not just the consumer accessor: translateString
+      // interpolates its arguments into a string, so one non-finite term anywhere in the
+      // expression would yield transform="translate(NaN,0)" rather than a placed cross.
+      translateString(toFinite(groupScale(d) + (inGroupScale(groupIndex) ?? 0) + inGroupScale.bandwidth() / 2), toFinite(y(d, groupIndex))),
+      tooltipPosition: ({
+        groupScale,
+        y
+      }, inGroupScale) => group => {
+        let xTotal = 0;
+        let tallest = Infinity;
+        for (const [i, d] of group.entries()) {
+          xTotal += groupScale(d) + (inGroupScale(i) ?? 0) + inGroupScale.bandwidth() / 2;
+          // smaller y is higher
+          tallest = Math.min(tallest, y(d, i));
+        }
+        return [xTotal / group.length, tallest];
       }
     });
     const createHorizontalConfig = () => ({
       inGroupRange: props => [0, props.groupHeight],
-      x: _ref8 => {
-        let {
-          x
-        } = _ref8;
-        return x;
-      },
-      y: (_ref9, inGroupScale) => {
-        let {
-          groupScale
-        } = _ref9;
-        return (d, groupIndex) => {
-          var _inGroupScale4;
-          return groupScale(d) + ((_inGroupScale4 = inGroupScale(groupIndex)) !== null && _inGroupScale4 !== void 0 ? _inGroupScale4 : 0);
-        };
-      },
-      width: _ref0 => {
-        let {
-          width
-        } = _ref0;
-        return width;
-      },
+      x: ({
+        x
+      }) => x,
+      y: ({
+        groupScale
+      }, inGroupScale) => (d, groupIndex) => groupScale(d) + (inGroupScale(groupIndex) ?? 0),
+      width: ({
+        width
+      }) => width,
       height: (_, inGroupScale) => inGroupScale.bandwidth(),
-      missingTransform: (_ref1, inGroupScale) => {
-        let {
-          groupScale,
-          x
-        } = _ref1;
-        return (d, groupIndex) => {
-          var _inGroupScale5;
-          return (
-            // Guarded as a whole, as in the vertical config.
-            translateString(toFinite(x(d, groupIndex)), toFinite(groupScale(d) + ((_inGroupScale5 = inGroupScale(groupIndex)) !== null && _inGroupScale5 !== void 0 ? _inGroupScale5 : 0) + inGroupScale.bandwidth() / 2))
-          );
-        };
-      },
-      tooltipPosition: (_ref10, inGroupScale) => {
-        let {
-          groupScale,
-          x
-        } = _ref10;
-        return group => {
-          let yTotal = 0;
-          let rightmost = -Infinity;
-          for (const [i, d] of group.entries()) {
-            var _inGroupScale6;
-            yTotal += groupScale(d) + ((_inGroupScale6 = inGroupScale(i)) !== null && _inGroupScale6 !== void 0 ? _inGroupScale6 : 0) + inGroupScale.bandwidth() / 2;
-            // larger x is more to the right
-            rightmost = Math.max(rightmost, x(d, i));
-          }
-          return [rightmost, yTotal / group.length];
-        };
+      missingTransform: ({
+        groupScale,
+        x
+      }, inGroupScale) => (d, groupIndex) =>
+      // Guarded as a whole, as in the vertical config.
+      translateString(toFinite(x(d, groupIndex)), toFinite(groupScale(d) + (inGroupScale(groupIndex) ?? 0) + inGroupScale.bandwidth() / 2)),
+      tooltipPosition: ({
+        groupScale,
+        x
+      }, inGroupScale) => group => {
+        let yTotal = 0;
+        let rightmost = -Infinity;
+        for (const [i, d] of group.entries()) {
+          yTotal += groupScale(d) + (inGroupScale(i) ?? 0) + inGroupScale.bandwidth() / 2;
+          // larger x is more to the right
+          rightmost = Math.max(rightmost, x(d, i));
+        }
+        return [rightmost, yTotal / group.length];
       }
     });
     const groupedBarsVertical = () => createGroupedBarsComponent(createVerticalConfig());
@@ -6166,7 +6001,7 @@
      */
     function required$3(value, name) {
       if (value === undefined) {
-        throw new Error("[line] the ".concat(name, " property is required"));
+        throw new Error(`[line] the ${name} property is required`);
       }
       return value;
     }
@@ -6176,7 +6011,6 @@
       // A caller who sets a different L must supply a matching accessor; the constraint
       // cannot express "identity is valid only for the default instantiation".
       .valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
-        var _props$stroke, _props$strokeWidth;
         const selection = d3.select(this);
         const props = selection.props();
         // Layouts
@@ -6197,8 +6031,8 @@
         const pathData = function (datum, index) {
           return line(props.valuesAccessor.call(this, datum, index));
         };
-        const stroke = valueFn((_props$stroke = props.stroke) !== null && _props$stroke !== void 0 ? _props$stroke : null);
-        const strokeWidth = valueFn((_props$strokeWidth = props.strokeWidth) !== null && _props$strokeWidth !== void 0 ? _props$strokeWidth : null);
+        const stroke = valueFn(props.stroke ?? null);
+        const strokeWidth = valueFn(props.strokeWidth ?? null);
         const path = selection.selectAll(".sszvis-line").data(data, props.key).join("path").classed("sszvis-line", true).style("stroke", stroke);
         path.order();
         // The visual properties are applied to the transition when there is one, so the two
@@ -6349,7 +6183,6 @@
       // category code - groups the same way a string one does. The keys themselves are read
       // back off the cascade row with Object.keys, which is why `series` stays a string.
       seriesAcc, valueAcc) => data => {
-        var _max, _min;
         const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
         // The series keys, and with them the stacking order, come from the data rather than
         // from the cascade rows: those are plain objects, which enumerate integer-like keys
@@ -6361,10 +6194,7 @@
         // its true total rather than to its first row.
         // A stack that carries no row for one of the series keys stacks that series as
         // zero rather than throwing.
-        .value((x, key) => {
-          var _x$key;
-          return d3.sum((_x$key = x[key]) !== null && _x$key !== void 0 ? _x$key : [], valueAcc);
-        }).order(order)(rows);
+        .value((x, key) => d3.sum(x[key] ?? [], valueAcc)).order(order)(rows);
         // Simplify the 'data' property. The slices themselves are the objects d3 created,
         // rewritten in place, so a caller holding one sees the new shape. The series arrays
         // are rebuilt, so d3's own `key` and `index` - the only two properties it hangs off a
@@ -6375,8 +6205,7 @@
         const stackValues = rows.map(row => _stackAcc(Object.values(row).flat()[0]));
         const series = stacks.map(stack => {
           const slices = stack.map((d, i) => {
-            var _d$data$stack$key;
-            const datum = (_d$data$stack$key = d.data[stack.key]) === null || _d$data$stack$key === void 0 ? void 0 : _d$data$stack$key[0];
+            const datum = d.data[stack.key]?.[0];
             return Object.assign(d, {
               series: stack.key,
               data: datum,
@@ -6390,8 +6219,8 @@
         });
         // Both bounds are considered, so a stack that reaches below the baseline reports an
         // extent that covers it.
-        const maxValue = (_max = d3.max(series, stack => d3.max(stack, d => Math.max(d[0], d[1])))) !== null && _max !== void 0 ? _max : 0;
-        const minValue = (_min = d3.min(series, stack => d3.min(stack, d => Math.min(d[0], d[1])))) !== null && _min !== void 0 ? _min : 0;
+        const maxValue = d3.max(series, stack => d3.max(stack, d => Math.max(d[0], d[1]))) ?? 0;
+        const minValue = d3.min(series, stack => d3.min(stack, d => Math.min(d[0], d[1]))) ?? 0;
         return {
           series,
           keys,
@@ -6433,7 +6262,7 @@
     function requireProps(name, props, required) {
       for (const prop of required) {
         if (Reflect.get(props, prop) === undefined) {
-          throw new Error("[".concat(name, "] the ").concat(prop, " property is required"));
+          throw new Error(`[${name}] the ${prop} property is required`);
         }
       }
     }
@@ -6466,7 +6295,7 @@
      */
     function strokeOf(stroke) {
       if (stroke === undefined) return "#FFFFFF";
-      return stroke !== null && stroke !== void 0 ? stroke : undefined;
+      return stroke ?? undefined;
     }
     function stackedBarHorizontal() {
       return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").prop("transition").transition(true).render(function (data) {
@@ -6558,13 +6387,12 @@
      */
     /** The group key of a layout: `key`, or `nest` under its older name. */
     function nestKey(layout) {
-      var _layout$key;
-      return (_layout$key = layout.key) !== null && _layout$key !== void 0 ? _layout$key : layout.nest;
+      return layout.key ?? layout.nest;
     }
     /** Reports a required property the caller left unset, naming it. */
     function required$2(value, name) {
       if (value === undefined) {
-        throw new Error("[nestedStackedBarsVertical] the ".concat(name, " property is required"));
+        throw new Error(`[nestedStackedBarsVertical] the ${name} property is required`);
       }
       return value;
     }
@@ -6584,7 +6412,7 @@
       const high = Math.max(...extent);
       if (zero >= low && zero <= high) return zero;
       const clamped = zero < low ? low : high;
-      warn("[nestedStackedBarsVertical] the y-scale baseline ".concat(zero, " falls outside its range [").concat(low, ", ").concat(high, "]; placing the x-axis at ").concat(clamped));
+      warn(`[nestedStackedBarsVertical] the y-scale baseline ${zero} falls outside its range [${low}, ${high}]; placing the x-axis at ${clamped}`);
       return clamped;
     }
     function nestedStackedBarsVertical() {
@@ -6603,15 +6431,15 @@
         const xAxis = axisX.ordinal().scale(xScale).tickSize(0).orient("bottom").slant(props.slant)
         // xLabel is wrapped by fn.functor, so it is always a function here; the axis binds its
         // title as text data and never calls it, so evaluate it first.
-        .title(xLabel === null || xLabel === void 0 ? void 0 : xLabel());
+        .title(xLabel?.());
         const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
         const nestedGroups = group.join("g").attr("data-nested-stacked-bars", (d, i) => {
           if (d.length === 0) {
-            warn("[nestedStackedBarsVertical] the nested group at index ".concat(i, " has no stacks; rendering it empty"));
+            warn(`[nestedStackedBarsVertical] the nested group at index ${i} has no stacks; rendering it empty`);
           }
           const key = nestKey(d);
           if (key === undefined) {
-            warn("[nestedStackedBarsVertical] the nested group at index ".concat(i, " has no key; labelling it by index"));
+            warn(`[nestedStackedBarsVertical] the nested group at index ${i} has no key; labelling it by index`);
             return i;
           }
           return key;
@@ -6619,7 +6447,7 @@
         nestedGroups.attr("transform", d => {
           const x = offset(d);
           if (!Number.isFinite(x)) {
-            warn("[nestedStackedBarsVertical] the offset accessor returned ".concat(x, "; positioning the group at 0"));
+            warn(`[nestedStackedBarsVertical] the offset accessor returned ${x}; positioning the group at 0`);
           }
           return translateString(Number.isFinite(x) ? x : 0, 0);
         });
@@ -6688,17 +6516,13 @@
      * @param rootKey - The top-level category key (used for color mapping)
      * @returns Array of NodeDatum objects representing the hierarchy
      */
-    function unwrapNested(roll) {
-      let parentKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-      let rootKey = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+    function unwrapNested(roll, parentKey = null, rootKey = null) {
       const rollupMap = roll;
-      return Array.from(rollupMap, _ref => {
-        var _ref2;
-        let [key, values] = _ref;
+      return Array.from(rollupMap, ([key, values]) => {
         // Use parent key as fallback when current key is null/undefined
-        const effectiveKey = (_ref2 = key !== null && key !== void 0 ? key : parentKey) !== null && _ref2 !== void 0 ? _ref2 : "";
+        const effectiveKey = key ?? parentKey ?? "";
         // For root category, use the current key if we're at the first level (rootKey is null)
-        const effectiveRootKey = rootKey !== null && rootKey !== void 0 ? rootKey : effectiveKey;
+        const effectiveRootKey = rootKey ?? effectiveKey;
         if (values instanceof Map && values.size > 0) {
           // Branch node - has children
           return {
@@ -6731,10 +6555,7 @@
     function inheritedColorKey(node) {
       if ("rootKey" in node.data && node.data.rootKey) return node.data.rootKey;
       const ancestors = node.ancestors();
-      const topLevel = ancestors.find((_, i) => {
-        var _ancestors;
-        return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
-      });
+      const topLevel = ancestors.find((_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root");
       if (topLevel && "key" in topLevel.data) return topLevel.data.key;
       return undefined;
     }
@@ -6834,10 +6655,7 @@
         }).attr("stroke-width", d => {
           // Branch nodes get thicker stroke to make them more visible
           return d.children ? 2 : props.circleStrokeWidth;
-        }).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => {
-          var _props$onClick;
-          return (_props$onClick = props.onClick) === null || _props$onClick === void 0 ? void 0 : _props$onClick.call(props, event, d);
-        });
+        }).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => props.onClick?.(event, d));
         // Apply transitions if enabled
         if (props.transition) {
           circles.transition(defaultTransition()).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r);
@@ -6931,7 +6749,7 @@
     /** Reports a required property the caller left unset, naming it. */
     function required$1(value, name) {
       if (value === undefined) {
-        throw new Error("[pie] the ".concat(name, " property is required"));
+        throw new Error(`[pie] the ${name} property is required`);
       }
       return value;
     }
@@ -6944,7 +6762,7 @@
       // An accessor is handed to d3 untouched. Its result is narrowed from
       // `string | null | undefined` to `string | null` only because d3's own attr typings omit
       // undefined; d3 removes the attribute for either one, so the two are interchangeable here.
-      return typeof value === "function" ? value : () => value !== null && value !== void 0 ? value : null;
+      return typeof value === "function" ? value : () => value ?? null;
     }
     // The angles currently on screen, per wedge element. d3 cannot interpolate an arc path
     // directly, so a transition needs the previous angles as well as the destination ones -
@@ -6972,7 +6790,7 @@
         const stroke = props.stroke === undefined ? "#FFFFFF" : props.stroke;
         const fillAccessor = toColorAccessor(props.fill);
         const strokeAccessor = toColorAccessor(stroke);
-        const transform = "translate(".concat(radius, ",").concat(radius, ")");
+        const transform = `translate(${radius},${radius})`;
         // The destination layout, held alongside the data rather than written onto it.
         const layout = [];
         let angle = 0;
@@ -6985,7 +6803,7 @@
             // A scale over a domain containing undefined, an empty group, or a division by a
             // zero total all land here. Skipping the step keeps the running total usable, so
             // the wedges after this one are unaffected.
-            warn("[pie] the angle accessor returned ".concat(step, "; drawing a zero-width wedge"));
+            warn(`[pie] the angle accessor returned ${step}; drawing a zero-width wedge`);
           }
           layout.push({
             a0,
@@ -6994,10 +6812,7 @@
         }
         const arcGen = d3.arc().innerRadius(4).outerRadius(radius).startAngle(d => d.a0).endAngle(d => d.a1);
         // arc only returns null when it renders into a canvas context, which this one never does.
-        const arcPath = angles => {
-          var _arcGen;
-          return (_arcGen = arcGen(angles)) !== null && _arcGen !== void 0 ? _arcGen : "";
-        };
+        const arcPath = angles => arcGen(angles) ?? "";
         // Matching on the component's own class rather than the generic .sszvis-path one keeps a
         // foreign path in the same group out of the join. The generic class stays on the node, so
         // no CSS selector changes meaning.
@@ -7009,15 +6824,13 @@
         // destination ones for a wedge that has just entered - so the DOM is never in a
         // geometry-less state and nothing jumps before the transition takes over.
         segments.attr("d", function (_d, i) {
-          var _onScreen$get;
-          const start = (_onScreen$get = onScreen.get(this)) !== null && _onScreen$get !== void 0 ? _onScreen$get : layout[i];
+          const start = onScreen.get(this) ?? layout[i];
           onScreen.set(this, start);
           return arcPath(start);
         });
         if (props.transition) {
           segments.transition(defaultTransition(OWN_TRANSITION)).attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor).attrTween("d", function (_d, i) {
-            var _onScreen$get2;
-            const from = (_onScreen$get2 = onScreen.get(this)) !== null && _onScreen$get2 !== void 0 ? _onScreen$get2 : layout[i];
+            const from = onScreen.get(this) ?? layout[i];
             const to = layout[i];
             const a0 = d3.interpolate(from.a0, to.a0);
             const a1 = d3.interpolate(from.a1, to.a1);
@@ -7048,11 +6861,10 @@
         // The anchors are placed from the destination angles, so they describe the layout the
         // wedges are heading for rather than the one they are leaving.
         (_d, i) => {
-          var _layout$i;
           const {
             a0,
             a1
-          } = (_layout$i = layout[i]) !== null && _layout$i !== void 0 ? _layout$i : {
+          } = layout[i] ?? {
             a0: 0,
             a1: 0
           };
@@ -7173,7 +6985,7 @@
         // missing-value guard as undefined.
         for (const name of REQUIRED_PROPS) {
           if (props[name] === undefined) {
-            throw new Error("[pyramid] the ".concat(name, " property is required"));
+            throw new Error(`[pyramid] the ${name} property is required`);
           }
         }
         // Components
@@ -7205,7 +7017,7 @@
       if (accessor === undefined) return [];
       const series = accessor(data);
       if (!Array.isArray(series)) {
-        warn("[pyramid] ".concat(name, " returned ").concat(String(series), " rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series."));
+        warn(`[pyramid] ${name} returned ${String(series)} rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series.`);
         return [];
       }
       return series.length === 0 ? [] : [series];
@@ -7406,7 +7218,7 @@
     const COLUMN_LABEL_Y = -24;
     /* Helper functions
     ----------------------------------------------- */
-    const linkPathString = (x0, x1, x2, x3, y0, y1) => "M".concat(x0, ",").concat(y0, "C").concat(x1, ",").concat(y0, " ").concat(x2, ",").concat(y1, " ").concat(x3, ",").concat(y1);
+    const linkPathString = (x0, x1, x2, x3, y0, y1) => `M${x0},${y0}C${x1},${y0} ${x2},${y1} ${x3},${y1}`;
     const linkBounds = (x0, x1, y0, y1) => [x0, x1, y0, y1];
     /** The links are keyed on their id, so a redrawn link keeps its path element. */
     const idAcc = link => link.id;
@@ -7419,7 +7231,6 @@
     function sankey() {
       return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("columnLabelOpacity", functor).columnLabelOpacity(1).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort").linkSort((a, b) => b.value - a.value) // Descending, so the thinnest links paint on top
       .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel", functor).nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).prop("transition").transition(true).render(function (data) {
-        var _props$linkColor, _props$linkLabel, _props$linkLabel2;
         const selection = d3.select(this);
         const props = selection.props();
         // Checked before anything is drawn. These four are used directly in arithmetic, so
@@ -7428,7 +7239,7 @@
         // empty-looking chart rather than an error.
         for (const name of ["nodeThickness", "nodePadding", "labelHitBoxSize", "linkCurvature"]) {
           if (typeof props[name] !== "number" || !Number.isFinite(props[name])) {
-            throw new Error("[sankey] the ".concat(name, " property must be a number"));
+            throw new Error(`[sankey] the ${name} property must be a number`);
           }
         }
         if (typeof props.linkSort !== "function") {
@@ -7484,7 +7295,7 @@
         });
         const linksGroup = selection.selectGroup("links");
         const linksElems = linksGroup.selectAll(".sszvis-link").data(drawableLinks, idAcc).join("path").attr("class", "sszvis-link");
-        linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", (_props$linkColor = props.linkColor) !== null && _props$linkColor !== void 0 ? _props$linkColor : null).sort(props.linkSort);
+        linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", props.linkColor ?? null).sort(props.linkSort);
         linksGroup.datum(drawableLinks);
         const linkTooltipAnchor = tooltipAnchor().position(link => {
           const bbox = linkBoundingBox(link);
@@ -7498,13 +7309,13 @@
         linkSourceLabels.attr("transform", link => {
           const bbox = linkBoundingBox(link);
           return translateString(bbox[0] + 6, bbox[2]);
-        }).text((_props$linkLabel = props.linkLabel) !== null && _props$linkLabel !== void 0 ? _props$linkLabel : null);
+        }).text(props.linkLabel ?? null);
         // If no props.linkTargetLabels are provided, most of this rendering is no-op
         const linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
         linkTargetLabels.attr("transform", link => {
           const bbox = linkBoundingBox(link);
           return translateString(bbox[1] - 6, bbox[3]);
-        }).text((_props$linkLabel2 = props.linkLabel) !== null && _props$linkLabel2 !== void 0 ? _props$linkLabel2 : null);
+        }).text(props.linkLabel ?? null);
         // Render the node labels and their hit boxes
         const getLabelSide = colIndex => {
           let side = props.labelSide(colIndex);
@@ -7518,7 +7329,7 @@
         // keeps them on top of the zero-height bar the same value produced.
         const guarded = (value, node, what) => {
           if (Number.isFinite(value)) return value;
-          warn("[sankey] non-finite ".concat(what, " for node"), node.id);
+          warn(`[sankey] non-finite ${what} for node`, node.id);
           return 0;
         };
         const safeY = node => guarded(yPosition(node), node, "position");
@@ -7693,7 +7504,6 @@
      */
     function stackedArea() {
       return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("transition").transition(true).render(function (data) {
-        var _props$fill;
         const selection = d3.select(this);
         const props = selection.props();
         // x, y0 and y1 are all required, and each used to fail differently and silently: an
@@ -7705,7 +7515,7 @@
         // deliberately not caught: only an unset property is.
         for (const required of ["x", "y0", "y1"]) {
           if (props[required] === undefined) {
-            throw new Error("[stackedArea] the ".concat(required, " property is required"));
+            throw new Error(`[stackedArea] the ${required} property is required`);
           }
         }
         // Layouts
@@ -7739,7 +7549,7 @@
         }
         // Rendering
         const pathData = datum => areaGen(datum);
-        const fill = valueFn((_props$fill = props.fill) !== null && _props$fill !== void 0 ? _props$fill : null);
+        const fill = valueFn(props.fill ?? null);
         // The white hairline separating two touching layers. Applied with an explicit undefined
         // check, as strokeWidth is, so it stands in for an unset stroke only: null and "" are
         // supplied values and reach d3 as given. A ?? would have swallowed the null.
@@ -7960,7 +7770,6 @@
       // A caller who sets a different L must supply a matching accessor; the constraint
       // cannot express "identity is valid only for the default instantiation".
       .valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
-        var _props$fill;
         const selection = d3.select(this);
         const props = selection.props();
         // x, y0 and y1 are all required, and each used to fail differently and silently: an
@@ -7972,7 +7781,7 @@
         // deliberately not caught: only an unset property is.
         for (const required of ["x", "y0", "y1"]) {
           if (props[required] === undefined) {
-            throw new Error("[stackedAreaMultiples] the ".concat(required, " property is required"));
+            throw new Error(`[stackedAreaMultiples] the ${required} property is required`);
           }
         }
         // Layouts
@@ -8010,7 +7819,7 @@
         const pathData = function (datum, index, group) {
           return areaGen(props.valuesAccessor.call(this, datum, index, group));
         };
-        const fill = valueFn((_props$fill = props.fill) !== null && _props$fill !== void 0 ? _props$fill : null);
+        const fill = valueFn(props.fill ?? null);
         // The white hairline separating two touching bands, as stackedArea has. Applied with an
         // explicit undefined check, as strokeWidth is, so it stands in for an unset stroke
         // only: null and "" are supplied values and reach d3 as given.
@@ -8315,7 +8124,6 @@
     // the cascade row with Object.keys, which is why `series` stays a string.
     rowValueAcc, seriesAcc, valueAcc) {
       return data => {
-        var _max;
         const grouped = cascade().arrayBy(sideAcc).arrayBy(rowValueAcc).objectBy(seriesAcc).apply(data);
         const sides = grouped.map(rows => {
           // The union of the series across every row of the side, so a series that appears in
@@ -8333,10 +8141,9 @@
           // series - have to be carried across by hand.
           return stacks.map((stack, i) => {
             const slices = stack.map(d => {
-              var _d$data$keys$i;
               // A row the side's series is absent from has no source row to point at, so the
               // padding slice carries no data and a zero value.
-              const datum = (_d$data$keys$i = d.data[keys[i]]) === null || _d$data$keys$i === void 0 ? void 0 : _d$data$keys$i[0];
+              const datum = d.data[keys[i]]?.[0];
               return Object.assign(d, {
                 data: datum,
                 series: keys[i],
@@ -8355,7 +8162,7 @@
         });
         // Compute the max value, for convenience. This value is needed to construct
         // the horizontal scale.
-        const maxValue = (_max = d3.max(sides, s => d3.max(s, rows => d3.max(rows, row => row[1])))) !== null && _max !== void 0 ? _max : 0;
+        const maxValue = d3.max(sides, s => d3.max(s, rows => d3.max(rows, row => row[1]))) ?? 0;
         return {
           sides,
           maxValue
@@ -8419,7 +8226,7 @@
         const rightStack = stackComponent().stackElement(rightBar);
         // The line reads a reference point's value through the same scale, or parks it at the
         // constant when barWidth is one.
-        const referenceWidth = widthScale !== null && widthScale !== void 0 ? widthScale : () => constantWidth;
+        const referenceWidth = widthScale ?? (() => constantWidth);
         const leftLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth).mirror(true);
         const rightLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth);
         // Rendering
@@ -8590,7 +8397,7 @@
         // into NaN and renders an empty chart.
         for (const required of ["radiusScale", "centerRadius", "fill"]) {
           if (props[required] === undefined) {
-            throw new Error("[sunburst] the ".concat(required, " property is required"));
+            throw new Error(`[sunburst] the ${required} property is required`);
           }
         }
         // The angles currently on screen, read off the existing arcs before anything below can
@@ -8707,7 +8514,6 @@
           const r0Interp = d3.interpolate(d.r0, innerRadius(d));
           const r1Interp = d3.interpolate(d.r1, outerRadius(d));
           return t => {
-            var _arcGen;
             d.x0 = x0Interp(t);
             d.x1 = x1Interp(t);
             d.r0 = r0Interp(t);
@@ -8715,7 +8521,7 @@
             // arc returns null only for an empty path buffer, and every branch of it writes at
             // least a moveTo - even for NaN radii, which come out as "M0,0Z" - so this is
             // unreachable.
-            return (_arcGen = arcGen(d)) !== null && _arcGen !== void 0 ? _arcGen : "";
+            return arcGen(d) ?? "";
           };
         });
         // Add tooltip anchors
@@ -8803,10 +8609,7 @@
         const visibleData = treemapData.filter(d => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5).filter(d => !d.children);
         const rectangles = selection.selectAll(".sszvis-treemap-rect").data(visibleData).join("rect").classed("sszvis-treemap-rect", true).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0).attr("fill", d => {
           return nodeColor(d, props.colorScale);
-        }).attr("stroke", "#ffffff").attr("stroke-width", 1).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => {
-          var _props$onClick;
-          return (_props$onClick = props.onClick) === null || _props$onClick === void 0 ? void 0 : _props$onClick.call(props, event, d);
-        });
+        }).attr("stroke", "#ffffff").attr("stroke-width", 1).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => props.onClick?.(event, d));
         // Apply transitions if enabled
         if (props.transition) {
           rectangles.transition(defaultTransition()).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0);
@@ -8993,8 +8796,7 @@
       // Coerced rather than merely defaulted: a chart hands this a state key that is only
       // populated when its data arrives, so the value actually passed is `undefined`, which a
       // plain default would not catch - `.prop()` stores whatever the setter is given.
-      .prop("values", values => values !== null && values !== void 0 ? values : []).values([]).prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
-        var _props$ariaLabel;
+      .prop("values", values => values ?? []).values([]).prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
         const selection = d3.select(this);
         const props = selection.props();
         // Divided by zero for an empty group, which is only ever written onto buttons - of which
@@ -9002,8 +8804,8 @@
         const buttonWidth = props.width / props.values.length;
         const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true).attr("role", "radiogroup")
         // `??` rather than `||`, so an explicitly empty name stays an empty name.
-        .attr("aria-label", (_props$ariaLabel = props.ariaLabel) !== null && _props$ariaLabel !== void 0 ? _props$ariaLabel : null);
-        container.style("width", "".concat(props.width, "px"));
+        .attr("aria-label", props.ariaLabel ?? null);
+        container.style("width", `${props.width}px`);
         const buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values).join("button").classed("sszvis-control-buttonGroup__item", true).attr("type", "button").attr("role", "radio");
         // Roving tabindex: exactly one option is in the tab order. That is the current one, or
         // the first option when `current` matches no value, so the group stays reachable.
@@ -9012,13 +8814,12 @@
         const nodes = buttons.nodes();
         /** Moves the selection by `step` options, wrapping at both ends. */
         const move = (event, from, step) => {
-          var _nodes$to;
           const to = (from + step + nodes.length) % nodes.length;
           event.preventDefault();
-          (_nodes$to = nodes[to]) === null || _nodes$to === void 0 || _nodes$to.focus();
+          nodes[to]?.focus();
           props.change(event, props.values[to]);
         };
-        buttons.style("width", "".concat(buttonWidth, "px")).classed("selected", d => d === props.current)
+        buttons.style("width", `${buttonWidth}px`).classed("selected", d => d === props.current)
         // Keyed on the index, not on the value: duplicate values are supported, and a
         // radiogroup with two checked radios is contradictory state for assistive
         // technology. The legacy `selected` class still highlights every occurrence.
@@ -9098,7 +8899,6 @@
     const LABEL_BASELINE_NUDGE = 5;
     function handleRuler() {
       return component().prop("x", functor).prop("y", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).render(function (data) {
-        var _props$color;
         const selection = d3.select(this);
         const props = selection.props();
         // Elements need to be placed on half-pixels in order to be rendered
@@ -9127,7 +8927,7 @@
         dots.attr("cx", crispX).attr("cy", crispY).attr("r", DOT_RADIUS)
         // `?? null` only to satisfy d3's attr signature: it treats null and undefined
         // alike (`value == null` removes the attribute), so this matches the original.
-        .attr("fill", (_props$color = props.color) !== null && _props$color !== void 0 ? _props$color : null);
+        .attr("fill", props.color ?? null);
         selection.selectAll(".sszvis-ruler__label-outline").data(data).join("text").classed("sszvis-ruler__label-outline", true);
         selection.selectAll(".sszvis-ruler__label").data(data).join("text").classed("sszvis-ruler__label", true);
         // Update both labelOutline and labelOutline selections
@@ -9232,12 +9032,11 @@
       // Coerced rather than merely defaulted: a chart hands this a state key that is only
       // populated when its data arrives, so the value actually passed is `undefined`, which a
       // plain default would not catch - `.prop()` stores whatever the setter is given.
-      .prop("values", values => values !== null && values !== void 0 ? values : []).values([]).prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
-        var _props$ariaLabel;
+      .prop("values", values => values ?? []).values([]).prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
         const selection = d3.select(this);
         const props = selection.props();
         const wrapperEl = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-select"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-select", true);
-        wrapperEl.style("width", "".concat(props.width, "px"));
+        wrapperEl.style("width", `${props.width}px`);
         const metricsEl = wrapperEl.selectDiv("selectMetrics").classed("sszvis-control-select__metrics", true);
         const selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]).join("select").classed("sszvis-control-select__element", true).on("change", function (e) {
           // An option's value can only hold a string, so it holds `String(value)` and the
@@ -9250,7 +9049,7 @@
             // Still reachable: a select with no options at all reports "", and an option
             // value written by something other than this component matches nothing. A
             // selection that maps to no value is not a selection.
-            warn("[selectMenu] ignoring a selection whose option value \"".concat(value, "\" does not match any of the ").concat(props.values.length, " configured values."));
+            warn(`[selectMenu] ignoring a selection whose option value "${value}" does not match any of the ${props.values.length} configured values.`);
             return;
           }
           props.change(e, selected);
@@ -9260,9 +9059,9 @@
             window.focus();
           }, 0);
         });
-        selectEl.style("width", "".concat(props.width + SELECT_WIDTH_PADDING, "px"));
+        selectEl.style("width", `${props.width + SELECT_WIDTH_PADDING}px`);
         // `??` rather than `||`, so an explicitly empty name stays an empty name.
-        selectEl.attr("aria-label", (_props$ariaLabel = props.ariaLabel) !== null && _props$ariaLabel !== void 0 ? _props$ariaLabel : null);
+        selectEl.attr("aria-label", props.ariaLabel ?? null);
         // Options are keyed by their own value, so an option element follows its value
         // across a re-render rather than being positionally re-labelled. Values repeated
         // verbatim are fine - they key the same and resolve to the same thing - but two
@@ -9276,7 +9075,7 @@
           if (!firstByKey.has(key)) firstByKey.set(key, d);else if (firstByKey.get(key) !== d) collisions.push(key);
         }
         if (collisions.length > 0) {
-          warn("[selectMenu] values contains distinct entries that are indistinguishable as strings (".concat(collisions.join(", "), "); a selection resolves to the first of each."));
+          warn(`[selectMenu] values contains distinct entries that are indistinguishable as strings (${collisions.join(", ")}); a selection resolves to the first of each.`);
         }
         selectEl.selectAll("option").data(props.values, keyOf).join("option").property("selected", d => d === props.current).attr("value", keyOf).text(d => truncateToWidth(metricsEl, props.width - LABEL_WIDTH_ALLOWANCE, d));
       });
@@ -9299,7 +9098,7 @@
         metricsEl.text(str);
         const textWidth = Math.ceil(metricsEl.node().clientWidth);
         if (i >= MAX_RECURSION || textWidth <= maxWidth) return str;
-        const shorter = "".concat(str.slice(0, -2), "\u2026");
+        const shorter = `${str.slice(0, -2)}…`;
         // "…" is a fixed point of the shortening step; without this guard a negative
         // measuring budget burns the full MAX_RECURSION in forced synchronous layouts.
         // Compared by text rather than by length: a one-character label such as "A" is the
@@ -9523,16 +9322,15 @@
      *
      * @returns {d3.selection}
      */
-    function createHtmlLayer(selector, bounds$1) {
-      let metadata = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    function createHtmlLayer(selector, bounds$1, metadata = {}) {
       const {
         padding
       } = bounds$1 || bounds();
       const key = metadata.key || "default";
-      const elementDataKey = "data-sszvis-html-".concat(key);
+      const elementDataKey = `data-sszvis-html-${key}`;
       const render = root => {
         root.classed("sszvis-outer-container", true);
-        return root.selectAll("[data-sszvis-html-layer][".concat(elementDataKey, "]")).data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", "".concat(padding.left, "px")).style("top", "".concat(padding.top, "px"));
+        return root.selectAll(`[data-sszvis-html-layer][${elementDataKey}]`).data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", `${padding.left}px`).style("top", `${padding.top}px`);
       };
       return withRootSelection(selector, render);
     }
@@ -9556,22 +9354,21 @@
      *
      * @returns {d3.selection}
      */
-    function createSvgLayer(selector, bounds$1) {
-      let metadata = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    function createSvgLayer(selector, bounds$1, metadata = {}) {
       const {
         padding,
         height,
         width
       } = bounds$1 || bounds();
       const key = metadata.key || "default";
-      const elementDataKey = "data-sszvis-svg-".concat(key);
+      const elementDataKey = `data-sszvis-svg-${key}`;
       const title = metadata.title || "";
       const description = metadata.description || "";
       const render = root => {
-        const svg = root.selectAll("svg[".concat(elementDataKey, "]")).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", "".concat(title, " \u2013 ").concat(description)).attr("height", height).attr("width", width);
+        const svg = root.selectAll(`svg[${elementDataKey}]`).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", `${title} – ${description}`).attr("height", height).attr("width", width);
         svg.selectAll("title").data([0]).join("title").text(title);
         svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
-        return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(".concat(padding.left, ",").concat(padding.top, ")"));
+        return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", `translate(${padding.left},${padding.top})`);
       };
       return withRootSelection(selector, render);
     }
@@ -9707,7 +9504,7 @@
         });
         let verticalOffset = "";
         if (props.verticallyCentered) {
-          verticalOffset = "translate(0,".concat(String(-(domain.length * props.rowHeight / 2)), ") ");
+          verticalOffset = `translate(0,${String(-(domain.length * props.rowHeight / 2))}) `;
         }
         if (props.horizontalFloat) {
           let rowPosition = 0;
@@ -9725,13 +9522,11 @@
           });
         } else {
           groups.attr("transform", (_d, i) => {
-            var _props$columnWidth2;
             if (props.orientation === "horizontal") {
-              var _props$columnWidth;
-              return "".concat(verticalOffset, "translate(").concat(i % cols * ((_props$columnWidth = props.columnWidth) !== null && _props$columnWidth !== void 0 ? _props$columnWidth : 0), ",").concat(Math.floor(i / cols) * props.rowHeight, ")");
+              return `${verticalOffset}translate(${i % cols * (props.columnWidth ?? 0)},${Math.floor(i / cols) * props.rowHeight})`;
             }
             // Only "vertical" remains - any other value was rejected above.
-            return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * ((_props$columnWidth2 = props.columnWidth) !== null && _props$columnWidth2 !== void 0 ? _props$columnWidth2 : 0), ",").concat(i % rows * props.rowHeight, ")");
+            return `${verticalOffset}translate(${Math.floor(i / rows) * (props.columnWidth ?? 0)},${i % rows * props.rowHeight})`;
           });
         }
       });
@@ -9768,26 +9563,25 @@
      * - A container that cannot be measured is warned about and treated as having no width.
      * - legendPadding is rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT.
      */
-    function colorLegendLayout(_ref, container) {
-      let {
-        legendLabels,
-        axisLabels = [],
-        slant
-      } = _ref;
+    function colorLegendLayout({
+      legendLabels,
+      axisLabels = [],
+      slant
+    }, container) {
       // an omitted slant - null included, as the docs examples pass it - is horizontal
-      const resolvedSlant = slant !== null && slant !== void 0 ? slant : "horizontal";
+      const resolvedSlant = slant ?? "horizontal";
       if (!SLANTS.includes(resolvedSlant)) {
-        throw new RangeError("colorLegendLayout: slant must be one of ".concat(SLANTS.join(", "), ", got ").concat(slant));
+        throw new RangeError(`colorLegendLayout: slant must be one of ${SLANTS.join(", ")}, got ${slant}`);
       }
       const measuredWidth = measureDimensions(container).width;
       if (!measuredWidth) {
         warn("colorLegendLayout could not measure its container, and is laying the legend out as if it had no width:", container);
       }
-      const containerWidth = measuredWidth !== null && measuredWidth !== void 0 ? measuredWidth : 0;
+      const containerWidth = measuredWidth ?? 0;
       const layout = colorLegendDimensions(legendLabels, containerWidth);
       const scale = legendLabels.length > 6 ? scaleQual12().domain(legendLabels) : scaleQual6().domain(legendLabels);
       if (legendLabels.length > scale.range().length) {
-        warn("colorLegendLayout: ".concat(legendLabels.length, " labels share the ").concat(scale.range().length, " colours of this scale, so some categories are drawn in the same colour"));
+        warn(`colorLegendLayout: ${legendLabels.length} labels share the ${scale.range().length} colours of this scale, so some categories are drawn in the same colour`);
       }
       const legend = legendColorOrdinal().scale(scale).horizontalFloat(layout.horizontalFloat).rows(layout.rows).columnWidth(layout.columnWidth).orientation(layout.orientation);
       const axisLabelPadding = axisLabelHeight(resolvedSlant, axisLabels);
@@ -9818,10 +9612,9 @@
      * - A container of no width degrades to one column, one row per label.
      */
     function colorLegendDimensions(labels, containerWidth) {
-      var _max;
       const labelCount = labels.length;
       // an empty legend has no labels to be as wide as
-      const maxLabelWidth = (_max = d3.max(labels, labelWidth)) !== null && _max !== void 0 ? _max : 0;
+      const maxLabelWidth = d3.max(labels, labelWidth) ?? 0;
       const totalLabelsWidth = d3.sum(labels, labelWidth);
       // Use a single column for four or fewer items
       const columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
@@ -9843,13 +9636,11 @@
       switch (slant) {
         case "vertical":
           {
-            var _max2;
-            return 40 + ((_max2 = d3.max(labels, measureAxisLabel)) !== null && _max2 !== void 0 ? _max2 : 0);
+            return 40 + (d3.max(labels, measureAxisLabel) ?? 0);
           }
         case "diagonal":
           {
-            var _max3;
-            return 40 + Math.sqrt(2 * (((_max3 = d3.max(labels, measureAxisLabel)) !== null && _max3 !== void 0 ? _max3 : 0) / 2) ** 2);
+            return 40 + Math.sqrt(2 * ((d3.max(labels, measureAxisLabel) ?? 0) / 2) ** 2);
           }
         default:
           {
@@ -9863,50 +9654,6 @@
     function numCols(totalWidth, columnWidth, num) {
       if (num <= 1) return 1;
       return columnWidth <= totalWidth / num ? num : numCols(totalWidth, columnWidth, num - 1);
-    }
-
-    function _defineProperty(e, r, t) {
-      return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
-        value: t,
-        enumerable: true,
-        configurable: true,
-        writable: true
-      }) : e[r] = t, e;
-    }
-    function ownKeys(e, r) {
-      var t = Object.keys(e);
-      if (Object.getOwnPropertySymbols) {
-        var o = Object.getOwnPropertySymbols(e);
-        r && (o = o.filter(function (r) {
-          return Object.getOwnPropertyDescriptor(e, r).enumerable;
-        })), t.push.apply(t, o);
-      }
-      return t;
-    }
-    function _objectSpread2(e) {
-      for (var r = 1; r < arguments.length; r++) {
-        var t = null != arguments[r] ? arguments[r] : {};
-        r % 2 ? ownKeys(Object(t), true).forEach(function (r) {
-          _defineProperty(e, r, t[r]);
-        }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) {
-          Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
-        });
-      }
-      return e;
-    }
-    function _toPrimitive(t, r) {
-      if ("object" != typeof t || !t) return t;
-      var e = t[Symbol.toPrimitive];
-      if (void 0 !== e) {
-        var i = e.call(t, r);
-        if ("object" != typeof i) return i;
-        throw new TypeError("@@toPrimitive must return a primitive value.");
-      }
-      return ("string" === r ? String : Number)(t);
-    }
-    function _toPropertyKey(t) {
-      var i = _toPrimitive(t, "string");
-      return "symbol" == typeof i ? i : i + "";
     }
 
     /**
@@ -9927,22 +9674,65 @@
     /** Throws unless `value` is a finite number of zero or more pixels. */
     function requireSize(layoutName, propName, value) {
       if (!Number.isFinite(value) || value < 0) {
-        throw new RangeError("".concat(layoutName, ": ").concat(propName, " must be a finite number of pixels of zero or more, got ").concat(value));
+        throw new RangeError(`${layoutName}: ${propName} must be a finite number of pixels of zero or more, got ${value}`);
       }
     }
     /** Throws unless `value` is a finite ratio within `[0, 1]`. */
     function requireRatio(layoutName, propName, value) {
       if (!Number.isFinite(value) || value < 0 || value > 1) {
-        throw new RangeError("".concat(layoutName, ": ").concat(propName, " must be a ratio within [0, 1], got ").concat(value));
+        throw new RangeError(`${layoutName}: ${propName} must be a ratio within [0, 1], got ${value}`);
       }
     }
     /** Throws unless `value` is a whole number of zero or more items. */
     function requireCount(layoutName, propName, value) {
       if (!Number.isInteger(value) || value < 0) {
-        throw new RangeError("".concat(layoutName, ": ").concat(propName, " must be a whole number of zero or more, got ").concat(value));
+        throw new RangeError(`${layoutName}: ${propName} must be a whole number of zero or more, got ${value}`);
       }
     }
 
+    /**
+     * Heat Table Dimensions
+     *
+     * Utility function for calculating different demensions in the heat table
+     *
+     * @module sszvis/layout/heatTableDimensions
+     *
+     * @param  {Number} spaceWidth   the total available width for the heat table within its container
+     * @param  {Number} squarePadding the padding, in pixels, between squares in the heat table
+     * @param  {Number} numX     The number of columns that need to fit within the heat table width
+     * @param {Number} numY The number of rows in the table
+     * @param {Object} [chartPadding] An object that includes padding values for the left, right, top,
+     *                              and bottom padding which the heat table should have within its container.
+     *                              These padding values should be enough to include any axis labels or other things
+     *                              that show up around the table itself. The heat table will then fill the rest
+     *                              of the available space as appropriate (up to a certain maximum size of box)
+     * @return {object}         An object with dimension information about the heat table:
+     *                          {
+     *                              side: the length of one side of a table box
+     *                              paddedSide: the length of the side plus padding
+     *                              padRatio: the ratio of padding to paddedSide (used for configuring d3.scaleOrdinal.rangeBands as the second parameter)
+     *                              width: the total width of all table boxes plus padding in between
+     *                              height: the total height of all table boxes plus padding in between
+     *                              centeredOffset: the left offset required to center the table horizontally within its container
+     *                          }
+     *
+     * Behaviour notes:
+     * - The box side is fitted to the available width only; numY/rows never affect it.
+     * - The side is capped at 30px and floored at 0. Too many columns, a large squarePadding
+     *   or a large horizontal chartPadding leave no room for a box at all, and the whole
+     *   layout is then zeroed rather than reporting a negative side and a padRatio outside
+     *   the [0, 1) range a band scale expects.
+     * - The chartPadding argument is copied before the missing sides are defaulted onto it, so
+     *   a shared or frozen padding object is left as the caller wrote it.
+     * - Defaults for chartPadding are applied with `||`, so an explicit 0 is indistinguishable
+     *   from a missing value.
+     * - Only left/right padding affect the layout; top/bottom are accepted but unused.
+     * - A zero spaceWidth, or a table with no columns or no rows, is a table with nothing to
+     *   draw, and every dimension comes back 0.
+     * - A negative spaceWidth or squarePadding, and a negative or fractional column or row
+     *   count, throw.
+     * - centeredOffset is clamped at 0 but never validated otherwise.
+     */
     /** A table with no columns, no rows or no room: nothing to draw and nothing to report. */
     const EMPTY_DIMENSIONS = {
       side: 0,
@@ -9953,21 +9743,24 @@
       centeredOffset: 0
     };
     function dimensionsHeatTable(spaceWidth, squarePadding, numX, numY, chartPadding) {
-      var _padding$left, _padding$right;
       requireSize("dimensionsHeatTable", "spaceWidth", spaceWidth);
       requireSize("dimensionsHeatTable", "squarePadding", squarePadding);
       requireCount("dimensionsHeatTable", "numX", numX);
       requireCount("dimensionsHeatTable", "numY", numY);
-      if (spaceWidth === 0 || numX === 0 || numY === 0) return _objectSpread2({}, EMPTY_DIMENSIONS);
+      if (spaceWidth === 0 || numX === 0 || numY === 0) return {
+        ...EMPTY_DIMENSIONS
+      };
       // a copy: a dimension calculator has no business writing to its arguments
-      const padding = _objectSpread2({}, chartPadding);
-      padding.top || (padding.top = 0);
-      padding.right || (padding.right = 0);
-      padding.bottom || (padding.bottom = 0);
-      padding.left || (padding.left = 0);
+      const padding = {
+        ...chartPadding
+      };
+      padding.top ||= 0;
+      padding.right ||= 0;
+      padding.bottom ||= 0;
+      padding.left ||= 0;
       // this includes the default side length for the heat table
       const DEFAULT_SIDE = 30,
-        availableChartWidth = spaceWidth - ((_padding$left = padding.left) !== null && _padding$left !== void 0 ? _padding$left : 0) - ((_padding$right = padding.right) !== null && _padding$right !== void 0 ? _padding$right : 0),
+        availableChartWidth = spaceWidth - (padding.left ?? 0) - (padding.right ?? 0),
         // the side is capped from above and floored at 0: a box cannot have a negative side,
         // and a padRatio derived from one lands outside the [0, 1) a band scale accepts
         side = Math.max(0, Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE)),
@@ -9977,7 +9770,9 @@
         // subtract the squarePadding at the end
         tableHeight = numY * paddedSide - squarePadding; // subtract the squarePadding at the end
       // no room for a box means no table to lay out
-      if (side === 0) return _objectSpread2({}, EMPTY_DIMENSIONS);
+      if (side === 0) return {
+        ...EMPTY_DIMENSIONS
+      };
       return {
         side,
         paddedSide,
@@ -10213,7 +10008,7 @@
         const getValue = mGetValue;
         if (!getSource || !getTarget || !getValue) {
           const missing = [getSource ? undefined : "source", getTarget ? undefined : "target", getValue ? undefined : "value"].filter(Boolean);
-          throw new TypeError("sankeyPrepareData: the ".concat(missing.join(", "), " accessor").concat(missing.length > 1 ? "s are" : " is", " required"));
+          throw new TypeError(`sankeyPrepareData: the ${missing.join(", ")} accessor${missing.length > 1 ? "s are" : " is"} required`);
         }
         const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
           for (const id of columnIdsList) {
@@ -10397,17 +10192,16 @@
      *   height or width, or a negative or fractional column length, throws.
      */
     const computeLayout$1 = (columnLengths, columnTotals, columnHeight, columnWidth) => {
-      var _max, _min;
       requireSize("sankeyLayout", "columnHeight", columnHeight);
       requireSize("sankeyLayout", "columnWidth", columnWidth);
       for (const colLength of columnLengths) {
         requireCount("sankeyLayout", "columnLengths", colLength);
       }
       if (columnTotals.length !== columnLengths.length) {
-        throw new RangeError("sankeyLayout: columnTotals must hold one total per column, got ".concat(columnTotals.length, " for ").concat(columnLengths.length, " columns"));
+        throw new RangeError(`sankeyLayout: columnTotals must hold one total per column, got ${columnTotals.length} for ${columnLengths.length} columns`);
       }
       // The maximum total value of any column
-      const maxTotal = (_max = d3.max(columnTotals)) !== null && _max !== void 0 ? _max : 0;
+      const maxTotal = d3.max(columnTotals) ?? 0;
       const nodeThickness = 20;
       const numColumns = columnLengths.length;
       // With one column there are no steps to space out, so the offset is zero rather than a
@@ -10440,12 +10234,12 @@
       // A column of one node draws no gaps, so it has no padding of its own to contribute, and
       // charging its (divide-by-zero, then clamped) candidate to the other columns would shrink
       // columns that do draw gaps.
-      const computedPixPadding = (_min = d3.min(columnLengths.filter(colLength => colLength > 1).map(colLength => {
+      const computedPixPadding = d3.min(columnLengths.filter(colLength => colLength > 1).map(colLength => {
         // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
         const colPadding = columnHeight * padSpaceRatio / (colLength - 1);
         // Limit by minimum and maximum pixel padding values
         return Math.max(padMin, Math.min(padMax, colPadding));
-      }))) !== null && _min !== void 0 ? _min : 0;
+      })) ?? 0;
       // Given the computed padding value, compute each column's resulting "pixels per unit"
       // This is the number of remaining pixels available to display the column's total units,
       // after padding pixels have been subtracted. Then take the minimum value of that.
@@ -10556,19 +10350,19 @@
         const props = selection.props();
         for (const propName of ["width", "height", "rows", "cols"]) {
           if (props[propName] === undefined) {
-            throw new TypeError("smallMultiples: the ".concat(propName, " property is required"));
+            throw new TypeError(`smallMultiples: the ${propName} property is required`);
           }
         }
         if (props.showTitle && !TITLE_ANCHORS.includes(props.titleAnchor)) {
-          throw new RangeError("smallMultiples: titleAnchor must be one of ".concat(TITLE_ANCHORS.join(", "), ", got ").concat(props.titleAnchor));
+          throw new RangeError(`smallMultiples: titleAnchor must be one of ${TITLE_ANCHORS.join(", ")}, got ${props.titleAnchor}`);
         }
         for (const [index, datum] of data.entries()) {
           if (!(datum && "values" in datum)) {
-            throw new TypeError("smallMultiples: group ".concat(index, " has no values property"));
+            throw new TypeError(`smallMultiples: group ${index} has no values property`);
           }
         }
         if (data.length > props.rows * props.cols) {
-          throw new RangeError("smallMultiples: the ".concat(props.rows, " x ").concat(props.cols, " grid has no room for ").concat(data.length, " groups"));
+          throw new RangeError(`smallMultiples: the ${props.rows} x ${props.cols} grid has no room for ${data.length} groups`);
         }
         const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
         const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
@@ -10584,7 +10378,7 @@
           d.gh = unitHeight;
           d.cy = verticalCenter;
           return d;
-        }).attr("transform", d => "translate(".concat(d.gx, ",").concat(d.gy, ")"));
+        }).attr("transform", d => `translate(${d.gx},${d.gy})`);
         // Render titles if showTitle is enabled
         if (props.showTitle) {
           const titleX = props.titleAnchor === "start" ? 0 : props.titleAnchor === "end" ? unitWidth : horizontalCenter;
@@ -10595,6 +10389,43 @@
       });
     }
 
+    /**
+     * Stacked Area Multiples Layout
+     *
+     * This function is used to compute layout parameters for the area multiples chart.
+     *
+     * @module sszvis/layout/stackedAreaMultiplesLayout
+     *
+     * @param  {number} height      The available height of the chart
+     * @param  {number} num         The number of individual stacks to display
+     * @param  {number} pct         the planned-for ratio between the space allotted to each area and the amount of space + area.
+     *                              This value is used to compute the baseline positions for the areas, and how much vertical space to leave
+     *                              between the areas.
+     *
+     * @return {object}             An object containing configuration properties for use in laying out the stacked area multiples.
+     *                              {
+     *                                range:          This is an array of baseline positions, counting from the top of the stack downwards.
+     *                                                It should be used to configure a d3.scaleOrdinal(). The values passed into the ordinal
+     *                                                scale will be given a y-value which descends from the top of the stack, so that the resulting
+     *                                                scale will match the organization scheme of sszvis.stackedArea. Use the ordinal scale to
+     *                                                configure the sszvis.stackedAreaMultiples component.
+     *                                bandHeight:     The height of each multiples band. This can be used to configure the within-area y-scale.
+     *                                                This height represents the height of the y-axis of the individual area multiple.
+     *                                padHeight:      This is the amount of vertical padding between each area multiple.
+     *                              }
+     *
+     * Behaviour notes:
+     * - step = height / (num - pct); band and pad split that step in a (1 - pct) / pct ratio.
+     * - By construction, step * (num - pct) === height, so baseline number `num` always lands exactly on `height`.
+     * - The baseline loop terminates on the stack count, so `range` always holds exactly `num`
+     *   baselines, whatever the height.
+     * - pct defaults to 0.1 when it is omitted. An explicit 0 means exactly that: gapless
+     *   multiples. A pct outside [0, 1] throws.
+     * - num is a count of stacks: a negative or fractional value throws, which also rules out the
+     *   num === pct division by zero.
+     * - A step that is not strictly positive - a zero or negative height, or a num at or below pct -
+     *   describes no band at all, and the layout comes back empty rather than looping forever.
+     */
     /** Nothing can be drawn: no baselines, and no band or padding to report. */
     const EMPTY_LAYOUT = {
       range: [],
@@ -10604,7 +10435,7 @@
     function layoutStackedAreaMultiples(height, num, pct) {
       requireSize("layoutStackedAreaMultiples", "height", height);
       requireCount("layoutStackedAreaMultiples", "num", num);
-      const padRatio = pct !== null && pct !== void 0 ? pct : 0.1;
+      const padRatio = pct ?? 0.1;
       requireRatio("layoutStackedAreaMultiples", "pct", padRatio);
       const step = height / (num - padRatio);
       // A non-positive step describes no band at all, and an infinite one - num and pct both 0,
@@ -10612,7 +10443,9 @@
       // describe in either case, so neither reaches the baseline loop. A degenerate height is not
       // a misconfiguration: it is what a container mid-entrance or a flex parent that has not
       // settled reports, and it corrects itself, so it is neither warned about nor thrown on.
-      if (!(step > 0) || !Number.isFinite(step)) return _objectSpread2({}, EMPTY_LAYOUT);
+      if (!(step > 0) || !Number.isFinite(step)) return {
+        ...EMPTY_LAYOUT
+      };
       const bandHeight = step * (1 - padRatio),
         range = [];
       let level = bandHeight; // count from the top, and start at the bottom of the first band
@@ -10690,7 +10523,7 @@
       // leaves them. Give it to them, down to a centre of nothing.
       const centerRadius = Math.max(0, Math.min(targetCenterRadius, halfWidth - ringWidth * numLayers));
       if (ringWidth * numLayers > halfWidth) {
-        warn("sunburstLayout: ".concat(numLayers, " rings of the minimum ").concat(MIN_RW, "px do not fit a chart ").concat(chartWidth, "px wide, and will be drawn outside it"));
+        warn(`sunburstLayout: ${numLayers} rings of the minimum ${MIN_RW}px do not fit a chart ${chartWidth}px wide, and will be drawn outside it`);
       }
       return {
         centerRadius,
@@ -10712,10 +10545,7 @@
      * - d3.min/max skip undefined and NaN nodes.
      * - An empty array gives [0, 0], which is a usable, if empty, scale domain.
      */
-    const getRadiusExtent = formattedData => {
-      var _min, _max;
-      return [(_min = d3.min(formattedData, d => d.y0)) !== null && _min !== void 0 ? _min : 0, (_max = d3.max(formattedData, d => d.y1)) !== null && _max !== void 0 ? _max : 0];
-    };
+    const getRadiusExtent = formattedData => [d3.min(formattedData, d => d.y0) ?? 0, d3.max(formattedData, d => d.y1) ?? 0];
 
     /**
      * Vertical Bar Chart Dimensions
@@ -10883,7 +10713,7 @@
         const lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData).join("line").classed("sszvis-legend__crispmark", true);
         lines.attr("x1", d => halfPixel(d.x + d.w)).attr("x2", d => halfPixel(d.x + d.w)).attr("y1", segHeight + 1).attr("y2", segHeight + 6).attr("stroke", "#B8B8B8");
         const labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData).join("text").classed("sszvis-legend__axislabel", true);
-        labels.style("text-anchor", "middle").attr("transform", d => "translate(".concat(d.x + d.w, ",").concat(segHeight + 20, ")")).text(d => props.labelFormat(d.p));
+        labels.style("text-anchor", "middle").attr("transform", d => `translate(${d.x + d.w},${segHeight + 20})`).text(d => props.labelFormat(d.p));
       });
     }
 
@@ -10943,7 +10773,7 @@
         const labels = selection.selectAll(".sszvis-legend__label").data(labelText).join("text").classed("sszvis-legend__label", true);
         const labelPadding = 16;
         labels.style("text-anchor", (_d, i) => i === 0 ? "end" : "start").attr("dy", "0.35em") // vertically-center
-        .attr("transform", (_d, i) => "translate(".concat(i * props.width + (i === 0 ? -1 : 1) * labelPadding, ", ").concat(segHeight / 2, ")")).text((d, i) => props.labelFormat(d, i));
+        .attr("transform", (_d, i) => `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`).text((d, i) => props.labelFormat(d, i));
       });
     }
 
@@ -11001,7 +10831,6 @@
      * works for a continuous scale - supply tickValues to use any other kind.
      */
     function defaultTickValues(scale) {
-      var _mean;
       const {
         invert
       } = scale;
@@ -11010,7 +10839,7 @@
       }
       const domain = scale.domain();
       // mean() only returns undefined for an empty range, which a d3 scale never has.
-      return [domain[1], invert((_mean = d3.mean(scale.range())) !== null && _mean !== void 0 ? _mean : Number.NaN), domain[0]];
+      return [domain[1], invert(d3.mean(scale.range()) ?? Number.NaN), domain[0]];
     }
 
     /**
@@ -11076,7 +10905,7 @@
     // Part of the signature only so that the memoize resolver below can read it.
     _featureBoundsCacheKey) => d3.geoMercator().fitSize([width, height], featureCollection),
     // Memoize resolver
-    (width, height, _, featureBoundsCacheKey) => "".concat(width, ",").concat(height, ",").concat(featureBoundsCacheKey));
+    (width, height, _, featureBoundsCacheKey) => `${width},${height},${featureBoundsCacheKey}`);
     function swissMapProjection(width, height, featureCollection, featureBoundsCacheKey) {
       // Without a key there is nothing that identifies the collection, so caching would hand a second
       // map the first map's fit. An uncached fitSize is always correct.
@@ -11137,7 +10966,7 @@
     function pixelsFromGeoDistance(projection, centerPoint, meterDistance) {
       // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
       // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
-      const APPROX_EARTH_RADIUS = 6367475;
+      const APPROX_EARTH_RADIUS = 6_367_475;
       const APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
       // Compute the size of the angle made by the meter distance
       const degrees = meterDistance / APPROX_EARTH_CIRCUMFERENCE * 360;
@@ -11255,8 +11084,7 @@
      *                                          (or user-specified center) of the object.
      */
     function getGeoJsonCenter(geoJson) {
-      var _parseCenter, _geoJson$properties;
-      return (_parseCenter = parseCenter((_geoJson$properties = geoJson.properties) === null || _geoJson$properties === void 0 ? void 0 : _geoJson$properties.center, geoJson.id)) !== null && _parseCenter !== void 0 ? _parseCenter : d3.geoCentroid(geoJson);
+      return parseCenter(geoJson.properties?.center, geoJson.id) ?? d3.geoCentroid(geoJson);
     }
     /**
      * An authored "longitude,latitude" centre, or undefined where none was given or it is not exactly
@@ -11277,14 +11105,14 @@
       // number or an object would otherwise throw from split() rather than degrading to the centroid,
       // which is what this function exists to guarantee.
       if (typeof center !== "string") {
-        warn("getGeoJsonCenter: ignoring the center property of feature ".concat(String(featureId), ", whose ") + "type is ".concat(center === null ? "null" : typeof center, " rather than a ") + '"longitude,latitude" string. Falling back to the computed centroid.');
+        warn(`getGeoJsonCenter: ignoring the center property of feature ${String(featureId)}, whose ` + `type is ${center === null ? "null" : typeof center} rather than a ` + '"longitude,latitude" string. Falling back to the computed centroid.');
         return undefined;
       }
       const parsed = center.split(",").map(token => token.trim() === "" ? Number.NaN : Number(token));
       if (parsed.length === 2 && parsed.every(n => Number.isFinite(n))) {
         return [parsed[0], parsed[1]];
       }
-      warn("getGeoJsonCenter: ignoring the center property \"".concat(center, "\" of feature ").concat(String(featureId), ", ") + "which is not two finite numbers. Falling back to the computed centroid.");
+      warn(`getGeoJsonCenter: ignoring the center property "${center}" of feature ${String(featureId)}, ` + "which is not two finite numbers. Falling back to the computed centroid.");
       return undefined;
     }
     /**
@@ -11319,8 +11147,7 @@
      * See test/map/mapUtils.test.ts.
      */
     function isPaintServer(fill) {
-      var _fill$startsWith;
-      return (_fill$startsWith = fill === null || fill === void 0 ? void 0 : fill.startsWith("url(")) !== null && _fill$startsWith !== void 0 ? _fill$startsWith : false;
+      return fill?.startsWith("url(") ?? false;
     }
     /** Where a layer records the pattern id it was given, so re-renders reuse it. */
     const MISSING_PATTERN_ID_ATTR = "data-sszvis-missing-pattern-id";
@@ -11342,7 +11169,7 @@
     function missingPatternId(selection) {
       const assigned = selection.attr(MISSING_PATTERN_ID_ATTR);
       if (assigned) return assigned;
-      const id = "missing-pattern-".concat(++missingPatternCount);
+      const id = `missing-pattern-${++missingPatternCount}`;
       selection.attr(MISSING_PATTERN_ID_ATTR, id);
       return id;
     }
@@ -11445,7 +11272,6 @@
       return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", storeMapValue).defined(true) // a predicate function to determine whether a datum has a defined value
       .prop("encodesData").prop("fill", storeMapValue).fill("black") // a constant: an accessor would make every default layer encode data
       .prop("transitionColor").transitionColor(true).render(function () {
-        var _props$encodesData;
         const selection = d3.select(this);
         const props = selection.props();
         // render the missing value pattern, under an id of this layer's own
@@ -11457,7 +11283,7 @@
         // handed a datum, so the layer is encoding values whether or not its data has arrived yet -
         // which is the case that used to crash. Constants need nothing, so a layer built from them
         // is drawing geometry until a datum actually matches.
-        const encodesData = (_props$encodesData = props.encodesData) !== null && _props$encodesData !== void 0 ? _props$encodesData : props.fill.needsDatum || props.defined.needsDatum || props.mergedData.some(d => defined(d.datum));
+        const encodesData = props.encodesData ?? (props.fill.needsDatum || props.defined.needsDatum || props.mergedData.some(d => defined(d.datum)));
         // On a data layer, one notion of a missing value is shared by the fill and the --undefined
         // class: an entity the dataset does not cover is as missing as one the predicate rejects.
         // Short-circuiting also keeps both accessors from being called with undefined. A layer
@@ -11467,7 +11293,7 @@
         }
         // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
         function getMapFill(d) {
-          return hasValue(d) ? props.fill(d.datum) : "url(#".concat(patternId, ")");
+          return hasValue(d) ? props.fill(d.datum) : `url(#${patternId})`;
         }
         const mapAreas = selection
         // Typed to the element the join creates, so the fill filters below can read the fill
@@ -11622,7 +11448,7 @@
       return {
         type,
         name,
-        key: "".concat(type, ".").concat(name)
+        key: `${type}.${name}`
       };
     }
     /** The name half of a canonical key, which is everything after its single separating dot. */
@@ -11634,7 +11460,7 @@
     function anonymousKey(feature) {
       const existing = anonymousKeys.get(feature);
       if (existing !== undefined) return existing;
-      const key = "anonymous:".concat(++anonymousCount);
+      const key = `anonymous:${++anonymousCount}`;
       anonymousKeys.set(feature, key);
       return key;
     }
@@ -11646,7 +11472,7 @@
      * this returns, so an id is stringified either way; String() only makes that explicit for the type.
      */
     function keyOf(d) {
-      return d.geoJson.id == null ? anonymousKey(d.geoJson) : "id:".concat(String(d.geoJson.id));
+      return d.geoJson.id == null ? anonymousKey(d.geoJson) : `id:${String(d.geoJson.id)}`;
     }
     /** Reads the datum off a merged entry, as the JavaScript's module-level accessor did. */
     const datumAcc = prop("datum");
@@ -11751,10 +11577,7 @@
       // collapses the callback to never. Narrowing to "over" | "out" | "click" would type the callback
       // properly but would also reject the namespaced typenames d3 accepts at runtime, such as
       // "over.tooltip".
-      anchoredCirclesComponent.on = function () {
-        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
-        }
+      anchoredCirclesComponent.on = (...args) => {
         const value = event.on.apply(event, args);
         if (value !== event) return value;
         // A setter call, and d3 validated the typenames by returning the dispatch. It accepts a
@@ -11773,6 +11596,7 @@
           } = parseTypename(typename);
           if (handler == null) {
             if (type === "") {
+              // oxlint-disable-next-line unicorn/no-useless-spread -- the copy is required: the loop body deletes from `registered`.
               for (const held of [...registered]) if (nameOfKey(held) === name) registered.delete(held);
             } else {
               registered.delete(key);
@@ -11889,7 +11713,7 @@
           };
         });
         function getMapFill(d) {
-          return defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : "url(#".concat(patternId, ")");
+          return defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : `url(#${patternId})`;
         }
         function getMapStroke(d) {
           return defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
@@ -11949,10 +11773,7 @@
       // derives its callback type from a *literal* event name, so a plain string collapses the
       // callback to never. Narrowing to "over" | "out" | "click" would type the callback properly but
       // would also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
-      geojsonComponent.on = function () {
-        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
-        }
+      geojsonComponent.on = function (...args) {
         const value = event.on.apply(event, args);
         return value === event ? geojsonComponent : value;
       };
@@ -12122,7 +11943,7 @@
     function warnUnmatched(unmatchedIds, keyName) {
       if (unmatchedIds.length === 0) return;
       const ids = unmatchedIds.map(id => String(id)).join(", ");
-      warn("[mapRendererHighlight] no map entity has the ".concat(keyName, " ").concat(ids, "; nothing was highlighted for it. Check that the highlight ids match the geoJson feature ids, including their format (\"01\" and \"1\" are different entities)."));
+      warn(`[mapRendererHighlight] no map entity has the ${keyName} ${ids}; nothing was highlighted for it. Check that the highlight ids match the geoJson feature ids, including their format ("01" and "1" are different entities).`);
     }
     function mapRendererHighlight() {
       return component().prop("keyName").keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
@@ -12139,7 +11960,7 @@
         // removing it: that is what holds its place among its siblings, so a first hover after the
         // anchored shape group was drawn still lands beneath it. The same reasoning as choropleth's
         // ownGroup; see issue #332.
-        const highlightGroup = selection.selectAll(":scope > g.".concat(GROUP_CLASS)).filter(function () {
+        const highlightGroup = selection.selectAll(`:scope > g.${GROUP_CLASS}`).filter(function () {
           return this.getAttribute(KEY_ATTRIBUTE$4) === props.key;
         }).data([null]).join("g").classed(GROUP_CLASS, true).attr(KEY_ATTRIBUTE$4, props.key);
         // Scoped to this layer by its wrapper, so a second highlight layer in the same group draws
@@ -12170,14 +11991,13 @@
             if (feature === undefined) {
               unmatchedIds.push(entityId);
             } else {
-              var _occurrences$get;
               const entityKey = String(toLookupKey(entityId));
-              const occurrence = (_occurrences$get = occurrences.get(entityKey)) !== null && _occurrences$get !== void 0 ? _occurrences$get : 0;
+              const occurrence = occurrences.get(entityKey) ?? 0;
               occurrences.set(entityKey, occurrence + 1);
               m.push({
                 geoJson: feature,
                 datum: v,
-                joinKey: "".concat(entityKey, "#").concat(occurrence)
+                joinKey: `${entityKey}#${occurrence}`
               });
             }
           }
@@ -12305,7 +12125,7 @@
     /** Reports a required property the caller left unset, naming it. */
     function required(value, name) {
       if (value === undefined) {
-        throw new Error("[mapRendererImage] the ".concat(name, " property is required"));
+        throw new Error(`[mapRendererImage] the ${name} property is required`);
       }
       return value;
     }
@@ -12317,7 +12137,7 @@
       const projected = projection(geoBounds[which]);
       if (projected == null) {
         const name = which === 0 ? "north-west" : "south-east";
-        throw new Error("[mapRendererImage] the projection could not place the ".concat(name, " corner of geoBounds"));
+        throw new Error(`[mapRendererImage] the projection could not place the ${name} corner of geoBounds`);
       }
       return projected;
     }
@@ -12357,10 +12177,10 @@
         // not need sszvis.css: absolute makes the offsets below apply at all, block keeps an inline
         // image from picking up baseline leading, and none lets the map layers underneath be
         // hovered through it.
-        .style("position", "absolute").style("display", "block").style("pointer-events", "none").style("left", "".concat(Math.round(topLeft[0]), "px")).style("top", "".concat(Math.round(topLeft[1]), "px"))
+        .style("position", "absolute").style("display", "block").style("pointer-events", "none").style("left", `${Math.round(topLeft[0])}px`).style("top", `${Math.round(topLeft[1])}px`)
         // Each corner is rounded before the subtraction, so the right and bottom edges land on the
         // same pixels as the projected south-east corner rather than a pixel either side of it.
-        .style("width", "".concat(width, "px")).style("height", "".concat(height, "px")).style("opacity", valueFn(props.opacity));
+        .style("width", `${width}px`).style("height", `${height}px`).style("opacity", valueFn(props.opacity));
       });
     }
 
@@ -12443,7 +12263,7 @@
     function withDefault(value, fallback) {
       return function (datum, index, groups) {
         const resolved = valueFn(value).call(this, datum, index, groups);
-        return resolved !== null && resolved !== void 0 ? resolved : fallback;
+        return resolved ?? fallback;
       };
     }
     function mapRendererMesh() {
@@ -12596,7 +12416,7 @@
      */
     function requireSpellableKey(key) {
       if (!KEY_PATTERN.test(key)) {
-        throw new Error("[mapRendererPatternedLakeOverlay] the key property must start with a letter and use only letters, digits, hyphens and underscores; got \"".concat(key, "\". The key is written into this overlay's definition ids, which a url(#...) reference has to be able to name."));
+        throw new Error(`[mapRendererPatternedLakeOverlay] the key property must start with a letter and use only letters, digits, hyphens and underscores; got "${key}". The key is written into this overlay's definition ids, which a url(#...) reference has to be able to name.`);
       }
       return key;
     }
@@ -12624,16 +12444,16 @@
         const selection = d3.select(this);
         const props = selection.props();
         const scope = overlayScope(this, props.key);
-        const patternId = "lake-pattern-".concat(scope);
-        const gradientId = "lake-fade-gradient-".concat(scope);
-        const maskId = "lake-fade-mask-".concat(scope);
+        const patternId = `lake-pattern-${scope}`;
+        const gradientId = `lake-fade-gradient-${scope}`;
+        const maskId = `lake-fade-mask-${scope}`;
         /**
          * The paths of one class this overlay owns: scoped to the rendering group's own children, so
          * an overlay in a nested group is never rebound, and filtered by key, which is what lets two
          * overlays share one group. Read back through getAttribute rather than matched with an
          * attribute selector, so a caller-supplied key needs no escaping.
          */
-        const ownPaths = className => selection.selectAll(":scope > path.".concat(className)).filter(function () {
+        const ownPaths = className => selection.selectAll(`:scope > path.${className}`).filter(function () {
           return this.getAttribute(KEY_ATTRIBUTE$1) === scope;
         });
         /**
@@ -12643,12 +12463,7 @@
          * id - clearing the outer overlay would then strip the definitions the inner overlay's
          * paths still reference. Scoped like ownPaths, so ownership is the same on both sides.
          */
-        const ownDefs = function () {
-          for (var _len = arguments.length, selectors = new Array(_len), _key = 0; _key < _len; _key++) {
-            selectors[_key] = arguments[_key];
-          }
-          return selection.selectAll(":scope > defs").selectAll(selectors.map(selector => ":scope > ".concat(selector)).join(", "));
-        };
+        const ownDefs = (...selectors) => selection.selectAll(":scope > defs").selectAll(selectors.map(selector => `:scope > ${selector}`).join(", "));
         // No lake to draw: remove what an earlier render left, so a caller can ask this component
         // for "no lake" rather than wrapping it in a group to empty. Only this overlay's own
         // definitions are removed - the ids carry its scope - so a sibling overlay keeps its own.
@@ -12656,7 +12471,7 @@
         if (props.lakeFeature == null) {
           ownPaths("sszvis-map__lakezurich").remove();
           ownPaths("sszvis-map__lakepath").remove();
-          ownDefs("pattern#".concat(patternId), "linearGradient#".concat(gradientId), "mask#".concat(maskId)).remove();
+          ownDefs(`pattern#${patternId}`, `linearGradient#${gradientId}`, `mask#${maskId}`).remove();
           return;
         }
         // the lake texture. The helpers join their contents, so calling them on every render updates
@@ -12669,12 +12484,12 @@
           ensureDefsElement(selection, "mask", maskId).call(mapLakeGradientMask, gradientId);
         } else {
           // Turning the fade off must undo an existing one, not merely skip writing it.
-          ownDefs("linearGradient#".concat(gradientId), "mask#".concat(maskId)).remove();
+          ownDefs(`linearGradient#${gradientId}`, `mask#${maskId}`).remove();
         }
         // generate the Lake Zurich path
-        const zurichSee = ownPaths("sszvis-map__lakezurich").data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath).attr("fill", "url(#".concat(patternId, ")"));
+        const zurichSee = ownPaths("sszvis-map__lakezurich").data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath).attr("fill", `url(#${patternId})`);
         // this mask applies the fade effect
-        zurichSee.attr("mask", props.fadeOut ? "url(#".concat(maskId, ")") : null);
+        zurichSee.attr("mask", props.fadeOut ? `url(#${maskId})` : null);
         // add a path for the boundaries of map entities which extend over the lake.
         // This path is rendered as a dotted line over the lake shape
         const lakePath = ownPaths("sszvis-map__lakepath").data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath);
@@ -12899,7 +12714,7 @@
      */
     function dimension$1(value, name) {
       if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-        throw new Error("[mapRendererRaster] the ".concat(name, " property is required, and must be a finite, non-negative number"));
+        throw new Error(`[mapRendererRaster] the ${name} property is required, and must be a finite, non-negative number`);
       }
       return value;
     }
@@ -12928,7 +12743,7 @@
      */
     function accessor(value, name, accepts) {
       if (typeof value !== "function") {
-        throw new Error("[mapRendererRaster] the ".concat(name, " property is required, and must be ").concat(accepts));
+        throw new Error(`[mapRendererRaster] the ${name} property is required, and must be ${accepts}`);
       }
       return value;
     }
@@ -12952,7 +12767,7 @@
         // The bitmap is in device pixels while the element is laid out in CSS pixels, so the cells
         // are as sharp as the SVG layers over them on a high-DPI display.
         const ratio = pixelRatio();
-        canvas.attr("width", Math.round(width * ratio)).attr("height", Math.round(height * ratio)).style("width", "".concat(width, "px")).style("height", "".concat(height, "px")).style("opacity", props.opacity);
+        canvas.attr("width", Math.round(width * ratio)).attr("height", Math.round(height * ratio)).style("width", `${width}px`).style("height", `${height}px`).style("opacity", props.opacity);
         // An empty alt marks the layer decorative, so it is skipped deliberately rather than by
         // accident; a description is exposed both to assistive technology and as fallback content.
         const described = props.alt !== "";
@@ -12996,7 +12811,7 @@
         // through sszvis.logger rather than console directly, like every other diagnostic in the
         // library.
         if (unplaced > 0) {
-          warn("[mapRendererRaster] the position property could not place ".concat(unplaced, " of ").concat(data.length, " cells; they were not drawn"));
+          warn(`[mapRendererRaster] the position property could not place ${unplaced} of ${data.length} cells; they were not drawn`);
         }
       });
     }
@@ -13151,7 +12966,7 @@
      */
     function dimension(value, name) {
       if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-        throw new Error("[choropleth] the ".concat(name, " property is required, and must be a finite, non-negative number"));
+        throw new Error(`[choropleth] the ${name} property is required, and must be a finite, non-negative number`);
       }
       return value;
     }
@@ -13182,7 +12997,7 @@
      * renderer keeps its paths in a wrapper group of its own - the same place-holding trick as
      * ownGroup below, see issue #332 - so it is that group, not the paths, that follows the lake.
      */
-    const ABOVE_THE_LAKE = ":scope > g.sszvis-map__highlight-group, :scope > [data-d3-selectgroup=\"".concat(SHAPE_GROUP, "\"]");
+    const ABOVE_THE_LAKE = `:scope > g.sszvis-map__highlight-group, :scope > [data-d3-selectgroup="${SHAPE_GROUP}"]`;
     /**
      * The wrapper this component owns for the anchored shape, joined against the direct children of
      * the map group rather than searched for with selectGroup, which matches any descendant: an
@@ -13195,7 +13010,7 @@
      * group instead of back where it belongs.
      */
     function ownGroup(selection, key) {
-      return selection.selectAll(":scope > [data-d3-selectgroup=\"".concat(key, "\"]")).data(d => [d]).join("g").attr("data-d3-selectgroup", key);
+      return selection.selectAll(`:scope > [data-d3-selectgroup="${key}"]`).data(d => [d]).join("g").attr("data-d3-selectgroup", key);
     }
     /**
      * Puts the lake back beneath the layers drawn after it. The overlay appends its paths at the end of
@@ -13276,10 +13091,7 @@
       // its callback type from a *literal* event name, so a plain string collapses the callback to
       // never. Narrowing to "over" | "out" | "click" would type the callback properly but would also
       // reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
-      mapComponent.on = function () {
-        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
-        }
+      mapComponent.on = (...args) => {
         const value = event.on.apply(event, args);
         return value === event ? mapComponent : value;
       };
@@ -13489,11 +13301,11 @@
        *   { name: 'large', width: 700 }
        * ])
        */
-      const breakpoints = function () {
-        if (arguments.length === 0) {
+      const breakpoints = (...args) => {
+        if (args.length === 0) {
           return breakpointSpec;
         }
-        breakpointSpec = breakpointCreateSpec(arguments.length <= 0 ? undefined : arguments[0]);
+        breakpointSpec = breakpointCreateSpec(args[0]);
         return _responsiveProps;
       };
       _responsiveProps.breakpoints = breakpoints;
@@ -13584,21 +13396,21 @@
     function formatHTML() {
       const styles = {
         plain: d => d,
-        italic: d => "<em>".concat(d, "</em>"),
-        bold: d => "<strong>".concat(d, "</strong>")
+        italic: d => `<em>${d}</em>`,
+        bold: d => `<strong>${d}</strong>`
       };
       return (textBody, datum) => textBody.lines().map(line => line.map(word => styles[word.style](word.text(datum))).join(" ")).join("<br/>");
     }
     function formatSVG() {
       const styles = {
-        plain: d => "<tspan>".concat(d, "</tspan>"),
-        italic: d => "<tspan style=\"font-style:italic\">".concat(d, "</tspan>"),
-        bold: d => "<tspan style=\"font-weight:bold\">".concat(d, "</tspan>")
+        plain: d => `<tspan>${d}</tspan>`,
+        italic: d => `<tspan style="font-style:italic">${d}</tspan>`,
+        bold: d => `<tspan style="font-weight:bold">${d}</tspan>`
       };
       return (textBody, datum) => textBody.lines().reduce((svg, line, i) => {
         const lineSvg = line.map(word => styles[word.style](word.text(datum))).join(" ");
         const dy = i === 0 ? 0 : "1.2em";
-        return "".concat(svg, "<tspan x=\"0\" dy=\"").concat(dy, "\">").concat(lineSvg, "</tspan>");
+        return `${svg}<tspan x="0" dy="${dy}">${lineSvg}</tspan>`;
       }, "");
     }
     function structuredText() {

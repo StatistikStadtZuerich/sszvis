@@ -29,7 +29,7 @@
         // Configuration
         // -----------------------------------------------
 
-        const queryProps = sszvis
+        var queryProps = sszvis
           .responsiveProps()
           .prop("targetNumColumns", {
             palm: 1,
@@ -42,7 +42,9 @@
             _: "Prozent",
           })
           .prop("xLabelFormat", {
-            _: () => sszvis.formatText,
+            _: function _() {
+              return sszvis.formatText;
+            },
           })
           .prop("xSlant", {
             _: null,
@@ -59,15 +61,15 @@
           };
         }
 
-        const xAcc = sszvis.prop("xValue");
-        const yAcc = sszvis.prop("yValue");
-        const cAcc = sszvis.prop("category");
-        const dataAcc = sszvis.prop("data");
+        var xAcc = sszvis.prop("xValue");
+        var yAcc = sszvis.prop("yValue");
+        var cAcc = sszvis.prop("category");
+        var dataAcc = sszvis.prop("data");
 
         // Application state
         // -----------------------------------------------
 
-        const state = {
+        var state = {
           data: [],
           yValues: [],
           categories: [],
@@ -79,17 +81,17 @@
         // State transitions
         // -----------------------------------------------
 
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.yValues = sszvis.set(state.data, yAcc);
 
-            const stackLayout = sszvis.stackedBarHorizontalLayout(
+            var stackLayout = sszvis.stackedBarHorizontalLayout(
               yAcc,
               cAcc,
               xAcc,
             );
-            const layout = stackLayout(data);
+            var layout = stackLayout(data);
             state.stackedData = layout.series;
 
             state.categories = layout.keys;
@@ -98,17 +100,17 @@
             render(state);
           },
 
-          showTooltip(e, datum) {
+          showTooltip: function showTooltip(e, datum) {
             state.selection = [datum];
             render(state);
           },
 
-          hideTooltip() {
+          hideTooltip: function hideTooltip() {
             state.selection = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -124,9 +126,9 @@
         // -----------------------------------------------
 
         function render(state) {
-          const props = queryProps(sszvis.measureDimensions(config.id));
+          var props = queryProps(sszvis.measureDimensions(config.id));
 
-          const legendLayout = sszvis.colorLegendLayout(
+          var legendLayout = sszvis.colorLegendLayout(
             {
               axisLabels: props.xLabelFormat(state.maxStacked),
               legendLabels: state.categories,
@@ -135,19 +137,19 @@
             config.id,
           );
 
-          const cScale = legendLayout.scale;
-          const colorLegend = legendLayout.legend;
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
           //the height and the bottom padding need to be calculated
-          const chartDimensions = sszvis.dimensionsHorizontalBarChart(
+          var chartDimensions = sszvis.dimensionsHorizontalBarChart(
             state.yValues.length,
           );
-          const paddingTop = 20;
-          const bottomPadding =
+          var paddingTop = 20;
+          var bottomPadding =
             props.bottomPadding == null
               ? legendLayout.bottomPadding
               : props.bottomPadding;
-          const bounds = sszvis.bounds(
+          var bounds = sszvis.bounds(
             {
               height: paddingTop + chartDimensions.totalHeight + bottomPadding,
               top: paddingTop,
@@ -155,16 +157,16 @@
             },
             config.id,
           );
-          const chartWidth = Math.min(bounds.innerWidth, 800);
+          var chartWidth = Math.min(bounds.innerWidth, 800);
 
           // Scales
 
-          const xScale = d3
+          var xScale = d3
             .scaleLinear()
             .domain([0, state.maxStacked])
             .range([0, chartWidth]);
 
-          const yScale = d3
+          var yScale = d3
             .scaleBand()
             .domain(state.yValues)
             .padding(chartDimensions.padRatio)
@@ -173,24 +175,24 @@
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer(config.id, bounds)
             .datum(state.stackedData);
 
-          const tooltipLayer = sszvis
+          var tooltipLayer = sszvis
             .createHtmlLayer(config.id, bounds)
             .datum(state.selection);
 
           // Components
 
-          const horizontalBars = sszvis
+          var horizontalBars = sszvis
             .stackedBarHorizontal()
             .xScale(xScale)
             .height(chartDimensions.barHeight)
             .yScale(yScale)
             .fill(sszvis.compose(cScale, cAcc, dataAcc));
 
-          const xAxis = sszvis
+          var xAxis = sszvis
             .axisX()
             .scale(xScale)
             .orient("bottom")
@@ -203,17 +205,17 @@
             xAxis.ticks(props.ticks);
           }
 
-          const yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
+          var yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
 
-          const tooltipHeader = sszvis
+          var tooltipHeader = sszvis
             .modularTextHTML()
             .bold(sszvis.compose(cAcc, dataAcc));
 
-          const tooltipText = sszvis
+          var tooltipText = sszvis
             .modularTextHTML()
             .plain(sszvis.compose(sszvis.formatPercent, xAcc, dataAcc));
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .orientation(sszvis.fitTooltip("bottom", bounds))
@@ -231,7 +233,7 @@
             ),
           );
 
-          const bars = chartLayer.selectGroup("barchart").call(horizontalBars);
+          var bars = chartLayer.selectGroup("barchart").call(horizontalBars);
 
           bars.selectAll("[data-tooltip-anchor]").call(tooltip);
 
@@ -264,7 +266,7 @@
 
           // Interaction
 
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .panning()
             .elementSelector(".sszvis-bar")
             .on("start", actions.showTooltip)

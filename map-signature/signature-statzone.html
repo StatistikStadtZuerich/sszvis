@@ -22,11 +22,11 @@
         // Configuration
         // -----------------------------------------------
 
-        const queryProps = sszvis
+        var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _(width) {
-              const innerHeight = sszvis.aspectRatioSquare(width);
+            _: function _(width) {
+              var innerHeight = sszvis.aspectRatioSquare(width);
               return {
                 top: 90,
                 bottom: 30,
@@ -35,17 +35,27 @@
             },
           })
           .prop("legendX", {
-            _: (width) => Math.max(width / 2 - 205, 5),
+            _: function _(width) {
+              return Math.max(width / 2 - 205, 5);
+            },
           })
           .prop("radiusMax", {
-            _: (width) => Math.min(14, Math.max(width / 28, 10)),
+            _: function _(width) {
+              return Math.min(14, Math.max(width / 28, 10));
+            },
           })
           .prop("control", {
-            palm: () => sszvis.selectMenu,
-            _: () => sszvis.buttonGroup,
+            palm: function palm() {
+              return sszvis.selectMenu;
+            },
+            _: function _() {
+              return sszvis.buttonGroup;
+            },
           })
           .prop("controlWidth", {
-            _: (width) => Math.min(width, sszvis.aspectRatioSquare.MAX_HEIGHT),
+            _: function _(width) {
+              return Math.min(width, sszvis.aspectRatioSquare.MAX_HEIGHT);
+            },
           });
 
         function parseRow(d) {
@@ -58,15 +68,15 @@
           };
         }
 
-        const datumAcc = sszvis.prop("datum");
-        const yearAcc = sszvis.prop("year");
-        const genderAcc = sszvis.prop("gender");
-        const birthsAcc = sszvis.propOr("births", 0);
-        const zoneNameAcc = sszvis.propOr("zonename", "--");
+        var datumAcc = sszvis.prop("datum");
+        var yearAcc = sszvis.prop("year");
+        var genderAcc = sszvis.prop("gender");
+        var birthsAcc = sszvis.propOr("births", 0);
+        var zoneNameAcc = sszvis.propOr("zonename", "--");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: null,
           mapData: null,
           filteredData: [],
@@ -76,15 +86,15 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareData(data) {
+        var actions = {
+          prepareData: function prepareData(data) {
             state.data = data;
             state.birthsRange = [0, d3.max(state.data, birthsAcc)];
 
             actions.setFilter(null, state.currentFilter);
           },
 
-          prepareMapData(topo) {
+          prepareMapData: function prepareMapData(topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.statistische_zonen),
               borders: topojson.mesh(topo, topo.objects.statistische_zonen),
@@ -92,30 +102,30 @@
             render(state);
           },
 
-          setFilter(_event, filterValue) {
+          setFilter: function setFilter(_event, filterValue) {
             state.currentFilter = filterValue;
-            const filter = filterValue.toLowerCase().split(" ");
-            const gender = filter[0];
-            const year = Number.parseInt(filter[1]);
+            var filter = filterValue.toLowerCase().split(" ");
+            var gender = filter[0];
+            var year = Number.parseInt(filter[1]);
 
-            state.filteredData = state.data.filter(
-              (d) => genderAcc(d) === gender && yearAcc(d) === year,
-            );
+            state.filteredData = state.data.filter(function (d) {
+              return genderAcc(d) === gender && yearAcc(d) === year;
+            });
 
             render(state);
           },
 
-          selectHovered(_event, d) {
+          selectHovered: function selectHovered(_event, d) {
             state.selection = [d.datum];
             render(state);
           },
 
-          deselectHovered() {
+          deselectHovered: function deselectHovered() {
             state.selection = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -138,8 +148,8 @@
             return true;
           }
 
-          const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-          const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+          var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+          var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
           // Scales
           // Any time you visualize a quantity using a circle, you should make the total
@@ -149,61 +159,65 @@
           // This scale takes the square root of the input and uses that to scale the radius. When the
           // result is used as the radius of a circle, the area of the circle will be linearly
           // proportional to the input quantity.
-          const radiusScale = d3
+          var radiusScale = d3
             .scaleSqrt()
             .domain(state.birthsRange)
             .range([0, props.radiusMax]);
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer("#sszvis-chart", bounds, {
               key: "chartlayer",
             })
             .datum(state.filteredData);
 
-          const tooltipLayer = sszvis
+          var tooltipLayer = sszvis
             .createHtmlLayer("#sszvis-chart", bounds)
             .datum(state.selection);
 
           // Components
 
-          const bubbleMap = sszvis
+          var bubbleMap = sszvis
             .mapRendererBubble()
             .fill(sszvis.scaleQual6()(0))
-            .radius((d) => (sszvis.defined(d) ? radiusScale(birthsAcc(d)) : 0))
+            .radius(function (d) {
+              return sszvis.defined(d) ? radiusScale(birthsAcc(d)) : 0;
+            })
             .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
 
-          const choroplethMap = sszvis
+          var choroplethMap = sszvis
             .choropleth()
             .features(state.mapData.features)
             .borders(state.mapData.borders)
             .keyName("id")
             .width(bounds.innerWidth)
             .height(bounds.innerHeight)
-            .fill((d) =>
-              isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0),
-            )
+            .fill(function (d) {
+              return isSelected(d)
+                ? sszvis.scaleDimGry()(0)
+                : sszvis.scaleGry()(0);
+            })
             .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
             .transitionColor(false)
             .anchoredShape(bubbleMap);
 
-          const tooltipHeader = sszvis
-            .modularTextHTML()
-            .plain((geod) => birthsAcc(geod.datum) + " Geburten");
+          var tooltipHeader = sszvis.modularTextHTML().plain(function (geod) {
+            return birthsAcc(geod.datum) + " Geburten";
+          });
 
-          const tooltipBody = sszvis
-            .modularTextHTML()
-            .plain((geod) => zoneNameAcc(geod.datum));
+          var tooltipBody = sszvis.modularTextHTML().plain(function (geod) {
+            return zoneNameAcc(geod.datum);
+          });
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .header(tooltipHeader)
             .body(tooltipBody)
             .visible(sszvis.compose(isSelected, datumAcc));
 
-          const control = props
+          var control = props
             .control()
             .values([
               "Männlich 1993",
@@ -215,7 +229,7 @@
             .width(props.controlWidth)
             .change(actions.setFilter);
 
-          const radiusLegend = sszvis
+          var radiusLegend = sszvis
             .legendRadius()
             .scale(radiusScale)
             .tickFormat(sszvis.formatPreciseNumber(1));
@@ -242,7 +256,7 @@
 
           // Interaction
 
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .panning()
             .elementSelector(".sszvis-map__area, .sszvis-anchored-circle")
             .on("start", actions.selectHovered)

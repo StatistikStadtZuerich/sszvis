@@ -29,16 +29,16 @@
         // Configuration
         // -----------------------------------------------
 
-        const PIE_DIAMETER = 260;
-        const LEGEND_TOP_PADDING = 40;
-        const LEGEND_LEFT_PADDING = 25;
-        const LEGEND_HEIGHT = 145;
-        const LEGEND_WIDTH = 102;
-        const queryProps = sszvis.responsiveProps().prop("layout", {
-          palm(width) {
-            const sidePadding = Math.max((width - PIE_DIAMETER) / 2, 10);
-            const diameter = width - 2 * sidePadding;
-            const legendHeight = LEGEND_TOP_PADDING + LEGEND_HEIGHT + 20;
+        var PIE_DIAMETER = 260;
+        var LEGEND_TOP_PADDING = 40;
+        var LEGEND_LEFT_PADDING = 25;
+        var LEGEND_HEIGHT = 145;
+        var LEGEND_WIDTH = 102;
+        var queryProps = sszvis.responsiveProps().prop("layout", {
+          palm: function palm(width) {
+            var sidePadding = Math.max((width - PIE_DIAMETER) / 2, 10);
+            var diameter = width - 2 * sidePadding;
+            var legendHeight = LEGEND_TOP_PADDING + LEGEND_HEIGHT + 20;
             return {
               bounds: {
                 top: 20,
@@ -58,26 +58,28 @@
               },
             };
           },
-          _: (width) => ({
-            bounds: {
-              top: 20,
-              bottom: 20,
-              left: 20,
-              right: LEGEND_WIDTH,
-              height: 20 + 20 + PIE_DIAMETER,
-            },
-            pieRadius: PIE_DIAMETER / 2,
-            piePosition: {
-              top: 0,
-              left:
-                width / 2 -
-                (PIE_DIAMETER + LEGEND_LEFT_PADDING + LEGEND_WIDTH) / 2,
-            },
-            legendPosition: {
-              top: PIE_DIAMETER / 2 - LEGEND_HEIGHT / 2,
-              left: PIE_DIAMETER + LEGEND_LEFT_PADDING,
-            },
-          }),
+          _: function _(width) {
+            return {
+              bounds: {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: LEGEND_WIDTH,
+                height: 20 + 20 + PIE_DIAMETER,
+              },
+              pieRadius: PIE_DIAMETER / 2,
+              piePosition: {
+                top: 0,
+                left:
+                  width / 2 -
+                  (PIE_DIAMETER + LEGEND_LEFT_PADDING + LEGEND_WIDTH) / 2,
+              },
+              legendPosition: {
+                top: PIE_DIAMETER / 2 - LEGEND_HEIGHT / 2,
+                left: PIE_DIAMETER + LEGEND_LEFT_PADDING,
+              },
+            };
+          },
         });
 
         function parseRow(d) {
@@ -89,12 +91,12 @@
           };
         }
 
-        const vAcc = sszvis.prop("value");
-        const cAcc = sszvis.prop("category");
+        var vAcc = sszvis.prop("value");
+        var cAcc = sszvis.prop("category");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           totalValue: 0,
           categories: [],
@@ -103,25 +105,25 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.totalValue = d3.sum(state.data, vAcc);
             state.categories = sszvis.set(state.data, cAcc);
             render(state);
           },
 
-          showTooltip(e, datum) {
+          showTooltip: function showTooltip(e, datum) {
             state.selection = [datum];
             render(state);
           },
 
-          hideTooltip() {
+          hideTooltip: function hideTooltip() {
             state.selection = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -135,52 +137,49 @@
         // Render
         // -----------------------------------------------
         function render(state) {
-          const props = queryProps(sszvis.measureDimensions(config.id));
-          const bounds = sszvis.bounds(props.layout.bounds, config.id);
+          var props = queryProps(sszvis.measureDimensions(config.id));
+          var bounds = sszvis.bounds(props.layout.bounds, config.id);
 
           // Scales
 
-          const aScale = d3
+          var aScale = d3
             .scaleLinear()
             .domain([0, state.totalValue])
             .range([0, 2 * Math.PI]);
 
-          const cScale = sszvis.scaleQual12().domain(state.categories);
+          var cScale = sszvis.scaleQual12().domain(state.categories);
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer(config.id, bounds)
             .datum(state.data);
 
-          const tooltipLayer = sszvis
+          var tooltipLayer = sszvis
             .createHtmlLayer(config.id, bounds)
             .datum(state.selection);
 
           // Components
 
-          const pieMaker = sszvis
+          var pieMaker = sszvis
             .pie()
             .radius(props.layout.pieRadius)
             .angle(sszvis.compose(aScale, vAcc))
             .fill(sszvis.compose(cScale, cAcc));
 
-          const colorLegend = sszvis
+          var colorLegend = sszvis
             .legendColorOrdinal()
             .scale(cScale)
             .rows(state.categories.length)
             .orientation("vertical");
 
-          const headerText = sszvis
-            .modularTextHTML()
-            .bold(
-              sszvis.compose(
-                sszvis.formatFractionPercent,
-                (d) => vAcc(d) / state.totalValue,
-              ),
-            );
+          var headerText = sszvis.modularTextHTML().bold(
+            sszvis.compose(sszvis.formatFractionPercent, function (d) {
+              return vAcc(d) / state.totalValue;
+            }),
+          );
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .header(headerText)
@@ -196,24 +195,24 @@
             ),
           );
 
-          const pie = chartLayer.selectGroup("piechart").call(pieMaker);
+          var pie = chartLayer.selectGroup("piechart").call(pieMaker);
 
           pie.selectAll("[data-tooltip-anchor]").call(tooltip);
 
           chartLayer
             .selectGroup("colorLegend")
             // the magic number y-offset here vertically centers the color legend.
-            .attr("transform", () =>
-              sszvis.translateString(
+            .attr("transform", function () {
+              return sszvis.translateString(
                 props.layout.legendPosition.left,
                 props.layout.legendPosition.top,
-              ),
-            )
+              );
+            })
             .call(colorLegend);
 
           // Interaction
 
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .panning()
             .elementSelector(".sszvis-path")
             .on("start", actions.showTooltip)

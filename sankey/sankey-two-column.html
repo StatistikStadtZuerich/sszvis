@@ -29,30 +29,34 @@
         // Configuration
         // -----------------------------------------------
 
-        const MIN_CHART_HEIGHT = 650;
-        const queryProps = sszvis
+        var MIN_CHART_HEIGHT = 650;
+        var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            palm: (w) => ({
-              top: 40,
-              left: 0,
-              bottom: 20,
-              right: 0,
-              height: Math.max(
-                sszvis.aspectRatio4to3(w),
-                MIN_CHART_HEIGHT + 40 + 20,
-              ),
-            }),
-            _: (w) => ({
-              top: 40,
-              left: w / 4,
-              bottom: 20,
-              right: w / 4,
-              height: Math.max(
-                sszvis.aspectRatio4to3(w),
-                MIN_CHART_HEIGHT + 40 + 20,
-              ),
-            }),
+            palm: function palm(w) {
+              return {
+                top: 40,
+                left: 0,
+                bottom: 20,
+                right: 0,
+                height: Math.max(
+                  sszvis.aspectRatio4to3(w),
+                  MIN_CHART_HEIGHT + 40 + 20,
+                ),
+              };
+            },
+            _: function _(w) {
+              return {
+                top: 40,
+                left: w / 4,
+                bottom: 20,
+                right: w / 4,
+                height: Math.max(
+                  sszvis.aspectRatio4to3(w),
+                  MIN_CHART_HEIGHT + 40 + 20,
+                ),
+              };
+            },
           })
           .prop("labelSide", {
             palm: "inside",
@@ -71,13 +75,13 @@
           };
         }
 
-        const sourceAcc = sszvis.prop("source");
-        const targetAcc = sszvis.prop("target");
-        const valueAcc = sszvis.prop("value");
+        var sourceAcc = sszvis.prop("source");
+        var targetAcc = sszvis.prop("target");
+        var valueAcc = sszvis.prop("value");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           hoveredNode: {},
           hoveredLink: {},
@@ -87,10 +91,10 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
-            const leftColIds = sszvis.set(data, sourceAcc);
-            const rightColIds = sszvis.set(data, targetAcc);
+        var actions = {
+          prepareState: function prepareState(data) {
+            var leftColIds = sszvis.set(data, sourceAcc);
+            var rightColIds = sszvis.set(data, targetAcc);
 
             state.data = sszvis
               .sankeyPrepareData()
@@ -105,7 +109,7 @@
             render(state);
           },
 
-          onNodeOver(e, d) {
+          onNodeOver: function onNodeOver(e, d) {
             state.hoveredNode = d;
             state.linkSourceLabels = d.linksTo;
             state.linkTargetLabels = d.linksFrom;
@@ -115,7 +119,7 @@
             render(state);
           },
 
-          onNodeOut() {
+          onNodeOut: function onNodeOut() {
             state.hoveredNode = null;
             state.linkSourceLabels = [];
             state.linkTargetLabels = [];
@@ -125,21 +129,21 @@
             render(state);
           },
 
-          onLinkOver(e, d) {
+          onLinkOver: function onLinkOver(e, d) {
             state.hoveredLink = d;
             state.hoveredNode = null;
 
             render(state);
           },
 
-          onLinkOut() {
+          onLinkOut: function onLinkOut() {
             state.hoveredLink = {};
             state.hoveredNode = null;
 
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -153,7 +157,7 @@
         // Render
         // -----------------------------------------------
         function render(state) {
-          const props = queryProps(sszvis.measureDimensions(config.id));
+          var props = queryProps(sszvis.measureDimensions(config.id));
 
           // The right and left padding are chosen so that there is enough space on either side of the chart
           // to see all labels. For performance reasons, it doesn't make sense to calculate these values while
@@ -161,12 +165,12 @@
           // and right padding which reveals the labels. When using the sszvis.sankeyLayout function,
           // the chart will be positioned such that the node bars themselves line up with the edges of the available
           // space, and any outside bar labels (e.g. 'left' labels for a lefthand column) are outside, in the padding space.
-          const bounds = sszvis.bounds(props.bounds, config.id);
+          var bounds = sszvis.bounds(props.bounds, config.id);
 
           // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
           // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.
           // The order of bounds.innerHeight and bounds.innerWidth needs to be reversed when doing a horizontal orientation
-          const sankeyLayout = sszvis.sankeyLayout(
+          var sankeyLayout = sszvis.sankeyLayout(
             state.data.columnLengths,
             state.data.columnTotals,
             bounds.innerHeight,
@@ -175,52 +179,52 @@
 
           // Scales
 
-          const valueScale = d3
+          var valueScale = d3
             .scaleLinear()
             .domain(sankeyLayout.valueDomain)
             .range(sankeyLayout.valueRange);
 
-          const columnPosition = d3
+          var columnPosition = d3
             .scaleLinear()
             .domain(sankeyLayout.columnDomain)
             .range(sankeyLayout.columnRange);
 
           // Layers
 
-          const chartLayer = sszvis.createSvgLayer(config.id, bounds);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds);
 
-          const linkTooltipLayer = sszvis.createHtmlLayer(config.id, bounds, {
+          var linkTooltipLayer = sszvis.createHtmlLayer(config.id, bounds, {
             key: "linkTooltipLayer",
           });
 
-          const nodeTooltipLayer = sszvis.createHtmlLayer(config.id, bounds, {
+          var nodeTooltipLayer = sszvis.createHtmlLayer(config.id, bounds, {
             key: "nodeTooltipLayer",
           });
 
-          const nodeBlue = sszvis.scaleQual12().range()[0];
-          const highlightLinkBlue = sszvis.scaleQual12().range()[1];
-          const linkGrey = sszvis.scalePaleGry()(0);
+          var nodeBlue = sszvis.scaleQual12().range()[0];
+          var highlightLinkBlue = sszvis.scaleQual12().range()[1];
+          var linkGrey = sszvis.scalePaleGry()(0);
 
           // Components
 
-          const formatValue = sszvis.compose(
+          var formatValue = sszvis.compose(
             sszvis.formatPreciseNumber(0),
             valueAcc,
           );
 
-          const sankeyGen = sszvis
+          var sankeyGen = sszvis
             .sankey()
             .sizeScale(valueScale)
             .columnPosition(columnPosition)
-            .columnLabel(
-              (columnIndex) => ["Zuzugsregion", "Stadtquartier"][columnIndex],
-            )
+            .columnLabel(function (columnIndex) {
+              return ["Zuzugsregion", "Stadtquartier"][columnIndex];
+            })
             .nodeThickness(sankeyLayout.nodeThickness)
             .nodePadding(sankeyLayout.nodePadding)
-            .columnPadding(
-              (columnIndex) => sankeyLayout.columnPaddings[columnIndex],
-            )
-            .columnLabelOffset((d, i) => {
+            .columnPadding(function (columnIndex) {
+              return sankeyLayout.columnPaddings[columnIndex];
+            })
+            .columnLabelOffset(function (d, i) {
               if (props.labelSide === "inside") {
                 return i === 0 ? 24 : -24;
               } else {
@@ -228,60 +232,62 @@
               }
             })
             .nodeColor(nodeBlue)
-            .linkColor((d) =>
-              linkIsSelected(d) ? highlightLinkBlue : linkGrey,
-            )
-            .linkSort((a, b) =>
-              linkIsSelected(a)
+            .linkColor(function (d) {
+              return linkIsSelected(d) ? highlightLinkBlue : linkGrey;
+            })
+            .linkSort(function (a, b) {
+              return linkIsSelected(a)
                 ? 1
                 : linkIsSelected(b)
                   ? -1
-                  : valueAcc(a) - valueAcc(b),
-            )
+                  : valueAcc(a) - valueAcc(b);
+            })
             .linkSourceLabels(state.linkSourceLabels)
             .linkTargetLabels(state.linkTargetLabels)
             .linkLabel(formatValue)
             .labelSideSwitch(props.labelSide === "inside")
-            .labelSide((columnIndex) =>
-              columnPosition(columnIndex) > bounds.innerWidth / 2
+            .labelSide(function (columnIndex) {
+              return columnPosition(columnIndex) > bounds.innerWidth / 2
                 ? "right"
-                : "left",
-            )
-            .labelOpacity(() =>
-              props.labelSide === "inside" && state.hoveredNode !== null
+                : "left";
+            })
+            .labelOpacity(function () {
+              return props.labelSide === "inside" && state.hoveredNode !== null
                 ? 0
-                : 1,
-            )
+                : 1;
+            })
             .labelHitBoxSize(props.hitboxSize)
-            .nameLabel((id) => id);
+            .nameLabel(function (id) {
+              return id;
+            });
 
-          const linkTooltip = sszvis
+          var linkTooltip = sszvis
             .tooltip()
             .renderInto(linkTooltipLayer)
             .header(sszvis.modularTextHTML().bold(formatValue))
             .visible(linkIsHovered);
 
-          const nodeTooltip = sszvis
+          var nodeTooltip = sszvis
             .tooltip()
             .renderInto(nodeTooltipLayer)
             .visible(nodeIsHovered)
             .header(sszvis.modularTextHTML().bold(formatValue))
-            .orientation((d) =>
-              d.x >= bounds.innerWidth / 2 ? "right" : "left",
-            )
+            .orientation(function (d) {
+              return d.x >= bounds.innerWidth / 2 ? "right" : "left";
+            })
             .dx(20);
 
           // Rendering
 
-          const sankeyGroup = chartLayer.selectGroup("sankey");
+          var sankeyGroup = chartLayer.selectGroup("sankey");
 
           sankeyGroup.datum(state.data).call(sankeyGen);
 
-          const nodesGroup = sankeyGroup.selectGroup("nodes");
+          var nodesGroup = sankeyGroup.selectGroup("nodes");
 
           nodesGroup.selectAll("[data-tooltip-anchor]").call(nodeTooltip);
 
-          const linksGroup = sankeyGroup.selectGroup("links");
+          var linksGroup = sankeyGroup.selectGroup("links");
 
           linksGroup
             .selectAll(".sszvis-link")
@@ -292,7 +298,7 @@
 
           // Interaction
 
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .panning()
             .elementSelector(".sszvis-sankey-hitbox")
             .on("start", actions.onNodeOver)

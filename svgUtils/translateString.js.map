@@ -1,1 +1,0 @@
-{"version":3,"file":"translateString.js","sources":["../../src/svgUtils/translateString.ts"],"sourcesContent":[null],"names":["translateString","x","y","concat"],"mappings":"AAAA;;;;;;;;;;;AAWG;AAEW,SAAUA,eAAeA,CAACC,CAAS,EAAEC,CAAS,EAAA;AAC1D,EAAA,OAAA,YAAA,CAAAC,MAAA,CAAoBF,CAAC,EAAA,GAAA,CAAA,CAAAE,MAAA,CAAID,CAAC,EAAA,GAAA,CAAA;AAC5B;;;;"}

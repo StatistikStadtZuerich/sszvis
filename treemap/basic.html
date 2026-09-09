@@ -26,33 +26,111 @@
       (function (d3, sszvis, config) {
         "use strict";
 
+        function _createForOfIteratorHelper(r, e) {
+          var t =
+            ("undefined" != typeof Symbol && r[Symbol.iterator]) ||
+            r["@@iterator"];
+          if (!t) {
+            if (
+              Array.isArray(r) ||
+              (t = _unsupportedIterableToArray(r)) ||
+              (e && r && "number" == typeof r.length)
+            ) {
+              t && (r = t);
+              var _n = 0,
+                F = function F() {};
+              return {
+                s: F,
+                n: function n() {
+                  return _n >= r.length
+                    ? { done: !0 }
+                    : { done: !1, value: r[_n++] };
+                },
+                e: function e(r) {
+                  throw r;
+                },
+                f: F,
+              };
+            }
+            throw new TypeError(
+              "Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.",
+            );
+          }
+          var o,
+            a = !0,
+            u = !1;
+          return {
+            s: function s() {
+              t = t.call(r);
+            },
+            n: function n() {
+              var r = t.next();
+              return ((a = r.done), r);
+            },
+            e: function e(r) {
+              ((u = !0), (o = r));
+            },
+            f: function f() {
+              try {
+                a || null == t.return || t.return();
+              } finally {
+                if (u) throw o;
+              }
+            },
+          };
+        }
+        function _unsupportedIterableToArray(r, a) {
+          if (r) {
+            if ("string" == typeof r) return _arrayLikeToArray(r, a);
+            var t = {}.toString.call(r).slice(8, -1);
+            return (
+              "Object" === t && r.constructor && (t = r.constructor.name),
+              "Map" === t || "Set" === t
+                ? Array.from(r)
+                : "Arguments" === t ||
+                    /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t)
+                  ? _arrayLikeToArray(r, a)
+                  : void 0
+            );
+          }
+        }
+        function _arrayLikeToArray(r, a) {
+          (null == a || a > r.length) && (a = r.length);
+          for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];
+          return n;
+        }
+
         // Configuration
         // -----------------------------------------------
 
-        const MIN_CHART_HEIGHT = 650;
-        const queryProps = sszvis
+        var MIN_CHART_HEIGHT = 650;
+        var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            palm: (w) => ({
-              top: 50,
-              left: 0,
-              bottom: 10,
-              right: 0,
-              height: Math.max(
-                sszvis.aspectRatio4to3(w),
-                MIN_CHART_HEIGHT + 40 + 20,
-              ),
-            }),
-            _: (w) => ({
-              top: 50,
-              left: 20,
-              bottom: 10,
-              right: 20,
-              height: Math.max(
-                sszvis.aspectRatio4to3(w),
-                MIN_CHART_HEIGHT + 40 + 20,
-              ),
-            }),
+            palm: function palm(w) {
+              return {
+                top: 50,
+                left: 0,
+                bottom: 10,
+                right: 0,
+                height: Math.max(
+                  sszvis.aspectRatio4to3(w),
+                  MIN_CHART_HEIGHT + 40 + 20,
+                ),
+              };
+            },
+            _: function _(w) {
+              return {
+                top: 50,
+                left: 20,
+                bottom: 10,
+                right: 20,
+                height: Math.max(
+                  sszvis.aspectRatio4to3(w),
+                  MIN_CHART_HEIGHT + 40 + 20,
+                ),
+              };
+            },
           })
           .prop("labelSide", {
             palm: "inside",
@@ -73,15 +151,15 @@
           };
         }
 
-        const categoryAcc = sszvis.prop("category");
-        const subcategoryAcc = sszvis.prop("subcategory");
-        const divisionAcc = sszvis.prop("division");
-        const teamAcc = sszvis.prop("team");
-        const valueAcc = sszvis.prop("value");
+        var categoryAcc = sszvis.prop("category");
+        var subcategoryAcc = sszvis.prop("subcategory");
+        var divisionAcc = sszvis.prop("division");
+        var teamAcc = sszvis.prop("team");
+        var valueAcc = sszvis.prop("value");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           categories: [],
           selection: [],
@@ -96,36 +174,49 @@
         function buildDisplayData(focusedNode) {
           if (!focusedNode) return state.originalData;
 
-          const findNode = (root, targetData) => {
+          var _findNode = function findNode(root, targetData) {
             if (root.data === targetData) return root;
             if (!root.children) return null;
-            for (const child of root.children) {
-              const found = findNode(child, targetData);
-              if (found) return found;
+            var _iterator = _createForOfIteratorHelper(root.children),
+              _step;
+            try {
+              for (_iterator.s(); !(_step = _iterator.n()).done;) {
+                var child = _step.value;
+                var found = _findNode(child, targetData);
+                if (found) return found;
+              }
+            } catch (err) {
+              _iterator.e(err);
+            } finally {
+              _iterator.f();
             }
             return null;
           };
 
           return d3
-            .hierarchy(focusedNode.data, (d) => {
-              var _findNode;
+            .hierarchy(focusedNode.data, function (d) {
+              var _findNode2;
               if (d._tag !== "root" && d._tag !== "branch") {
                 return null;
               }
-              return (_findNode = findNode(state.originalData, d)) === null ||
-                _findNode === void 0 ||
-                (_findNode = _findNode.children) === null ||
-                _findNode === void 0
+              return (_findNode2 = _findNode(state.originalData, d)) === null ||
+                _findNode2 === void 0 ||
+                (_findNode2 = _findNode2.children) === null ||
+                _findNode2 === void 0
                 ? void 0
-                : _findNode.map((c) => c.data);
+                : _findNode2.map(function (c) {
+                    return c.data;
+                  });
             })
-            .sum((d) => (d._tag === "leaf" ? valueAcc(d.data) : 0));
+            .sum(function (d) {
+              return d._tag === "leaf" ? valueAcc(d.data) : 0;
+            });
         }
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             // Prepare data for treemap (using new API without hardcoded size)
             state.originalData = sszvis
               .prepareHierarchyData()
@@ -142,21 +233,21 @@
             render(state);
           },
 
-          onRectangleOver(_, d) {
+          onRectangleOver: function onRectangleOver(_, d) {
             state.selection = [d];
             render(state);
           },
 
-          onRectangleOut() {
+          onRectangleOut: function onRectangleOut() {
             state.selection = [];
             render(state);
           },
 
-          onNodeClick(_, node) {
+          onNodeClick: function onNodeClick(_, node) {
             // Helper to find a node in the original hierarchy by matching data
-            const findOriginalNode = (targetData) => {
-              let found = null;
-              state.originalData.each((n) => {
+            var findOriginalNode = function findOriginalNode(targetData) {
+              var found = null;
+              state.originalData.each(function (n) {
                 if (n.data === targetData || n.data.key === targetData.key) {
                   found = n;
                 }
@@ -164,16 +255,16 @@
               return found;
             };
 
-            const originalNode = findOriginalNode(node.data);
+            var originalNode = findOriginalNode(node.data);
             if (!originalNode) {
               return;
             }
 
-            let zoomTarget;
+            var zoomTarget;
             if (originalNode.children && originalNode.children.length > 0) {
               zoomTarget = originalNode;
             } else {
-              const parent = originalNode.parent;
+              var parent = originalNode.parent;
               if (
                 (parent === null || parent === void 0
                   ? void 0
@@ -191,14 +282,14 @@
             render(state);
           },
 
-          onBreadcrumbClick(node) {
+          onBreadcrumbClick: function onBreadcrumbClick(node) {
             state.focusedNode = node;
             state.data = buildDisplayData(node);
             state.selection = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -214,10 +305,10 @@
         function render(state) {
           if (!state.data) return;
 
-          const props = queryProps(sszvis.measureDimensions(config.id));
-          const bounds = sszvis.bounds(props.bounds, config.id);
+          var props = queryProps(sszvis.measureDimensions(config.id));
+          var bounds = sszvis.bounds(props.bounds, config.id);
 
-          const legendLayout = sszvis.colorLegendLayout(
+          var legendLayout = sszvis.colorLegendLayout(
             {
               axisLabels: state.categories,
               legendLabels: state.categories,
@@ -225,36 +316,36 @@
             config.id,
           );
 
-          const colorScale = legendLayout.scale;
-          const colorLegend = legendLayout.legend;
+          var colorScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
           // Build breadcrumb trail using the helper function
-          const breadcrumbItems = sszvis.createBreadcrumbItems(
-            state.focusedNode,
-          );
+          var breadcrumbItems = sszvis.createBreadcrumbItems(state.focusedNode);
 
           // Layers
-          const chartLayer = sszvis.createSvgLayer(config.id, bounds);
-          const htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds);
+          var htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
 
           // Components
-          const treemap = sszvis
+          var treemap = sszvis
             .treemap()
             .containerWidth(bounds.innerWidth)
             .containerHeight(bounds.innerHeight - legendLayout.bottomPadding) // Leave space for legend
             .colorScale(colorScale)
             .showLabels(true)
-            .label((d) => d.data.key)
+            .label(function (d) {
+              return d.data.key;
+            })
             .onClick(actions.onNodeClick);
 
-          const tooltipHeaderText = sszvis
-            .modularTextHTML()
-            .bold((d) => d.data.key);
-          const tooltipBodyText = sszvis
-            .modularTextHTML()
-            .plain((d) => "Value: " + sszvis.formatNumber(d.value));
+          var tooltipHeaderText = sszvis.modularTextHTML().bold(function (d) {
+            return d.data.key;
+          });
+          var tooltipBodyText = sszvis.modularTextHTML().plain(function (d) {
+            return "Value: " + sszvis.formatNumber(d.value);
+          });
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(htmlLayer)
             .header(tooltipHeaderText)
@@ -279,17 +370,19 @@
             .call(colorLegend);
 
           // Render breadcrumbs using the new component
-          const breadcrumbNav = sszvis
+          var breadcrumbNav = sszvis
             .breadcrumb()
             .renderInto(htmlLayer)
             .items(breadcrumbItems)
             .width(bounds.innerWidth)
-            .onClick((item) => actions.onBreadcrumbClick(item.node));
+            .onClick(function (item) {
+              return actions.onBreadcrumbClick(item.node);
+            });
 
           htmlLayer.call(breadcrumbNav);
 
           // Interaction
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .panning()
             .elementSelector(".sszvis-treemap-rect")
             .on("start", actions.onRectangleOver)

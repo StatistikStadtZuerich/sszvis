@@ -22,9 +22,9 @@
         // Configuration
         // -----------------------------------------------
 
-        const queryProps = sszvis.responsiveProps().prop("bounds", {
-          _(width) {
-            const innerHeight = sszvis.aspectRatioPortrait(width);
+        var queryProps = sszvis.responsiveProps().prop("bounds", {
+          _: function _(width) {
+            var innerHeight = sszvis.aspectRatioPortrait(width);
             return {
               top: 10,
               bottom: 64,
@@ -42,16 +42,16 @@
           };
         }
 
-        const cAcc = sszvis.prop("category");
-        const vAcc = sszvis.prop("value");
-        const nameAcc = sszvis.prop("name");
-        const mDatumAcc = sszvis.prop("datum");
-        const catName = sszvis.prop("name");
-        const catValue = sszvis.prop("value");
+        var cAcc = sszvis.prop("category");
+        var vAcc = sszvis.prop("value");
+        var nameAcc = sszvis.prop("name");
+        var mDatumAcc = sszvis.prop("datum");
+        var catName = sszvis.prop("name");
+        var catValue = sszvis.prop("value");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: null,
           mapData: null,
           selection: [],
@@ -61,8 +61,8 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.valueDomain = [
               d3.min(state.data, vAcc),
@@ -72,16 +72,20 @@
               .cascade()
               .arrayBy(cAcc)
               .apply(state.data)
-              .map((d) => ({
-                name: cAcc(d[0]),
-                value: d3.min(d, vAcc),
-              }))
-              .sort((a, b) => d3.ascending(catValue(a), catValue(b)));
+              .map(function (d) {
+                return {
+                  name: cAcc(d[0]),
+                  value: d3.min(d, vAcc),
+                };
+              })
+              .sort(function (a, b) {
+                return d3.ascending(catValue(a), catValue(b));
+              });
 
             render(state);
           },
 
-          prepareMapData(topo) {
+          prepareMapData: function prepareMapData(topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.agglomeration),
               borders: topojson.mesh(topo, topo.objects.agglomeration),
@@ -98,17 +102,17 @@
           },
 
           // manage which datum is selected. These data are highlighted by the map.
-          selectHovered(_event, d) {
+          selectHovered: function selectHovered(_event, d) {
             state.selection = [d.datum];
             render(state);
           },
 
-          deselectHovered() {
+          deselectHovered: function deselectHovered() {
             state.selection = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -131,31 +135,31 @@
             return true;
           }
 
-          const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-          const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+          var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+          var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
           // Scales
 
-          const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+          var colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
-          const categoryColorScale = d3
+          var categoryColorScale = d3
             .scaleOrdinal()
             .domain(state.categories.map(catName))
             .range(state.categories.map(sszvis.compose(colorScale, catValue)));
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer("#sszvis-chart", bounds)
             .datum(state.data);
 
-          const tooltipLayer = sszvis
+          var tooltipLayer = sszvis
             .createHtmlLayer("#sszvis-chart", bounds)
             .datum(state.selection);
 
           // Components
 
-          const choroplethMap = sszvis
+          var choroplethMap = sszvis
             .choropleth()
             .features(state.mapData.features)
             .borders(state.mapData.borders)
@@ -174,12 +178,12 @@
             .height(bounds.innerHeight)
             .fill(sszvis.compose(colorScale, vAcc));
 
-          const tooltipHeader = sszvis
+          var tooltipHeader = sszvis
             .modularTextHTML()
             .bold(sszvis.compose(nameAcc, mDatumAcc));
 
-          const tooltipBody = (d) => {
-            const value = sszvis.compose(vAcc, mDatumAcc);
+          var tooltipBody = function tooltipBody(d) {
+            var value = sszvis.compose(vAcc, mDatumAcc);
             return [
               ["Anteil 75-jährige und Ältere", sszvis.formatPercent(value(d))],
             ];
@@ -190,7 +194,7 @@
           // can be calculated from the geoJson. But that also means that when accessing the datum for other purposes,
           // such as creating tooltip text, the user must be aware that the 'd' argument is not just the data value.
           // The data value, if present, is available as d.datum.
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .header(tooltipHeader)
@@ -198,10 +202,10 @@
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .visible(isSelected);
 
-          const numColumns = 3;
-          const columnWidth = Math.min(bounds.innerWidth / numColumns, 100);
+          var numColumns = 3;
+          var columnWidth = Math.min(bounds.innerWidth / numColumns, 100);
 
-          const legend = sszvis
+          var legend = sszvis
             .legendColorOrdinal()
             .scale(categoryColorScale)
             .orientation("vertical")
@@ -233,7 +237,7 @@
 
           // Interaction
 
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .panning()
             .elementSelector(".sszvis-map__area")
             .on("start", actions.selectHovered)

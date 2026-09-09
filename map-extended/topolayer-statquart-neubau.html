@@ -21,8 +21,8 @@
 
         // Configuration
         // -----------------------------------------------
-        const queryProps = sszvis.responsiveProps().prop("bounds", {
-          _(width) {
+        var queryProps = sszvis.responsiveProps().prop("bounds", {
+          _: function _(width) {
             // The calculation of the rastermap bounds is a bit more complex due to the fact
             // that we have to deal with a raster image in the background that has a bigger
             // size than the vector map.
@@ -30,23 +30,22 @@
             // At the maximum map size (420x420px) the raster image overlaps the image by
             // the magic padding numbers below. At smaller sizes, we apply a scale factor
             // to calculate the respective paddings.
-            const scale =
-              width / (sszvis.aspectRatioSquare.MAX_HEIGHT + 49 + 42);
+            var scale = width / (sszvis.aspectRatioSquare.MAX_HEIGHT + 49 + 42);
 
-            const padding = {
+            var padding = {
               top: Math.min(36 * scale, 36),
               right: 49 * scale,
               bottom: Math.min(31 * scale, 31),
               left: 42 * scale,
             };
 
-            const innerWidth = width - padding.left - padding.right;
-            const innerHeight = sszvis.aspectRatioSquare(innerWidth);
+            var innerWidth = width - padding.left - padding.right;
+            var innerHeight = sszvis.aspectRatioSquare(innerWidth);
 
             // We always want a 1:1 ratio, so we restrict the innerWidth to the max height
             // by increasing the horizontal padding.
             if (innerHeight < innerWidth) {
-              const excessPadding = innerWidth - innerHeight;
+              var excessPadding = innerWidth - innerHeight;
               padding.right = padding.right + excessPadding / 2;
               padding.left = padding.left + excessPadding / 2;
             }
@@ -62,7 +61,7 @@
         });
 
         function parseRow(d) {
-          let parsedYear = sszvis.parseNumber(d["bezugsjahr"]);
+          var parsedYear = sszvis.parseNumber(d["bezugsjahr"]);
           parsedYear = parsedYear === 0 ? Number.NaN : parsedYear;
           return {
             id: sszvis.parseNumber(d["id"]),
@@ -72,13 +71,13 @@
           };
         }
 
-        const datumAcc = sszvis.prop("datum");
-        const nameAcc = sszvis.prop("name");
-        const yearAcc = sszvis.prop("year");
+        var datumAcc = sszvis.prop("datum");
+        var nameAcc = sszvis.prop("name");
+        var yearAcc = sszvis.prop("year");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: null,
           mapData: null,
           additionalMapData: null,
@@ -88,15 +87,15 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareData(data) {
+        var actions = {
+          prepareData: function prepareData(data) {
             state.data = data;
             state.yearRange = d3.extent(data, yearAcc);
 
             render(state);
           },
 
-          prepareMapData(topo) {
+          prepareMapData: function prepareMapData(topo) {
             state.mapData = {
               features: topojson.feature(
                 topo,
@@ -112,24 +111,24 @@
             render(state);
           },
 
-          prepareAdditionalMapData(geojson) {
+          prepareAdditionalMapData: function prepareAdditionalMapData(geojson) {
             state.additionalMapData = {
               features: geojson,
             };
             render(state);
           },
 
-          selectHovered(d) {
+          selectHovered: function selectHovered(d) {
             state.selection = [d];
             render(state);
           },
 
-          deselectHovered() {
+          deselectHovered: function deselectHovered() {
             state.selection = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -160,11 +159,11 @@
             return true;
           }
 
-          const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-          const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+          var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+          var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
           // Scales
-          const colorScale = sszvis
+          var colorScale = sszvis
             .scaleSeqBlu()
             .reverse()
             .domain(state.yearRange);
@@ -174,15 +173,15 @@
           // It's important that this html layer comes first, so that it lies under the svg
           // For more information about the 'key' argument to the metadata object, see the
           // comment in the source code for createHtmlLayer
-          const htmlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds, {
+          var htmlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds, {
             key: "topolayer",
           });
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer("#sszvis-chart", bounds)
             .datum(state.data);
 
-          const tooltipLayer = sszvis
+          var tooltipLayer = sszvis
             .createHtmlLayer("#sszvis-chart", bounds, {
               key: "tooltiplayer",
             })
@@ -190,7 +189,7 @@
 
           // Components
 
-          const choroplethMap = sszvis
+          var choroplethMap = sszvis
             .choropleth()
             .features(state.mapData.features)
             .borders(state.mapData.borders)
@@ -203,15 +202,15 @@
             .borderColor("#545454")
             .lakePathColor("#545454");
 
-          const mapPath = sszvis.swissMapPath(
+          var mapPath = sszvis.swissMapPath(
             bounds.innerWidth,
             bounds.innerHeight,
             state.mapData.features,
             "zurichStadtfeatures",
           );
-          const projection = mapPath.projection();
+          var projection = mapPath.projection();
 
-          const newBuildings = sszvis
+          var newBuildings = sszvis
             .mapRendererGeoJson()
             .dataKeyName("id")
             .geoJsonKeyName("OBJECTID")
@@ -226,14 +225,14 @@
             .on("out", actions.deselectHovered);
 
           // Offset is applied for better alignment with the map data
-          const geoOffset = -0.0011;
+          var geoOffset = -0.0011;
 
-          const layerBounds = [
+          var layerBounds = [
             [8.431443 + geoOffset, 47.448978 + geoOffset],
             [8.647471 + geoOffset, 47.309726 + geoOffset],
           ];
 
-          const topoLayer = sszvis
+          var topoLayer = sszvis
             .mapRendererImage()
             .projection(projection)
             .src("data/topo_layer_280915.png")
@@ -241,11 +240,11 @@
             .geoBounds(layerBounds)
             .opacity(0.4);
 
-          const tooltipHeader = sszvis
+          var tooltipHeader = sszvis
             .modularTextHTML()
             .bold(sszvis.compose(nameAcc, datumAcc));
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .header(tooltipHeader)

@@ -28,9 +28,9 @@
 
         // Configuration
         // -----------------------------------------------
-        const SLIDER_CONTROL_HEIGHT = 60;
-        const queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
-          _() {
+        var SLIDER_CONTROL_HEIGHT = 60;
+        var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
+          _: function _() {
             return sszvis.formatNumber;
           },
         });
@@ -44,14 +44,14 @@
             quarter: sszvis.parseDate(d["Quarter"]),
           };
         }
-        const xAcc = sszvis.prop("xValue");
-        const yAcc = sszvis.prop("yValue");
-        const cAcc = sszvis.prop("city");
-        const qAcc = sszvis.prop("quarter");
+        var xAcc = sszvis.prop("xValue");
+        var yAcc = sszvis.prop("yValue");
+        var cAcc = sszvis.prop("city");
+        var qAcc = sszvis.prop("quarter");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           xExtent: [0, 0],
           yExtent: [0, 0],
@@ -63,8 +63,8 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.xExtent = d3.extent(state.data, xAcc);
             state.yMax = d3.max(state.data, yAcc);
@@ -75,7 +75,7 @@
             actions.setQuarter(null, d3.max(state.quarters));
           },
 
-          setQuarter(e, inputQ) {
+          setQuarter: function setQuarter(e, inputQ) {
             state.activeQuarter = closestDatum(
               state.quarters,
               sszvis.identity,
@@ -85,7 +85,7 @@
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -99,9 +99,9 @@
         // Render
         // -----------------------------------------------
         function render(state) {
-          const props = queryProps(sszvis.measureDimensions(config.id));
+          var props = queryProps(sszvis.measureDimensions(config.id));
 
-          const legendLayout = sszvis.colorLegendLayout(
+          var legendLayout = sszvis.colorLegendLayout(
             {
               axisLabels: state.xExtent.map(props.xLabelFormat),
               legendLabels: state.cities,
@@ -109,10 +109,10 @@
             config.id,
           );
 
-          const cScale = legendLayout.scale;
-          const colorLegend = legendLayout.legend;
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
-          const bounds = sszvis.bounds(
+          var bounds = sszvis.bounds(
             {
               top: 20,
               bottom: SLIDER_CONTROL_HEIGHT + legendLayout.bottomPadding,
@@ -122,34 +122,32 @@
 
           // Scales
 
-          const xScale = d3
+          var xScale = d3
             .scaleLinear()
             .domain(state.xExtent)
             .range([0, bounds.innerWidth]);
 
-          const yScale = d3
+          var yScale = d3
             .scaleLinear()
             .domain([0, state.yMax])
             .range([bounds.innerHeight, 0]);
 
-          const tScale = d3
+          var tScale = d3
             .scaleTime()
             .domain(state.tExtent)
             .range([0, bounds.innerWidth]);
 
           // Layers
 
-          const chartLayer = sszvis
-            .createSvgLayer(config.id, bounds)
-            .datum(
-              state.data.filter((d) =>
-                sszvis.stringEqual(qAcc(d), state.activeQuarter),
-              ),
-            );
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(
+            state.data.filter(function (d) {
+              return sszvis.stringEqual(qAcc(d), state.activeQuarter);
+            }),
+          );
 
           // Components
 
-          const dots = sszvis
+          var dots = sszvis
             .dot()
             .x(sszvis.compose(xScale, xAcc))
             .y(sszvis.compose(yScale, yAcc))
@@ -158,24 +156,28 @@
             // use white outlines in scatterplots to assist in identifying distinct circles
             .stroke("#FFFFFF");
 
-          const slider = sszvis
+          var slider = sszvis
             .slider()
             .scale(tScale)
             .value(state.activeQuarter)
             .minorTicks(state.quarters)
             // Be aware that this uses fn.derivedSet instead of fn.set
-            .majorTicks(sszvis.derivedSet(state.quarters, (d) => d.getYear()))
+            .majorTicks(
+              sszvis.derivedSet(state.quarters, function (d) {
+                return d.getYear();
+              }),
+            )
             .tickLabels(sszvis.formatAxisTimeFormat)
             .label(sszvis.formatMonth)
             .onchange(actions.setQuarter);
 
-          const xAxis = sszvis
+          var xAxis = sszvis
             .axisX()
             .scale(xScale)
             .tickFormat(props.xLabelFormat)
             .orient("bottom");
 
-          const yAxis = sszvis
+          var yAxis = sszvis
             .axisY()
             .scale(yScale)
             .orient("right")
@@ -219,9 +221,9 @@
         // Helper functions
         // -----------------------------------------------
         function closestDatum(data, accessor, datum) {
-          const i = d3.bisector(accessor).left(data, datum, 1);
-          const d0 = data[i - 1];
-          const d1 = data[i] || d0;
+          var i = d3.bisector(accessor).left(data, datum, 1);
+          var d0 = data[i - 1];
+          var d1 = data[i] || d0;
           return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
         }
       })(d3, sszvis, EXTERNAL_CONFIG);

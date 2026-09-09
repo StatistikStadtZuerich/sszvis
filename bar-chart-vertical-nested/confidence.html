@@ -29,8 +29,8 @@
         // Configuration
         // -----------------------------------------------
 
-        const MAX_WIDTH = 800;
-        const queryProps = sszvis
+        var MAX_WIDTH = 800;
+        var queryProps = sszvis
           .responsiveProps()
           .prop("bottomPadding", {
             palm: 140,
@@ -49,7 +49,7 @@
           if (!confidenceStr || confidenceStr === "") {
             return { lower: null, upper: null };
           }
-          const parts = confidenceStr.split(" bis ");
+          var parts = confidenceStr.split(" bis ");
           if (parts.length === 2) {
             return {
               lower: sszvis.parseNumber(parts[0]),
@@ -59,16 +59,16 @@
           return { lower: null, upper: null };
         }
 
-        const xAcc = sszvis.prop("ageGroup");
-        const yAcc = sszvis.prop("value");
-        const cAcc = sszvis.prop("response");
-        const genderAcc = sszvis.prop("gender");
-        const lowAcc = sszvis.prop("confidenceLower");
-        const highAcc = sszvis.prop("confidenceUpper");
+        var xAcc = sszvis.prop("ageGroup");
+        var yAcc = sszvis.prop("value");
+        var cAcc = sszvis.prop("response");
+        var genderAcc = sszvis.prop("gender");
+        var lowAcc = sszvis.prop("confidenceLower");
+        var highAcc = sszvis.prop("confidenceUpper");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           filteredData: [],
           ageGroups: [],
@@ -82,19 +82,20 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.ageGroups = sszvis.set(state.data, xAcc);
             state.responses = sszvis.set(state.data, cAcc);
             state.genders = sszvis.set(state.data, genderAcc);
 
             // Filter data for initial display
-            state.filteredData = state.data.filter(
-              (d) =>
+            state.filteredData = state.data.filter(function (d) {
+              return (
                 d.year === state.selectedYear &&
-                genderAcc(d) === state.selectedGender,
-            );
+                genderAcc(d) === state.selectedGender
+              );
+            });
 
             // Group data by age group
             state.groupedData = sszvis
@@ -105,28 +106,28 @@
             render();
           },
 
-          showTooltip(_e, datum) {
+          showTooltip: function showTooltip(_e, datum) {
             if (state.selection !== datum) {
               state.selection = datum;
               render();
             }
           },
 
-          hideTooltip() {
+          hideTooltip: function hideTooltip() {
             if (state.selection !== null) {
               state.selection = null;
               render();
             }
           },
 
-          resize() {
+          resize: function resize() {
             render();
           },
         };
 
         // Data initialization
         // -----------------------------------------------
-        d3.csv(config.data, (d) => {
+        d3.csv(config.data, function (d) {
           return {
             ageGroup: d["Alter_F"],
             gender: d["Geschlecht_F"],
@@ -152,9 +153,9 @@
         function render() {
           if (state.filteredData.length === 0) return;
 
-          const props = queryProps(sszvis.measureDimensions(config.id));
+          var props = queryProps(sszvis.measureDimensions(config.id));
           // Create proper color legend layout for consistent colors
-          const legendLayout = sszvis.colorLegendLayout(
+          var legendLayout = sszvis.colorLegendLayout(
             {
               axisLabels: state.ageGroups,
               legendLabels: state.responses,
@@ -163,8 +164,8 @@
           );
 
           // Calculate bounds
-          const yMax = d3.max(state.filteredData, yAcc);
-          const bounds = sszvis.bounds(
+          var yMax = d3.max(state.filteredData, yAcc);
+          var bounds = sszvis.bounds(
             {
               top: 30,
               bottom: props.bottomPadding,
@@ -174,96 +175,116 @@
             config.id,
           );
 
-          const chartWidth = Math.min(MAX_WIDTH, bounds.innerWidth);
+          var chartWidth = Math.min(MAX_WIDTH, bounds.innerWidth);
 
           // Scales
-          const xScale = d3
+          var xScale = d3
             .scaleBand()
             .domain(state.ageGroups)
             .range([0, chartWidth])
             .paddingOuter(0.2)
             .padding(0.26);
 
-          const yScale = d3
+          var yScale = d3
             .scaleLinear()
             .domain([0, yMax * 1.1]) // Add some padding for error bars
             .range([bounds.innerHeight, 0]);
 
-          const colorScale = legendLayout.scale;
-          const colorLegend = legendLayout.legend;
+          var colorScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
           // Layers
-          const chartLayer = sszvis.createSvgLayer(config.id, bounds);
-          const tooltipLayer = sszvis
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds);
+          var tooltipLayer = sszvis
             .createHtmlLayer(config.id, bounds)
             .datum(state.selection);
 
           // Create grouped bars layout
-          const longestGroup = d3.max(state.groupedData, (d) => d.length);
+          var longestGroup = d3.max(state.groupedData, function (d) {
+            return d.length;
+          });
 
-          const barLayout = sszvis
+          var barLayout = sszvis
             .groupedBars()
             .groupScale(sszvis.compose(xScale, xAcc))
             .groupWidth(xScale.bandwidth())
             .groupSize(longestGroup)
             .y(sszvis.compose(yScale, yAcc))
-            .height(sszvis.compose((d) => bounds.innerHeight - yScale(d), yAcc))
+            .height(
+              sszvis.compose(function (d) {
+                return bounds.innerHeight - yScale(d);
+              }, yAcc),
+            )
             .fill(sszvis.compose(colorScale, cAcc))
-            .defined(sszvis.compose((d) => !Number.isNaN(d), yAcc));
+            .defined(
+              sszvis.compose(function (d) {
+                return !Number.isNaN(d);
+              }, yAcc),
+            );
 
           // Error bars component
-          const errorBars = sszvis
+          var errorBars = sszvis
             .annotationConfidenceBar()
             .groupScale(sszvis.compose(xScale, xAcc))
             .groupWidth(xScale.bandwidth())
             .groupSize(longestGroup)
-            .confidenceLow(sszvis.compose((d) => yScale(d || 0), lowAcc))
-            .confidenceHigh(sszvis.compose((d) => yScale(d || 0), highAcc))
+            .confidenceLow(
+              sszvis.compose(function (d) {
+                return yScale(d || 0);
+              }, lowAcc),
+            )
+            .confidenceHigh(
+              sszvis.compose(function (d) {
+                return yScale(d || 0);
+              }, highAcc),
+            )
             .width(8); // Width of horizontal caps
 
           // Components
-          const xAxis = sszvis
+          var xAxis = sszvis
             .axisX()
             .scale(xScale)
             .orient("bottom")
             .slant("diagonal")
             .tickFormat(props.xLabelFormat)
-            .highlightTick(
-              (d) => state.selection && xAcc(state.selection) === d,
-            );
+            .highlightTick(function (d) {
+              return state.selection && xAcc(state.selection) === d;
+            });
 
-          const yAxis = sszvis
+          var yAxis = sszvis
             .axisY()
             .scale(yScale)
             .orient("left")
             .title("Anteil (in %)")
-            .tickFormat((d) => "".concat(d, "%"));
+            .tickFormat(function (d) {
+              return "".concat(d, "%");
+            });
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .header(
-              sszvis
-                .modularTextHTML()
-                .plain((d) => "".concat(xAcc(d), " - ").concat(cAcc(d))),
+              sszvis.modularTextHTML().plain(function (d) {
+                return "".concat(xAcc(d), " - ").concat(cAcc(d));
+              }),
             )
-            .body((d) => {
-              const v = yAcc(d);
-              const confLow = lowAcc(d);
-              const confHigh = highAcc(d);
-              const result = [];
+            .body(function (d) {
+              var v = yAcc(d);
+              var confLow = lowAcc(d);
+              var confHigh = highAcc(d);
+              var result = [];
 
               // Main value with inline confidence interval as relative values
               if (Number.isNaN(v)) {
                 result.push(["Wert", "–"]);
               } else {
-                let valueText = "".concat(v.toFixed(1), "%");
+                var valueText = "".concat(v.toFixed(1), "%");
 
                 // Add confidence interval as relative values if available
                 if (confLow && confHigh) {
-                  const lowerDiff = (confLow - v).toFixed(0);
-                  const upperDiff = (confHigh - v).toFixed(0);
+                  var lowerDiff = (confLow - v).toFixed(0);
+                  var upperDiff = (confHigh - v).toFixed(0);
                   valueText += " ("
                     .concat(lowerDiff, "/+")
                     .concat(upperDiff, ")");
@@ -274,7 +295,9 @@
 
               return result;
             })
-            .visible((d) => state.selection === d);
+            .visible(function (d) {
+              return state.selection === d;
+            });
 
           // Rendering
           chartLayer
@@ -285,7 +308,7 @@
           chartLayer.selectGroup("yAxis").call(yAxis);
 
           // Render bars
-          const bars = chartLayer
+          var bars = chartLayer
             .selectGroup("bars")
             .datum(state.groupedData)
             .call(barLayout);

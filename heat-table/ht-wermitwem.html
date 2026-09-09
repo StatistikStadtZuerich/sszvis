@@ -34,10 +34,12 @@
         // fixed upper and lower bounds. Anything less than or equal to the first element
         // in BIN_EDGES will be grouped in the first bin, and anything greater than or
         // equal to the last element will be grouped in the last bin.
-        const BIN_EDGES = [5, 40, 200, 600];
-        const MAX_LEGEND_WIDTH = 260;
-        const queryProps = sszvis.responsiveProps().prop("legendWidth", {
-          _: (width) => Math.min(width * 0.9, MAX_LEGEND_WIDTH),
+        var BIN_EDGES = [5, 40, 200, 600];
+        var MAX_LEGEND_WIDTH = 260;
+        var queryProps = sszvis.responsiveProps().prop("legendWidth", {
+          _: function _(width) {
+            return Math.min(width * 0.9, MAX_LEGEND_WIDTH);
+          },
         });
 
         function parseRow(d) {
@@ -48,13 +50,13 @@
           };
         }
 
-        const xAcc = sszvis.prop("manAge");
-        const yAcc = sszvis.prop("womAge");
-        const cAcc = sszvis.prop("value");
+        var xAcc = sszvis.prop("manAge");
+        var yAcc = sszvis.prop("womAge");
+        var cAcc = sszvis.prop("value");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           manAgeList: [],
           womAgeList: [],
@@ -64,8 +66,8 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.manAgeList = sszvis.set(state.data, xAcc);
             state.womAgeList = sszvis.set(state.data, yAcc);
@@ -74,17 +76,17 @@
             render(state);
           },
 
-          showTooltip(e, datum) {
+          showTooltip: function showTooltip(e, datum) {
             state.selection = [datum];
             render(state);
           },
 
-          hideTooltip() {
+          hideTooltip: function hideTooltip() {
             state.selection = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -98,9 +100,9 @@
         // Render
         // -----------------------------------------------
         function render(state) {
-          const containerWidth = sszvis.measureDimensions(config.id).width;
-          const squarePadding = 2;
-          const tablePadding = {
+          var containerWidth = sszvis.measureDimensions(config.id).width;
+          var squarePadding = 2;
+          var tablePadding = {
             top: 60,
             left: 70,
             bottom: 60,
@@ -109,7 +111,7 @@
           // heatTableDimensions calculates a set of useful properties for configuring the heat table.
           // give it the targeted width (final width will not necessarily match this), the padding between squares, and the number of squares
           // in each dimension (x, then y)
-          const tableDimensions = sszvis.dimensionsHeatTable(
+          var tableDimensions = sszvis.dimensionsHeatTable(
             containerWidth,
             squarePadding,
             state.manAgeList.length,
@@ -119,7 +121,7 @@
 
           // construct the bounds as usual, but add the left and right padding to the width, and the top and bottom padding to the height
           // This is because, when bounds are being constructed, the padding is subtracted from width and height to provide innerWidth and innerHeight, but we want these values to represent the table's dimensions
-          const bounds = sszvis.bounds(
+          var bounds = sszvis.bounds(
             {
               height:
                 tablePadding.top + tableDimensions.height + tablePadding.bottom,
@@ -130,18 +132,18 @@
             },
             config.id,
           );
-          const props = queryProps(bounds);
+          var props = queryProps(bounds);
 
           // Scales
 
-          const xScale = d3
+          var xScale = d3
             .scaleBand()
             .padding(tableDimensions.padRatio)
             .paddingOuter(0)
             .rangeRound([0, tableDimensions.width])
             .domain(state.manAgeList);
 
-          const yScale = d3
+          var yScale = d3
             .scaleBand()
             .padding(tableDimensions.padRatio)
             .paddingOuter(0)
@@ -149,57 +151,55 @@
             .domain(state.womAgeList);
 
           // create a linear color interpolator for generating the output range of bin colors
-          const interpolateColor = sszvis
-            .scaleSeqBlu()
-            .domain(state.valueDomain);
+          var interpolateColor = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
           // the range is composed of colors sampled at equal distances along the color spectrum
           // such that binColors.length === BIN_EDGES.length + 1
-          const binColors = [...BIN_EDGES, state.valueDomain[1]].map(
-            interpolateColor,
-          );
+          var binColors = []
+            .concat(BIN_EDGES, [state.valueDomain[1]])
+            .map(interpolateColor);
 
           // for the threshold scale, the number of values in the range must be one greater than the
           // number of values in the domain.
-          const colorScale = d3
+          var colorScale = d3
             .scaleThreshold()
             .domain(BIN_EDGES)
             .range(binColors);
 
-          const xValue = sszvis.compose(xScale, xAcc);
-          const yValue = sszvis.compose(yScale, yAcc);
+          var xValue = sszvis.compose(xScale, xAcc);
+          var yValue = sszvis.compose(yScale, yAcc);
 
           function cValue(d) {
-            const v = cAcc(d);
+            var v = cAcc(d);
             return v === 0 ? sszvis.scaleLightGry()(v) : colorScale(v);
           }
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer(config.id, bounds)
             .datum(state.data);
 
-          const tooltipLayer = sszvis
+          var tooltipLayer = sszvis
             .createHtmlLayer(config.id, bounds)
             .datum(state.selection);
 
           // Components
 
-          const barGen = sszvis
+          var barGen = sszvis
             .bar()
             .x(xValue)
             .y(yValue)
             .width(tableDimensions.side)
             .height(tableDimensions.side)
             .fill(cValue)
-            .stroke((d) =>
-              sszvis.contains(state.selection, d)
+            .stroke(function (d) {
+              return sszvis.contains(state.selection, d)
                 ? sszvis.slightlyDarker(cValue(d))
-                : "none",
-            );
+                : "none";
+            });
 
-          const xAxis = sszvis.axisX
+          var xAxis = sszvis.axisX
             .ordinal()
             .scale(xScale)
             .orient("top")
@@ -211,11 +211,13 @@
             .slant("vertical")
             .dyTitle(-36)
             .hideLabelThreshold(0)
-            .highlightTick((tickValue) =>
-              state.selection.some((d) => xAcc(d) === tickValue),
-            );
+            .highlightTick(function (tickValue) {
+              return state.selection.some(function (d) {
+                return xAcc(d) === tickValue;
+              });
+            });
 
-          const yAxis = sszvis.axisY
+          var yAxis = sszvis.axisY
             .ordinal()
             .scale(yScale)
             .orient("left")
@@ -224,11 +226,13 @@
             .titleAnchor("middle")
             .titleCenter(true)
             .dxTitle(-45)
-            .highlightTick((tickValue) =>
-              state.selection.some((d) => yAcc(d) === tickValue),
-            );
+            .highlightTick(function (tickValue) {
+              return state.selection.some(function (d) {
+                return yAcc(d) === tickValue;
+              });
+            });
 
-          const legend = sszvis
+          var legend = sszvis
             .legendColorBinned()
             .scale(colorScale)
             .displayValues(BIN_EDGES)
@@ -236,23 +240,25 @@
             .width(props.legendWidth)
             .labelFormat(sszvis.formatNumber);
 
-          const tooltipHeaderText = sszvis.modularTextHTML().bold("Paare");
+          var tooltipHeaderText = sszvis.modularTextHTML().bold("Paare");
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .header(tooltipHeaderText)
-            .body((d) => [
-              ["Alter des Mannes:", xAcc(d)],
-              ["Alter der Frau:", yAcc(d)],
-              ["Anzahl: ", cAcc(d)],
-            ])
+            .body(function (d) {
+              return [
+                ["Alter des Mannes:", xAcc(d)],
+                ["Alter der Frau:", yAcc(d)],
+                ["Anzahl: ", cAcc(d)],
+              ];
+            })
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .visible(isSelected);
 
           // Rendering
 
-          const bars = chartLayer
+          var bars = chartLayer
             .selectGroup("bars")
             .attr(
               "transform",
@@ -280,7 +286,7 @@
 
           // At very small screen sizes, we position the legend centered on the screen,
           // at larger sizes centered on the table
-          const legendX =
+          var legendX =
             tableDimensions.width < MAX_LEGEND_WIDTH
               ? (bounds.width - props.legendWidth) / 2 - bounds.padding.left
               : tableDimensions.centeredOffset +
@@ -296,7 +302,7 @@
 
           // Interaction
 
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .panning()
             .elementSelector(".sszvis-bar")
             .on("start", actions.showTooltip)

@@ -1,1 +1,0 @@
-{"version":3,"file":"d3-selectdiv.d.ts","sourceRoot":"","sources":["../src/d3-selectdiv.ts"],"names":[],"mappings":"AAEA;;;;;;;;GAQG;AAGH,OAAO,QAAQ,IAAI,CAAC;IAElB,UAAU,SAAS,CAAC,QAAQ,EAAE,KAAK,EAAE,QAAQ,EAAE,MAAM;QACnD,4DAA4D;QAC5D,SAAS,CAAC,GAAG,EAAE,MAAM,GAAG,SAAS,CAAC,cAAc,EAAE,KAAK,EAAE,QAAQ,EAAE,KAAK,CAAC,CAAC;KAC3E;CACF"}

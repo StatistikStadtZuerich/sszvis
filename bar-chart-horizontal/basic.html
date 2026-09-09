@@ -29,7 +29,7 @@
         // Configuration
         // -----------------------------------------------
 
-        const queryProps = sszvis
+        var queryProps = sszvis
           .responsiveProps()
           .prop("yLabel", {
             _: "Beschäftigte",
@@ -45,13 +45,13 @@
           };
         }
 
-        const xAcc = sszvis.prop("xValue");
-        const cAcc = sszvis.prop("category");
+        var xAcc = sszvis.prop("xValue");
+        var cAcc = sszvis.prop("category");
 
         // Application state
         // -----------------------------------------------
 
-        const state = {
+        var state = {
           data: [],
           categories: [],
           selected: [],
@@ -60,24 +60,26 @@
         // State transitions
         // -----------------------------------------------
 
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.categories = sszvis.set(state.data, cAcc);
             render(state);
           },
 
-          showTooltip(e, x, category) {
-            state.selected = state.data.filter((d) => cAcc(d) === category);
+          showTooltip: function showTooltip(e, x, category) {
+            state.selected = state.data.filter(function (d) {
+              return cAcc(d) === category;
+            });
             render(state);
           },
 
-          hideTooltip() {
+          hideTooltip: function hideTooltip() {
             state.selected = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -91,11 +93,11 @@
         // Render
         // -----------------------------------------------
         function render(state) {
-          const props = queryProps(sszvis.measureDimensions(config.id));
-          const chartDimensions = sszvis.dimensionsHorizontalBarChart(
+          var props = queryProps(sszvis.measureDimensions(config.id));
+          var chartDimensions = sszvis.dimensionsHorizontalBarChart(
             state.categories.length,
           );
-          const bounds = sszvis.bounds(
+          var bounds = sszvis.bounds(
             {
               height: 30 + chartDimensions.totalHeight + 40,
               top: 30,
@@ -103,16 +105,16 @@
             },
             config.id,
           );
-          const chartWidth = Math.min(bounds.innerWidth, 800);
+          var chartWidth = Math.min(bounds.innerWidth, 800);
 
           // Scales
 
-          const widthScale = d3
+          var widthScale = d3
             .scaleLinear()
             .range([0, chartWidth])
             .domain([0, d3.max(state.data, xAcc)]);
 
-          const yScale = d3
+          var yScale = d3
             .scaleBand()
             .padding(chartDimensions.padRatio)
             .paddingOuter(chartDimensions.outerRatio)
@@ -120,16 +122,16 @@
             .domain(state.categories);
 
           // Layers
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer(config.id, bounds)
             .datum(state.data);
 
-          const tooltipLayer = sszvis
+          var tooltipLayer = sszvis
             .createHtmlLayer(config.id, bounds)
             .datum(state.selected);
 
           // Components
-          const barGen = sszvis
+          var barGen = sszvis
             .bar()
             .x(0)
             .y(sszvis.compose(yScale, cAcc))
@@ -138,7 +140,7 @@
             .centerTooltip(true)
             .fill(sszvis.scaleQual12());
 
-          const xAxis = sszvis
+          var xAxis = sszvis
             .axisX()
             .scale(widthScale)
             .orient("bottom")
@@ -149,18 +151,15 @@
             xAxis.ticks(props.ticks);
           }
 
-          const yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
+          var yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
 
-          const tooltipHeader = sszvis
-            .modularTextHTML()
-            .bold(
-              sszvis.compose(
-                (d) => (isNaN(d) ? "k. A." : sszvis.formatNumber(d)),
-                xAcc,
-              ),
-            );
+          var tooltipHeader = sszvis.modularTextHTML().bold(
+            sszvis.compose(function (d) {
+              return isNaN(d) ? "k. A." : sszvis.formatNumber(d);
+            }, xAcc),
+          );
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .orientation(sszvis.fitTooltip("bottom", bounds))
@@ -177,7 +176,7 @@
             ),
           );
 
-          const bars = chartLayer.selectGroup("bars").call(barGen);
+          var bars = chartLayer.selectGroup("bars").call(barGen);
 
           chartLayer
             .selectGroup("xAxis")
@@ -200,7 +199,7 @@
           // Interaction
           // Use the move behavior to provide tooltips in the absence of a bar, i.e.
           // when we have missing data.
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .move()
             .xScale(widthScale)
             .yScale(yScale)
@@ -215,7 +214,9 @@
         }
 
         function isWithinBarContour(xValue, category) {
-          const barDatum = sszvis.find((d) => cAcc(d) === category, state.data);
+          var barDatum = sszvis.find(function (d) {
+            return cAcc(d) === category;
+          }, state.data);
           return sszvis.util.testBarThreshold(xValue, barDatum, xAcc, 1000);
         }
 

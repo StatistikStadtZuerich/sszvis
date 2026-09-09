@@ -22,13 +22,13 @@
         // Configuration
         // -----------------------------------------------
 
-        const DEFAULT_KEY = "Kinder";
-        const KEY_OPTIONS = ["Kinder", "Random"];
-        const MAX_LEGEND_WIDTH = 320;
-        const queryProps = sszvis
+        var DEFAULT_KEY = "Kinder";
+        var KEY_OPTIONS = ["Kinder", "Random"];
+        var MAX_LEGEND_WIDTH = 320;
+        var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _(width) {
+            _: function _(width) {
               // The calculation of the rastermap bounds is a bit more complex due to the fact
               // that we have to deal with a raster image in the background that has a bigger
               // size than the vector map.
@@ -36,23 +36,23 @@
               // At the maximum map size (420x420px) the raster image overlaps the image by
               // the magic padding numbers below. At smaller sizes, we apply a scale factor
               // to calculate the respective paddings.
-              const scale =
+              var scale =
                 width / (sszvis.aspectRatioSquare.MAX_HEIGHT + 49 + 42);
 
-              const padding = {
+              var padding = {
                 top: 74 + Math.min(36 * scale, 36),
                 right: 49 * scale,
                 bottom: 60 + Math.min(31 * scale, 31),
                 left: 42 * scale,
               };
 
-              const innerWidth = width - padding.left - padding.right;
-              const innerHeight = sszvis.aspectRatioSquare(innerWidth);
+              var innerWidth = width - padding.left - padding.right;
+              var innerHeight = sszvis.aspectRatioSquare(innerWidth);
 
               // We always want a 1:1 ratio, so we restrict the innerWidth to the max height
               // by increasing the horizontal padding.
               if (innerHeight < innerWidth) {
-                const excessPadding = innerWidth - innerHeight;
+                var excessPadding = innerWidth - innerHeight;
                 padding.right = padding.right + excessPadding / 2;
                 padding.left = padding.left + excessPadding / 2;
               }
@@ -67,10 +67,14 @@
             },
           })
           .prop("legendWidth", {
-            _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH),
+            _: function _(width) {
+              return Math.min(width / 2, MAX_LEGEND_WIDTH);
+            },
           })
           .prop("controlWidth", {
-            _: (width) => Math.max(200, Math.min(MAX_LEGEND_WIDTH, width / 2)),
+            _: function _(width) {
+              return Math.max(200, Math.min(MAX_LEGEND_WIDTH, width / 2));
+            },
           });
 
         function parseRow(d) {
@@ -82,14 +86,14 @@
           };
         }
 
-        const xAcc = sszvis.prop("xpos");
-        const yAcc = sszvis.prop("ypos");
-        const kinderAcc = sszvis.prop("kinder");
-        const randomAcc = sszvis.prop("random");
+        var xAcc = sszvis.prop("xpos");
+        var yAcc = sszvis.prop("ypos");
+        var kinderAcc = sszvis.prop("kinder");
+        var randomAcc = sszvis.prop("random");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: null,
           mapData: null,
           valueDomain: [0, 0],
@@ -98,8 +102,8 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareData(data) {
+        var actions = {
+          prepareData: function prepareData(data) {
             state.data = data;
             // Ignore the domain of the random data
             state.valueDomain = d3.extent(data, kinderAcc);
@@ -107,7 +111,7 @@
             actions.setKey(null, DEFAULT_KEY);
           },
 
-          prepareMapData(topo) {
+          prepareMapData: function prepareMapData(topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.stadtkreise),
               borders: topojson.mesh(topo, topo.objects.stadtkreise),
@@ -120,13 +124,13 @@
             render(state);
           },
 
-          setKey(_event, key) {
+          setKey: function setKey(_event, key) {
             state.currentKey = key;
 
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -149,8 +153,8 @@
             return true;
           }
 
-          const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-          const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+          var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+          var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
           // Scales
 
@@ -158,7 +162,7 @@
           // up a binned color scale.
 
           // Choose a number of bins
-          const numBins = 5;
+          var numBins = 5;
           // Then we need to calculate the bin edges in the data domain, and the color values for
           // each bin in the color range. We will be using d3.scale.threshold(), so bin edges shouldn't
           // include the start of the first bin or the end of the last bin. For the threshold scale,
@@ -167,28 +171,28 @@
 
           // Calculate a bin step (the 'width' of a single bin) which will result in the correct
           // number of bins, and round the bin step to 2 significant digits of precision.
-          const binStep =
+          var binStep =
             Math.ceil(
               ((state.valueDomain[1] - state.valueDomain[0]) / numBins) * 100,
             ) / 100;
           // Calculate the inner edges of the bins. We skip the beginning of the value domain,
           // and d3.range automatically leaves off the end.
-          const binEdges = d3.range(
+          var binEdges = d3.range(
             state.valueDomain[0] + binStep,
             state.valueDomain[0] + binStep * numBins,
             binStep,
           );
           // Use a color scale function on an arbitrary range to calculate a set of bin colors easily.
           // This domain is used because we want to map the integer range [0, numBins - 1].
-          const interpolateColor = sszvis
+          var interpolateColor = sszvis
             .scaleDivValGry()
             .reverse()
             .domain([0, numBins - 1]);
           // Calculate the colors of the bins using the range [0, numBins - 1]
           // d3.range(0, numBins) returns a range including the integers in [0, numBins - 1]
-          const binColors = d3.range(0, numBins).map(interpolateColor);
+          var binColors = d3.range(0, numBins).map(interpolateColor);
 
-          const colorScale = d3
+          var colorScale = d3
             .scaleThreshold()
             .domain(binEdges)
             .range(binColors);
@@ -199,35 +203,31 @@
           // the topographic image and the canvas raster layer
           // For more information about the 'key' argument to the metadata object, see the
           // comment in the source code for createHtmlLayer
-          const htmlUnderLayer = sszvis
+          var htmlUnderLayer = sszvis
             .createHtmlLayer("#sszvis-chart", bounds, {
               key: "underlayer",
             })
             .datum(state.data);
 
           // Create an SVG layer. This will contain the city outline
-          const chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds);
+          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds);
 
           // Create an HTML layer that lives at the top of the stack. This will
           // contain the segmented control
-          const htmlOverLayer = sszvis.createHtmlLayer(
-            "#sszvis-chart",
-            bounds,
-            {
-              key: "overlayer",
-            },
-          );
+          var htmlOverLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds, {
+            key: "overlayer",
+          });
 
           // Components
 
-          const control = sszvis
+          var control = sszvis
             .buttonGroup()
             .values(KEY_OPTIONS)
             .width(props.controlWidth)
             .current(state.currentKey)
             .change(actions.setKey);
 
-          const choroplethMap = sszvis
+          var choroplethMap = sszvis
             .choropleth()
             .features(state.mapData.features)
             .borders(state.mapData.borders)
@@ -242,21 +242,21 @@
             .fill("none")
             .borderColor("#fff");
 
-          const mapPath = sszvis.swissMapPath(
+          var mapPath = sszvis.swissMapPath(
             bounds.innerWidth,
             bounds.innerHeight,
             state.mapData.features,
             "zurichStadtfeatures",
           );
-          const projection = mapPath.projection();
+          var projection = mapPath.projection();
 
           function roundPow10(n, pow10) {
-            const divisor = Math.pow(10, pow10);
+            var divisor = Math.pow(10, pow10);
             return Math.round(n * divisor) / divisor;
           }
 
           // Offset is applied for better alignment with the map data
-          const geoOffset = -0.0011;
+          var geoOffset = -0.0011;
 
           function getRoundVal(val) {
             return [
@@ -265,19 +265,19 @@
             ];
           }
 
-          const valAcc =
+          var valAcc =
             state.currentKey === "Kinder"
               ? kinderAcc
               : state.currentKey === "Random"
                 ? randomAcc
                 : sszvis.identity;
 
-          const layerBounds = [
+          var layerBounds = [
             [8.431443 + geoOffset, 47.448978 + geoOffset],
             [8.647471 + geoOffset, 47.309726 + geoOffset],
           ];
 
-          let pixelSide = sszvis.pixelsFromGeoDistance(
+          var pixelSide = sszvis.pixelsFromGeoDistance(
             projection,
             [
               (layerBounds[0][0] + layerBounds[1][0]) / 2,
@@ -288,7 +288,7 @@
           // Using the half pixel crisp setting reduces some of the grid-like overlap patterning that we see with the exact measurement
           pixelSide = sszvis.halfPixel(pixelSide);
 
-          const rasterLayer = sszvis
+          var rasterLayer = sszvis
             .mapRendererRaster()
             .width(bounds.innerWidth)
             .height(bounds.innerHeight)
@@ -297,7 +297,7 @@
             .fill(sszvis.compose(colorScale, valAcc))
             .opacity(0.6);
 
-          const topoLayer = sszvis
+          var topoLayer = sszvis
             .mapRendererImage()
             .projection(projection)
             .src("data/topo_layer_280915.png")
@@ -305,7 +305,7 @@
             .geoBounds(layerBounds)
             .opacity(0.4);
 
-          const legend = sszvis
+          var legend = sszvis
             .legendColorBinned()
             .scale(colorScale)
             .displayValues(binEdges)

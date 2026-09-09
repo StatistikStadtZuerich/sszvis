@@ -18,10 +18,54 @@
       (function (d3, sszvis) {
         "use strict";
 
+        function _toConsumableArray(r) {
+          return (
+            _arrayWithoutHoles(r) ||
+            _iterableToArray(r) ||
+            _unsupportedIterableToArray(r) ||
+            _nonIterableSpread()
+          );
+        }
+        function _nonIterableSpread() {
+          throw new TypeError(
+            "Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.",
+          );
+        }
+        function _unsupportedIterableToArray(r, a) {
+          if (r) {
+            if ("string" == typeof r) return _arrayLikeToArray(r, a);
+            var t = {}.toString.call(r).slice(8, -1);
+            return (
+              "Object" === t && r.constructor && (t = r.constructor.name),
+              "Map" === t || "Set" === t
+                ? Array.from(r)
+                : "Arguments" === t ||
+                    /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t)
+                  ? _arrayLikeToArray(r, a)
+                  : void 0
+            );
+          }
+        }
+        function _iterableToArray(r) {
+          if (
+            ("undefined" != typeof Symbol && null != r[Symbol.iterator]) ||
+            null != r["@@iterator"]
+          )
+            return Array.from(r);
+        }
+        function _arrayWithoutHoles(r) {
+          if (Array.isArray(r)) return _arrayLikeToArray(r);
+        }
+        function _arrayLikeToArray(r, a) {
+          (null == a || a > r.length) && (a = r.length);
+          for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];
+          return n;
+        }
+
         // Configuration
         // -----------------------------------------------
 
-        const queryProps = sszvis.responsiveProps().prop("yAxis2Label", {
+        var queryProps = sszvis.responsiveProps().prop("yAxis2Label", {
           palm: "(schweizweit)",
           _: "Anzahl Arbeitslose (schweizweit)",
         });
@@ -34,18 +78,20 @@
           };
         }
 
-        const xAcc = sszvis.prop("date");
-        const yAcc = sszvis.prop("value");
-        const cAcc = sszvis.prop("region");
+        var xAcc = sszvis.prop("date");
+        var yAcc = sszvis.prop("value");
+        var cAcc = sszvis.prop("region");
 
         // a few helpers to distinguish between data that belongs on axis1 (left) and axis2 (right)
-        const axis2 = ["Schweiz"]; // the values for "Region" that go in axis2
-        const valueIsOnAxis2 = (d) => sszvis.contains(axis2, d);
-        const datumIsOnAxis2 = sszvis.compose(valueIsOnAxis2, cAcc);
+        var axis2 = ["Schweiz"]; // the values for "Region" that go in axis2
+        var valueIsOnAxis2 = function valueIsOnAxis2(d) {
+          return sszvis.contains(axis2, d);
+        };
+        var datumIsOnAxis2 = sszvis.compose(valueIsOnAxis2, cAcc);
 
         sszvis.app({
-          init: (state) =>
-            d3.csv("data/S_2yAxis.csv", parseRow).then((data) => {
+          init: function init(state) {
+            return d3.csv("data/S_2yAxis.csv", parseRow).then(function (data) {
               state.data = data;
               state.dates = d3.extent(state.data, xAcc);
               state.lineData = sszvis
@@ -72,99 +118,99 @@
               );
 
               state.selection = [];
-            }),
+            });
+          },
           actions: {
-            changeDate(state, e, inputDate) {
-              const closestDate = xAcc(
-                closestDatum(state.data, xAcc, inputDate),
-              );
-              const closestData = state.lineData.map((linePoints) =>
-                sszvis.find(
-                  (d) => sszvis.stringEqual(xAcc(d), closestDate),
-                  linePoints,
-                ),
-              );
+            changeDate: function changeDate(state, e, inputDate) {
+              var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
+              var closestData = state.lineData.map(function (linePoints) {
+                return sszvis.find(function (d) {
+                  return sszvis.stringEqual(xAcc(d), closestDate);
+                }, linePoints);
+              });
               state.selection = closestData.filter(
                 sszvis.compose(sszvis.not(isNaN), yAcc),
               );
             },
 
-            resetDate(state) {
+            resetDate: function resetDate(state) {
               state.selection = [];
             },
           },
-          render(state, actions) {
-            const bounds = sszvis.bounds(
+          render: function render(state, actions) {
+            var bounds = sszvis.bounds(
               { top: 30, bottom: 130 },
               "#sszvis-chart",
             );
-            const props = queryProps(bounds);
+            var props = queryProps(bounds);
 
             // Scales
 
-            const xScale = d3
+            var xScale = d3
               .scaleTime()
               .domain(state.dates)
               .range([0, bounds.innerWidth]);
 
-            const yScale1 = d3
+            var yScale1 = d3
               .scaleLinear()
               .domain([0, state.axis1maxY])
               .range([bounds.innerHeight, 0]);
 
-            const yScale2 = d3
+            var yScale2 = d3
               .scaleLinear()
               .domain([0, state.axis2maxY])
               .range([bounds.innerHeight, 0]);
 
-            const cScale1 = sszvis.scaleQual6a();
-            const cScale2 = sszvis.scaleQual6b();
+            var cScale1 = sszvis.scaleQual6a();
+            var cScale2 = sszvis.scaleQual6b();
 
             // Layers
 
-            const chartLayer = sszvis
+            var chartLayer = sszvis
               .createSvgLayer("#sszvis-chart", bounds)
               .datum(state.lineData);
 
             // Components
 
-            const line = sszvis
+            var line = sszvis
               .line()
               .x(sszvis.compose(xScale, xAcc))
-              .y((d) =>
-                datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d)),
-              )
+              .y(function (d) {
+                return datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d));
+              })
               // Access the first data point of the line to decide on the stroke color
-              .stroke((lineData) => {
-                const d = sszvis.first(lineData);
+              .stroke(function (lineData) {
+                var d = sszvis.first(lineData);
                 return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
               });
 
-            const rulerLabel = sszvis
+            var rulerLabel = sszvis
               .modularTextSVG()
               .bold(sszvis.compose(sszvis.formatNumber, yAcc))
               .plain(cAcc);
 
-            const ruler = sszvis
+            var ruler = sszvis
               .annotationRuler()
               .top(0)
               .bottom(bounds.innerHeight)
               .label(rulerLabel)
               .x(sszvis.compose(xScale, xAcc))
-              .y((d) =>
-                datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d)),
-              )
-              .flip((d) => xScale(xAcc(d)) >= bounds.innerWidth / 2)
-              .color((d) =>
-                datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d)),
-              );
+              .y(function (d) {
+                return datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d));
+              })
+              .flip(function (d) {
+                return xScale(xAcc(d)) >= bounds.innerWidth / 2;
+              })
+              .color(function (d) {
+                return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
+              });
 
-            const xTickValues = [
-              ...xScale.ticks(5),
-              ...state.selection.map(xAcc),
-            ];
+            var xTickValues = [].concat(
+              _toConsumableArray(xScale.ticks(5)),
+              _toConsumableArray(state.selection.map(xAcc)),
+            );
 
-            const xAxis = sszvis.axisX
+            var xAxis = sszvis.axisX
               .time()
               .scale(xScale)
               .orient("bottom")
@@ -175,7 +221,7 @@
               .titleCenter(true)
               .titleAnchor("middle");
 
-            const yAxis1 = sszvis
+            var yAxis1 = sszvis
               .axisY()
               .scale(yScale1)
               .orient("right")
@@ -183,7 +229,7 @@
               .title("Anzahl Arbeitslose (regional)")
               .dyTitle(-20);
 
-            const yAxis2 = sszvis
+            var yAxis2 = sszvis
               .axisY()
               .scale(yScale2)
               .orient("left")
@@ -191,12 +237,12 @@
               .title(props.yAxis2Label)
               .dyTitle(-20);
 
-            const cLegend1 = sszvis
+            var cLegend1 = sszvis
               .legendColorOrdinal()
               .scale(cScale1)
               .orientation("vertical");
 
-            const cLegend2 = sszvis
+            var cLegend2 = sszvis
               .legendColorOrdinal()
               .scale(cScale2)
               .orientation("vertical")
@@ -244,7 +290,7 @@
 
             // Interaction
 
-            const interactionLayer = sszvis
+            var interactionLayer = sszvis
               .move()
               .xScale(xScale)
               .yScale(yScale1) // In this example, which scale you use for the y-dimension of the move component doesn't matter
@@ -259,15 +305,19 @@
         // -----------------------------------------------
 
         function closestDatum(data, accessor, datum) {
-          const i = d3.bisector(accessor).left(data, datum, 1);
-          const d0 = data[i - 1];
-          const d1 = data[i] || d0;
+          var i = d3.bisector(accessor).left(data, datum, 1);
+          var d0 = data[i - 1];
+          var d1 = data[i] || d0;
           return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
         }
 
         function isSelected(state) {
-          return (d) =>
-            sszvis.contains(state.selection.map(xAcc).map(String), String(d));
+          return function (d) {
+            return sszvis.contains(
+              state.selection.map(xAcc).map(String),
+              String(d),
+            );
+          };
         }
       })(d3, sszvis);
     </script>

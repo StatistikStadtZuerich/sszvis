@@ -38,18 +38,18 @@
           };
         }
 
-        const vAcc = sszvis.prop("value");
-        const gAcc = sszvis.prop("gender");
-        const aAcc = sszvis.prop("age");
-        const refAcc = sszvis.prop("group");
-        const womenAcc = sszvis.prop("Frauen");
-        const menAcc = sszvis.prop("Männer");
-        const collegeAcc = sszvis.prop("Hochschulabschluss");
-        const otherAcc = sszvis.prop("Andere");
+        var vAcc = sszvis.prop("value");
+        var gAcc = sszvis.prop("gender");
+        var aAcc = sszvis.prop("age");
+        var refAcc = sszvis.prop("group");
+        var womenAcc = sszvis.prop("Frauen");
+        var menAcc = sszvis.prop("Männer");
+        var collegeAcc = sszvis.prop("Hochschulabschluss");
+        var otherAcc = sszvis.prop("Andere");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           ages: d3.range(0, 101), // [0 ... 100]
           maxValue: 0,
@@ -58,8 +58,8 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.maxValue = d3.max(state.data, vAcc);
             state.populations = sszvis
@@ -71,7 +71,7 @@
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -85,13 +85,13 @@
         // Render
         // -----------------------------------------------
         function render(state) {
-          const pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
-          const pyramidDimensions = sszvis.layoutPopulationPyramid(
+          var pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
+          var pyramidDimensions = sszvis.layoutPopulationPyramid(
             pyramidWidth,
             state.ages.length,
           );
-          const chartPadding = { top: 25, bottom: 86 };
-          const bounds = sszvis.bounds(
+          var chartPadding = { top: 25, bottom: 86 };
+          var bounds = sszvis.bounds(
             {
               height:
                 chartPadding.top +
@@ -107,27 +107,27 @@
 
           // Scales
 
-          const lengthScale = d3
+          var lengthScale = d3
             .scaleLinear()
             .domain([0, state.maxValue])
             .range([0, pyramidDimensions.maxBarLength]);
 
-          const positionScale = d3
+          var positionScale = d3
             .scaleOrdinal()
             .domain(state.ages)
             .range(pyramidDimensions.positions);
 
-          const colorScale = sszvis.scaleGender3();
+          var colorScale = sszvis.scaleGender3();
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer(config.id, bounds)
             .datum(state.populations);
 
           // Components
 
-          const pyramid = sszvis
+          var pyramid = sszvis
             .pyramid()
             .barFill(sszvis.compose(colorScale, gAcc))
             .barPosition(sszvis.compose(positionScale, aAcc))
@@ -138,7 +138,7 @@
             .leftRefAccessor(sszvis.compose(womenAcc, otherAcc))
             .rightRefAccessor(sszvis.compose(menAcc, otherAcc));
 
-          const xAxis = sszvis.axisX
+          var xAxis = sszvis.axisX
             .pyramid()
             .scale(lengthScale)
             .orient("bottom")
@@ -147,16 +147,18 @@
             .titleAnchor("middle")
             .titleCenter(true);
 
-          const yAxis = sszvis.axisY
+          var yAxis = sszvis.axisY
             .ordinal()
             .scale(positionScale)
             .orient("right")
-            .tickFormat((d) => (d === 0 ? "" : sszvis.formatAge(d)))
+            .tickFormat(function (d) {
+              return d === 0 ? "" : sszvis.formatAge(d);
+            })
             .ticks(5)
             .title("Alter in Jahren")
             .dyTitle(-18);
 
-          const colorLegend = sszvis
+          var colorLegend = sszvis
             .legendColorOrdinal()
             .scale(colorScale)
             .reverse(true)

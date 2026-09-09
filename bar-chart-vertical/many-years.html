@@ -26,10 +26,54 @@
       (function (d3, sszvis, config) {
         "use strict";
 
+        function _toConsumableArray(r) {
+          return (
+            _arrayWithoutHoles(r) ||
+            _iterableToArray(r) ||
+            _unsupportedIterableToArray(r) ||
+            _nonIterableSpread()
+          );
+        }
+        function _nonIterableSpread() {
+          throw new TypeError(
+            "Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.",
+          );
+        }
+        function _unsupportedIterableToArray(r, a) {
+          if (r) {
+            if ("string" == typeof r) return _arrayLikeToArray(r, a);
+            var t = {}.toString.call(r).slice(8, -1);
+            return (
+              "Object" === t && r.constructor && (t = r.constructor.name),
+              "Map" === t || "Set" === t
+                ? Array.from(r)
+                : "Arguments" === t ||
+                    /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t)
+                  ? _arrayLikeToArray(r, a)
+                  : void 0
+            );
+          }
+        }
+        function _iterableToArray(r) {
+          if (
+            ("undefined" != typeof Symbol && null != r[Symbol.iterator]) ||
+            null != r["@@iterator"]
+          )
+            return Array.from(r);
+        }
+        function _arrayWithoutHoles(r) {
+          if (Array.isArray(r)) return _arrayLikeToArray(r);
+        }
+        function _arrayLikeToArray(r, a) {
+          (null == a || a > r.length) && (a = r.length);
+          for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];
+          return n;
+        }
+
         // Configuration
         // -----------------------------------------------
 
-        const queryProps = sszvis
+        var queryProps = sszvis
           .responsiveProps()
           .prop("barPadding", {
             palm: 0.2,
@@ -39,7 +83,9 @@
             _: null,
           })
           .prop("yLabelFormat", {
-            _: () => sszvis.formatNumber,
+            _: function _() {
+              return sszvis.formatNumber;
+            },
           });
 
         function parseRow(d) {
@@ -49,12 +95,12 @@
           };
         }
 
-        const xAcc = sszvis.prop("year");
-        const yAcc = sszvis.prop("value");
+        var xAcc = sszvis.prop("year");
+        var yAcc = sszvis.prop("value");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           categories: [],
           yearRange: [],
@@ -63,28 +109,28 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.categories = sszvis.set(state.data, xAcc);
             state.yearRange = d3.extent(state.data, xAcc);
             render(state);
           },
 
-          changeDate(e, selectedDate) {
-            const selectedYear = Math.round(selectedDate);
-            state.selection = state.data.filter(
-              (v) => xAcc(v) === selectedYear,
-            );
+          changeDate: function changeDate(e, selectedDate) {
+            var selectedYear = Math.round(selectedDate);
+            state.selection = state.data.filter(function (v) {
+              return xAcc(v) === selectedYear;
+            });
             render(state);
           },
 
-          resetDate() {
+          resetDate: function resetDate() {
             state.selection = [];
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -98,9 +144,9 @@
         // Render
         // -----------------------------------------------
         function render(state) {
-          const props = queryProps(sszvis.measureDimensions(config.id));
-          const yMax = d3.max(state.data, yAcc);
-          const bounds = sszvis.bounds(
+          var props = queryProps(sszvis.measureDimensions(config.id));
+          var yMax = d3.max(state.data, yAcc);
+          var bounds = sszvis.bounds(
             {
               top: 3,
               bottom: 25,
@@ -112,77 +158,81 @@
             config.id,
           );
 
-          const chartDimensions = sszvis.dimensionsVerticalBarChart(
+          var chartDimensions = sszvis.dimensionsVerticalBarChart(
             bounds.innerWidth,
             state.categories.length,
           );
 
           // Scales
 
-          const xScale = d3
+          var xScale = d3
             .scaleBand()
             .domain(state.categories)
             .padding(chartDimensions.padRatio)
             .paddingOuter(props.barPadding)
             .range([0, chartDimensions.totalWidth]);
 
-          const heightScale = d3
+          var heightScale = d3
             .scaleLinear()
             .domain([0, yMax])
             .range([0, bounds.innerHeight]);
 
-          const yPosScale = heightScale
+          var yPosScale = heightScale
             .copy()
-            .range([...heightScale.range()].reverse());
+            .range(_toConsumableArray(heightScale.range()).reverse());
 
-          const xValue = sszvis.compose(xScale, xAcc);
+          var xValue = sszvis.compose(xScale, xAcc);
           // rounding the y-values and the height prevents the bars from jumping around
-          const yValue = sszvis.compose(Math.round, yPosScale, yAcc);
-          const hValue = sszvis.compose(Math.round, heightScale, yAcc);
+          var yValue = sszvis.compose(Math.round, yPosScale, yAcc);
+          var hValue = sszvis.compose(Math.round, heightScale, yAcc);
 
-          const cScale = sszvis.scaleQual12();
-          const cScaleDark = cScale.darker();
+          var cScale = sszvis.scaleQual12();
+          var cScaleDark = cScale.darker();
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer(config.id, bounds)
             .datum(state.data);
 
-          const tooltipLayer = sszvis
+          var tooltipLayer = sszvis
             .createHtmlLayer(config.id, bounds)
             .datum(state.selection);
 
           // Components
 
-          const barGen = sszvis
+          var barGen = sszvis
             .bar()
             .x(xValue)
             .y(yValue)
             .width(xScale.bandwidth())
             .height(hValue)
-            .fill((d) => (isSelected(d) ? cScaleDark(d) : cScale(d)));
+            .fill(function (d) {
+              return isSelected(d) ? cScaleDark(d) : cScale(d);
+            });
 
-          const xAxis = sszvis.axisX
+          var xAxis = sszvis.axisX
             .ordinal()
             .scale(xScale)
             .orient("bottom")
             .alignOuterLabels(true)
             .ticks(5);
 
-          const yAxis = sszvis.axisY().scale(yPosScale).orient("right");
+          var yAxis = sszvis.axisY().scale(yPosScale).orient("right");
 
-          const tooltipTitle = sszvis
+          var tooltipTitle = sszvis
             .modularTextHTML()
             .bold(yAcc)
             .plain("Hotelübernachtungen");
 
-          const tooltip = sszvis
+          var tooltip = sszvis
             .tooltip()
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .renderInto(tooltipLayer)
             .header(tooltipTitle)
-            .body((d) => "Im Jahr " + xAcc(d))
+            .body(function (d) {
+              return "Im Jahr " + xAcc(d);
+            })
             .visible(isSelected);
 
           // Rendering
@@ -195,7 +245,7 @@
             ),
           );
 
-          const bars = chartLayer
+          var bars = chartLayer
             .selectGroup("bars")
             .attr("transform", sszvis.translateString(bounds.padding.left, 0))
             .call(barGen);
@@ -211,7 +261,7 @@
 
           // Interaction
 
-          const interactionLayer = sszvis
+          var interactionLayer = sszvis
             .move()
             .xScale(xScale)
             .yScale(yPosScale)

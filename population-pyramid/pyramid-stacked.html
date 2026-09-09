@@ -29,7 +29,7 @@
         // Configuration
         // -----------------------------------------------
 
-        const queryProps = sszvis
+        var queryProps = sszvis
           .responsiveProps()
           .prop("bottomPadding", {
             lap: 150,
@@ -49,16 +49,16 @@
           };
         }
 
-        const vAcc = sszvis.prop("value");
-        const gAcc = sszvis.prop("gender");
-        const aAcc = sszvis.prop("age");
-        const stackAcc = sszvis.prop("group");
-        const womenAcc = sszvis.prop("0");
-        const menAcc = sszvis.prop("1");
+        var vAcc = sszvis.prop("value");
+        var gAcc = sszvis.prop("gender");
+        var aAcc = sszvis.prop("age");
+        var stackAcc = sszvis.prop("group");
+        var womenAcc = sszvis.prop("0");
+        var menAcc = sszvis.prop("1");
 
         // Application state
         // -----------------------------------------------
-        const state = {
+        var state = {
           data: [],
           ages: d3.range(0, 101), // [0 ... 100]
           groups: [],
@@ -68,12 +68,12 @@
 
         // State transitions
         // -----------------------------------------------
-        const actions = {
-          prepareState(data) {
+        var actions = {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.groups = sszvis.set(state.data, groupAndStackAcc);
 
-            const layout = sszvis.stackedPyramidLayout(
+            var layout = sszvis.stackedPyramidLayout(
               gAcc,
               aAcc,
               stackAcc,
@@ -86,7 +86,7 @@
             render(state);
           },
 
-          resize() {
+          resize: function resize() {
             render(state);
           },
         };
@@ -100,17 +100,17 @@
         // Render
         // -----------------------------------------------
         function render(state) {
-          const chartDimensions = sszvis.measureDimensions(config.id);
+          var chartDimensions = sszvis.measureDimensions(config.id);
 
-          const props = queryProps(chartDimensions);
-          const pyramidDimensions = sszvis.layoutPopulationPyramid(
+          var props = queryProps(chartDimensions);
+          var pyramidDimensions = sszvis.layoutPopulationPyramid(
             chartDimensions.width - 2,
             state.ages.length,
           );
 
-          const chartPadding = { top: 25, bottom: props.bottomPadding };
+          var chartPadding = { top: 25, bottom: props.bottomPadding };
 
-          const bounds = sszvis.bounds(
+          var bounds = sszvis.bounds(
             {
               height:
                 chartPadding.top +
@@ -126,27 +126,27 @@
 
           // Scales
 
-          const lengthScale = d3
+          var lengthScale = d3
             .scaleLinear()
             .domain([0, state.maxStackedValue])
             .range([0, pyramidDimensions.maxBarLength]);
 
-          const positionScale = d3
+          var positionScale = d3
             .scaleOrdinal()
             .domain(state.ages)
             .range(pyramidDimensions.positions);
 
-          const colorScale = sszvis.scaleGender6Origin().domain(state.groups);
+          var colorScale = sszvis.scaleGender6Origin().domain(state.groups);
 
           // Layers
 
-          const chartLayer = sszvis
+          var chartLayer = sszvis
             .createSvgLayer(config.id, bounds)
             .datum(state.stackedPyramidData);
 
           // Components
 
-          const pyramid = sszvis
+          var pyramid = sszvis
             .stackedPyramid()
             .barFill(sszvis.compose(colorScale, groupAndStackAcc))
             .barPosition(positionScale)
@@ -155,7 +155,7 @@
             .leftAccessor(womenAcc)
             .rightAccessor(menAcc);
 
-          const xAxis = sszvis.axisX
+          var xAxis = sszvis.axisX
             .pyramid()
             .scale(lengthScale)
             .orient("bottom")
@@ -163,16 +163,18 @@
             .titleAnchor("middle")
             .titleCenter(true);
 
-          const yAxis = sszvis.axisY
+          var yAxis = sszvis.axisY
             .ordinal()
             .scale(positionScale)
             .orient("right")
-            .tickFormat((d) => (d === 0 ? "" : sszvis.formatAge(d)))
+            .tickFormat(function (d) {
+              return d === 0 ? "" : sszvis.formatAge(d);
+            })
             .ticks(5)
             .title("Alter in Jahren")
             .dyTitle(-18);
 
-          const colorLegend = sszvis
+          var colorLegend = sszvis
             .legendColorOrdinal()
             .scale(colorScale)
             .orientation("vertical")
