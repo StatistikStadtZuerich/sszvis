@@ -14,18 +14,16 @@
   "devDependencies": {
     "@effect/tsgo": "latest",
     "@semantic-release/changelog": "^7.0.0",
-    "concurrently": "^9.1.0",
     "oxfmt": "latest",
     "oxlint": "latest",
     "playwright": "^1.55.0",
     "semantic-release": "^25.0.9",
     "turbo": "^2.5.8",
-    "typescript": "^5.9.2",
-    "wait-on": "^8.0.1"
+    "typescript": "^5.9.2"
   },
   "scripts": {
     "build": "turbo run build",
-    "clean": "turbo run clean && rm -rf node_modules",
+    "clean": "turbo run clean && rm -rf node_modules apps/*/node_modules packages/*/node_modules",
     "dev": "turbo run dev",
     "test": "turbo run test",
     "test:unit": "turbo run test --filter=sszvis",
@@ -40,6 +38,7 @@
     "regression:crawl": "node scripts/visual-regression/crawl.mjs",
     "regression:export": "node scripts/visual-regression/export.mjs",
     "generate:changelogs": "semantic-release",
-    "build:topo": "turbo run build --filter=@sszvis/geodata"
+    "build:topo": "turbo run build --filter=@sszvis/geodata",
+    "version": "echo 'Do not version the root. See the Releasing section in AGENTS.md.' && exit 1"
   }
 }

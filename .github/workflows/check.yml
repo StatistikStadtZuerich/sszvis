@@ -80,8 +80,6 @@ jobs:
       - name: Build library and docs
         run: pnpm run build
 
-      - name: Serve docs and run snapshot tests
-        run: |
-          pnpm exec concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
-            "pnpm --filter @sszvis/docs run serve" \
-            "pnpm exec wait-on http://localhost:8000 && pnpm --filter sszvis run test:snapshot"
+      # playwright.config.js owns the docs server via its `webServer` block.
+      - name: Run snapshot tests
+        run: pnpm run test:snapshot

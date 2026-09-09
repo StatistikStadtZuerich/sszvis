@@ -1,26 +1,48 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
+  "globalDependencies": [
+    ".oxlintrc.json",
+    ".oxfmtrc.jsonc",
+    "tsconfig.json",
+    "pnpm-workspace.yaml"
+  ],
+  "globalEnv": ["CI"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["build/**", "dist/**"]
-    },
-    "dev": {
-      "persistent": true,
-      "cache": false,
-      "dependsOn": ["^build"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!test/**",
+        "!playwright.config.js",
+        "!vitest.config.js",
+        "!README.md",
+        ".env*"
+      ],
+      "outputs": ["build/**", "dist/**"],
+      "outputLogs": "new-only"
     },
     "type-check": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^type-check"],
+      "outputLogs": "new-only"
     },
     "test": {
-      "dependsOn": ["^build"]
+      "outputLogs": "new-only"
     },
     "test:snapshot": {
       "dependsOn": ["sszvis#build", "@sszvis/docs#build"],
       "cache": false
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "persistent": true,
+      "cache": false,
+      "interruptible": true
+    },
+    "build:watch": {
+      "persistent": true,
+      "cache": false,
+      "interruptible": true
     },
     "clean": {
       "cache": false
