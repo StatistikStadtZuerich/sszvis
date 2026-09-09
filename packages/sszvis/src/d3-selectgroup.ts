@@ -21,7 +21,7 @@ declare module "d3" {
 
 selection.prototype.selectGroup = function <G extends BaseType, D, P extends BaseType, PD>(
   this: Selection<G, D, P, PD>,
-  key: string
+  key: string,
 ) {
   return this.selectAll(`[data-d3-selectgroup="${key}"]`)
     .data((d: unknown) => [d])

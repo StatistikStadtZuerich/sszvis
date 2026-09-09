@@ -98,8 +98,9 @@ type SelectProps<T> = {
   ariaLabel: string | undefined;
 };
 
-export interface SelectComponent<T extends string = string>
-  extends ComponentBuilder<SelectComponent<T>> {
+export interface SelectComponent<T extends string = string> extends ComponentBuilder<
+  SelectComponent<T>
+> {
   values(): T[];
   values(values: T[] | undefined): SelectComponent<T>;
   current(): T;
@@ -160,7 +161,7 @@ export default function selectMenu<T extends string = string>(): SelectComponent
               // value written by something other than this component matches nothing. A
               // selection that maps to no value is not a selection.
               logger.warn(
-                `[selectMenu] ignoring a selection whose option value "${value}" does not match any of the ${props.values.length} configured values.`
+                `[selectMenu] ignoring a selection whose option value "${value}" does not match any of the ${props.values.length} configured values.`,
               );
               return;
             }
@@ -191,7 +192,7 @@ export default function selectMenu<T extends string = string>(): SelectComponent
         }
         if (collisions.length > 0) {
           logger.warn(
-            `[selectMenu] values contains distinct entries that are indistinguishable as strings (${collisions.join(", ")}); a selection resolves to the first of each.`
+            `[selectMenu] values contains distinct entries that are indistinguishable as strings (${collisions.join(", ")}); a selection resolves to the first of each.`,
           );
         }
 
@@ -221,7 +222,7 @@ export default function selectMenu<T extends string = string>(): SelectComponent
 function truncateToWidth(
   metricsEl: Selection<HTMLDivElement, string, HTMLDivElement, string>,
   maxWidth: number,
-  originalString: string
+  originalString: string,
 ): string {
   const MAX_RECURSION = 1000;
   const fitText = (str: string, i: number): string => {

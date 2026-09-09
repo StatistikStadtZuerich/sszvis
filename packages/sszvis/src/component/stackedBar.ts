@@ -233,7 +233,7 @@ function stackedBarData(order: StackOrder) {
     // category code - groups the same way a string one does. The keys themselves are read
     // back off the cascade row with Object.keys, which is why `series` stays a string.
     seriesAcc: (datum: T) => string | number,
-    valueAcc: (datum: T) => number
+    valueAcc: (datum: T) => number,
   ) =>
     (data: T[]): StackedBarLayout<T, X> => {
       const rows: CascadeRow<T>[] = cascade<T>().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
@@ -292,7 +292,7 @@ function stackedBarSeriesData(order: StackOrder) {
   return <T, X extends string | number = string>(
     stackAcc: (datum: T) => X,
     seriesAcc: (datum: T) => string | number,
-    valueAcc: (datum: T) => number
+    valueAcc: (datum: T) => number,
   ) =>
     (data: T[]): StackedBarSeriesData<T, X> => {
       const { series, maxValue, minValue } = layout<T, X>(stackAcc, seriesAcc, valueAcc)(data);
@@ -327,7 +327,7 @@ type SliceValue<U, R> = R | ((slice: U, index: number) => R);
  */
 type StoredDimension<T, X extends string | number> = (
   slice?: StackedBarSlice<T, X>,
-  index?: number
+  index?: number,
 ) => number;
 
 /** fill is stored exactly as set, and may be left unset, in which case no fill is written. */
@@ -378,8 +378,10 @@ type HorizontalProps<T, X extends string | number> = ColorProps<T, X> & {
  * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
  */
-export interface StackedBarVerticalComponent<T = unknown, X extends string | number = string>
-  extends ComponentBuilder<StackedBarVerticalComponent<T, X>> {
+export interface StackedBarVerticalComponent<
+  T = unknown,
+  X extends string | number = string,
+> extends ComponentBuilder<StackedBarVerticalComponent<T, X>> {
   xScale(): StackScale<X>;
   xScale<V = X>(scale: (value: V) => number | undefined): StackedBarVerticalComponent<T, X>;
   width(): StoredDimension<T, X>;
@@ -388,41 +390,43 @@ export interface StackedBarVerticalComponent<T = unknown, X extends string | num
   yScale(scale: ValueScale): StackedBarVerticalComponent<T, X>;
   height(): StoredDimension<T, X>;
   height<U = StackedBarSlice<T, X>>(
-    value: SliceValue<U, number>
+    value: SliceValue<U, number>,
   ): StackedBarVerticalComponent<T, X>;
   fill(): FillValue<T, X>;
   fill<U = StackedBarSlice<T, X>>(
-    value: SliceValue<U, string | undefined>
+    value: SliceValue<U, string | undefined>,
   ): StackedBarVerticalComponent<T, X>;
   stroke(): StrokeValue<T, X>;
   stroke<U = StackedBarSlice<T, X>>(
-    value: string | null | undefined | ((slice: U, index: number) => string | undefined)
+    value: string | null | undefined | ((slice: U, index: number) => string | undefined),
   ): StackedBarVerticalComponent<T, X>;
   transition(): boolean;
   transition(enabled: boolean): StackedBarVerticalComponent<T, X>;
 }
 
-export interface StackedBarHorizontalComponent<T = unknown, X extends string | number = string>
-  extends ComponentBuilder<StackedBarHorizontalComponent<T, X>> {
+export interface StackedBarHorizontalComponent<
+  T = unknown,
+  X extends string | number = string,
+> extends ComponentBuilder<StackedBarHorizontalComponent<T, X>> {
   xScale(): ValueScale;
   xScale(scale: ValueScale): StackedBarHorizontalComponent<T, X>;
   width(): StoredDimension<T, X>;
   width<U = StackedBarSlice<T, X>>(
-    value: SliceValue<U, number>
+    value: SliceValue<U, number>,
   ): StackedBarHorizontalComponent<T, X>;
   yScale(): StackScale<X>;
   yScale<V = X>(scale: (value: V) => number | undefined): StackedBarHorizontalComponent<T, X>;
   height(): StoredDimension<T, X>;
   height<U = StackedBarSlice<T, X>>(
-    value: SliceValue<U, number>
+    value: SliceValue<U, number>,
   ): StackedBarHorizontalComponent<T, X>;
   fill(): FillValue<T, X>;
   fill<U = StackedBarSlice<T, X>>(
-    value: SliceValue<U, string | undefined>
+    value: SliceValue<U, string | undefined>,
   ): StackedBarHorizontalComponent<T, X>;
   stroke(): StrokeValue<T, X>;
   stroke<U = StackedBarSlice<T, X>>(
-    value: string | null | undefined | ((slice: U, index: number) => string | undefined)
+    value: string | null | undefined | ((slice: U, index: number) => string | undefined),
   ): StackedBarHorizontalComponent<T, X>;
   transition(): boolean;
   transition(enabled: boolean): StackedBarHorizontalComponent<T, X>;
@@ -450,7 +454,7 @@ function requireProps(name: string, props: object, required: string[]): void {
 function drawStacks<T, X extends string | number>(
   selection: Selection<Element, unknown, null, undefined>,
   data: StackedBarSeries<T, X>[],
-  barGen: BarComponent<StackedBarSlice<T, X>>
+  barGen: BarComponent<StackedBarSlice<T, X>>,
 ): void {
   const groups = selection
     .selectAll(".sszvis-stack")
@@ -482,7 +486,7 @@ function fillOf<T, X extends string | number>(fill: FillValue<T, X> | undefined)
  * attribute for it, while an empty string reaches the rect as stroke="".
  */
 function strokeOf<T, X extends string | number>(
-  stroke: StrokeValue<T, X>
+  stroke: StrokeValue<T, X>,
 ): FillValue<T, X> | string {
   if (stroke === undefined) return "#FFFFFF";
   return stroke ?? undefined;

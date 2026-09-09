@@ -145,7 +145,7 @@ describe("component/pie", () => {
           .radius(50)
           .angle(() => 1)
           .fill("#abc"),
-        [{ value: 1 }, { value: 2 }]
+        [{ value: 1 }, { value: 2 }],
       );
       expect(attrs(node, "fill")).toEqual(["#abc", "#abc"]);
     });
@@ -156,7 +156,7 @@ describe("component/pie", () => {
           .radius(50)
           .angle(() => 1)
           .fill((_d: Datum, i: number) => (i === 0 ? "#111" : "#222")),
-        [{ value: 1 }, { value: 2 }]
+        [{ value: 1 }, { value: 2 }],
       );
       expect(attrs(node, "fill")).toEqual(["#111", "#222"]);
     });
@@ -167,7 +167,7 @@ describe("component/pie", () => {
         pie()
           .radius(50)
           .angle(() => 1),
-        [{ value: 1 }]
+        [{ value: 1 }],
       );
       expect(attrs(node, "fill")).toEqual([null]);
     });
@@ -242,7 +242,7 @@ describe("component/pie", () => {
     test("should accept a stroke accessor", () => {
       const node = render(
         pieOf().stroke((d: Datum) => d.color),
-        testData()
+        testData(),
       );
       expect(attrs(node, "stroke")).toEqual(["#f00", "#0f0"]);
     });
@@ -260,14 +260,14 @@ describe("component/pie", () => {
           .radius(50)
           .angle(() => 1)
           .stroke(""),
-        [{ value: 1 }]
+        [{ value: 1 }],
       );
       const asAccessor = render(
         pie()
           .radius(50)
           .angle(() => 1)
           .stroke(() => ""),
-        [{ value: 1 }]
+        [{ value: 1 }],
       );
       expect(attrs(asProp, "stroke")).toEqual([""]);
       expect(attrs(asAccessor, "stroke")).toEqual(attrs(asProp, "stroke"));
@@ -277,7 +277,7 @@ describe("component/pie", () => {
   describe("required properties", () => {
     test("should throw a named error when the angle property was never set", () => {
       expect(() => render(pie().radius(50).fill("#000"), [{ value: 1 }])).toThrow(
-        "[pie] the angle property is required"
+        "[pie] the angle property is required",
       );
     });
 
@@ -287,8 +287,8 @@ describe("component/pie", () => {
           pie()
             .angle(() => 1)
             .fill("#000"),
-          [{ value: 1 }]
-        )
+          [{ value: 1 }],
+        ),
       ).toThrow("[pie] the radius property is required");
     });
 
@@ -328,7 +328,7 @@ describe("component/pie", () => {
           .radius(50)
           .angle(Math.PI / 4)
           .fill("#000"),
-        [{ value: 1 }, { value: 2 }, { value: 3 }]
+        [{ value: 1 }, { value: 2 }, { value: 3 }],
       );
       const [a, b, c] = wedges(node);
       expectAngles(a, [0, Math.PI / 4]);
@@ -408,7 +408,7 @@ describe("component/pie", () => {
           .radius(90)
           .angle(() => Math.PI)
           .fill("#000"),
-        [{ value: 1 }, { value: 1 }]
+        [{ value: 1 }, { value: 1 }],
       );
       const [first, second] = points(node);
       expect(first[0]).toBeCloseTo(150, 6);
@@ -423,7 +423,7 @@ describe("component/pie", () => {
           .radius(60)
           .angle(() => TAU)
           .fill("#000"),
-        [{ value: 1 }]
+        [{ value: 1 }],
       );
       // A single full-circle wedge bisects at 6 o'clock: 60 + 2/3 * 60 below the centre.
       const [[x, y]] = points(node);
@@ -690,7 +690,7 @@ describe("component/pie", () => {
         pie()
           .radius(50)
           .angle((d: Datum) => d.value),
-        [{ value: 1 }, { value: Number.NaN }, { value: 1 }]
+        [{ value: 1 }, { value: Number.NaN }, { value: 1 }],
       );
       // The bad wedge is zero-width and the running total carries on from where it was.
       for (const d of attrs(node, "d")) expect(d).not.toContain("NaN");
@@ -705,7 +705,7 @@ describe("component/pie", () => {
         pie()
           .radius(50)
           .angle((d: Datum) => d.value),
-        [{ value: Number.NaN }, { value: 1 }]
+        [{ value: Number.NaN }, { value: 1 }],
       );
       for (const d of attrs(node, "d")) expect(d).not.toContain("NaN");
       expectAngles(wedges(node)[1], [0, 1]);
@@ -717,7 +717,7 @@ describe("component/pie", () => {
         pie()
           .radius(50)
           .angle((d: Datum) => d.value),
-        [{ value: 1 }, { value: Number.NaN }, { value: 1 }]
+        [{ value: 1 }, { value: Number.NaN }, { value: 1 }],
       );
       for (const anchor of anchors(node)) expect(anchor).not.toContain("NaN");
     });

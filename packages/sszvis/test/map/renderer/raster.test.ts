@@ -70,16 +70,16 @@ describe("map/renderer/raster", () => {
   const render = (
     data: Cell[],
     configure: (c: ReturnType<typeof mapRendererRaster>) => ReturnType<typeof mapRendererRaster> = (
-      c
+      c,
     ) => c,
-    key?: string
+    key?: string,
   ) => {
     const component = configure(
       mapRendererRaster()
         .width(20)
         .height(20)
         .position((d: Cell) => [d.x, d.y])
-        .fill("#ff0000")
+        .fill("#ff0000"),
     );
     return layer(key).datum(data).call(component).node() as HTMLElement;
   };
@@ -149,7 +149,7 @@ describe("map/renderer/raster", () => {
             .fill((d: Cell) => {
               fills.push(d);
               return "#00ff00";
-            })
+            }),
         );
       expect(positions).toEqual(data);
       expect(fills).toEqual(data);
@@ -162,7 +162,7 @@ describe("map/renderer/raster", () => {
 
     test("leaves a cell unpainted when its fill does not parse", () => {
       const node = render([cell(4, 4), cell(12, 12)], (c) =>
-        c.cellSide(4).fill((d: Cell) => (d.x === 4 ? "#00ff00" : "not-a-colour"))
+        c.cellSide(4).fill((d: Cell) => (d.x === 4 ? "#00ff00" : "not-a-colour")),
       );
       expect(pixelAt(node, 4, 4)).toEqual([0, 255, 0, 255]);
       expect(pixelAt(node, 12, 12)).toEqual([0, 0, 0, 0]);
@@ -173,8 +173,8 @@ describe("map/renderer/raster", () => {
         c.cellSide(4).fill(
           // @ts-expect-error - an accessor returning undefined is a caller error; pinned because
           // the cell must be skipped rather than inherit the previous cell's colour.
-          (d: Cell) => (d.x === 4 ? "#00ff00" : undefined)
-        )
+          (d: Cell) => (d.x === 4 ? "#00ff00" : undefined),
+        ),
       );
       expect(pixelAt(node, 4, 4)).toEqual([0, 255, 0, 255]);
       expect(pixelAt(node, 12, 12)).toEqual([0, 0, 0, 0]);
@@ -185,7 +185,7 @@ describe("map/renderer/raster", () => {
         c
           .debug(true)
           .cellSide(4)
-          .fill(() => "not-a-colour")
+          .fill(() => "not-a-colour"),
       );
       // Only the debug rectangle, not a cell composited on top of it.
       expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 51]);
@@ -203,7 +203,7 @@ describe("map/renderer/raster", () => {
               .height(20)
               .position((d: Cell) => [d.x, d.y])
               .fill("#ff0000")
-              .cellSide(4)
+              .cellSide(4),
           )
           .node() as HTMLElement;
       renderWith([cell(4, 4)]);
@@ -221,8 +221,8 @@ describe("map/renderer/raster", () => {
         target.datum([cell(10, 10)]).call(
           raster()
             .position((d: Cell) => [d.x, d.y])
-            .fill("#ff0000")
-        )
+            .fill("#ff0000"),
+        ),
       ).toThrow(new RegExp(`the ${name} property is required`));
       // Nothing is drawn, so no stale canvas is left behind either.
       expect(canvasOf(target.node() as HTMLElement)).toBeNull();
@@ -244,12 +244,12 @@ describe("map/renderer/raster", () => {
     ])("reports a missing %s, naming the component and the property", (name, raster) => {
       const target = layer();
       expect(() => target.datum([cell(1, 1)]).call(raster())).toThrow(
-        new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`)
+        new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`),
       );
       // The same report for an empty dataset, which used to hide the misconfiguration entirely,
       // and no canvas left behind either way.
       expect(() => layer().datum([]).call(raster())).toThrow(
-        new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`)
+        new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`),
       );
       expect(canvasOf(target.node() as HTMLElement)).toBeNull();
     });
@@ -263,8 +263,8 @@ describe("map/renderer/raster", () => {
               .width(width)
               .height(20)
               .position((d: Cell) => [d.x, d.y])
-              .fill("#ff0000")
-          )
+              .fill("#ff0000"),
+          ),
       ).toThrow(/the width property is required/);
     });
 
@@ -278,7 +278,7 @@ describe("map/renderer/raster", () => {
             .width(20.5)
             .height(20.9)
             .position((d: Cell) => [d.x, d.y])
-            .fill("#ff0000")
+            .fill("#ff0000"),
         )
         .node() as HTMLElement;
       const canvas = canvasOf(node) as HTMLCanvasElement;
@@ -298,7 +298,7 @@ describe("map/renderer/raster", () => {
               .width(20)
               .height(20)
               .position((d: Cell) => [d.x, d.y])
-              .fill("#ff0000")
+              .fill("#ff0000"),
           )
           .node() as HTMLElement;
       const first = canvasOf(renderWith());
@@ -409,7 +409,7 @@ describe("map/renderer/raster", () => {
 
     test("carries a caller-supplied accessible name and fallback content", () => {
       const canvas = canvasOf(
-        render([cell(10, 10)], (c) => c.alt("Population density per hectare"))
+        render([cell(10, 10)], (c) => c.alt("Population density per hectare")),
       ) as HTMLCanvasElement;
       expect(canvas.getAttribute("role")).toBe("img");
       expect(canvas.getAttribute("aria-label")).toBe("Population density per hectare");
@@ -428,7 +428,7 @@ describe("map/renderer/raster", () => {
               .height(20)
               .position((d: Cell) => [d.x, d.y])
               .fill("#ff0000")
-              .alt(alt)
+              .alt(alt),
           )
           .node() as HTMLElement;
       renderWith("Described");
@@ -488,7 +488,7 @@ describe("map/renderer/raster", () => {
     test("skips a null position rather than taking the whole render down with it", () => {
       const warnings = captureWarnings();
       const node = render([cell(1, 1), cell(10, 10)], (c) =>
-        c.cellSide(4).position((d: Cell) => (d.x === 1 ? null : [d.x, d.y]))
+        c.cellSide(4).position((d: Cell) => (d.x === 1 ? null : [d.x, d.y])),
       );
       expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
       expect(warnings).toEqual([
@@ -503,7 +503,7 @@ describe("map/renderer/raster", () => {
           .cellSide(4)
           // @ts-expect-error - the contract says a position accessor returns a pair or null; an
           // accessor answering undefined is a caller error, tolerated as the same failure.
-          .position((d: Cell) => (d.x === 1 ? undefined : [d.x, d.y]))
+          .position((d: Cell) => (d.x === 1 ? undefined : [d.x, d.y])),
       );
       expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
       expect(warnings).toEqual([
@@ -515,7 +515,7 @@ describe("map/renderer/raster", () => {
       const warnings = captureWarnings();
       render(
         [cell(Number.NaN, Number.NaN), cell(1, 1), cell(Number.POSITIVE_INFINITY, 2), cell(10, 10)],
-        (c) => c.cellSide(4).position((d: Cell) => (d.x === 1 ? null : [d.x, d.y]))
+        (c) => c.cellSide(4).position((d: Cell) => (d.x === 1 ? null : [d.x, d.y])),
       );
       expect(warnings).toEqual([
         "[mapRendererRaster] the position property could not place 3 of 4 cells; they were not drawn",
@@ -540,19 +540,19 @@ describe("map/renderer/raster", () => {
 
     test("reports a zero cellSide", () => {
       expect(() => render([cell(10, 10)], (c) => c.cellSide(0))).toThrow(
-        /\[mapRendererRaster\].*cellSide/
+        /\[mapRendererRaster\].*cellSide/,
       );
     });
 
     test("reports a negative cellSide, which used to draw its positive counterpart", () => {
       expect(() => render([cell(10, 10)], (c) => c.cellSide(-4))).toThrow(
-        /\[mapRendererRaster\].*cellSide/
+        /\[mapRendererRaster\].*cellSide/,
       );
     });
 
     test("reports a non-finite cellSide", () => {
       expect(() => render([cell(10, 10)], (c) => c.cellSide(Number.NaN))).toThrow(
-        /\[mapRendererRaster\].*cellSide/
+        /\[mapRendererRaster\].*cellSide/,
       );
     });
 
@@ -565,8 +565,8 @@ describe("map/renderer/raster", () => {
             .height(20)
             .position((d: Cell) => [d.x, d.y])
             .fill("#ff0000")
-            .cellSide(0)
-        )
+            .cellSide(0),
+        ),
       ).toThrow(/cellSide/);
       expect(canvasOf(target.node() as HTMLElement)).toBeNull();
     });
@@ -590,8 +590,8 @@ describe("map/renderer/raster", () => {
             .width(20)
             .height(20)
             .position((d: Cell) => [d.x, d.y])
-            .fill("#ff0000")
-        )
+            .fill("#ff0000"),
+        ),
       ).toThrow(TypeError);
       expect(canvasOf(target.node() as HTMLElement)).not.toBeNull();
     });
@@ -618,7 +618,7 @@ describe("map/renderer/raster", () => {
               .width(width)
               .height(20)
               .position((d: Cell) => [d.x, d.y])
-              .fill("#ff0000")
+              .fill("#ff0000"),
           )
           .node() as HTMLElement;
       const first = canvasOf(renderWith(20));
@@ -660,7 +660,7 @@ describe("map/renderer/raster", () => {
             .fill((...args: unknown[]) => {
               seen.push(args);
               return "#ff0000";
-            })
+            }),
         );
       expect(seen).toHaveLength(2);
       expect(seen[0]).toHaveLength(1);
@@ -690,8 +690,8 @@ describe("map/renderer/raster", () => {
               .width(20)
               .height(20)
               .position((d: Cell) => [d.x, d.y])
-              .fill("#ff0000")
-          )
+              .fill("#ff0000"),
+          ),
       ).toThrow(TypeError);
     });
 
@@ -716,7 +716,7 @@ describe("map/renderer/raster", () => {
             .height(20)
             .position((d: Cell) => [d.x, d.y])
             .fill("#ff0000")
-            .cellSide(4)
+            .cellSide(4),
         )
         .node() as HTMLElement;
 
@@ -743,14 +743,14 @@ describe("map/renderer/raster", () => {
           .geoBounds([
             [0, 0],
             [20, 20],
-          ])
+          ]),
       );
       target.datum([cell(10, 10)]).call(
         mapRendererRaster()
           .width(20)
           .height(20)
           .position((d: Cell) => [d.x, d.y])
-          .fill("#ff0000")
+          .fill("#ff0000"),
       );
       const node = target.node() as HTMLElement;
       const children = [...node.children].map((child) => child.tagName);
@@ -766,7 +766,7 @@ describe("map/renderer/raster", () => {
       const padded = createHtmlLayer(
         "#chart-container",
         boundsOf({ width: 400, height: 300, top: 30, left: 40 }),
-        { key: "raster-padded" }
+        { key: "raster-padded" },
       );
       padded.datum([cell(4, 4)]).call(
         mapRendererRaster()
@@ -774,7 +774,7 @@ describe("map/renderer/raster", () => {
           .height(20)
           .position((d: Cell) => [d.x, d.y])
           .fill("#ff0000")
-          .cellSide(4)
+          .cellSide(4),
       );
       const node = padded.node() as HTMLElement;
       expect(node.style.left).toBe("40px");

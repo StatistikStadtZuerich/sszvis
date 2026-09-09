@@ -43,7 +43,7 @@ describe("svgUtils/textWrap", () => {
 
     beforeEach(() => {
       SVGTextContentElement.prototype.getComputedTextLength = function (
-        this: SVGTextContentElement
+        this: SVGTextContentElement,
       ) {
         return (this.textContent ?? "").length * CHAR_WIDTH;
       };
@@ -375,7 +375,7 @@ describe("svgUtils/textWrap", () => {
   describe("with real text measurement", () => {
     test("should wrap a long sentence into multiple lines", () => {
       const text = appendText(
-        "Die Bevölkerung der Stadt Zürich wächst seit vielen Jahren kontinuierlich an"
+        "Die Bevölkerung der Stadt Zürich wächst seit vielen Jahren kontinuierlich an",
       );
       text.style.fontSize = "14px";
       const lineCounts = textWrap(select(text), 120);

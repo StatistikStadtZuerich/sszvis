@@ -43,7 +43,7 @@ beforeEach(() => {
   vi.spyOn(viewport, "on").mockImplementation(function (
     this: typeof viewport,
     name: string,
-    cb: ResizeListener
+    cb: ResizeListener,
   ) {
     if (name === "resize") registeredResizeListeners.push(cb);
     return onResize.call(this, "resize", cb);
@@ -60,13 +60,13 @@ describe("app", () => {
   describe("configuration", () => {
     test("throws when no init function is provided", () => {
       expect(() => app({ render: () => {} } as never)).toThrow(
-        '[sszvis.app] An "init" function must be provided.'
+        '[sszvis.app] An "init" function must be provided.',
       );
     });
 
     test("throws when no render function is provided", () => {
       expect(() => app({ init: async () => {} } as never)).toThrow(
-        '[sszvis.app] A "render" function must be provided.'
+        '[sszvis.app] A "render" function must be provided.',
       );
     });
 
@@ -446,7 +446,7 @@ describe("app", () => {
 
       const reported = error.mock.calls.at(0)?.[0] as Error;
       expect(reported.message).toBe(
-        '[sszvis.app] Dispatch failed: Action "missing" is not defined, add it to "actions".'
+        '[sszvis.app] Dispatch failed: Action "missing" is not defined, add it to "actions".',
       );
       // Reported as the dispatch it is, rather than wrapped as a failure of the effect that
       // happened to make it - the effect itself is fine, the action map is not.
@@ -466,7 +466,7 @@ describe("app", () => {
 
       const reported = error.mock.calls.at(0)?.[0] as Error;
       expect(reported.message).toBe(
-        '[sszvis.app] Dispatch failed: Action "toString" is not defined, add it to "actions".'
+        '[sszvis.app] Dispatch failed: Action "toString" is not defined, add it to "actions".',
       );
     });
 
@@ -634,7 +634,7 @@ describe("app", () => {
       // The initial render plus the capped run of cascaded ones, and no more.
       expect(seen).toHaveLength(11);
       expect(warn.mock.calls.flat().join()).toContain(
-        '[sszvis.app] Stopped after 10 renders scheduled from inside "render".'
+        '[sszvis.app] Stopped after 10 renders scheduled from inside "render".',
       );
     });
 
@@ -748,7 +748,7 @@ describe("app", () => {
       // listener to release. Registering afterwards leaves one attached for good.
       const on = viewport.on as unknown as { mock: { invocationCallOrder: number[] } };
       expect(on.mock.invocationCallOrder[0]).toBeLessThan(
-        off.mock.invocationCallOrder[0] as number
+        off.mock.invocationCallOrder[0] as number,
       );
     });
 

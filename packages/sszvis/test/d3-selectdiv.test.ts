@@ -21,7 +21,8 @@ describe("selectDiv", () => {
     document.body.append(container);
     select(container).selectDiv("positioned");
     expect(
-      (container.querySelector('[data-d3-selectdiv="positioned"]') as HTMLDivElement).style.position
+      (container.querySelector('[data-d3-selectdiv="positioned"]') as HTMLDivElement).style
+        .position,
     ).toBe("absolute");
   });
 

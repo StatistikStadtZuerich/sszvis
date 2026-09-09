@@ -128,7 +128,7 @@ describe("layout/sankey", () => {
           { from: "b", to: "nowhere", value: 2 },
           { from: "a", to: "c", value: 3 },
         ],
-        COLUMNS
+        COLUMNS,
       );
       expect(prepared.links.map((l) => l.value)).toEqual([3]);
       warn.mockRestore();
@@ -137,7 +137,7 @@ describe("layout/sankey", () => {
     test("requires the source, target and value accessors", () => {
       const bare = prepareData().idLists(COLUMNS);
       expect(() =>
-        (bare as unknown as { apply: (d: Row[]) => unknown }).apply([LINKS[0] as Row])
+        (bare as unknown as { apply: (d: Row[]) => unknown }).apply([LINKS[0] as Row]),
       ).toThrow(/source, target, value/);
     });
 
@@ -145,7 +145,7 @@ describe("layout/sankey", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const { links, nodes } = prepare(
         [{ from: "a", to: "c", value: "not a number" as unknown as number }],
-        COLUMNS
+        COLUMNS,
       );
       expect(links).toEqual([]);
       expect(byId(nodes, "a")?.value).toBe(0);
@@ -160,7 +160,7 @@ describe("layout/sankey", () => {
           { from: "a", to: "c", value: -5 },
           { from: "a", to: "d", value: 2 },
         ],
-        COLUMNS
+        COLUMNS,
       );
       // the surviving link fills its node exactly, rather than stacking outside a node whose
       // own value the negative link had already clamped to zero

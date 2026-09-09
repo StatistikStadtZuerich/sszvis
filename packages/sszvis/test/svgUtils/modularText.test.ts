@@ -13,7 +13,7 @@ describe("svgUtils/modularText", () => {
         .bold((d: Artist) => d.age)
         .italic("years old");
       expect(fmtHtml({ name: "Patti", age: 67 })).toBe(
-        "Artist: Patti<br/><strong>67</strong> <em>years old</em>"
+        "Artist: Patti<br/><strong>67</strong> <em>years old</em>",
       );
     });
 
@@ -81,23 +81,23 @@ describe("svgUtils/modularText", () => {
         .bold((d: { items: number }) => d.items)
         .plain("items");
       expect(fmtSvg({ items: 30 })).toBe(
-        '<tspan x="0" dy="0"><tspan style="font-weight:bold">30</tspan> <tspan>items</tspan></tspan>'
+        '<tspan x="0" dy="0"><tspan style="font-weight:bold">30</tspan> <tspan>items</tspan></tspan>',
       );
     });
 
     test("should wrap each word in a styled tspan", () => {
       expect(modularTextSVG().plain("p")({})).toBe('<tspan x="0" dy="0"><tspan>p</tspan></tspan>');
       expect(modularTextSVG().bold("b")({})).toBe(
-        '<tspan x="0" dy="0"><tspan style="font-weight:bold">b</tspan></tspan>'
+        '<tspan x="0" dy="0"><tspan style="font-weight:bold">b</tspan></tspan>',
       );
       expect(modularTextSVG().italic("i")({})).toBe(
-        '<tspan x="0" dy="0"><tspan style="font-style:italic">i</tspan></tspan>'
+        '<tspan x="0" dy="0"><tspan style="font-style:italic">i</tspan></tspan>',
       );
     });
 
     test("should give the first line dy 0 and subsequent lines dy 1.2em", () => {
       expect(modularTextSVG().plain("a").newline().plain("b")({})).toBe(
-        '<tspan x="0" dy="0"><tspan>a</tspan></tspan><tspan x="0" dy="1.2em"><tspan>b</tspan></tspan>'
+        '<tspan x="0" dy="0"><tspan>a</tspan></tspan><tspan x="0" dy="1.2em"><tspan>b</tspan></tspan>',
       );
     });
 
@@ -109,7 +109,7 @@ describe("svgUtils/modularText", () => {
 
     test("should join words on a line with a single space", () => {
       expect(modularTextSVG().plain("a").plain("b")({})).toBe(
-        '<tspan x="0" dy="0"><tspan>a</tspan> <tspan>b</tspan></tspan>'
+        '<tspan x="0" dy="0"><tspan>a</tspan> <tspan>b</tspan></tspan>',
       );
     });
 

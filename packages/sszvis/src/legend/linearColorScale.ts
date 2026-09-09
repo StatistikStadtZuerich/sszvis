@@ -144,7 +144,7 @@ export default function legendColorLinear(): LinearColorScaleComponent {
           .attr(
             "transform",
             (_d, i) =>
-              `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`
+              `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`,
           )
           .text((d, i) => props.labelFormat(d, i));
       })

@@ -40,7 +40,7 @@ export const measureDimensions = <
   P extends BaseType = BaseType,
   PD = unknown,
 >(
-  arg: MeasurableElement<G, D, P, PD>
+  arg: MeasurableElement<G, D, P, PD>,
 ): DimensionMeasurement => {
   const node = measurableNode(arg);
   return {

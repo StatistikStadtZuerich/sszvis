@@ -54,7 +54,7 @@ export type HierarchyComponent<T = unknown> = {
   layer: (accessor: (d: T) => string | null | undefined) => HierarchyComponent<T>;
   value: (accessor: (d: T) => number) => HierarchyComponent<T>;
   sort: (
-    sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number
+    sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number,
   ) => HierarchyComponent<T>;
 };
 // Function overloads for better TypeScript support
@@ -65,7 +65,7 @@ export function prepareHierarchyData<T = unknown>(
   options: {
     layers: Array<(d: T) => string | null | undefined>;
     valueAccessor: (d: T) => number;
-  }
+  },
 ): HierarchyNode<NodeDatum<T>>;
 
 export function prepareHierarchyData<T = unknown>(
@@ -73,7 +73,7 @@ export function prepareHierarchyData<T = unknown>(
   options?: {
     layers: Array<(d: T) => string | null | undefined>;
     valueAccessor: (d: T) => number;
-  }
+  },
 ) {
   if (data !== undefined && options !== undefined) {
     const layout = createHierarchyLayout<T>();
@@ -94,7 +94,7 @@ function createHierarchyLayout<T = unknown>(): HierarchyComponent<T> {
   let valueAcc: (d: T) => number = fn.identity as (d: T) => number;
   let sortFn: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number = (
     _a,
-    _b
+    _b,
   ) => 0;
 
   const api: HierarchyComponent<T> = {
@@ -149,7 +149,7 @@ function createHierarchyLayout<T = unknown>(): HierarchyComponent<T> {
 export function unwrapNested<T>(
   roll: Map<string, unknown> | unknown,
   parentKey: string | null = null,
-  rootKey: string | null = null
+  rootKey: string | null = null,
 ): NodeDatum<T>[] {
   const rollupMap = roll as Map<string, unknown>;
   return Array.from(rollupMap, ([key, values]: [string, unknown]) => {
@@ -193,7 +193,7 @@ export function inheritedColorKey<T>(node: HierarchyNode<NodeDatum<T>>): string 
   if ("rootKey" in node.data && node.data.rootKey) return node.data.rootKey;
   const ancestors = node.ancestors();
   const topLevel = ancestors.find(
-    (_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root"
+    (_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root",
   );
   if (topLevel && "key" in topLevel.data) return topLevel.data.key;
   return undefined;
@@ -209,7 +209,7 @@ export function colorKeyOf<T>(node: HierarchyNode<NodeDatum<T>>): string | undef
 /** The fill a hierarchy node is drawn with, or the grey fallback when it has no key. */
 export function nodeColor<T>(
   node: HierarchyNode<NodeDatum<T>>,
-  colorScale: (key: string) => string
+  colorScale: (key: string) => string,
 ): string {
   const key = colorKeyOf(node);
   return key === undefined ? HIERARCHY_FALLBACK_COLOR : colorScale(key);

@@ -148,13 +148,12 @@ type LakeOverlayProps = {
   key?: string;
 };
 
-export interface MapRendererPatternedLakeOverlayComponent
-  extends ComponentBuilder<MapRendererPatternedLakeOverlayComponent> {
+export interface MapRendererPatternedLakeOverlayComponent extends ComponentBuilder<MapRendererPatternedLakeOverlayComponent> {
   mapPath(): LakePath | undefined;
   mapPath(value: LakePath): MapRendererPatternedLakeOverlayComponent;
   lakeFeature(): GeoPermissibleObjects | undefined | null;
   lakeFeature(
-    value: GeoPermissibleObjects | null | undefined
+    value: GeoPermissibleObjects | null | undefined,
   ): MapRendererPatternedLakeOverlayComponent;
   lakeBounds(): GeoPermissibleObjects | undefined;
   lakeBounds(value: GeoPermissibleObjects): MapRendererPatternedLakeOverlayComponent;
@@ -193,7 +192,7 @@ const KEY_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
 function requireSpellableKey(key: string): string {
   if (!KEY_PATTERN.test(key)) {
     throw new Error(
-      `[mapRendererPatternedLakeOverlay] the key property must start with a letter and use only letters, digits, hyphens and underscores; got "${key}". The key is written into this overlay's definition ids, which a url(#...) reference has to be able to name.`
+      `[mapRendererPatternedLakeOverlay] the key property must start with a letter and use only letters, digits, hyphens and underscores; got "${key}". The key is written into this overlay's definition ids, which a url(#...) reference has to be able to name.`,
     );
   }
   return key;
@@ -282,7 +281,7 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         // by the id handed to them.
         ensureDefsElement(selection, "linearGradient", gradientId).call(
           mapLakeFadeGradient,
-          gradientId
+          gradientId,
         );
         ensureDefsElement(selection, "mask", maskId).call(mapLakeGradientMask, gradientId);
       } else {

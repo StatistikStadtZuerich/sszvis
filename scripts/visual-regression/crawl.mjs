@@ -67,7 +67,7 @@ async function loadSide(context, chart, side) {
     });
     await page.waitForTimeout(SETTLE_MS);
     const snapshot = await page.evaluate(() =>
-      window.__sszvisRegression ? window.__sszvisRegression() : null
+      window.__sszvisRegression ? window.__sszvisRegression() : null,
     );
     let shot = null;
     if (SHOTS) shot = await page.screenshot({ fullPage: true });
@@ -94,8 +94,7 @@ function verdict(baseline, candidate) {
   return "ok";
 }
 
-const worst = (verdicts) =>
-  SEVERITY.find((v) => verdicts.includes(v)) ?? "ok";
+const worst = (verdicts) => SEVERITY.find((v) => verdicts.includes(v)) ?? "ok";
 
 const manifest = await fetch(`${BASE}/api/manifest.json`).then((r) => r.json());
 const charts = manifest.filter((c) => c.comparable).slice(0, LIMIT);
@@ -121,7 +120,7 @@ async function worker(queue) {
           const result = await loadSide(context, chart, side);
           await context.close();
           return result;
-        })
+        }),
       );
       const outcome = verdict(baseline, candidate);
       byWidth.push({
@@ -137,7 +136,9 @@ async function worker(queue) {
         if (candidate.shot) await writeFile(path.join(dir, "candidate.png"), candidate.shot);
       }
       done++;
-      process.stdout.write(`\r${done}/${total} loads (${chart.name} @${width} ${outcome})`.padEnd(78));
+      process.stdout.write(
+        `\r${done}/${total} loads (${chart.name} @${width} ${outcome})`.padEnd(78),
+      );
     }
     results.push({
       path: chart.path,
@@ -150,9 +151,7 @@ async function worker(queue) {
 }
 
 const queue = [...charts];
-await Promise.all(
-  Array.from({ length: Math.min(CONCURRENCY, queue.length) }, () => worker(queue))
-);
+await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, () => worker(queue)));
 await browser.close();
 
 results.sort((a, b) => a.path.localeCompare(b.path));
@@ -164,8 +163,8 @@ await writeFile(
   JSON.stringify(
     { base: BASE, generated: new Date().toISOString(), widths: WIDTHS, summary, results },
     null,
-    2
-  )
+    2,
+  ),
 );
 
 process.stdout.write(`\n\nsummary: ${JSON.stringify(summary)}\n`);

@@ -85,14 +85,14 @@ describe("map/renderer/base", () => {
   const render = (
     data: Datum[],
     configure: (c: ReturnType<typeof mapRendererBase>) => ReturnType<typeof mapRendererBase> = (
-      c
+      c,
     ) => c,
-    key?: string
+    key?: string,
   ) => {
     const collection = geoJson();
     const merged = prepareMergedGeoData(data, collection);
     const component = configure(
-      mapRendererBase().mergedData(merged).geoJson(collection).mapPath(mapPathOf(collection))
+      mapRendererBase().mergedData(merged).geoJson(collection).mapPath(mapPathOf(collection)),
     );
     return group(key).call(component).node() as SVGGElement;
   };
@@ -123,7 +123,7 @@ describe("map/renderer/base", () => {
           mapRendererBase()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .geoJson(collection)
-            .mapPath(mapPath)
+            .mapPath(mapPath),
         )
         .node() as SVGGElement;
       expect(attrs(node, "d")).toEqual(collection.features.map((f) => mapPath(f)));
@@ -164,7 +164,7 @@ describe("map/renderer/base", () => {
         c.transitionColor(false).fill((d: Datum | undefined) => {
           seen.push(d);
           return `rgb(${d?.value}, 0, 0)`;
-        })
+        }),
       );
       expect(attrs(node, "fill")).toEqual(["rgb(1, 0, 0)", "rgb(2, 0, 0)", "rgb(3, 0, 0)"]);
       expect(seen).toContainEqual({ geoId: "a", value: 1 });
@@ -180,7 +180,7 @@ describe("map/renderer/base", () => {
         c
           .transitionColor(false)
           .fill("#ff0000")
-          .defined((d: Datum | undefined) => d?.value !== 2)
+          .defined((d: Datum | undefined) => d?.value !== 2),
       );
       expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), "#ff0000"]);
     });
@@ -191,7 +191,7 @@ describe("map/renderer/base", () => {
         c.transitionColor(false).fill((d?: Datum) => {
           seen.push(d);
           return d ? "#00ff00" : "#0000ff";
-        })
+        }),
       );
       expect(seen).not.toContain(undefined);
       expect(attrs(node, "fill")).toEqual(["#00ff00", missingFill(node), missingFill(node)]);
@@ -232,7 +232,7 @@ describe("map/renderer/base", () => {
         c
           .transitionColor(false)
           .defined((d?: Datum) => d?.value !== undefined)
-          .fill("none")
+          .fill("none"),
       );
       expect(attrs(node, "fill")).toEqual([
         missingFill(node),
@@ -253,7 +253,7 @@ describe("map/renderer/base", () => {
           .fill((d?: Datum) => {
             seen.push(d);
             return "none";
-          })
+          }),
       );
       expect(seen).toEqual([undefined, undefined, undefined]);
       expect(attrs(node, "fill")).toEqual(["none", "none", "none"]);
@@ -271,7 +271,7 @@ describe("map/renderer/base", () => {
           .fill((d?: Datum) => {
             seen.push(d);
             return "#123456";
-          })
+          }),
       );
       expect(seen).toEqual([{ geoId: "a", value: 1 }, undefined, undefined]);
       expect(attrs(node, "fill")).toEqual(["#123456", "#123456", "#123456"]);
@@ -297,7 +297,7 @@ describe("map/renderer/base", () => {
         c.transitionColor(false).fill((d?: Datum) => {
           seen.push(d);
           return String(d?.value);
-        })
+        }),
       );
       expect(seen).toEqual([]);
       expect(attrs(node, "fill")).toEqual([
@@ -345,7 +345,7 @@ describe("map/renderer/base", () => {
             mapRendererBase()
               .mergedData(prepareMergedGeoData(data, collection))
               .geoJson(collection)
-              .mapPath(mapPath)
+              .mapPath(mapPath),
           )
           .node() as SVGGElement;
 
@@ -395,7 +395,7 @@ describe("map/renderer/base", () => {
               .geoJson(collection)
               .mapPath(mapPath)
               .transitionColor(transition)
-              .fill(fill)
+              .fill(fill),
           )
           .node() as SVGGElement;
 
@@ -424,7 +424,7 @@ describe("map/renderer/base", () => {
               .mapPath(mapPath)
               .transitionColor(transition)
               .defined(definedValue)
-              .fill("#ff0000")
+              .fill("#ff0000"),
           )
           .node() as SVGGElement;
 
@@ -453,7 +453,7 @@ describe("map/renderer/base", () => {
               .mapPath(mapPath)
               .transitionColor(transition)
               .defined(definedValue)
-              .fill("#00ff00")
+              .fill("#00ff00"),
           )
           .node() as SVGGElement;
 
@@ -468,7 +468,7 @@ describe("map/renderer/base", () => {
         .__transition;
       const scheduled = Object.values(schedules ?? {}).filter(
         (v): v is { duration: number; ease: (t: number) => number } =>
-          typeof v === "object" && v !== null && "duration" in v
+          typeof v === "object" && v !== null && "duration" in v,
       );
       expect(scheduled).toHaveLength(1);
       expect(scheduled[0].duration).toBe(500);
@@ -491,7 +491,7 @@ describe("map/renderer/base", () => {
               .geoJson(collection)
               .mapPath(mapPath)
               .transitionColor(false)
-              .fill(fill)
+              .fill(fill),
           )
           .node() as SVGGElement;
 
@@ -503,7 +503,7 @@ describe("map/renderer/base", () => {
     // The fill and the class agree: whatever is classed --undefined also carries the texture.
     test("both classes and textures a no-datum feature", () => {
       const node = render([{ geoId: "a", value: 1 }], (c) =>
-        c.transitionColor(false).fill("#ff0000")
+        c.transitionColor(false).fill("#ff0000"),
       );
       const [, second] = areas(node);
       expect(second.classList.contains("sszvis-map__area--undefined")).toBe(true);
@@ -546,7 +546,7 @@ describe("map/renderer/base", () => {
           mapRendererBase()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .geoJson(collection)
-            .mapPath(spyPath(() => null, []))
+            .mapPath(spyPath(() => null, [])),
         )
         .node() as SVGGElement;
       expect(anchors(node).map((a) => a.getAttribute("transform"))).toEqual([
@@ -578,7 +578,7 @@ describe("map/renderer/base", () => {
             mapRendererBase()
               .mergedData(prepareMergedGeoData(fullData, collection))
               .geoJson(collection)
-              .mapPath(mapPath)
+              .mapPath(mapPath),
           )
           .node() as SVGGElement;
 
@@ -598,11 +598,11 @@ describe("map/renderer/base", () => {
           .call(
             mapRendererBase()
               .mergedData(
-                features.map((f) => ({ geoJson: f, datum: { geoId: String(f.id), value: 1 } }))
+                features.map((f) => ({ geoJson: f, datum: { geoId: String(f.id), value: 1 } })),
               )
               .geoJson(collection)
               .mapPath(mapPath)
-              .transitionColor(false)
+              .transitionColor(false),
           )
           .node() as SVGGElement;
 
@@ -619,7 +619,7 @@ describe("map/renderer/base", () => {
       expect(() =>
         group()
           .call(mapRendererBase().geoJson(collection).mapPath(mapPathOf(collection)))
-          .node()
+          .node(),
       ).toThrow();
     });
 
@@ -630,9 +630,9 @@ describe("map/renderer/base", () => {
           .call(
             mapRendererBase()
               .mergedData(prepareMergedGeoData(fullData, collection))
-              .geoJson(collection)
+              .geoJson(collection),
           )
-          .node()
+          .node(),
       ).toThrow();
     });
 
@@ -648,9 +648,9 @@ describe("map/renderer/base", () => {
               .mergedData(prepareMergedGeoData(fullData, collection))
               .geoJson(collection)
               // @ts-expect-error - a bare path function is what the JSDoc's {d3.geo.path} allows
-              .mapPath(() => "M0,0Z")
+              .mapPath(() => "M0,0Z"),
           )
-          .node()
+          .node(),
       ).toThrow();
     });
 
@@ -662,7 +662,7 @@ describe("map/renderer/base", () => {
         .call(
           mapRendererBase()
             .mergedData(prepareMergedGeoData(fullData, collection))
-            .mapPath(mapPathOf(collection))
+            .mapPath(mapPathOf(collection)),
         )
         .node() as SVGGElement;
       expect(areas(node)).toHaveLength(3);
@@ -693,7 +693,7 @@ describe("map/renderer/base", () => {
           mapRendererBase()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .geoJson(collection)
-            .mapPath(mapPathOf(collection))
+            .mapPath(mapPathOf(collection)),
         )
         .node() as SVGGElement;
       for (const transform of anchors(node).map((a) => a.getAttribute("transform"))) {
@@ -710,7 +710,7 @@ describe("map/renderer/base", () => {
           mapRendererBase()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .geoJson(collection)
-            .mapPath(reportingPath(seen))
+            .mapPath(reportingPath(seen)),
         )
         .node();
       expect(seen).not.toContainEqual([1, 2, 3]);
@@ -725,14 +725,14 @@ describe("map/renderer/base", () => {
     test("positions each anchor at the projected centre of its feature", () => {
       const collection = geoJson();
       const mapPath = geoPath().projection(
-        swissMapProjection(100, 100, collection, "anchor-position")
+        swissMapProjection(100, 100, collection, "anchor-position"),
       );
       const node = group()
         .call(
           mapRendererBase()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .geoJson(collection)
-            .mapPath(mapPath)
+            .mapPath(mapPath),
         )
         .node() as SVGGElement;
       const projection = swissMapProjection(100, 100, collection, "anchor-position");
@@ -753,7 +753,7 @@ describe("map/renderer/base", () => {
           mapRendererBase()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .geoJson(collection)
-            .mapPath(mapPathOf(collection))
+            .mapPath(mapPathOf(collection)),
         )
         .node();
       for (const feature of collection.features) {

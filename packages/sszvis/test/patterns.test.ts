@@ -22,7 +22,7 @@ describe("patterns", () => {
     pattern = document.createElementNS("http://www.w3.org/2000/svg", "pattern");
     gradient = document.createElementNS(
       "http://www.w3.org/2000/svg",
-      "linearGradient"
+      "linearGradient",
     ) as SVGLinearGradientElement;
     mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
     svg.append(defs);

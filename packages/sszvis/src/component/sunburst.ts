@@ -170,7 +170,7 @@ export type StrokeAccessor<T = unknown> = (
   this: SVGPathElement,
   d: PositionedNode<T>,
   i: number,
-  group: ArrayLike<SVGPathElement>
+  group: ArrayLike<SVGPathElement>,
 ) => string | null;
 export type StrokeValue<T = unknown> = string | StrokeAccessor<T>;
 
@@ -285,7 +285,7 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
           // tags. It is still rendered - the structure is all the layout needs - but the
           // caller is told once per chart rather than once per node.
           logger.warn(
-            "Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData"
+            "Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData",
           );
         }
         const root = partition<NodeDatum<T>>()(inputData);
@@ -319,7 +319,7 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
       // holes of a sparse array the way a for...of loop does, and so still fails before
       // anything is rendered.
       const data = Array.from(nodes, (d) =>
-        Object.assign(d, { _x0: d.x0, _x1: d.x1, r0: innerRadius(d), r1: outerRadius(d) })
+        Object.assign(d, { _x0: d.x0, _x1: d.x1, r0: innerRadius(d), r1: outerRadius(d) }),
       );
 
       // Put the on-screen geometry back, matched to the new data by index, so the tween
@@ -387,7 +387,7 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
             .append("path")
             .attr("class", "sszvis-sunburst-arc")
             .attr("stroke", fn.valueFn(props.stroke))
-            .attr("fill", fillColor)
+            .attr("fill", fillColor),
         );
 
       // One transition for the whole arc: scheduling a second one on the same elements would
@@ -421,7 +421,7 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
           const a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;
           const r = (innerRadius(d) + outerRadius(d)) / 2;
           return [Math.cos(a) * r, Math.sin(a) * r];
-        }
+        },
       );
 
       // Rebind the group to the flattened array before rendering the anchors, the way pie

@@ -53,7 +53,7 @@ describe("legend/linearColorScale", () => {
     const withDefault = render(legendColorLinear().scale(s));
     const withExplicit = render(legendColorLinear().scale(s).segments(8));
     expect(withDefault.querySelectorAll("rect.sszvis-legend__mark").length).toBe(
-      withExplicit.querySelectorAll("rect.sszvis-legend__mark").length
+      withExplicit.querySelectorAll("rect.sszvis-legend__mark").length,
     );
     expect(withDefault.querySelectorAll("rect.sszvis-legend__mark").length).toBe(s.ticks(7).length);
   });
@@ -125,12 +125,12 @@ describe("legend/linearColorScale", () => {
 
   test("should use labelText when supplied", () => {
     const node = render(
-      legendColorLinear().scale(scale()).displayValues([0, 50]).labelText(["wenig", "viel"])
+      legendColorLinear().scale(scale()).displayValues([0, 50]).labelText(["wenig", "viel"]),
     );
     expect(
       [...node.querySelectorAll<SVGTextElement>("text.sszvis-legend__label")].map(
-        (l) => l.textContent
-      )
+        (l) => l.textContent,
+      ),
     ).toEqual(["wenig", "viel"]);
   });
 
@@ -143,12 +143,12 @@ describe("legend/linearColorScale", () => {
         .labelFormat((d, i) => {
           seen.push([d, i]);
           return `${d}@${i}`;
-        })
+        }),
     );
     expect(
       [...node.querySelectorAll<SVGTextElement>("text.sszvis-legend__label")].map(
-        (l) => l.textContent
-      )
+        (l) => l.textContent,
+      ),
     ).toEqual(["0@0", "100@1"]);
     expect(seen).toEqual([
       [0, 0],

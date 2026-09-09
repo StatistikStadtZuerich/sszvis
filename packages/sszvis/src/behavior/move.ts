@@ -86,8 +86,9 @@ type MoveProps<XDomain, YDomain> = {
 type Domain = number | string;
 type EventHandler = (event: Event, x: number | string | null, y: number | string | null) => void;
 
-export interface MoveComponent<XDomain = Domain, YDomain = Domain>
-  extends ComponentBuilder<MoveComponent<XDomain, YDomain>> {
+export interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBuilder<
+  MoveComponent<XDomain, YDomain>
+> {
   debug(): boolean;
   debug(value: boolean): MoveComponent<XDomain, YDomain>;
 
@@ -105,7 +106,7 @@ export interface MoveComponent<XDomain = Domain, YDomain = Domain>
 
   cancelScrolling(): (x?: XDomain | null, y?: YDomain | null) => boolean;
   cancelScrolling(
-    predicate: boolean | ((x: XDomain | null, y: YDomain | null) => boolean)
+    predicate: boolean | ((x: XDomain | null, y: YDomain | null) => boolean),
   ): MoveComponent<XDomain, YDomain>;
 
   fireOnPanOnly(): () => boolean;

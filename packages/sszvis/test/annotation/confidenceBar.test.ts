@@ -172,7 +172,7 @@ describe("annotation/confidenceBar", () => {
     /** The x of each unit's vertical line, which sits at its slot's centre. */
     const centres = (layer: ReturnType<typeof createSvgLayer>) =>
       [...layer.selectAll<SVGGElement, unknown>("g.sszvis-confidence-barunit").nodes()].map((u) =>
-        Number(select(u).select("line.sszvis-confidence-bar").attr("x1"))
+        Number(select(u).select("line.sszvis-confidence-bar").attr("x1")),
       );
 
     const sharedData = () => {

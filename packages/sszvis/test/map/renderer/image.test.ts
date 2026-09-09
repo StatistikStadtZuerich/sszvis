@@ -37,12 +37,12 @@ describe("map/renderer/image", () => {
   /** Renders the image layer, returning the layer node it drew into. */
   const render = (
     configure: (c: ReturnType<typeof mapRendererImage>) => ReturnType<typeof mapRendererImage> = (
-      c
+      c,
     ) => c,
-    key?: string
+    key?: string,
   ) => {
     const component = configure(
-      mapRendererImage().projection(projectionOf()).src(SRC).geoBounds(GEO_BOUNDS)
+      mapRendererImage().projection(projectionOf()).src(SRC).geoBounds(GEO_BOUNDS),
     );
     return layer(key).call(component).node() as HTMLElement;
   };
@@ -77,10 +77,10 @@ describe("map/renderer/image", () => {
       const topLeft = projection(GEO_BOUNDS[0]) as [number, number];
       const bottomRight = projection(GEO_BOUNDS[1]) as [number, number];
       expect(image(node)?.style.width).toBe(
-        `${Math.round(bottomRight[0]) - Math.round(topLeft[0])}px`
+        `${Math.round(bottomRight[0]) - Math.round(topLeft[0])}px`,
       );
       expect(image(node)?.style.height).toBe(
-        `${Math.round(bottomRight[1]) - Math.round(topLeft[1])}px`
+        `${Math.round(bottomRight[1]) - Math.round(topLeft[1])}px`,
       );
     });
 
@@ -96,7 +96,7 @@ describe("map/renderer/image", () => {
             .geoBounds([
               [0, 0],
               [1, 1],
-            ])
+            ]),
         )
         .node() as HTMLElement;
       expect(image(node)?.style.left).toBe("11px");
@@ -140,7 +140,7 @@ describe("map/renderer/image", () => {
           .projection(projectionOf())
           .src("data:image/gif;base64,OTHER")
           .geoBounds(GEO_BOUNDS)
-          .opacity(0.5)
+          .opacity(0.5),
       );
       const node = target.node() as HTMLElement;
       const images = [...node.querySelectorAll<HTMLImageElement>("img.sszvis-map__image")];
@@ -189,19 +189,19 @@ describe("map/renderer/image", () => {
   describe("validation", () => {
     test("reports a missing projection", () => {
       expect(() => layer().call(mapRendererImage().src(SRC).geoBounds(GEO_BOUNDS))).toThrow(
-        /projection/
+        /projection/,
       );
     });
 
     test("reports a missing src", () => {
       expect(() =>
-        layer().call(mapRendererImage().projection(projectionOf()).geoBounds(GEO_BOUNDS))
+        layer().call(mapRendererImage().projection(projectionOf()).geoBounds(GEO_BOUNDS)),
       ).toThrow(/src/);
     });
 
     test("reports a missing geoBounds", () => {
       expect(() => layer().call(mapRendererImage().projection(projectionOf()).src(SRC))).toThrow(
-        /geoBounds/
+        /geoBounds/,
       );
     });
 
@@ -211,8 +211,8 @@ describe("map/renderer/image", () => {
           mapRendererImage()
             .projection(projectionOf())
             .src(SRC)
-            .geoBounds([GEO_BOUNDS[1], GEO_BOUNDS[0]])
-        )
+            .geoBounds([GEO_BOUNDS[1], GEO_BOUNDS[0]]),
+        ),
       ).toThrow(/geoBounds/);
     });
 
@@ -222,8 +222,8 @@ describe("map/renderer/image", () => {
           mapRendererImage()
             .projection(() => null)
             .src(SRC)
-            .geoBounds(GEO_BOUNDS)
-        )
+            .geoBounds(GEO_BOUNDS),
+        ),
       ).toThrow(/north-west corner/);
     });
 
@@ -248,7 +248,7 @@ describe("map/renderer/image", () => {
             .geoBounds([
               [8, 90],
               [9, 47],
-            ])
+            ]),
         )
         .node() as HTMLElement;
       expect(Number.parseInt(image(node)?.style.top ?? "", 10)).toBeLessThan(-10_000);
@@ -264,7 +264,7 @@ describe("map/renderer/image", () => {
           mapRendererImage()
             .projection(() => [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY])
             .src(SRC)
-            .geoBounds(GEO_BOUNDS)
+            .geoBounds(GEO_BOUNDS),
         )
         .node() as HTMLElement;
       expect(image(node)?.style.top).toBe("");
@@ -278,7 +278,7 @@ describe("map/renderer/image", () => {
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       container.appendChild(svg);
       select(svg).call(
-        mapRendererImage().projection(projectionOf()).src(SRC).geoBounds(GEO_BOUNDS)
+        mapRendererImage().projection(projectionOf()).src(SRC).geoBounds(GEO_BOUNDS),
       );
       const appended = svg.querySelector("img");
       expect(appended).not.toBeNull();
@@ -314,7 +314,7 @@ describe("map/renderer/image", () => {
               return "data:image/gif;base64,FN";
             })
             .geoBounds(GEO_BOUNDS)
-            .opacity(() => 0.25)
+            .opacity(() => 0.25),
         )
         .node() as HTMLElement;
       expect(seen).toEqual([0]);
@@ -330,7 +330,7 @@ describe("map/renderer/image", () => {
       const padded = createHtmlLayer(
         "#chart-container",
         boundsOf({ width: 400, height: 300, top: 30, left: 40 }),
-        { key: "image-padded" }
+        { key: "image-padded" },
       );
       const projection = projectionOf();
       padded.call(mapRendererImage().projection(projection).src(SRC).geoBounds(GEO_BOUNDS));

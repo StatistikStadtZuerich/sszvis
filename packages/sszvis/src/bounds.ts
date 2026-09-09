@@ -88,15 +88,15 @@ const DEFAULT_WIDTH = 516;
  */
 export function bounds(): BoundsResult;
 export function bounds(
-  boundsOrSelection: BoundsConfig | string | AnySelection | HTMLElement
+  boundsOrSelection: BoundsConfig | string | AnySelection | HTMLElement,
 ): BoundsResult;
 export function bounds(
   bounds: BoundsConfig,
-  selection: string | AnySelection | HTMLElement
+  selection: string | AnySelection | HTMLElement,
 ): BoundsResult;
 export function bounds(
   arg1?: BoundsConfig | string | AnySelection | HTMLElement,
-  arg2?: string | AnySelection | HTMLElement
+  arg2?: string | AnySelection | HTMLElement,
 ): BoundsResult {
   let _bounds: BoundsConfig = {};
   let selection: AnySelection | null = null;

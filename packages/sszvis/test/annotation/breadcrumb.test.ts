@@ -74,7 +74,7 @@ describe("annotation/breadcrumb", () => {
             { label: "Category", node: null },
             { label: "Subcategory", node: null },
           ])
-          .width(600)
+          .width(600),
       );
       const breadcrumbContainer = container.querySelector('[data-d3-selectdiv="breadcrumbs"]');
       expect(breadcrumbContainer).not.toBeNull();
@@ -87,7 +87,7 @@ describe("annotation/breadcrumb", () => {
         breadcrumb()
           .renderInto(htmlLayer)
           .items([{ label: "Category", node: null }])
-          .rootLabel("Home")
+          .rootLabel("Home"),
       );
       const breadcrumbItems = container.querySelectorAll(".sszvis-breadcrumb-item");
       expect(breadcrumbItems.length).toBe(2); // Root + Category
@@ -104,7 +104,7 @@ describe("annotation/breadcrumb", () => {
             { label: "Level 1", node: null },
             { label: "Level 2", node: null },
             { label: "Level 3", node: null },
-          ])
+          ]),
       );
       const breadcrumbItems = container.querySelectorAll(".sszvis-breadcrumb-item");
       expect(breadcrumbItems.length).toBe(4); // Root + 3 items
@@ -118,7 +118,7 @@ describe("annotation/breadcrumb", () => {
           .items([
             { label: "Category", node: null },
             { label: "Current", node: null },
-          ])
+          ]),
       );
       const links = container.querySelectorAll<HTMLAnchorElement>(".sszvis-breadcrumb-item a");
       const lastLink = links[links.length - 1];
@@ -134,7 +134,7 @@ describe("annotation/breadcrumb", () => {
           .items([
             { label: "Category", node: null },
             { label: "Current", node: null },
-          ])
+          ]),
       );
       const links = container.querySelectorAll<HTMLAnchorElement>(".sszvis-breadcrumb-item a");
       const firstLink = links[0];
@@ -151,10 +151,10 @@ describe("annotation/breadcrumb", () => {
           .items([
             { label: "Category", node: null },
             { label: "Current", node: null },
-          ])
+          ]),
       );
       const separators = container.querySelectorAll<HTMLSpanElement>(
-        ".sszvis-breadcrumb-separator"
+        ".sszvis-breadcrumb-separator",
       );
       const lastSeparator = separators[separators.length - 1];
       expect(lastSeparator.style.display).toBe("none");
@@ -168,10 +168,10 @@ describe("annotation/breadcrumb", () => {
           .items([
             { label: "Category", node: null },
             { label: "Current", node: null },
-          ])
+          ]),
       );
       const separators = container.querySelectorAll<HTMLSpanElement>(
-        ".sszvis-breadcrumb-separator"
+        ".sszvis-breadcrumb-separator",
       );
       expect(separators[0].style.display).not.toBe("none");
     });
@@ -186,7 +186,7 @@ describe("annotation/breadcrumb", () => {
             { label: "Category", node: null },
             { label: "Current", node: null },
           ])
-          .onClick(onClickMock)
+          .onClick(onClickMock),
       );
 
       const links = container.querySelectorAll<HTMLAnchorElement>(".sszvis-breadcrumb-item a");
@@ -196,7 +196,7 @@ describe("annotation/breadcrumb", () => {
       expect(onClickMock).toHaveBeenCalledTimes(1);
       expect(onClickMock).toHaveBeenCalledWith(
         expect.objectContaining({ label: "Root", node: null }),
-        0
+        0,
       );
     });
 
@@ -210,7 +210,7 @@ describe("annotation/breadcrumb", () => {
             { label: "Category", node: null },
             { label: "Current", node: null },
           ])
-          .onClick(onClickMock)
+          .onClick(onClickMock),
       );
       const links = container.querySelectorAll<HTMLAnchorElement>(".sszvis-breadcrumb-item a");
       links[links.length - 1].click();
@@ -223,7 +223,7 @@ describe("annotation/breadcrumb", () => {
         breadcrumb()
           .renderInto(htmlLayer)
           .items([{ label: "Category", node: null }])
-          .separator(" / ")
+          .separator(" / "),
       );
       expect(container.querySelectorAll(".sszvis-breadcrumb-separator")[0].textContent).toBe(" / ");
     });
@@ -234,10 +234,10 @@ describe("annotation/breadcrumb", () => {
         breadcrumb()
           .renderInto(htmlLayer)
           .items([{ label: "category", node: null }])
-          .label((d) => d.label.toUpperCase())
+          .label((d) => d.label.toUpperCase()),
       );
       expect(container.querySelectorAll(".sszvis-breadcrumb-item a")[1].textContent).toBe(
-        "CATEGORY"
+        "CATEGORY",
       );
     });
 

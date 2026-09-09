@@ -198,7 +198,7 @@ export default function pie<T = unknown>(): PieComponent<T> {
             .attr("class", "sszvis-path sszvis-pie-path")
             .attr("transform", transform)
             .attr("fill", fillAccessor)
-            .attr("stroke", strokeAccessor)
+            .attr("stroke", strokeAccessor),
         );
 
       // Geometry is applied on the render tick, from the angles already on screen - the
@@ -256,7 +256,7 @@ export default function pie<T = unknown>(): PieComponent<T> {
           const a = a0 + Math.abs(a1 - a0) / 2 - Math.PI / 2;
           const r = (radius * 2) / 3;
           return [radius + Math.cos(a) * r, radius + Math.sin(a) * r];
-        }
+        },
       );
 
       selection.datum(data).call(ta);

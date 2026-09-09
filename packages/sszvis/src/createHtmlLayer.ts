@@ -59,14 +59,14 @@ export function createHtmlLayer<
 >(
   selector: SelectableElement<G, D, P, PD> | HTMLElement,
   bounds?: BoundsResult,
-  metadata: LayerMetadata = {}
+  metadata: LayerMetadata = {},
 ): LayerSelection<HTMLDivElement, number> {
   const { padding } = bounds || mkBounds();
   const key = metadata.key || "default";
   const elementDataKey = `data-sszvis-html-${key}`;
 
   const render = <G extends BaseType, D, P extends BaseType, PD>(
-    root: Selection<G, D, P, PD>
+    root: Selection<G, D, P, PD>,
   ): LayerSelection<HTMLDivElement, number> => {
     root.classed("sszvis-outer-container", true);
     return root

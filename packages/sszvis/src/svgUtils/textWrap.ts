@@ -73,7 +73,7 @@ export default function textWrap<D, P extends BaseType, PD>(
   selection: Selection<SVGTextElement, D, P, PD>,
   width: number,
   paddingRightLeft?: number,
-  paddingTopBottom?: number
+  paddingTopBottom?: number,
 ): number[] {
   const padRightLeft = resolvePadding(paddingRightLeft, "paddingRightLeft");
   // Remove 2 pixels because of the borders

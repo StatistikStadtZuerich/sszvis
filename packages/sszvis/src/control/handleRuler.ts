@@ -79,8 +79,9 @@ interface HandleRulerProps<T> {
   flip: (d: T) => boolean;
 }
 
-export interface HandleRulerComponent<T = unknown>
-  extends ComponentBuilder<HandleRulerComponent<T>> {
+export interface HandleRulerComponent<T = unknown> extends ComponentBuilder<
+  HandleRulerComponent<T>
+> {
   x(): (d: T) => NumberValue;
   x(accessor: NumberAccessor<T>): HandleRulerComponent<T>;
   y(): (d: T) => NumberValue;

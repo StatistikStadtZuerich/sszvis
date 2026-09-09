@@ -46,7 +46,7 @@ interface GradientStop {
  * @param selection A d3 selection of SVG pattern elements
  */
 export const heatTableMissingValuePattern = <D, P extends BaseType, PD>(
-  selection: Selection<SVGPatternElement, D, P, PD>
+  selection: Selection<SVGPatternElement, D, P, PD>,
 ): void => {
   const rectFill = "#FAFAFA", // Light grey color directly
     crossStroke = "#A4A4A4",
@@ -94,7 +94,7 @@ export const heatTableMissingValuePattern = <D, P extends BaseType, PD>(
  * @param selection A d3 selection of SVG pattern elements
  */
 export const mapMissingValuePattern = <D, P extends BaseType, PD>(
-  selection: Selection<SVGPatternElement, D, P, PD>
+  selection: Selection<SVGPatternElement, D, P, PD>,
 ): void => {
   const pWidth = 14,
     pHeight = 14,
@@ -142,7 +142,7 @@ export const mapMissingValuePattern = <D, P extends BaseType, PD>(
  * @param selection A d3 selection of SVG pattern elements
  */
 export const mapLakePattern = <D, P extends BaseType, PD>(
-  selection: Selection<SVGPatternElement, D, P, PD>
+  selection: Selection<SVGPatternElement, D, P, PD>,
 ): void => {
   const pWidth = 6;
   const pHeight = 6;
@@ -196,7 +196,7 @@ export const mapLakePattern = <D, P extends BaseType, PD>(
  */
 export const mapLakeFadeGradient = <D, P extends BaseType, PD>(
   selection: Selection<SVGLinearGradientElement, D, P, PD>,
-  gradientId: string = LAKE_FADE_GRADIENT_ID
+  gradientId: string = LAKE_FADE_GRADIENT_ID,
 ): void => {
   const stops: GradientStop[] = [
     { offset: 0.74, opacity: 1 },
@@ -227,7 +227,7 @@ export const mapLakeFadeGradient = <D, P extends BaseType, PD>(
  */
 export const mapLakeGradientMask = <D, P extends BaseType, PD>(
   selection: Selection<SVGMaskElement, D, P, PD>,
-  gradientId: string = LAKE_FADE_GRADIENT_ID
+  gradientId: string = LAKE_FADE_GRADIENT_ID,
 ): void => {
   selection.attr("maskContentUnits", "objectBoundingBox");
 
@@ -245,7 +245,7 @@ export const mapLakeGradientMask = <D, P extends BaseType, PD>(
  * @param selection A d3 selection of SVG pattern elements
  */
 export const dataAreaPattern = <D, P extends BaseType, PD>(
-  selection: Selection<SVGPatternElement, D, P, PD>
+  selection: Selection<SVGPatternElement, D, P, PD>,
 ): void => {
   const pWidth = 6;
   const pHeight = 6;

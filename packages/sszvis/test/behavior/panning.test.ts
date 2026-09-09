@@ -99,7 +99,7 @@ describe("behavior/panning", () => {
         .elementSelector("circle.test-element")
         .on("start", handlers.start)
         .on("pan", handlers.pan)
-        .on("end", handlers.end)
+        .on("end", handlers.end),
     );
     const firstCircle = circles.nodes()[0] as SVGCircleElement;
     firstCircle.dispatchEvent(
@@ -107,7 +107,7 @@ describe("behavior/panning", () => {
         clientX: 50,
         clientY: 100,
         bubbles: true,
-      })
+      }),
     );
     expect(handlers.start).toHaveBeenCalledTimes(1);
     firstCircle.dispatchEvent(
@@ -115,7 +115,7 @@ describe("behavior/panning", () => {
         clientX: 60,
         clientY: 110,
         bubbles: true,
-      })
+      }),
     );
     expect(handlers.pan).toHaveBeenCalledTimes(1);
     firstCircle.dispatchEvent(
@@ -123,7 +123,7 @@ describe("behavior/panning", () => {
         clientX: 70,
         clientY: 120,
         bubbles: true,
-      })
+      }),
     );
     expect(handlers.end).toHaveBeenCalledTimes(1);
   });
@@ -136,7 +136,7 @@ describe("behavior/panning", () => {
       panning()
         .elementSelector("circle.test-element")
         .on("start", startHandler)
-        .on("pan", panHandler)
+        .on("pan", panHandler),
     );
     const circleNodes = circles.nodes() as SVGCircleElement[];
     circleNodes[0].dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
@@ -160,7 +160,7 @@ describe("behavior/panning", () => {
         .elementSelector("circle.test-element")
         .on("start", handlers.start)
         .on("pan", handlers.pan)
-        .on("end", handlers.end)
+        .on("end", handlers.end),
     );
     const firstCircle = circles.nodes()[0] as SVGCircleElement;
     const createTouchEvent = (type: string, touches: Touch[] = []) => {

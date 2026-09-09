@@ -57,7 +57,7 @@ export type PopulationPyramidLayout = {
 
 export default function layoutPopulationPyramid(
   spaceWidth: number,
-  numBars: number
+  numBars: number,
 ): PopulationPyramidLayout {
   requireSize("layoutPopulationPyramid", "spaceWidth", spaceWidth);
   requireCount("layoutPopulationPyramid", "numBars", numBars);

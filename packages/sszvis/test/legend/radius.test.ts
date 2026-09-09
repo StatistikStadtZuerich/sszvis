@@ -105,7 +105,7 @@ describe("legend/radius", () => {
       legendRadius()
         .scale(linear())
         .tickValues([100, 0])
-        .tickFormat((d) => `${d} Einwohner`)
+        .tickFormat((d) => `${d} Einwohner`),
     );
     expect([...node.querySelectorAll("text")].map((t) => t.textContent)).toEqual([
       "100 Einwohner",
@@ -153,8 +153,8 @@ describe("legend/radius", () => {
         render(
           legendRadius()
             .scale(ordinal as never)
-            .tickValues(["a", "b"] as never)
-        )
+            .tickValues(["a", "b"] as never),
+        ),
       ).not.toThrow();
     });
   });

@@ -70,7 +70,7 @@ export type SliderValue = number | Date;
 export type SliderChangeHandler = (
   event: Event,
   x: number | string | Date | null,
-  y: number | string | null
+  y: number | string | null,
 ) => void;
 
 const AXIS_OFFSET = 28; // vertical offset for the axis
@@ -177,7 +177,7 @@ export default function slider(): SliderComponent {
         // read the leftmost and rightmost labels off the ends of the selection.
         const tickValues: AxisDomain[] = fn.set([...props.majorTicks, ...props.minorTicks]);
         tickValues.sort((a, b) =>
-          ascending(alteredScale(a as SliderValue), alteredScale(b as SliderValue))
+          ascending(alteredScale(a as SliderValue), alteredScale(b as SliderValue)),
         );
 
         // create the axis
@@ -273,10 +273,10 @@ export default function slider(): SliderComponent {
             "x1",
             rangeSign === 1
               ? Math.ceil(rangeStart + LINE_END_OFFSET)
-              : Math.floor(rangeStart - LINE_END_OFFSET)
+              : Math.floor(rangeStart - LINE_END_OFFSET),
           )
           .attr("x2", (d) =>
-            rangeSign === 1 ? Math.floor(alteredScale(d)) : Math.ceil(alteredScale(d))
+            rangeSign === 1 ? Math.floor(alteredScale(d)) : Math.ceil(alteredScale(d)),
           );
 
         // draw the handle and the label

@@ -160,7 +160,7 @@ type KeyAccessor<L, R> = (
   this: Element,
   datum: L,
   index: number,
-  group: ArrayLike<Element> | ArrayLike<L>
+  group: ArrayLike<Element> | ArrayLike<L>,
 ) => R;
 
 /** Either a constant or an accessor; the three dimensions accept both. */
@@ -185,8 +185,10 @@ type StackedAreaProps<P, L> = {
   transition: boolean;
 };
 
-export interface StackedAreaComponent<P = unknown, L extends Iterable<P> = P[]>
-  extends ComponentBuilder<StackedAreaComponent<P, L>> {
+export interface StackedAreaComponent<
+  P = unknown,
+  L extends Iterable<P> = P[],
+> extends ComponentBuilder<StackedAreaComponent<P, L>> {
   x(): AreaValue<P> | undefined;
   x<Q = P>(value: AreaValue<Q>): StackedAreaComponent<P, L>;
   y0(): AreaValue<P> | undefined;
@@ -292,7 +294,7 @@ export default function stackedArea<
         if (missing && !reported) {
           reported = true;
           logger.warn(
-            "[stackedArea] a point has a missing y0 or y1 value and was skipped; the area breaks around it."
+            "[stackedArea] a point has a missing y0 or y1 value and was skipped; the area breaks around it.",
           );
         }
         return !missing;

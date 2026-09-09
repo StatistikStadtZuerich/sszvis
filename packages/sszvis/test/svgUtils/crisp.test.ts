@@ -35,7 +35,7 @@ describe("svgUtils/crisp", () => {
   describe("roundTransformString", () => {
     test("should round the translate coordinates and leave other instructions untouched", () => {
       expect(roundTransformString("translate(12.3,4.56789) rotate(3.5)")).toBe(
-        "translate(12,4) rotate(3.5)"
+        "translate(12,4) rotate(3.5)",
       );
     });
 
@@ -88,7 +88,7 @@ describe("svgUtils/crisp", () => {
         // first translate instruction is processed. Crisping a single translate is all this
         // is used for; see the scope paragraph in the crisp.ts JSDoc.
         expect(roundTransformString("translate(1.5,2.5) translate(3.5,4.5)")).toBe(
-          "translate(1,2) translate(3.5,4.5)"
+          "translate(1,2) translate(3.5,4.5)",
         );
       });
 

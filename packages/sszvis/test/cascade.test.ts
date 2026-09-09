@@ -62,7 +62,7 @@ describe("cascade", () => {
       const result = cascade<DataItem>()
         .arrayBy(
           (d) => d.city,
-          (a, b) => a.localeCompare(b)
+          (a, b) => a.localeCompare(b),
         )
         .apply<DataItem[][]>(testData);
       expect(Array.isArray(result)).toBe(true);

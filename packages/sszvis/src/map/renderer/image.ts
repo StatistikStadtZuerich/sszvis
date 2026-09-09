@@ -165,13 +165,13 @@ function required<T>(value: T | undefined, name: string): T {
 function corner(
   projection: PointProjection,
   geoBounds: [GeoPoint, GeoPoint],
-  which: 0 | 1
+  which: 0 | 1,
 ): [number, number] {
   const projected = projection(geoBounds[which]);
   if (projected == null) {
     const name = which === 0 ? "north-west" : "south-east";
     throw new Error(
-      `[mapRendererImage] the projection could not place the ${name} corner of geoBounds`
+      `[mapRendererImage] the projection could not place the ${name} corner of geoBounds`,
     );
   }
   return projected;
@@ -204,7 +204,7 @@ export default function mapRendererImage(): MapRendererImageComponent {
       // zero would render an invisible image rather than report the mistake.
       if (bottomRight[0] < topLeft[0] || bottomRight[1] < topLeft[1]) {
         throw new Error(
-          "[mapRendererImage] the geoBounds property expects the north-west corner first; the corners given project to a negative width or height"
+          "[mapRendererImage] the geoBounds property expects the north-west corner first; the corners given project to a negative width or height",
         );
       }
 

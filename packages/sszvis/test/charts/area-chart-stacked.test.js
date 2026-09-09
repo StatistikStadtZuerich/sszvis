@@ -32,7 +32,7 @@ describe("area-chart-stacked", () => {
             r[k] = yAcc(d[k][0]);
           }
           return r;
-        })
+        }),
     );
 
     expect(stackedData[0]).toHaveProperty("key");

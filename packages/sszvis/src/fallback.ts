@@ -35,7 +35,7 @@ export const fallbackCanvasUnsupported = (): boolean => {
 
 export const fallbackRender = (
   selector: SelectableElement,
-  options: FallbackOptions = { src: "fallback.png" }
+  options: FallbackOptions = { src: "fallback.png" },
 ): void => {
   const selection: AnySelection = fn.isSelection(selector) ? selector : select(selector);
   selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);

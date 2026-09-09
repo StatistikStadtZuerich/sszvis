@@ -38,7 +38,7 @@ describe("component/pack", () => {
         right: 20,
         bottom: 30,
         left: 40,
-      })
+      }),
     );
 
     // Sample hierarchical data
@@ -110,14 +110,14 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360) // Chart area width
             .containerHeight(250) // Chart area height
-            .transition(false)
+            .transition(false),
         );
       const circles = svg.selectAll(".sszvis-pack-circle");
       expect(circles.empty()).toBe(false);
@@ -140,7 +140,7 @@ describe("component/pack", () => {
               .colorScale(scale)
               .containerWidth(360)
               .containerHeight(250)
-              .transition(false)
+              .transition(false),
           );
         return svg
           .selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle")
@@ -159,14 +159,14 @@ describe("component/pack", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
-            .transition(false)
+            .transition(false),
         );
       const circles = svg.selectAll(".sszvis-pack-circle");
       expect(circles.size()).toBeGreaterThan(0);
@@ -176,7 +176,7 @@ describe("component/pack", () => {
         expect(fill).toBeDefined();
         // Leaf nodes should have color fill, branch nodes should have "none"
         expect(fill === "none" || ["#1f77b4", "#ff7f0e", "#2ca02c"].includes(fill || "")).toBe(
-          true
+          true,
         );
       }
     });
@@ -187,7 +187,7 @@ describe("component/pack", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -196,7 +196,7 @@ describe("component/pack", () => {
             .containerHeight(250)
             .circleStroke("#ff0000")
             .circleStrokeWidth(2)
-            .transition(false)
+            .transition(false),
         );
 
       const leafCircles = svg
@@ -222,7 +222,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -230,7 +230,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .showLabels(true)
-            .transition(false)
+            .transition(false),
         );
       expect(svg.selectAll(".sszvis-pack-label").empty()).toBe(false);
     });
@@ -241,7 +241,7 @@ describe("component/pack", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -249,7 +249,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .showLabels(false)
-            .transition(false)
+            .transition(false),
         );
       expect(svg.selectAll(".sszvis-pack-label").empty()).toBe(true);
     });
@@ -260,7 +260,7 @@ describe("component/pack", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -269,7 +269,7 @@ describe("component/pack", () => {
             .containerHeight(250)
             .showLabels(true)
             .label((d) => `Label: ${d.data && "key" in d.data ? d.data.key : ""}`)
-            .transition(false)
+            .transition(false),
         );
       const firstLabel = svg.selectAll<SVGTextElement, TestDatum>(".sszvis-pack-label").node();
       if (firstLabel) {
@@ -288,7 +288,7 @@ describe("component/pack", () => {
             .calculate([
               { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
               { category: "B", subcategory: "B1", value: 100, name: "Normal" },
-            ])
+            ]),
         )
         .call(
           pack<TestDatum>()
@@ -296,7 +296,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .minRadius(5)
-            .transition(false)
+            .transition(false),
         );
       svg
         .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
@@ -313,7 +313,7 @@ describe("component/pack", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -321,7 +321,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .radiusScale(customRScale)
-            .transition(false)
+            .transition(false),
         );
       expect(customRScale).toHaveBeenCalled();
     });
@@ -333,14 +333,14 @@ describe("component/pack", () => {
             prepareHierarchyData<TestDatum>()
               .layer((d) => d.category)
               .value((d) => d.value)
-              .calculate([])
+              .calculate([]),
           )
           .call(
             pack<TestDatum>()
               .colorScale(cScale)
               .containerWidth(360)
               .containerHeight(250)
-              .transition(false)
+              .transition(false),
           );
       }).not.toThrow();
     });
@@ -361,14 +361,14 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
-            .transition(false)
+            .transition(false),
         );
       let branchCount = 0;
       let leafCount = 0;
@@ -398,14 +398,14 @@ describe("component/pack", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
-            .transition(false)
+            .transition(false),
         );
       svg
         .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
@@ -438,7 +438,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(packComponent);
       const first = svg.selectAll(".sszvis-pack-circle").size();
@@ -460,7 +460,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -468,7 +468,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       // NOTE: selectAll, not select - d3's select propagates the group's datum onto
@@ -491,7 +491,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -499,7 +499,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
@@ -513,7 +513,7 @@ describe("component/pack", () => {
           y: expect.any(Number),
           r: expect.any(Number),
           value: expect.any(Number),
-        })
+        }),
       );
     });
 
@@ -526,7 +526,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -534,7 +534,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
@@ -559,7 +559,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -567,7 +567,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const circles = svg.selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle");
@@ -584,14 +584,14 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
-            .transition(false)
+            .transition(false),
         );
 
       const circles = svg.selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle");
@@ -610,7 +610,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -618,7 +618,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       // Find a leaf node (circle with fill color, not "white")
@@ -647,7 +647,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -655,7 +655,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       // Find a branch node (circle with fill="white")
@@ -686,7 +686,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -694,7 +694,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
@@ -718,7 +718,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -726,7 +726,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
@@ -751,7 +751,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -759,7 +759,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const circles = svg.selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle");
@@ -827,7 +827,7 @@ describe("component/pack", () => {
             .layer((d) => d.division)
             .layer((d) => d.team)
             .value((d) => d.value)
-            .calculate(deepData)
+            .calculate(deepData),
         )
         .call(
           pack<DeepDatum>()
@@ -835,7 +835,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
@@ -887,7 +887,7 @@ describe("component/pack", () => {
             .layer((d) => d.subcategory)
             .layer((d) => d.division)
             .value((d) => d.value)
-            .calculate(unevenData)
+            .calculate(unevenData),
         )
         .call(
           pack<UnevenDatum>()
@@ -895,7 +895,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const circles = svg.selectAll<SVGCircleElement, UnevenDatum>(".sszvis-pack-circle");
@@ -930,7 +930,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(rows)
+            .calculate(rows),
         )
         .call(
           pack<TestDatum>()
@@ -938,7 +938,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .minRadius(minRadius)
-            .transition(false)
+            .transition(false),
         );
 
     test("should render one anchor per drawn circle, in the same order", () => {
@@ -948,7 +948,7 @@ describe("component/pack", () => {
       expect(anchorNodes().length).toBe(circles.length);
 
       const circleData = circles.map((el) =>
-        select<SVGCircleElement, PackLayout<TestDatum>>(el).datum()
+        select<SVGCircleElement, PackLayout<TestDatum>>(el).datum(),
       );
       expect(anchorData().map(keyOf)).toEqual(circleData.map(keyOf));
     });
@@ -970,7 +970,7 @@ describe("component/pack", () => {
           { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
           { category: "B", subcategory: "B1", value: 100, name: "Normal" },
         ],
-        5
+        5,
       );
       expect(anchorNodes().length).toBe(circleNodes().length);
       expect(anchorData().map(keyOf)).not.toContain("A1");
@@ -1010,7 +1010,7 @@ describe("component/pack", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           pack<TestDatum>()
@@ -1018,7 +1018,7 @@ describe("component/pack", () => {
             .containerWidth(360)
             .containerHeight(250)
             .showLabels(true)
-            .transition(false)
+            .transition(false),
         );
 
       const circleFill = new Map<PackLayout<TestDatum>, string | null>(
@@ -1028,7 +1028,7 @@ describe("component/pack", () => {
           .map((el) => [
             select<SVGCircleElement, PackLayout<TestDatum>>(el).datum(),
             el.getAttribute("fill"),
-          ])
+          ]),
       );
 
       const labels = svg.selectAll<SVGTextElement, unknown>(".sszvis-pack-label").nodes();

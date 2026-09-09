@@ -272,7 +272,7 @@ function axis(): AxisComponent {
             // and "got object" is the least useful thing that could be said about it.
             const got = tickFormat === null ? "null" : typeof tickFormat;
             throw new TypeError(
-              `axis: tickFormat must be a function from a tick value to its label, got ${got}`
+              `axis: tickFormat must be a function from a tick value to its label, got ${got}`,
             );
           }
           axisDelegate.tickFormat((d) => tickFormat(d) ?? "");
@@ -313,7 +313,7 @@ function axis(): AxisComponent {
         // grid by taking the translation of the group into account.
         tickGroups.each(function (this) {
           const subpixelShift = transformTranslateSubpixelShift(
-            this.getAttribute("transform") || ""
+            this.getAttribute("transform") || "",
           );
           const dx = halfPixel(0) - subpixelShift[0];
           const dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
@@ -344,7 +344,7 @@ function axis(): AxisComponent {
             "hidden",
             !d3this.classed("sszvis-axis__longtick") &&
               (absDistance(pos, min) < (props.hideBorderTickThreshold || 0) ||
-                absDistance(pos, max) < (props.hideBorderTickThreshold || 0))
+                absDistance(pos, max) < (props.hideBorderTickThreshold || 0)),
           );
         });
 
@@ -357,7 +357,7 @@ function axis(): AxisComponent {
               domainExtent[0] !== undefined &&
               domainExtent[1] !== undefined &&
               !fn.stringEqual(d as AxisDomain, domainExtent[0]) &&
-              !fn.stringEqual(d as AxisDomain, domainExtent[1])
+              !fn.stringEqual(d as AxisDomain, domainExtent[1]),
           );
           const orientation = props.orient;
 
@@ -468,7 +468,7 @@ function axis(): AxisComponent {
               for (const passive of passiveBounds) {
                 select(passive.node).classed(
                   "hidden",
-                  boundsOverlap(passive.bounds, active.bounds)
+                  boundsOverlap(passive.bounds, active.bounds),
                 );
               }
             }
@@ -573,7 +573,7 @@ function axis(): AxisComponent {
             let textContour = g.select<SVGTextElement>(".sszvis-axis__label-contour");
             if (textContour.empty() && textNode && "cloneNode" in textNode) {
               textContour = select<SVGTextElement, AxisDomain>(
-                textNode.cloneNode(true) as SVGTextElement
+                textNode.cloneNode(true) as SVGTextElement,
               ).classed("sszvis-axis__label-contour", true);
               const contourNode = textContour.node();
               if (contourNode) this.insertBefore(contourNode, textNode);
@@ -661,7 +661,7 @@ axisX.pyramid = () =>
     .tickFormat((v: AxisDomain) =>
       // this tick format means that the axis appears to be divergent around 0
       // when in fact it is -domain[1] -> +domain[1]
-      formatNumber(Math.abs(v as number))
+      formatNumber(Math.abs(v as number)),
     );
 
 export const axisY = (): AxisComponent => {
@@ -670,7 +670,7 @@ export const axisY = (): AxisComponent => {
     .tickSize(0)
     .tickPadding(0)
     .tickFormat((d: AxisDomain): string | null =>
-      0 === d && !newAxis.showZeroY() ? null : formatNumber(d as number)
+      0 === d && !newAxis.showZeroY() ? null : formatNumber(d as number),
     )
     .vertical(true);
   return newAxis;

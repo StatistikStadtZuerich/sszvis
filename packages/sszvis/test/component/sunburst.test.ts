@@ -258,7 +258,7 @@ describe("component/sunburst", () => {
       }).sum((d) => d.value ?? 0);
       const node = render(
         sunburstOf((key) => (key === "x" ? "#ff0000" : "#0000ff")),
-        plain
+        plain,
       );
       expect(keys(node)).toEqual(["x", "y"]);
       expect(attrs(node, "fill")).toEqual(["rgb(255, 0, 0)", "rgb(0, 0, 255)"]);
@@ -320,7 +320,7 @@ describe("component/sunburst", () => {
       // Half a turn for the whole chart, so the first category's arc bisects at 45 degrees.
       const node = render(
         sunburstOf().angleScale(scaleLinear().range([0, Math.PI])),
-        hierarchyOf()
+        hierarchyOf(),
       );
       const [x, y] = points(node)[0];
       expect(x).toBeCloseTo(160 * Math.cos(-Math.PI / 4), 6);
@@ -372,7 +372,7 @@ describe("component/sunburst", () => {
       // the ring onto the centre circle instead of inverting it.
       const node = render(
         sunburstOf().radiusScale(() => -100),
-        hierarchyOf()
+        hierarchyOf(),
       );
       expect(Math.hypot(...points(node)[0])).toBeCloseTo(10, 6);
     });
@@ -382,7 +382,7 @@ describe("component/sunburst", () => {
     test("should colour the innermost ring with the fill accessor", () => {
       const node = render(
         sunburstOf((key) => (key === "A" ? "#ff0000" : "#0000ff")),
-        hierarchyOf()
+        hierarchyOf(),
       );
       // d3's hsl round trip turns the hex into an rgb string.
       expect(attrs(node, "fill")[0]).toBe("rgb(255, 0, 0)");
@@ -398,7 +398,7 @@ describe("component/sunburst", () => {
           .fill("#808080")
           .radiusScale((v: number) => v * 300)
           .centerRadius(10),
-        hierarchyOf()
+        hierarchyOf(),
       );
       expect(attrs(accessor, "fill")).toEqual(attrs(constant, "fill"));
     });
@@ -447,7 +447,7 @@ describe("component/sunburst", () => {
       // however little headroom the caller's colour scale leaves.
       const node = render(
         sunburstOf(() => "#eeeeee"),
-        hierarchyOf()
+        hierarchyOf(),
       );
       expect(attrs(node, "fill")[0]).toBe("rgb(238, 238, 238)");
       expect(attrs(node, "fill")[1]).toBe("rgb(241, 241, 241)");
@@ -482,7 +482,7 @@ describe("component/sunburst", () => {
       test(`should throw naming ${name} when it was never set`, () => {
         const g = group(`missing-${name}`);
         expect(() => g.datum(hierarchyOf()).call(missing(name) as never)).toThrow(
-          `[sunburst] the ${name} property is required`
+          `[sunburst] the ${name} property is required`,
         );
       });
 
@@ -510,7 +510,7 @@ describe("component/sunburst", () => {
     test("should accept a stroke accessor, which receives the node", () => {
       const node = render(
         sunburstOf().stroke((d: Arc) => (d.depth === 1 ? "#f00" : "#00f")),
-        hierarchyOf()
+        hierarchyOf(),
       );
       expect(attrs(node, "stroke")).toEqual(["#f00", "#00f", "#00f", "#f00", "#00f"]);
     });
@@ -518,7 +518,7 @@ describe("component/sunburst", () => {
     test("should hand d3's index to the stroke accessor, as any d3 attr callback does", () => {
       const node = render(
         sunburstOf().stroke((_d, i) => (i === 0 ? "#f00" : "#00f")),
-        hierarchyOf()
+        hierarchyOf(),
       );
       expect(attrs(node, "stroke")).toEqual(["#f00", "#00f", "#00f", "#00f", "#00f"]);
     });
@@ -620,7 +620,7 @@ describe("component/sunburst", () => {
           { cat: "A", sub: "A1", value: 3 },
           { cat: "A", sub: "A2", value: 1 },
           { cat: "B", sub: "B1", value: 4 },
-        ])
+        ]),
       ).call(component as never);
       const node = g.node() as SVGGElement;
       const a1 = data(node)[1];
@@ -639,7 +639,7 @@ describe("component/sunburst", () => {
           { cat: "A", sub: "A1", value: 3 },
           { cat: "A", sub: "A2", value: 1 },
           { cat: "B", sub: "B1", value: 4 },
-        ])
+        ]),
       ).call(component as never);
       const node = g.node() as SVGGElement;
       await nextFrame();
@@ -708,7 +708,7 @@ describe("component/sunburst", () => {
           { cat: "A", sub: "A1", value: 3 },
           { cat: "A", sub: "A2", value: 1 },
           { cat: "B", sub: "B1", value: 4 },
-        ])
+        ]),
       ).call(component.radiusScale((v: number) => v * 600) as never);
       const node = g.node() as SVGGElement;
       await nextFrame();
@@ -839,7 +839,7 @@ describe("component/sunburst", () => {
           { cat: "A", sub: "A1", value: 7 },
           { cat: "A", sub: "A2", value: 1 },
           { cat: "B", sub: "B1", value: 1 },
-        ])
+        ]),
       ).call(component as never);
       expect(points(node)).toEqual(before);
       await settle();
@@ -869,7 +869,7 @@ describe("component/sunburst", () => {
         hierarchyOf([
           { cat: "A", sub: "A1", value: 0 },
           { cat: "B", sub: "B1", value: 1 },
-        ])
+        ]),
       );
       await nextFrame();
       expect(data(node)[0].x0).toBe(data(node)[0].x1);
@@ -892,7 +892,7 @@ describe("component/sunburst", () => {
       expect(
         data(node)
           .slice(0, 2)
-          .map((d) => [d.x1, d._x1])
+          .map((d) => [d.x1, d._x1]),
       ).toEqual([
         [1, 0.5],
         [1, 0.25],

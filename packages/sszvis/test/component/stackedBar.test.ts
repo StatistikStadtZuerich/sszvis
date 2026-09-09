@@ -189,8 +189,8 @@ describe("component/stackedBar", () => {
       expect(
         Reflect.get(
           data.filter(() => true),
-          "maxValue"
-        )
+          "maxValue",
+        ),
       ).toBeUndefined();
     });
 
@@ -357,7 +357,7 @@ describe("component/stackedBar", () => {
     test("props should be chainable", () => {
       const component = stackedBarVertical();
       expect(
-        component.xScale(xBand).width(10).yScale(yLinear).height(10).fill("#000").stroke("#000")
+        component.xScale(xBand).width(10).yScale(yLinear).height(10).fill("#000").stroke("#000"),
       ).toBe(component);
     });
 
@@ -437,7 +437,7 @@ describe("component/stackedBar", () => {
       // `props.height`, although the JSDoc claims the prop determines the bar height.
       const withHeight = render(verticalOf().height(999));
       expect(attrs(rects(withHeight), "height")).toEqual(
-        attrs(rects(render(verticalOf())), "height")
+        attrs(rects(render(verticalOf())), "height"),
       );
     });
   });
@@ -506,7 +506,7 @@ describe("component/stackedBar", () => {
           seen.push(d.data);
           return (d.data as Row).category === "X" ? "#f00" : "#0f0";
         }),
-        verticalData(sparse)
+        verticalData(sparse),
       );
       expect(seen).not.toContain(undefined);
       // the zero slice is left with no fill attribute rather than a colour
@@ -675,20 +675,20 @@ describe("component/stackedBar", () => {
   describe("missing props", () => {
     test("should throw when width is unset on a vertical chart", () => {
       expect(() => render(stackedBarVertical().xScale(xBand).yScale(yLinear))).toThrow(
-        "[stackedBarVertical] the width property is required"
+        "[stackedBarVertical] the width property is required",
       );
     });
 
     test("should throw when height is unset on a horizontal chart", () => {
       expect(() =>
-        render(stackedBarHorizontal().xScale(xLinear).yScale(yBand), horizontalData())
+        render(stackedBarHorizontal().xScale(xLinear).yScale(yBand), horizontalData()),
       ).toThrow("[stackedBarHorizontal] the height property is required");
     });
 
     test("should draw nothing at all when a required prop is missing", () => {
       const g = group("missing-width");
       expect(() =>
-        g.datum(verticalData()).call(stackedBarVertical().xScale(xBand) as never)
+        g.datum(verticalData()).call(stackedBarVertical().xScale(xBand) as never),
       ).toThrow();
       expect(rects(g.node() as SVGGElement).length).toBe(0);
       expect(stacks(g.node() as SVGGElement).length).toBe(0);
@@ -696,13 +696,13 @@ describe("component/stackedBar", () => {
 
     test("should throw when the x-scale is unset", () => {
       expect(() => render(stackedBarVertical().width(10).yScale(yLinear))).toThrow(
-        "[stackedBarVertical] the xScale property is required"
+        "[stackedBarVertical] the xScale property is required",
       );
     });
 
     test("should throw when the y-scale is unset", () => {
       expect(() => render(stackedBarVertical().xScale(xBand).width(10))).toThrow(
-        "[stackedBarVertical] the yScale property is required"
+        "[stackedBarVertical] the yScale property is required",
       );
     });
   });
@@ -758,7 +758,7 @@ describe("component/stackedBar", () => {
       // without raising a single error.
       const node = render(
         verticalOf(),
-        stackedBarVerticalData(regionAcc, categoryAcc, valueAcc)(rows)
+        stackedBarVerticalData(regionAcc, categoryAcc, valueAcc)(rows),
       );
       expect(stacks(node).length).toBe(2);
       expect(rects(node).length).toBe(4);
@@ -767,7 +767,7 @@ describe("component/stackedBar", () => {
     test("should draw bars when the whole return value of stackedBarHorizontalData is bound", () => {
       const node = render(
         horizontalOf(),
-        stackedBarHorizontalData(regionAcc, categoryAcc, valueAcc)(rows)
+        stackedBarHorizontalData(regionAcc, categoryAcc, valueAcc)(rows),
       );
       expect(stacks(node).length).toBe(2);
       expect(rects(node).length).toBe(4);

@@ -70,7 +70,7 @@ describe("parse", () => {
       expect(parseNumber("  42  ")).toBe(42);
       expect(
         parseNumber(`	123
-`)
+`),
       ).toBe(123);
     });
 
@@ -79,7 +79,7 @@ describe("parse", () => {
       expect(parseNumber("   ")).toBeNaN();
       expect(
         parseNumber(`	
-`)
+`),
       ).toBeNaN();
     });
 

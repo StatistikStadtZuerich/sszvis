@@ -139,7 +139,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
         getValue ? undefined : "value",
       ].filter(Boolean);
       throw new TypeError(
-        `sankeyPrepareData: the ${missing.join(", ")} accessor${missing.length > 1 ? "s are" : " is"} required`
+        `sankeyPrepareData: the ${missing.join(", ")} accessor${missing.length > 1 ? "s are" : " is"} required`,
       );
     }
 
@@ -150,7 +150,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
             logger.warn(
               "Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:",
               id,
-              "The existing value will be overwritten"
+              "The existing value will be overwritten",
             );
           }
 
@@ -169,7 +169,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
 
         return index;
       },
-      new Map<unknown, PreparedNode>()
+      new Map<unknown, PreparedNode>(),
     );
 
     const listOfLinks = inputData.flatMap<SankeyLink>((datum, rowIndex) => {
@@ -195,7 +195,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
         logger.warn(
           "Found a link whose source and target are in the same column, and dropped it:",
           srcId,
-          tgtId
+          tgtId,
         );
         return [];
       }
@@ -205,7 +205,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
           "Found a link value that is not a number of zero or more, and dropped the link:",
           rawValue,
           srcId,
-          tgtId
+          tgtId,
         );
         return [];
       }
@@ -242,7 +242,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
 
         return totals;
       },
-      fn.filledArray(mColumnIds.length, 0)
+      fn.filledArray(mColumnIds.length, 0),
     );
 
     // An array with the number of nodes in each column
@@ -272,7 +272,7 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
 
         return columnData;
       },
-      [fn.filledArray(mColumnIds.length, 0), fn.filledArray(mColumnIds.length, 0)]
+      [fn.filledArray(mColumnIds.length, 0), fn.filledArray(mColumnIds.length, 0)],
     );
 
     // Once the order of nodes is calculated, we need to sort the links going into the
@@ -386,7 +386,7 @@ export const computeLayout = (
   columnLengths: number[],
   columnTotals: number[],
   columnHeight: number,
-  columnWidth: number
+  columnWidth: number,
 ): SankeyComputedLayout => {
   requireSize("sankeyLayout", "columnHeight", columnHeight);
   requireSize("sankeyLayout", "columnWidth", columnWidth);
@@ -395,7 +395,7 @@ export const computeLayout = (
   }
   if (columnTotals.length !== columnLengths.length) {
     throw new RangeError(
-      `sankeyLayout: columnTotals must hold one total per column, got ${columnTotals.length} for ${columnLengths.length} columns`
+      `sankeyLayout: columnTotals must hold one total per column, got ${columnTotals.length} for ${columnLengths.length} columns`,
     );
   }
 
@@ -446,7 +446,7 @@ export const computeLayout = (
           const colPadding = (columnHeight * padSpaceRatio) / (colLength - 1);
           // Limit by minimum and maximum pixel padding values
           return Math.max(padMin, Math.min(padMax, colPadding));
-        })
+        }),
     ) ?? 0;
 
   // Given the computed padding value, compute each column's resulting "pixels per unit"
@@ -457,10 +457,10 @@ export const computeLayout = (
       // The non-padding pixels must have at least minDisplayPixels
       const nonPaddingPixels = Math.max(
         minDisplayPixels,
-        columnHeight - (colLength - 1) * computedPixPadding
+        columnHeight - (colLength - 1) * computedPixPadding,
       );
       return nonPaddingPixels / num(columnTotals[colIndex]);
-    })
+    }),
   );
 
   // The padding between bars, in bar value units
@@ -471,11 +471,11 @@ export const computeLayout = (
   // Compute y-padding required to vertically center each column (in pixels)
   const paddedHeights = columnLengths.map(
     (colLength, colIndex) =>
-      num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * nodePadding
+      num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * nodePadding,
   );
   const maxPaddedHeight = max(paddedHeights);
   const columnPaddings = columnLengths.map(
-    (_colLength, colIndex) => (num(maxPaddedHeight) - num(paddedHeights[colIndex])) / 2
+    (_colLength, colIndex) => (num(maxPaddedHeight) - num(paddedHeights[colIndex])) / 2,
   );
 
   // The domain of the size scale

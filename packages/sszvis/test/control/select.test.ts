@@ -95,7 +95,7 @@ describe("control/select", () => {
         // @ts-expect-error - the ported types constrain values to strings; this pins the
         // runtime coercion that protects JS consumers and the built bundle.
         .values([42])
-        .current("")
+        .current(""),
     );
     expect(options()[0]?.getAttribute("value")).toBe("42");
   });
@@ -145,7 +145,7 @@ describe("control/select", () => {
         // @ts-expect-error - see above; pins the collision for the built bundle.
         .values(["1", 1])
         .current("1")
-        .change(change)
+        .change(change),
     );
     expect(options().map((o) => o.textContent)).toEqual(["1", "1"]);
     expect(warn).toHaveBeenCalled();
@@ -326,7 +326,7 @@ describe("control/select", () => {
           // the runtime coercion that protects JS consumers and the built bundle.
           .values([123_456_789_012_345])
           .current("")
-          .width(60)
+          .width(60),
       );
       const text = options()[0]?.textContent ?? "";
       expect(text.endsWith("…")).toBe(true);
@@ -339,7 +339,7 @@ describe("control/select", () => {
           // @ts-expect-error - as above: coercion must happen on the non-truncating path too.
           .values([42])
           .current("")
-          .width(300)
+          .width(300),
       );
       expect(options()[0]?.textContent).toBe("42");
     });
@@ -452,7 +452,7 @@ describe("control/select", () => {
       const maxWidth = 120 - 40;
       render(selectMenu().values(["M"]).current("M").width(120));
       const metrics = container.querySelector<HTMLDivElement>(
-        ".sszvis-control-select__metrics"
+        ".sszvis-control-select__metrics",
       ) as HTMLDivElement;
       const fits = (text: string) => {
         metrics.textContent = text;

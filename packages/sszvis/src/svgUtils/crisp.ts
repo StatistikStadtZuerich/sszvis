@@ -67,7 +67,7 @@ export const roundTransformString = (transformStr: string): string => {
         .map(roundNumber)
         .join(",");
       return `${left}${roundVec}${right}`;
-    }
+    },
   );
 };
 

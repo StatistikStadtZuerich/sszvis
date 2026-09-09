@@ -93,14 +93,14 @@ export interface CascadeInstance<T> {
     accessor: KeyAccessor<T, K>,
     // The grouping stringifies its keys, so a sorter is always handed strings -
     // whatever K the accessor returns.
-    sorter?: KeySorter<string>
+    sorter?: KeySorter<string>,
   ): CascadeInstance<T>;
   sort(sorter: ValueSorter<T>): CascadeInstance<T>;
 }
 
 function groupBy<T, K extends string | number>(
   data: T[],
-  keyFunc: KeyAccessor<T, K>
+  keyFunc: KeyAccessor<T, K>,
 ): Record<string, T[]> {
   const group: Record<string, T[]> = {};
   let key: K;
@@ -176,7 +176,7 @@ export function cascade<T = unknown>(): CascadeInstance<T> {
   _cascade.apply = <R = CascadeResult<T>>(data: T[]): R => make(data, 0) as R;
 
   _cascade.objectBy = <K extends string | number>(
-    accessor: KeyAccessor<T, K>
+    accessor: KeyAccessor<T, K>,
   ): CascadeInstance<T> => {
     keys.push({
       type: "obj",
@@ -187,7 +187,7 @@ export function cascade<T = unknown>(): CascadeInstance<T> {
 
   _cascade.arrayBy = <K extends string | number>(
     accessor: KeyAccessor<T, K>,
-    sorter?: KeySorter<string>
+    sorter?: KeySorter<string>,
   ): CascadeInstance<T> => {
     keys.push({
       type: "arr",

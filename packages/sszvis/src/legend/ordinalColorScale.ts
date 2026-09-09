@@ -128,8 +128,9 @@ type OrdinalColorScaleProps<T> = {
   floatWidth: number;
 };
 
-export interface OrdinalColorScaleComponent<T = string>
-  extends ComponentBuilder<OrdinalColorScaleComponent<T>> {
+export interface OrdinalColorScaleComponent<T = string> extends ComponentBuilder<
+  OrdinalColorScaleComponent<T>
+> {
   scale(): OrdinalColorScale<T>;
   scale(scale: OrdinalColorScale<T>): OrdinalColorScaleComponent<T>;
   rowHeight(): number;
@@ -193,7 +194,7 @@ export default function legendColorOrdinal<T = string>(): OrdinalColorScaleCompo
         props.orientation !== "vertical"
       ) {
         throw new Error(
-          '[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true'
+          '[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true',
         );
       }
 

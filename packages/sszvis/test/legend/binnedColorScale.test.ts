@@ -116,28 +116,28 @@ describe("legend/binnedColorScale", () => {
         .scale(scale())
         .displayValues([25, 50, 75])
         .endpoints([0, 100])
-        .labelFormat((d: number) => `${d}%`)
+        .labelFormat((d: number) => `${d}%`),
     );
     expect(
-      [...node.querySelectorAll("text.sszvis-legend__axislabel")].map((l) => l.textContent)
+      [...node.querySelectorAll("text.sszvis-legend__axislabel")].map((l) => l.textContent),
     ).toEqual(["25%", "50%", "75%"]);
   });
 
   test("should scale the layout with the width property", () => {
     const node = render(
-      legendColorBinned().scale(scale()).displayValues([50]).endpoints([0, 100]).width(100)
+      legendColorBinned().scale(scale()).displayValues([50]).endpoints([0, 100]).width(100),
     );
     // innerRange becomes [0, 90]; the single display value splits it in half
     expect(attrs(node, "rect.sszvis-legend__crispmark", "x")).toEqual(["5", "50"]);
     expect(
-      [...node.querySelectorAll("circle.sszvis-legend__circle")].map((c) => c.getAttribute("cx"))
+      [...node.querySelectorAll("circle.sszvis-legend__circle")].map((c) => c.getAttribute("cx")),
     ).toEqual(["5", "95"]);
   });
 
   test("should default the width to 200", () => {
     const node = render(legendColorBinned().scale(scale()).displayValues([50]).endpoints([0, 100]));
     expect(
-      [...node.querySelectorAll("circle.sszvis-legend__circle")].map((c) => c.getAttribute("cx"))
+      [...node.querySelectorAll("circle.sszvis-legend__circle")].map((c) => c.getAttribute("cx")),
     ).toEqual(["5", "195"]);
   });
 

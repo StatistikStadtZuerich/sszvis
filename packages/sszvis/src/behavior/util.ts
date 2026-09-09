@@ -69,7 +69,7 @@ export const elementFromEvent = (
   evt: {
     clientX: number;
     clientY: number;
-  } | null
+  } | null,
 ): Element | null => {
   if (!fn.isNull(evt) && fn.defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
@@ -78,7 +78,7 @@ export const elementFromEvent = (
 };
 
 export const datumFromPannableElement = <T = unknown>(
-  element: Element | null
+  element: Element | null,
 ): DatumContainer<T> | null => {
   if (!fn.isNull(element)) {
     const selection = select(element as Element);
@@ -93,7 +93,7 @@ export const datumFromPannableElement = <T = unknown>(
 };
 
 export const datumFromPanEvent = <T = unknown>(
-  panEvent: Touch | null
+  panEvent: Touch | null,
 ): DatumContainer<T> | null => {
   const element = elementFromEvent(panEvent);
   return datumFromPannableElement<T>(element);
@@ -103,7 +103,7 @@ export const testBarThreshold = <T>(
   cursorValue: number,
   datum: T,
   accessor: (d: T) => number,
-  threshold: number
+  threshold: number,
 ): boolean => {
   if (!fn.defined(datum)) {
     return false;

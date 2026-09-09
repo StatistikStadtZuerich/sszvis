@@ -417,7 +417,7 @@ describe("fn", () => {
         flatten([
           [1, 2],
           [3, 4],
-        ])
+        ]),
       ).toEqual([1, 2, 3, 4]);
     });
 
@@ -529,7 +529,7 @@ describe("fn", () => {
     test("should throw a TypeError for a non-function argument", () => {
       expect(() => memoize(undefined as unknown as () => void)).toThrow(TypeError);
       expect(() => memoize((x: number) => x, "nope" as unknown as (x: number) => string)).toThrow(
-        TypeError
+        TypeError,
       );
     });
 
@@ -537,7 +537,7 @@ describe("fn", () => {
       // NOTE: the guard is `resolver != null`, so an explicit null resolver is
       // accepted and falls back to the default args[0] key.
       expect(() =>
-        memoize((x: number) => x, null as unknown as (x: number) => string)
+        memoize((x: number) => x, null as unknown as (x: number) => string),
       ).not.toThrow();
     });
 
@@ -557,7 +557,7 @@ describe("fn", () => {
         foldPattern("a", {
           a: () => "A",
           b: () => "B",
-        })
+        }),
       ).toBe("A");
     });
 
@@ -569,13 +569,13 @@ describe("fn", () => {
 
     test("should throw a descriptive error for an unknown key", () => {
       expect(() => foldPattern("c", { a: () => "A" })).toThrow(
-        "[foldPattern] No definition provided for key: c"
+        "[foldPattern] No definition provided for key: c",
       );
     });
 
     test("should throw when the pattern entry is not a function", () => {
       expect(() => foldPattern("a", { a: "A" as unknown as () => string })).toThrow(
-        "[foldPattern]"
+        "[foldPattern]",
       );
     });
 

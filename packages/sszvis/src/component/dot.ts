@@ -163,7 +163,7 @@ export default function dot<T = unknown>(): DotComponent<T> {
             .classed("sszvis-circle", true)
             .attr("cx", xAt)
             .attr("cy", yAt)
-            .attr("r", rAt)
+            .attr("r", rAt),
         )
         .attr("stroke", strokeAt)
         .attr("fill", fillAt);

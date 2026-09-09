@@ -190,8 +190,9 @@ type HighlightProps<T> = {
   highlightStrokeWidth: StoredHighlightValue<T, number | null>;
 };
 
-export interface MapRendererHighlightComponent<T = unknown>
-  extends ComponentBuilder<MapRendererHighlightComponent<T>> {
+export interface MapRendererHighlightComponent<T = unknown> extends ComponentBuilder<
+  MapRendererHighlightComponent<T>
+> {
   keyName(): string;
   keyName(value: string): MapRendererHighlightComponent<T>;
   key(): string;
@@ -206,7 +207,7 @@ export interface MapRendererHighlightComponent<T = unknown>
   highlightStroke<U = T>(value: HighlightValue<U, string | null>): MapRendererHighlightComponent<T>;
   highlightStrokeWidth(): StoredHighlightValue<T, number | null>;
   highlightStrokeWidth<U = T>(
-    value: HighlightValue<U, number | null>
+    value: HighlightValue<U, number | null>,
   ): MapRendererHighlightComponent<T>;
 }
 
@@ -236,7 +237,7 @@ function warnUnmatched(unmatchedIds: unknown[], keyName: string): void {
   if (unmatchedIds.length === 0) return;
   const ids = unmatchedIds.map((id) => String(id)).join(", ");
   logger.warn(
-    `[mapRendererHighlight] no map entity has the ${keyName} ${ids}; nothing was highlighted for it. Check that the highlight ids match the geoJson feature ids, including their format ("01" and "1" are different entities).`
+    `[mapRendererHighlight] no map entity has the ${keyName} ${ids}; nothing was highlighted for it. Check that the highlight ids match the geoJson feature ids, including their format ("01" and "1" are different entities).`,
   );
 }
 
@@ -278,7 +279,7 @@ export default function mapRendererHighlight<T = unknown>(): MapRendererHighligh
       // Scoped to this layer by its wrapper, so a second highlight layer in the same group draws
       // its own paths instead of rebinding these.
       const highlightBorders = highlightGroup.selectAll<Element, HighlightedFeature<T>>(
-        ".sszvis-map__highlight"
+        ".sszvis-map__highlight",
       );
 
       if (props.highlight.length === 0) {

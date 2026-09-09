@@ -113,7 +113,7 @@ describe("component/stackedPyramid", () => {
     bars(node, key).map((b) => b.getAttribute(attr));
   const anchors = (node: Element, key: string) =>
     [...(sideGroup(node, key)?.querySelectorAll("[data-tooltip-anchor]") ?? [])].map((a) =>
-      a.getAttribute("transform")
+      a.getAttribute("transform"),
     );
   const lines = (node: Element, key: string) => [
     ...(sideGroup(node, key)?.querySelectorAll("path.sszvis-path") ?? []),
@@ -468,7 +468,7 @@ describe("component/stackedPyramid", () => {
             { side: "f", row: 0, series: "a", value: 1 },
             { side: "m", row: 0, series: "a", value: 2 },
             { side: "x", row: 0, series: "a", value: 3 },
-          ]).length
+          ]).length,
         ).toBe(3);
       });
 
@@ -481,7 +481,7 @@ describe("component/stackedPyramid", () => {
           layoutOf([
             { side: "f", row: 0, series: "a", value: -50 },
             { side: "f", row: 0, series: "b", value: 10 },
-          ]).maxValue
+          ]).maxValue,
         ).toBe(-40);
       });
 
@@ -551,7 +551,7 @@ describe("component/stackedPyramid", () => {
     test("should render the reference groups after the bars, so lines draw on top", () => {
       const node = render(pyramidOf());
       const keys = [...node.querySelectorAll("[data-d3-selectgroup]")].map((g) =>
-        g.getAttribute("data-d3-selectgroup")
+        g.getAttribute("data-d3-selectgroup"),
       );
       expect(keys).toEqual(["leftStack", "rightStack", "leftReference", "rightReference"]);
     });
@@ -577,7 +577,7 @@ describe("component/stackedPyramid", () => {
           { side: "f", row: 1, series: "a", value: 2 },
           { side: "f", row: 1, series: "b", value: 3 },
           { side: "m", row: 0, series: "a", value: 4 },
-        ])
+        ]),
       );
       expect(stacks(node, "leftStack").length).toBe(2);
       // The recovered series is drawn: its row-1 slice runs from 2 to 5, its row-0 pad is
@@ -648,7 +648,7 @@ describe("component/stackedPyramid", () => {
           { side: "f", row: 40, series: "a", value: 1 },
           { side: "f", row: 80, series: "a", value: 2 },
           { side: "m", row: 40, series: "a", value: 3 },
-        ])
+        ]),
       );
       expect(attrs(node, "leftStack", "y")).toEqual(["480", "960"]);
       expect(attrs(node, "rightStack", "y")).toEqual(["480"]);
@@ -662,7 +662,7 @@ describe("component/stackedPyramid", () => {
     test("should apply barFill to the slice's source row", () => {
       const node = render(
         pyramidOf().barFill((d: Row) => (d.series === "a" ? "#f00" : "#00f")),
-        layout()
+        layout(),
       );
       expect(attrs(node, "leftStack", "fill")).toEqual(["#f00", "#f00", "#00f", "#00f"]);
       expect(attrs(node, "rightStack", "fill")).toEqual(["#f00", "#f00", "#00f", "#00f"]);
@@ -689,7 +689,7 @@ describe("component/stackedPyramid", () => {
           .barPosition((row: number) => row * 12)
           .leftAccessor(() => [])
           .rightAccessor(() => []),
-        empty
+        empty,
       );
       expect(stacks(node, "leftStack").length).toBe(0);
       expect(bars(node, "leftStack").length).toBe(0);
@@ -717,7 +717,7 @@ describe("component/stackedPyramid", () => {
           { side: "f", row: 1, series: "a", value: 5 },
           { side: "m", row: 0, series: "a", value: 30 },
           { side: "m", row: 1, series: "a", value: 1 },
-        ])
+        ]),
       ).call(component as never);
       const node = g.node() as SVGGElement;
       expect(stacks(node, "leftStack").length).toBe(1);
@@ -743,7 +743,7 @@ describe("component/stackedPyramid", () => {
         layout([
           { side: "f", row: 0, series: "a", value: 99 },
           { side: "m", row: 0, series: "a", value: 7 },
-        ])
+        ]),
       ).call(component as never);
       const node = g.node() as SVGGElement;
       await vi.waitFor(() => {
@@ -759,7 +759,7 @@ describe("component/stackedPyramid", () => {
       const node = render(pyramidOf());
       expect(anchors(node, "leftStack").length).toBe(4);
       expect(
-        [...stacks(node, "leftStack")[0].querySelectorAll("[data-tooltip-anchor]")].length
+        [...stacks(node, "leftStack")[0].querySelectorAll("[data-tooltip-anchor]")].length,
       ).toBe(2);
     });
 
@@ -858,7 +858,7 @@ describe("component/stackedPyramid", () => {
         pyramidOf().rightRefAccessor(() => [
           { row: 0, value: 70 },
           { row: 1, value: 3 },
-        ])
+        ]),
       );
       expect(await lineD(node, "rightReference")).toBe("M70,0L3,12");
       const outerEdges = bars(node, "rightStack")
@@ -890,7 +890,7 @@ describe("component/stackedPyramid", () => {
       // element so that no selector written against the generic class changes meaning.
       const node = render(withRefs());
       expect(lines(node, "rightReference")[0].getAttribute("class")).toBe(
-        "sszvis-path sszvis-stacked-pyramid__referenceline"
+        "sszvis-path sszvis-stacked-pyramid__referenceline",
       );
     });
 
@@ -939,7 +939,7 @@ describe("component/stackedPyramid", () => {
       // the tick the re-render happens.
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M0,0L1,12");
       await vi.waitFor(() =>
-        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M2,24L3,36")
+        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M2,24L3,36"),
       );
     });
   });
@@ -957,8 +957,8 @@ describe("component/stackedPyramid", () => {
           stackedPyramid()
             .barHeight(10)
             .barWidth((v: number) => v)
-            .barPosition(0)
-        )
+            .barPosition(0),
+        ),
       ).toThrow(TypeError);
     });
 
@@ -978,8 +978,8 @@ describe("component/stackedPyramid", () => {
         render(
           bare()
             .barHeight(10)
-            .barWidth((v: number) => v)
-        )
+            .barWidth((v: number) => v),
+        ),
       ).toThrow(TypeError);
     });
 
@@ -994,7 +994,7 @@ describe("component/stackedPyramid", () => {
         const node = render(
           bare()
             .barWidth((v: number) => v)
-            .barPosition(0)
+            .barPosition(0),
         );
         expect(attrs(node, "rightStack", "height")).toEqual(["0", "0", "0", "0"]);
       });
@@ -1005,8 +1005,8 @@ describe("component/stackedPyramid", () => {
         expect(() =>
           render(
             // @ts-expect-error - deliberately violating the accessor's return contract
-            pyramidOf().leftAccessor(() => undefined)
-          )
+            pyramidOf().leftAccessor(() => undefined),
+          ),
         ).toThrow(TypeError);
       });
     });
@@ -1053,7 +1053,7 @@ describe("component/stackedPyramid", () => {
           { side: "m", row: 0, series: "b", value: 5 },
           { side: "m", row: 1, series: "a", value: 6 },
           { side: "m", row: 1, series: "b", value: 7 },
-        ])
+        ]),
       );
       expect(seen).not.toContain(undefined);
       // the padding slice is left with no fill attribute rather than a colour
@@ -1074,7 +1074,7 @@ describe("component/stackedPyramid", () => {
           { side: "m", row: 0, series: "b", value: 5 },
           { side: "m", row: 1, series: "a", value: 6 },
           { side: "m", row: 1, series: "b", value: 7 },
-        ])
+        ]),
       );
       // Row 1 of the left side has no "b", so its second slice is padding.
       expect(attrs(node, "leftStack", "width")).toEqual(["20", "20", "20", "0"]);
@@ -1103,7 +1103,7 @@ describe("component/stackedPyramid", () => {
         pyramidOf().barWidth((v: number) => {
           seen.push(v);
           return v;
-        })
+        }),
       );
       expect(seen.every((v) => typeof v === "number")).toBe(true);
       expect(seen).toContain(30);
@@ -1140,7 +1140,7 @@ describe("component/stackedPyramid", () => {
           .barFill((...args: unknown[]) => {
             fillArgs.push(args);
             return "#000";
-          })
+          }),
       );
       expect(positionArgs.every((args) => args.length === 1)).toBe(true);
       expect(fillArgs.every((args) => args.length === 1)).toBe(true);
@@ -1169,7 +1169,7 @@ describe("component/stackedPyramid", () => {
         pyramidOf().rightRefAccessor(() => [
           { row: 0, value: 0 },
           { row: 1, value: 1 },
-        ])
+        ]),
       );
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
@@ -1183,14 +1183,14 @@ describe("component/stackedPyramid", () => {
       expect(() =>
         render(
           // @ts-expect-error - deliberately violating the accessor's return contract
-          pyramidOf().rightRefAccessor(() => undefined)
-        )
+          pyramidOf().rightRefAccessor(() => undefined),
+        ),
       ).toThrow(TypeError);
       expect(() =>
         render(
           // @ts-expect-error - deliberately violating the accessor's return contract
-          pyramidOf().rightRefAccessor(() => null)
-        )
+          pyramidOf().rightRefAccessor(() => null),
+        ),
       ).toThrow(TypeError);
     });
 
@@ -1233,7 +1233,7 @@ describe("component/stackedPyramid", () => {
         pyramidOf().rightRefAccessor(() => [
           { row: Number.NaN, value: Number.NaN },
           { row: 1, value: 1 },
-        ])
+        ]),
       );
       expect(await lineD(node, "rightReference")).toBe("MNaN,NaNL1,12");
     });
@@ -1248,7 +1248,7 @@ describe("component/stackedPyramid", () => {
         pyramidOf().rightRefAccessor(() => [
           { row: 0, value: 0 },
           { row: 1, value: 1 },
-        ])
+        ]),
       );
       expect(attrs(node, "rightStack", "y")).toEqual(["0", "12", "0", "12"]);
       expect(attrs(node, "rightStack", "height")).toEqual(["10", "10", "10", "10"]);
@@ -1279,7 +1279,7 @@ describe("component/stackedPyramid", () => {
         layout([
           { side: "f", row: 0, series: "a", value: 10 },
           { side: "m", row: 0, series: "a", value: 99 },
-        ])
+        ]),
       ).call(component as never);
       // On this tick the bars have not jumped ahead...
       expect(attrs(node, "rightStack", "width")).toEqual(["30"]);
@@ -1317,7 +1317,7 @@ describe("component/stackedPyramid", () => {
           .rightRefAccessor(() => [
             { row: 0, value: 10 },
             { row: 1, value: 20 },
-          ])
+          ]),
       );
       expect(await lineD(node, "rightReference")).toBe("MNaN,0LNaN,12");
       expect(attrs(node, "rightStack", "width")).toEqual(["0", "0", "0", "0"]);
@@ -1340,7 +1340,7 @@ describe("component/stackedPyramid", () => {
         layout([
           { side: "f", row: 0, series: "a", value: -5 },
           { side: "m", row: 0, series: "a", value: 5 },
-        ])
+        ]),
       );
       expect(attrs(node, "leftStack", "x")).toEqual(["4.5"]);
       expect(attrs(node, "leftStack", "width")).toEqual(["-5"]);
@@ -1365,7 +1365,7 @@ describe("component/stackedPyramid", () => {
           { side: "f", row: 1, series: "b", value: 15 },
           { side: "m", row: 0, series: "b", value: 40 },
           { side: "m", row: 1, series: "b", value: 2 },
-        ])
+        ]),
       ).call(component as never);
       // The group that used to hold series "a" now holds series "b".
       expect(stacks(node, "leftStack")[0]).toBe(firstStack);

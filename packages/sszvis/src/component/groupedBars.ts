@@ -132,7 +132,7 @@ interface GroupedBarsComponent<T = unknown> extends ComponentBuilder<GroupedBars
   fill<U = T>(value: string | ((datum: U, index: number) => string)): GroupedBarsComponent<T>;
   stroke(): string | ((datum: T, index: number) => string) | undefined;
   stroke<U = T>(
-    value: string | ((datum: U, index: number) => string) | undefined
+    value: string | ((datum: U, index: number) => string) | undefined,
   ): GroupedBarsComponent<T>;
   defined(): (datum: T) => boolean;
   defined<U = T>(predicate: boolean | ((datum: U) => boolean)): GroupedBarsComponent<T>;
@@ -145,32 +145,32 @@ type GroupedBarsConfig<T> = {
   inGroupRange(props: GroupedBarsProps<T>): [number, number];
   x(
     props: GroupedBarsProps<T>,
-    inGroupScale: ScaleBand<number>
+    inGroupScale: ScaleBand<number>,
   ): (d: T, groupIndex: number) => number;
   y(
     props: GroupedBarsProps<T>,
-    inGroupScale: ScaleBand<number>
+    inGroupScale: ScaleBand<number>,
   ): (d: T, groupIndex: number) => number;
   width(
     props: GroupedBarsProps<T>,
-    inGroupScale: ScaleBand<number>
+    inGroupScale: ScaleBand<number>,
   ): number | ((d: T, groupIndex: number) => number);
   height(
     props: GroupedBarsProps<T>,
-    inGroupScale: ScaleBand<number>
+    inGroupScale: ScaleBand<number>,
   ): number | ((d: T, groupIndex: number) => number);
   missingTransform(
     props: GroupedBarsProps<T>,
-    inGroupScale: ScaleBand<number>
+    inGroupScale: ScaleBand<number>,
   ): (d: T, groupIndex: number) => string;
   tooltipPosition(
     props: GroupedBarsProps<T>,
-    inGroupScale: ScaleBand<number>
+    inGroupScale: ScaleBand<number>,
   ): (group: T[]) => [number, number];
 };
 
 function createGroupedBarsComponent<T = unknown>(
-  config: GroupedBarsConfig<T>
+  config: GroupedBarsConfig<T>,
 ): GroupedBarsComponent<T> {
   return component<GroupedBarsComponent<T>>()
     .prop("groupScale")
@@ -268,12 +268,12 @@ function createGroupedBarsComponent<T = unknown>(
       };
       const widthAt = function (this: SVGRectElement, d: T) {
         return toFinite(
-          typeof configWidth === "function" ? configWidth(d, indexOfRect(this)) : configWidth
+          typeof configWidth === "function" ? configWidth(d, indexOfRect(this)) : configWidth,
         );
       };
       const heightAt = function (this: SVGRectElement, d: T) {
         return toFinite(
-          typeof configHeight === "function" ? configHeight(d, indexOfRect(this)) : configHeight
+          typeof configHeight === "function" ? configHeight(d, indexOfRect(this)) : configHeight,
         );
       };
       const fillAt = function (this: SVGRectElement, d: T) {
@@ -324,7 +324,7 @@ function createGroupedBarsComponent<T = unknown>(
             .attr("x", xAt)
             .attr("y", yAt)
             .attr("width", widthAt)
-            .attr("height", heightAt)
+            .attr("height", heightAt),
         )
         .attr("fill", fillAt)
         .attr("stroke", strokeAt);
@@ -362,7 +362,7 @@ function createGroupedBarsComponent<T = unknown>(
         .join((enter) =>
           enter
             .append("line")
-            .classed("sszvis-bar--missing sszvis-bar--missing-cross-1 line1", true)
+            .classed("sszvis-bar--missing sszvis-bar--missing-cross-1 line1", true),
         )
         .attr("x1", -4)
         .attr("y1", -4)
@@ -375,7 +375,7 @@ function createGroupedBarsComponent<T = unknown>(
         .join((enter) =>
           enter
             .append("line")
-            .classed("sszvis-bar--missing sszvis-bar--missing-cross-2 line2", true)
+            .classed("sszvis-bar--missing sszvis-bar--missing-cross-2 line2", true),
         )
         .attr("x1", 4)
         .attr("y1", -4)
@@ -405,7 +405,7 @@ const createVerticalConfig = <T>(): GroupedBarsConfig<T> => ({
       // expression would yield transform="translate(NaN,0)" rather than a placed cross.
       translateString(
         toFinite(groupScale(d) + (inGroupScale(groupIndex) ?? 0) + inGroupScale.bandwidth() / 2),
-        toFinite(y(d, groupIndex))
+        toFinite(y(d, groupIndex)),
       ),
   tooltipPosition:
     ({ groupScale, y }, inGroupScale) =>
@@ -436,7 +436,7 @@ const createHorizontalConfig = <T>(): GroupedBarsConfig<T> => ({
       // Guarded as a whole, as in the vertical config.
       translateString(
         toFinite(x(d, groupIndex)),
-        toFinite(groupScale(d) + (inGroupScale(groupIndex) ?? 0) + inGroupScale.bandwidth() / 2)
+        toFinite(groupScale(d) + (inGroupScale(groupIndex) ?? 0) + inGroupScale.bandwidth() / 2),
       ),
   tooltipPosition:
     ({ groupScale, x }, inGroupScale) =>

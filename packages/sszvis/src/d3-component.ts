@@ -33,7 +33,7 @@ export type ComponentCallable = <
   PElement extends BaseType,
   PDatum,
 >(
-  selection: Selection<GElement, Datum, PElement, PDatum>
+  selection: Selection<GElement, Datum, PElement, PDatum>,
 ) => void;
 
 /**
@@ -105,7 +105,7 @@ export function component<C extends Component = Component>(): C {
    * @param  {d3.selection} selection Passed in by d3
    */
   function sszvisComponent<G extends BaseType, D, P extends BaseType, PD>(
-    selection: Selection<G, D, P, PD>
+    selection: Selection<G, D, P, PD>,
   ): void {
     if (selectionRenderer) {
       // Attach the props reader d3's Selection prototype is augmented with below.
@@ -133,7 +133,7 @@ export function component<C extends Component = Component>(): C {
     Reflect.set(
       sszvisComponent,
       prop,
-      accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent)
+      accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent),
     );
     return sszvisComponent as Component;
   };
