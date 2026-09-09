@@ -1,0 +1,9 @@
+{
+  "name": "sszvis",
+  "runtime": { "_tag": "node", "packageManager": "pnpm" },
+  "typescript": "7",
+  "lint": "oxlint",
+  "format": "oxfmt",
+  "test": "vitest",
+  "monorepo": "turbo"
+}

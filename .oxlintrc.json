@@ -1,0 +1,35 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "unicorn", "typescript"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "env": {
+    "browser": true,
+    "es2024": true
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/build/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/geodata/**",
+    "**/.reference/**",
+    "**/contrib/**",
+    "apps/docs/docs/**",
+    "scripts/visual-regression/__export__/**",
+    "scripts/visual-regression/__report__/**"
+  ],
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.js", "**/*.spec.js"],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "typescript/no-this-alias": "off",
+        "unicorn/consistent-function-scoping": "off"
+      }
+    }
+  ]
+}

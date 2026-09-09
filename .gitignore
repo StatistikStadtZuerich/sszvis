@@ -1,20 +1,49 @@
+# dependencies
+node_modules
+
+# build
+dist
+build
+.cache
+.turbo
+tsconfig.tsbuildinfo
+
+# env
+.env
+.env.local
+.env.*.local
+
+# ide
+.idea
+*.swp
+*.swo
+
+# os
 .DS_Store
+Thumbs.db
+
+# test
+coverage
+playwright-report
+test-results
+
+# nix
+result
+result-*
+.direnv/
+
+# sszvis-specific
 .node-version
 .projectile
 .sass-cache
-node_modules
-
-build
 __diff_output__
-/test/snapshot/__results__
+.reference
+.claude/
+.playwright-mcp/
+blob-report
+playwright/.cache
 # vitest browser mode drops failure screenshots next to each test file
 **/__screenshots__/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-
-.reference
-
-.claude/
+**/test/snapshot/__results__/
 scripts/visual-regression/__report__/
 scripts/visual-regression/__export__/
