@@ -1,6 +1,9 @@
 // @ts-check
 const { defineConfig, devices } = require("@playwright/test");
 
+// Kept in sync with test/snapshot/snapshot.spec.js.
+const SNAPSHOT_BASE_URL = process.env.SNAPSHOT_BASE_URL || "http://localhost:8000";
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -36,6 +39,13 @@ module.exports = defineConfig({
   expect: {
     toHaveScreenshot: { maxDiffPixelRatio: 0.05 },
   },
+
+  /*
+   * Writing a baseline must be deliberate. Playwright's default ("missing")
+   * silently creates one for any page or button state that has none, so adding
+   * a docs example would mint an unreviewed baseline on someone's laptop.
+   */
+  updateSnapshots: "none",
 
   /* Configure projects for major browsers */
   projects: [
@@ -79,10 +89,15 @@ module.exports = defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: "npm run start",
-  //   url: "http://127.0.0.1:8000",
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  /*
+   * Serve the built docs ourselves, so `pnpm run test:snapshot` is one command.
+   * Without this the suite needs a docs server in another shell and otherwise
+   * fails all 54 pages with ERR_CONNECTION_REFUSED.
+   */
+  webServer: {
+    command: "pnpm --filter @sszvis/docs run serve",
+    url: SNAPSHOT_BASE_URL,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+  },
 });

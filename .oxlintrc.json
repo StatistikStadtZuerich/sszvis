@@ -10,15 +10,24 @@
     "browser": true,
     "es2024": true
   },
+  "rules": {
+    "no-underscore-dangle": "off",
+    "import/no-unassigned-import": "off",
+    "unicorn/no-array-sort": "off",
+    "unicorn/no-array-reverse": "off",
+    "no-await-in-loop": "off",
+    "unicorn/consistent-function-scoping": "off"
+  },
   "ignorePatterns": [
     "**/node_modules/**",
     "**/build/**",
     "**/dist/**",
     "**/coverage/**",
-    "packages/geodata/src/**",
     "**/.reference/**",
-    "**/contrib/**",
+    "packages/geodata/src/**",
     "apps/docs/docs/**",
+    "apps/project-specimen/src/**",
+    "contrib/**",
     "scripts/visual-regression/__export__/**",
     "scripts/visual-regression/__report__/**"
   ],
@@ -27,8 +36,7 @@
       "files": ["**/*.test.ts", "**/*.test.js", "**/*.spec.js"],
       "rules": {
         "typescript/no-explicit-any": "off",
-        "typescript/no-this-alias": "off",
-        "unicorn/consistent-function-scoping": "off"
+        "typescript/no-this-alias": "off"
       }
     }
   ]
