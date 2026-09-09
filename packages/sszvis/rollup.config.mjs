@@ -6,7 +6,7 @@ import typescript from "@rollup/plugin-typescript";
 import { dts } from "rollup-plugin-dts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import terser from "@rollup/plugin-terser";
 import pkg from "./package.json";
 
@@ -50,6 +50,29 @@ for (const file of sourceFiles) {
   inputFiles[key] = file;
 }
 
+const cssSource = path.join(__dirname, "src", "sszvis.css");
+
+/**
+ * sszvis.css is part of the library - consumers must load it - but it is not
+ * imported by any module, so rollup would never see it. Emitting it as an asset
+ * rather than copying it in a build script keeps `--watch` honest: addWatchFile
+ * makes an edit to the stylesheet trigger a rebuild, so the docs dev server and
+ * the regression harness pick it up like any source change.
+ */
+const emitStylesheet = () => ({
+  name: "sszvis-stylesheet",
+  buildStart() {
+    this.addWatchFile(cssSource);
+  },
+  generateBundle() {
+    this.emitFile({
+      type: "asset",
+      fileName: "sszvis.css",
+      source: readFileSync(cssSource, "utf8"),
+    });
+  },
+});
+
 const createConfig = ({ input, output, plugins = [] }) => ({
   strictDeprecations: true,
   input,
@@ -91,6 +114,7 @@ export default [
       preserveModules: true,
       preserveModulesRoot: "src",
     },
+    plugins: [emitStylesheet()],
   }),
 
   // UMD bundle

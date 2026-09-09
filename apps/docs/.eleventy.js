@@ -4,11 +4,17 @@ const prettier = require("prettier");
 
 module.exports = function (eleventyConfig) {
   /**
-   * The library bundle is built by the `sszvis` package and copied in here, so
-   * the docs output directory is no longer shared with the library build.
-   * Turborepo guarantees `sszvis#build` has run first.
+   * The library bundle and its stylesheet are built by the `sszvis` package and
+   * copied in here, so the docs output directory is no longer shared with the
+   * library build. Turborepo guarantees `sszvis#build` has run first.
+   *
+   * sszvis.css belongs to the library, not to the docs: every consumer needs it
+   * for tooltips, layer positioning and the fallback image. It used to live in
+   * docs/ and only reached npm because the docs once built into the library's
+   * build/ directory.
    */
   eleventyConfig.addPassthroughCopy({
+    "../../packages/sszvis/build/sszvis.css": "sszvis.css",
     "../../packages/sszvis/build/sszvis.js": "sszvis.js",
     "../../packages/sszvis/build/sszvis.js.map": "sszvis.js.map",
     "../../packages/sszvis/build/sszvis.min.js": "sszvis.min.js",

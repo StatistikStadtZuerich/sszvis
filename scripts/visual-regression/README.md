@@ -96,7 +96,7 @@ The server rewrites those to `/lib/<side>/<version>/…` as it serves the HTML a
 resolves them per side. Nothing in `.reference` is modified.
 
 - **baseline** — every file from the pinned `library_script/<version>/` folder.
-- **candidate** — `packages/sszvis/build/sszvis.js` and `apps/docs/docs/sszvis.css` from this repo;
+- **candidate** — `packages/sszvis/build/sszvis.js` and `packages/sszvis/build/sszvis.css` from this repo;
   `d3.js` and `topojson.js` still come from the pinned folder, so sszvis is the
   only variable.
 

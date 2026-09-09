@@ -30,7 +30,10 @@
         "types": "./build/sszvis.d.ts",
         "default": "./build/sszvis.js"
       }
-    }
+    },
+    "./sszvis.css": "./build/sszvis.css",
+    "./build/sszvis.css": "./build/sszvis.css",
+    "./package.json": "./package.json"
   },
   "files": [
     "src",
