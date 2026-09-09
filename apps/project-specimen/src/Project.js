@@ -186,7 +186,7 @@ export default function ProjectConfigurator(opts) {
             .then((response) => response.text())
             .then((source) => {
               let content = this.sourceViewFiles(projectConfig).some(
-                (f) => f.source === file.source
+                (f) => f.source === file.source,
               )
                 ? normalizeReferences(rootPath, projectConfig.files, source)
                 : source;
@@ -217,7 +217,7 @@ export default function ProjectConfigurator(opts) {
                       });
                       content = content.replace(
                         /\s+data-catalog-project-expose=[\"\'].+?[\"\']/,
-                        ""
+                        "",
                       );
                       return resolve({
                         path: file.target,

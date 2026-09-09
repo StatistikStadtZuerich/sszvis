@@ -6,6 +6,8 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "@sszvis/geodata": "workspace:*",
+    "@sszvis/project-specimen": "workspace:*",
+    "d3": "^7.9.0",
     "sszvis": "workspace:*"
   },
   "devDependencies": {
@@ -16,8 +18,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build": "pnpm run clean && eleventy",
-    "dev": "eleventy --serve --port 8000",
-    "start": "eleventy --serve --port 8000",
+    "dev": "eleventy --serve --port ${PORT:-8000}",
     "serve": "eleventy --serve --port 8000"
   }
 }

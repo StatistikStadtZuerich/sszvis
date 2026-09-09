@@ -5,7 +5,7 @@ export default (rootPath, files, body) => {
   files.map((file) => {
     let regexp = new RegExp(
       "([\"'])([./a-z0-9]*" + escapeRegExp(fileUtils.filename(file.source)) + ")([\"'])",
-      "gi"
+      "gi",
     );
     body = body.replace(regexp, (_, left, path, right) => {
       let targetPath = file.source === fileUtils.normalizePath(rootPath, path) ? file.target : path;
