@@ -4,7 +4,10 @@ sszvis can be installed from npm or embedded in a script tag. Please refer to th
 
 ## Documentation
 
-The documentation is written in Markdown and bundled with [Catalog](https://www.catalog.style/).
+The documentation site is built with [11ty](https://www.11ty.dev/) from
+`apps/docs`. Each chart type has a `README.md` plus runnable `.html`/`.js`
+examples; [Catalog](https://www.catalog.style/) is the client-side shell that
+renders the index and the source viewers.
 
 ## Development
 
@@ -20,6 +23,7 @@ This repository is a [pnpm](https://pnpm.io/) + [Turborepo](https://turborepo.co
 
 ```txt
 apps/docs          # 11ty documentation site (@sszvis/docs)
+apps/project-specimen  # Catalog widget the docs homepage requires
 packages/sszvis    # the published library, bundled with Rollup
 packages/geodata   # Swiss geographic source data + the TopoJSON pipeline
 scripts            # the visual-regression harness
@@ -27,14 +31,15 @@ contrib            # example projects and experiments
 ```
 
 ```sh
-# Install dependencies for every workspace
+# Install dependencies for every workspace, plus the browsers the tests need
 pnpm install
+pnpm --filter sszvis exec playwright install
 
 # Build the library and the docs site (turbo builds the library first)
 pnpm run build
 
-# Start the docs server on http://localhost:8000
-pnpm --filter @sszvis/docs run dev
+# Start the docs server on http://localhost:8000 (builds dependencies first)
+pnpm run dev
 
 # Rebuild the library on change
 pnpm --filter sszvis run build:watch
@@ -69,10 +74,8 @@ directory any more.
 # Unit tests (Vitest in browser mode)
 pnpm run test:unit
 
-# Visual regression: build first, then serve the docs and screenshot every example
-pnpm run build
-pnpm --filter @sszvis/docs run serve   # in one shell
-pnpm run test:snapshot                 # in another
+# Visual regression: builds, starts the docs server, screenshots every example
+pnpm run test:snapshot
 ```
 
 ## Deploying
@@ -80,9 +83,13 @@ pnpm run test:snapshot                 # in another
 Create a new version and push it, it will then be automatically deployed to NPM using GitHub Actions.
 
 ```sh
-pnpm --filter sszvis version minor
+pnpm --filter sszvis exec npm --no-git-tag-version version minor
+git tag v$(node -p "require('./packages/sszvis/package.json').version")
 git push --follow-tags
 ```
+
+Never run `pnpm version` at the repository root — see the Releasing section in
+`AGENTS.md` for the full sequence and why.
 
 ## License
 

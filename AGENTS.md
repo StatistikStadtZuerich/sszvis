@@ -7,27 +7,40 @@ Authoritative instructions for coding agents working on SSZVIS, the D3-based dat
 This is a pnpm + Turborepo monorepo. Root commands fan out across workspaces; use
 `--filter` to target one.
 
-| Task                | Command                                                     |
-| ------------------- | ----------------------------------------------------------- |
-| Install             | `pnpm install`                                              |
-| Test (all)          | `pnpm test`                                                 |
-| Test (unit only)    | `pnpm run test:unit`                                        |
-| Test (one file)     | `pnpm --filter sszvis exec vitest run test/color.test.ts`   |
-| Test (watch)        | `pnpm --filter sszvis run test:watch`                       |
-| Visual regression   | `pnpm run test:snapshot` (needs the docs server, see below) |
-| Type check          | `pnpm run type-check` (tsc over `src/` **and** `test/`)     |
-| Lint                | `pnpm run lint` (oxlint)                                    |
-| Format              | `pnpm run format` (oxfmt)                                   |
-| Lint + format check | `pnpm run check`                                            |
-| Autofix             | `pnpm run lint:fix && pnpm run format`                      |
-| Docs server         | `pnpm --filter @sszvis/docs run dev` (port 8000)            |
-| Full build          | `pnpm run build`                                            |
-| Rebuild topo data   | `pnpm run build:topo`                                       |
-| Search              | `rg "pattern"` — always ripgrep, never grep/find            |
+| Task                | Command                                                           |
+| ------------------- | ----------------------------------------------------------------- |
+| Install             | `pnpm install && pnpm --filter sszvis exec playwright install`    |
+| Test (all)          | `pnpm test`                                                       |
+| Test (unit only)    | `pnpm run test:unit`                                              |
+| Test (one file)     | `pnpm --filter sszvis exec vitest run test/component/bar.test.ts` |
+| Test (in a browser) | `pnpm --filter sszvis exec vitest --browser.headless=false`       |
+| Test (watch)        | `pnpm --filter sszvis run test:watch`                             |
+| Visual regression   | `pnpm run test:snapshot` (starts the docs server itself)          |
+| Type check          | `pnpm run type-check` (tsc over `src/` **and** `test/`)           |
+| Lint                | `pnpm run lint` (oxlint)                                          |
+| Format              | `pnpm run format` (oxfmt)                                         |
+| Lint + format check | `pnpm run check`                                                  |
+| Autofix             | `pnpm run lint:fix && pnpm run format`                            |
+| Docs server         | `pnpm run dev` (port 8000)                                        |
+| Library watch       | `pnpm --filter sszvis run build:watch`                            |
+| Full build          | `pnpm run build`                                                  |
+| Rebuild topo data   | `pnpm run build:topo`                                             |
+| Consumer regression | `pnpm run regression` (needs `.reference/d3charts-website`)       |
+| Search              | `rg "pattern"` — always ripgrep, never grep/find                  |
 
 CI runs `check`, `type-check`, `test:unit`, and the snapshot suite; all four must pass.
-Publishing re-runs the first three (not snapshots) before `pnpm publish` from
-`packages/sszvis`.
+The publish workflow re-runs the first three (not snapshots) before publishing from
+`packages/sszvis`. Nothing re-runs them on a local publish except
+`prepublishOnly`, which builds but does not test.
+
+Test paths passed to `vitest` are relative to `packages/sszvis`, not the repo root.
+Unit tests run in a real browser (Vitest browser mode, Playwright/Chromium), so
+`playwright install` is required once after cloning. There is no test-helper module —
+tests import from `src/` directly.
+
+Only `correctness` lint rules fail the build. `suspicious` and `perf` rules are
+advisory and there is a standing backlog of ~34 warnings (mostly `no-shadow`), so
+check that a warning is _yours_ before acting on it.
 
 Dev environment is Nix + direnv (`nix develop`); pnpm is the package manager.
 
@@ -38,6 +51,8 @@ apps/
   docs/            # 11ty documentation site (@sszvis/docs)
     docs/          # eleventy input: guides, _includes, static, one dir per chart type
     dist/          # eleventy output, also what gh-pages deploys
+apps/
+  project-specimen/  # @sszvis/project-specimen - Catalog widget the docs homepage needs
 packages/
   sszvis/          # the published library
     src/           # 100% TypeScript
@@ -61,6 +76,43 @@ committed files.
 
 Do not add a second `addPassthroughCopy` with a source path eleventy has already
 seen — it is silently dropped. Use a glob to distinguish the sources.
+
+`docs/index.html` needs `ProjectSpecimen.js` from `@sszvis/project-specimen`; without
+it Catalog throws and the entire index — the nav and every `README.md` page — renders
+blank while every chart page still works. The snapshot suite globs one directory deep
+and does **not** cover `index.html`, so check the homepage by hand after touching the
+docs build.
+
+## Adding a docs example
+
+1. Create `apps/docs/docs/<chart-type>/<name>.html` plus `<name>.js`, copying an
+   existing pair. The layouts live in `apps/docs/docs/_includes/layouts/`: `basic`,
+   `external-config`, `map-basic`, `map-external-config`.
+2. `{% printFileContents "<name>.js" %}` must name your own js file.
+3. Register the page in the hand-maintained `pages:` array in
+   `apps/docs/docs/index.html`, or it is reachable only by direct URL.
+4. **Restart the dev server.** Eleventy's watcher does not re-glob for new
+   templates: it reports a rebuild and keeps serving 404 for the new page.
+5. Every `.html` under `apps/docs/docs/` is a template — an incomplete one aborts the
+   whole docs build with `Wrote 0 files`.
+
+## Releasing
+
+Only `packages/sszvis` is published. Never run `pnpm version` at the repo root: it
+writes a fabricated version into the private root manifest and creates a tag that
+matches the publish trigger. The root has a `version` script that refuses, as a guard.
+
+1. Update `apps/docs/docs/CHANGELOG.md` with the user-facing changes.
+2. Bump the library: `pnpm --filter sszvis exec npm --no-git-tag-version version minor`
+3. Commit, then tag from the repo root:
+   `git tag v$(node -p "require('./packages/sszvis/package.json').version")`
+4. `git push --follow-tags`. The `v*` tag triggers `.github/workflows/npm-publish.yml`,
+   which checks, type-checks, unit-tests, builds, asserts the tag matches the package
+   version, and publishes with `npm publish --provenance`.
+5. Confirm at <https://www.npmjs.com/package/sszvis>, including the provenance badge.
+
+Publishing uses npm OIDC trusted publishing — no `NPM_TOKEN`. `pnpm publish` cannot do
+the OIDC exchange and would silently drop provenance, so the workflow uses `npm`.
 
 The snapshot suite serves `apps/docs/dist` on port 8000 and screenshots every
 example, so it needs `pnpm run build` and a running docs server first.
@@ -90,11 +142,10 @@ src/
 ├── maps/         High-level map components (choropleth)
 ├── svgUtils/     Crisp lines, text wrapping, defs elements
 └── viewport/     Resize handling
-test/     Vitest (browser mode, Chromium) + Playwright snapshots
-docs/     11ty documentation site with live examples
-build/    Compiled output (JS + .d.ts)
-geodata/  GeoJSON/TopoJSON for Swiss administrative regions
 ```
+
+(Paths above are relative to `packages/sszvis/`. For the repository layout see
+"Layout" above.)
 
 ## Architecture
 
@@ -121,7 +172,7 @@ Note: the Biome rules that enforced `.js` import extensions, `import type`, `T[]
 ### Module shape
 
 - Chart modules (`component/`, `annotation/`, `legend/`, `control/`, `map/renderer/`, `maps/`) **default-export their factory**. Utility modules (`fn`, `color`, `format`, `scale`, `crisp`, `bounds`, …) use **named exports only**. Never mix the two in one file.
-- Default exports **should be named**, so stack traces and symbol search work: `export default function bar<T = unknown>(): BarComponent<T>` rather than `export default function <T = unknown>()`. A handful of factories are still anonymous, carried over wholesale by the port — `rg 'export default function *\(' src` lists them. Name them as you touch them; do not add new anonymous ones.
+- Default exports **should be named**, so stack traces and symbol search work: `export default function bar<T = unknown>(): BarComponent<T>` rather than `export default function <T = unknown>()`. A handful of factories are still anonymous, carried over wholesale by the port — `rg 'export default function *\(' packages/sszvis/src` lists them. Name them as you touch them; do not add new anonymous ones.
 - Top-level functions are `function` declarations. `const x = () => …` is for local callbacks and short combinators.
 - The `d3-*.ts` prefix is reserved for the three d3 plugin modules.
 - Import d3 from the `"d3"` barrel, never from `d3-*` submodules — the peer dependency is `d3` as a whole.
@@ -158,9 +209,9 @@ export default function dot<T = unknown>(): DotComponent<T> {
 
 ### Escape hatches
 
-- `$IntentionalAny` (in `types.ts`) is the only sanctioned `any`. Use it solely where a type genuinely cannot be expressed — d3 internals, variadic combinators, the untyped component core — and always with a comment saying which. `rg '\$IntentionalAny' src` lists every hatch; keep the list short and defensible. Lint-ignore comments are similarly rare — `rg 'oxlint-disable' src` should stay a short, individually justified list.
+- `$IntentionalAny` (in `types.ts`) is the only sanctioned `any`. Use it solely where a type genuinely cannot be expressed — d3 internals, variadic combinators, the untyped component core — and always with a comment saying which. `rg '\$IntentionalAny' packages/sszvis/src` lists every hatch; keep the list short and defensible. Lint-ignore comments are similarly rare — `rg 'oxlint-disable' packages/sszvis/src` should stay a short, individually justified list.
 - Prefer `unknown` and narrow.
-- **`as unknown as X` is a smell, not a tool.** In this codebase it has almost always meant a declaration was lying rather than a type being inexpressible — fix the signature first. The one case that genuinely needs care: d3's `Selection` is invariant in all four type parameters, so no single type — not `BaseType`, not `any` in the datum slot, not a union — accepts every selection. A function taking "any selection" must be **generic over d3's four parameters**; see `textWrap`, `ensureDefsElement`, `createSvgLayer`. `rg 'as unknown as' src` should stay near-empty.
+- **`as unknown as X` is a smell, not a tool.** In this codebase it has almost always meant a declaration was lying rather than a type being inexpressible — fix the signature first. The one case that genuinely needs care: d3's `Selection` is invariant in all four type parameters, so no single type — not `BaseType`, not `any` in the datum slot, not a union — accepts every selection. A function taking "any selection" must be **generic over d3's four parameters**; see `textWrap`, `ensureDefsElement`, `createSvgLayer`. `rg 'as unknown as' packages/sszvis/src` should stay near-empty.
 - No `@ts-ignore`. `@ts-expect-error` with a one-line reason if truly stuck.
 
 ### Documentation
