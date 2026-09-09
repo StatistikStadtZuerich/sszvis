@@ -34,7 +34,8 @@
   },
   "files": [
     "src",
-    "build"
+    "build",
+    "README.md"
   ],
   "peerDependencies": {
     "d3": ">=7.9.0"
@@ -73,11 +74,12 @@
     "build": "pnpm run clean && pnpm run build:ts && pnpm run build:lib",
     "build:ts": "tsc",
     "build:lib": "rollup -c --bundleConfigAsCjs",
-    "build:watch": "pnpm run build:ts -- --watch & pnpm run build:lib -- --watch",
+    "build:watch": "tsc --watch & rollup -c --bundleConfigAsCjs --watch",
     "type-check": "tsc --noEmit && tsc -p tsconfig.test.json",
     "test": "vitest run",
-    "test:unit": "vitest run",
     "test:watch": "vitest",
-    "test:snapshot": "rm -rf test/snapshot/__results__ && playwright test"
+    "test:snapshot": "rm -rf test/snapshot/__results__ && playwright test",
+    "dev": "pnpm run build:watch",
+    "prepublishOnly": "pnpm run build"
   }
 }

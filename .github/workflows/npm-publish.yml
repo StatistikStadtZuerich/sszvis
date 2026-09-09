@@ -22,8 +22,14 @@ jobs:
       - run: pnpm run test:unit
       - run: pnpm run build
 
-      - name: Publish sszvis
-        run: pnpm publish --access public --no-git-checks
+      # `npm publish`, not `pnpm publish`: npm implements OIDC trusted publishing,
+      # so this needs no NPM_TOKEN and keeps the provenance attestation. pnpm
+      # cannot do the OIDC exchange and would silently drop provenance.
+      - name: Verify the tag matches the package version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: test "v$(node -p "require('./package.json').version")" = "${{ github.ref_name }}"
         working-directory: packages/sszvis
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish sszvis
+        run: npm publish --access public --provenance
+        working-directory: packages/sszvis

@@ -1,16 +1,35 @@
 {
-  "branches": [{ "name": "master" }],
+  "branches": [
+    {
+      "name": "master"
+    }
+  ],
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
       {
         "preset": "angular",
         "releaseRules": [
-          { "type": "breaking", "release": "major" },
-          { "type": "feat", "release": "minor" },
-          { "type": "fix", "release": "patch" },
-          { "type": "hotfix", "release": "patch" },
-          { "type": "perf", "release": "patch" }
+          {
+            "type": "breaking",
+            "release": "major"
+          },
+          {
+            "type": "feat",
+            "release": "minor"
+          },
+          {
+            "type": "fix",
+            "release": "patch"
+          },
+          {
+            "type": "hotfix",
+            "release": "patch"
+          },
+          {
+            "type": "perf",
+            "release": "patch"
+          }
         ],
         "parserOpts": {
           "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
@@ -21,7 +40,7 @@
     [
       "@semantic-release/changelog",
       {
-        "changelogFile": "CHANGELOG.md"
+        "changelogFile": "apps/docs/docs/CHANGELOG.md"
       }
     ]
   ]
