@@ -250,7 +250,7 @@ A map of Zürich's agglomeration.
             "template": "template.html"
         },
         "data.csv": "map-standard/data/agglomeration_2012.csv",
-        "agglomeration-zurich.json": "dist/topo/agglomeration-zurich.json",
+        "agglomeration-zurich.json": "/topo/agglomeration-zurich.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
@@ -273,7 +273,7 @@ A map of Switzerland.
             "template": "template.html"
         },
         "data.csv": "map-standard/data/M_swiss_fake.csv",
-        "switzerland.json": "dist/topo/switzerland.json",
+        "switzerland.json": "/topo/switzerland.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
