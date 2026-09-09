@@ -1,6 +1,8 @@
 {
-  "name": "catalog-project-specimen",
+  "name": "@sszvis/project-specimen",
   "version": "1.0.0",
+  "private": true,
+  "description": "Catalog project specimen used by the documentation homepage",
   "license": "BSD-3-Clause",
   "devDependencies": {
     "@babel/core": "^7.10.5",
@@ -8,13 +10,15 @@
     "@babel/preset-react": "^7.10.4",
     "babel-loader": "^8.1.0",
     "jszip": "^3.5.0",
+    "prop-types": "^15.8.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
   "scripts": {
-    "start": "npm install && webpack --watch",
-    "build": "npm install && webpack"
+    "clean": "rm -rf dist",
+    "build": "webpack",
+    "dev": "webpack --watch"
   }
 }

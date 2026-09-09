@@ -49,7 +49,7 @@ var saveAs =
           false,
           false,
           0,
-          null
+          null,
         );
         node.dispatchEvent(event);
       },
@@ -208,10 +208,10 @@ var saveAs =
                           };
                           filesaver.readyState = filesaver.WRITING;
                         }),
-                        fs_error
+                        fs_error,
                       );
                     }),
-                    fs_error
+                    fs_error,
                   );
                 };
                 dir.getFile(
@@ -228,13 +228,13 @@ var saveAs =
                     } else {
                       fs_error();
                     }
-                  })
+                  }),
                 );
               }),
-              fs_error
+              fs_error,
             );
           }),
-          fs_error
+          fs_error,
         );
       },
       FS_proto = FileSaver.prototype,
@@ -263,7 +263,7 @@ var saveAs =
   })(
     (typeof self !== "undefined" && self) ||
       (typeof window !== "undefined" && window) ||
-      this.content
+      this.content,
   );
 // `self` is undefined in Firefox for Android content script context
 // while `this` is nsIContentFrameMessageManager

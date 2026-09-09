@@ -29,6 +29,15 @@ module.exports = function (eleventyConfig) {
     "../../packages/geodata/dist/topo/*.json": "topo",
   });
 
+  /**
+   * The Catalog homepage (docs/index.html) requires ProjectSpecimen.js; without
+   * it Catalog.render throws and the whole index - nav and every README page -
+   * fails to render. Built by @sszvis/project-specimen.
+   */
+  eleventyConfig.addPassthroughCopy({
+    "../project-specimen/dist/ProjectSpecimen.js": "ProjectSpecimen.js",
+  });
+
   eleventyConfig.addPassthroughCopy("docs/_headers");
   eleventyConfig.addPassthroughCopy("docs/index.html");
   eleventyConfig.addPassthroughCopy("docs/template.html");
