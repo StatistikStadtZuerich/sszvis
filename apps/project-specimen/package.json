@@ -19,6 +19,6 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build": "webpack",
-    "dev": "webpack --watch"
+    "build:watch": "webpack --watch"
   }
 }

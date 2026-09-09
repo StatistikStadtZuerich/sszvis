@@ -74,7 +74,7 @@
     "build": "pnpm run clean && pnpm run build:ts && pnpm run build:lib",
     "build:ts": "tsc",
     "build:lib": "rollup -c --bundleConfigAsCjs",
-    "build:watch": "tsc --watch & rollup -c --bundleConfigAsCjs --watch",
+    "build:watch": "trap 'kill 0' EXIT; tsc --watch & rollup -c --bundleConfigAsCjs --watch & wait",
     "type-check": "tsc --noEmit && tsc -p tsconfig.test.json",
     "test": "vitest run",
     "test:watch": "vitest",

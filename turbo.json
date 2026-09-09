@@ -37,7 +37,8 @@
       "dependsOn": ["^build"],
       "persistent": true,
       "cache": false,
-      "interruptible": true
+      "interruptible": true,
+      "env": ["PORT"]
     },
     "build:watch": {
       "persistent": true,
