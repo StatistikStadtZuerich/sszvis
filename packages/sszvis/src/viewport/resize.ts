@@ -77,7 +77,7 @@ export interface Viewport {
   on<Name extends string>(
     this: Viewport,
     name: Name extends "resize" ? never : Name,
-    cb: ViewportListener
+    cb: ViewportListener,
   ): Viewport;
   off(this: Viewport, name: string, cb?: ViewportListener): Viewport;
   trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport;
@@ -97,7 +97,7 @@ if (globalThis.window !== undefined) {
     "resize",
     throttle(() => {
       viewport.trigger("resize");
-    }, 500)
+    }, 500),
   );
 }
 
@@ -106,7 +106,7 @@ function on(this: Viewport, name: string, cb: ViewportListener): Viewport {
   // left to fail inside `trigger` one resize event later, far from the call that caused it.
   if (typeof cb !== "function") {
     throw new TypeError(
-      `[sszvis.viewport] The listener for "${name}" must be a function, got ${typeof cb}.`
+      `[sszvis.viewport] The listener for "${name}" must be a function, got ${typeof cb}.`,
     );
   }
   if (!callbacks[name]) {
@@ -129,6 +129,7 @@ function trigger(this: Viewport, name: string, ...evtArgs: unknown[]): Viewport 
     // A copy, so that a listener which registers or releases listeners cannot change the
     // list being iterated. Each call is isolated: one failing chart must not silence the
     // charts after it, nor let the error escape into the throttled window handler.
+    // oxlint-disable-next-line unicorn/no-useless-spread -- the copy is required: a handler may register or remove callbacks while we iterate.
     for (const fn of [...callbacks[name]]) {
       try {
         Reflect.apply(fn, null, evtArgs);

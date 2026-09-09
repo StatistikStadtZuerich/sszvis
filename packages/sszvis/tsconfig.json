@@ -1,0 +1,20 @@
+{
+  "extends": "@repo/config-typescript/base.json",
+  "compilerOptions": {
+    "outDir": "./build",
+    "rootDir": "./src",
+    "target": "es2024",
+    "lib": ["es2024", "DOM", "DOM.Iterable"],
+    "moduleResolution": "node",
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": false,
+    "preserveConstEnums": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "build", "dist", "test"]
+}

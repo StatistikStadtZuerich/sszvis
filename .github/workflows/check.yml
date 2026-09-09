@@ -22,7 +22,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run Check
-        run: npm run check
+        run: pnpm run check
 
   verify-types:
     name: "Types"
@@ -35,7 +35,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Verify Types
-        run: npm run type-check
+        run: pnpm run type-check
 
   unit-test:
     needs:
@@ -53,10 +53,10 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Install Playwright
-        run: npx playwright install --with-deps
+        run: pnpm --filter sszvis exec playwright install --with-deps
 
       - name: Run Component Tests
-        run: npm run test:unit
+        run: pnpm run test:unit
 
   snapshot-test:
     needs:
@@ -67,7 +67,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI: true
-      NODE_OPTIONS: --openssl-legacy-provider
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -76,13 +75,13 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Install Playwright
-        run: npx playwright install --with-deps
+        run: pnpm --filter sszvis exec playwright install --with-deps
 
-      - name: Build Docs
-        run: npm run build
+      - name: Build library and docs
+        run: pnpm run build
 
-      - name: Serve docs and run tests
+      - name: Serve docs and run snapshot tests
         run: |
-          npx concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
-            "npm run start" \
-            "npx wait-on http://localhost:8000 && npm run test:snapshot"
+          pnpm exec concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
+            "pnpm --filter @sszvis/docs run serve" \
+            "pnpm exec wait-on http://localhost:8000 && pnpm --filter sszvis run test:snapshot"

@@ -16,20 +16,28 @@ To run the development shell:
 nix develop
 ```
 
-This library is bundled using [Rollup](https://rollupjs.org/). To start developing, install dependencies using npm first.
+This repository is a [pnpm](https://pnpm.io/) + [Turborepo](https://turborepo.com/) monorepo:
+
+```txt
+apps/docs          # 11ty documentation site (@sszvis/docs)
+packages/sszvis    # the published library, bundled with Rollup
+geodata            # Swiss geographic source data
+scripts            # topo processing and the visual-regression harness
+contrib            # example projects and experiments
+```
 
 ```sh
-# Install dependencies first
-npm install
+# Install dependencies for every workspace
+pnpm install
 
-# Build the library (if necessary use export `NODE_OPTIONS=--openssl-legacy-provider`)
-npm run build
+# Build the library and the docs site (turbo builds the library first)
+pnpm run build
 
-# Start library build in watch mode (this only rebuilds library scripts, not things like topojson)
-npm run build:watch
+# Start the docs server on http://localhost:8000
+pnpm --filter @sszvis/docs run dev
 
-# Start Catalog documentation server
-npm start
+# Rebuild the library on change
+pnpm --filter sszvis run build:watch
 ```
 
 ### Building
@@ -37,30 +45,33 @@ npm start
 sszvis builds are automated. You don't have to run build tasks for publishing but you may need them for developing the library:
 
 ```sh
-# Build everything necessary for publishing (if necessary use export `NODE_OPTIONS=--openssl-legacy-provider`)
-npm run build
+# Build every workspace
+pnpm run build
 
-# Build the library
-npm run build:lib
+# Build only the library
+pnpm --filter sszvis run build
 
-# Build topojson files
-npm run build:topo
+# Build only the docs site
+pnpm --filter @sszvis/docs run build
 
-# Build documentation
-npm run build:docs
+# Refresh the topojson files from the open-data portal
+pnpm run build:topo
 ```
+
+The library writes to `packages/sszvis/build` and the docs site to `apps/docs/dist`.
+The docs site copies `sszvis.js` in from the library build, so the two no longer share
+an output directory.
 
 ### Testing
 
 ```sh
-# Start the server from which the screenshots should be taken
-npm start
+# Unit tests (Vitest in browser mode)
+pnpm run test:unit
 
-# Run all tests
-npm test
-
-# Or run individual tests
-npm run test:snapshot
+# Visual regression: build first, then serve the docs and screenshot every example
+pnpm run build
+pnpm --filter @sszvis/docs run serve   # in one shell
+pnpm run test:snapshot                 # in another
 ```
 
 ## Deploying
@@ -68,7 +79,7 @@ npm run test:snapshot
 Create a new version and push it, it will then be automatically deployed to NPM using GitHub Actions.
 
 ```sh
-npm version minor
+pnpm --filter sszvis version minor
 git push --follow-tags
 ```
 

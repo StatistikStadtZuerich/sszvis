@@ -1,106 +1,50 @@
 {
-  "name": "sszvis",
-  "version": "3.5.0",
-  "description": "Statistik Stadt Zürich Visualization Library",
-  "keywords": [
-    "d3",
-    "visualization",
-    "data visualization"
-  ],
-  "homepage": "https://statistikstadtzuerich.github.io/sszvis/",
+  "name": "sszvis-monorepo",
+  "private": true,
+  "description": "Monorepo for the Statistik Stadt Zürich Visualization Library",
   "repository": {
     "type": "git",
     "url": "https://github.com/StatistikStadtZuerich/sszvis.git"
   },
   "license": "BSD-3-Clause",
-  "peerDependencies": {
-    "d3": ">=7.9.0"
-  },
-  "dependencies": {
-    "immer": "^10.1.1",
-    "nano-throttle": "^1.0.3"
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=22"
   },
   "devDependencies": {
-    "@11ty/eleventy": "^3.1.2",
-    "@babel/core": "^7.28.4",
-    "@babel/plugin-transform-modules-commonjs": "^7.27.1",
-    "@babel/preset-env": "^7.28.3",
-    "@biomejs/biome": "2.2.4",
-    "@playwright/test": "^1.55.0",
-    "@rollup/plugin-babel": "^6.0.4",
-    "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-replace": "^6.0.2",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^12.1.4",
-    "@semantic-release/changelog": "^6.0.3",
-    "@types/d3": "^7.4.3",
-    "@types/node": "^24.5.1",
-    "@vitest/browser": "^3.2.4",
-    "d3": "^7.9.0",
+    "@effect/tsgo": "latest",
+    "@semantic-release/changelog": "^7.0.0",
+    "concurrently": "^9.1.0",
     "d3-dsv": "^3.0.1",
     "glob": "^11.0.3",
-    "happy-dom": "^20.0.11",
     "ndjson-cli": "^0.3.1",
-    "playwright": "^1.55.0",
-    "prettier": "^3.6.2",
-    "rollup": "^4.50.2",
-    "rollup-plugin-dts": "^6.2.3",
+    "oxfmt": "latest",
+    "oxlint": "latest",
+    "semantic-release": "^25.0.9",
     "topojson-client": "^3.1.0",
     "topojson-server": "^3.0.1",
     "topojson-simplify": "^3.0.3",
-    "tslib": "^2.8.1",
+    "turbo": "^2.5.8",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
-  },
-  "files": [
-    "src",
-    "build"
-  ],
-  "main": "build/sszvis.js",
-  "module": "build/index.js",
-  "types": "build/index.d.ts",
-  "jsnext:main": "build/index.js",
-  "unpkg": "build/sszvis.js",
-  "jsdelivr": "build/sszvis.js",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./build/index.d.ts",
-        "default": "./build/index.js"
-      },
-      "require": {
-        "types": "./build/sszvis.d.ts",
-        "default": "./build/sszvis.js"
-      }
-    }
+    "wait-on": "^8.0.1"
   },
   "scripts": {
-    "start": "npx @11ty/eleventy --serve --port 8000",
-    "clean": "rm -rf build && mkdir -p build",
-    "build": "npm run clean && npm run build:ts && npm run build:lib && npm run build:topo && npm run build:docs && npm run build:contrib",
-    "build:ts": "tsc",
-    "build:lib": "rollup -c --bundleConfigAsCjs",
+    "build": "turbo run build",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:unit": "turbo run test --filter=sszvis",
+    "test:snapshot": "turbo run test:snapshot --filter=sszvis",
+    "type-check": "turbo run type-check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "check": "pnpm run lint && pnpm run format:check",
     "build:topo": "scripts/topo.sh",
-    "build:docs": "npx @11ty/eleventy",
-    "build:contrib": "cd contrib/ProjectSpecimen && npm run build && cd -",
-    "build:watch": "mkdir -p build && npm run build:topo && npm run build:ts -- --watch & npm run build:lib -- --watch & npx @11ty/eleventy --watch & cd contrib/ProjectSpecimen && NODE_OPTIONS='--openssl-legacy-provider' npm run start && cd -",
-    "generate:changelogs": "npx semantic-release",
-    "test": "vitest run ",
-    "test:ci": "npm run lint && npm run type-check && npm run check",
-    "test:unit": "vitest run --exclude **/snapshot.test.js",
-    "test:snapshot": "rm -rf test/snapshot/__results__ && npx playwright test",
-    "test:watch": "vitest",
-    "prepublishOnly": "npm run test:ci && npm run build",
-    "type-check": "tsc --noEmit && tsc -p tsconfig.test.json",
-    "format": "npx biome format --write .",
-    "lint": "npx biome lint .",
-    "lint:fix": "npx biome lint --write .",
-    "check": "npx biome check . --error-on-warnings",
-    "check:fix": "npx biome check --write .",
-    "postversion": "npx echo-cli Don't forget to push the new version's tag with \"git push --follow-tags\".",
     "regression": "node scripts/visual-regression/server.mjs",
     "regression:crawl": "node scripts/visual-regression/crawl.mjs",
-    "regression:export": "node scripts/visual-regression/export.mjs"
+    "regression:export": "node scripts/visual-regression/export.mjs",
+    "generate:changelogs": "semantic-release"
   }
 }

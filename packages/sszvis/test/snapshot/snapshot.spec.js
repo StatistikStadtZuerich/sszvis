@@ -4,7 +4,10 @@ import { globSync } from "glob";
 // Must exceed the library's longest transition
 const RENDER_DELAY = 700;
 
-const files = globSync("../../build/[^_]*/*.html", { cwd: __dirname });
+// The docs site is built by the `@sszvis/docs` app; turbo runs its build first.
+const DOCS_DIST = "../../../../apps/docs/dist";
+
+const files = globSync(`${DOCS_DIST}/[^_]*/*.html`, { cwd: __dirname });
 
 for (const url of files.map(filepathToUrl)) {
   test(url, async ({ page }) => {
@@ -39,7 +42,7 @@ for (const url of files.map(filepathToUrl)) {
 // -----------------------------------------------------------------------------
 
 function filepathToUrl(path) {
-  return path.replace(/(.*\/build)/, "http://localhost:8000");
+  return path.replace(/^.*apps\/docs\/dist/, "http://localhost:8000");
 }
 
 function urlToIdentifier(url) {

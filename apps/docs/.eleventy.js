@@ -3,6 +3,18 @@ const babel = require("@babel/core");
 const prettier = require("prettier");
 
 module.exports = function (eleventyConfig) {
+  /**
+   * The library bundle is built by the `sszvis` package and copied in here, so
+   * the docs output directory is no longer shared with the library build.
+   * Turborepo guarantees `sszvis#build` has run first.
+   */
+  eleventyConfig.addPassthroughCopy({
+    "../../packages/sszvis/build/sszvis.js": "sszvis.js",
+    "../../packages/sszvis/build/sszvis.js.map": "sszvis.js.map",
+    "../../packages/sszvis/build/sszvis.min.js": "sszvis.min.js",
+    "../../packages/sszvis/build/sszvis.min.js.map": "sszvis.min.js.map",
+  });
+
   eleventyConfig.addPassthroughCopy("docs/_headers");
   eleventyConfig.addPassthroughCopy("docs/index.html");
   eleventyConfig.addPassthroughCopy("docs/template.html");
@@ -27,11 +39,7 @@ module.exports = function (eleventyConfig) {
    * exported using "modules.export = …" and prints it verbatim.
    */
   eleventyConfig.addShortcode("printFileContents", function (relativePath) {
-    const path = PATH.join(
-      __dirname,
-      PATH.dirname(this.page.inputPath),
-      relativePath
-    );
+    const path = PATH.join(__dirname, PATH.dirname(this.page.inputPath), relativePath);
     const { code } = babel.transformFileSync(path, {
       sourceType: "script",
       generatorOpts: {
@@ -44,15 +52,13 @@ module.exports = function (eleventyConfig) {
   });
 
   eleventyConfig.addTransform("prettify", (content, outputPath) =>
-    outputPath.endsWith(".html")
-      ? prettier.format(content, { parser: "html" })
-      : content
+    outputPath.endsWith(".html") ? prettier.format(content, { parser: "html" }) : content,
   );
 
   return {
     dir: {
       input: "docs",
-      output: "build",
+      output: "dist",
     },
     htmlTemplateEngine: "njk",
     templateFormats: ["html", "njk", "11ty.js"],
