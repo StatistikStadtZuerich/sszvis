@@ -49,20 +49,8 @@
 }
 
 :root {
-  --stzh-font: var(
-    --stzh-font-family-regular,
-    "Helvetica Neue",
-    Helvetica,
-    Arial,
-    sans-serif
-  );
-  --stzh-font-bold: var(
-    --stzh-font-family-bold,
-    "Helvetica Neue",
-    Helvetica,
-    Arial,
-    sans-serif
-  );
+  --stzh-font: var(--stzh-font-family-regular, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  --stzh-font-bold: var(--stzh-font-family-bold, "Helvetica Neue", Helvetica, Arial, sans-serif);
 }
 
 /**
