@@ -1,39 +1,34 @@
 {
-  description = "Development environment from IXT";
+  description = "sszvis development environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem
-      (system:
+  outputs = { self, nixpkgs }:
+    let
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+      pkgsFor = system: import nixpkgs { inherit system; };
+    in
+    {
+      devShells = forAllSystems (system:
         let
-          pkgs = import nixpkgs {
-            inherit system;
-          };
-
-        in {
-          devShells.default = pkgs.mkShell {
-            buildInputs = [
-              pkgs.nodejs_24
+          pkgs = pkgsFor system;
+        in
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              nodejs_24
+              git
+              pnpm
             ];
 
             shellHook = ''
-              clear >$(tty)
-              echo ""
-              echo "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
-              echo "┃                                               ┃"
-              echo "┃  Welcome to the IXT development environment!  ┃"
-              echo "┃                                               ┃"
-              echo "┃  Build Docs:   'npm run build'                ┃"
-              echo "┃  Server:       'npm start'                    ┃"
-              echo "┃                                               ┃"
-              echo "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
-              echo ""
+              echo "Node $(node --version)"
             '';
           };
         }
       );
+    };
 }
