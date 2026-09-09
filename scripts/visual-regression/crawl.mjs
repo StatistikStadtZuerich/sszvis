@@ -2,7 +2,7 @@
  * Headless sweep over every comparable chart, loading each one against the
  * baseline release and against this working copy and diffing the outcome.
  *
- * Requires `npm run regression` to be running (or pass BASE=http://host:port).
+ * Requires `pnpm run regression` to be running (or pass BASE=http://host:port).
  * Writes a JSON report plus screenshots of every flagged chart.
  *
  * Charts are responsive, and a fault often lives in one breakpoint only - the

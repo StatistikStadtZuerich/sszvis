@@ -7,7 +7,7 @@
  * absolute `http://sszsttprd/...` library URLs, so the HTML is rewritten on the
  * fly - nothing in `.reference` is modified.
  *
- * Usage: npm run regression  (then open http://localhost:8100)
+ * Usage: pnpm run regression  (then open http://localhost:8100)
  */
 
 import { createServer } from "node:http";

@@ -8,8 +8,8 @@ than a bug report from downstream.
 ## Run it locally
 
 ```bash
-npm run build:ts && npm run build:lib   # refresh build/ (the candidate side)
-npm run regression                      # http://localhost:8100
+pnpm --filter sszvis run build   # refresh packages/sszvis/build/ (the candidate side)
+pnpm run regression                      # http://localhost:8100
 ```
 
 The comparison page is a long scroll: one row per chart, baseline on the left,
@@ -32,7 +32,7 @@ flagged-only. `fit to content` sizes each iframe to its rendered height.
 ## Batch report
 
 ```bash
-npm run regression:crawl -- --concurrency 8 --shots
+pnpm run regression:crawl --concurrency 8 --shots
 ```
 
 Loads every comparable chart on both sides in headless Chromium and writes
@@ -62,8 +62,8 @@ Flags: `--limit N`, `--concurrency N`, `--widths 400,900`, `--settle MS`, `--sho
 ## Sharing it
 
 ```bash
-npm run regression:export              # all 711 charts   -> 60MB folder, 12MB zip
-npm run regression:export -- --flagged # only what a sweep flagged -> 23MB, 3.8MB zip
+pnpm run regression:export              # all 711 charts   -> 60MB folder, 12MB zip
+pnpm run regression:export --flagged # only what a sweep flagged -> 23MB, 3.8MB zip
 ```
 
 Writes a self-contained folder plus a zip under `__export__/`, with a `START-HERE.md`
@@ -96,7 +96,7 @@ The server rewrites those to `/lib/<side>/<version>/…` as it serves the HTML a
 resolves them per side. Nothing in `.reference` is modified.
 
 - **baseline** — every file from the pinned `library_script/<version>/` folder.
-- **candidate** — `build/sszvis.js` and `docs/sszvis.css` from this repo;
+- **candidate** — `packages/sszvis/build/sszvis.js` and `apps/docs/docs/sszvis.css` from this repo;
   `d3.js` and `topojson.js` still come from the pinned folder, so sszvis is the
   only variable.
 
