@@ -5,6 +5,7 @@
   "description": "11ty documentation site with live examples for sszvis",
   "license": "BSD-3-Clause",
   "dependencies": {
+    "@sszvis/geodata": "workspace:*",
     "sszvis": "workspace:*"
   },
   "devDependencies": {

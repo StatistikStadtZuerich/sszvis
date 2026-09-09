@@ -21,8 +21,8 @@ This repository is a [pnpm](https://pnpm.io/) + [Turborepo](https://turborepo.co
 ```txt
 apps/docs          # 11ty documentation site (@sszvis/docs)
 packages/sszvis    # the published library, bundled with Rollup
-geodata            # Swiss geographic source data
-scripts            # topo processing and the visual-regression harness
+packages/geodata   # Swiss geographic source data + the TopoJSON pipeline
+scripts            # the visual-regression harness
 contrib            # example projects and experiments
 ```
 
@@ -54,13 +54,14 @@ pnpm --filter sszvis run build
 # Build only the docs site
 pnpm --filter @sszvis/docs run build
 
-# Refresh the topojson files from the open-data portal
+# Rebuild the topojson bundles from the geo sources
 pnpm run build:topo
 ```
 
-The library writes to `packages/sszvis/build` and the docs site to `apps/docs/dist`.
-The docs site copies `sszvis.js` in from the library build, so the two no longer share
-an output directory.
+The library writes to `packages/sszvis/build`, the TopoJSON bundles to
+`packages/geodata/dist`, and the docs site to `apps/docs/dist`. The docs site copies
+`sszvis.js` and the topo bundles in from those builds, so nothing shares an output
+directory any more.
 
 ### Testing
 

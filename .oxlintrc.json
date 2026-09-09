@@ -15,7 +15,7 @@
     "**/build/**",
     "**/dist/**",
     "**/coverage/**",
-    "**/geodata/**",
+    "packages/geodata/src/**",
     "**/.reference/**",
     "**/contrib/**",
     "apps/docs/docs/**",

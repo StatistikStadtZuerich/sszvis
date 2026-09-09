@@ -15,6 +15,20 @@ module.exports = function (eleventyConfig) {
     "../../packages/sszvis/build/sszvis.min.js.map": "sszvis.min.js.map",
   });
 
+  /**
+   * The TopoJSON bundles are built by @sszvis/geodata; they used to be committed
+   * under docs/static/topo. Served at both paths: the examples load
+   * ../static/topo/… and the guides document /topo/… as the public URL.
+   */
+  eleventyConfig.addPassthroughCopy({
+    "../../packages/geodata/dist/topo": "static/topo",
+  });
+  // A glob, not the directory again: eleventy keys passthroughs by source path and
+  // would silently drop a second entry with the same source.
+  eleventyConfig.addPassthroughCopy({
+    "../../packages/geodata/dist/topo/*.json": "topo",
+  });
+
   eleventyConfig.addPassthroughCopy("docs/_headers");
   eleventyConfig.addPassthroughCopy("docs/index.html");
   eleventyConfig.addPassthroughCopy("docs/template.html");
