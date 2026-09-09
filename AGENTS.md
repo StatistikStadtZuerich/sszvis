@@ -22,6 +22,7 @@ This is a pnpm + Turborepo monorepo. Root commands fan out across workspaces; us
 | Autofix             | `pnpm run lint:fix && pnpm run format`                      |
 | Docs server         | `pnpm --filter @sszvis/docs run dev` (port 8000)            |
 | Full build          | `pnpm run build`                                            |
+| Rebuild topo data   | `pnpm run build:topo`                                       |
 | Search              | `rg "pattern"` — always ripgrep, never grep/find            |
 
 CI runs `check`, `type-check`, `test:unit`, and the snapshot suite; all four must pass.
@@ -42,15 +43,24 @@ packages/
     src/           # 100% TypeScript
     test/          # unit tests + test/snapshot (Playwright)
     build/         # rollup + tsc output, what npm publishes
+  geodata/         # @sszvis/geodata — Swiss geo source data + the topo pipeline
+    src/           #   GeoJSON/CSV sources
+    topo.sh        #   pipeline
+    dist/topo/     #   the four TopoJSON bundles
   config-typescript/ # shared tsconfig base (@repo/config-typescript)
-geodata/           # Swiss geographic source data
-scripts/           # topo processing and the visual-regression harness
+scripts/           # the visual-regression harness
 contrib/           # example projects and experiments
 ```
 
-The library build and the docs build write to **separate** directories
-(`packages/sszvis/build` and `apps/docs/dist`). The docs site pulls `sszvis.js` in
-through an eleventy passthrough copy; turbo guarantees `sszvis#build` runs first.
+Every build writes to its own directory — `packages/sszvis/build`,
+`packages/geodata/dist`, `apps/docs/dist`. The docs site pulls `sszvis.js` and the
+TopoJSON bundles in through eleventy passthrough copies; turbo runs those two builds
+first. The topo bundles are served at **both** `/topo/…` (the URL the guides
+document) and `/static/topo/…` (what the examples load); they are build output, not
+committed files.
+
+Do not add a second `addPassthroughCopy` with a source path eleventy has already
+seen — it is silently dropped. Use a glob to distinguish the sources.
 
 The snapshot suite serves `apps/docs/dist` on port 8000 and screenshots every
 example, so it needs `pnpm run build` and a running docs server first.

@@ -17,7 +17,7 @@
     "**/generated/**",
     "**/.cache/**",
     "**/.turbo/**",
-    "**/geodata/**",
+    "packages/geodata/src/**",
     "**/contrib/**",
     "**/.reference/**",
     "apps/docs/docs/**",

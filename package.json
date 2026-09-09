@@ -15,15 +15,10 @@
     "@effect/tsgo": "latest",
     "@semantic-release/changelog": "^7.0.0",
     "concurrently": "^9.1.0",
-    "d3-dsv": "^3.0.1",
-    "glob": "^11.0.3",
-    "ndjson-cli": "^0.3.1",
     "oxfmt": "latest",
     "oxlint": "latest",
+    "playwright": "^1.55.0",
     "semantic-release": "^25.0.9",
-    "topojson-client": "^3.1.0",
-    "topojson-server": "^3.0.1",
-    "topojson-simplify": "^3.0.3",
     "turbo": "^2.5.8",
     "typescript": "^5.9.2",
     "wait-on": "^8.0.1"
@@ -41,10 +36,10 @@
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "check": "pnpm run lint && pnpm run format:check",
-    "build:topo": "scripts/topo.sh",
     "regression": "node scripts/visual-regression/server.mjs",
     "regression:crawl": "node scripts/visual-regression/crawl.mjs",
     "regression:export": "node scripts/visual-regression/export.mjs",
-    "generate:changelogs": "semantic-release"
+    "generate:changelogs": "semantic-release",
+    "build:topo": "turbo run build --filter=@sszvis/geodata"
   }
 }

@@ -1,0 +1,17 @@
+{
+  "name": "@sszvis/geodata",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Swiss geographic source data for sszvis and the TopoJSON pipeline that bundles it",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "d3-dsv": "^3.0.1",
+    "ndjson-cli": "^0.3.1",
+    "topojson-server": "^3.0.1",
+    "topojson-simplify": "^3.0.3"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "./topo.sh"
+  }
+}
