@@ -3,6 +3,12 @@ on:
   push:
     branches:
       - master
+
+# A second push while a deploy is in flight would race it to the gh-pages branch.
+concurrency:
+  group: gh-pages
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -15,7 +21,8 @@ jobs:
         uses: ./.github/actions/setup
       - name: Build
         run: pnpm run build
-      # To preserve folders with underscores, we need to add a ".nojekyll" file
+      # Belt and braces: nothing in the output is underscore-prefixed except the
+      # Cloudflare _headers file, but this stops Jekyll touching the 11ty output.
       - name: Disable Jekyll
         run: touch apps/docs/dist/.nojekyll
       - name: Deploy

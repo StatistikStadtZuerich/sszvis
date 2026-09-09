@@ -150,7 +150,7 @@ An optional formatter function for the end labels. Usually should be sszvis.form
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        "switzerland.json": "/topo/switzerland.json",
+        "switzerland.json": "topo/switzerland.json",
 
     },
     "sourceView": ["index.html", "data.csv"]
