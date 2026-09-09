@@ -29,7 +29,7 @@ interface Bounds {
 
 export default function <T = unknown>(
   defaultVal: TooltipOrientation,
-  bounds: Bounds
+  bounds: Bounds,
 ): (d: TooltipData<T>) => TooltipOrientation {
   const lo = Math.min((bounds.innerWidth * 1) / 4, 100);
   const hi = Math.max((bounds.innerWidth * 3) / 4, bounds.innerWidth - 100);

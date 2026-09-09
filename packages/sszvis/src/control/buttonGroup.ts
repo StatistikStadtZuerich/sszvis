@@ -98,8 +98,9 @@ type ButtonGroupProps<T> = {
   ariaLabel: string | undefined;
 };
 
-export interface ButtonGroupComponent<T extends string | number = string | number>
-  extends ComponentBuilder<ButtonGroupComponent<T>> {
+export interface ButtonGroupComponent<
+  T extends string | number = string | number,
+> extends ComponentBuilder<ButtonGroupComponent<T>> {
   values(): T[];
   values(values: T[] | undefined): ButtonGroupComponent<T>;
   current(): T;

@@ -117,8 +117,10 @@ type NestedStackedBarsProps<T, X extends string | number> = {
  * Setters take `<U = T>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
  */
-export interface NestedStackedBarsVerticalComponent<T = unknown, X extends string | number = string>
-  extends ComponentBuilder<NestedStackedBarsVerticalComponent<T, X>> {
+export interface NestedStackedBarsVerticalComponent<
+  T = unknown,
+  X extends string | number = string,
+> extends ComponentBuilder<NestedStackedBarsVerticalComponent<T, X>> {
   offset(): (datum: NestedStack<T, X>) => number | undefined;
   offset<U = NestedStack<T, X>>(accessor: (datum: U) => number | undefined): this;
   xScale(): ScaleBand<X>;
@@ -133,7 +135,7 @@ export interface NestedStackedBarsVerticalComponent<T = unknown, X extends strin
     | undefined
     | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
   stroke<U = StackedBarSlice<T, X>>(
-    value: string | null | undefined | ((slice: U, index: number) => string | undefined)
+    value: string | null | undefined | ((slice: U, index: number) => string | undefined),
   ): this;
   tooltip(): (selection: AnySelection) => void;
   tooltip(tooltip: (selection: AnySelection) => void): this;
@@ -172,7 +174,7 @@ function baseline(yScale: (value: number) => number): number {
   if (zero >= low && zero <= high) return zero;
   const clamped = zero < low ? low : high;
   logger.warn(
-    `[nestedStackedBarsVertical] the y-scale baseline ${zero} falls outside its range [${low}, ${high}]; placing the x-axis at ${clamped}`
+    `[nestedStackedBarsVertical] the y-scale baseline ${zero} falls outside its range [${low}, ${high}]; placing the x-axis at ${clamped}`,
   );
   return clamped;
 }
@@ -216,13 +218,13 @@ export default function nestedStackedBarsVertical<
       const nestedGroups = group.join("g").attr("data-nested-stacked-bars", (d, i) => {
         if (d.length === 0) {
           logger.warn(
-            `[nestedStackedBarsVertical] the nested group at index ${i} has no stacks; rendering it empty`
+            `[nestedStackedBarsVertical] the nested group at index ${i} has no stacks; rendering it empty`,
           );
         }
         const key = nestKey(d);
         if (key === undefined) {
           logger.warn(
-            `[nestedStackedBarsVertical] the nested group at index ${i} has no key; labelling it by index`
+            `[nestedStackedBarsVertical] the nested group at index ${i} has no key; labelling it by index`,
           );
           return i;
         }
@@ -233,7 +235,7 @@ export default function nestedStackedBarsVertical<
         const x = offset(d);
         if (!Number.isFinite(x)) {
           logger.warn(
-            `[nestedStackedBarsVertical] the offset accessor returned ${x}; positioning the group at 0`
+            `[nestedStackedBarsVertical] the offset accessor returned ${x}; positioning the group at 0`,
           );
         }
         return translateString(Number.isFinite(x) ? (x as number) : 0, 0);

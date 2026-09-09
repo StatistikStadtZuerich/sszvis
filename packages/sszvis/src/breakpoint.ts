@@ -62,7 +62,7 @@ export type PartialBreakpoint = BreakpointWithMeasurement | BreakpointWithInline
  */
 export function breakpointFind(
   breakpoints: Breakpoint[],
-  partialMeasurement: Partial<Measurement>
+  partialMeasurement: Partial<Measurement>,
 ): Breakpoint | undefined {
   const measurement = parseMeasurement(partialMeasurement);
   return fn.find((bp: Breakpoint) => breakpointTest(bp, measurement), breakpoints);
@@ -81,7 +81,7 @@ export function breakpointFind(
  */
 export function breakpointFindByName(
   breakpoints: Breakpoint[],
-  name: string
+  name: string,
 ): Breakpoint | undefined {
   const eqName = (bp: Breakpoint): boolean => bp.name === name;
   return fn.find(eqName, breakpoints);
@@ -98,7 +98,7 @@ export function breakpointFindByName(
  */
 export function breakpointTest(
   breakpoint: Breakpoint,
-  partialMeasurement: Partial<Measurement>
+  partialMeasurement: Partial<Measurement>,
 ): boolean {
   const bpm = breakpoint.measurement;
   const measurement = parseMeasurement(partialMeasurement);
@@ -117,7 +117,7 @@ export function breakpointTest(
  */
 export function breakpointMatch(
   breakpoints: Breakpoint[],
-  partialMeasurement: Partial<Measurement>
+  partialMeasurement: Partial<Measurement>,
 ): Breakpoint[] {
   const measurement = parseMeasurement(partialMeasurement);
   return breakpoints.filter((bp) => breakpointTest(bp, measurement));
@@ -173,9 +173,9 @@ export const breakpointLap = makeTest("lap");
  * @param {{width?: number, screenHeight?: number}} partialMeasurement
  * @returns Measurement
  */
-function parseMeasurement(
-  partialMeasurement: { [K in keyof Measurement]?: Measurement[K] | undefined }
-): Measurement {
+function parseMeasurement(partialMeasurement: {
+  [K in keyof Measurement]?: Measurement[K] | undefined;
+}): Measurement {
   const widthOrInf = fn.propOr("width", Infinity);
   const screenHeightOrInf = fn.propOr("screenHeight", Infinity);
   return {

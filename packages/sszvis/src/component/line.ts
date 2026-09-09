@@ -108,8 +108,9 @@ type LineProps<P, L> = {
   transition: boolean;
 };
 
-export interface LineComponent<P = unknown, L = unknown>
-  extends ComponentBuilder<LineComponent<P, L>> {
+export interface LineComponent<P = unknown, L = unknown> extends ComponentBuilder<
+  LineComponent<P, L>
+> {
   // x and y have no default: required() runs at render time, so the getter is undefined
   // until the caller sets one. The type says so rather than letting an unset property be
   // called without narrowing.

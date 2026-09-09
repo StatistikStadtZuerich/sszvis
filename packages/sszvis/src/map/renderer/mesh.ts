@@ -102,7 +102,7 @@ const DEFAULT_STROKE_WIDTH = 1.25;
  */
 function withDefault<R extends string | number>(
   value: MeshValue<R>,
-  fallback: R
+  fallback: R,
 ): ValueFn<BaseType, GeoPermissibleObjects, R> {
   return function (this: BaseType, datum, index, groups) {
     const resolved = fn
@@ -159,12 +159,12 @@ export default function mapRendererMesh(): MapRendererMeshComponent {
       const { geoJson, mapPath } = props;
       if (geoJson === undefined) {
         throw new TypeError(
-          "map/renderer/mesh: geoJson is required, since it carries the border geometry to render"
+          "map/renderer/mesh: geoJson is required, since it carries the border geometry to render",
         );
       }
       if (mapPath === undefined) {
         throw new TypeError(
-          "map/renderer/mesh: mapPath is required, since it turns the geoJson into path data"
+          "map/renderer/mesh: mapPath is required, since it turns the geoJson into path data",
         );
       }
 

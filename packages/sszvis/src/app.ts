@@ -167,7 +167,7 @@ export const app = <
       // would then never stop, which is what this cap is for.
       if (cascadedRenders >= MAX_CASCADED_RENDERS) {
         logger.warn(
-          `[sszvis.app] Stopped after ${MAX_CASCADED_RENDERS} renders scheduled from inside "render". Dispatch from render only on a condition that eventually becomes false.`
+          `[sszvis.app] Stopped after ${MAX_CASCADED_RENDERS} renders scheduled from inside "render". Dispatch from render only on a condition that eventually becomes false.`,
         );
         return;
       }
@@ -217,7 +217,7 @@ export const app = <
       // failure instead of thrown: one mistyped dispatch should not take the chart down.
       reportError(
         "Dispatch failed",
-        new Error(`Action "${action}" is not defined, add it to "actions".`)
+        new Error(`Action "${action}" is not defined, add it to "actions".`),
       );
       return;
     }

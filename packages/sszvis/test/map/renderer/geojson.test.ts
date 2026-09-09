@@ -83,13 +83,13 @@ describe("map/renderer/geojson", () => {
   const render = (
     data: Datum[],
     configure: (
-      c: ReturnType<typeof mapRendererGeoJson>
+      c: ReturnType<typeof mapRendererGeoJson>,
     ) => ReturnType<typeof mapRendererGeoJson> = (c) => c,
-    key?: string
+    key?: string,
   ) => {
     const collection = geoJson();
     const component = configure(
-      mapRendererGeoJson().geoJson(collection).mapPath(mapPathOf(collection))
+      mapRendererGeoJson().geoJson(collection).mapPath(mapPathOf(collection)),
     );
     return group(key).datum(data).call(component).node() as SVGGElement;
   };
@@ -139,7 +139,7 @@ describe("map/renderer/geojson", () => {
 
     test("matches a single datum to its feature", () => {
       const node = render([{ geoId: "a", value: 1 }], (c) =>
-        c.fill("#ff0000").transitionColor(false)
+        c.fill("#ff0000").transitionColor(false),
       );
       expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), missingFill(node)]);
     });
@@ -156,7 +156,7 @@ describe("map/renderer/geojson", () => {
     // NOTE: an undefined datum still throws, because the key accessor indexes it directly.
     test("throws when a datum is undefined", () => {
       expect(() => render([undefined as unknown as Datum, { geoId: "b", value: 2 }])).toThrow(
-        TypeError
+        TypeError,
       );
     });
 
@@ -165,7 +165,7 @@ describe("map/renderer/geojson", () => {
     test("never matches a datum keyed by a symbol", () => {
       const symbolKeyed = { [Symbol("s")]: 1, value: 5 } as unknown as Datum;
       const node = render([symbolKeyed], (c) =>
-        c.transitionColor(false).dataKeyName("missing").fill("#ff0000")
+        c.transitionColor(false).dataKeyName("missing").fill("#ff0000"),
       );
       expect(attrs(node, "fill")).toEqual([
         missingFill(node),
@@ -184,7 +184,7 @@ describe("map/renderer/geojson", () => {
             .geoJson(collection)
             .mapPath(mapPathOf(collection))
             .fill("#ff0000")
-            .transitionColor(false)
+            .transitionColor(false),
         )
         .node() as SVGGElement;
       expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), "#ff0000"]);
@@ -207,7 +207,7 @@ describe("map/renderer/geojson", () => {
             .dataKeyName("code")
             .geoJsonKeyName("mapId")
             .fill("#ff0000")
-            .transitionColor(false)
+            .transitionColor(false),
         )
         .node() as SVGGElement;
       expect(attrs(node, "fill")).toEqual([missingFill(node), "#ff0000", "#ff0000"]);
@@ -233,7 +233,7 @@ describe("map/renderer/geojson", () => {
             .geoJson(collection)
             .mapPath(mapPathOf(collection))
             .fill("#ff0000")
-            .transitionColor(false)
+            .transitionColor(false),
         )
         .node() as SVGGElement;
       expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), "#ff0000"]);
@@ -266,7 +266,7 @@ describe("map/renderer/geojson", () => {
             .geoJson(collection)
             .mapPath(mapPathOf(collection))
             .transitionColor(false)
-            .fill((d: Datum) => `rgb(${d.value},0,0)`)
+            .fill((d: Datum) => `rgb(${d.value},0,0)`),
         )
         .node() as SVGGElement;
       expect(attrs(node, "fill")).toEqual([
@@ -292,7 +292,7 @@ describe("map/renderer/geojson", () => {
             .fill((d: unknown) => {
               seen.push(typeof d);
               return "#ff0000";
-            })
+            }),
         )
         .node() as SVGGElement;
       expect(seen).not.toContain("function");
@@ -325,7 +325,7 @@ describe("map/renderer/geojson", () => {
           .datum(fullData)
           // @ts-expect-error - geoJson is required, and unguarded
           .call(mapRendererGeoJson().geoJson(undefined).mapPath(mapPathOf(geoJson())))
-          .node()
+          .node(),
       ).toThrow(TypeError);
     });
 
@@ -343,7 +343,7 @@ describe("map/renderer/geojson", () => {
               .geoJson(collection)
               .mapPath(mapPath)
               .transitionColor(false)
-              .fill(fill)
+              .fill(fill),
           )
           .node() as SVGGElement;
       renderWith("#ff0000");
@@ -392,7 +392,7 @@ describe("map/renderer/geojson", () => {
         c
           .fill("#ff0000")
           .transitionColor(false)
-          .defined((d: Datum) => d.value !== 2)
+          .defined((d: Datum) => d.value !== 2),
       );
       expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), missingFill(node)]);
     });
@@ -407,7 +407,7 @@ describe("map/renderer/geojson", () => {
     // NOTE: defined goes through fn.functor, so a constant false textures the whole overlay.
     test("textures every element for a constant false defined", () => {
       const node = render(partialData, (c) =>
-        c.fill("#ff0000").transitionColor(false).defined(false)
+        c.fill("#ff0000").transitionColor(false).defined(false),
       );
       expect(attrs(node, "fill")).toEqual([
         missingFill(node),
@@ -436,7 +436,7 @@ describe("map/renderer/geojson", () => {
 
     test("takes the stroke from an accessor called with the datum", () => {
       const node = render(partialData, (c) =>
-        c.transitionColor(false).stroke((d: Datum) => `rgb(${d.value},0,0)`)
+        c.transitionColor(false).stroke((d: Datum) => `rgb(${d.value},0,0)`),
       );
       expect(attrs(node, "stroke").slice(0, 2)).toEqual(["rgb(1,0,0)", "rgb(2,0,0)"]);
     });
@@ -447,7 +447,7 @@ describe("map/renderer/geojson", () => {
         c.transitionColor(false).strokeWidth((d: Datum) => {
           seen.push(d);
           return d.value;
-        })
+        }),
       );
       expect(seen[0]).toEqual({ geoId: "a", value: 1 });
       expect(attrs(node, "stroke-width")).toEqual(["1", "2", "3"]);
@@ -459,7 +459,7 @@ describe("map/renderer/geojson", () => {
         c.transitionColor(false).strokeWidth((d: Datum) => {
           seen.push(d);
           return d.value;
-        })
+        }),
       );
       expect(seen).toEqual([
         { geoId: "a", value: 1 },
@@ -474,7 +474,7 @@ describe("map/renderer/geojson", () => {
         c
           .transitionColor(false)
           .defined((d: Datum) => d.geoId !== "b")
-          .strokeWidth((d: Datum) => d.value)
+          .strokeWidth((d: Datum) => d.value),
       );
       expect(elements(node)[1].hasAttribute("stroke-width")).toBe(false);
     });
@@ -499,7 +499,7 @@ describe("map/renderer/geojson", () => {
       const out = vi.fn();
       const click = vi.fn();
       const node = render(fullData, (c) =>
-        c.transitionColor(false).on("out", out).on("click", click)
+        c.transitionColor(false).on("out", out).on("click", click),
       );
       elements(node)[1].dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
       elements(node)[1].dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -538,7 +538,7 @@ describe("map/renderer/geojson", () => {
     test("applies the fill without a transition when disabled", () => {
       const node = render(fullData, (c) => c.transitionColor(false).fill("#ff0000"));
       expect(
-        (elements(node)[0] as Element & { __transition?: unknown }).__transition
+        (elements(node)[0] as Element & { __transition?: unknown }).__transition,
       ).toBeUndefined();
     });
 
@@ -551,7 +551,7 @@ describe("map/renderer/geojson", () => {
         .__transition;
       const scheduled = Object.values(schedules ?? {}).filter(
         (v): v is { duration: number; ease: (t: number) => number } =>
-          typeof v === "object" && v !== null && "duration" in v
+          typeof v === "object" && v !== null && "duration" in v,
       );
       expect(scheduled[0].duration).toBe(500);
       expect(scheduled[0].ease).toBe(easePolyOut);
@@ -574,7 +574,7 @@ describe("map/renderer/geojson", () => {
               .mapPath(mapPath)
               .transitionColor(transition)
               .defined(definedValue)
-              .fill("#ff0000")
+              .fill("#ff0000"),
           )
           .node() as SVGGElement;
 
@@ -601,7 +601,7 @@ describe("map/renderer/geojson", () => {
               .mapPath(mapPath)
               .transitionColor(transition)
               .defined(definedValue)
-              .fill("#00ff00")
+              .fill("#00ff00"),
           )
           .node() as SVGGElement;
 
@@ -734,7 +734,7 @@ describe("map/renderer/geojson", () => {
       const [x, y] = projection([8.5, 47.4]) as [number, number];
       expect(anchors(node)[0].getAttribute("transform")).toBe(`translate(${x},${y})`);
       expect(anchors(node)[0].getAttribute("transform")).not.toBe(
-        `translate(${(projection(geoCentroid(square("a"))) as [number, number]).join(",")})`
+        `translate(${(projection(geoCentroid(square("a"))) as [number, number]).join(",")})`,
       );
     });
   });

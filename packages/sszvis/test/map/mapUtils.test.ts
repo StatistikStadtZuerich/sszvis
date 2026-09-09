@@ -198,8 +198,8 @@ describe("map utils", () => {
       const clipping: PointProjection = () => null;
       expect(() => pixelsFromGeoDistance(clipping, [0, 0], 100_000)).toThrow(
         new TypeError(
-          "pixelsFromGeoDistance: the projection clipped away the bounds of the measured square"
-        )
+          "pixelsFromGeoDistance: the projection clipped away the bounds of the measured square",
+        ),
       );
     });
 
@@ -235,7 +235,7 @@ describe("map utils", () => {
     test("returns a positive size for a negative distance", () => {
       expect(pixelsFromGeoDistance(identity, [0, 0], -100_000)).toBeCloseTo(
         pixelsFromGeoDistance(identity, [0, 0], 100_000),
-        10
+        10,
       );
     });
   });
@@ -256,7 +256,7 @@ describe("map utils", () => {
           { id: "c", value: 3 },
         ],
         geoJson,
-        "id"
+        "id",
       );
       expect(merged).toHaveLength(3);
       expect(merged[0].geoJson).toBe(geoJson.features[0]);
@@ -277,7 +277,7 @@ describe("map utils", () => {
           { id: "a", value: 1 },
         ],
         geoJson,
-        "id"
+        "id",
       );
       expect(merged.map((d) => d.geoJson.id)).toEqual(["a", "b", "c"]);
     });
@@ -290,7 +290,7 @@ describe("map utils", () => {
           { id: "a", value: 2 },
         ],
         geoJson,
-        "id"
+        "id",
       );
       expect(merged[0].datum).toEqual({ id: "a", value: 2 });
     });
@@ -308,7 +308,7 @@ describe("map utils", () => {
       const merged = prepareMergedGeoData(
         [{ id: marker, value: 1 }],
         collection(square("a"), square("Symbol(a)")),
-        "id"
+        "id",
       );
       expect(merged.every((d) => d.datum === undefined)).toBe(true);
     });
@@ -331,7 +331,7 @@ describe("map utils", () => {
       const merged = prepareMergedGeoData(
         [{ id: "__proto__", value: 1 }],
         collection(square("__proto__"), square("value")),
-        "id"
+        "id",
       );
       expect(merged[0].datum).toEqual({ id: "__proto__", value: 1 });
       expect(merged[1].datum).toBeUndefined();
@@ -349,7 +349,7 @@ describe("map utils", () => {
     test("throws for a missing geojson, unlike a missing dataset", () => {
       expect(() =>
         // @ts-expect-error - deliberately exercising the unguarded geoJson path
-        prepareMergedGeoData([{ id: "a" }], undefined, "id")
+        prepareMergedGeoData([{ id: "a" }], undefined, "id"),
       ).toThrow();
     });
 
@@ -361,7 +361,7 @@ describe("map utils", () => {
       const merged = prepareMergedGeoData([{ id: "a" }], collection(square("constructor")), "id");
       expect(merged[0].datum).toBeUndefined();
       expect(
-        prepareMergedGeoData([{ id: "a" }], collection(square("toString")), "id")[0].datum
+        prepareMergedGeoData([{ id: "a" }], collection(square("toString")), "id")[0].datum,
       ).toBeUndefined();
     });
 

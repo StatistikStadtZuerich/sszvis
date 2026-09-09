@@ -121,8 +121,9 @@ type GeoJsonProps = {
 /** A handler as this component's own event API delivers it. */
 type GeoJsonEventHandler = (datum: unknown) => void;
 
-export interface MapRendererGeoJsonComponent<T = unknown>
-  extends ComponentBuilder<MapRendererGeoJsonComponent<T>> {
+export interface MapRendererGeoJsonComponent<T = unknown> extends ComponentBuilder<
+  MapRendererGeoJsonComponent<T>
+> {
   dataKeyName(): string;
   dataKeyName(value: string): MapRendererGeoJsonComponent<T>;
   geoJsonKeyName(): string;
@@ -236,7 +237,7 @@ export default function mapRendererGeoJson<
       geoElements
         .classed(
           "sszvis-map__geojsonelement--undefined",
-          (d) => !fn.defined(d.datum) || !props.defined(d.datum)
+          (d) => !fn.defined(d.datum) || !props.defined(d.datum),
         )
         .attr("d", (d) => props.mapPath(d.geoJson));
 

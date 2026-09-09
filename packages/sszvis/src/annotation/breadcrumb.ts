@@ -63,7 +63,7 @@ export interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<Bread
   /** Set the container to render breadcrumbs into */
   renderInto(): LayerSelection<Element, unknown>;
   renderInto<G extends Element, D, P extends BaseType, PD>(
-    selection: Selection<G, D, P, PD>
+    selection: Selection<G, D, P, PD>,
   ): BreadcrumbComponent<T>;
 
   /** Set the array of breadcrumb items */
@@ -104,7 +104,7 @@ export interface BreadcrumbComponent<T = unknown> extends ComponentBuilder<Bread
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 export function createBreadcrumbItems<T>(
-  node: HierarchyNode<NodeDatum<T>> | null
+  node: HierarchyNode<NodeDatum<T>> | null,
 ): BreadcrumbItem<T>[] {
   if (!node) return [];
 
@@ -191,13 +191,13 @@ export default function <T = unknown>(): BreadcrumbComponent<T> {
         .select("a")
         .text((d: BreadcrumbItem<T>) => props.label(d))
         .style("font-weight", (_d: BreadcrumbItem<T>, i: number) =>
-          i === allItems.length - 1 ? "bold" : "normal"
+          i === allItems.length - 1 ? "bold" : "normal",
         )
         .style("color", (_d: BreadcrumbItem<T>, i: number) =>
-          i === allItems.length - 1 ? "#333" : "#0073B3"
+          i === allItems.length - 1 ? "#333" : "#0073B3",
         )
         .style("cursor", (_d: BreadcrumbItem<T>, i: number) =>
-          i === allItems.length - 1 ? "default" : "pointer"
+          i === allItems.length - 1 ? "default" : "pointer",
         )
         .on("click", (event: Event, d: BreadcrumbItem<T>) => {
           const index = allItems.indexOf(d);
@@ -211,7 +211,7 @@ export default function <T = unknown>(): BreadcrumbComponent<T> {
       crumbsMerged
         .select(".sszvis-breadcrumb-separator")
         .style("display", (_d: BreadcrumbItem<T>, i: number) =>
-          i === allItems.length - 1 ? "none" : "inline"
+          i === allItems.length - 1 ? "none" : "inline",
         );
 
       // Exit: remove old breadcrumbs

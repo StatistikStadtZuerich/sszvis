@@ -78,13 +78,13 @@ const LABEL_PADDING = 40;
  */
 export function colorLegendLayout(
   { legendLabels, axisLabels = [], slant }: ColorLegendLayoutOptions,
-  container: MeasurableElement
+  container: MeasurableElement,
 ): ColorLegendLayout {
   // an omitted slant - null included, as the docs examples pass it - is horizontal
   const resolvedSlant = slant ?? "horizontal";
   if (!SLANTS.includes(resolvedSlant)) {
     throw new RangeError(
-      `colorLegendLayout: slant must be one of ${SLANTS.join(", ")}, got ${slant}`
+      `colorLegendLayout: slant must be one of ${SLANTS.join(", ")}, got ${slant}`,
     );
   }
 
@@ -92,7 +92,7 @@ export function colorLegendLayout(
   if (!measuredWidth) {
     logger.warn(
       "colorLegendLayout could not measure its container, and is laying the legend out as if it had no width:",
-      container
+      container,
     );
   }
   const containerWidth = measuredWidth ?? 0;
@@ -104,7 +104,7 @@ export function colorLegendLayout(
 
   if (legendLabels.length > scale.range().length) {
     logger.warn(
-      `colorLegendLayout: ${legendLabels.length} labels share the ${scale.range().length} colours of this scale, so some categories are drawn in the same colour`
+      `colorLegendLayout: ${legendLabels.length} labels share the ${scale.range().length} colours of this scale, so some categories are drawn in the same colour`,
     );
   }
 
@@ -146,7 +146,7 @@ export function colorLegendLayout(
  */
 export function colorLegendDimensions(
   labels: string[],
-  containerWidth: number
+  containerWidth: number,
 ): ColorLegendDimensions {
   const labelCount = labels.length;
   // an empty legend has no labels to be as wide as

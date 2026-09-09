@@ -18,13 +18,13 @@ working copy on the right. Only rows near the viewport hold live iframes, so all
 
 Each pane reports `<n> svg · <n> marks · <n> err`, and the row gets a verdict:
 
-| verdict | meaning |
-| --- | --- |
-| `matches baseline` | same number of rendered SVGs, no new errors, and marks on the candidate wherever the baseline had them - mark counts may still differ |
-| `new errors in candidate` | the working copy threw where the baseline did not |
-| `render count differs` | one side rendered a chart, the other did not |
-| `candidate renders no marks` | the SVG and axes are there, the data marks are gone |
-| `nothing rendered on either side` | the page is broken independently of our change |
+| verdict                           | meaning                                                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `matches baseline`                | same number of rendered SVGs, no new errors, and marks on the candidate wherever the baseline had them - mark counts may still differ |
+| `new errors in candidate`         | the working copy threw where the baseline did not                                                                                     |
+| `render count differs`            | one side rendered a chart, the other did not                                                                                          |
+| `candidate renders no marks`      | the SVG and axes are there, the data marks are gone                                                                                   |
+| `nothing rendered on either side` | the page is broken independently of our change                                                                                        |
 
 Filters: free-text on chart id / folder / title, library version, and
 flagged-only. `fit to content` sizes each iframe to its rendered height.
@@ -47,15 +47,15 @@ appeared at some widths and not others. A chart's verdict is the worst of them.
 
 Verdicts separate our breakage from breakage that was already there:
 
-| verdict | |
-| --- | --- |
-| `new-errors` | the candidate raised errors the baseline did not |
-| `render-differs` | the sides disagree on how many SVGs were drawn |
-| `renders-empty` | the candidate drew the SVG but none of the marks the baseline drew |
-| `load-failed` | the page never loaded far enough to report |
-| `renders-nothing` | neither side drew anything |
-| `shared-errors` | both sides raised the same errors — predates the working copy |
-| `fixed` | the baseline raised errors the candidate does not |
+| verdict           |                                                                    |
+| ----------------- | ------------------------------------------------------------------ |
+| `new-errors`      | the candidate raised errors the baseline did not                   |
+| `render-differs`  | the sides disagree on how many SVGs were drawn                     |
+| `renders-empty`   | the candidate drew the SVG but none of the marks the baseline drew |
+| `load-failed`     | the page never loaded far enough to report                         |
+| `renders-nothing` | neither side drew anything                                         |
+| `shared-errors`   | both sides raised the same errors — predates the working copy      |
+| `fixed`           | the baseline raised errors the candidate does not                  |
 
 Flags: `--limit N`, `--concurrency N`, `--widths 400,900`, `--settle MS`, `--shots`.
 
@@ -125,12 +125,12 @@ case; the side-by-side can.
 
 `.reference` holds 1083 chart pages across four pinned library versions:
 
-| version | pages | compared |
-| --- | --- | --- |
-| 3.4.0 | 665 | yes |
-| 3.2.1 | 46 | yes |
-| 2.0.2 | 7 | no — d3 v4 |
-| 1.0.0 | 365 | no — d3 v3 |
+| version | pages | compared   |
+| ------- | ----- | ---------- |
+| 3.4.0   | 665   | yes        |
+| 3.2.1   | 46    | yes        |
+| 2.0.2   | 7     | no — d3 v4 |
+| 1.0.0   | 365   | no — d3 v3 |
 
 The 372 pages on 1.0.0/2.0.2 ship their own d3 v3/v4 and predate the current
 sszvis API, so running them against today's build proves nothing. They are still

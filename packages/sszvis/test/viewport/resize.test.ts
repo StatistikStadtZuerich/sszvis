@@ -155,7 +155,7 @@ describe("viewport/resize", () => {
       expect(error).toHaveBeenCalledTimes(1);
       expect(error).toHaveBeenCalledWith(
         expect.stringContaining('[sszvis.viewport] A "resize" listener threw'),
-        boom
+        boom,
       );
     });
 
@@ -178,7 +178,7 @@ describe("viewport/resize", () => {
       expect(() => listen("resize", undefined)).toThrow(TypeError);
       // @ts-expect-error - see above.
       expect(() => listen("resize", undefined)).toThrow(
-        '[sszvis.viewport] The listener for "resize" must be a function, got undefined.'
+        '[sszvis.viewport] The listener for "resize" must be a function, got undefined.',
       );
       listen("resize", later);
       viewport.trigger("resize");
@@ -281,7 +281,7 @@ describe("viewport/resize", () => {
       listen("resize", () => cb());
       viewport.off(
         "resize",
-        () => cb() // a different function object with the same body
+        () => cb(), // a different function object with the same body
       );
       viewport.trigger("resize");
       viewport.trigger("resize");

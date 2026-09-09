@@ -89,17 +89,17 @@ const memoizedSwissMapProjection = memoize(
     height: number,
     featureCollection: MapGeoObject,
     // Part of the signature only so that the memoize resolver below can read it.
-    _featureBoundsCacheKey: string
+    _featureBoundsCacheKey: string,
   ): GeoProjection => geoMercator().fitSize([width, height], featureCollection),
   // Memoize resolver
-  (width, height, _, featureBoundsCacheKey) => `${width},${height},${featureBoundsCacheKey}`
+  (width, height, _, featureBoundsCacheKey) => `${width},${height},${featureBoundsCacheKey}`,
 );
 
 export function swissMapProjection(
   width: number,
   height: number,
   featureCollection: MapGeoObject,
-  featureBoundsCacheKey?: string
+  featureBoundsCacheKey?: string,
 ): GeoProjection {
   // Without a key there is nothing that identifies the collection, so caching would hand a second
   // map the first map's fit. An uncached fitSize is always correct.
@@ -138,10 +138,10 @@ export function swissMapPath(
   width: number,
   height: number,
   featureCollection: MapGeoObject,
-  featureBoundsCacheKey?: string
+  featureBoundsCacheKey?: string,
 ): GeoPath {
   return geoPath().projection(
-    swissMapProjection(width, height, featureCollection, featureBoundsCacheKey)
+    swissMapProjection(width, height, featureCollection, featureBoundsCacheKey),
   );
 }
 
@@ -170,7 +170,7 @@ export function swissMapPath(
 export function pixelsFromGeoDistance(
   projection: PointProjection,
   centerPoint: GeoPoint,
-  meterDistance: number
+  meterDistance: number,
 ): number {
   // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
   // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
@@ -191,7 +191,7 @@ export function pixelsFromGeoDistance(
   const [lowerBound, upperBound] = bounds.map((point) => projection(point));
   if (lowerBound == null || upperBound == null) {
     throw new TypeError(
-      "pixelsFromGeoDistance: the projection clipped away the bounds of the measured square"
+      "pixelsFromGeoDistance: the projection clipped away the bounds of the measured square",
     );
   }
   // Depending on the rotation of the map, the sides of the box are not always positive quantities
@@ -250,7 +250,7 @@ export interface MergedGeoDatum<Datum> {
 export function prepareMergedGeoData<Datum extends object>(
   dataset: readonly Datum[] | null | undefined,
   geoJson: ExtendedFeatureCollection,
-  keyName?: string
+  keyName?: string,
 ): MergedGeoDatum<Datum>[] {
   // Any falsy key name, the empty string included, falls back to the default.
   const key = keyName || GEO_KEY_DEFAULT;
@@ -349,7 +349,7 @@ function parseCenter(center: unknown, featureId: unknown): GeoPoint | undefined 
     logger.warn(
       `getGeoJsonCenter: ignoring the center property of feature ${String(featureId)}, whose ` +
         `type is ${center === null ? "null" : typeof center} rather than a ` +
-        '"longitude,latitude" string. Falling back to the computed centroid.'
+        '"longitude,latitude" string. Falling back to the computed centroid.',
     );
     return undefined;
   }
@@ -361,7 +361,7 @@ function parseCenter(center: unknown, featureId: unknown): GeoPoint | undefined 
   }
   logger.warn(
     `getGeoJsonCenter: ignoring the center property "${center}" of feature ${String(featureId)}, ` +
-      "which is not two finite numbers. Falling back to the computed centroid."
+      "which is not two finite numbers. Falling back to the computed centroid.",
   );
   return undefined;
 }
@@ -422,7 +422,7 @@ let missingPatternCount = 0;
  * See test/map/mapUtils.test.ts.
  */
 export function missingPatternId<G extends BaseType, D, P extends BaseType, PD>(
-  selection: Selection<G, D, P, PD>
+  selection: Selection<G, D, P, PD>,
 ): string {
   const assigned = selection.attr(MISSING_PATTERN_ID_ATTR);
   if (assigned) return assigned;

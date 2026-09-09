@@ -29,7 +29,7 @@ export type SunburstDataBuilder<T = unknown> = {
   layer: (keyFunc: (d: T) => string | null | undefined) => SunburstDataBuilder<T>;
   value: (accfn: (d: T) => number) => SunburstDataBuilder<T>;
   sort: (
-    sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number
+    sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number,
   ) => SunburstDataBuilder<T>;
 };
 
@@ -59,7 +59,7 @@ export const prepareData = <T = unknown>(): SunburstDataBuilder<T> => {
       function flatten(node: HierarchyNode<NodeDatum<T>>): SunburstNode<T>[] {
         return Array.prototype.concat.apply(
           [node],
-          (node.children || []).map((child) => flatten(child))
+          (node.children || []).map((child) => flatten(child)),
         );
       }
       return flatten(root).filter((d) => d.data._tag !== "root");
@@ -123,14 +123,14 @@ export const computeLayout = (numLayers: number, chartWidth: number): SunburstLa
   const targetCenterRadius = halfWidth / 3;
   const ringWidth = Math.max(
     MIN_RW,
-    Math.min(MAX_RW, (halfWidth - targetCenterRadius) / numLayers)
+    Math.min(MAX_RW, (halfWidth - targetCenterRadius) / numLayers),
   );
   // Once the ring width is floored, the rings may need more room than the target centre
   // leaves them. Give it to them, down to a centre of nothing.
   const centerRadius = Math.max(0, Math.min(targetCenterRadius, halfWidth - ringWidth * numLayers));
   if (ringWidth * numLayers > halfWidth) {
     logger.warn(
-      `sunburstLayout: ${numLayers} rings of the minimum ${MIN_RW}px do not fit a chart ${chartWidth}px wide, and will be drawn outside it`
+      `sunburstLayout: ${numLayers} rings of the minimum ${MIN_RW}px do not fit a chart ${chartWidth}px wide, and will be drawn outside it`,
     );
   }
 
@@ -156,5 +156,5 @@ export const computeLayout = (numLayers: number, chartWidth: number): SunburstLa
  * - An empty array gives [0, 0], which is a usable, if empty, scale domain.
  */
 export const getRadiusExtent = (
-  formattedData: { y0?: number | undefined; y1?: number | undefined }[]
+  formattedData: { y0?: number | undefined; y1?: number | undefined }[],
 ): [number, number] => [min(formattedData, (d) => d.y0) ?? 0, max(formattedData, (d) => d.y1) ?? 0];

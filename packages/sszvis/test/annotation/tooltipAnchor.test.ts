@@ -49,12 +49,12 @@ describe("annotation/tooltipAnchor", () => {
       tooltipAnchor<string>().position((_d, i) => {
         seen.push(i);
         return layout[i];
-      })
+      }),
     );
 
     expect(seen).toEqual([0, 1, 2]);
     expect(
-      [...svg.querySelectorAll("[data-tooltip-anchor]")].map((el) => el.getAttribute("transform"))
+      [...svg.querySelectorAll("[data-tooltip-anchor]")].map((el) => el.getAttribute("transform")),
     ).toEqual(["translate(5,6)", "translate(7,8)", "translate(9,10)"]);
   });
 

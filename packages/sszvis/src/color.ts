@@ -339,7 +339,7 @@ function decorateDivScale(scale: ScaleLinear<LabColor, LabColor>): ExtendedDiver
 }
 
 function interpolatedDivergentColorScale(
-  scale: ScaleLinear<LabColor, LabColor>
+  scale: ScaleLinear<LabColor, LabColor>,
 ): ScaleLinear<LabColor, LabColor> {
   const nativeDomain = scale.domain;
   if (!scale.range()) return scale;
@@ -349,7 +349,7 @@ function interpolatedDivergentColorScale(
   // Reflect.set writes it without having to restate the scale's type.
   const replaceDomain = function (
     this: ScaleLinear<LabColor, LabColor>,
-    dom?: number[]
+    dom?: number[],
   ): number[] | ScaleLinear<LabColor, LabColor> {
     // Only a two-value domain is expanded across the range's stops. Everything else - a
     // no-argument getter call above all - forwards to the scale's own domain verbatim, so
@@ -381,7 +381,7 @@ function decorateLinearScale(scale: ScaleLinear<LabColor, LabColor>): ExtendedLi
 }
 
 function interpolatedColorScale(
-  scale: ScaleLinear<LabColor, LabColor>
+  scale: ScaleLinear<LabColor, LabColor>,
 ): ScaleLinear<LabColor, LabColor> {
   const nativeDomain = scale.domain;
 
@@ -389,7 +389,7 @@ function interpolatedColorScale(
   // Reflect.set writes it without having to restate the scale's type.
   const replaceDomain = function (
     this: ScaleLinear<LabColor, LabColor>,
-    dom?: number[]
+    dom?: number[],
   ): number[] | ScaleLinear<LabColor, LabColor> {
     if (arguments.length === 1 && dom && dom.length === 2) {
       const threeDomain = [dom[0], mean(dom) || 0, dom[1]];

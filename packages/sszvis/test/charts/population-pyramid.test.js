@@ -54,7 +54,7 @@ describe("population-pyramid", () => {
           (acc, d) => ({ gender: gAcc(d), yValue: i + binWidth, xValue: xAcc(acc) + xAcc(d) }),
           {
             xValue: 0,
-          }
+          },
         );
         bins.push(binData);
       }
@@ -90,7 +90,7 @@ describe("population-pyramid", () => {
 
     for (const side of stackedData.sides) {
       expect(side.flatMap((d) => d.map((d) => d.side)).every((d) => d === side[0][0].side)).toBe(
-        true
+        true,
       );
       for (const series of side) {
         expect(series.map((d) => d.series).every((d) => d === series[0].series)).toBe(true);

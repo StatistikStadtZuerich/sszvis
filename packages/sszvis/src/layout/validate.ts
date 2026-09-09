@@ -18,7 +18,7 @@
 export function requireSize(layoutName: string, propName: string, value: number): void {
   if (!Number.isFinite(value) || value < 0) {
     throw new RangeError(
-      `${layoutName}: ${propName} must be a finite number of pixels of zero or more, got ${value}`
+      `${layoutName}: ${propName} must be a finite number of pixels of zero or more, got ${value}`,
     );
   }
 }
@@ -34,7 +34,7 @@ export function requireRatio(layoutName: string, propName: string, value: number
 export function requireCount(layoutName: string, propName: string, value: number): void {
   if (!Number.isInteger(value) || value < 0) {
     throw new RangeError(
-      `${layoutName}: ${propName} must be a whole number of zero or more, got ${value}`
+      `${layoutName}: ${propName} must be a whole number of zero or more, got ${value}`,
     );
   }
 }

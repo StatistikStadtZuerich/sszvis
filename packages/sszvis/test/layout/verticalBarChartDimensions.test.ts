@@ -86,7 +86,7 @@ describe("verticalBarChartDimensions", () => {
       const dim = dimensionsVerticalBarChart(10_000, 2);
       expect(dim.outerRatio).toBeCloseTo(
         (dim.totalWidth - dim.barGroupWidth) / 2 / (dim.barWidth + dim.padWidth),
-        9
+        9,
       );
     });
 

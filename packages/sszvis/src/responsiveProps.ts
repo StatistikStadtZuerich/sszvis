@@ -112,7 +112,7 @@ export function responsiveProps(): ResponsivePropsInstance {
           memo[key] = val;
           return memo;
         },
-        {} as Record<string, unknown>
+        {} as Record<string, unknown>,
       );
     }
 
@@ -128,7 +128,7 @@ export function responsiveProps(): ResponsivePropsInstance {
         logger.warn(
           "ResponsiveProps - invalid propSpec for " +
             propKey +
-            ". Make sure you define the '_' fallback and that all breakpoint names are valid."
+            ". Make sure you define the '_' fallback and that all breakpoint names are valid.",
         );
         return memo;
       }
@@ -190,7 +190,7 @@ export function responsiveProps(): ResponsivePropsInstance {
    */
   _responsiveProps.prop = <T>(
     propName: string,
-    propSpec: ResponsivePropValue<T>
+    propSpec: ResponsivePropValue<T>,
   ): ResponsivePropsInstance => {
     propsConfig[propName] = functorizeValues(propSpec);
     return _responsiveProps;

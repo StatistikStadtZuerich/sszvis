@@ -37,7 +37,7 @@ describe("component/treemap", () => {
         right: 20,
         bottom: 30,
         left: 40,
-      })
+      }),
     );
 
     // Sample hierarchical data
@@ -169,14 +169,14 @@ describe("component/treemap", () => {
 
       // The node with team=null should have key="Servers" (parent's key)
       const serverNullTeamNode = leafNodes.find(
-        (n) => n.data.team === null && n.data.division === "Servers"
+        (n) => n.data.team === null && n.data.division === "Servers",
       );
       expect(serverNullTeamNode).toBeDefined();
       expect(serverNullTeamNode?.key).toBe("Servers");
 
       // The node with both division=null and team=null should have key="Banking" (grandparent's key)
       const bankingNullDivisionNode = leafNodes.find(
-        (n) => n.data.division === null && n.data.subcategory === "Banking"
+        (n) => n.data.division === null && n.data.subcategory === "Banking",
       );
       expect(bankingNullDivisionNode).toBeDefined();
       expect(bankingNullDivisionNode?.key).toBe("Banking");
@@ -242,14 +242,14 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360) // Chart area width
             .containerHeight(250) // Chart area height
-            .transition(false)
+            .transition(false),
         );
       const rectangles = svg.selectAll(".sszvis-treemap-rect");
       expect(rectangles.empty()).toBe(false);
@@ -272,7 +272,7 @@ describe("component/treemap", () => {
               .colorScale(scale)
               .containerWidth(360)
               .containerHeight(250)
-              .transition(false)
+              .transition(false),
           );
         return svg
           .selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect")
@@ -291,14 +291,14 @@ describe("component/treemap", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
-            .transition(false)
+            .transition(false),
         );
       const rectangles = svg.selectAll(".sszvis-treemap-rect");
       expect(rectangles.size()).toBeGreaterThan(0);
@@ -317,7 +317,7 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -325,7 +325,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .showLabels(true)
-            .transition(false)
+            .transition(false),
         );
       expect(svg.selectAll(".sszvis-treemap-label").empty()).toBe(false);
     });
@@ -336,7 +336,7 @@ describe("component/treemap", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -344,7 +344,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .showLabels(false)
-            .transition(false)
+            .transition(false),
         );
       expect(svg.selectAll(".sszvis-treemap-label").empty()).toBe(true);
     });
@@ -355,7 +355,7 @@ describe("component/treemap", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -364,7 +364,7 @@ describe("component/treemap", () => {
             .containerHeight(250)
             .showLabels(true)
             .labelPosition("center")
-            .transition(false)
+            .transition(false),
         );
       const firstLabel = svg.selectAll<SVGTextElement, TestDatum>(".sszvis-treemap-label").node();
       if (firstLabel) {
@@ -382,14 +382,14 @@ describe("component/treemap", () => {
             .calculate([
               { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
               { category: "B", subcategory: "B1", value: 100, name: "Normal" },
-            ])
+            ]),
         )
         .call(
           treemap<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
-            .transition(false)
+            .transition(false),
         );
       svg
         .selectAll<SVGRectElement, TestDatum>(".sszvis-treemap-rect")
@@ -435,7 +435,7 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(treemapComponent);
       const first = svg.selectAll(".sszvis-treemap-rect").size();
@@ -457,7 +457,7 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -465,7 +465,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       // NOTE: selectAll, not select - d3's select propagates the group's datum onto
@@ -488,7 +488,7 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -496,7 +496,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
@@ -511,7 +511,7 @@ describe("component/treemap", () => {
           x1: expect.any(Number),
           y1: expect.any(Number),
           value: expect.any(Number),
-        })
+        }),
       );
     });
 
@@ -524,7 +524,7 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -532,7 +532,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
@@ -557,7 +557,7 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -565,7 +565,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const rectangles = svg.selectAll<SVGRectElement, TestDatum>(".sszvis-treemap-rect");
@@ -582,14 +582,14 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
-            .transition(false)
+            .transition(false),
         );
 
       const rectangles = svg.selectAll<SVGRectElement, TestDatum>(".sszvis-treemap-rect");
@@ -608,7 +608,7 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -616,7 +616,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
@@ -640,7 +640,7 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -648,7 +648,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
@@ -673,7 +673,7 @@ describe("component/treemap", () => {
           prepareHierarchyData<TestDatum>()
             .layer((d) => d.category)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -681,7 +681,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const rect = svg.selectAll<SVGRectElement, unknown>(".sszvis-treemap-rect").nodes()[0];
@@ -702,7 +702,7 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(data)
+            .calculate(data),
         )
         .call(
           treemap<TestDatum>()
@@ -710,7 +710,7 @@ describe("component/treemap", () => {
             .containerWidth(360)
             .containerHeight(250)
             .onClick(clickHandler)
-            .transition(false)
+            .transition(false),
         );
 
       const rectangles = svg.selectAll<SVGRectElement, TestDatum>(".sszvis-treemap-rect");
@@ -832,14 +832,14 @@ describe("component/treemap", () => {
             .layer((d) => d.category)
             .layer((d) => d.subcategory)
             .value((d) => d.value)
-            .calculate(rows)
+            .calculate(rows),
         )
         .call(
           treemap<TestDatum>()
             .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
-            .transition(false)
+            .transition(false),
         );
 
     test("should render one anchor per drawn rectangle, in the same order", () => {
@@ -849,7 +849,7 @@ describe("component/treemap", () => {
       expect(anchorNodes().length).toBe(rects.length);
 
       const rectData = rects.map((el) =>
-        select<SVGRectElement, TreemapLayout<TestDatum>>(el).datum()
+        select<SVGRectElement, TreemapLayout<TestDatum>>(el).datum(),
       );
       expect(anchorData().map(keyOf)).toEqual(rectData.map(keyOf));
     });

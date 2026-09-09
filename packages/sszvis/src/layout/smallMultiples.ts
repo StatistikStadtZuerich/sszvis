@@ -111,8 +111,9 @@ type SmallMultiplesProps<G> = {
   titleY: number;
 };
 
-export interface SmallMultiplesComponent<G extends SmallMultipleGroup = SmallMultipleGroup>
-  extends ComponentBuilder<SmallMultiplesComponent<G>> {
+export interface SmallMultiplesComponent<
+  G extends SmallMultipleGroup = SmallMultipleGroup,
+> extends ComponentBuilder<SmallMultiplesComponent<G>> {
   /** width, height, rows and cols are required; their getters report undefined until set. */
   width(): number | undefined;
   width(width: number): SmallMultiplesComponent<G>;
@@ -169,7 +170,7 @@ export default function <
 
       if (props.showTitle && !TITLE_ANCHORS.includes(props.titleAnchor)) {
         throw new RangeError(
-          `smallMultiples: titleAnchor must be one of ${TITLE_ANCHORS.join(", ")}, got ${props.titleAnchor}`
+          `smallMultiples: titleAnchor must be one of ${TITLE_ANCHORS.join(", ")}, got ${props.titleAnchor}`,
         );
       }
 
@@ -181,7 +182,7 @@ export default function <
 
       if (data.length > props.rows * props.cols) {
         throw new RangeError(
-          `smallMultiples: the ${props.rows} x ${props.cols} grid has no room for ${data.length} groups`
+          `smallMultiples: the ${props.rows} x ${props.cols} grid has no room for ${data.length} groups`,
         );
       }
 

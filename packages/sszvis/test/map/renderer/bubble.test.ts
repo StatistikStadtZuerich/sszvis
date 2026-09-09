@@ -99,9 +99,9 @@ describe("map/renderer/bubble", () => {
   const render = (
     data: Datum[],
     configure: (c: ReturnType<typeof mapRendererBubble>) => ReturnType<typeof mapRendererBubble> = (
-      c
+      c,
     ) => c,
-    key?: string
+    key?: string,
   ) => {
     const collection = geoJson();
     const component = configure(
@@ -110,7 +110,7 @@ describe("map/renderer/bubble", () => {
         .mapPath(mapPathOf(collection))
         .radius(5)
         // fill has no default and is called unguarded, so every render needs one.
-        .fill("#ff0000")
+        .fill("#ff0000"),
     );
     return group(key).call(component).node() as SVGGElement;
   };
@@ -145,13 +145,13 @@ describe("map/renderer/bubble", () => {
           })
           // The final radius is written by the transition when one is scheduled, so read it back
           // without one; the animation itself is pinned under "transition".
-          .transition(false)
+          .transition(false),
       );
       expect(seen).toEqual(expect.arrayContaining(fullData));
       expect(
         circles(node)
           .map((circle) => circle.getAttribute("r"))
-          .sort()
+          .sort(),
       ).toEqual(["2", "4", "6"]);
     });
 
@@ -171,7 +171,7 @@ describe("map/renderer/bubble", () => {
             .mergedData(prepareMergedGeoData(fullData, collection))
             .mapPath(swissMapPath(100, 100, collection, key))
             .radius(5)
-            .fill("#ff0000")
+            .fill("#ff0000"),
         )
         .node() as SVGGElement;
       // Every radius is equal here, so the size sort leaves the features in their own order.
@@ -187,7 +187,7 @@ describe("map/renderer/bubble", () => {
         c
           .fill((d: Datum) => (d.value === 1 ? "#ff0000" : "#00ff00"))
           .strokeColor("#0000ff")
-          .strokeWidth((d: Datum) => d.value)
+          .strokeWidth((d: Datum) => d.value),
       );
       const byRadius = circles(node);
       expect(byRadius.map((circle) => circle.style.stroke)).toEqual([
@@ -222,7 +222,7 @@ describe("map/renderer/bubble", () => {
               .mapPath(mapPath)
               .radius((d: Datum | undefined) => d?.value ?? 0)
               .fill("#ff0000")
-              .transition(false)
+              .transition(false),
           )
           .node() as SVGGElement;
       renderWith(fullData);
@@ -246,14 +246,14 @@ describe("map/renderer/bubble", () => {
         mapRendererBase()
           .mergedData(merged)
           .mapPath(swissMapPath(100, 100, collection, key))
-          .fill("#cccccc")
+          .fill("#cccccc"),
       );
       layer.call(
         mapRendererBubble()
           .mergedData(merged)
           .mapPath(swissMapPath(100, 100, collection, key))
           .radius(5)
-          .fill("#ff0000")
+          .fill("#ff0000"),
       );
       const node = layer.node() as SVGGElement;
       const children = [...node.children].map((child) => child.getAttribute("data-d3-selectgroup"));
@@ -268,7 +268,7 @@ describe("map/renderer/bubble", () => {
       const box = circle.getBoundingClientRect();
       const hit = document.elementFromPoint(
         box.left + box.width / 2,
-        box.top + box.height / 2
+        box.top + box.height / 2,
       ) as Element;
       expect(hit).not.toBe(circle);
       expect(hit.closest("[data-event-target]")).not.toBeNull();
@@ -294,12 +294,12 @@ describe("map/renderer/bubble", () => {
                 collection.features.map((feature) => ({
                   geoJson: feature,
                   datum: { geoId: "x", value: 1 },
-                }))
+                })),
               )
               .mapPath(mapPathOf(collection))
               .radius(5)
               .fill("#ff0000")
-              .transition(false)
+              .transition(false),
           )
           .node() as SVGGElement;
       const [firstBefore, secondBefore] = circles(renderWith());
@@ -330,12 +330,12 @@ describe("map/renderer/bubble", () => {
                 collection.features.map((feature) => ({
                   geoJson: feature,
                   datum: { geoId: String(radii.get(feature)), value: 1 },
-                }))
+                })),
               )
               .mapPath(mapPathOf(collection))
               .radius((d: Datum) => Number(d.geoId))
               .fill("#ff0000")
-              .transition(false)
+              .transition(false),
           )
           .node() as SVGGElement;
 
@@ -343,7 +343,7 @@ describe("map/renderer/bubble", () => {
         new Map([
           [first, 4],
           [second, 8],
-        ])
+        ]),
       );
       const elementOf = (node: SVGGElement, feature: Feature<Polygon>) =>
         circles(node).find((circle) => datumOf(circle).geoJson === feature);
@@ -359,7 +359,7 @@ describe("map/renderer/bubble", () => {
         new Map([
           [first, 8],
           [second, 4],
-        ])
+        ]),
       );
       expect(circles(node)).toHaveLength(2);
       expect(elementOf(node, first)).toBe(firstElement);
@@ -379,7 +379,7 @@ describe("map/renderer/bubble", () => {
             .mapPath(mapPathOf(collection))
             .radius(5)
             .fill("#ff0000")
-            .on("click", () => undefined)
+            .on("click", () => undefined),
         )
         .node() as SVGGElement;
       expect(circles(node)[0].style.pointerEvents).toBe("");
@@ -422,7 +422,7 @@ describe("map/renderer/bubble", () => {
 
       component.on(".tooltip", null);
       expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe(
-        "none"
+        "none",
       );
     });
 
@@ -446,7 +446,7 @@ describe("map/renderer/bubble", () => {
 
       component.on(removeWith, null);
       expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe(
-        expected
+        expected,
       );
     });
 
@@ -464,7 +464,7 @@ describe("map/renderer/bubble", () => {
               .mapPath(mapPath)
               .radius(5)
               .fill("#ff0000")
-              .transition(false)
+              .transition(false),
           )
           .node() as SVGGElement;
       const circle = circles(renderWith())[0];
@@ -519,7 +519,7 @@ describe("map/renderer/bubble", () => {
               .mergedData(prepareMergedGeoData(fullData, collection))
               .mapPath(mapPath)
               .radius(radius)
-              .fill("#ff0000")
+              .fill("#ff0000"),
           )
           .node() as SVGGElement;
       renderWith(4);
@@ -539,7 +539,7 @@ describe("map/renderer/bubble", () => {
         .__transition;
       const scheduled = Object.values(schedules ?? {}).filter(
         (v): v is { duration: number; ease: (t: number) => number } =>
-          typeof v === "object" && v !== null && "duration" in v
+          typeof v === "object" && v !== null && "duration" in v,
       );
       expect(scheduled).toHaveLength(1);
       expect(scheduled[0].duration).toBe(300);
@@ -555,11 +555,11 @@ describe("map/renderer/bubble", () => {
           .call(
             mapRendererBubble()
               .mergedData(
-                features.map((feature) => ({ geoJson: feature, datum: { geoId: "x", value: 1 } }))
+                features.map((feature) => ({ geoJson: feature, datum: { geoId: "x", value: 1 } })),
               )
               .mapPath(mapPath)
               .radius(5)
-              .fill("#ff0000")
+              .fill("#ff0000"),
           )
           .node() as SVGGElement;
       renderWith(collection.features);
@@ -571,7 +571,7 @@ describe("map/renderer/bubble", () => {
       // reading circles(node)[0] would inspect the retained circle and pass on its update tween
       // even if the exit transition were dropped.
       const departing = circles(node).filter(
-        (circle) => datumOf(circle).geoJson !== collection.features[0]
+        (circle) => datumOf(circle).geoJson !== collection.features[0],
       );
       expect(circles(node)).toHaveLength(3);
       expect(departing).toHaveLength(2);
@@ -589,12 +589,12 @@ describe("map/renderer/bubble", () => {
           .call(
             mapRendererBubble()
               .mergedData(
-                features.map((feature) => ({ geoJson: feature, datum: { geoId: "x", value: 1 } }))
+                features.map((feature) => ({ geoJson: feature, datum: { geoId: "x", value: 1 } })),
               )
               .mapPath(mapPath)
               .radius(5)
               .fill("#ff0000")
-              .transition(false)
+              .transition(false),
           )
           .node() as SVGGElement;
       renderWith(collection.features);
@@ -619,7 +619,7 @@ describe("map/renderer/bubble", () => {
         mapRendererBase()
           .mergedData(merged)
           .mapPath(swissMapPath(100, 100, collection, key))
-          .fill("#cccccc")
+          .fill("#cccccc"),
       );
       layer.call(
         mapRendererBubble<Datum>()
@@ -628,7 +628,7 @@ describe("map/renderer/bubble", () => {
           .radius(5)
           .fill("#ff0000")
           .transition(false)
-          .on("over", () => undefined)
+          .on("over", () => undefined),
       );
       const node = layer.node() as SVGGElement;
       const circle = circles(node)[0];
@@ -650,7 +650,7 @@ describe("map/renderer/bubble", () => {
     test("delivers the datum to out and click handlers too", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
-        c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d))
+        c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d)),
       );
       circles(node)[0].dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
       circles(node)[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -665,7 +665,7 @@ describe("map/renderer/bubble", () => {
     test("delivers undefined for a circle whose feature matched no datum", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
-        c.on("over", (d: unknown) => seen.push(d))
+        c.on("over", (d: unknown) => seen.push(d)),
       );
       circles(node)[1].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
       expect(seen).toEqual([undefined]);
@@ -708,7 +708,7 @@ describe("map/renderer/bubble", () => {
         c.radius(() => {
           calls += 1;
           return 5;
-        })
+        }),
       );
       expect(calls).toBeGreaterThan(fullData.length);
     });
@@ -719,7 +719,7 @@ describe("map/renderer/bubble", () => {
     test("throws when mergedData is missing", () => {
       const collection = geoJson();
       expect(() =>
-        group().call(mapRendererBubble().mapPath(mapPathOf(collection)).radius(5).fill("#ff0000"))
+        group().call(mapRendererBubble().mapPath(mapPathOf(collection)).radius(5).fill("#ff0000")),
       ).toThrow(TypeError);
     });
 
@@ -738,8 +738,8 @@ describe("map/renderer/bubble", () => {
             // failure comes from inside the transform callback, after the circles exist.
             .mapPath(() => "M0,0")
             .radius(5)
-            .fill("#ff0000")
-        )
+            .fill("#ff0000"),
+        ),
       ).toThrow(TypeError);
       expect(circles(layer.node() as SVGGElement)).toHaveLength(3);
     });
@@ -751,8 +751,8 @@ describe("map/renderer/bubble", () => {
           mapRendererBubble()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .radius(5)
-            .fill("#ff0000")
-        )
+            .fill("#ff0000"),
+        ),
       ).toThrow(TypeError);
     });
 
@@ -767,8 +767,8 @@ describe("map/renderer/bubble", () => {
           mapRendererBubble()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .mapPath(mapPathOf(collection))
-            .fill("#ff0000")
-        )
+            .fill("#ff0000"),
+        ),
       ).toThrow(TypeError);
     });
 
@@ -779,8 +779,8 @@ describe("map/renderer/bubble", () => {
           mapRendererBubble()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .mapPath(mapPathOf(collection))
-            .radius(5)
-        )
+            .radius(5),
+        ),
       ).toThrow(TypeError);
     });
 
@@ -797,7 +797,7 @@ describe("map/renderer/bubble", () => {
         c.radius(function (this: unknown) {
           seen.push(this);
           return 5;
-        })
+        }),
       );
       // The accessor is also reached through the sort comparator and the transition, which call it
       // directly rather than through d3, so `this` is undefined for those. What matters is that
@@ -811,7 +811,7 @@ describe("map/renderer/bubble", () => {
         c.radius((d: Datum | undefined) => {
           seen.push(d);
           return d ? 5 : 0;
-        })
+        }),
       );
       expect(circles(node)).toHaveLength(3);
       expect(seen).toContain(undefined);
@@ -829,12 +829,12 @@ describe("map/renderer/bubble", () => {
                 collection.features.map((feature) => ({
                   geoJson: feature,
                   datum: { geoId: "x", value: 1 },
-                }))
+                })),
               )
               .mapPath(mapPath)
               .radius(5)
               .fill("#ff0000")
-              .transition(false)
+              .transition(false),
           )
           .node() as SVGGElement;
       const before = circles(renderWith())[0].getAttribute("transform");
@@ -853,7 +853,7 @@ describe("map/renderer/bubble", () => {
     // without guarding throws, taking the whole render with it - one unmatched feature is enough.
     test("throws when an unguarded radius accessor meets a feature with no datum", () => {
       expect(() =>
-        render([{ geoId: "a", value: 1 }], (c) => c.radius((d: Datum) => d.value))
+        render([{ geoId: "a", value: 1 }], (c) => c.radius((d: Datum) => d.value)),
       ).toThrow(TypeError);
     });
 
@@ -896,8 +896,8 @@ describe("map/renderer/bubble", () => {
             .mergedData(prepareMergedGeoData(fullData, collection))
             .mapPath(mapPath)
             .radius(5)
-            .fill("#ff0000")
-        )
+            .fill("#ff0000"),
+        ),
       ).toThrow(TypeError);
     });
 

@@ -37,13 +37,13 @@ describe("component/nestedStackedBar", () => {
     const stackLayout = stackedBarVerticalData(
       (d: Row) => d.year,
       (d: Row) => d.category,
-      (d: Row) => d.value
+      (d: Row) => d.value,
     );
     return cascade<Row>()
       .arrayBy((d: Row) => d.nested)
       .apply<Row[][]>(data)
-      .map(
-        (group: Row[]): NestedStack => Object.assign(stackLayout(group), { [tag]: group[0].nested })
+      .map((group: Row[]): NestedStack =>
+        Object.assign(stackLayout(group), { [tag]: group[0].nested }),
       );
   };
 
@@ -54,7 +54,7 @@ describe("component/nestedStackedBar", () => {
   /** The same layouts with their group key stripped, which is what the fallback is about. */
   const untaggedData = (data: Row[] = rows): NestedStack[] =>
     nestedData(data).map((stack) =>
-      Object.assign(stack.slice(), { maxValue: stack.maxValue, minValue: stack.minValue })
+      Object.assign(stack.slice(), { maxValue: stack.maxValue, minValue: stack.minValue }),
     );
 
   let offsetScale: ScaleBand<string>;
@@ -140,7 +140,7 @@ describe("component/nestedStackedBar", () => {
           .tooltip(() => undefined)
           .xAcc((d: Row) => d.year)
           .xLabel("Jahr")
-          .slant("vertical")
+          .slant("vertical"),
       ).toBe(component);
     });
 
@@ -328,7 +328,7 @@ describe("component/nestedStackedBar", () => {
         { year: "2021", category: "A", nested: "F", value: 30 },
       ];
       const component = nestedOf().xScale(
-        scaleBand<string>().domain(["2019", "2020", "2021"]).range([0, 300]).paddingInner(0.2)
+        scaleBand<string>().domain(["2019", "2020", "2021"]).range([0, 300]).paddingInner(0.2),
       );
       const node = render(component, nestedData(threeYears));
       expect(rects(node).length).toBe(3);
@@ -345,7 +345,7 @@ describe("component/nestedStackedBar", () => {
         value: 10,
       }));
       const component = nestedOf().xScale(
-        scaleBand<string>().domain(domain).range([0, 60]).paddingInner(0.2)
+        scaleBand<string>().domain(domain).range([0, 60]).paddingInner(0.2),
       );
       const node = render(component, nestedData(rowsFive));
       expect(tickLabels(axisOf(groups(node)[0]))).toEqual(domain);
@@ -395,7 +395,7 @@ describe("component/nestedStackedBar", () => {
     for (const prop of ["offset", "xScale", "yScale", "tooltip"]) {
       test(`should throw a named error when ${prop} is not set`, () => {
         expect(() => render(withoutProp(prop))).toThrow(
-          `[nestedStackedBarsVertical] the ${prop} property is required`
+          `[nestedStackedBarsVertical] the ${prop} property is required`,
         );
       });
     }
@@ -408,7 +408,7 @@ describe("component/nestedStackedBar", () => {
           .offset((d: NestedStack) => offsetScale(String(d.key)))
           .xScale(xScale)
           .yScale(yScale)
-          .tooltip(() => undefined)
+          .tooltip(() => undefined),
       );
       expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["F", "M"]);
       expect(rects(node).length).toBe(rows.length);
@@ -456,7 +456,7 @@ describe("component/nestedStackedBar", () => {
       // component's own docs example used to do. Both are read, `key` first.
       const node = render(
         nestedOf().offset((d: NestedStack) => offsetScale(String(d.nest))),
-        nestedData(rows, "nest")
+        nestedData(rows, "nest"),
       );
       expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["F", "M"]);
       expect(rects(node).length).toBe(rows.length);
@@ -470,14 +470,14 @@ describe("component/nestedStackedBar", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const node = render(
         nestedOf().offset(() => 0),
-        untaggedData()
+        untaggedData(),
       );
       expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["0", "1"]);
       expect(rects(node).length).toBe(rows.length);
       expect(warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          "[nestedStackedBarsVertical] the nested group at index 0 has no key"
-        )
+          "[nestedStackedBarsVertical] the nested group at index 0 has no key",
+        ),
       );
       warn.mockRestore();
     });
@@ -489,13 +489,13 @@ describe("component/nestedStackedBar", () => {
       // A key-independent offset again, so the untagged group warns only about its missing key.
       const node = render(
         nestedOf().offset(() => 0),
-        [first, second]
+        [first, second],
       );
       expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["F", "1"]);
       expect(warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          "[nestedStackedBarsVertical] the nested group at index 1 has no key"
-        )
+          "[nestedStackedBarsVertical] the nested group at index 1 has no key",
+        ),
       );
       warn.mockRestore();
     });

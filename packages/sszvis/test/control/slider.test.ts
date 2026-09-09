@@ -61,7 +61,7 @@ describe("control/slider", () => {
   test("should offset the axis below the slider track", () => {
     const node = render(basic());
     expect(node.querySelector("g.sszvis-axisGroup")?.getAttribute("transform")).toBe(
-      "translate(0,28)"
+      "translate(0,28)",
     );
   });
 
@@ -119,7 +119,7 @@ describe("control/slider", () => {
   test("should centre the track vertically on a half pixel", () => {
     const node = render(basic());
     expect(node.querySelector("g.sszvis-slider__background")?.getAttribute("transform")).toBe(
-      "translate(0,18.5)"
+      "translate(0,18.5)",
     );
   });
 
@@ -168,7 +168,7 @@ describe("control/slider", () => {
       slider()
         .scale(scaleLog().domain([1, 1000]).range([0, 300]))
         .value(10)
-        .majorTicks([1, 1000])
+        .majorTicks([1, 1000]),
     );
     // 10 sits at a third of the way along a log scale from 1 to 1000, inset by the handle
     const x = handle(node)?.getAttribute("transform");
@@ -200,7 +200,7 @@ describe("control/slider", () => {
       group.call(basic().value(10));
       const node = group.node() as SVGGElement;
       expect(
-        [...node.querySelectorAll("text.sszvis-control-slider--label")].map((t) => t.textContent)
+        [...node.querySelectorAll("text.sszvis-control-slider--label")].map((t) => t.textContent),
       ).toEqual(["10"]);
     });
 
@@ -288,11 +288,11 @@ describe("control/slider", () => {
   test("should not throw on a drag when no onchange is configured", () => {
     const node = render(slider().scale(scale()).value(5));
     const layer = node.querySelector(
-      "g.sszvis-control-slider--interactionLayer rect"
+      "g.sszvis-control-slider--interactionLayer rect",
     ) as SVGRectElement;
     layer.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     expect(() =>
-      layer.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 20, clientY: 5 }))
+      layer.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 20, clientY: 5 })),
     ).not.toThrow();
   });
 
@@ -300,7 +300,7 @@ describe("control/slider", () => {
     const node = render(basic());
     const classes = [...node.children].map((c) => c.getAttribute("class"));
     expect(classes.indexOf("sszvis-control-slider--interactionLayer")).toBeGreaterThan(
-      classes.indexOf("sszvis-control-slider__handle")
+      classes.indexOf("sszvis-control-slider__handle"),
     );
   });
 
@@ -313,7 +313,7 @@ describe("control/slider", () => {
     const onchange = vi.fn();
     const node = render(basic().onchange(onchange));
     const layer = node.querySelector(
-      "g.sszvis-control-slider--interactionLayer rect"
+      "g.sszvis-control-slider--interactionLayer rect",
     ) as SVGRectElement;
     layer.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     layer.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 20, clientY: 5 }));
@@ -336,7 +336,7 @@ describe("control/slider", () => {
     test("should centre a lone major label", () => {
       const node = render(basic().majorTicks([5]));
       const label = [...node.querySelectorAll<SVGTextElement>("g.tick text")].find(
-        (t) => t.textContent === "5"
+        (t) => t.textContent === "5",
       );
       expect(label?.style.textAnchor).toBe("middle");
     });
@@ -377,7 +377,7 @@ describe("control/slider", () => {
     test("should name the component and the property in that error", () => {
       const node = d3Select(svg).append("g");
       expect(() => node.call(slider().scale(scale()))).toThrow(
-        "[sszvis.control.slider] the `value` property is required"
+        "[sszvis.control.slider] the `value` property is required",
       );
     });
   });
@@ -386,7 +386,7 @@ describe("control/slider", () => {
     /** Drags to `offset` pixels into the interaction layer and returns the reported x. */
     const dragTo = (node: SVGGElement, onchange: ReturnType<typeof vi.fn>, offset: number) => {
       const layer = node.querySelector(
-        "g.sszvis-control-slider--interactionLayer rect"
+        "g.sszvis-control-slider--interactionLayer rect",
       ) as SVGRectElement;
       const box = layer.getBoundingClientRect();
       layer.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
@@ -395,7 +395,7 @@ describe("control/slider", () => {
           bubbles: true,
           clientX: box.left + offset,
           clientY: box.top + 20,
-        })
+        }),
       );
       expect(onchange).toHaveBeenCalled();
       // the move behaviour calls its handlers as (event, x, y)
@@ -405,7 +405,7 @@ describe("control/slider", () => {
     test("should keep the interaction layer spanning the whole configured range", () => {
       const node = render(basic());
       const layer = node.querySelector(
-        "g.sszvis-control-slider--interactionLayer rect"
+        "g.sszvis-control-slider--interactionLayer rect",
       ) as SVGRectElement;
       expect(layer.getAttribute("x")).toBe("0");
       expect(layer.getAttribute("width")).toBe("300");
@@ -431,7 +431,7 @@ describe("control/slider", () => {
         slider()
           .scale(scaleTime().domain(domain).range([0, 300]))
           .value(domain[0])
-          .onchange(onchange)
+          .onchange(onchange),
       );
       expect(+(dragTo(node, onchange, 5) as Date)).toBe(+domain[0]);
       const high = dragTo(node, onchange, 294) as Date;
@@ -463,7 +463,7 @@ describe("control/slider", () => {
       const reversed = scaleLinear().domain([0, 10]).range([300, 0]);
       const node = render(slider().scale(reversed).value(0).majorTicks([0, 10]));
       const labelled = [...node.querySelectorAll<SVGTextElement>("g.tick text")].filter(
-        (t) => t.textContent !== ""
+        (t) => t.textContent !== "",
       );
       // in track order: 10 on the left, 0 on the right
       expect(labelled.map((t) => [t.textContent, t.style.textAnchor])).toEqual([
@@ -502,7 +502,7 @@ describe("control/slider", () => {
         slider()
           .scale(scaleTime().domain(domain).range([300, 0]))
           .value(domain[0])
-          .majorTicks([domain[0], domain[1]])
+          .majorTicks([domain[0], domain[1]]),
       );
       expect(handle(node)?.getAttribute("transform")).toBe("translate(294.5,0.5)");
     });
@@ -519,7 +519,7 @@ describe("control/slider", () => {
           .scale(scaleTime().domain(domain).range([0, 300]))
           .value(domain[0])
           .majorTicks([new Date(2020, 0, 15)])
-          .minorTicks([new Date(2020, 0, 15)])
+          .minorTicks([new Date(2020, 0, 15)]),
       );
       const drawn = ticks(node);
       expect(drawn.length).toBe(2);
@@ -541,7 +541,7 @@ describe("control/slider", () => {
         slider()
           .scale(scaleTime().domain(domain).range([0, 300]))
           // an equal-but-distinct Date, as a rebuilt state value would be
-          .value(new Date(2020, 0, 1))
+          .value(new Date(2020, 0, 1)),
       );
       expect(handleLabel(node)?.style.textAnchor).toBe("start");
     });
@@ -553,7 +553,7 @@ describe("control/slider", () => {
       const onchange = vi.fn();
       const node = render(basic().onchange(onchange));
       const layer = node.querySelector(
-        "g.sszvis-control-slider--interactionLayer rect"
+        "g.sszvis-control-slider--interactionLayer rect",
       ) as SVGRectElement;
       expect(layer.getAttribute("height")).toBe("51");
       const box = layer.getBoundingClientRect();
@@ -563,7 +563,7 @@ describe("control/slider", () => {
           bubbles: true,
           clientX: box.left + 150,
           clientY: box.top + 25,
-        })
+        }),
       );
       const y = onchange.mock.calls.at(-1)?.[2] as number;
       // a fraction of the layer's own height rather than anything in data space

@@ -44,7 +44,7 @@ export default function ensureDefsElement<
 >(
   selection: Selection<G, D, P, PD>,
   type: K,
-  elementId: string
+  elementId: string,
 ): Selection<SVGElementTagNameMap[K], number, SVGDefsElement, number> {
   return (
     ensureDefsSelection(selection)
@@ -71,7 +71,7 @@ export default function ensureDefsElement<
  * of other, visible, elements.
  */
 function ensureDefsSelection<G extends BaseType, D, P extends BaseType, PD>(
-  selection: Selection<G, D, P, PD>
+  selection: Selection<G, D, P, PD>,
 ): Selection<SVGDefsElement, number, G, D> {
   return selection.selectAll<SVGDefsElement, number>(":scope > defs").data([0]).join("defs");
 }

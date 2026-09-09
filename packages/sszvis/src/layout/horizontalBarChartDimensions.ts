@@ -47,7 +47,7 @@ export type HorizontalBarChartDimensions = {
 };
 
 export default function dimensionsHorizontalBarChart(
-  numBars: number
+  numBars: number,
 ): HorizontalBarChartDimensions {
   requireCount("dimensionsHorizontalBarChart", "numBars", numBars);
 

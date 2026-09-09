@@ -374,7 +374,7 @@ describe("annotation/confidenceArea", () => {
       .datum([testData])
       .call(areaOf(false));
     expect(chartLayer.select("path.sszvis-area").attr("d")).toBe(
-      reference.select("path.sszvis-area").attr("d")
+      reference.select("path.sszvis-area").attr("d"),
     );
   });
 
@@ -395,7 +395,7 @@ describe("annotation/confidenceArea", () => {
     };
     const scheduled = Object.values(path.__transition ?? {}).filter(
       (v): v is { duration: number; ease: (t: number) => number } =>
-        typeof v === "object" && v !== null && "duration" in v
+        typeof v === "object" && v !== null && "duration" in v,
     );
     expect(scheduled).toHaveLength(1);
     expect(scheduled[0].duration).toBe(300);

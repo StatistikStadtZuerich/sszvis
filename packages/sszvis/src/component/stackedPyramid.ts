@@ -364,7 +364,7 @@ export function stackedPyramidLayout<T, S extends string | number = string>(
   // the cascade row with Object.keys, which is why `series` stays a string.
   rowValueAcc: (datum: T) => string | number,
   seriesAcc: (datum: T) => string | number,
-  valueAcc: (datum: T) => number
+  valueAcc: (datum: T) => number,
 ) {
   return (data: T[]): StackedPyramidLayout<T, S> => {
     const grouped: CascadeRow<T>[][] = cascade<T>()
@@ -426,7 +426,7 @@ export function stackedPyramidData<T, S extends string | number = string>(
   sideAcc: (datum: T) => S,
   rowValueAcc: (datum: T) => string | number,
   seriesAcc: (datum: T) => string | number,
-  valueAcc: (datum: T) => number
+  valueAcc: (datum: T) => number,
 ) {
   const layout = stackedPyramidLayout<T, S>(sideAcc, rowValueAcc, seriesAcc, valueAcc);
   return (data: T[]): StackedPyramidSidesData<T, S> => {
@@ -463,7 +463,7 @@ type StoredPosition = (value?: string | number, index?: number) => number;
 /** How barHeight reads back: unlike the other two dimensions it is handed straight to bar. */
 type StoredHeight<T, S extends string | number> = (
   slice?: StackedPyramidSlice<T, S>,
-  index?: number
+  index?: number,
 ) => number;
 
 /** How barFill reads back. It is called with the slice's `data`, so it reads a source row. */
@@ -471,7 +471,7 @@ type StoredFill<T> = (datum: T, index?: number) => string | undefined;
 
 /** Pulls one side's series out of the datum bound to the chart layer. */
 type SideAccessor<T, S extends string | number> = (
-  data: StackedPyramidSide<T, S>[]
+  data: StackedPyramidSide<T, S>[],
 ) => StackedPyramidSide<T, S>;
 
 /**
@@ -489,7 +489,7 @@ export interface StackedPyramidReferencePoint {
 
 /** Pulls one side's reference series out of the datum bound to the chart layer. */
 type ReferenceAccessor<T, S extends string | number> = (
-  data: StackedPyramidSide<T, S>[]
+  data: StackedPyramidSide<T, S>[],
 ) => StackedPyramidReferencePoint[];
 
 /** A constant or an accessor; either is accepted, since fn.functor normalises both. */
@@ -519,11 +519,13 @@ type StackedPyramidProps<T, S extends string | number> = {
  * Setters take `<U = ...>` so that a typed accessor can be passed without naming the
  * component's generics at the call site.
  */
-export interface StackedPyramidComponent<T = unknown, S extends string | number = string>
-  extends ComponentBuilder<StackedPyramidComponent<T, S>> {
+export interface StackedPyramidComponent<
+  T = unknown,
+  S extends string | number = string,
+> extends ComponentBuilder<StackedPyramidComponent<T, S>> {
   barHeight(): StoredHeight<T, S>;
   barHeight<U = StackedPyramidSlice<T, S>>(
-    value: PyramidValue<U, number>
+    value: PyramidValue<U, number>,
   ): StackedPyramidComponent<T, S>;
   barWidth(): StoredWidth;
   barWidth(value: PyramidValue<number, number>): StackedPyramidComponent<T, S>;
@@ -535,19 +537,19 @@ export interface StackedPyramidComponent<T = unknown, S extends string | number 
   tooltipAnchor(anchor: (number | string)[]): StackedPyramidComponent<T, S>;
   leftAccessor(): SideAccessor<T, S>;
   leftAccessor<U = StackedPyramidSide<T, S>[]>(
-    accessor: (data: U) => StackedPyramidSide<T, S>
+    accessor: (data: U) => StackedPyramidSide<T, S>,
   ): StackedPyramidComponent<T, S>;
   rightAccessor(): SideAccessor<T, S>;
   rightAccessor<U = StackedPyramidSide<T, S>[]>(
-    accessor: (data: U) => StackedPyramidSide<T, S>
+    accessor: (data: U) => StackedPyramidSide<T, S>,
   ): StackedPyramidComponent<T, S>;
   leftRefAccessor(): ReferenceAccessor<T, S> | undefined;
   leftRefAccessor<U = StackedPyramidSide<T, S>[]>(
-    accessor: (data: U) => StackedPyramidReferencePoint[]
+    accessor: (data: U) => StackedPyramidReferencePoint[],
   ): StackedPyramidComponent<T, S>;
   rightRefAccessor(): ReferenceAccessor<T, S> | undefined;
   rightRefAccessor<U = StackedPyramidSide<T, S>[]>(
-    accessor: (data: U) => StackedPyramidReferencePoint[]
+    accessor: (data: U) => StackedPyramidReferencePoint[],
   ): StackedPyramidComponent<T, S>;
 }
 
@@ -581,7 +583,7 @@ export function stackedPyramid<
           // because the component computes both the x and the width of every bar from it.
           throw new TypeError(
             "[sszvis.stackedPyramid] the barWidth property is required: pass a scale over the " +
-              "stacked values, or a number for a constant segment width."
+              "stacked values, or a number for a constant segment width.",
           );
         }
 
@@ -669,8 +671,9 @@ type StackProps<T, S extends string | number> = {
   stackElement: BarComponent<StackedPyramidSlice<T, S>>;
 };
 
-interface StackComponent<T, S extends string | number>
-  extends ComponentBuilder<StackComponent<T, S>> {
+interface StackComponent<T, S extends string | number> extends ComponentBuilder<
+  StackComponent<T, S>
+> {
   stackElement(): BarComponent<StackedPyramidSlice<T, S>>;
   stackElement(value: BarComponent<StackedPyramidSlice<T, S>>): StackComponent<T, S>;
 }
@@ -743,7 +746,7 @@ function lineComponent(): ReferenceLineComponent {
       // selector written against it changes meaning.
       const line = selection
         .selectAll<SVGPathElement, StackedPyramidReferencePoint[]>(
-          "path.sszvis-stacked-pyramid__referenceline"
+          "path.sszvis-stacked-pyramid__referenceline",
         )
         .data(data)
         .join("path")

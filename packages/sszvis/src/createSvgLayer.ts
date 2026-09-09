@@ -38,7 +38,7 @@ export function createSvgLayer<
 >(
   selector: SelectableElement<G, D, P, PD> | HTMLElement,
   bounds?: BoundsResult,
-  metadata: SvgLayerMetadata = {}
+  metadata: SvgLayerMetadata = {},
 ): LayerSelection<SVGGElement, number> {
   const { padding, height, width } = bounds || mkBounds();
 
@@ -48,7 +48,7 @@ export function createSvgLayer<
   const description = metadata.description || "";
 
   const render = <G extends BaseType, D, P extends BaseType, PD>(
-    root: Selection<G, D, P, PD>
+    root: Selection<G, D, P, PD>,
   ): LayerSelection<SVGGElement, number> => {
     const svg = root
       .selectAll<SVGSVGElement, number>(`svg[${elementDataKey}]`)

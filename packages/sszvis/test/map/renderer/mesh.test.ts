@@ -83,9 +83,9 @@ describe("map/renderer/mesh", () => {
   /** Renders the mesh, returning the group node it drew into. */
   const render = (
     configure: (c: ReturnType<typeof mapRendererMesh>) => ReturnType<typeof mapRendererMesh> = (
-      c
+      c,
     ) => c,
-    key?: string
+    key?: string,
   ) => {
     const component = configure(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()));
     return group(key).call(component).node() as SVGGElement;
@@ -171,7 +171,7 @@ describe("map/renderer/mesh", () => {
             .borderColor((...args: unknown[]) => {
               seen.push(args);
               return "#00ff00";
-            })
+            }),
         )
         .node() as SVGGElement;
       expect(seen).toHaveLength(1);
@@ -191,7 +191,7 @@ describe("map/renderer/mesh", () => {
             .strokeWidth((...args: unknown[]) => {
               seen.push(args);
               return 3;
-            })
+            }),
         )
         .node() as SVGGElement;
       expect((seen[0] as unknown[])[0]).toBe(meshFeature);
@@ -207,11 +207,11 @@ describe("map/renderer/mesh", () => {
     test("two meshes with distinct keys draw two paths", () => {
       const layer = group("two-meshes");
       layer.call(
-        mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key("admin").borderColor("#ff0000")
+        mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key("admin").borderColor("#ff0000"),
       );
       const first = borders(layer.node() as SVGGElement)[0];
       layer.call(
-        mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key("lakes").borderColor("#00ff00")
+        mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key("lakes").borderColor("#00ff00"),
       );
       const after = borders(layer.node() as SVGGElement);
       expect(after).toHaveLength(2);
@@ -223,7 +223,7 @@ describe("map/renderer/mesh", () => {
       const layer = group("two-meshes-rerender");
       const draw = (key: string, color: string) =>
         layer.call(
-          mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key(key).borderColor(color)
+          mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key(key).borderColor(color),
         );
       draw("admin", "#ff0000");
       draw("lakes", "#00ff00");
@@ -282,14 +282,14 @@ describe("map/renderer/mesh", () => {
     test("throws naming geoJson when it is missing", () => {
       const layer = group("mesh-no-geojson");
       expect(() => layer.call(mapRendererMesh().mapPath(mapPathOf()))).toThrow(
-        /map\/renderer\/mesh: geoJson is required/
+        /map\/renderer\/mesh: geoJson is required/,
       );
     });
 
     test("throws naming mapPath when it is missing", () => {
       const layer = group("mesh-no-mappath");
       expect(() => layer.call(mapRendererMesh().geoJson(mesh()))).toThrow(
-        /map\/renderer\/mesh: mapPath is required/
+        /map\/renderer\/mesh: mapPath is required/,
       );
     });
 
@@ -331,8 +331,8 @@ describe("map/renderer/mesh", () => {
       expect(
         borders(
           // @ts-expect-error - a string is a caller error; pinned because it fails silently
-          render((c) => c.strokeWidth("abc"))
-        ).at(0)?.style.strokeWidth
+          render((c) => c.strokeWidth("abc")),
+        ).at(0)?.style.strokeWidth,
       ).toBe("");
       expect(borders(render((c) => c.strokeWidth(-1))).at(0)?.style.strokeWidth).toBe("");
       expect(borders(render((c) => c.strokeWidth(0))).at(0)?.style.strokeWidth).toBe("0");
@@ -344,7 +344,7 @@ describe("map/renderer/mesh", () => {
     test("schedules no transition at all", () => {
       const node = render();
       expect(
-        (borders(node)[0] as Element & { __transition?: unknown }).__transition
+        (borders(node)[0] as Element & { __transition?: unknown }).__transition,
       ).toBeUndefined();
     });
 
@@ -380,7 +380,7 @@ describe("map/renderer/mesh", () => {
             .mapPath((...args: unknown[]) => {
               seen.push(args);
               return "M0,0L1,1";
-            })
+            }),
         )
         .node() as SVGGElement;
       expect(seen[0][0]).toBe(meshFeature);

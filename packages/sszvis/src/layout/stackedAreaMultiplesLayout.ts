@@ -50,7 +50,7 @@ const EMPTY_LAYOUT: StackedAreaMultiplesLayout = { range: [], bandHeight: 0, pad
 export default function layoutStackedAreaMultiples(
   height: number,
   num: number,
-  pct?: number
+  pct?: number,
 ): StackedAreaMultiplesLayout {
   requireSize("layoutStackedAreaMultiples", "height", height);
   requireCount("layoutStackedAreaMultiples", "num", num);

@@ -98,7 +98,7 @@ export default function voronoi<T = unknown>(): VoronoiComponent<T> {
       const delaunay = Delaunay.from(
         data,
         (d) => props.x(d),
-        (d) => props.y(d)
+        (d) => props.y(d),
       );
       const voronoi = delaunay.voronoi(props.bounds);
 

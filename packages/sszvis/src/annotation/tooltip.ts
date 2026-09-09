@@ -68,7 +68,7 @@ interface TooltipProps<T = unknown> {
 
 interface TooltipComponent<T = unknown> extends ComponentBuilder<TooltipComponent<T>> {
   renderInto<G extends Element, D, P extends BaseType, PD>(
-    selection?: Selection<G, D, P, PD>
+    selection?: Selection<G, D, P, PD>,
   ): TooltipComponent<T>;
   visible(accessor?: Accessor<Datum<T>, boolean>): TooltipComponent<T>;
   header(accessor?: StringAccessor<Datum<T>>): TooltipComponent<T>;
@@ -161,7 +161,7 @@ const tooltipRenderer = <T = unknown>(): Component => {
         .style("padding-top", (d) => (props.orientation(d) === "top" ? `${TIP_SIZE}px` : null))
         .style("padding-right", (d) => (props.orientation(d) === "right" ? `${TIP_SIZE}px` : null))
         .style("padding-bottom", (d) =>
-          props.orientation(d) === "bottom" ? `${TIP_SIZE}px` : null
+          props.orientation(d) === "bottom" ? `${TIP_SIZE}px` : null,
         )
         .style("padding-left", (d) => (props.orientation(d) === "left" ? `${TIP_SIZE}px` : null))
         .classed("sszvis-tooltip", true);
@@ -309,8 +309,8 @@ const tooltipRenderer = <T = unknown>(): Component => {
                 [BLUR_PADDING, BLUR_PADDING],
                 [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING],
                 orientation,
-                isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS
-              )
+                isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS,
+              ),
             );
         });
     });
@@ -339,7 +339,7 @@ function side(
   y0: number,
   x1: number,
   y1: number,
-  showTip: boolean
+  showTip: boolean,
 ): (string | number)[] {
   const mx = x0 + (x1 - x0) / 2;
   const my = y0 + (y1 - y0) / 2;
@@ -390,7 +390,7 @@ function tooltipBackgroundGenerator(
   a: [number, number],
   b: [number, number],
   orientation: TooltipOrientation,
-  radius: number
+  radius: number,
 ): string {
   switch (orientation) {
     case "top": {

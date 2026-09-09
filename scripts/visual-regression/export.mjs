@@ -59,7 +59,7 @@ if (FLAGGED_ONLY) {
   }
   report = JSON.parse(await readFile(REPORT, "utf8"));
   const wanted = new Set(
-    report.results.filter((r) => r.verdict !== "ok" && r.verdict !== "fixed").map((r) => r.path)
+    report.results.filter((r) => r.verdict !== "ok" && r.verdict !== "fixed").map((r) => r.path),
   );
   charts = manifest.filter((c) => wanted.has(c.path));
 }
@@ -114,7 +114,7 @@ for (const chart of charts) {
   for (const side of ["baseline", "candidate"]) {
     await writeFile(
       path.join(outDir, `${base}.${side}.html`),
-      rewriteChart(html, side, chart.path, libPrefix)
+      rewriteChart(html, side, chart.path, libPrefix),
     );
   }
   written++;
@@ -131,7 +131,7 @@ if (report) await copyFile(REPORT, path.join(OUT, "report.json"));
 const page = await readFile(path.join(__dirname, "index.html"), "utf8");
 await writeFile(
   path.join(OUT, "index.html"),
-  page.replace("<script>", "<script>window.__REGRESSION_STATIC__ = true;</script>\n    <script>")
+  page.replace("<script>", "<script>window.__REGRESSION_STATIC__ = true;</script>\n    <script>"),
 );
 
 await writeFile(
@@ -183,7 +183,7 @@ looks wrong, reload it a few times before believing it.
 ${report ? "    report.json     verdicts from the headless sweep this export was filtered by\n" : ""}
 Only sszvis differs between the two sides. d3 and topojson are the same files in
 both, so nothing here is explained by a different d3.
-`
+`,
 );
 
 process.stdout.write("\n");
@@ -210,5 +210,6 @@ const size = async (target) => {
 
 console.log(`\n${charts.length} charts exported${FLAGGED_ONLY ? " (flagged only)" : ""}`);
 console.log(`  folder  ${path.relative(process.cwd(), OUT)}  (${await size(OUT)})`);
-if (zipPath) console.log(`  zip     ${path.relative(process.cwd(), zipPath)}  (${await size(zipPath)})`);
+if (zipPath)
+  console.log(`  zip     ${path.relative(process.cwd(), zipPath)}  (${await size(zipPath)})`);
 console.log(`\nTo check it locally:  cd ${path.relative(process.cwd(), OUT)} && npx serve .`);

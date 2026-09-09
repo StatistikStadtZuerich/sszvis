@@ -66,7 +66,7 @@ describe("component/pyramid", () => {
     bars(node, key).map((b) => b.getAttribute(attr));
   const anchors = (node: Element, key: string) =>
     [...(side(node, key)?.querySelectorAll("[data-tooltip-anchor]") ?? [])].map((a) =>
-      a.getAttribute("transform")
+      a.getAttribute("transform"),
     );
   const lines = (node: Element, key: string) => [
     ...(side(node, key)?.querySelectorAll("path.sszvis-pyramid__referenceline") ?? []),
@@ -91,7 +91,7 @@ describe("component/pyramid", () => {
     test("should render the reference groups after the bars, so lines draw on top", () => {
       const node = render(pyramidOf(), testData);
       const keys = [...node.querySelectorAll("[data-d3-selectgroup]")].map((g) =>
-        g.getAttribute("data-d3-selectgroup")
+        g.getAttribute("data-d3-selectgroup"),
       );
       expect(keys).toEqual(["left", "right", "leftReference", "rightReference"]);
     });
@@ -132,7 +132,7 @@ describe("component/pyramid", () => {
           .barPosition(0)
           .leftAccessor((d: Population) => d.left)
           .rightAccessor((d: Population) => d.right),
-        testData
+        testData,
       );
       // 2 * SPINE_PADDING: the left bar ends at -0.5 and the right one starts at 0.5
       const leftEdge =
@@ -157,7 +157,7 @@ describe("component/pyramid", () => {
           .barPosition(9)
           .leftAccessor((d: Population) => d.left)
           .rightAccessor((d: Population) => d.right),
-        testData
+        testData,
       );
       expect(attrs(node, "left", "x")).toEqual(["-7.5", "-7.5"]);
       expect(attrs(node, "right", "x")).toEqual(["0.5", "0.5"]);
@@ -169,7 +169,7 @@ describe("component/pyramid", () => {
     test("should apply barFill to both sides", () => {
       const node = render(
         pyramidOf().barFill((d: Datum) => d.color),
-        testData
+        testData,
       );
       expect(attrs(node, "left", "fill")).toEqual(["#f00", "#f00"]);
       expect(attrs(node, "right", "fill")).toEqual(["#00f", "#00f"]);
@@ -224,7 +224,7 @@ describe("component/pyramid", () => {
     test("should forward d3's index to an index-aware barWidth on both sides", () => {
       const node = render(
         pyramidOf().barWidth((_d: Datum, i: number) => 100 + i),
-        testData
+        testData,
       );
       expect(attrs(node, "left", "width")).toEqual(["100", "101"]);
       expect(attrs(node, "left", "x")).toEqual(["-100.5", "-101.5"]);
@@ -238,7 +238,7 @@ describe("component/pyramid", () => {
       const g = group("update");
       g.datum(testData).call(component as never);
       g.datum({ left: [{ age: 3, value: 99 }], right: [{ age: 3, value: 5 }] }).call(
-        component as never
+        component as never,
       );
       const node = g.node() as SVGGElement;
       await vi.waitFor(() => {
@@ -317,7 +317,7 @@ describe("component/pyramid", () => {
     test("should render only the configured side", () => {
       const node = render(
         pyramidOf().rightRefAccessor((d: Population) => d.right),
-        testData
+        testData,
       );
       expect(lines(node, "leftReference").length).toBe(0);
       expect(lines(node, "rightReference").length).toBe(1);
@@ -340,7 +340,7 @@ describe("component/pyramid", () => {
       // The reference point sits exactly on the bar's outer edge, vertically centred on it.
       const node = render(
         pyramidOf().rightRefAccessor((d: Population) => d.right),
-        { left, right: [{ age: 0, value: 100 }] }
+        { left, right: [{ age: 0, value: 100 }] },
       );
       const barRight =
         Number(attrs(node, "right", "x")[0]) + Number(attrs(node, "right", "width")[0]);
@@ -356,7 +356,7 @@ describe("component/pyramid", () => {
       // path must not wait for the first animation frame.
       const node = render(
         pyramidOf().rightRefAccessor((d: Population) => d.right),
-        testData
+        testData,
       );
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M30.5,5L10.5,17");
     });
@@ -367,7 +367,7 @@ describe("component/pyramid", () => {
           { age: 0, value: 5 },
           { age: 2, value: 7 },
         ]),
-        testData
+        testData,
       );
       expect(await lineD(node, "rightReference")).toBe("M5.5,5L7.5,29");
     });
@@ -400,7 +400,7 @@ describe("component/pyramid", () => {
       // on the tick the re-render happens.
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M30.5,5L10.5,17");
       await vi.waitFor(() =>
-        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M100.5,5L90.5,17")
+        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M100.5,5L90.5,17"),
       );
     });
 
@@ -412,7 +412,7 @@ describe("component/pyramid", () => {
         const node = render(
           // @ts-expect-error - deliberately violating the accessor's return contract
           pyramidOf().rightRefAccessor(() => undefined),
-          testData
+          testData,
         );
         expect(lines(node, "rightReference").length).toBe(0);
         expect(spy).toHaveBeenCalledOnce();
@@ -424,7 +424,7 @@ describe("component/pyramid", () => {
         const node = render(
           // @ts-expect-error - deliberately violating the accessor's return contract
           pyramidOf().rightRefAccessor(() => null),
-          testData
+          testData,
         );
         expect(lines(node, "rightReference").length).toBe(0);
         expect(spy).toHaveBeenCalledOnce();
@@ -440,7 +440,7 @@ describe("component/pyramid", () => {
           const node = render(
             // @ts-expect-error - deliberately violating the accessor's return contract
             pyramidOf().rightRefAccessor(() => value),
-            testData
+            testData,
           );
           expect(lines(node, "rightReference").length).toBe(0);
           expect(spy).toHaveBeenCalledOnce();
@@ -453,7 +453,7 @@ describe("component/pyramid", () => {
         const spy = warn();
         const node = render(
           pyramidOf().rightRefAccessor(() => []),
-          testData
+          testData,
         );
         expect(lines(node, "rightReference").length).toBe(0);
         expect(spy).not.toHaveBeenCalled();
@@ -494,7 +494,7 @@ describe("component/pyramid", () => {
             { age: 1, value: Number.NaN },
             { age: 2, value: 30 },
           ]),
-          testData
+          testData,
         );
         // The gap breaks the outline into two segments rather than truncating it.
         expect(await lineD(node, "rightReference")).toBe("M10.5,5ZM30.5,29Z");
@@ -507,7 +507,7 @@ describe("component/pyramid", () => {
             { age: 1, value: 5 },
             { age: 2, value: 7 },
           ]),
-          testData
+          testData,
         );
         expect(await lineD(node, "rightReference")).toBe("M5.5,17L7.5,29");
       });
@@ -519,7 +519,7 @@ describe("component/pyramid", () => {
             { age: 1, value: 7 },
             { age: 2, value: Number.NaN },
           ]),
-          testData
+          testData,
         );
         expect(await lineD(node, "rightReference")).toBe("M5.5,5L7.5,17");
       });
@@ -537,7 +537,7 @@ describe("component/pyramid", () => {
               { age: 1, value: 20 },
               { age: 2, value: 30 },
             ]),
-          testData
+          testData,
         );
         expect(await lineD(node, "rightReference")).toBe("M10.5,5ZM30.5,29Z");
       });
@@ -586,19 +586,19 @@ describe("component/pyramid", () => {
 
     test("should throw a named error when barHeight is missing", () => {
       expect(() => render(bare().barWidth(10).barPosition(5), testData)).toThrow(
-        "[pyramid] the barHeight property is required"
+        "[pyramid] the barHeight property is required",
       );
     });
 
     test("should throw a named error when barWidth is missing", () => {
       expect(() => render(bare().barHeight(5).barPosition(5), testData)).toThrow(
-        "[pyramid] the barWidth property is required"
+        "[pyramid] the barWidth property is required",
       );
     });
 
     test("should throw a named error when barPosition is missing", () => {
       expect(() => render(bare().barHeight(5).barWidth(10), testData)).toThrow(
-        "[pyramid] the barPosition property is required"
+        "[pyramid] the barPosition property is required",
       );
     });
 
@@ -610,8 +610,8 @@ describe("component/pyramid", () => {
             .barWidth(10)
             .barPosition(5)
             .rightAccessor((d: Population) => d.right),
-          testData
-        )
+          testData,
+        ),
       ).toThrow("[pyramid] the leftAccessor property is required");
     });
 
@@ -623,8 +623,8 @@ describe("component/pyramid", () => {
             .barWidth(10)
             .barPosition(5)
             .leftAccessor((d: Population) => d.left),
-          testData
-        )
+          testData,
+        ),
       ).toThrow("[pyramid] the rightAccessor property is required");
     });
 
@@ -648,8 +648,8 @@ describe("component/pyramid", () => {
         render(
           // @ts-expect-error - deliberately violating the accessor's return contract
           pyramidOf().leftAccessor(() => undefined),
-          testData
-        )
+          testData,
+        ),
       ).toThrow(TypeError);
     });
   });
@@ -663,7 +663,7 @@ describe("component/pyramid", () => {
       // barWidth before the mirroring arithmetic would put the same rule in two places.
       const node = render(
         pyramidOf().barWidth(() => Number.NaN),
-        testData
+        testData,
       );
       expect(attrs(node, "left", "x")).toEqual(["0", "0"]);
       expect(attrs(node, "left", "width")).toEqual(["0", "0"]);
@@ -680,7 +680,7 @@ describe("component/pyramid", () => {
       // shape, since fill defaults to black.
       const node = render(
         pyramidOf().rightRefAccessor((d: Population) => d.right),
-        testData
+        testData,
       );
       const path = lines(node, "rightReference")[0];
       expect(path.getAttribute("fill")).toBeNull();
@@ -705,7 +705,7 @@ describe("component/pyramid", () => {
       // Harmless, but it means the attribute is always present.
       const node = render(
         pyramidOf().rightRefAccessor((d: Population) => d.right),
-        testData
+        testData,
       );
       expect(lines(node, "rightReference")[0].getAttribute("transform")).toBe("");
     });

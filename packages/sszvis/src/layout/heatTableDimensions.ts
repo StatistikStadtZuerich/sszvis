@@ -75,7 +75,7 @@ export default function dimensionsHeatTable(
   squarePadding: number,
   numX: number,
   numY: number,
-  chartPadding?: HeatTableChartPadding
+  chartPadding?: HeatTableChartPadding,
 ): HeatTableDimensions {
   requireSize("dimensionsHeatTable", "spaceWidth", spaceWidth);
   requireSize("dimensionsHeatTable", "squarePadding", squarePadding);
@@ -97,7 +97,7 @@ export default function dimensionsHeatTable(
     // and a padRatio derived from one lands outside the [0, 1) a band scale accepts
     side = Math.max(
       0,
-      Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE)
+      Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
     ),
     paddedSide = side + squarePadding,
     padRatio = 1 - side / paddedSide,

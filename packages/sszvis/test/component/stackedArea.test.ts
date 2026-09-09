@@ -167,7 +167,7 @@ describe("component/stackedArea", () => {
           .y0((d: number[]) => d[0])
           .y1((d: number[]) => d[1])
           .fill((d: { key: string }) => (d.key === "a" ? "#f00" : "#00f")),
-        series
+        series,
       );
       expect(ds(node)).toEqual(["M0,1L10,3L10,0L0,0Z", "M0,3L10,7L10,3L0,1Z"]);
       expect(attrs(node, "fill")).toEqual(["#f00", "#00f"]);
@@ -185,7 +185,7 @@ describe("component/stackedArea", () => {
         };
       render(
         stackedArea().transition(false).x(record("x")).y0(record("y0")).y1(record("y1")),
-        oneLayer
+        oneLayer,
       );
       // All three go through the same call site in d3.area, once per point - the baseline
       // is drawn back from cached values rather than by asking again. y0 and y1 are asked
@@ -211,7 +211,7 @@ describe("component/stackedArea", () => {
           seen.push(args);
           return "#f00";
         }),
-        twoLayers
+        twoLayers,
       );
       // Style accessors receive the array of points, not a single point - the inverse of
       // what x, y0 and y1 receive. The third argument is d3's group of path nodes.
@@ -236,7 +236,7 @@ describe("component/stackedArea", () => {
           .x("7")
           .y0(2)
           .y1(1),
-        oneLayer
+        oneLayer,
       );
       expect(ds(node)).toEqual(["M7,1L7,1L7,2L7,2Z"]);
     });
@@ -249,7 +249,7 @@ describe("component/stackedArea", () => {
           .x((d: Point) => d.x * 2)
           .y0((d: Point) => yScale(d.y0))
           .y1((d: Point) => yScale(d.y1)),
-        oneLayer
+        oneLayer,
       );
       expect(ds(node)).toEqual(["M0,90L20,80L20,50L0,60Z"]);
     });
@@ -263,7 +263,7 @@ describe("component/stackedArea", () => {
     test("should apply a fill derived from the layer's own data", () => {
       const node = render(
         areaOf().fill((d: Layer) => (d[0].y1 === 60 ? "#f00" : "#00f")),
-        twoLayers
+        twoLayers,
       );
       expect(attrs(node, "fill")).toEqual(["#f00", "#00f"]);
     });
@@ -286,7 +286,7 @@ describe("component/stackedArea", () => {
         const node = render(
           // @ts-expect-error - a fill accessor is typed as returning a colour
           areaOf().fill(() => undefined),
-          oneLayer
+          oneLayer,
         );
         expect(attrs(node, "fill")).toEqual([null]);
       });
@@ -306,7 +306,7 @@ describe("component/stackedArea", () => {
     test("should apply a stroke derived from the layer's own data", () => {
       const node = render(
         areaOf().stroke((d: Layer) => (d[0].y1 === 60 ? "#f00" : "#00f")),
-        twoLayers
+        twoLayers,
       );
       expect(attrs(node, "stroke")).toEqual(["#f00", "#00f"]);
     });
@@ -325,7 +325,7 @@ describe("component/stackedArea", () => {
     test("should apply a strokeWidth derived from the layer's own data", () => {
       const node = render(
         areaOf().strokeWidth((d: Layer) => d.length),
-        twoLayers
+        twoLayers,
       );
       expect(attrs(node, "stroke-width")).toEqual(["2", "2"]);
     });
@@ -341,10 +341,10 @@ describe("component/stackedArea", () => {
         attrs(
           render(
             areaOf().stroke(() => ""),
-            oneLayer
+            oneLayer,
           ),
-          "stroke"
-        )
+          "stroke",
+        ),
       ).toEqual([""]);
     });
 
@@ -373,7 +373,7 @@ describe("component/stackedArea", () => {
     test("should use an explicit defined predicate to break the area", () => {
       const node = render(
         areaOf().defined((d: Point) => !Number.isNaN(d.y1)),
-        withGap
+        withGap,
       );
       // Each surviving run becomes its own subpath. A run of one point is emitted as a
       // degenerate top-and-bottom pair by d3.area.
@@ -387,7 +387,7 @@ describe("component/stackedArea", () => {
           seen.push(args);
           return true;
         }),
-        oneLayer
+        oneLayer,
       );
       expect(seen.map((args) => args.length)).toEqual([3, 3]);
       expect(seen.map((args) => args[1])).toEqual([0, 1]);
@@ -411,8 +411,8 @@ describe("component/stackedArea", () => {
               { x: 10, y0: Number.NaN, y1: 20 },
               { x: 20, y0: 60, y1: 30 },
             ],
-          ])
-        )
+          ]),
+        ),
       ).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
     });
 
@@ -473,7 +473,7 @@ describe("component/stackedArea", () => {
             { x: 10, y0: Number.NaN, y1: 20 },
             { x: 20, y0: 60, y1: 30 },
           ],
-        ]
+        ],
       );
       expect(ds(node)).toEqual(["M0,10L10,20L20,30L20,60L10,NaNL0,40Z"]);
     });
@@ -512,7 +512,7 @@ describe("component/stackedArea", () => {
           seen.push(args);
           return String(args[1]);
         }),
-        twoLayers
+        twoLayers,
       );
       expect(seen.map((args) => args.length)).toEqual([3, 3]);
       expect(seen.map((args) => args[0])).toEqual(twoLayers);
@@ -541,8 +541,8 @@ describe("component/stackedArea", () => {
             .transition(false)
             .y0((d: Point) => d.y0)
             .y1((d: Point) => d.y1),
-          oneLayer
-        )
+          oneLayer,
+        ),
       ).toThrow("[stackedArea] the x property is required");
     });
 
@@ -553,8 +553,8 @@ describe("component/stackedArea", () => {
             .transition(false)
             .x((d: Point) => d.x)
             .y1((d: Point) => d.y1),
-          oneLayer
-        )
+          oneLayer,
+        ),
       ).toThrow("[stackedArea] the y0 property is required");
     });
 
@@ -568,8 +568,8 @@ describe("component/stackedArea", () => {
             .transition(false)
             .x((d: Point) => d.x)
             .y0((d: Point) => d.y0),
-          oneLayer
-        )
+          oneLayer,
+        ),
       ).toThrow("[stackedArea] the y1 property is required");
     });
 
@@ -578,7 +578,7 @@ describe("component/stackedArea", () => {
       // found it rather than filling it with paths whose geometry is entirely NaN.
       const g = group("unconfigured");
       expect(() => g.datum(twoLayers).call(stackedArea().transition(false) as never)).toThrow(
-        /property is required/
+        /property is required/,
       );
       expect(paths(g.node() as SVGGElement).length).toBe(0);
     });
@@ -592,7 +592,7 @@ describe("component/stackedArea", () => {
           .x((d: Point) => d.x)
           .y0((d: Point) => d.y0)
           .y1(null),
-        oneLayer
+        oneLayer,
       );
       expect(ds(node)).toEqual(["M0,40L10,50L10,50L0,40Z"]);
     });
@@ -633,8 +633,8 @@ describe("component/stackedArea", () => {
               { x: 0, y0: 10, y1: 40 },
               { x: 10, y0: 10, y1: 40 },
             ],
-          ])
-        )
+          ]),
+        ),
       ).toEqual(["M0,40L10,40L10,10L0,10Z"]);
     });
 
@@ -658,8 +658,8 @@ describe("component/stackedArea", () => {
         // fails with "areaOf(...).valuesAccessor is not a function".
         expect(() =>
           (areaOf() as unknown as { valuesAccessor: (a: unknown) => void }).valuesAccessor(
-            (d: { values: Layer }) => d.values
-          )
+            (d: { values: Layer }) => d.values,
+          ),
         ).toThrow(TypeError);
       });
     });

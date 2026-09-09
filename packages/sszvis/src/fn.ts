@@ -39,7 +39,7 @@ export const isSelection = (val: unknown): val is AnySelection => val instanceof
  */
 export const arity = <A extends unknown[], R>(
   n: number,
-  fn: (...args: A) => R
+  fn: (...args: A) => R,
 ): ((...args: unknown[]) => R) => {
   // arity exists to call `fn` with an argument list its own signature does not describe:
   // extra arguments are dropped and missing ones padded with undefined. No type can say
@@ -118,7 +118,7 @@ export const defined = <T>(val: T): val is NonNullable<T> =>
  */
 export const derivedSet = <T>(
   arr: T[],
-  acc?: (value: T, index: number, array: T[]) => unknown
+  acc?: (value: T, index: number, array: T[]) => unknown,
 ): T[] => {
   const accessor = acc || identity;
   const seen: unknown[] = [];
@@ -247,7 +247,7 @@ export const foldPattern = <T>(key: string, pattern: Record<string, () => T>): T
  */
 export const hashableSet = <T, U extends string | number>(
   arr: T[],
-  acc?: (element: T, index: number, array: T[]) => U
+  acc?: (element: T, index: number, array: T[]) => U,
 ): U[] => {
   const accessor = acc || (identity as (element: T, index: number, array: T[]) => U);
   // A Set, not a plain object: an object inherits Object.prototype, so values naming one
@@ -329,7 +329,7 @@ export const not = <T extends unknown[]>(f: (...args: T) => unknown): ((...args:
  */
 export const prop =
   <K extends string | number | symbol>(
-    key: K
+    key: K,
   ): (<T extends Record<K, unknown>>(object: T) => T[K]) =>
   <T extends Record<K, unknown>>(object: T): T[K] =>
     object[key];
@@ -347,7 +347,7 @@ export const prop =
 export const propOr =
   <K extends string | number | symbol, D>(
     key: K,
-    defaultVal?: D
+    defaultVal?: D,
   ): (<T extends Partial<Record<K, unknown>>>(object: T | undefined) => T[K] | D) =>
   <T extends Partial<Record<K, unknown>>>(object: T | undefined): T[K] | D => {
     const value = object === undefined ? undefined : object[key];
@@ -419,7 +419,7 @@ export const functor = <T>(v: T | (() => T)): (() => T) =>
  */
 export function withRootSelection<R, SG extends BaseType, SD, SP extends BaseType, SPD>(
   selector: string | Element | Selection<SG, SD, SP, SPD>,
-  render: <G extends BaseType, D, P extends BaseType, PD>(root: Selection<G, D, P, PD>) => R
+  render: <G extends BaseType, D, P extends BaseType, PD>(root: Selection<G, D, P, PD>) => R,
 ): R {
   if (typeof selector === "string") return render(select(selector));
   if (selector instanceof Element) return render(select(selector));
@@ -469,7 +469,7 @@ export const MEMOIZE_CACHE_LIMIT = 32;
  */
 export const memoize = <TFunc extends (...args: never[]) => unknown>(
   func: TFunc,
-  resolver?: (...args: Parameters<TFunc>) => string | number
+  resolver?: (...args: Parameters<TFunc>) => string | number,
   // The cache key is whatever the resolver returned, or - with no resolver - the first
   // argument itself, which may be any value including an object compared by identity.
 ): TFunc & { cache: Map<unknown, ReturnType<TFunc>> } => {
@@ -481,7 +481,7 @@ export const memoize = <TFunc extends (...args: never[]) => unknown>(
       throw new TypeError(
         "[fn.memoize] A function called with more than one argument needs a resolver: the " +
           "default cache key is the first argument alone, so differing later arguments would " +
-          "return the first call's result."
+          "return the first call's result.",
       );
     }
     const key = resolver ? resolver(...args) : args[0];

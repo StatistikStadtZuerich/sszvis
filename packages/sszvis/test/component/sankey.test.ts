@@ -118,7 +118,7 @@ describe("component/sankey", () => {
     test("should render the four groups in a fixed order", () => {
       const node = render(sankeyOf(), testData);
       const keys = [...node.querySelectorAll("[data-d3-selectgroup]")].map((g) =>
-        g.getAttribute("data-d3-selectgroup")
+        g.getAttribute("data-d3-selectgroup"),
       );
       expect(keys).toEqual(["nodes", "links", "linklabels", "nodelabels"]);
     });
@@ -167,7 +167,7 @@ describe("component/sankey", () => {
     test("should offset every column by its columnPadding", () => {
       const node = render(
         sankeyOf().columnPadding((i: number) => i * 7),
-        testData
+        testData,
       );
       expect(attrs(node, "nodes", "rect.sszvis-bar", "y")).toEqual(["0", "40", "7", "42"]);
     });
@@ -184,7 +184,7 @@ describe("component/sankey", () => {
         sankeyOf()
           .sizeScale((v: number) => v * 1.5)
           .columnPadding(0.7),
-        testData
+        testData,
       );
       // A: floor(0.7 + 0) = 0, height ceil(45) = 45
       // B: floor(0.7 + 45 + 10) = 55, height ceil(15) = 15
@@ -216,7 +216,7 @@ describe("component/sankey", () => {
       ]);
       const accessor = render(
         sankeyOf().nodeColor((n: Node) => (n.columnIndex === 0 ? "#f00" : "#00f")),
-        testData
+        testData,
       );
       expect(attrs(accessor, "nodes", "rect.sszvis-bar", "fill")).toEqual([
         "#f00",
@@ -284,7 +284,7 @@ describe("component/sankey", () => {
       // bound to an element at all.
       const node = render(
         sankeyOf().columnLabel((i: number) => `col ${i}`),
-        testData
+        testData,
       );
       expect(texts(node, "nodes", "text.sszvis-sankey-column-label")).toEqual(["col 0", "col 1"]);
     });
@@ -311,7 +311,7 @@ describe("component/sankey", () => {
           seen.push([length, i]);
           return i * 10;
         }),
-        testData
+        testData,
       );
       expect(seen).toEqual([
         [2, 0],
@@ -332,7 +332,7 @@ describe("component/sankey", () => {
         {
           ...testData,
           columnLengths: [2, 2, 0],
-        }
+        },
       );
       expect(texts(node, "nodes", "text.sszvis-sankey-column-label")).toEqual([
         "col 0",
@@ -340,7 +340,7 @@ describe("component/sankey", () => {
         "col 2",
       ]);
       expect(attrs(node, "nodes", "text.sszvis-sankey-column-label", "transform")[2]).toBe(
-        "translate(210,-24)"
+        "translate(210,-24)",
       );
     });
   });
@@ -402,7 +402,7 @@ describe("component/sankey", () => {
       ]);
       const accessor = render(
         sankeyOf().linkColor((l: Link) => (l.value > 5 ? "#f00" : "#00f")),
-        testData
+        testData,
       );
       // DOM order after the default sort is by descending value: 20, 10, 5, 5
       expect(attrs(accessor, "links", "path.sszvis-link", "stroke")).toEqual([
@@ -456,7 +456,7 @@ describe("component/sankey", () => {
     test("should sort the paths with a custom linkSort", () => {
       const node = render(
         sankeyOf().linkSort((a: Link, b: Link) => a.value - b.value),
-        testData
+        testData,
       );
       expect(linkAttrs(node, "stroke-width")).toEqual(["5", "5", "10", "20"]);
     });
@@ -543,7 +543,7 @@ describe("component/sankey", () => {
     test("should map the id through nameLabel", () => {
       const node = render(
         sankeyOf().nameLabel((id: string) => id.toLowerCase()),
-        testData
+        testData,
       );
       expect(labels(node).map((l) => l.textContent)).toEqual(["a", "b", "c", "d"]);
     });
@@ -581,7 +581,7 @@ describe("component/sankey", () => {
     test("should choose the side per column", () => {
       const node = render(
         sankeyOf().labelSide((i: number) => (i === 0 ? "left" : "right")),
-        testData
+        testData,
       );
       expect(labels(node).map((l) => l.getAttribute("x"))).toEqual(["-6", "-6", "126", "126"]);
     });
@@ -591,7 +591,7 @@ describe("component/sankey", () => {
         sankeyOf()
           .labelSide((i: number) => (i === 0 ? "left" : "right"))
           .labelSideSwitch(true),
-        testData
+        testData,
       );
       expect(labels(node).map((l) => l.getAttribute("x"))).toEqual(["26", "26", "94", "94"]);
     });
@@ -615,24 +615,24 @@ describe("component/sankey", () => {
     test("should default labelOpacity to 1 and accept a constant or an accessor", () => {
       const dflt = render(sankeyOf(), testData);
       expect(
-        all<SVGTextElement>(dflt, "nodelabels", "text.sszvis-sankey-node-label")[0].style.opacity
+        all<SVGTextElement>(dflt, "nodelabels", "text.sszvis-sankey-node-label")[0].style.opacity,
       ).toBe("1");
 
       const constant = render(sankeyOf().labelOpacity(0), testData);
       expect(
         all<SVGTextElement>(constant, "nodelabels", "text.sszvis-sankey-node-label").map(
-          (l) => l.style.opacity
-        )
+          (l) => l.style.opacity,
+        ),
       ).toEqual(["0", "0", "0", "0"]);
 
       const accessor = render(
         sankeyOf().labelOpacity((n: Node) => (n.columnIndex === 0 ? 1 : 0.5)),
-        testData
+        testData,
       );
       expect(
         all<SVGTextElement>(accessor, "nodelabels", "text.sszvis-sankey-node-label").map(
-          (l) => l.style.opacity
-        )
+          (l) => l.style.opacity,
+        ),
       ).toEqual(["1", "1", "0.5", "0.5"]);
     });
 
@@ -642,13 +642,13 @@ describe("component/sankey", () => {
       const node = render(sankeyOf().columnLabel("Total").labelOpacity(0.25), testData);
       expect(
         all<SVGTextElement>(node, "nodelabels", "text.sszvis-sankey-node-label").map(
-          (l) => l.style.opacity
-        )
+          (l) => l.style.opacity,
+        ),
       ).toEqual(["0.25", "0.25", "0.25", "0.25"]);
       expect(
         all<SVGTextElement>(node, "nodes", "text.sszvis-sankey-column-label").map(
-          (l) => l.style.opacity
-        )
+          (l) => l.style.opacity,
+        ),
       ).toEqual(["1", "1"]);
     });
 
@@ -656,25 +656,25 @@ describe("component/sankey", () => {
       const constant = render(sankeyOf().columnLabel("Total").columnLabelOpacity(0.25), testData);
       expect(
         all<SVGTextElement>(constant, "nodes", "text.sszvis-sankey-column-label").map(
-          (l) => l.style.opacity
-        )
+          (l) => l.style.opacity,
+        ),
       ).toEqual(["0.25", "0.25"]);
       // The node labels are left alone
       expect(
         all<SVGTextElement>(constant, "nodelabels", "text.sszvis-sankey-node-label")[0].style
-          .opacity
+          .opacity,
       ).toBe("1");
 
       const accessor = render(
         sankeyOf()
           .columnLabel("Total")
           .columnLabelOpacity((i: number) => (i === 0 ? 1 : 0)),
-        testData
+        testData,
       );
       expect(
         all<SVGTextElement>(accessor, "nodes", "text.sszvis-sankey-column-label").map(
-          (l) => l.style.opacity
-        )
+          (l) => l.style.opacity,
+        ),
       ).toEqual(["1", "0"]);
     });
 
@@ -682,8 +682,8 @@ describe("component/sankey", () => {
       const node = render(sankeyOf().columnLabel("Total"), testData);
       expect(
         all<SVGTextElement>(node, "nodes", "text.sszvis-sankey-column-label").map(
-          (l) => l.style.opacity
-        )
+          (l) => l.style.opacity,
+        ),
       ).toEqual(["1", "1"]);
     });
   });
@@ -754,7 +754,7 @@ describe("component/sankey", () => {
         sankeyOf()
           .linkSourceLabels([data.links[0], data.links[1]])
           .linkLabel((l: Link) => String(l.value)),
-        data
+        data,
       );
       expect(sourceLabels(node).map((l) => l.textContent)).toEqual(["20", "10"]);
     });
@@ -791,7 +791,7 @@ describe("component/sankey", () => {
           .linkSourceLabels([data.links[0]])
           .linkTargetLabels([data.links[0]])
           .linkLabel((l: Link) => String(l.value)),
-        data
+        data,
       );
       expect(sourceLabels(node).map((l) => l.textContent)).toEqual(["20"]);
       expect(targetLabels(node).map((l) => l.textContent)).toEqual(["20"]);
@@ -925,8 +925,8 @@ describe("component/sankey", () => {
             .nodeThickness(20)
             .nodePadding(10)
             .columnPadding(0),
-          testData
-        )
+          testData,
+        ),
       ).toThrow(TypeError);
     });
 
@@ -938,8 +938,8 @@ describe("component/sankey", () => {
             .nodeThickness(20)
             .nodePadding(10)
             .columnPadding(0),
-          testData
-        )
+          testData,
+        ),
       ).toThrow(TypeError);
     });
 
@@ -953,8 +953,8 @@ describe("component/sankey", () => {
             .columnPosition((i: number) => i * 100)
             .nodeThickness(20)
             .nodePadding(10),
-          testData
-        )
+          testData,
+        ),
       ).toThrow(TypeError);
     });
 
@@ -976,8 +976,8 @@ describe("component/sankey", () => {
             .columnPosition((i: number) => i * 100)
             .nodePadding(10)
             .columnPadding(0),
-          testData
-        )
+          testData,
+        ),
       ).toThrow(/\[sankey\].*nodeThickness/);
     });
 
@@ -989,8 +989,8 @@ describe("component/sankey", () => {
             .sizeScale((v: number) => v)
             .columnPosition((i: number) => i * 100)
             .nodePadding(10)
-            .columnPadding(0) as never
-        )
+            .columnPadding(0) as never,
+        ),
       ).toThrow();
       expect((g.node() as SVGGElement).childElementCount).toBe(0);
     });
@@ -1003,8 +1003,8 @@ describe("component/sankey", () => {
             .columnPosition((i: number) => i * 100)
             .nodeThickness(20)
             .columnPadding(0),
-          testData
-        )
+          testData,
+        ),
       ).toThrow(/\[sankey\].*nodePadding/);
     });
 
@@ -1014,7 +1014,7 @@ describe("component/sankey", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const node = render(
         sankeyOf().sizeScale((v: number) => (v === 20 ? Number.NaN : v)),
-        testData
+        testData,
       );
       const paths = attrs(node, "links", "path.sszvis-link", "d");
       expect(paths.some((d) => d?.includes("NaN"))).toBe(false);
@@ -1031,7 +1031,7 @@ describe("component/sankey", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const node = render(
         sankeyOf().sizeScale((v: number) => (v === 30 ? Number.NaN : v)),
-        testData
+        testData,
       );
       expect(attrs(node, "nodelabels", "text.sszvis-sankey-node-label", "y")[0]).toBe("0");
       expect(attrs(node, "nodelabels", "rect.sszvis-sankey-hitbox", "y")[0]).toBe("-5");
@@ -1043,7 +1043,7 @@ describe("component/sankey", () => {
     test("should accept a constant nameLabel as well as an accessor", () => {
       const node = render(sankeyOf().nameLabel("Total"), testData);
       expect(
-        all(node, "nodelabels", "text.sszvis-sankey-node-label").map((l) => l.textContent)
+        all(node, "nodelabels", "text.sszvis-sankey-node-label").map((l) => l.textContent),
       ).toEqual(["Total", "Total", "Total", "Total"]);
     });
 
@@ -1067,15 +1067,15 @@ describe("component/sankey", () => {
         render(
           // @ts-expect-error - deliberately passing an accessor where a number is declared
           sankeyOf().labelHitBoxSize(() => 50),
-          testData
-        )
+          testData,
+        ),
       ).toThrow(/labelHitBoxSize/);
       expect(() =>
         render(
           // @ts-expect-error - deliberately passing an accessor where a number is declared
           sankeyOf().linkCurvature(() => 0.5),
-          testData
-        )
+          testData,
+        ),
       ).toThrow(/linkCurvature/);
     });
 
@@ -1136,7 +1136,7 @@ describe("component/sankey", () => {
       // edge while the bar is drawn one pixel wide.
       const node = render(sankeyOf().nodeThickness(0), testData);
       expect(attrs(node, "nodes", "text.sszvis-sankey-column-label", "transform")[0]).toBe(
-        "translate(0,-24)"
+        "translate(0,-24)",
       );
     });
 
@@ -1158,7 +1158,7 @@ describe("component/sankey", () => {
       // top edge, but the stack can finish up to a pixel short of the bar's bottom edge.
       const node = render(
         sankeyOf().sizeScale((v: number) => v * 1.05),
-        makeData()
+        makeData(),
       );
       // Node A: y = floor(0) = 0, height = ceil(31.5) = 32, so the bar's bottom edge is 32
       expect(attrs(node, "nodes", "rect.sszvis-bar", "y")[0]).toBe("0");
@@ -1166,7 +1166,7 @@ describe("component/sankey", () => {
       // Its second link is centred at 26.25 and 10.5 thick, so it ends at 31.5 - half a
       // pixel above the bar it hangs off
       expect(attrs(node, "links", "path.sszvis-link", "d")[1]).toBe(
-        "M21,26.25C60,26.25 60,41.25 99,41.25"
+        "M21,26.25C60,26.25 60,41.25 99,41.25",
       );
       expect(attrs(node, "links", "path.sszvis-link", "stroke-width")[1]).toBe("10.5");
     });
@@ -1197,13 +1197,13 @@ describe("component/sankey", () => {
           // computeLayout only returns undefined here for an empty column list
           .nodePadding(layout.nodePadding ?? 0)
           .columnPadding((i: number) => layout.columnPaddings[i]),
-        prepared
+        prepared,
       );
       expect(all(node, "nodes", "rect.sszvis-bar").length).toBe(4);
       expect(all(node, "links", "path.sszvis-link").length).toBe(3);
       expect(all(node, "nodes", "text.sszvis-sankey-column-label").length).toBe(2);
       expect(
-        all(node, "nodelabels", "text.sszvis-sankey-node-label").map((l) => l.textContent)
+        all(node, "nodelabels", "text.sszvis-sankey-node-label").map((l) => l.textContent),
       ).toEqual(["A", "C", "D", "B"]);
     });
   });

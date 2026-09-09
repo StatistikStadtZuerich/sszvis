@@ -184,4 +184,3 @@ export function resolveLib(side, version, file) {
   if (file === "sszvis.css") return path.join(REPO, "docs", "sszvis.css");
   return baseline;
 }
-

@@ -104,12 +104,12 @@ describe("map/renderer/highlight", () => {
   /** Renders the highlight layer, returning the group node it drew into. */
   const render = (
     configure: (c: MapRendererHighlightComponent<Datum>) => MapRendererHighlightComponent<Datum> = (
-      c
+      c,
     ) => c,
-    key?: string
+    key?: string,
   ) => {
     const component = configure(
-      mapRendererHighlight<Datum>().geoJson(collection()).mapPath(mapPathOf())
+      mapRendererHighlight<Datum>().geoJson(collection()).mapPath(mapPathOf()),
     );
     return group(key).call(component).node() as SVGGElement;
   };
@@ -129,7 +129,7 @@ describe("map/renderer/highlight", () => {
           mapRendererHighlight<Datum>()
             .geoJson(features)
             .mapPath(mapPath)
-            .highlight([{ geoId: "b" }])
+            .highlight([{ geoId: "b" }]),
         )
         .node() as SVGGElement;
       expect(highlights(node)[0].getAttribute("d")).toBe(mapPath(features.features[1]));
@@ -143,7 +143,7 @@ describe("map/renderer/highlight", () => {
           mapRendererHighlight<Datum>()
             .geoJson(features)
             .mapPath(mapPath)
-            .highlight([{ geoId: "a" }])
+            .highlight([{ geoId: "a" }]),
         )
         .node() as SVGGElement;
       expect(highlights(node)[0].getAttribute("d")).toBe(mapPath(features.features[0]));
@@ -167,7 +167,7 @@ describe("map/renderer/highlight", () => {
             mapRendererHighlight<Datum>()
               .geoJson(collection())
               .mapPath(mapPathOf())
-              .highlight([{ geoId: "a" }])
+              .highlight([{ geoId: "a" }]),
           )
           .node() as SVGGElement;
       const first = highlights(renderWith())[0];
@@ -195,7 +195,7 @@ describe("map/renderer/highlight", () => {
         mapRendererHighlight<Datum>()
           .geoJson(collection())
           .mapPath(mapPathOf())
-          .highlight([{ geoId: "a" }])
+          .highlight([{ geoId: "a" }]),
       );
       expect(highlights(layer.node() as SVGGElement)).toHaveLength(1);
       layer.call(mapRendererHighlight<Datum>().geoJson(collection()).mapPath(mapPathOf()));
@@ -221,7 +221,7 @@ describe("map/renderer/highlight", () => {
         c
           .highlight([{ geoId: "a" }])
           .highlightStroke("#ff0000")
-          .highlightStrokeWidth(4)
+          .highlightStrokeWidth(4),
       );
       expect(highlights(node)[0].style.stroke).toBe("rgb(255, 0, 0)");
       expect(highlights(node)[0].style.strokeWidth).toBe("4");
@@ -234,7 +234,7 @@ describe("map/renderer/highlight", () => {
         c.highlight([datum]).highlightStroke((d: Datum) => {
           seen.push(d);
           return "#00ff00";
-        })
+        }),
       );
       expect(seen).toEqual([datum]);
       expect(highlights(node)[0].style.stroke).toBe("rgb(0, 255, 0)");
@@ -247,7 +247,7 @@ describe("map/renderer/highlight", () => {
         c.highlight([datum]).highlightStrokeWidth((d: Datum) => {
           seen.push(d);
           return 5;
-        })
+        }),
       );
       expect(seen).toEqual([datum]);
       expect(highlights(node)[0].style.strokeWidth).toBe("5");
@@ -260,7 +260,7 @@ describe("map/renderer/highlight", () => {
             { geoId: "a", value: 1 },
             { geoId: "b", value: 2 },
           ])
-          .highlightStroke((d: Datum) => (d.value === 1 ? "#ff0000" : "#0000ff"))
+          .highlightStroke((d: Datum) => (d.value === 1 ? "#ff0000" : "#0000ff")),
       );
       expect(highlights(node)[0].style.stroke).toBe("rgb(255, 0, 0)");
       expect(highlights(node)[1].style.stroke).toBe("rgb(0, 0, 255)");
@@ -277,7 +277,7 @@ describe("map/renderer/highlight", () => {
         c.highlight([{ geoId: "a" }]).highlightStroke(function (this: unknown, ...args: unknown[]) {
           seen.push([...args, this]);
           return "#ff0000";
-        })
+        }),
       );
       expect(seen[0]).toHaveLength(2);
       expect(seen[0][0]).toEqual({ geoId: "a" });
@@ -355,7 +355,7 @@ describe("map/renderer/highlight", () => {
           mapRendererHighlight<Datum>()
             .geoJson(features)
             .mapPath(mapPath)
-            .highlight([{ geoId: "nope" }, { geoId: "a" }])
+            .highlight([{ geoId: "nope" }, { geoId: "a" }]),
         )
         .node() as SVGGElement;
       expect(highlights(node)).toHaveLength(1);
@@ -401,7 +401,7 @@ describe("map/renderer/highlight", () => {
         mapRendererHighlight<Datum>()
           .geoJson(features)
           .mapPath(seen.mapPath)
-          .highlight([{ geoId: "__proto__" }, { geoId: "a" }, { geoId: "nope" }])
+          .highlight([{ geoId: "__proto__" }, { geoId: "a" }, { geoId: "nope" }]),
       );
       expect(seen.features).toEqual([features.features[0]]);
     });
@@ -418,7 +418,7 @@ describe("map/renderer/highlight", () => {
       const renderWith = (geoId: unknown) =>
         group()
           .call(
-            mapRendererHighlight<Datum>().geoJson(features).mapPath(mapPath).highlight([{ geoId }])
+            mapRendererHighlight<Datum>().geoJson(features).mapPath(mapPath).highlight([{ geoId }]),
           )
           .node() as SVGGElement;
       expect(highlights(renderWith(1))[0].getAttribute("d")).toBe(mapPath(features.features[0]));
@@ -437,7 +437,7 @@ describe("map/renderer/highlight", () => {
             mapRendererHighlight<Datum>()
               .geoJson(collection())
               .mapPath(mapPathOf())
-              .highlight(highlight)
+              .highlight(highlight),
           )
           .node() as SVGGElement;
       const before = highlights(renderWith([{ geoId: "a" }, { geoId: "b" }]));
@@ -457,7 +457,7 @@ describe("map/renderer/highlight", () => {
             mapRendererHighlight<Datum>()
               .geoJson(collection())
               .mapPath(mapPathOf())
-              .highlight(highlight)
+              .highlight(highlight),
           )
           .node() as SVGGElement;
       const before = highlights(renderWith([{ geoId: "a" }, { geoId: "b" }]));
@@ -475,7 +475,7 @@ describe("map/renderer/highlight", () => {
             mapRendererHighlight<Datum>()
               .geoJson(collection())
               .mapPath(mapPathOf())
-              .highlight(highlight)
+              .highlight(highlight),
           )
           .node() as SVGGElement;
       expect(highlights(renderWith([{ geoId: "a" }, { geoId: "a" }]))).toHaveLength(2);
@@ -492,7 +492,7 @@ describe("map/renderer/highlight", () => {
           .geoJson(collection())
           .mapPath(mapPathOf())
           .highlight([{ geoId: "a" }])
-          .highlightStroke("#ff0000")
+          .highlightStroke("#ff0000"),
       );
       const first = highlights(layer.node() as SVGGElement)[0];
       layer.call(
@@ -501,7 +501,7 @@ describe("map/renderer/highlight", () => {
           .geoJson(collection())
           .mapPath(mapPathOf())
           .highlight([{ geoId: "b" }])
-          .highlightStroke("#00ff00")
+          .highlightStroke("#00ff00"),
       );
       const after = highlights(layer.node() as SVGGElement);
       expect(after).toHaveLength(2);
@@ -519,7 +519,7 @@ describe("map/renderer/highlight", () => {
             .key(key)
             .geoJson(collection())
             .mapPath(mapPathOf())
-            .highlight(highlight)
+            .highlight(highlight),
         );
       renderWith("first", [{ geoId: "a" }]);
       renderWith("second", [{ geoId: "b" }]);
@@ -541,7 +541,7 @@ describe("map/renderer/highlight", () => {
           mapRendererHighlight<Datum>()
             .geoJson(collection())
             .mapPath(mapPathOf())
-            .highlight([{ geoId }])
+            .highlight([{ geoId }]),
         );
       renderWith("a");
       const first = highlights(layer.node() as SVGGElement)[0];
@@ -561,7 +561,7 @@ describe("map/renderer/highlight", () => {
     const renderInto = (
       layer: ReturnType<typeof group>,
       highlight: Datum[],
-      key?: string
+      key?: string,
     ): SVGGElement => {
       let component = mapRendererHighlight<Datum>()
         .geoJson(collection())
@@ -575,7 +575,7 @@ describe("map/renderer/highlight", () => {
     const appendSibling = (node: SVGGElement, id: string): Element => {
       const sibling = node.ownerDocument.createElementNS(
         "http://www.w3.org/2000/svg",
-        "g"
+        "g",
       ) as Element;
       sibling.setAttribute("data-sibling", id);
       node.appendChild(sibling);
@@ -724,7 +724,7 @@ describe("map/renderer/highlight", () => {
       const node = render((c) =>
         // null and undefined entries are a caller error; pinned because the component accepts
         // them rather than reporting them.
-        c.highlight([null, { geoId: "a" }, undefined])
+        c.highlight([null, { geoId: "a" }, undefined]),
       );
       expect(highlights(node)).toHaveLength(1);
     });
@@ -741,7 +741,7 @@ describe("map/renderer/highlight", () => {
             mapRendererHighlight<Datum>()
               .geoJson(collection())
               .mapPath(mapPathOf())
-              .highlight(highlight)
+              .highlight(highlight),
           )
           .node() as SVGGElement;
       expect(highlights(renderWith([{ geoId: "a" }]))).toHaveLength(1);
@@ -757,11 +757,13 @@ describe("map/renderer/highlight", () => {
         mapRendererHighlight<Datum>()
           .geoJson(collection())
           .mapPath(mapPathOf())
-          .highlight([{ geoId: "a" }])
+          .highlight([{ geoId: "a" }]),
       );
       expect(highlights(layer.node() as SVGGElement)).toHaveLength(1);
       expect(() =>
-        layer.call(mapRendererHighlight<Datum>().geoJson(collection()).highlight([null, undefined]))
+        layer.call(
+          mapRendererHighlight<Datum>().geoJson(collection()).highlight([null, undefined]),
+        ),
       ).not.toThrow();
       expect(highlights(layer.node() as SVGGElement)).toHaveLength(0);
     });
@@ -774,7 +776,7 @@ describe("map/renderer/highlight", () => {
         mapRendererHighlight<Datum>()
           .geoJson(collection())
           .mapPath(mapPathOf())
-          .highlight([{ geoId: "a" }])
+          .highlight([{ geoId: "a" }]),
       );
       layer.call(
         mapRendererHighlight<Datum>()
@@ -782,7 +784,7 @@ describe("map/renderer/highlight", () => {
           .mapPath(mapPathOf())
           // @ts-expect-error - a string is a caller error; pinned because "" is accepted while
           // every other string throws.
-          .highlight("")
+          .highlight(""),
       );
       expect(highlights(layer.node() as SVGGElement)).toHaveLength(0);
     });
@@ -811,7 +813,7 @@ describe("map/renderer/highlight", () => {
     test("schedules no transition at all", () => {
       const node = render((c) => c.highlight([{ geoId: "a" }]));
       expect(
-        (highlights(node)[0] as Element & { __transition?: unknown }).__transition
+        (highlights(node)[0] as Element & { __transition?: unknown }).__transition,
       ).toBeUndefined();
     });
 
@@ -825,8 +827,8 @@ describe("map/renderer/highlight", () => {
         group().call(
           mapRendererHighlight<Datum>()
             .mapPath(mapPathOf())
-            .highlight([{ geoId: "a" }])
-        )
+            .highlight([{ geoId: "a" }]),
+        ),
       ).toThrow(TypeError);
     });
 
@@ -838,8 +840,8 @@ describe("map/renderer/highlight", () => {
         layer.call(
           mapRendererHighlight<Datum>()
             .mapPath(mapPathOf())
-            .highlight([{ geoId: "a" }])
-        )
+            .highlight([{ geoId: "a" }]),
+        ),
       ).toThrow(TypeError);
       expect(highlights(layer.node() as SVGGElement)).toHaveLength(0);
     });
@@ -854,8 +856,8 @@ describe("map/renderer/highlight", () => {
         layer.call(
           mapRendererHighlight<Datum>()
             .geoJson(collection())
-            .highlight([{ geoId: "a" }])
-        )
+            .highlight([{ geoId: "a" }]),
+        ),
       ).toThrow(TypeError);
       const paths = highlights(layer.node() as SVGGElement);
       expect(paths).toHaveLength(1);
@@ -875,8 +877,8 @@ describe("map/renderer/highlight", () => {
             // inside the component rather than being reported.
             .geoJson(square("a"))
             .mapPath(mapPathOf())
-            .highlight([{ geoId: "a" }])
-        )
+            .highlight([{ geoId: "a" }]),
+        ),
       ).toThrow(TypeError);
     });
 

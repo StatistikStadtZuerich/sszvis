@@ -242,8 +242,9 @@ type ChoroplethProps<T> = {
  * are spelled out here rather than inherited because a delegate returns this component for
  * chaining, not the renderer.
  */
-export interface ChoroplethComponent<T extends object = object>
-  extends ComponentBuilder<ChoroplethComponent<T>> {
+export interface ChoroplethComponent<T extends object = object> extends ComponentBuilder<
+  ChoroplethComponent<T>
+> {
   width(): number | undefined;
   width(value: number): ChoroplethComponent<T>;
   height(): number | undefined;
@@ -310,7 +311,7 @@ export interface ChoroplethComponent<T extends object = object>
  */
 function entityDatum<T extends object>(
   bound: unknown,
-  entities: ReadonlySet<unknown>
+  entities: ReadonlySet<unknown>,
 ): T | undefined {
   if (!entities.has(bound)) return undefined;
   return (bound as { datum?: T }).datum;
@@ -326,7 +327,7 @@ function entityDatum<T extends object>(
 function dimension(value: number | undefined, name: string): number {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
     throw new Error(
-      `[choropleth] the ${name} property is required, and must be a finite, non-negative number`
+      `[choropleth] the ${name} property is required, and must be a finite, non-negative number`,
     );
   }
   return value;
@@ -345,7 +346,7 @@ function requireFeatures(value: ExtendedFeatureCollection | undefined): Extended
     !Array.isArray(value.features)
   ) {
     throw new Error(
-      "[choropleth] the features property is required, and must be a GeoJSON feature collection"
+      "[choropleth] the features property is required, and must be a GeoJSON feature collection",
     );
   }
   return value;
@@ -384,7 +385,7 @@ const ABOVE_THE_LAKE = `:scope > g.sszvis-map__highlight-group, :scope > [data-d
  */
 function ownGroup<G extends BaseType, D, P extends BaseType, PD>(
   selection: Selection<G, D, P, PD>,
-  key: string
+  key: string,
 ): Selection<SVGGElement, D, G, D> {
   return selection
     .selectAll<SVGGElement, D>(`:scope > [data-d3-selectgroup="${key}"]`)
@@ -400,7 +401,7 @@ function ownGroup<G extends BaseType, D, P extends BaseType, PD>(
  * shape and paint its texture across them.
  */
 function keepLakeBeneath<G extends BaseType, D, P extends BaseType, PD>(
-  selection: Selection<G, D, P, PD>
+  selection: Selection<G, D, P, PD>,
 ): void {
   const group = selection.node();
   if (group === null || !(group instanceof Element)) return;

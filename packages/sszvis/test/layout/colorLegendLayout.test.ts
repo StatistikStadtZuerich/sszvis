@@ -82,7 +82,7 @@ describe("colorLegendLayout", () => {
         expect(colorLegendDimensions(SIX, 2000).legendWidth).toBe(maxLabelWidth(SIX) * 2);
         // a stacked single column is as wide as its widest label
         expect(colorLegendDimensions(FOUR, totalLabelWidth(FOUR) - 1).legendWidth).toBe(
-          maxLabelWidth(FOUR)
+          maxLabelWidth(FOUR),
         );
       });
 
@@ -130,7 +130,7 @@ describe("colorLegendLayout", () => {
     test("reserves 60px for horizontal axis labels", () => {
       const layout = colorLegendLayout(
         { legendLabels: FOUR, axisLabels: ["2020", "2021"] },
-        container
+        container,
       );
       expect(layout.axisLabelPadding).toBe(60);
     });
@@ -139,7 +139,7 @@ describe("colorLegendLayout", () => {
       const axisLabels = ["2020", "a much longer label"];
       const layout = colorLegendLayout(
         { legendLabels: FOUR, axisLabels, slant: "vertical" },
-        container
+        container,
       );
       expect(layout.axisLabelPadding).toBe(40 + measureAxisLabel("a much longer label"));
     });
@@ -149,7 +149,7 @@ describe("colorLegendLayout", () => {
       const widest = measureAxisLabel("a much longer label");
       const layout = colorLegendLayout(
         { legendLabels: FOUR, axisLabels, slant: "diagonal" },
-        container
+        container,
       );
       expect(layout.axisLabelPadding).toBeCloseTo(40 + widest / Math.SQRT2, 9);
     });
@@ -178,8 +178,8 @@ describe("colorLegendLayout", () => {
             axisLabels: ["2020"],
             slant: "sideways" as unknown as "vertical",
           },
-          container
-        )
+          container,
+        ),
       ).toThrow(/slant/);
       container.remove();
     });

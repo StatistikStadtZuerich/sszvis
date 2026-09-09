@@ -111,7 +111,7 @@ describe("maps/choropleth", () => {
   const render = (
     data: Datum[],
     configure: Configure = (c) => c,
-    options: { key?: string; collection?: FeatureCollection<Polygon>; size?: number } = {}
+    options: { key?: string; collection?: FeatureCollection<Polygon>; size?: number } = {},
   ) => {
     const collection = options.collection ?? geoJson();
     const side = options.size ?? nextSize();
@@ -122,7 +122,7 @@ describe("maps/choropleth", () => {
         .lakeFeatures(lakeFeature())
         .lakeBorders(lakeBorders())
         .width(side)
-        .height(side)
+        .height(side),
     );
     return layer(options.key).datum(data).call(map).node() as SVGGElement;
   };
@@ -189,7 +189,7 @@ describe("maps/choropleth", () => {
     test("throws when borders are missing, naming the mesh renderer's property", () => {
       const collection = geoJson();
       expect(() =>
-        layer().call(choropleth().features(collection).width(160).height(160).withLake(false))
+        layer().call(choropleth().features(collection).width(160).height(160).withLake(false)),
       ).toThrow(/geoJson is required/);
     });
 
@@ -264,7 +264,7 @@ describe("maps/choropleth", () => {
         c.fill((d?: Datum) => {
           seen.push(d);
           return "#ff0000";
-        })
+        }),
       );
       expect(distinct(seen)).toEqual(fullData);
     });
@@ -309,7 +309,7 @@ describe("maps/choropleth", () => {
             .fill((d?: Datum) => {
               seen.push(d);
               return "#ff0000";
-            })
+            }),
         )
         .node() as SVGGElement;
       expect(areas(node)).toHaveLength(3);
@@ -327,7 +327,7 @@ describe("maps/choropleth", () => {
         c.transitionColor(false).fill((d?: Datum) => {
           seen.push(d);
           return "#ff0000";
-        })
+        }),
       );
       expect(distinct(seen)).toEqual([{ geoId: "a", value: 1 }]);
       expect(attrs(node, "fill")[1]).toMatch(missingPattern);
@@ -358,7 +358,7 @@ describe("maps/choropleth", () => {
             .fill((d?: Kreis) => {
               seen.push(d);
               return d ? "#ff0000" : "#0000ff";
-            })
+            }),
         )
         .node() as SVGGElement;
       expect(attrs(node, "fill")[1]).toBe("#ff0000");
@@ -436,7 +436,7 @@ describe("maps/choropleth", () => {
       /** Every direct child of the map group, by what identifies it - wrapper key or class. */
       const order = (node: Element) =>
         [...node.children].map(
-          (child) => child.getAttribute("data-d3-selectgroup") ?? child.getAttribute("class")
+          (child) => child.getAttribute("data-d3-selectgroup") ?? child.getAttribute("class"),
         );
 
       target.datum(fullData).call(map.withLake(true));
@@ -455,7 +455,7 @@ describe("maps/choropleth", () => {
       expect(highlight).toBeDefined();
       for (const path of [...lake(node), ...lakePaths(node)]) {
         expect(
-          path.compareDocumentPosition(highlight) & Node.DOCUMENT_POSITION_FOLLOWING
+          path.compareDocumentPosition(highlight) & Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeTruthy();
       }
     });
@@ -542,7 +542,7 @@ describe("maps/choropleth", () => {
 
     test("delegates the highlight stroke and its width", () => {
       const node = render(fullData, (c) =>
-        c.highlight([fullData[1]]).highlightStroke("#ff0000").highlightStrokeWidth(5)
+        c.highlight([fullData[1]]).highlightStroke("#ff0000").highlightStrokeWidth(5),
       );
       expect(highlights(node)[0].style.stroke).toBe("rgb(255, 0, 0)");
       expect(highlights(node)[0].style.strokeWidth).toBe("5");
@@ -581,7 +581,7 @@ describe("maps/choropleth", () => {
         c
           .fill("#ff0000")
           .transitionColor(false)
-          .defined((d?: Datum) => d?.value !== 2)
+          .defined((d?: Datum) => d?.value !== 2),
       );
       const fills = attrs(node, "fill");
       expect([fills[0], fills[2]]).toEqual(["#ff0000", "#ff0000"]);
@@ -628,7 +628,7 @@ describe("maps/choropleth", () => {
         const props = (this as Element & { __props__: Record<string, unknown> }).__props__;
         calls.push({ mergedData: props.mergedData, mapPath: props.mapPath });
         this.appendChild(
-          document.createElementNS("http://www.w3.org/2000/svg", "circle")
+          document.createElementNS("http://www.w3.org/2000/svg", "circle"),
         ).classList.add("anchored-marker");
       });
       return { shape, calls };
@@ -642,7 +642,7 @@ describe("maps/choropleth", () => {
       expect(calls[0].mergedData).toHaveLength(3);
       expect(typeof calls[0].mapPath).toBe("function");
       expect((calls[0].mergedData as { datum: Datum | undefined }[]).map((d) => d.datum)).toEqual(
-        fullData
+        fullData,
       );
     });
 
@@ -707,7 +707,7 @@ describe("maps/choropleth", () => {
       const drawnShape = shapeGroup as Element;
       expect(highlight).toBeDefined();
       expect(
-        highlight.compareDocumentPosition(drawnShape) & Node.DOCUMENT_POSITION_FOLLOWING
+        highlight.compareDocumentPosition(drawnShape) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     });
 
@@ -744,7 +744,7 @@ describe("maps/choropleth", () => {
     test("delivers the datum to out and click handlers too", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
-        c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d))
+        c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d)),
       );
       dispatchOn(areas(node)[1], "mouseout");
       dispatchOn(areas(node)[1], "click");
@@ -756,7 +756,7 @@ describe("maps/choropleth", () => {
     test("delivers undefined for an entity that matched no datum", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
-        c.on("over", (d: unknown) => seen.push(d))
+        c.on("over", (d: unknown) => seen.push(d)),
       );
       dispatchOn(areas(node)[1], "mouseover");
       expect(seen).toEqual([undefined]);
@@ -794,7 +794,7 @@ describe("maps/choropleth", () => {
       });
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
-        c.anchoredShape(marked).on("click", (d: unknown) => seen.push(d))
+        c.anchoredShape(marked).on("click", (d: unknown) => seen.push(d)),
       );
       dispatchOn(node.querySelector("circle.shape-target") as Element, "click");
       expect(seen).toEqual([undefined]);
@@ -815,7 +815,7 @@ describe("maps/choropleth", () => {
       });
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
-        c.anchoredShape(marked).on("click", (d: unknown) => seen.push(d))
+        c.anchoredShape(marked).on("click", (d: unknown) => seen.push(d)),
       );
       dispatchOn(node.querySelector("circle.lookalike-target") as Element, "click");
       expect(seen).toEqual([undefined]);
@@ -830,7 +830,7 @@ describe("maps/choropleth", () => {
       const map = choropleth().features(collection).borders(mesh()).withLake(false);
       const target = layer();
       expect(() => target.call(map)).toThrow(
-        "[choropleth] the width property is required, and must be a finite, non-negative number"
+        "[choropleth] the width property is required, and must be a finite, non-negative number",
       );
       expect(() => target.call(map.width(100))).toThrow(/the height property is required/);
     });
@@ -838,10 +838,10 @@ describe("maps/choropleth", () => {
     test("throws for a non-finite or negative size", () => {
       const map = choropleth().features(geoJson()).borders(mesh()).withLake(false);
       expect(() => layer().call(map.width(Number.NaN).height(100))).toThrow(
-        /the width property is required/
+        /the width property is required/,
       );
       expect(() => layer().call(map.width(100).height(-1))).toThrow(
-        /the height property is required/
+        /the height property is required/,
       );
     });
 
@@ -850,7 +850,7 @@ describe("maps/choropleth", () => {
     test("draws nothing at all when the size is missing", () => {
       const target = layer();
       expect(() =>
-        target.call(choropleth().features(geoJson()).borders(mesh()).withLake(false))
+        target.call(choropleth().features(geoJson()).borders(mesh()).withLake(false)),
       ).toThrow();
       expect(areas(target.node() as SVGGElement)).toHaveLength(0);
     });
@@ -859,7 +859,7 @@ describe("maps/choropleth", () => {
     // component nor the property; it is reported in the same shape as the size now.
     test("throws when features are missing, naming the missing property", () => {
       expect(() => layer().call(choropleth().width(100).height(100))).toThrow(
-        "[choropleth] the features property is required, and must be a GeoJSON feature collection"
+        "[choropleth] the features property is required, and must be a GeoJSON feature collection",
       );
     });
   });
@@ -872,9 +872,9 @@ describe("maps/choropleth", () => {
       features: [],
     } as unknown as FeatureCollection<Polygon>;
     expect(() =>
-      layer().call(choropleth().features(notACollection).width(100).height(100))
+      layer().call(choropleth().features(notACollection).width(100).height(100)),
     ).toThrow(
-      "[choropleth] the features property is required, and must be a GeoJSON feature collection"
+      "[choropleth] the features property is required, and must be a GeoJSON feature collection",
     );
   });
 

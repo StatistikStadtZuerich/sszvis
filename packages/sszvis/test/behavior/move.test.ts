@@ -76,7 +76,7 @@ describe("behavior/move", () => {
       move<number, number>()
         .xScale(xScale)
         .yScale(yScale)
-        .padding({ top: 10, right: 15, bottom: 20, left: 25 })
+        .padding({ top: 10, right: 15, bottom: 20, left: 25 }),
     );
     const interactiveRect = svg.select("[data-sszvis-behavior-move]");
     expect(interactiveRect.attr("x")).toBe("-25"); // 0 - 25 = -25
@@ -94,14 +94,14 @@ describe("behavior/move", () => {
         clientX: 150,
         clientY: 100,
         bubbles: true,
-      })
+      }),
     );
     rectNode?.dispatchEvent(
       new MouseEvent("mousemove", {
         clientX: 150,
         clientY: 100,
         bubbles: true,
-      })
+      }),
     );
     expect(moveHandler).toHaveBeenCalled();
   });
@@ -115,14 +115,14 @@ describe("behavior/move", () => {
         clientX: 150,
         clientY: 100,
         bubbles: true,
-      })
+      }),
     );
     rectNode?.dispatchEvent(
       new MouseEvent("mousemove", {
         clientX: 150,
         clientY: 100,
         bubbles: true,
-      })
+      }),
     );
     expect(dragHandler).toHaveBeenCalled();
   });
@@ -136,7 +136,7 @@ describe("behavior/move", () => {
         clientX: 150,
         clientY: 100,
         bubbles: true,
-      })
+      }),
     );
     expect(startHandler).toHaveBeenCalled();
   });
@@ -150,7 +150,7 @@ describe("behavior/move", () => {
         clientX: 150,
         clientY: 100,
         bubbles: true,
-      })
+      }),
     );
     expect(endHandler).toHaveBeenCalled();
   });
@@ -165,7 +165,7 @@ describe("behavior/move", () => {
         .yScale(yScale)
         .on("drag", dragHandler)
         .on("move", moveHandler)
-        .on("end", endHandler)
+        .on("end", endHandler),
     );
     const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
     expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).toBeUndefined();
@@ -203,7 +203,7 @@ describe("behavior/move", () => {
     test("should dispatch move event with band scales", () => {
       const moveHandler = vi.fn();
       svg.call(
-        move<string, string>().xScale(xBandScale).yScale(yBandScale).on("move", moveHandler)
+        move<string, string>().xScale(xBandScale).yScale(yBandScale).on("move", moveHandler),
       );
       const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
       rectNode?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
@@ -214,7 +214,7 @@ describe("behavior/move", () => {
     test("should handle band scale drag events", () => {
       const dragHandler = vi.fn();
       svg.call(
-        move<string, string>().xScale(xBandScale).yScale(yBandScale).on("drag", dragHandler)
+        move<string, string>().xScale(xBandScale).yScale(yBandScale).on("drag", dragHandler),
       );
       const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
       rectNode?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
@@ -241,7 +241,7 @@ describe("behavior/move", () => {
     test("should dispatch move event with point scales", () => {
       const moveHandler = vi.fn();
       svg.call(
-        move<string, string>().xScale(xPointScale).yScale(yPointScale).on("move", moveHandler)
+        move<string, string>().xScale(xPointScale).yScale(yPointScale).on("move", moveHandler),
       );
       const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
       rectNode?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
@@ -252,7 +252,7 @@ describe("behavior/move", () => {
     test("should handle point scale drag events", () => {
       const dragHandler = vi.fn();
       svg.call(
-        move<string, string>().xScale(xPointScale).yScale(yPointScale).on("drag", dragHandler)
+        move<string, string>().xScale(xPointScale).yScale(yPointScale).on("drag", dragHandler),
       );
       const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
       rectNode?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
@@ -268,7 +268,7 @@ describe("behavior/move", () => {
           .xScale(xPointScale)
           .yScale(yPointScale)
           .on("start", startHandler)
-          .on("end", endHandler)
+          .on("end", endHandler),
       );
       const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
       rectNode?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
@@ -283,7 +283,7 @@ describe("behavior/move", () => {
     // where clientX/clientY are NOT on the event itself, only in the touches array
     const createSafariTouchEvent = (
       type: string,
-      touches: Array<{ clientX: number; clientY: number; identifier?: number }>
+      touches: Array<{ clientX: number; clientY: number; identifier?: number }>,
     ): Event => {
       const event = new Event(type, { bubbles: true, cancelable: true });
       Object.defineProperty(event, "touches", {
@@ -316,7 +316,7 @@ describe("behavior/move", () => {
           .yScale(yScale)
           .on("start", startHandler)
           .on("move", moveHandler)
-          .on("drag", dragHandler)
+          .on("drag", dragHandler),
       );
 
       const touchEvent = createSafariTouchEvent("touchstart", [{ clientX: 150, clientY: 100 }]);
@@ -342,7 +342,7 @@ describe("behavior/move", () => {
       rectNode.dispatchEvent(
         createSafariTouchEvent("touchstart", [
           { clientX: rect.left + 150, clientY: rect.top + 100 },
-        ])
+        ]),
       );
       expect(moveHandler).toHaveBeenCalled();
       const [, x, y] = moveHandler.mock.calls[0];
@@ -363,13 +363,13 @@ describe("behavior/move", () => {
       rectNode.dispatchEvent(
         createSafariTouchEvent("touchstart", [
           { clientX: rect.left + 150, clientY: rect.top + 100 },
-        ])
+        ]),
       );
 
       expect(moveHandler).toHaveBeenCalledTimes(1);
 
       rectNode.dispatchEvent(
-        createSafariTouchEvent("touchmove", [{ clientX: rect.left + 200, clientY: rect.top + 50 }])
+        createSafariTouchEvent("touchmove", [{ clientX: rect.left + 200, clientY: rect.top + 50 }]),
       );
 
       expect(moveHandler).toHaveBeenCalledTimes(2);
@@ -391,7 +391,7 @@ describe("behavior/move", () => {
       rectNode.dispatchEvent(
         createSafariTouchEvent("touchstart", [
           { clientX: rect.left + 150, clientY: rect.top + 100 },
-        ])
+        ]),
       );
 
       expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).not.toBeNull();
@@ -422,7 +422,7 @@ describe("behavior/move", () => {
           .xScale(xScale)
           .yScale(yScale)
           .on("start", startHandler)
-          .on("move", moveHandler)
+          .on("move", moveHandler),
       );
 
       const emptyTouchEvent = new Event("touchstart", { bubbles: true });
@@ -453,7 +453,7 @@ describe("behavior/move", () => {
           .xScale(xScale)
           .yScale(yScale)
           .on("start", startHandler)
-          .on("move", moveHandler)
+          .on("move", moveHandler),
       );
 
       const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
@@ -483,7 +483,7 @@ describe("behavior/move", () => {
       node: SVGRectElement,
       type: "touchstart" | "touchmove",
       clientX: number,
-      clientY: number
+      clientY: number,
     ) {
       const touchEvent = new Event(type, { bubbles: true, cancelable: true });
       Object.defineProperty(touchEvent, "touches", {
@@ -497,13 +497,13 @@ describe("behavior/move", () => {
       moveComponent: MoveComponent<XDomain, YDomain>,
       path: "mouse" | "touch",
       offsetX: number,
-      offsetY: number
+      offsetY: number,
     ): [unknown, unknown] {
       let seen: [unknown, unknown] = [undefined, undefined];
       svg.call(
         moveComponent.on("move", (_e, x, y) => {
           seen = [x, y];
-        })
+        }),
       );
       const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
       const box = rectNode?.getBoundingClientRect() as DOMRect;
@@ -525,13 +525,13 @@ describe("behavior/move", () => {
     describe.each(["mouse", "touch"] as const)("with a 0-based range, over %s", (path) => {
       test("should report the domain start at the start of the range", () => {
         expect(valueAt(move<number, number>().xScale(xScale).yScale(yScale), path, 0, 200)).toEqual(
-          [0, 0]
+          [0, 0],
         );
       });
 
       test("should report the domain end at the end of the range", () => {
         expect(valueAt(move<number, number>().xScale(xScale).yScale(yScale), path, 300, 0)).toEqual(
-          [100, 50]
+          [100, 50],
         );
       });
     });
@@ -545,19 +545,19 @@ describe("behavior/move", () => {
 
       test("should report the domain start at the start of the range", () => {
         expect(
-          valueAt(move<number, number>().xScale(insetX()).yScale(insetY()), path, 0, 200)
+          valueAt(move<number, number>().xScale(insetX()).yScale(insetY()), path, 0, 200),
         ).toEqual([0, 0]);
       });
 
       test("should report the domain end at the end of the range", () => {
         expect(
-          valueAt(move<number, number>().xScale(insetX()).yScale(insetY()), path, 300, 0)
+          valueAt(move<number, number>().xScale(insetX()).yScale(insetY()), path, 300, 0),
         ).toEqual([10, 20]);
       });
 
       test("should report the midpoint of the domain at the middle of the range", () => {
         expect(
-          valueAt(move<number, number>().xScale(insetX()).yScale(insetY()), path, 150, 100)
+          valueAt(move<number, number>().xScale(insetX()).yScale(insetY()), path, 150, 100),
         ).toEqual([5, 10]);
       });
     });
@@ -574,7 +574,7 @@ describe("behavior/move", () => {
           .yScale(scaleLinear().domain([0, 20]).range([250, 50]))
           .on("move", (_e, x, y) => {
             seen.push([x, y]);
-          })
+          }),
       );
       const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node() as
         | SVGRectElement
@@ -607,7 +607,7 @@ describe("behavior/move", () => {
             .yScale(yScale),
           path,
           290,
-          200
+          200,
         );
         expect(seenLast[0]).toBe("C");
       });
@@ -621,7 +621,7 @@ describe("behavior/move", () => {
         move<number, number>().xScale(scale).yScale(yScale).padding({ left: 20, right: 20 }),
         "touch",
         0,
-        220
+        220,
       );
       // The rect now starts 20px before the range, so its own left edge is one padding
       // width outside the domain: 20px is 10/300 * 20 of the domain.
@@ -642,13 +642,13 @@ describe("behavior/move", () => {
         move<number, number>().xScale(scale()).yScale(yScale),
         "touch",
         300,
-        0
+        0,
       );
       const overMouse = valueAt(
         move<number, number>().xScale(scale()).yScale(yScale),
         "mouse",
         300,
-        0
+        0,
       );
       expect(overTouch[0]).toBeCloseTo(50, 10);
       expect(overTouch[0]).toBeCloseTo(overMouse[0] as number, 10);

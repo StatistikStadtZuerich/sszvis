@@ -152,8 +152,9 @@ type PyramidProps<T, D> = {
  */
 type PyramidValue<D, R> = R | ValueAccessor<D, R>;
 
-export interface PyramidComponent<T = unknown, D = unknown>
-  extends ComponentBuilder<PyramidComponent<T, D>> {
+export interface PyramidComponent<T = unknown, D = unknown> extends ComponentBuilder<
+  PyramidComponent<T, D>
+> {
   barHeight(): StoredAccessor<D, number>;
   barHeight<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
   barWidth(): StoredAccessor<D, number>;
@@ -264,13 +265,13 @@ export default function pyramid<T = unknown, D = unknown>(): PyramidComponent<T,
 function referenceSeries<T, D>(
   accessor: SideAccessor<T, D> | undefined,
   data: T,
-  name: string
+  name: string,
 ): D[][] {
   if (accessor === undefined) return [];
   const series = accessor(data);
   if (!Array.isArray(series)) {
     logger.warn(
-      `[pyramid] ${name} returned ${String(series)} rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series.`
+      `[pyramid] ${name} returned ${String(series)} rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series.`,
     );
     return [];
   }
@@ -332,7 +333,7 @@ function lineComponent<D>(): ReferenceLineComponent<D> {
             .attr("class", "sszvis-pyramid__referenceline")
             // Entering paths get their geometry synchronously: a transition alone would
             // leave getBBox, snapshots and PNG exports looking at an empty path.
-            .attr("d", lineGen)
+            .attr("d", lineGen),
         );
 
       line

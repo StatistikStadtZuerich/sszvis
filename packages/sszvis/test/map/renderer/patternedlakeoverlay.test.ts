@@ -86,15 +86,15 @@ describe("map/renderer/patternedlakeoverlay", () => {
   /** Renders the overlay, returning the group node it drew into. */
   const render = (
     configure: (
-      c: ReturnType<typeof mapRendererPatternedLakeOverlay>
+      c: ReturnType<typeof mapRendererPatternedLakeOverlay>,
     ) => ReturnType<typeof mapRendererPatternedLakeOverlay> = (c) => c,
-    key?: string
+    key?: string,
   ) => {
     const component = configure(
       mapRendererPatternedLakeOverlay()
         .mapPath(mapPathOf())
         .lakeFeature(lake())
-        .lakeBounds(bounds())
+        .lakeBounds(bounds()),
     );
     return group(key).call(component).node() as SVGGElement;
   };
@@ -115,7 +115,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
           mapRendererPatternedLakeOverlay()
             .mapPath(mapPath)
             .lakeFeature(lakeFeature)
-            .lakeBounds(lakeBounds)
+            .lakeBounds(lakeBounds),
         )
         .node() as SVGGElement;
       expect(lakeShape(node)?.getAttribute("d")).toBe(mapPath(lakeFeature));
@@ -153,7 +153,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             mapRendererPatternedLakeOverlay()
               .mapPath(mapPathOf())
               .lakeFeature(lake())
-              .lakeBounds(bounds())
+              .lakeBounds(bounds()),
           )
           .node() as SVGGElement;
       const first = lakeShape(renderWith());
@@ -196,7 +196,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
               .mapPath(mapPathOf())
               .lakeFeature(lake())
               .lakeBounds(bounds())
-              .fadeOut(fadeOut)
+              .fadeOut(fadeOut),
           )
           .node() as SVGGElement;
       renderWith(true);
@@ -215,7 +215,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
               .mapPath(mapPathOf())
               .lakeFeature(lake())
               .lakeBounds(bounds())
-              .fadeOut(fadeOut)
+              .fadeOut(fadeOut),
           )
           .node() as SVGGElement;
       renderWith(true);
@@ -257,7 +257,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
               .mapPath(mapPathOf())
               .lakeFeature(lake())
               .lakeBounds(bounds())
-              .lakePathColor(lakePathColor)
+              .lakePathColor(lakePathColor),
           )
           .node() as SVGGElement;
       renderWith("#ff0000");
@@ -274,7 +274,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
               .mapPath(mapPathOf())
               .lakeFeature(lake())
               .lakeBounds(bounds())
-              .lakePathColor(() => colour ?? null)
+              .lakePathColor(() => colour ?? null),
           )
           .node() as SVGGElement;
       renderWith("#ff0000");
@@ -298,7 +298,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             .lakePathColor((...args: unknown[]) => {
               seen.push(args);
               return "#00ff00";
-            })
+            }),
         )
         .node() as SVGGElement;
       expect(seen).toHaveLength(1);
@@ -339,7 +339,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             mapRendererPatternedLakeOverlay()
               .mapPath(mapPathOf())
               .lakeFeature(lake())
-              .lakeBounds(bounds())
+              .lakeBounds(bounds()),
           )
           .node() as SVGGElement;
       const firstId = idOf(renderWith(), "defs > pattern");
@@ -358,7 +358,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             .mapPath(mapPathOf())
             .lakeFeature(lakeFeature)
             .lakeBounds(bounds())
-            .lakePathColor(colour)
+            .lakePathColor(colour),
         );
       renderWith("a", lake(), "#ff0000");
       renderWith("b", lake(2), "#00ff00");
@@ -368,10 +368,12 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "defs > pattern")).toHaveLength(2);
       expect(idOf(node, 'defs > pattern[id$="a"]')).toBe("lake-pattern-a");
       expect(
-        defs(node, 'path.sszvis-map__lakezurich[data-lake-key="b"]')[0]?.getAttribute("fill")
+        defs(node, 'path.sszvis-map__lakezurich[data-lake-key="b"]')[0]?.getAttribute("fill"),
       ).toBe("url(#lake-pattern-b)");
       expect(
-        defs(node, "path.sszvis-map__lakepath").map((path) => (path as SVGPathElement).style.stroke)
+        defs(node, "path.sszvis-map__lakepath").map(
+          (path) => (path as SVGPathElement).style.stroke,
+        ),
       ).toEqual(["rgb(255, 0, 0)", "rgb(0, 255, 0)"]);
     });
 
@@ -387,7 +389,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             .key("shared")
             .mapPath(mapPathOf())
             .lakeFeature(lake())
-            .lakeBounds(bounds())
+            .lakeBounds(bounds()),
         );
       renderWith(inner);
       renderWith(outer);
@@ -396,7 +398,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "path.sszvis-map__lakepath")).toHaveLength(2);
       expect(defs(node, ":scope > path.sszvis-map__lakezurich")).toHaveLength(1);
       expect(
-        defs(inner.node() as SVGGElement, ":scope > path.sszvis-map__lakezurich")
+        defs(inner.node() as SVGGElement, ":scope > path.sszvis-map__lakezurich"),
       ).toHaveLength(1);
     });
 
@@ -408,7 +410,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             .key("only")
             .mapPath(mapPathOf())
             .lakeFeature(lake())
-            .lakeBounds(bounds())
+            .lakeBounds(bounds()),
         );
       renderWith();
       const first = lakeShape(layer.node() as SVGGElement);
@@ -428,7 +430,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             mapRendererPatternedLakeOverlay()
               .mapPath(mapPathOf())
               .lakeFeature(lake())
-              .lakeBounds(bounds())
+              .lakeBounds(bounds()),
           )
           .node() as SVGGElement;
       renderWith();
@@ -463,7 +465,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             mapRendererPatternedLakeOverlay()
               .mapPath(mapPathOf())
               .lakeFeature(lakeFeature)
-              .lakeBounds(bounds())
+              .lakeBounds(bounds()),
           )
           .node() as SVGGElement;
       const drawn = renderWith(lake());
@@ -484,7 +486,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
               .mapPath(mapPathOf())
               .lakeFeature(lakeFeature)
               .lakeBounds(bounds())
-              .fadeOut(true)
+              .fadeOut(true),
           )
           .node() as SVGGElement;
       renderWith(lake());
@@ -505,7 +507,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             .mapPath(mapPathOf())
             .lakeFeature(lakeFeature)
             .lakeBounds(bounds())
-            .fadeOut(true)
+            .fadeOut(true),
         );
       renderWith(inner, lake());
       renderWith(outer, lake());
@@ -534,7 +536,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       const renderWith = (
         target: typeof outer,
         key: string,
-        lakeFeature: ReturnType<typeof lake> | null
+        lakeFeature: ReturnType<typeof lake> | null,
       ) =>
         target.call(
           mapRendererPatternedLakeOverlay()
@@ -542,7 +544,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             .mapPath(mapPathOf())
             .lakeFeature(lakeFeature)
             .lakeBounds(bounds())
-            .fadeOut(true)
+            .fadeOut(true),
         );
       renderWith(inner, "inner", lake());
       renderWith(outer, "outer", lake());
@@ -557,7 +559,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       // Nowhere in the subtree, so a leak into the inner defs would be caught too.
       expect(outerIds.filter((id) => defs(node, `[id="${id}"]`).length > 0)).toEqual([]);
       expect(
-        defs(inner.node() as SVGGElement, ":scope > defs > [id]").map((n) => n.getAttribute("id"))
+        defs(inner.node() as SVGGElement, ":scope > defs > [id]").map((n) => n.getAttribute("id")),
       ).toEqual(["lake-pattern-inner", "lake-fade-gradient-inner", "lake-fade-mask-inner"]);
     });
 
@@ -569,7 +571,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             mapRendererPatternedLakeOverlay()
               .mapPath(mapPathOf())
               .lakeFeature(lakeFeature)
-              .lakeBounds(bounds())
+              .lakeBounds(bounds()),
           )
           .node() as SVGGElement;
       renderWith(lake());
@@ -590,7 +592,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             .key(key)
             .mapPath(mapPathOf())
             .lakeFeature(lakeFeature)
-            .lakeBounds(bounds())
+            .lakeBounds(bounds()),
         );
       renderWith("keeper", lake());
       renderWith("goner", lake(2));
@@ -667,7 +669,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             .key(key)
             .mapPath(mapPathOf())
             .lakeFeature(lake())
-            .lakeBounds(bounds())
+            .lakeBounds(bounds()),
         );
     };
 
@@ -675,7 +677,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
     // never referenced - silent at render time. This names the property and the cause instead.
     test("rejects a key that cannot be spelled in an id, naming the property", () => {
       expect(renderKeyed("quoted-key", 'a"b')).toThrow(
-        /\[mapRendererPatternedLakeOverlay\] the key property/
+        /\[mapRendererPatternedLakeOverlay\] the key property/,
       );
     });
 
@@ -683,7 +685,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
     // nothing, so every render appended another definition and the url(#...) reference was inert.
     test("rejects a key containing a space, which used to fail silently", () => {
       expect(renderKeyed("spaced-key", "a b")).toThrow(
-        /\[mapRendererPatternedLakeOverlay\] the key property/
+        /\[mapRendererPatternedLakeOverlay\] the key property/,
       );
     });
 
@@ -691,7 +693,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
     // key from ever landing on the scope an unkeyed overlay would generate.
     test("rejects a key that would collide with a generated scope", () => {
       expect(renderKeyed("numeric-key", "1")).toThrow(
-        /\[mapRendererPatternedLakeOverlay\] the key property/
+        /\[mapRendererPatternedLakeOverlay\] the key property/,
       );
     });
 
@@ -702,7 +704,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
           mapRendererPatternedLakeOverlay()
             .mapPath(mapPathOf())
             .lakeFeature(lakeFeature)
-            .lakeBounds(bounds())
+            .lakeBounds(bounds()),
         );
       renderWith(lake());
       const first = lakeShape(layer.node() as SVGGElement);
@@ -724,7 +726,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
             mapRendererPatternedLakeOverlay()
               .mapPath(mapPath)
               .lakeFeature(lakeFeature)
-              .lakeBounds(bounds())
+              .lakeBounds(bounds()),
           )
           .node() as SVGGElement;
       const before = lakeShape(renderWith())?.getAttribute("d");
@@ -753,7 +755,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
               return "M0,0L1,1";
             })
             .lakeFeature(lakeFeature)
-            .lakeBounds(bounds())
+            .lakeBounds(bounds()),
         )
         .node() as SVGGElement;
       expect(seen[0][0]).toBe(lakeFeature);

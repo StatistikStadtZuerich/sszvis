@@ -45,7 +45,7 @@ export type VerticalBarChartDimensions = {
 
 export default function dimensionsVerticalBarChart(
   width: number,
-  numBars: number
+  numBars: number,
 ): VerticalBarChartDimensions {
   requireSize("dimensionsVerticalBarChart", "width", width);
   requireCount("dimensionsVerticalBarChart", "numBars", numBars);

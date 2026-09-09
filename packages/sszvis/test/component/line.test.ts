@@ -152,7 +152,7 @@ describe("component/line", () => {
           })
           .y(() => 0)
           .defined(() => true),
-        [oneLine[0]]
+        [oneLine[0]],
       );
       expect(seen.map((args) => args.length)).toEqual([3, 3, 3]);
       expect(seen.map((args) => args[0])).toEqual(oneLine[0]);
@@ -167,7 +167,7 @@ describe("component/line", () => {
           seen.push(args);
           return "#f00";
         }),
-        twoLines
+        twoLines,
       );
       // Style accessors receive the array of points, not a single point - the inverse of
       // what x and y receive.
@@ -188,7 +188,7 @@ describe("component/line", () => {
             { x: 1, y: 2 },
             { x: 3, y: 4 },
           ],
-        ]
+        ],
       );
       expect(ds(node)).toEqual(["M2,4L6,8"]);
     });
@@ -249,7 +249,7 @@ describe("component/line", () => {
             { x: 20, y: 20 },
             { x: 30, y: 30 },
           ],
-        ]
+        ],
       );
       expect(ds(node)).toEqual(["M0,0L10,10"]);
     });
@@ -261,7 +261,7 @@ describe("component/line", () => {
           seen.push(args);
           return true;
         }),
-        [oneLine[0]]
+        [oneLine[0]],
       );
       expect(seen.map((args) => args.length)).toEqual([3, 3, 3]);
       expect(seen.map((args) => args[1])).toEqual([0, 1, 2]);
@@ -295,7 +295,7 @@ describe("component/line", () => {
                 { x: 10, y: value as number },
                 { x: 20, y: 20 },
               ],
-            ])
+            ]),
           )[0];
 
         // Coerce to NaN, so the line breaks into two degenerate subpaths.
@@ -336,7 +336,7 @@ describe("component/line", () => {
               { x: 0, y: 0 },
               { x: 10, y: Number.NaN },
             ],
-          ]
+          ],
         );
         expect(ds(node)).toEqual(["M0,0L10,NaN"]);
       });
@@ -355,7 +355,7 @@ describe("component/line", () => {
     test("should apply a stroke derived from the line's own data", () => {
       const node = render(
         lineOf().stroke((d: Point[]) => (d[0].y === 0 ? "#f00" : "#00f")),
-        twoLines
+        twoLines,
       );
       expect(styles(node, "stroke")).toEqual(["rgb(255, 0, 0)", "rgb(0, 0, 255)"]);
     });
@@ -367,7 +367,7 @@ describe("component/line", () => {
     test("should apply a strokeWidth derived from the line's own data", () => {
       const node = render(
         lineOf().strokeWidth((d: Point[]) => d.length),
-        twoLines
+        twoLines,
       );
       expect(styles(node, "stroke-width")).toEqual(["2", "2"]);
     });
@@ -402,7 +402,7 @@ describe("component/line", () => {
             calls += 1;
             return "#f00";
           }),
-          oneLine
+          oneLine,
         );
         expect(calls).toBe(2);
       });
@@ -424,7 +424,7 @@ describe("component/line", () => {
               { x: 10, y: 10 },
             ],
           },
-        ]
+        ],
       );
       expect(ds(node)).toEqual(["M0,0L10,10"]);
     });
@@ -442,7 +442,7 @@ describe("component/line", () => {
               strokeSaw = d;
               return "#f00";
             }),
-          [{ values: [{ x: 0, y: 0 }], key: "a" }]
+          [{ values: [{ x: 0, y: 0 }], key: "a" }],
         );
         expect(strokeSaw).toEqual({ values: [{ x: 0, y: 0 }], key: "a" });
         expect(ds(node)).toEqual(["M0,0Z"]);
@@ -493,7 +493,7 @@ describe("component/line", () => {
           seen.push([datum, index]);
           return index;
         }),
-        twoLines
+        twoLines,
       );
       expect(seen.map((args) => args[0])).toEqual(twoLines);
       expect(seen.map((args) => args[1])).toEqual([0, 1]);
@@ -524,7 +524,7 @@ describe("component/line", () => {
 
     test("should name the component and the property when y is not configured", () => {
       expect(() => render(line().transition(false).x(0), oneLine)).toThrow(
-        "[line] the y property is required"
+        "[line] the y property is required",
       );
     });
 
@@ -537,8 +537,8 @@ describe("component/line", () => {
           line()
             .transition(false)
             .y((d: Point) => d.y),
-          oneLine
-        )
+          oneLine,
+        ),
       ).toThrow("[line] the x property is required");
     });
 
@@ -558,7 +558,7 @@ describe("component/line", () => {
           .transition(false)
           .x(5)
           .y((d: Point) => d.y),
-        [[{ y: 1 }, { y: 2 }]]
+        [[{ y: 1 }, { y: 2 }]],
       );
       expect(ds(constantX)).toEqual(["M5,1L5,2"]);
 
@@ -583,7 +583,7 @@ describe("component/line", () => {
             { x: 0, y: 0 },
             { x: 10, y: 0 },
           ],
-        ]
+        ],
       );
       expect(ds(kept)).toEqual(["M0,NaNL10,NaN"]);
 
@@ -593,7 +593,7 @@ describe("component/line", () => {
           .x((d: Point) => d.x)
           .y((d: Point) => d.y)
           .defined(() => false),
-        oneLine
+        oneLine,
       );
       expect(ds(dropped)).toEqual([null]);
     });
@@ -680,7 +680,7 @@ describe("component/line", () => {
           .x((d: Point) => d.x)
           .y((d: Point) => d.y)
           .stroke("#f00"),
-        oneLine
+        oneLine,
       );
       expect(styles(node, "stroke")).toEqual(["rgb(255, 0, 0)"]);
     });
@@ -697,7 +697,7 @@ describe("component/line", () => {
             .x((d: Point) => d.x)
             .y((d: Point) => d.y)
             .strokeWidth(3),
-          oneLine
+          oneLine,
         );
         expect(paths(node).length).toBe(1);
         expect(ds(node)).toEqual([null]);
@@ -713,7 +713,7 @@ describe("component/line", () => {
         g.datum(oneLine).call(
           line()
             .x((d: Point) => d.x)
-            .y((d: Point) => d.y) as never
+            .y((d: Point) => d.y) as never,
         );
         await new Promise((resolve) => setTimeout(resolve, 30));
         expect(ds(g.node() as SVGGElement)).toEqual(["M0,0L10,20L20,10"]);

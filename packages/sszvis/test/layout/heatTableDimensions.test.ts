@@ -142,7 +142,7 @@ describe("heatTableDimensions", () => {
       const frozen = Object.freeze({ left: 20 });
       expect(() => dimensionsHeatTable(800, 2, 10, 5, frozen)).not.toThrow();
       expect(dimensionsHeatTable(800, 2, 10, 5, frozen)).toEqual(
-        dimensionsHeatTable(800, 2, 10, 5, { left: 20 })
+        dimensionsHeatTable(800, 2, 10, 5, { left: 20 }),
       );
     });
   });

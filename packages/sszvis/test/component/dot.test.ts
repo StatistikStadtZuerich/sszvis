@@ -97,7 +97,7 @@ describe("component/dot", () => {
         dotOf()
           .fill((d: Datum) => d.color)
           .stroke("#00f"),
-        testData
+        testData,
       );
       expect(attrs(node, "fill")).toEqual(["#f00", "#0f0"]);
       expect(attrs(node, "stroke")).toEqual(["#00f", "#00f"]);
@@ -165,7 +165,7 @@ describe("component/dot", () => {
           .y(0)
           .radius(1)
           .transition(transition),
-        data
+        data,
       );
       return seen;
     };
@@ -193,7 +193,7 @@ describe("component/dot", () => {
           .x((_d: Datum, i: number) => i * 10)
           .y((_d: Datum, i: number) => i * 5)
           .radius(3),
-        testData
+        testData,
       );
       expect(attrs(node, "cx")).toEqual(["0", "10"]);
       expect(attrs(node, "cy")).toEqual(["0", "5"]);
@@ -227,7 +227,7 @@ describe("component/dot", () => {
             .y(0)
             .radius(1)
             .transition(false),
-          [testData[0]]
+          [testData[0]],
         );
         expect(seen.map((args) => args.length)).toEqual([2, 2, 2]);
       });
@@ -298,7 +298,7 @@ describe("component/dot", () => {
           .radius(() => 4)
           .fill(() => "#f00")
           .stroke(() => "#00f"),
-        [testData[0]]
+        [testData[0]],
       );
       expect(attrs(constant, "r")).toEqual(attrs(accessor, "r"));
       expect(attrs(constant, "fill")).toEqual(attrs(accessor, "fill"));
@@ -323,7 +323,7 @@ describe("component/dot", () => {
           .y(0)
           // @ts-expect-error - accessor returns unknown on purpose
           .radius(() => value),
-        [{}]
+        [{}],
       );
       return {
         cx: circles(node)[0].getAttribute("cx"),
@@ -400,7 +400,7 @@ describe("component/dot", () => {
           // @ts-expect-error - accessor returns undefined on purpose
           .y(() => undefined)
           .radius(3),
-        [{}]
+        [{}],
       );
       expect(anchors(node)).toEqual(["translate(0,0)"]);
     });
@@ -482,7 +482,7 @@ describe("component/dot", () => {
 
     test("should schedule a transition only when the property is set", () => {
       expect(
-        tweenNames(circles(render(dotOf().transition(true), [testData[0]]))[0])
+        tweenNames(circles(render(dotOf().transition(true), [testData[0]]))[0]),
       ).not.toBeNull();
       expect(tweenNames(circles(render(dotOf().transition(false), [testData[0]]))[0])).toBeNull();
     });

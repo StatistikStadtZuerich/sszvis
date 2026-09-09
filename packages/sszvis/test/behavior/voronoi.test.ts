@@ -79,7 +79,7 @@ describe("behavior/voronoi", () => {
     selection.call(
       voronoi<TestDataPoint>()
         .x((d) => d.x)
-        .y((d) => d.y)
+        .y((d) => d.y),
     );
     expect(consoleErrorSpy).toHaveBeenCalledWith("behavior.voronoi - requires bounds");
     consoleErrorSpy.mockRestore();
@@ -95,7 +95,7 @@ describe("behavior/voronoi", () => {
       voronoi<TestDataPoint>()
         .x((d) => d.x)
         .y((d) => d.y)
-        .bounds([0, 0, 400, 300])
+        .bounds([0, 0, 400, 300]),
     );
     const voronoiPaths = svg.selectAll("[data-sszvis-behavior-voronoi]");
     expect(voronoiPaths.size()).toBe(testData.length);
@@ -119,7 +119,7 @@ describe("behavior/voronoi", () => {
           .x((d) => d.x)
           .y((d) => d.y)
           .bounds([0, 0, 400, 300])
-          .debug(true)
+          .debug(true),
       );
     svg.selectAll("[data-sszvis-behavior-voronoi]").each(function () {
       const path = d3.select(this);
@@ -141,7 +141,7 @@ describe("behavior/voronoi", () => {
           .y((d) => d.y)
           .bounds([0, 0, 400, 300])
           .on("over", overHandler)
-          .on("out", outHandler)
+          .on("out", outHandler),
       );
     const svgRect = svg.node()?.getBoundingClientRect() as DOMRect;
     const firstPath = svg.selectAll("[data-sszvis-behavior-voronoi]").nodes()[0] as SVGPathElement;
@@ -150,7 +150,7 @@ describe("behavior/voronoi", () => {
         clientX: svgRect.left + 100, // Near first data point
         clientY: svgRect.top + 100,
         bubbles: true,
-      })
+      }),
     );
     expect(overHandler).toHaveBeenCalledTimes(1);
     expect(overHandler.mock.calls[0][1]).toEqual(testData[0]); // Correct data passed
@@ -159,7 +159,7 @@ describe("behavior/voronoi", () => {
         clientX: svgRect.left + 105, // Close to first point
         clientY: svgRect.top + 105,
         bubbles: true,
-      })
+      }),
     );
     expect(overHandler).toHaveBeenCalledTimes(2);
     firstPath.dispatchEvent(
@@ -167,7 +167,7 @@ describe("behavior/voronoi", () => {
         clientX: svgRect.left + 50, // Far from any data point
         clientY: svgRect.top + 50,
         bubbles: true,
-      })
+      }),
     );
     expect(outHandler).toHaveBeenCalledTimes(1);
     firstPath.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
@@ -188,7 +188,7 @@ describe("behavior/voronoi", () => {
           .y((d) => d.y)
           .bounds([0, 0, 400, 300])
           .on("over", overHandler)
-          .on("out", outHandler)
+          .on("out", outHandler),
       );
     const svgRect = svg.node()?.getBoundingClientRect() as DOMRect;
     const firstPath = svg.selectAll("[data-sszvis-behavior-voronoi]").nodes()[0] as SVGPathElement;
@@ -256,7 +256,7 @@ describe("behavior/voronoi", () => {
           .x((d) => d.x)
           .y((d) => d.y)
           .bounds([0, 0, 400, 300])
-          .on("over", overHandler)
+          .on("over", overHandler),
       );
     const svgRect = svg.node()?.getBoundingClientRect() as DOMRect;
     const firstPath = svg.selectAll("[data-sszvis-behavior-voronoi]").nodes()[0] as SVGPathElement;
@@ -265,7 +265,7 @@ describe("behavior/voronoi", () => {
         clientX: svgRect.left + 200,
         clientY: svgRect.top + 150,
         bubbles: true,
-      })
+      }),
     );
     expect(overHandler).toHaveBeenCalledTimes(1);
     overHandler.mockClear();
@@ -274,7 +274,7 @@ describe("behavior/voronoi", () => {
         clientX: svgRect.left + 210, // 10px away horizontally
         clientY: svgRect.top + 155, // 5px away vertically (total ~11px)
         bubbles: true,
-      })
+      }),
     );
     expect(overHandler).toHaveBeenCalledTimes(1);
     overHandler.mockClear();
@@ -283,7 +283,7 @@ describe("behavior/voronoi", () => {
         clientX: svgRect.left + 220, // 20px away horizontally
         clientY: svgRect.top + 170, // 20px away vertically (total ~28px)
         bubbles: true,
-      })
+      }),
     );
     expect(overHandler).toHaveBeenCalledTimes(0);
   });
@@ -300,7 +300,7 @@ describe("behavior/voronoi", () => {
           .x((d) => d.x)
           .y((d) => d.y)
           .bounds([0, 0, 400, 300])
-          .on("over", overHandler)
+          .on("over", overHandler),
       );
     const svgRect = svg.node()?.getBoundingClientRect() as DOMRect;
     let voronoiPaths = svg.selectAll("[data-sszvis-behavior-voronoi]");
@@ -334,7 +334,7 @@ describe("behavior/voronoi", () => {
           .x((d) => d.position.horizontal)
           .y((d) => d.position.vertical)
           .bounds([0, 0, 400, 300])
-          .on("over", overHandler)
+          .on("over", overHandler),
       );
     voronoiPaths = svg.selectAll("[data-sszvis-behavior-voronoi]");
     const mouseEvent = new MouseEvent("mouseover", {
@@ -370,7 +370,7 @@ describe("behavior/voronoi", () => {
           .x((d) => d.x)
           .y((d) => d.y)
           .bounds([100, 80, 400, 300])
-          .on("over", overHandler)
+          .on("over", overHandler),
       );
       // The screen position of the group's user-space origin. `getBoundingClientRect()` would
       // report the mesh's box, which starts 100px right and 80px down from here.
@@ -387,7 +387,7 @@ describe("behavior/voronoi", () => {
           clientX: origin[0] + 200,
           clientY: origin[1] + 150,
           bubbles: true,
-        })
+        }),
       );
       expect(overHandler).toHaveBeenCalledTimes(1);
       expect(overHandler.mock.calls[0][1]).toEqual(insetData[0]);
@@ -443,7 +443,7 @@ describe("behavior/voronoi", () => {
           .y((d) => d.y)
           .bounds([100, 80, 400, 300])
           .on("over", overHandler)
-          .on("out", outHandler)
+          .on("out", outHandler),
       );
       const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
       const firstPath = layer
@@ -496,7 +496,7 @@ describe("behavior/voronoi", () => {
           .y((d) => d.y)
           .bounds([100, 80, 400, 300])
           .on("over", overHandler)
-          .on("out", outHandler)
+          .on("out", outHandler),
       );
       const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
       const firstPath = layer
@@ -565,7 +565,7 @@ describe("behavior/voronoi", () => {
           .y((d) => d.y)
           .bounds([100, 80, 400, 300])
           .on("over", overHandler)
-          .on("out", outHandler)
+          .on("out", outHandler),
       );
       const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
       const firstPath = layer
@@ -647,7 +647,7 @@ describe("behavior/voronoi", () => {
           .x((d) => d.x)
           .y((d) => d.y)
           .bounds([100, 80, 400, 300])
-          .on("out", outHandler)
+          .on("out", outHandler),
       );
       const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
       const firstPath = layer
@@ -693,7 +693,7 @@ describe("behavior/voronoi", () => {
           .y((d) => d.y)
           .bounds([100, 80, 400, 300])
           .on("over", overHandler)
-          .on("out", outHandler)
+          .on("out", outHandler),
       );
       const ctm = (layer.node() as SVGGElement).getScreenCTM() as DOMMatrix;
       const paths = layer.selectAll("[data-sszvis-behavior-voronoi]").nodes();
@@ -702,7 +702,7 @@ describe("behavior/voronoi", () => {
           clientX: ctm.e + 130,
           clientY: ctm.f + 100,
           bubbles: true,
-        })
+        }),
       );
       expect(overHandler).not.toHaveBeenCalled();
       expect(outHandler).toHaveBeenCalledTimes(1);

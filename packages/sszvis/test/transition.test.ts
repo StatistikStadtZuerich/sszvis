@@ -41,7 +41,7 @@ describe("transition", () => {
       });
       expect(Number.parseFloat(globalThis.getComputedStyle(testElement).opacity)).toBeCloseTo(
         0.3,
-        1
+        1,
       );
     });
   });
@@ -172,7 +172,7 @@ describe("transition", () => {
       expect(Date.now() - startTime).toBeGreaterThan(140); // 100ms delay + 50ms transition - some tolerance
       expect(Number.parseFloat(globalThis.getComputedStyle(testElement).opacity)).toBeCloseTo(
         0.7,
-        1
+        1,
       );
     });
   });

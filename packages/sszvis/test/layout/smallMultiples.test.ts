@@ -186,7 +186,7 @@ describe("layout/smallMultiples", () => {
           .showTitle(true)
           .titleAnchor("start")
           .titleLabel(() => "t"),
-        groups(6)
+        groups(6),
       ).querySelector(".sszvis-multiple-title");
       expect(start?.getAttribute("x")).toBe("0");
 
@@ -195,7 +195,7 @@ describe("layout/smallMultiples", () => {
           .showTitle(true)
           .titleAnchor("end")
           .titleLabel(() => "t"),
-        groups(6)
+        groups(6),
       ).querySelector(".sszvis-multiple-title");
       expect(end?.getAttribute("x")).toBe("100");
     });
@@ -217,14 +217,14 @@ describe("layout/smallMultiples", () => {
       selection.datum(data).call(
         grid()
           .showTitle(true)
-          .titleLabel(() => "t") as never
+          .titleLabel(() => "t") as never,
       );
       expect(
-        (selection.node() as SVGGElement).querySelectorAll(".sszvis-multiple-title")
+        (selection.node() as SVGGElement).querySelectorAll(".sszvis-multiple-title"),
       ).toHaveLength(6);
       selection.datum(data).call(grid() as never);
       expect(
-        (selection.node() as SVGGElement).querySelectorAll(".sszvis-multiple-title")
+        (selection.node() as SVGGElement).querySelectorAll(".sszvis-multiple-title"),
       ).toHaveLength(0);
     });
   });
@@ -261,7 +261,7 @@ describe("layout/smallMultiples", () => {
 
     test("rejects a group with no values property", () => {
       expect(() => render(grid(), [{ name: "no values" }] as unknown as Group[])).toThrow(
-        /group 0 has no values/
+        /group 0 has no values/,
       );
     });
 

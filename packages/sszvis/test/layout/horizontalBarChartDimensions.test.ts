@@ -52,7 +52,7 @@ describe("horizontalBarChartDimensions", () => {
       const step = DEFAULT_HEIGHT + MIN_PADDING;
       for (let n = 1; n < 6; n++) {
         expect(dimensionsHorizontalBarChart(n + 1).barGroupHeight).toBe(
-          dimensionsHorizontalBarChart(n).barGroupHeight + step
+          dimensionsHorizontalBarChart(n).barGroupHeight + step,
         );
       }
     });

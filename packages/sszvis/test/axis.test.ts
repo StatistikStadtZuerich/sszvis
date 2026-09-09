@@ -47,7 +47,7 @@ describe("axis", () => {
         .scale(
           scaleTime()
             .domain([new Date(2020, 0, 1), new Date(2020, 11, 31)])
-            .range([0, 300])
+            .range([0, 300]),
         )
         .orient("bottom");
       const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
@@ -95,7 +95,7 @@ describe("axis", () => {
       expect(tickTexts.length).toBeGreaterThan(0);
       expect(["start", "middle", "end"]).toContain(select(tickTexts[0]).style("text-anchor"));
       expect(["start", "middle", "end"]).toContain(
-        select(tickTexts[tickTexts.length - 1]).style("text-anchor")
+        select(tickTexts[tickTexts.length - 1]).style("text-anchor"),
       );
     });
   });
@@ -227,7 +227,7 @@ describe("axis", () => {
       expect(() =>
         createSvgLayer("#chart-container", undefined, { key: "test-layer" })
           .selectGroup("xAxis")
-          .call(xAxis)
+          .call(xAxis),
       ).toThrow(/axis: tickFormat must be a function .*, got string/);
     });
 
@@ -239,7 +239,7 @@ describe("axis", () => {
       expect(() =>
         createSvgLayer("#chart-container", undefined, { key: "test-layer" })
           .selectGroup("xAxis")
-          .call(xAxis)
+          .call(xAxis),
       ).toThrow(/got null/);
     });
 
@@ -337,7 +337,7 @@ describe("axis", () => {
         .scale(
           scaleLinear()
             .domain([0, ["Category A", "Category B", "Category C", "Category D"].length - 1])
-            .range([0, 300])
+            .range([0, 300]),
         )
         .orient("bottom");
       const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
@@ -436,7 +436,7 @@ describe("axis", () => {
         .scale(
           scaleTime()
             .domain([new Date(2020, 0, 1), new Date(2020, 11, 31)])
-            .range([200, 0])
+            .range([200, 0]),
         )
         .orient("left");
       const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
@@ -454,7 +454,7 @@ describe("axis", () => {
         .scale(
           scaleLinear()
             .domain([0, ["Item 1", "Item 2", "Item 3"].length - 1])
-            .range([200, 0])
+            .range([200, 0]),
         )
         .orient("left");
 

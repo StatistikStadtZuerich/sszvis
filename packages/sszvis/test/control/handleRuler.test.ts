@@ -92,7 +92,7 @@ describe("control/handleRuler", () => {
     const rulerGroup = node.querySelector("g.sszvis-handleRuler__group") as SVGGElement;
     const classes = [...rulerGroup.children].map((c) => c.getAttribute("class"));
     expect(classes.lastIndexOf("sszvis-handleRuler__handle")).toBeLessThan(
-      classes.indexOf("sszvis-ruler__dot")
+      classes.indexOf("sszvis-ruler__dot"),
     );
     expect(rule(node)?.getAttribute("x1")).toBe("40.5");
   });
@@ -128,7 +128,7 @@ describe("control/handleRuler", () => {
         .x((d: Datum) => d.x)
         .y((d: Datum) => d.y)
         .top(20)
-        .bottom(200)
+        .bottom(200),
     );
     expect(rule(node)?.getAttribute("x1")).toBe("40.5");
     expect(handle(node)?.getAttribute("x")).toBe("35.5");
@@ -147,7 +147,7 @@ describe("control/handleRuler", () => {
       [
         { x: 40, y: 60, label: "first" },
         { x: 100, y: 120, label: "second" },
-      ]
+      ],
     );
     expect(rule(node)?.getAttribute("x1")).toBe("40.5");
     expect(handle(node)?.getAttribute("x")).toBe("35.5");
@@ -223,7 +223,7 @@ describe("control/handleRuler", () => {
           self: this,
         });
         return d.y;
-      } as never)
+      } as never),
     );
 
     const dotElements = dots(node);

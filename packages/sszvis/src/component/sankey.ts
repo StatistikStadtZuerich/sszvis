@@ -412,13 +412,13 @@ const linkPathString = (
   x2: number,
   x3: number,
   y0: number,
-  y1: number
+  y1: number,
 ): string => `M${x0},${y0}C${x1},${y0} ${x2},${y1} ${x3},${y1}`;
 const linkBounds = (
   x0: number,
   x1: number,
   y0: number,
-  y1: number
+  y1: number,
 ): [number, number, number, number] => [x0, x1, y0, y1];
 
 /** The links are keyed on their id, so a redrawn link keeps its path element. */
@@ -492,7 +492,7 @@ export default function sankey(): SankeyComponent {
         Math.floor(
           props.columnPadding(node.columnIndex) +
             props.sizeScale(node.valueOffset) +
-            props.nodePadding * node.nodeIndex
+            props.nodePadding * node.nodeIndex,
         );
       const xPosition = (node: SankeyNode): number => props.columnPosition(node.columnIndex);
       const yPosition = (node: SankeyNode): number => getNodePosition(node);
@@ -532,7 +532,7 @@ export default function sankey(): SankeyComponent {
 
       columnLabels
         .attr("transform", (d, i) =>
-          translateString(columnLabelX(i) + props.columnLabelOffset(d, i), COLUMN_LABEL_Y)
+          translateString(columnLabelX(i) + props.columnLabelOffset(d, i), COLUMN_LABEL_Y),
         )
         .text((_d, i) => props.columnLabel(i))
         .style("opacity", (_d, i) => props.columnLabelOpacity(i));
@@ -578,7 +578,7 @@ export default function sankey(): SankeyComponent {
           curveControlPtB,
           points[1],
           points[2],
-          points[3]
+          points[3],
         );
       };
 
@@ -634,7 +634,7 @@ export default function sankey(): SankeyComponent {
         .join("text")
         .attr(
           "class",
-          "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label"
+          "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label",
         );
 
       linkSourceLabels
@@ -651,7 +651,7 @@ export default function sankey(): SankeyComponent {
         .join("text")
         .attr(
           "class",
-          "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label"
+          "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label",
         );
 
       linkTargetLabels
@@ -692,12 +692,12 @@ export default function sankey(): SankeyComponent {
       barLabels
         .text((node) => props.nameLabel(node.id))
         .attr("text-anchor", (node) =>
-          getLabelSide(node.columnIndex) === "left" ? "end" : "start"
+          getLabelSide(node.columnIndex) === "left" ? "end" : "start",
         )
         .attr("x", (node) =>
           getLabelSide(node.columnIndex) === "left"
             ? xPosition(node) - 6
-            : xPosition(node) + props.nodeThickness + 6
+            : xPosition(node) + props.nodeThickness + 6,
         )
         .attr("y", (node) => safeY(node) + safeExtent(node) / 2)
         .style("opacity", props.labelOpacity);
@@ -714,7 +714,7 @@ export default function sankey(): SankeyComponent {
           "x",
           (node) =>
             xPosition(node) +
-            (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)
+            (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0),
         )
         .attr("y", (node) => safeY(node) - props.nodePadding / 2)
         .attr("width", props.labelHitBoxSize + props.nodeThickness)

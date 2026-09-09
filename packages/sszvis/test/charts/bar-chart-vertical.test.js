@@ -33,7 +33,7 @@ describe("bar-chart-vertical", () => {
             r[k] = yAcc(d[k][0]);
           }
           return r;
-        })
+        }),
     );
 
     for (const bar of stackedData) {

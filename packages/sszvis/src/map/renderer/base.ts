@@ -144,8 +144,9 @@ type BaseProps<T> = {
   transitionColor: boolean;
 };
 
-export interface MapRendererBaseComponent<T = unknown>
-  extends ComponentBuilder<MapRendererBaseComponent<T>> {
+export interface MapRendererBaseComponent<T = unknown> extends ComponentBuilder<
+  MapRendererBaseComponent<T>
+> {
   mergedData(): MergedGeoDatum<T>[];
   mergedData(data: MergedGeoDatum<T>[]): MapRendererBaseComponent<T>;
   /** @deprecated Declared and documented, but the render only ever reads mergedData. */
@@ -259,7 +260,7 @@ export default function mapRendererBase<T = unknown>(): MapRendererBaseComponent
         const projection = props.mapPath.projection<GeoProjection>();
         if (typeof projection !== "function") {
           throw new TypeError(
-            "map/renderer/base: mapPath must be a d3.geoPath with a projection, since the tooltip anchors are positioned with it"
+            "map/renderer/base: mapPath must be a d3.geoPath with a projection, since the tooltip anchors are positioned with it",
           );
         }
         // The centre is handed over whole rather than narrowed to a pair. getGeoJsonCenter returns

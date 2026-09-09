@@ -107,7 +107,7 @@ describe("component/bar", () => {
         barOf()
           .fill((d: Datum) => d.color)
           .stroke("#00f"),
-        testData
+        testData,
       );
       expect(attrs(node, "fill")).toEqual(["#f00", "#0f0"]);
       expect(attrs(node, "stroke")).toEqual(["#00f", "#00f"]);
@@ -171,8 +171,8 @@ describe("component/bar", () => {
             .y(0)
             .width(10)
             .height(10),
-          [{}]
-        )
+          [{}],
+        ),
       )[0].getAttribute("x");
 
     test("should replace NaN with 0", () => {
@@ -200,7 +200,7 @@ describe("component/bar", () => {
           .y(() => Number.NaN)
           .width(() => Number.NaN)
           .height(() => Number.NaN),
-        [{}]
+        [{}],
       );
       expect(attrs(node, "x")).toEqual(["0"]);
       expect(attrs(node, "y")).toEqual(["0"]);
@@ -296,7 +296,7 @@ describe("component/bar", () => {
           .y((_d: Datum, i: number) => i * 10)
           .width(20)
           .height(10),
-        testData
+        testData,
       );
       expect(attrs(node, "x")).toEqual(["0", "100"]);
       // x + width / 2, y - with the index reaching the accessors, as it does for the rects
@@ -311,7 +311,7 @@ describe("component/bar", () => {
           .width(20)
           .height(10)
           .centerTooltip(true),
-        testData
+        testData,
       );
       expect(anchors(node)).toEqual(["translate(10,5)", "translate(110,15)"]);
     });
@@ -324,7 +324,7 @@ describe("component/bar", () => {
           .width(20)
           .height(10)
           .tooltipAnchor([1, 1]),
-        testData
+        testData,
       );
       expect(anchors(node)).toEqual(["translate(20,10)", "translate(120,20)"]);
     });
@@ -336,7 +336,7 @@ describe("component/bar", () => {
           .y(() => Number.NaN)
           .width(20)
           .height(10),
-        [{}]
+        [{}],
       );
       // NaN x and y become 0, so the anchor lands at 0 + 20 / 2, 0
       expect(anchors(node)).toEqual(["translate(10,0)"]);

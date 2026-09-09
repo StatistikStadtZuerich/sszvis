@@ -48,8 +48,9 @@ interface ConfidenceAreaProps<T = unknown> {
   transition: boolean;
 }
 
-interface ConfidenceAreaComponent<T = unknown>
-  extends ComponentBuilder<ConfidenceAreaComponent<T>> {
+interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<
+  ConfidenceAreaComponent<T>
+> {
   x(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
   y0(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
   y1(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;

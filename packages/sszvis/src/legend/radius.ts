@@ -130,7 +130,7 @@ function defaultTickValues(scale: RadiusScale): NumberValue[] {
   const { invert } = scale;
   if (!invert) {
     throw new TypeError(
-      "legend.radius - scale.invert is required to derive the default ticks; supply tickValues instead."
+      "legend.radius - scale.invert is required to derive the default ticks; supply tickValues instead.",
     );
   }
   const domain = scale.domain();

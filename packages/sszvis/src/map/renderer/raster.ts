@@ -184,8 +184,9 @@ type RasterProps<T> = {
   opacity: number;
 };
 
-export interface MapRendererRasterComponent<T = unknown>
-  extends ComponentBuilder<MapRendererRasterComponent<T>> {
+export interface MapRendererRasterComponent<T = unknown> extends ComponentBuilder<
+  MapRendererRasterComponent<T>
+> {
   debug(): boolean;
   debug(value: boolean): MapRendererRasterComponent<T>;
   width(): number | undefined;
@@ -275,7 +276,7 @@ function pixelRatio(): number {
 function dimension(value: number | undefined, name: string): number {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
     throw new Error(
-      `[mapRendererRaster] the ${name} property is required, and must be a finite, non-negative number`
+      `[mapRendererRaster] the ${name} property is required, and must be a finite, non-negative number`,
     );
   }
   return value;
@@ -291,7 +292,7 @@ function dimension(value: number | undefined, name: string): number {
 function cellSide(value: number): number {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
     throw new Error(
-      "[mapRendererRaster] the cellSide property must be a finite number greater than zero"
+      "[mapRendererRaster] the cellSide property must be a finite number greater than zero",
     );
   }
   return value;
@@ -417,7 +418,7 @@ export default function mapRendererRaster<T = unknown>(): MapRendererRasterCompo
       // library.
       if (unplaced > 0) {
         logger.warn(
-          `[mapRendererRaster] the position property could not place ${unplaced} of ${data.length} cells; they were not drawn`
+          `[mapRendererRaster] the position property could not place ${unplaced} of ${data.length} cells; they were not drawn`,
         );
       }
     });

@@ -158,7 +158,7 @@ export default function bar<T = unknown>(): BarComponent<T> {
             .attr("x", xAt)
             .attr("y", yAt)
             .attr("width", wAt)
-            .attr("height", hAt)
+            .attr("height", hAt),
         )
         .attr("fill", fillAt)
         .attr("stroke", strokeAt);

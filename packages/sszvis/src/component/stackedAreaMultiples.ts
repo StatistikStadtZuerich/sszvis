@@ -193,7 +193,7 @@ type KeyAccessor<L, R> = (
   this: Element,
   datum: L,
   index: number,
-  group: ArrayLike<Element> | ArrayLike<L>
+  group: ArrayLike<Element> | ArrayLike<L>,
 ) => R;
 
 /** Either a constant or an accessor; the three dimensions accept both. */
@@ -224,8 +224,9 @@ type StackedAreaMultiplesProps<P, L> = {
   transition: boolean;
 };
 
-export interface StackedAreaMultiplesComponent<P = unknown, L = P[]>
-  extends ComponentBuilder<StackedAreaMultiplesComponent<P, L>> {
+export interface StackedAreaMultiplesComponent<P = unknown, L = P[]> extends ComponentBuilder<
+  StackedAreaMultiplesComponent<P, L>
+> {
   x(): AreaValue<P> | undefined;
   x<Q = P>(value: AreaValue<Q>): StackedAreaMultiplesComponent<P, L>;
   y0(): AreaValue<P> | undefined;
@@ -240,7 +241,7 @@ export interface StackedAreaMultiplesComponent<P = unknown, L = P[]>
   strokeWidth<M = L>(value: StyleValue<M, number> | null): StackedAreaMultiplesComponent<P, L>;
   defined(): boolean | PointAccessor<P, boolean> | undefined;
   defined<Q = P>(
-    predicate: boolean | PointAccessor<Q, boolean>
+    predicate: boolean | PointAccessor<Q, boolean>,
   ): StackedAreaMultiplesComponent<P, L>;
   key(): KeyAccessor<L, string | number>;
   key<M = L>(accessor: KeyAccessor<M, string | number>): StackedAreaMultiplesComponent<P, L>;
@@ -341,7 +342,7 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
           if (missing && !reported) {
             reported = true;
             logger.warn(
-              "[stackedAreaMultiples] a point has a missing y0 or y1 value and was skipped; the band breaks around it."
+              "[stackedAreaMultiples] a point has a missing y0 or y1 value and was skipped; the band breaks around it.",
             );
           }
           return !missing;
@@ -426,7 +427,7 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
                 .attr("fill", fill)
                 .attr("stroke", stroke)
                 .attr("stroke-width", strokeWidth);
-            }
+            },
           );
       })
   );
