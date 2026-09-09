@@ -16,6 +16,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const REPO = path.resolve(__dirname, "..", "..");
 export const REF = path.join(REPO, ".reference", "d3charts-website");
+
+/**
+ * Where this working copy's own library and stylesheet live. Kept as two
+ * constants so a future move breaks one line rather than three call sites -
+ * these pointed at the pre-monorepo `build/` and `docs/` until the workspace
+ * split, which made every chart report `sszvis is not defined`.
+ */
+export const CANDIDATE_BUILD = path.join(REPO, "packages", "sszvis", "build");
+export const CANDIDATE_DOCS = path.join(REPO, "apps", "docs", "docs");
 export const LIBS = path.join(REF, "statisticstools/Modules/StyleGuide/projects/library_script");
 
 /** Library versions whose chart code targets d3 v7 and today's sszvis API. */
@@ -179,8 +188,8 @@ export function rewriteChart(html, side, chartPath, libPrefix = "/lib/") {
 export function resolveLib(side, version, file) {
   const baseline = path.join(LIBS, version, file);
   if (side === "baseline") return baseline;
-  if (file === "sszvis.js") return path.join(REPO, "build", "sszvis.js");
-  if (file === "sszvis.min.js") return path.join(REPO, "build", "sszvis.min.js");
-  if (file === "sszvis.css") return path.join(REPO, "docs", "sszvis.css");
+  if (file === "sszvis.js") return path.join(CANDIDATE_BUILD, "sszvis.js");
+  if (file === "sszvis.min.js") return path.join(CANDIDATE_BUILD, "sszvis.min.js");
+  if (file === "sszvis.css") return path.join(CANDIDATE_DOCS, "sszvis.css");
   return baseline;
 }

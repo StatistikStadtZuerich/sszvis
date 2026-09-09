@@ -12,7 +12,7 @@
  * TopoJSON, which a browser refuses to do from `file://` - so START-HERE.md tells
  * the recipient how. That is a one-line command, not a checkout.
  *
- * Usage: npm run regression:export -- [--out DIR] [--flagged] [--limit N] [--no-zip]
+ * Usage: pnpm run regression:export -- [--out DIR] [--flagged] [--limit N] [--no-zip]
  */
 
 import { cp, copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -54,7 +54,7 @@ let report = null;
 if (FLAGGED_ONLY) {
   if (!existsSync(REPORT)) {
     console.error(`--flagged needs a sweep report at ${path.relative(process.cwd(), REPORT)}.`);
-    console.error("Run: npm run regression:crawl");
+    console.error("Run: pnpm run regression:crawl");
     process.exit(1);
   }
   report = JSON.parse(await readFile(REPORT, "utf8"));
@@ -92,7 +92,20 @@ for (const version of versions) {
     await mkdir(dir, { recursive: true });
     for (const file of LIB_FILES) {
       const source = resolveLib(side, version, file);
-      if (existsSync(source)) await copyFile(source, path.join(dir, file));
+      if (existsSync(source)) {
+        await copyFile(source, path.join(dir, file));
+        continue;
+      }
+      // sszvis.js and sszvis.css are the whole point of the comparison. Missing
+      // them used to be skipped silently, which shipped an export whose
+      // candidate column was blank and looked like a library failure.
+      if (side === "candidate" && (file === "sszvis.js" || file === "sszvis.css")) {
+        console.error(
+          `Cannot export: the candidate ${file} is missing at ${source}.\n` +
+            "Build the library first: pnpm --filter sszvis run build",
+        );
+        process.exit(1);
+      }
     }
   }
 }
