@@ -1,0 +1,97 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+# One release at a time: two runs versioning the same changesets would race on
+# the Version Packages branch and could publish the same version twice.
+concurrency: release-${{ github.ref }}
+
+jobs:
+  version:
+    name: "Version"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      has-changesets: ${{ steps.changesets.outputs.hasChangesets }}
+      version: ${{ steps.resolve.outputs.version }}
+      tag-exists: ${{ steps.resolve.outputs.tag-exists }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # changeset version reads the history to attribute entries to commits.
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        uses: ./.github/actions/setup
+
+      # Opens or updates the "Version Packages" pull request. It deliberately has
+      # no `publish` input: publishing goes through npm-publish.yml, which uses
+      # `npm publish --provenance` over OIDC. `changeset publish` shells out to
+      # the package manager and would drop the provenance attestation.
+      - name: Create or update the Version Packages pull request
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm run changeset:version
+          title: "chore: version packages"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve the library version and whether it is already released
+        id: resolve
+        run: |
+          version="$(node -p "require('./packages/sszvis/package.json').version")"
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null 2>&1; then
+            echo "tag-exists=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "tag-exists=false" >>"$GITHUB_OUTPUT"
+          fi
+
+  publish:
+    name: "Publish"
+    needs: version
+    # Reached when a Version Packages pull request has landed: the changesets are
+    # consumed, the manifest carries a version, and nothing has published it yet.
+    if: needs.version.outputs.has-changesets == 'false' && needs.version.outputs.tag-exists == 'false'
+    uses: ./.github/workflows/npm-publish.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      expected-version: ${{ needs.version.outputs.version }}
+
+  tag:
+    name: "Tag"
+    needs:
+      - version
+      - publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # After the publish, so a failed publish leaves the version re-releasable.
+      # This tag will not trigger npm-publish.yml — GITHUB_TOKEN pushes do not
+      # start workflows — which is why release.yml calls that workflow itself.
+      - name: Tag the release
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          git tag -a "v$VERSION" -m "v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: gh release create "v$VERSION" --title "v$VERSION" --verify-tag --generate-notes

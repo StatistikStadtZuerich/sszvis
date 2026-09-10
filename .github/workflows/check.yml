@@ -9,6 +9,9 @@ on:
       - opened
       - synchronize
       - reopened
+      # So the changeset gate re-runs when `no-changeset` is added or removed.
+      - labeled
+      - unlabeled
 
 jobs:
   check:
@@ -23,6 +26,27 @@ jobs:
 
       - name: Run Check
         run: pnpm run check
+
+  changeset:
+    name: "Changeset"
+    if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/master' && !contains(github.event.pull_request.labels.*.name, 'no-changeset')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # `changeset status --since` diffs against the base branch, so the
+          # shallow default checkout is not enough.
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        uses: ./.github/actions/setup
+
+      # Fails when packages/sszvis/src changed and no .changeset entry describes
+      # it. `changedFilePatterns` in .changeset/config.json defines "changed";
+      # label a pull request `no-changeset` to opt out.
+      - name: Verify a changeset describes the change
+        run: pnpm exec changeset status --since=origin/${{ github.base_ref }}
 
   verify-types:
     name: "Types"

@@ -6,7 +6,7 @@ Zürich — and the monorepo that builds it.
 
 [Documentation & examples](https://statistikstadtzuerich.github.io/sszvis/) ·
 [`sszvis` on npm](https://www.npmjs.com/package/sszvis) ·
-[Changelog](apps/docs/docs/CHANGELOG.md)
+[Changelog](packages/sszvis/CHANGELOG.md)
 
 **If you want to _use_ sszvis**, read the
 [documentation site](https://statistikstadtzuerich.github.io/sszvis/) or the

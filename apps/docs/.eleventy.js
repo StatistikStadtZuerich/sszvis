@@ -44,6 +44,15 @@ module.exports = function (eleventyConfig) {
     "../project-specimen/dist/ProjectSpecimen.js": "ProjectSpecimen.js",
   });
 
+  /**
+   * The changelog lives with the package it describes, so it ships to npm and is
+   * the file `changeset version` writes. The Catalog page docs/index.html reads it
+   * from the site root, so copy it in the way the library bundle is copied in.
+   */
+  eleventyConfig.addPassthroughCopy({
+    "../../packages/sszvis/CHANGELOG.md": "CHANGELOG.md",
+  });
+
   eleventyConfig.addPassthroughCopy("docs/_headers");
   eleventyConfig.addPassthroughCopy("docs/index.html");
   eleventyConfig.addPassthroughCopy("docs/template.html");

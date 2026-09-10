@@ -38,7 +38,8 @@
   "files": [
     "src",
     "build",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "peerDependencies": {
     "d3": ">=7.9.0"
