@@ -22,7 +22,7 @@
     "**/.reference/**",
     "apps/docs/docs/**",
     "**/test/snapshot/__results__/**",
-    "scripts/visual-regression/__export__/**",
-    "scripts/visual-regression/__report__/**",
+    "apps/regression-cli/__export__/**",
+    "apps/regression-cli/__report__/**",
   ],
 }

@@ -1,0 +1,30 @@
+{
+  "name": "@sszvis/regression-cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Consumer visual-regression harness for sszvis: serve, crawl and export the reference charts side by side",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "bin": {
+    "sszvis-regression": "dist/index.js"
+  },
+  "dependencies": {
+    "@effect/platform-node": "4.0.0-rc.113",
+    "effect": "4.0.0-rc.113",
+    "playwright": "^1.55.0"
+  },
+  "devDependencies": {
+    "@repo/config-typescript": "workspace:*",
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.27.0",
+    "tsx": "^4.20.0",
+    "vitest": "^4.1.4"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --packages=external --format=esm --outfile=dist/index.js --banner:js='#!/usr/bin/env node' && chmod +x dist/index.js",
+    "dev": "tsx src/index.ts",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rm -rf dist .turbo"
+  }
+}

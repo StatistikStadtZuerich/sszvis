@@ -19,7 +19,7 @@ jobs:
       - run: pnpm run check
       - run: pnpm run type-check
       - run: pnpm --filter sszvis exec playwright install --with-deps
-      - run: pnpm run test:unit
+      - run: pnpm run test
       - run: pnpm run build
 
       # `npm publish`, not `pnpm publish`: npm implements OIDC trusted publishing,

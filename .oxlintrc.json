@@ -28,10 +28,16 @@
     "apps/docs/docs/**",
     "apps/project-specimen/src/**",
     "contrib/**",
-    "scripts/visual-regression/__export__/**",
-    "scripts/visual-regression/__report__/**"
+    "apps/regression-cli/__export__/**",
+    "apps/regression-cli/__report__/**"
   ],
   "overrides": [
+    {
+      "files": ["apps/regression-cli/src/commands/*.ts"],
+      "rules": {
+        "no-shadow": "off"
+      }
+    },
     {
       "files": ["**/*.test.ts", "**/*.test.js", "**/*.spec.js"],
       "rules": {
