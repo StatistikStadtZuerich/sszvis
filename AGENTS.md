@@ -98,23 +98,58 @@ docs build.
 5. Every `.html` under `apps/docs/docs/` is a template — an incomplete one aborts the
    whole docs build with `Wrote 0 files`.
 
+## Changesets
+
+Every pull request that changes `packages/sszvis/src` carries a changeset. Run
+`pnpm changeset`, choose the bump, and write one user-facing sentence; commit the
+`.changeset/*.md` file it writes with the rest of the branch. The `Changeset` job
+in `.github/workflows/check.yml` fails a pull request that needs one and has none
+— label it `no-changeset` when the change genuinely reaches no consumer.
+
+Choose the bump from what a consumer sees, not from the size of the diff:
+
+- **patch** — a fix, an internal change, a dependency bump
+- **minor** — a new component, property or export
+- **major** — anything that makes existing chart code stop working
+
+Write the summary for someone upgrading, in the voice the changelog already uses:
+`add an ariaLabel property to sszvis.buttonGroup`, not `feat: aria label`. Only
+`sszvis` is publishable, so it is the only package a changeset can name.
+
 ## Releasing
 
-Only `packages/sszvis` is published. Never run `pnpm version` at the repo root: it
-writes a fabricated version into the private root manifest and creates a tag that
-matches the publish trigger. The root has a `version` script that refuses, as a guard.
+Only `packages/sszvis` is published, and the release is driven by Changesets — the
+version and the changelog are never edited by hand. Never run `pnpm version` at the
+repo root: it writes a fabricated version into the private root manifest and creates
+a tag that matches the publish trigger. The root has a `version` script that refuses,
+as a guard.
 
-1. Update `apps/docs/docs/CHANGELOG.md` with the user-facing changes.
-2. Bump the library: `pnpm --filter sszvis exec npm --no-git-tag-version version minor`
-3. Commit, then tag from the repo root:
-   `git tag v$(node -p "require('./packages/sszvis/package.json').version")`
-4. `git push --follow-tags`. The `v*` tag triggers `.github/workflows/npm-publish.yml`,
-   which checks, type-checks, unit-tests, builds, asserts the tag matches the package
-   version, and publishes with `npm publish --provenance`.
+1. Merge pull requests as usual, each with its changeset.
+2. `.github/workflows/release.yml` runs on every push to `master` and keeps a
+   **"chore: version packages"** pull request open, showing the version the
+   pending changesets add up to and the changelog they produce.
+3. Release by merging that pull request. It bumps `packages/sszvis/package.json`,
+   writes `packages/sszvis/CHANGELOG.md` and deletes the consumed changesets.
+   Edit its changelog section before merging when a release deserves more than
+   the accumulated bullets — 3.5.0 is the example to follow.
+4. The next `release.yml` run sees no changesets and an untagged version, so it
+   invokes `npm-publish.yml`, which checks, type-checks, unit-tests, builds and
+   publishes with `npm publish --provenance`, then tags `v<version>` and creates
+   the GitHub release.
 5. Confirm at <https://www.npmjs.com/package/sszvis>, including the provenance badge.
 
-Publishing uses npm OIDC trusted publishing — no `NPM_TOKEN`. `pnpm publish` cannot do
-the OIDC exchange and would silently drop provenance, so the workflow uses `npm`.
+Publishing uses npm OIDC trusted publishing — no `NPM_TOKEN`. `pnpm publish` and
+`changeset publish` cannot do the OIDC exchange and would silently drop provenance,
+so the workflow uses `npm` directly. That is also why `release.yml` calls
+`npm-publish.yml` through `workflow_call` rather than letting the tag trigger it: a
+tag pushed with `GITHUB_TOKEN` does not start a workflow.
+
+`npm-publish.yml` keeps its `v*` tag trigger and `workflow_dispatch` for a manual
+release. Bump and tag by hand only when the automated path is broken.
+
+The changelog lives at `packages/sszvis/CHANGELOG.md` — with the package it
+describes, so it ships to npm. The docs site copies it in as a passthrough and
+serves it at `/changelog`.
 
 The snapshot suite serves `apps/docs/dist` on port 8000 and screenshots every
 example, so it needs `pnpm run build` and a running docs server first.

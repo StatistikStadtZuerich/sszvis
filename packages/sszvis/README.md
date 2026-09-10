@@ -5,7 +5,7 @@ charting library for the statistical publications of the City of Zürich.
 
 [Documentation & examples](https://statistikstadtzuerich.github.io/sszvis/) ·
 [Source](https://github.com/StatistikStadtZuerich/sszvis) ·
-[Changelog](https://github.com/StatistikStadtZuerich/sszvis/blob/master/apps/docs/docs/CHANGELOG.md)
+[Changelog](https://github.com/StatistikStadtZuerich/sszvis/blob/master/packages/sszvis/CHANGELOG.md)
 
 sszvis is not a chart-type library. It is a set of small, composable d3 components —
 axes, bars, lines, areas, maps, legends, tooltips, interaction behaviours, responsive

@@ -12,12 +12,12 @@
     "node": ">=22"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.2",
     "@effect/tsgo": "latest",
-    "@semantic-release/changelog": "^7.0.0",
     "oxfmt": "latest",
     "oxlint": "latest",
     "playwright": "^1.55.0",
-    "semantic-release": "^25.0.9",
     "turbo": "^2.5.8",
     "typescript": "^7.0.2"
   },
@@ -37,7 +37,9 @@
     "regression": "pnpm --filter @sszvis/regression-cli exec tsx src/index.ts serve",
     "regression:crawl": "pnpm --filter @sszvis/regression-cli exec tsx src/index.ts crawl",
     "regression:export": "pnpm --filter @sszvis/regression-cli exec tsx src/index.ts export",
-    "generate:changelogs": "semantic-release",
+    "changeset": "changeset",
+    "changeset:status": "changeset status",
+    "changeset:version": "changeset version",
     "build:topo": "turbo run build --filter=@sszvis/geodata",
     "version": "echo 'Do not version the root. See the Releasing section in AGENTS.md.' && exit 1"
   }
