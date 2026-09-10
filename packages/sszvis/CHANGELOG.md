@@ -1,3 +1,9 @@
+## 3.5.1
+
+### Patch Changes
+
+- [#405](https://github.com/StatistikStadtZuerich/sszvis/pull/405) [`ad0c8b7`](https://github.com/StatistikStadtZuerich/sszvis/commit/ad0c8b70467d8fd26dad19dc18c5bac272e364b7) Thanks [@lloydrichards](https://github.com/lloydrichards)! - ship `sszvis.css` from the library package, so `sszvis/sszvis.css` resolves from an install instead of only from the documentation site
+
 ## 3.5.0 (2026-09-08)
 
 - the library is now written entirely in TypeScript, and its types describe the datum your chart actually binds
