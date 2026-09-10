@@ -45,5 +45,5 @@ playwright/.cache
 # vitest browser mode drops failure screenshots next to each test file
 **/__screenshots__/
 **/test/snapshot/__results__/
-scripts/visual-regression/__report__/
-scripts/visual-regression/__export__/
+apps/regression-cli/__report__/
+apps/regression-cli/__export__/

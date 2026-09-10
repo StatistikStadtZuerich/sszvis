@@ -1,7 +1,7 @@
 {
   "name": "sszvis-monorepo",
   "private": true,
-  "description": "Monorepo for the Statistik Stadt Zürich Visualization Library",
+  "description": "Monorepo for the Statistik Stadt Z\u00fcrich Visualization Library",
   "repository": {
     "type": "git",
     "url": "https://github.com/StatistikStadtZuerich/sszvis.git"
@@ -26,7 +26,6 @@
     "clean": "turbo run clean && rm -rf node_modules apps/*/node_modules packages/*/node_modules",
     "dev": "turbo run dev",
     "test": "turbo run test",
-    "test:unit": "turbo run test --filter=sszvis",
     "test:snapshot": "turbo run test:snapshot --filter=sszvis",
     "type-check": "turbo run type-check",
     "lint": "oxlint",
@@ -34,9 +33,9 @@
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "check": "pnpm run lint && pnpm run format:check",
-    "regression": "node scripts/visual-regression/server.mjs",
-    "regression:crawl": "node scripts/visual-regression/crawl.mjs",
-    "regression:export": "node scripts/visual-regression/export.mjs",
+    "regression": "pnpm --filter @sszvis/regression-cli exec tsx src/index.ts serve",
+    "regression:crawl": "pnpm --filter @sszvis/regression-cli exec tsx src/index.ts crawl",
+    "regression:export": "pnpm --filter @sszvis/regression-cli exec tsx src/index.ts export",
     "generate:changelogs": "semantic-release",
     "build:topo": "turbo run build --filter=@sszvis/geodata",
     "version": "echo 'Do not version the root. See the Releasing section in AGENTS.md.' && exit 1"

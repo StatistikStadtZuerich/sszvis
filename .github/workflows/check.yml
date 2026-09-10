@@ -55,8 +55,8 @@ jobs:
       - name: Install Playwright
         run: pnpm --filter sszvis exec playwright install --with-deps
 
-      - name: Run Component Tests
-        run: pnpm run test:unit
+      - name: Run Unit Tests
+        run: pnpm run test
 
   snapshot-test:
     needs:

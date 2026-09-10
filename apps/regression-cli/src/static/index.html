@@ -253,7 +253,7 @@
        * The page runs both from the local server and from a static export, which
        * address the same content differently: the server rewrites a chart's HTML per
        * request and answers `?side=`, while an export has already written one file per
-       * side. `export.mjs` injects `__REGRESSION_STATIC__` to select the second form.
+       * side. The `export` command injects `__REGRESSION_STATIC__` to select the second form.
        */
       const STATIC = window.__REGRESSION_STATIC__ === true;
       const manifestUrl = () => (STATIC ? "manifest.json" : "/api/manifest.json");

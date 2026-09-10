@@ -11,7 +11,7 @@ This is a pnpm + Turborepo monorepo. Root commands fan out across workspaces; us
 | ------------------- | ----------------------------------------------------------------- |
 | Install             | `pnpm install && pnpm --filter sszvis exec playwright install`    |
 | Test (all)          | `pnpm test`                                                       |
-| Test (unit only)    | `pnpm run test:unit`                                              |
+| Test (unit, all)    | `pnpm run test` (every package's unit tests, not snapshots)       |
 | Test (one file)     | `pnpm --filter sszvis exec vitest run test/component/bar.test.ts` |
 | Test (in a browser) | `pnpm --filter sszvis exec vitest --browser.headless=false`       |
 | Test (watch)        | `pnpm --filter sszvis run test:watch`                             |
@@ -26,17 +26,19 @@ This is a pnpm + Turborepo monorepo. Root commands fan out across workspaces; us
 | Full build          | `pnpm run build`                                                  |
 | Rebuild topo data   | `pnpm run build:topo`                                             |
 | Consumer regression | `pnpm run regression` (needs `.reference/d3charts-website`)       |
+| Regression sweep    | `pnpm run regression:crawl` (headless, writes a JSON report)      |
+| Regression export   | `pnpm run regression:export` (shareable static folder)            |
 | Search              | `rg "pattern"` — always ripgrep, never grep/find                  |
 
-CI runs `check`, `type-check`, `test:unit`, and the snapshot suite; all four must pass.
+CI runs `check`, `type-check`, `test`, and the snapshot suite; all four must pass.
 The publish workflow re-runs the first three (not snapshots) before publishing from
 `packages/sszvis`. Nothing re-runs them on a local publish except
 `prepublishOnly`, which builds but does not test.
 
 Test paths passed to `vitest` are relative to `packages/sszvis`, not the repo root.
-Unit tests run in a real browser (Vitest browser mode, Playwright/Chromium), so
-`playwright install` is required once after cloning. There is no test-helper module —
-tests import from `src/` directly.
+The library's unit tests run in a real browser (Vitest browser mode, Playwright/Chromium), so
+`playwright install` is required once after cloning. `@sszvis/regression-cli`'s tests are plain
+Node and need no browser. There is no test-helper module — tests import from `src/` directly.
 
 Only `correctness` lint rules fail the build. `suspicious` and `perf` rules are
 advisory and there is a standing backlog of ~34 warnings (mostly `no-shadow`), so
@@ -48,11 +50,12 @@ Dev environment is Nix + direnv (`nix develop`); pnpm is the package manager.
 
 ```txt
 apps/
-  docs/            # 11ty documentation site (@sszvis/docs)
-    docs/          # eleventy input: guides, _includes, static, one dir per chart type
-    dist/          # eleventy output, also what gh-pages deploys
-apps/
+  docs/              # 11ty documentation site (@sszvis/docs)
+    docs/            #   eleventy input: guides, _includes, static, one dir per chart type
+    dist/            #   eleventy output, also what gh-pages deploys
   project-specimen/  # @sszvis/project-specimen - Catalog widget the docs homepage needs
+  regression-cli/    # @sszvis/regression-cli - consumer regression harness (Effect v4 CLI)
+    src/commands/    #   serve, crawl, export
 packages/
   sszvis/          # the published library
     src/           # 100% TypeScript
@@ -63,7 +66,6 @@ packages/
     topo.sh        #   pipeline
     dist/topo/     #   the four TopoJSON bundles
   config-typescript/ # shared tsconfig base (@repo/config-typescript)
-scripts/           # the visual-regression harness
 contrib/           # example projects and experiments
 ```
 

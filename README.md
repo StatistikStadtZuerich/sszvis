@@ -68,18 +68,19 @@ Root commands fan out across workspaces; `--filter` targets one.
 | Build the library     | `pnpm --filter sszvis run build`                                  |
 | Build the docs        | `pnpm --filter @sszvis/docs run build`                            |
 | Rebuild the topo data | `pnpm run build:topo`                                             |
-| Unit tests            | `pnpm run test:unit`                                              |
+| Unit tests            | `pnpm run test`                                                   |
 | Single test file      | `pnpm --filter sszvis exec vitest run test/component/bar.test.ts` |
 | Visual regression     | `pnpm run test:snapshot` (starts the docs server itself)          |
 | Type check            | `pnpm run type-check`                                             |
 | Lint + format check   | `pnpm run check`                                                  |
 | Autofix               | `pnpm run lint:fix && pnpm run format`                            |
 
-CI runs `check`, `type-check`, `test:unit` and the snapshot suite; all four must pass.
+CI runs `check`, `type-check`, `test` and the snapshot suite; all four must pass.
 
-Unit tests run in a real browser (Vitest browser mode via Playwright/Chromium), which
-is why `playwright install` is a one-time requirement. Test paths are relative to
-`packages/sszvis`, not the repository root.
+The library's unit tests run in a real browser (Vitest browser mode via
+Playwright/Chromium), which is why `playwright install` is a one-time requirement;
+`@sszvis/regression-cli`'s run in plain Node. Test paths are relative to the package,
+not the repository root.
 
 Build outputs are disjoint: the library writes to `packages/sszvis/build`, the
 TopoJSON bundles to `packages/geodata/dist`, and the docs site to `apps/docs/dist`.
