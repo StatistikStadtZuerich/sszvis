@@ -19,9 +19,10 @@
     "playwright": "^1.55.0",
     "semantic-release": "^25.0.9",
     "turbo": "^2.5.8",
-    "typescript": "^5.9.2"
+    "typescript": "^7.0.2"
   },
   "scripts": {
+    "postinstall": "effect-tsgo patch --typescript",
     "build": "turbo run build",
     "clean": "turbo run clean && rm -rf node_modules apps/*/node_modules packages/*/node_modules",
     "dev": "turbo run dev",

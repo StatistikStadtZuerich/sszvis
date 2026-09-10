@@ -2,7 +2,6 @@ import babel from "@rollup/plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
-import typescript from "@rollup/plugin-typescript";
 import { dts } from "rollup-plugin-dts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,34 +18,53 @@ const globals = {
   topojson: "topojson",
 };
 
-// Determine the main entry point based on what exists
-const entryPoint = existsSync(path.join(__dirname, "src", "index.ts"))
-  ? path.join(__dirname, "src", "index.ts")
-  : path.join(__dirname, "src", "index.js");
+/**
+ * Rollup bundles what `tsc` already emitted, rather than compiling the sources
+ * itself.
+ *
+ * TypeScript 7 is the native compiler and exports no JS API, so a TS-API plugin
+ * such as @rollup/plugin-typescript cannot load at all. `build:ts` runs `tsc`
+ * over the same tsconfig into this staging directory first, which also removes
+ * the duplicate compile the plugin used to do.
+ */
+const staged = path.join(__dirname, ".tsbuild");
 
-// Function to get all JS/TS files in src directory recursively
-function getSourceFiles(dir, files = []) {
-  const items = readdirSync(dir);
-  for (const item of items) {
+if (!existsSync(path.join(staged, "index.js"))) {
+  throw new Error(
+    "rollup: .tsbuild is missing or incomplete - run `pnpm run build:ts` first (or `pnpm run build`).",
+  );
+}
+
+const entryPoint = path.join(staged, "index.js");
+
+function getStagedFiles(dir, pattern, files = []) {
+  for (const item of readdirSync(dir)) {
     const fullPath = path.join(dir, item);
-    const stat = statSync(fullPath);
-    if (stat.isDirectory()) {
-      getSourceFiles(fullPath, files);
-    } else if (item.endsWith(".js") || item.endsWith(".ts")) {
+    if (statSync(fullPath).isDirectory()) {
+      getStagedFiles(fullPath, pattern, files);
+    } else if (pattern.test(item)) {
       files.push(fullPath);
     }
   }
   return files;
 }
 
-// Get all source files
-const sourceFiles = getSourceFiles(path.join(__dirname, "src"));
+function getStagedModules(dir, files = []) {
+  for (const item of readdirSync(dir)) {
+    const fullPath = path.join(dir, item);
+    if (statSync(fullPath).isDirectory()) {
+      getStagedModules(fullPath, files);
+    } else if (item.endsWith(".js")) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
 
 // Create input object for multi-entry build
 const inputFiles = {};
-for (const file of sourceFiles) {
-  const relativePath = path.relative(path.join(__dirname, "src"), file);
-  const key = relativePath.replace(/\.(js|ts)$/, "");
+for (const file of getStagedModules(staged)) {
+  const key = path.relative(staged, file).replace(/\.js$/, "");
   inputFiles[key] = file;
 }
 
@@ -59,6 +77,23 @@ const cssSource = path.join(__dirname, "src", "sszvis.css");
  * makes an edit to the stylesheet trigger a rebuild, so the docs dev server and
  * the regression harness pick it up like any source change.
  */
+/**
+ * `tsc` staged the declarations; the package's `types` entry points at
+ * `build/index.d.ts`, so they have to land beside the bundled JS.
+ */
+const emitDeclarations = () => ({
+  name: "sszvis-declarations",
+  generateBundle() {
+    for (const file of getStagedFiles(staged, /\.d\.ts(\.map)?$/)) {
+      this.emitFile({
+        type: "asset",
+        fileName: path.relative(staged, file).split(path.sep).join("/"),
+        source: readFileSync(file, "utf8"),
+      });
+    }
+  },
+});
+
 const emitStylesheet = () => ({
   name: "sszvis-stylesheet",
   buildStart() {
@@ -82,17 +117,9 @@ const createConfig = ({ input, output, plugins = [] }) => ({
       "process.env.NODE_ENV": JSON.stringify("production"),
       preventAssignment: true,
     }),
-    typescript({
-      tsconfig: "./tsconfig.json",
-      declaration: true,
-      declarationMap: true,
-      sourceMap: true,
-      outDir: "./build",
-    }),
     babel({
       babelHelpers: "bundled",
       exclude: "node_modules/**",
-      extensions: [".js", ".ts"],
     }),
     nodeResolve({
       preferBuiltins: false,
@@ -114,7 +141,7 @@ export default [
       preserveModules: true,
       preserveModulesRoot: "src",
     },
-    plugins: [emitStylesheet()],
+    plugins: [emitStylesheet(), emitDeclarations()],
   }),
 
   // UMD bundle
@@ -156,7 +183,7 @@ export default [
 
   // Bundle TypeScript declarations into sszvis.d.ts
   {
-    input: path.join(__dirname, "build", "index.d.ts"),
+    input: path.join(staged, "index.d.ts"),
     output: {
       file: path.join(__dirname, "build", "sszvis.d.ts"),
       format: "es",
