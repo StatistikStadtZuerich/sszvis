@@ -35,7 +35,7 @@
         "name": "@effect/language-service",
         "barrelImportPackages": ["effect"],
         "includeSuggestionsInTsc": true,
-        "diagnostics": false,
+        "diagnostics": true,
         "diagnosticSeverity": {
           "abortControllerInEffect": "warning",
           "asyncFunction": "warning",
@@ -63,19 +63,7 @@
           "schemaNumber": "warning",
           "schemaSyncInEffect": "warning",
           "unsafeEffectTypeAssertion": "warning"
-        },
-        "overrides": [
-          {
-            "include": ["**/*.test.ts", "**/*.test.tsx"],
-            "options": {
-              "diagnosticSeverity": {
-                "asyncFunction": "off",
-                "nodeBuiltinImport": "off",
-                "preferSchemaOverJson": "off"
-              }
-            }
-          }
-        ]
+        }
       }
     ]
   },

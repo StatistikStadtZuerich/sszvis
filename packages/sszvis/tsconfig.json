@@ -1,11 +1,13 @@
 {
   "extends": "@repo/config-typescript/base.json",
   "compilerOptions": {
+    // sszvis is plain d3 code, not Effect. An empty plugins array is ignored by
+    // the language service, so silence it by redeclaring the entry with diagnostics off.
+    "plugins": [{ "name": "@effect/language-service", "diagnostics": false }],
     "outDir": "./build",
     "rootDir": "./src",
     "target": "es2024",
     "lib": ["es2024", "DOM", "DOM.Iterable"],
-    "moduleResolution": "node",
     "allowJs": true,
     "checkJs": false,
     "noEmit": false,
