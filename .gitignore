@@ -39,7 +39,11 @@ result-*
 .sass-cache
 __diff_output__
 .reference
-.claude/
+# Personal Claude settings stay local. Shared agent skills live in .agents/skills
+# (the cross-tool convention); .claude/skills holds committed symlinks to them so
+# Claude Code discovers them too.
+.claude/*
+!.claude/skills/
 .playwright-mcp/
 blob-report
 playwright/.cache
