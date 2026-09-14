@@ -6,6 +6,7 @@
  *   Product Owner     - Statistik Stadt Zürich <https://www.stadt-zuerich.ch/statistik>
  *   Technical Contact - Interactive Things <http://interactivethings.com>
  *
+ * @module sszvis/index
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,4 +54,8 @@ export * from "./responsiveProps.js";
 export * from "./scale.js";
 export * from "./svgUtils/index.js";
 export * from "./transition.js";
+// The vocabulary a consumer needs to annotate a public signature. Deliberately explicit
+// rather than `export *`: the rest of types.js is internal plumbing, and $IntentionalAny
+// is an escape hatch that should not be part of the API.
+export type { ColorValue, Measurement, PartialMeasurement } from "./types.js";
 export * from "./viewport/resize.js";
