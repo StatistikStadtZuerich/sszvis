@@ -1,0 +1,158 @@
+import { ChevronRight } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "~/components/ui/collapsible";
+import { useActiveHeading } from "~/hooks/use-active-heading";
+import type { TOCItem } from "~/lib/remark-toc-export";
+import { cn } from "~/lib/utils";
+
+interface TableOfContentsProps {
+  toc: TOCItem[];
+  /** Render only the desktop right-rail variant */
+  desktopOnly?: boolean;
+}
+
+export const TableOfContents = ({ toc, desktopOnly }: TableOfContentsProps) => {
+  const ids = useMemo(() => toc.map((item) => item.id), [toc]);
+  const activeId = useActiveHeading(ids);
+
+  if (toc.length === 0) return null;
+
+  if (desktopOnly) {
+    return (
+      <nav className="hidden xl:block fixed top-16 right-8 max-h-[calc(100vh-4rem)] w-48 overflow-y-auto scrollbar-none">
+        <p className="mb-3 text-xs font-semibold tracking-[-0.01em] text-foreground/70">
+          On this page
+        </p>
+        <TOCList toc={toc} activeId={activeId} />
+      </nav>
+    );
+  }
+
+  // Mobile-only: collapsible above content
+  return <MobileTOC toc={toc} activeId={activeId} />;
+};
+
+const MobileTOC = ({ toc, activeId }: { toc: TOCItem[]; activeId: string }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="xl:hidden mb-8 rounded-xl border bg-card/70 px-4 py-3 shadow-sm shadow-foreground/[0.03]"
+    >
+      <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-semibold">
+        On this page
+        <ChevronRight className={cn("h-4 w-4 transition-transform", open && "rotate-90")} />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-2">
+        <TOCList toc={toc} activeId={activeId} onClick={() => setOpen(false)} />
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
+interface TOCNode {
+  item: TOCItem;
+  children: TOCNode[];
+}
+
+/** Convert flat TOC array into a nested tree */
+const buildTree = (items: TOCItem[]): TOCNode[] => {
+  const root: TOCNode[] = [];
+  const stack: TOCNode[] = [];
+
+  for (const item of items) {
+    const node: TOCNode = { item, children: [] };
+
+    // Pop stack until we find a parent with lower depth
+    while (stack.length > 0 && (stack[stack.length - 1]?.item.depth || 0) >= item.depth) {
+      stack.pop();
+    }
+
+    if (stack.length === 0) {
+      root.push(node);
+    } else {
+      stack[stack.length - 1]?.children.push(node);
+    }
+
+    stack.push(node);
+  }
+
+  return root;
+};
+
+const TOCList = ({
+  toc,
+  activeId,
+  onClick,
+}: {
+  toc: TOCItem[];
+  activeId: string;
+  onClick?: () => void;
+}) => {
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+      e.preventDefault();
+      const el = document.getElementById(id);
+      if (el) {
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
+        history.replaceState(null, "", `#${id}`);
+      }
+      onClick?.();
+    },
+    [onClick],
+  );
+
+  const tree = useMemo(() => buildTree(toc), [toc]);
+
+  return (
+    <ul className="text-sm">
+      {tree.map((node) => (
+        <TOCNodeItem key={node.item.id} node={node} activeId={activeId} onClickLink={handleClick} />
+      ))}
+    </ul>
+  );
+};
+
+const TOCNodeItem = ({
+  node,
+  activeId,
+  onClickLink,
+}: {
+  node: TOCNode;
+  activeId: string;
+  onClickLink: (e: React.MouseEvent<HTMLAnchorElement>, id: string) => void;
+}) => {
+  const { item, children } = node;
+  const isActive = item.id === activeId;
+
+  return (
+    <li>
+      <a
+        href={`#${item.id}`}
+        aria-current={isActive ? "location" : undefined}
+        onClick={(e) => onClickLink(e, item.id)}
+        className={cn(
+          "flex min-h-10 items-center rounded-md px-2 py-1.5 transition-colors duration-150 hover:bg-accent/60 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring xl:min-h-0",
+          isActive ? "text-primary font-medium" : "text-muted-foreground",
+        )}
+      >
+        {item.value}
+      </a>
+      {children.length > 0 && (
+        <ul className="ml-3 border-l border-border pl-3 space-y-0.5">
+          {children.map((child) => (
+            <TOCNodeItem
+              key={child.item.id}
+              node={child}
+              activeId={activeId}
+              onClickLink={onClickLink}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+};
