@@ -1,0 +1,92 @@
+# Population pyramid
+
+> The population pyramid is used to show how a measurement varies across ages, or ranges of ages, within a population.
+
+The most common example is to show the number of people in the population for each age. In addition, population pyramids are mirrored, with a left and right side. The sides contrast differences across a binary variable, usually gender. More generally, the mirrored bar charts form could be used to display any contrast across a binary variable, with any type of variable mapped to the vertical dimension, but it is almost always used for population display, and it should be explicitly noted where that is not the case. As you will see from the examples, it is also possible to display bins computed from the population based on age range.
+
+## sszvis.pyramid
+
+### Data structure
+
+This component expects an object with properties that correspond to the two sides of the pyramid. You use configuration properties to tell the component how to access the data stored on the object. Each side's data should be an array of data values, where each data value is converted into one bar in the pyramid.
+
+### Configuration
+
+#### `pyramid.barHeight`
+
+Accessor function or numeric constant for the height of a bar
+
+#### `pyramid.barWidth`
+
+Accessor function or numeric constant for the width of a bar
+
+#### `pyramid.barPosition`
+
+Scale function for the vertical position of a bar
+
+#### `pyramid.leftAccessor`
+
+Accessor function which gets the data for the left side
+
+#### `pyramid.rightAccessor`
+
+Accessor function which gets the data for the right side
+
+#### `pyramid.[barFill]`
+
+Accessor function or constant for the color of a bar
+
+#### `pyramid.[leftRefAccessor]`
+
+Supply an accessor function for reference data for the left side. If this option is specified, the pyramid will show a reference line.
+
+#### `pyramid.[rightRefAccessor]`
+
+Supply an accessor function for reference data for the right side. If this option is specified, the pyramid will show a reference line.
+
+### Chart
+
+<Example
+  name="population-basic"
+  source="population-pyramid/basic.html"
+  data="population-pyramid/data/BP_basic.csv"
+/>
+
+## sszvis.stackedPyramid
+
+### Data structure
+
+This component, like the standard pyramid component, expects an object with left and right sides, plus property accessors for getting the side data. However, unlike the standard pyramid, it expects that the returned data structure is an array of sub-arrays, where each sub-array represents one layer of the stack. This component is essentially a combination of the population pyramid component and the stacked bar chart component.
+
+To create the stacked pyramid, you can use the `sszvis.stackedPyramidLayout` function to transform your data into the correct format. This function accepts the gender accessor, the age accessor, stack accessor and the value accessor, and returns a generator that can be applied to the data. The generator returns an object with the sides in `.sides` and the largest stacked total in `.maxValue` beside them; `.sides` is what gets bound to the chart layer.
+
+The older `sszvis.stackedPyramidData` returns the sides array itself, with `maxValue` assigned onto it. The function is not deprecated and remains supported - it is what existing charts bind directly. Only the assigned `maxValue` property is deprecated, since it does not survive a spread, a `map` or a trip through JSON. New code should prefer the layout function above.
+
+```js
+const layout = sszvis.stackedPyramidLayout(gAcc, aAcc, stackAcc, vAcc)(data);
+
+state.stackedPyramidData = layout.sides;
+state.maxStackedValue = layout.maxValue;
+```
+
+### Configuration
+
+The configuration options are the same as for the standard pyramid component, including the possibility of adding reference lines
+
+### Chart
+
+<Example
+  name="population-pyramid-stacked"
+  source="population-pyramid/pyramid-stacked.html"
+  data="population-pyramid/data/BP_stacked.csv"
+/>
+
+## Reference lines
+
+Reference lines can be shown to compare another set of data with the data displayed in the pyramid.
+
+<Example
+  name="population-pyramid-reference"
+  source="population-pyramid/pyramid-reference.html"
+  data="population-pyramid/data/BP_reference.csv"
+/>
