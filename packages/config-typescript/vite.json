@@ -1,0 +1,23 @@
+{
+  "$schema": "../../node_modules/@effect/tsgo/schema.json",
+  "extends": "./base.json",
+  "display": "Vite (React)",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "types": ["node", "vite/client"],
+    "jsx": "react-jsx",
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    // Vite's forthcoming native config loader requires config imports to carry
+    // their extension; safe here because nothing in a Vite app emits from tsc.
+    "allowImportingTsExtensions": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
+    // Vite/React apps here are not Effect code. An empty plugins array is
+    // ignored by the language service, so silence it by redeclaring the entry
+    // with diagnostics off (same trick as packages/sszvis/tsconfig.json).
+    "plugins": [{ "name": "@effect/language-service", "diagnostics": false }]
+  }
+}
