@@ -13,8 +13,9 @@ import {
 } from "react-router";
 import { AppSidebar } from "~/components/app-sidebar";
 import { DocFooter } from "~/components/doc-footer";
-import { GithubIcon } from "~/components/icons";
+import { GithubIcon } from "~/components/ui/icons";
 import { TableOfContents } from "~/components/table-of-contents";
+import { contentPages } from "~/content-pages";
 import { ThemeToggle } from "~/components/theme-toggle";
 import { proseComponents } from "~/components/tokens/prose-components";
 import { buttonVariants } from "~/components/ui/button";
@@ -94,14 +95,17 @@ export default function App() {
   }, [location.pathname]);
 
   const hasToc = toc.length > 0;
+  const tocMaxDepth = contentPages.find((page) => page.href === location.pathname)?.tocMaxDepth;
   return (
     <MDXProvider components={proseComponents}>
-      {hasToc && <TableOfContents toc={toc} />}
-      <div className="content-column mx-auto w-full max-w-[70ch]">
-        <Outlet />
-        <DocFooter />
+      {hasToc && <TableOfContents toc={toc} maxDepth={tocMaxDepth} />}
+      <div className="@container w-full">
+        <div className="content-column mx-auto w-full max-w-[70ch]">
+          <Outlet />
+          <DocFooter />
+        </div>
       </div>
-      {hasToc && <TableOfContents toc={toc} desktopOnly />}
+      {hasToc && <TableOfContents toc={toc} desktopOnly maxDepth={tocMaxDepth} />}
     </MDXProvider>
   );
 }
