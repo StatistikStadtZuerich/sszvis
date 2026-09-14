@@ -1,17 +1,17 @@
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "react-router";
-import { navigation } from "~/nav.config";
+import { contentPages } from "~/content-pages";
 
 const REPO_URL = "https://github.com/StatistikStadtZuerich/sszvis";
 const CONTENT_BASE = "blob/master/apps/new-docs/app/content";
 
-/** Flattened nav items in reading order */
-const flatNav = navigation.flatMap((section) => section.items);
+/** Pages in reading order - the same order the sidebar lists them in */
+const flatNav = contentPages;
 
-const getContentPath = (pathname: string): string => {
-  if (pathname === "/") return "index.mdx";
-  return `${pathname.replace(/^\/+|\/+$/g, "")}.mdx`;
-};
+/** Where the page's source lives, so "View on GitHub" links to the real file */
+const getContentPath = (pathname: string): string =>
+  contentPages.find((page) => page.href === pathname)?.contentPath.replace(/^content\//, "") ??
+  "index.mdx";
 
 export const DocFooter = () => {
   const { pathname } = useLocation();
