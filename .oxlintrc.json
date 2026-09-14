@@ -40,6 +40,13 @@
       }
     },
     {
+      "files": ["apps/new-docs/examples/**/*.ts"],
+      "rules": {
+        "typescript/consistent-type-definitions": ["error", "type"],
+        "func-style": ["error", "expression"]
+      }
+    },
+    {
       "files": ["**/*.test.ts", "**/*.test.js", "**/*.spec.js"],
       "rules": {
         "typescript/no-explicit-any": "off",

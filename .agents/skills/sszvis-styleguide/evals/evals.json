@@ -1,0 +1,26 @@
+{
+  "skill_name": "sszvis-styleguide",
+  "evals": [
+    {
+      "id": 0,
+      "name": "port-untyped-example",
+      "prompt": "In the sszvis repo, apps/new-docs/examples/bar-chart-horizontal/basic/chart.ts is supposed to be a TypeScript example but it isn't really typed. Please port it properly so it's a good example for people to copy. Don't edit the repo copy - write your result to the output directory.",
+      "expected_output": "A ported chart.ts using sszvis.app<State>(), named Datum/State interfaces, typed parseRow, no /* global */ pragma, config.id instead of hardcoded selector, wired fallback, no resize registration inside render.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "review-example-for-issues",
+      "prompt": "Can you review apps/new-docs/examples/line-chart/basic/chart.ts in the sszvis repo and tell me everything wrong with it as a documentation example? Write your review to the output directory as review.md.",
+      "expected_output": "A review identifying the highlightTick(isSelected) closure bug, sszvis.compose type erasure, absence of type annotations, and correctly attributing responsiveProps/measureDimensions errors to library type defects rather than the example.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "author-new-example",
+      "prompt": "I want to add a new example to the sszvis docs: a horizontal bar chart showing Zurich district populations, with a tooltip on hover. Write me the chart.ts and example.json. Put them in the output directory.",
+      "expected_output": "A new example with the canonical banner sections, sszvis.app<State>(), typed Datum/State, config-driven id/data/fallback, tooltip wired through createHtmlLayer, and a matching example.json.",
+      "files": []
+    }
+  ]
+}
