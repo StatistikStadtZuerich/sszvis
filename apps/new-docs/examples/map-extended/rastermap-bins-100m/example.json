@@ -1,0 +1,8 @@
+{
+  "title": "Map — Rastermap Bins 100m",
+  "config": {
+    "data": "data.csv",
+    "id": "#sszvis-chart",
+    "fallback": "/preview/_static/fallback.png"
+  }
+}

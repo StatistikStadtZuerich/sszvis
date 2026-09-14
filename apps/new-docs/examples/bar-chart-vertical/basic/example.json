@@ -1,0 +1,8 @@
+{
+  "title": "Vertical Bar Chart",
+  "config": {
+    "data": "data.csv",
+    "id": "#sszvis-chart",
+    "fallback": "/preview/_static/fallback.png"
+  }
+}
