@@ -1038,7 +1038,7 @@
         // Rendering
         const path = selection.selectAll(".sszvis-area").data(data).join("path").classed("sszvis-area", true);
         if (props.stroke) {
-          path.style("stroke", props.stroke);
+          path.style("stroke", String(props.stroke));
         }
         path.attr("fill", "url(#data-area-pattern)").order();
         // Without a transition the attributes below are written synchronously, so an in-flight
@@ -1047,7 +1047,7 @@
         const finalPath = props.transition ? path.transition(defaultTransition(OWN_TRANSITION)) : path.interrupt(OWN_TRANSITION);
         finalPath.attr("d", d => area(props.valuesAccessor(d)));
         if (props.stroke) {
-          finalPath.style("stroke", props.stroke);
+          finalPath.style("stroke", String(props.stroke));
         }
         if (props.strokeWidth) {
           finalPath.style("stroke-width", props.strokeWidth);
@@ -1715,6 +1715,233 @@
     }
 
     /**
+     * Color scales
+     *
+     * Three kinds of color scales are provided: qualitative, sequential, and
+     * diverging. All color scales can be reversed, qualitative color scales
+     * can also be brightened or darkened.
+     *
+     * @module sszvis/color
+     *
+     *
+     * Qualitative color scales
+     *
+     * @function qual12    The full range of categorical colors
+     * @function qual6     Subset of saturated categorical colors
+     * @function qual6a    Subset of blue-green categorical colors
+     * @function qual6b    Subset of yellow-red categorical colors
+     * @method   darken    Instance method to darken all colors. @returns new scale
+     * @method   brighten  Instance method to brighten all colors. @returns new scale
+     * @method   reverse   Instance method to reverse the color order. @returns new scale
+     *
+     *
+     * Sequential color scales
+     *
+     * @function seqBlu    Linear color scale from bright to dark blue
+     * @function seqRed    Linear color scale from bright to dark red
+     * @function seqGrn    Linear color scale from bright to dark green
+     * @function seqBrn    Linear color scale from bright to dark brown
+     * @method   reverse   Instance method to reverse the color order. @returns new scale
+     *
+     *
+     * Diverging color scales
+     *
+     * @function divVal    Diverging and valued color scale from red to blue
+     * @function divNtr    Diverging and neutral color scale from brown to green
+     * @function divValGry constiation of the valued scale with a grey midpoint
+     * @function divNtrGry constiation of the neutral scale with a grey midpoint
+     * @method   reverse   Instance method to reverse the color order. @returns new scale
+     *
+     * Grey color scales
+     * @function gry       1-color scale for shaded values
+     * @function lightGry  1-color scale for shaded backgrounds
+     */
+    /* Constants
+    ----------------------------------------------- */
+    const LIGHTNESS_STEP = 1;
+    /* Scales
+    ----------------------------------------------- */
+    function qualColorScale(colors) {
+      return () => {
+        const scale = d3.scaleOrdinal().range(colors.map(convertLab));
+        // Set unknown to first color without the type constraint
+        scale.unknown(convertLab(colors[0]));
+        return decorateOrdinalScale(scale);
+      };
+    }
+    const black = "#000000";
+    const white = "#FFFFFF";
+    const darkBlue = "#3431DE";
+    const mediumBlue = "#0A8DF6";
+    const lightBlue = "#23C3F1";
+    const darkRed = "#7B4FB7";
+    const mediumRed = "#DB247D";
+    const lightRed = "#FB737E";
+    const darkGreen = "#007C78";
+    const mediumGreen = "#1D942E";
+    const lightGreen = "#99C32E";
+    const darkBrown = "#9A5B01";
+    const mediumBrown = "#FF720C";
+    const lightBrown = "#FBB900";
+    const scaleQual12 = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed, darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
+    const scaleQual6 = qualColorScale([darkBlue, mediumRed, mediumGreen, lightBrown, lightBlue, mediumBrown]);
+    const scaleQual6a = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed]);
+    const scaleQual6b = qualColorScale([darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
+    const female = "#349894";
+    const male = "#FFD736";
+    const misc = "#986AD5";
+    const scaleGender3 = () => qualColorScale([female, male, misc])().domain(["Frauen", "Männer", "Divers"]);
+    const swissFemale = "#00615D";
+    const foreignFemale = "#349894";
+    const swissMale = "#DA9C00";
+    const foreignMale = "#FFD736";
+    const swissMisc = "#5E359A";
+    const foreignMisc = "#986AD5";
+    const scaleGender6Origin = () => qualColorScale([swissFemale, foreignFemale, swissMale, foreignMale, swissMisc, foreignMisc])().domain(["Schweizerinnen", "Ausländerinnen", "Schweizer", "Ausländer", "Divers Schweiz", "Divers Ausland"]);
+    const femaleFemale = "#349894";
+    const maleMale = "#FFD736";
+    const femaleMale = "#3431DE";
+    const femaleUnknown = "#B8B8B8";
+    const maleUnknown = "#D6D6D6";
+    const scaleGender5Wedding = () => qualColorScale([femaleFemale, maleMale, femaleMale, femaleUnknown, maleUnknown])().domain(["Frau / Frau", "Mann / Mann", "Frau / Mann", "Frau / Unbekannt", "Mann / Unbekannt"]);
+    function seqColorScale(colors) {
+      return () => {
+        const scale = d3.scaleLinear().range(colors.map(convertLab));
+        return decorateLinearScale(scale);
+      };
+    }
+    const scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
+    const scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
+    const scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
+    const scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
+    function divColorScale(colors) {
+      return () => {
+        const scale = d3.scaleLinear().range(colors.map(convertLab));
+        return decorateDivScale(scale);
+      };
+    }
+    const scaleDivVal = divColorScale(["#611F00", "#A13200", "#EA5D00", "#FF9A54", "#FCDDBB", "#CADEFF", "#89AFFF", "#5B6EFF", "#3431DE", "#211A8A"]);
+    const scaleDivValGry = divColorScale(["#782600", "#CC4309", "#FF720C", "#FFBC88", "#E4E0DF", "#AECBFF", "#6B8EFF", "#3B51FF", "#2F2ABB"]);
+    const scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
+    const scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
+    function greyColorScale(colors) {
+      return () => {
+        // Grey color scales are really ordinal but we treat them like linear for the API
+        const scale = d3.scaleOrdinal().range(colors.map(convertLab));
+        return decorateLinearScale(scale);
+      };
+    }
+    const scaleLightGry = greyColorScale(["#FAFAFA"]);
+    const scalePaleGry = greyColorScale(["#EAEAEA"]);
+    const scaleGry = greyColorScale(["#D6D6D6"]);
+    const scaleDimGry = greyColorScale(["#B8B8B8"]);
+    const scaleMedGry = greyColorScale(["#7C7C7C"]);
+    const scaleDeepGry = greyColorScale(["#545454"]);
+    const slightlyDarker = c => d3.hsl(String(c)).darker(0.4);
+    const muchDarker = c => d3.hsl(String(c)).darker(0.7);
+    const withAlpha = (c, a) => {
+      const rgbColor = d3.rgb(String(c));
+      return `rgba(${rgbColor.r},${rgbColor.g},${rgbColor.b},${a})`;
+    };
+    /* Scale extensions
+    ----------------------------------------------- */
+    function decorateOrdinalScale(scale) {
+      const enhancedScale = scale;
+      enhancedScale.darker = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
+      enhancedScale.brighter = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
+      enhancedScale.reverse = () => decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
+      return enhancedScale;
+    }
+    function decorateDivScale(scale) {
+      const enhancedScale = interpolatedDivergentColorScale(scale);
+      // decorateDivScale, not decorateLinearScale: copy() returns a bare d3 scale, so the reversed
+      // scale has to be re-wrapped with the diverging expansion. Wrapping it with the linear one
+      // silently downgraded it to the sequential three-stop domain, and every stop past the third
+      // became unreachable - a reversed diverging legend rendered as a single-hue ramp.
+      enhancedScale.reverse = () => decorateDivScale(scale.copy().range(scale.range().reverse()));
+      return enhancedScale;
+    }
+    function interpolatedDivergentColorScale(scale) {
+      const nativeDomain = scale.domain;
+      if (!scale.range()) return scale;
+      const length = scale.range().length;
+      // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+      // Reflect.set writes it without having to restate the scale's type.
+      const replaceDomain = function (dom) {
+        // Only a two-value domain is expanded across the range's stops. Everything else - a
+        // no-argument getter call above all - forwards to the scale's own domain verbatim, so
+        // reading the domain back is not a disguised setter call. Mirrors interpolatedColorScale.
+        if (arguments.length === 1 && dom && dom.length === 2) {
+          const xDomain = [];
+          for (let i = 0; i < length; i++) {
+            xDomain.push(d3.quantile(dom, i / (length - 1)) || 0);
+          }
+          return nativeDomain.call(this, xDomain);
+        }
+        return Reflect.apply(nativeDomain, this, arguments);
+      };
+      Reflect.set(scale, "domain", replaceDomain);
+      return scale;
+    }
+    function decorateLinearScale(scale) {
+      // Only apply interpolation to actual linear scales, not ordinal scales used for grey
+      const processedScale = "interpolate" in scale ? interpolatedColorScale(scale) : scale;
+      const enhancedScale = processedScale;
+      enhancedScale.reverse = () => {
+        const copiedScale = "copy" in scale ? scale.copy() : scale;
+        return decorateLinearScale(copiedScale.range(scale.range().reverse()));
+      };
+      return enhancedScale;
+    }
+    function interpolatedColorScale(scale) {
+      const nativeDomain = scale.domain;
+      // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+      // Reflect.set writes it without having to restate the scale's type.
+      const replaceDomain = function (dom) {
+        if (arguments.length === 1 && dom && dom.length === 2) {
+          const threeDomain = [dom[0], d3.mean(dom) || 0, dom[1]];
+          return nativeDomain.call(this, threeDomain);
+        } else {
+          return Reflect.apply(nativeDomain, this, arguments);
+        }
+      };
+      Reflect.set(scale, "domain", replaceDomain);
+      return scale;
+    }
+    /* Helper functions
+    ----------------------------------------------- */
+    function convertLab(d) {
+      return d3.lab(d);
+    }
+    /**
+     * Renders a colour as the string an SVG attribute needs.
+     *
+     * The scales in this module return d3 `LabColor` objects, and d3 stringifies those itself
+     * when it writes an attribute. Doing it explicitly is the same conversion, and it lets a
+     * property typed as `ColorValue` reach d3's attribute typings, which accept only strings.
+     * Nullish stays nullish: d3 removes the attribute for it.
+     */
+    function colorToString(color) {
+      return color == null ? null : String(color);
+    }
+    const getAccessibleTextColor = backgroundColor => {
+      if (!backgroundColor) {
+        return black;
+      }
+      const bgColor = d3.rgb(String(backgroundColor));
+      const gammaCorrect = c => {
+        const normalized = c / 255;
+        return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+      };
+      const rLum = gammaCorrect(bgColor.r);
+      const gLum = gammaCorrect(bgColor.g);
+      const bLum = gammaCorrect(bgColor.b);
+      // WCAG relative luminance formula
+      const luminance = 0.2126 * rLum + 0.7152 * gLum + 0.0722 * bLum;
+      return luminance > 0.179 ? black : white; // Use SSZVIS gray or white
+    };
+
+    /**
      * Ruler annotation
      *
      * The ruler component can be used to create a vertical line which highlights data at a certain
@@ -1753,6 +1980,14 @@
     const LABEL_OFFSET$1 = 10;
     /** Vertical nudge that drops a label's baseline clear of its dot. */
     const LABEL_BASELINE_NUDGE$1 = 5;
+    /**
+     * The dot fill, as d3 wants it. An unset `color` - and, as before, any other falsy value -
+     * falls back to black; an accessor is always asked, so a colour it returns is used as-is.
+     */
+    function fillOf$1(color) {
+      if (!color) return () => "black";
+      return typeof color === "function" ? d => colorToString(color(d)) : () => colorToString(color);
+    }
     const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
       const selection = d3.select(this);
       const props = selection.props();
@@ -1766,7 +2001,7 @@
       const ruler = selection.selectAll(".sszvis-ruler__rule").data(data, d => labelId(d)).join("line").classed("sszvis-ruler__rule", true);
       ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", d => Math.max(Number(props.y(d)), top)).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
       const dot = selection.selectAll(".sszvis-ruler__dot").data(data, d => labelId(d)).join("circle").classed("sszvis-ruler__dot", true);
-      dot.attr("cx", compose(halfPixel, props.x)).attr("cy", compose(halfPixel, props.y)).attr("r", 3.5).attr("fill", props.color || "black");
+      dot.attr("cx", compose(halfPixel, props.x)).attr("cy", compose(halfPixel, props.y)).attr("r", 3.5).attr("fill", fillOf$1(props.color));
       selection.selectAll(".sszvis-ruler__label-outline").data(data, d => labelId(d)).join("text").classed("sszvis-ruler__label-outline", true);
       const label = selection.selectAll(".sszvis-ruler__label").data(data, d => labelId(d)).join("text").classed("sszvis-ruler__label", true);
       // Update both label and labelOutline selections
@@ -4544,7 +4779,7 @@
      *
      * @return {d3.component}
      */
-    function panning () {
+    function panning() {
       const event = d3.dispatch("start", "pan", "end");
       const panningComponent = component().prop("elementSelector").render(function () {
         const selection = d3.select(this);
@@ -4571,7 +4806,10 @@
           if (this) event.apply("end", this, args);
         });
       });
-      panningComponent.on = function (...args) {
+      // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler callback
+      // to never. Narrowing to the three event names would type the callback properly but would also
+      // reject the namespaced typenames d3 accepts at runtime, such as "pan.tooltip".
+      panningComponent.on = (...args) => {
         const value = event.on.apply(event, args);
         return value === event ? panningComponent : value;
       };
@@ -5109,222 +5347,6 @@
     }
 
     /**
-     * Color scales
-     *
-     * Three kinds of color scales are provided: qualitative, sequential, and
-     * diverging. All color scales can be reversed, qualitative color scales
-     * can also be brightened or darkened.
-     *
-     * @module sszvis/color
-     *
-     *
-     * Qualitative color scales
-     *
-     * @function qual12    The full range of categorical colors
-     * @function qual6     Subset of saturated categorical colors
-     * @function qual6a    Subset of blue-green categorical colors
-     * @function qual6b    Subset of yellow-red categorical colors
-     * @method   darken    Instance method to darken all colors. @returns new scale
-     * @method   brighten  Instance method to brighten all colors. @returns new scale
-     * @method   reverse   Instance method to reverse the color order. @returns new scale
-     *
-     *
-     * Sequential color scales
-     *
-     * @function seqBlu    Linear color scale from bright to dark blue
-     * @function seqRed    Linear color scale from bright to dark red
-     * @function seqGrn    Linear color scale from bright to dark green
-     * @function seqBrn    Linear color scale from bright to dark brown
-     * @method   reverse   Instance method to reverse the color order. @returns new scale
-     *
-     *
-     * Diverging color scales
-     *
-     * @function divVal    Diverging and valued color scale from red to blue
-     * @function divNtr    Diverging and neutral color scale from brown to green
-     * @function divValGry constiation of the valued scale with a grey midpoint
-     * @function divNtrGry constiation of the neutral scale with a grey midpoint
-     * @method   reverse   Instance method to reverse the color order. @returns new scale
-     *
-     * Grey color scales
-     * @function gry       1-color scale for shaded values
-     * @function lightGry  1-color scale for shaded backgrounds
-     */
-    /* Constants
-    ----------------------------------------------- */
-    const LIGHTNESS_STEP = 1;
-    /* Scales
-    ----------------------------------------------- */
-    function qualColorScale(colors) {
-      return () => {
-        const scale = d3.scaleOrdinal().range(colors.map(convertLab));
-        // Set unknown to first color without the type constraint
-        scale.unknown(convertLab(colors[0]));
-        return decorateOrdinalScale(scale);
-      };
-    }
-    const black = "#000000";
-    const white = "#FFFFFF";
-    const darkBlue = "#3431DE";
-    const mediumBlue = "#0A8DF6";
-    const lightBlue = "#23C3F1";
-    const darkRed = "#7B4FB7";
-    const mediumRed = "#DB247D";
-    const lightRed = "#FB737E";
-    const darkGreen = "#007C78";
-    const mediumGreen = "#1D942E";
-    const lightGreen = "#99C32E";
-    const darkBrown = "#9A5B01";
-    const mediumBrown = "#FF720C";
-    const lightBrown = "#FBB900";
-    const scaleQual12 = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed, darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
-    const scaleQual6 = qualColorScale([darkBlue, mediumRed, mediumGreen, lightBrown, lightBlue, mediumBrown]);
-    const scaleQual6a = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed]);
-    const scaleQual6b = qualColorScale([darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
-    const female = "#349894";
-    const male = "#FFD736";
-    const misc = "#986AD5";
-    const scaleGender3 = () => qualColorScale([female, male, misc])().domain(["Frauen", "Männer", "Divers"]);
-    const swissFemale = "#00615D";
-    const foreignFemale = "#349894";
-    const swissMale = "#DA9C00";
-    const foreignMale = "#FFD736";
-    const swissMisc = "#5E359A";
-    const foreignMisc = "#986AD5";
-    const scaleGender6Origin = () => qualColorScale([swissFemale, foreignFemale, swissMale, foreignMale, swissMisc, foreignMisc])().domain(["Schweizerinnen", "Ausländerinnen", "Schweizer", "Ausländer", "Divers Schweiz", "Divers Ausland"]);
-    const femaleFemale = "#349894";
-    const maleMale = "#FFD736";
-    const femaleMale = "#3431DE";
-    const femaleUnknown = "#B8B8B8";
-    const maleUnknown = "#D6D6D6";
-    const scaleGender5Wedding = () => qualColorScale([femaleFemale, maleMale, femaleMale, femaleUnknown, maleUnknown])().domain(["Frau / Frau", "Mann / Mann", "Frau / Mann", "Frau / Unbekannt", "Mann / Unbekannt"]);
-    function seqColorScale(colors) {
-      return () => {
-        const scale = d3.scaleLinear().range(colors.map(convertLab));
-        return decorateLinearScale(scale);
-      };
-    }
-    const scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
-    const scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
-    const scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
-    const scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
-    function divColorScale(colors) {
-      return () => {
-        const scale = d3.scaleLinear().range(colors.map(convertLab));
-        return decorateDivScale(scale);
-      };
-    }
-    const scaleDivVal = divColorScale(["#611F00", "#A13200", "#EA5D00", "#FF9A54", "#FCDDBB", "#CADEFF", "#89AFFF", "#5B6EFF", "#3431DE", "#211A8A"]);
-    const scaleDivValGry = divColorScale(["#782600", "#CC4309", "#FF720C", "#FFBC88", "#E4E0DF", "#AECBFF", "#6B8EFF", "#3B51FF", "#2F2ABB"]);
-    const scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
-    const scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
-    function greyColorScale(colors) {
-      return () => {
-        // Grey color scales are really ordinal but we treat them like linear for the API
-        const scale = d3.scaleOrdinal().range(colors.map(convertLab));
-        return decorateLinearScale(scale);
-      };
-    }
-    const scaleLightGry = greyColorScale(["#FAFAFA"]);
-    const scalePaleGry = greyColorScale(["#EAEAEA"]);
-    const scaleGry = greyColorScale(["#D6D6D6"]);
-    const scaleDimGry = greyColorScale(["#B8B8B8"]);
-    const scaleMedGry = greyColorScale(["#7C7C7C"]);
-    const scaleDeepGry = greyColorScale(["#545454"]);
-    const slightlyDarker = c => d3.hsl(c).darker(0.4);
-    const muchDarker = c => d3.hsl(c).darker(0.7);
-    const withAlpha = (c, a) => {
-      const rgbColor = d3.rgb(c);
-      return `rgba(${rgbColor.r},${rgbColor.g},${rgbColor.b},${a})`;
-    };
-    /* Scale extensions
-    ----------------------------------------------- */
-    function decorateOrdinalScale(scale) {
-      const enhancedScale = scale;
-      enhancedScale.darker = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
-      enhancedScale.brighter = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
-      enhancedScale.reverse = () => decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
-      return enhancedScale;
-    }
-    function decorateDivScale(scale) {
-      const enhancedScale = interpolatedDivergentColorScale(scale);
-      // decorateDivScale, not decorateLinearScale: copy() returns a bare d3 scale, so the reversed
-      // scale has to be re-wrapped with the diverging expansion. Wrapping it with the linear one
-      // silently downgraded it to the sequential three-stop domain, and every stop past the third
-      // became unreachable - a reversed diverging legend rendered as a single-hue ramp.
-      enhancedScale.reverse = () => decorateDivScale(scale.copy().range(scale.range().reverse()));
-      return enhancedScale;
-    }
-    function interpolatedDivergentColorScale(scale) {
-      const nativeDomain = scale.domain;
-      if (!scale.range()) return scale;
-      const length = scale.range().length;
-      // Replacing the scale's own .domain in place is the whole point of these two wrappers.
-      // Reflect.set writes it without having to restate the scale's type.
-      const replaceDomain = function (dom) {
-        // Only a two-value domain is expanded across the range's stops. Everything else - a
-        // no-argument getter call above all - forwards to the scale's own domain verbatim, so
-        // reading the domain back is not a disguised setter call. Mirrors interpolatedColorScale.
-        if (arguments.length === 1 && dom && dom.length === 2) {
-          const xDomain = [];
-          for (let i = 0; i < length; i++) {
-            xDomain.push(d3.quantile(dom, i / (length - 1)) || 0);
-          }
-          return nativeDomain.call(this, xDomain);
-        }
-        return Reflect.apply(nativeDomain, this, arguments);
-      };
-      Reflect.set(scale, "domain", replaceDomain);
-      return scale;
-    }
-    function decorateLinearScale(scale) {
-      // Only apply interpolation to actual linear scales, not ordinal scales used for grey
-      const processedScale = "interpolate" in scale ? interpolatedColorScale(scale) : scale;
-      const enhancedScale = processedScale;
-      enhancedScale.reverse = () => {
-        const copiedScale = "copy" in scale ? scale.copy() : scale;
-        return decorateLinearScale(copiedScale.range(scale.range().reverse()));
-      };
-      return enhancedScale;
-    }
-    function interpolatedColorScale(scale) {
-      const nativeDomain = scale.domain;
-      // Replacing the scale's own .domain in place is the whole point of these two wrappers.
-      // Reflect.set writes it without having to restate the scale's type.
-      const replaceDomain = function (dom) {
-        if (arguments.length === 1 && dom && dom.length === 2) {
-          const threeDomain = [dom[0], d3.mean(dom) || 0, dom[1]];
-          return nativeDomain.call(this, threeDomain);
-        } else {
-          return Reflect.apply(nativeDomain, this, arguments);
-        }
-      };
-      Reflect.set(scale, "domain", replaceDomain);
-      return scale;
-    }
-    /* Helper functions
-    ----------------------------------------------- */
-    function convertLab(d) {
-      return d3.lab(d);
-    }
-    const getAccessibleTextColor = backgroundColor => {
-      if (!backgroundColor) {
-        return black;
-      }
-      const bgColor = d3.rgb(backgroundColor);
-      const gammaCorrect = c => {
-        const normalized = c / 255;
-        return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
-      };
-      const rLum = gammaCorrect(bgColor.r);
-      const gLum = gammaCorrect(bgColor.g);
-      const bLum = gammaCorrect(bgColor.b);
-      // WCAG relative luminance formula
-      const luminance = 0.2126 * rLum + 0.7152 * gLum + 0.0722 * bLum;
-      return luminance > 0.179 ? black : white; // Use SSZVIS gray or white
-    };
-
-    /**
      * @module sszvis/svgUtils/toFinite
      *
      * Coerces a geometry value to a finite number, substituting 0 for anything else.
@@ -5404,8 +5426,8 @@
         const yAt = (datum, index) => toFinite(props.y(datum, index));
         const wAt = (datum, index) => toFinite(props.width(datum, index));
         const hAt = (datum, index) => toFinite(props.height(datum, index));
-        const fillAt = (datum, index) => props.fill?.(datum, index) ?? null;
-        const strokeAt = (datum, index) => props.stroke?.(datum, index) ?? null;
+        const fillAt = (datum, index) => colorToString(props.fill?.(datum, index));
+        const strokeAt = (datum, index) => colorToString(props.stroke?.(datum, index));
         // Entering bars are given their geometry on the join, so they are in place before any
         // transition starts. The geometry is then applied exactly once more - to the transition
         // when there is one, and to the plain selection otherwise - so an update tweens from its
@@ -5531,8 +5553,8 @@
         // A negative r is invalid per the SVG spec and drops the circle, so it is clamped
         // rather than passed on.
         const rAt = (datum, index) => Math.max(0, toFinite(radiusProp(datum, index)));
-        const strokeAt = (datum, index) => props.stroke?.(datum, index) ?? null;
-        const fillAt = (datum, index) => props.fill?.(datum, index) ?? null;
+        const strokeAt = (datum, index) => colorToString(props.stroke?.(datum, index));
+        const fillAt = (datum, index) => colorToString(props.fill?.(datum, index));
         // Entering circles are given their geometry on the join, so they are in place before
         // any transition starts. The geometry is then applied exactly once more - to the
         // transition when there is one, and to the plain selection otherwise - so an update
@@ -5704,10 +5726,10 @@
           return toFinite(typeof configHeight === "function" ? configHeight(d, indexOfRect(this)) : configHeight);
         };
         const fillAt = function (d) {
-          return typeof props.fill === "function" ? props.fill(d, indexOfRect(this)) : props.fill;
+          return colorToString(typeof props.fill === "function" ? props.fill(d, indexOfRect(this)) : props.fill);
         };
         const strokeAt = function (d) {
-          return (typeof props.stroke === "function" ? props.stroke(d, indexOfRect(this)) : props.stroke) ?? null;
+          return colorToString(typeof props.stroke === "function" ? props.stroke(d, indexOfRect(this)) : props.stroke);
         };
         const missingTransformAt = function (d) {
           return configMissingTransform(d, indexOfUnit(this));
@@ -5958,7 +5980,12 @@
         const pathData = function (datum, index) {
           return line(props.valuesAccessor.call(this, datum, index));
         };
-        const stroke = valueFn(props.stroke ?? null);
+        // The prop may hold one of the library's colour objects, so it is resolved first and
+        // then rendered as the string d3 writes - the same conversion d3 would do itself.
+        const strokeValue = valueFn(props.stroke ?? null);
+        const stroke = function (datum, index, groups) {
+          return colorToString(strokeValue.call(this, datum, index, groups));
+        };
         const strokeWidth = valueFn(props.strokeWidth ?? null);
         const path = selection.selectAll(".sszvis-line").data(data, props.key).join("path").classed("sszvis-line", true).style("stroke", stroke);
         path.order();
@@ -6573,12 +6600,12 @@
         const circleFillAcc = d =>
         // Branch nodes get a light fill so they stay clickable.
         d.children ? "white" : nodeColor(d, props.colorScale);
-        const circles = selection.selectAll(".sszvis-pack-circle").data(visibleData).join("circle").classed("sszvis-pack-circle", true).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r).attr("fill", circleFillAcc).attr("stroke", d => {
+        const circles = selection.selectAll(".sszvis-pack-circle").data(visibleData).join("circle").classed("sszvis-pack-circle", true).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r).attr("fill", d => colorToString(circleFillAcc(d))).attr("stroke", d => {
           // Branches carry the category colour; leaves fall back to the configured stroke.
           const inherited = inheritedColorKey(d);
-          if (inherited !== undefined) return props.colorScale(inherited);
-          if (!d.children) return props.circleStroke;
-          return "key" in d.data ? props.colorScale(d.data.key) : HIERARCHY_FALLBACK_COLOR;
+          if (inherited !== undefined) return colorToString(props.colorScale(inherited));
+          if (!d.children) return colorToString(props.circleStroke);
+          return colorToString("key" in d.data ? props.colorScale(d.data.key) : HIERARCHY_FALLBACK_COLOR);
         }).attr("stroke-width", d => {
           // Branch nodes get thicker stroke to make them more visible
           return d.children ? 2 : props.circleStrokeWidth;
@@ -6686,10 +6713,10 @@
      * either way d3 removes the attribute.
      */
     function toColorAccessor(value) {
-      // An accessor is handed to d3 untouched. Its result is narrowed from
-      // `string | null | undefined` to `string | null` only because d3's own attr typings omit
-      // undefined; d3 removes the attribute for either one, so the two are interchangeable here.
-      return typeof value === "function" ? value : () => value ?? null;
+      // The result is rendered to a string because d3's own attr typings accept only strings -
+      // d3 would stringify a LabColor itself - and nullish stays nullish, which d3 reads as
+      // "remove the attribute" either way.
+      return typeof value === "function" ? (d, i) => colorToString(value(d, i)) : () => colorToString(value);
     }
     // The angles currently on screen, per wedge element. d3 cannot interpolate an arc path
     // directly, so a transition needs the previous angles as well as the destination ones -
@@ -7222,7 +7249,7 @@
         });
         const linksGroup = selection.selectGroup("links");
         const linksElems = linksGroup.selectAll(".sszvis-link").data(drawableLinks, idAcc).join("path").attr("class", "sszvis-link");
-        linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", props.linkColor ?? null).sort(props.linkSort);
+        linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", link => colorToString(props.linkColor?.(link))).sort(props.linkSort);
         linksGroup.datum(drawableLinks);
         const linkTooltipAnchor = tooltipAnchor().position(link => {
           const bbox = linkBoundingBox(link);
@@ -7429,6 +7456,16 @@
      * which d3 removes the attribute for - the same thing it does when handed undefined
      * directly.
      */
+    /**
+     * Resolves a colour prop - a constant or a per-layer accessor - to the string d3 writes into
+     * an attribute. Nullish stays nullish, which removes the attribute.
+     */
+    function colorFn$1(value) {
+      const resolve = valueFn(value);
+      return function (datum, index, groups) {
+        return colorToString(resolve.call(this, datum, index, groups));
+      };
+    }
     function stackedArea() {
       return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
@@ -7476,11 +7513,13 @@
         }
         // Rendering
         const pathData = datum => areaGen(datum);
-        const fill = valueFn(props.fill ?? null);
+        // The colour props may hold one of the library's colour objects, so each is resolved
+        // first and then rendered as the string d3 writes - the same conversion d3 would do.
+        const fill = colorFn$1(props.fill ?? null);
         // The white hairline separating two touching layers. Applied with an explicit undefined
         // check, as strokeWidth is, so it stands in for an unset stroke only: null and "" are
         // supplied values and reach d3 as given. A ?? would have swallowed the null.
-        const stroke = valueFn(props.stroke === undefined ? "#ffffff" : props.stroke);
+        const stroke = colorFn$1(props.stroke === undefined ? "#ffffff" : props.stroke);
         const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
         // Matching on the stacked-area class rather than the generic .sszvis-path one, which pie
         // and stackedPyramid also write, keeps a foreign path in the same group out of the join.
@@ -7691,6 +7730,16 @@
      * which d3 removes the attribute for - the same thing it does when handed undefined
      * directly.
      */
+    /**
+     * Resolves a colour prop - a constant or a per-layer accessor - to the string d3 writes into
+     * an attribute. Nullish stays nullish, which removes the attribute.
+     */
+    function colorFn(value) {
+      const resolve = valueFn(value);
+      return function (datum, index, groups) {
+        return colorToString(resolve.call(this, datum, index, groups));
+      };
+    }
     function stackedAreaMultiples() {
       return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
       // The default layer type L is P[], so the values ARE the layer and identity is correct.
@@ -7746,11 +7795,13 @@
         const pathData = function (datum, index, group) {
           return areaGen(props.valuesAccessor.call(this, datum, index, group));
         };
-        const fill = valueFn(props.fill ?? null);
+        // The colour props may hold one of the library's colour objects, so each is resolved
+        // first and then rendered as the string d3 writes - the same conversion d3 would do.
+        const fill = colorFn(props.fill ?? null);
         // The white hairline separating two touching bands, as stackedArea has. Applied with an
         // explicit undefined check, as strokeWidth is, so it stands in for an unset stroke
         // only: null and "" are supplied values and reach d3 as given.
-        const stroke = valueFn(props.stroke === undefined ? "#ffffff" : props.stroke);
+        const stroke = colorFn(props.stroke === undefined ? "#ffffff" : props.stroke);
         const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
         // An entering band is painted synchronously, as bar does, so it is complete on the
         // tick it appears on rather than staying an empty path element until the first
@@ -8403,10 +8454,10 @@
         // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
         function getColorRecursive(node) {
           if (!node.parent) {
-            return d3.hsl(props.fill(colorKey(node)));
+            return d3.hsl(String(props.fill(colorKey(node))));
           } else if (isRoot(node.parent)) {
             // Use the color scale
-            return d3.hsl(props.fill(colorKey(node)));
+            return d3.hsl(String(props.fill(colorKey(node))));
           } else {
             // Recurse up the tree and adjust the lightness value
             // Lighten by 15% of what is left between the parent's lightness and white,
@@ -8422,6 +8473,12 @@
         // is stringified here because the recursion needs the mutable d3 colour object while
         // d3's attr only takes a primitive; setAttribute would have coerced it the same way.
         const fillColor = node => isRoot(node) ? "transparent" : String(getColorRecursive(node));
+        // The stroke prop may hold one of the library's colour objects, so it is resolved and
+        // then rendered as the string d3 writes - the same conversion d3 would do itself.
+        const strokeResolve = valueFn(props.stroke);
+        const strokeColor = function (datum, index, groups) {
+          return colorToString(strokeResolve.call(this, datum, index, groups));
+        };
         const arcGen = d3.arc().startAngle(startAngle).endAngle(endAngle)
         // The radii the arc is drawn at right now, which the tween walks towards the
         // destination ones. Reading props here instead would put a changed radius scale on
@@ -8430,11 +8487,11 @@
         const arcs = selection.selectAll(".sszvis-sunburst-arc").data(data).join(enter =>
         // An entering arc has no colour to ease from, so it is painted outright; every
         // other attribute change goes through the transition below.
-        enter.append("path").attr("class", "sszvis-sunburst-arc").attr("stroke", valueFn(props.stroke)).attr("fill", fillColor));
+        enter.append("path").attr("class", "sszvis-sunburst-arc").attr("stroke", strokeColor).attr("fill", fillColor));
         // One transition for the whole arc: scheduling a second one on the same elements would
         // cancel this one.
         const arcTransition = arcs.transition(defaultTransition());
-        arcTransition.attr("stroke", valueFn(props.stroke)).attr("fill", fillColor);
+        arcTransition.attr("stroke", strokeColor).attr("fill", fillColor);
         arcTransition.attrTween("d", d => {
           const x0Interp = d3.interpolate(d.x0, d._x0);
           const x1Interp = d3.interpolate(d.x1, d._x1);
@@ -8535,7 +8592,7 @@
         // Filter out very small rectangles and show only leaf nodes
         const visibleData = treemapData.filter(d => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5).filter(d => !d.children);
         const rectangles = selection.selectAll(".sszvis-treemap-rect").data(visibleData).join("rect").classed("sszvis-treemap-rect", true).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0).attr("fill", d => {
-          return nodeColor(d, props.colorScale);
+          return colorToString(nodeColor(d, props.colorScale));
         }).attr("stroke", "#ffffff").attr("stroke-width", 1).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => props.onClick?.(event, d));
         // Apply transitions if enabled
         if (props.transition) {
@@ -8852,9 +8909,9 @@
         group.selectAll(".sszvis-handleRuler__handle-mark").data(d => [d]).join("line").classed("sszvis-handleRuler__handle-mark", true).attr("x1", crispX).attr("y1", halfPixel(handleTop + HANDLE_HEIGHT$1 * HANDLE_MARK_TOP)).attr("x2", crispX).attr("y2", halfPixel(handleTop + HANDLE_HEIGHT$1 * HANDLE_MARK_BOTTOM));
         const dots = group.selectAll(".sszvis-ruler__dot").data(data).join("circle").classed("sszvis-ruler__dot", true);
         dots.attr("cx", crispX).attr("cy", crispY).attr("r", DOT_RADIUS)
-        // `?? null` only to satisfy d3's attr signature: it treats null and undefined
-        // alike (`value == null` removes the attribute), so this matches the original.
-        .attr("fill", props.color ?? null);
+        // Rendered to a string for d3's attr signature, which accepts no colour object;
+        // an unset color stays nullish, which d3 reads as "remove the attribute".
+        .attr("fill", d => colorToString(typeof props.color === "function" ? props.color(d) : props.color));
         selection.selectAll(".sszvis-ruler__label-outline").data(data).join("text").classed("sszvis-ruler__label-outline", true);
         selection.selectAll(".sszvis-ruler__label").data(data).join("text").classed("sszvis-ruler__label", true);
         // Update both labelOutline and labelOutline selections
@@ -9293,7 +9350,11 @@
       const description = metadata.description || "";
       const render = root => {
         const svg = root.selectAll(`svg[${elementDataKey}]`).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", `${title} – ${description}`).attr("height", height).attr("width", width);
-        svg.selectAll("title").data([0]).join("title").text(title);
+        // No <title> element. The layer is role="img" with an aria-label, which is already its
+        // accessible name for assistive technology; a <title> would add nothing there but would
+        // make the browser show a native tooltip over the whole chart, which fights the chart's
+        // own hover interactions. The description stays in <desc>, which browsers do not surface.
+        svg.selectAll("title").remove();
         svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
         return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", `translate(${padding.left},${padding.top})`);
       };
@@ -10618,7 +10679,7 @@
           labelledBins.push({
             x: Math.floor(circleRad + sum),
             w: w + offset,
-            c: props.scale(pPrev),
+            c: colorToString(props.scale(pPrev)),
             p
           });
           sum += w;
@@ -10628,11 +10689,11 @@
         const finalBin = {
           x: Math.floor(circleRad + sum),
           w: innerRange[1] - sum,
-          c: props.scale(pPrev)
+          c: colorToString(props.scale(pPrev))
         };
         const rectData = [...labelledBins, finalBin];
         const circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints).join("circle").classed("sszvis-legend__circle", true);
-        circles.attr("r", circleRad).attr("cy", circleRad).attr("cx", (_d, i) => i === 0 ? circleRad : props.width - circleRad).attr("fill", props.scale);
+        circles.attr("r", circleRad).attr("cy", circleRad).attr("cx", (_d, i) => i === 0 ? circleRad : props.width - circleRad).attr("fill", d => colorToString(props.scale(d)));
         const segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData).join("rect").classed("sszvis-legend__crispmark", true);
         segments.attr("x", d => d.x).attr("y", 0).attr("width", d => d.w).attr("height", segHeight).attr("fill", d => d.c);
         // Every bin except the trailing one gets a tick line and a label.
@@ -10691,12 +10752,12 @@
         const segments = selection.selectAll("rect.sszvis-legend__mark").data(values).join("rect").classed("sszvis-legend__mark", true);
         segments.attr("x", (_d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("y", 0).attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
-        .attr("height", segHeight).attr("fill", d => props.scale(d));
+        .attr("height", segHeight).attr("fill", d => colorToString(props.scale(d)));
         const startEnd = [domain[0], domainMax];
-        const labelText = props.labelText || startEnd;
+        const labelText = props.labelText ?? startEnd;
         // rounded end caps for the segments
         const endCaps = selection.selectAll("circle.sszvis-legend__mark").data(startEnd).join("circle").attr("class", "sszvis-legend__mark");
-        endCaps.attr("cx", (_d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => props.scale(d));
+        endCaps.attr("cx", (_d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => colorToString(props.scale(d)));
         const labels = selection.selectAll(".sszvis-legend__label").data(labelText).join("text").classed("sszvis-legend__label", true);
         const labelPadding = 16;
         labels.style("text-anchor", (_d, i) => i === 0 ? "end" : "start").attr("dy", "0.35em") // vertically-center
@@ -10749,7 +10810,9 @@
         lines.attr("x1", 0).attr("y1", getCircleEdge).attr("x2", maxRadius + 15).attr("y2", getCircleEdge);
         const labels = group.selectAll(".sszvis-legend__label").data(tickValues).join("text").attr("class", "sszvis-legend__label sszvis-legend__label--small");
         labels.attr("dx", maxRadius + 18).attr("y", getCircleEdge).attr("dy", "0.35em") // vertically-center
-        .text(props.tickFormat);
+        // tickValues are d3 NumberValues; the formatter is handed the number they
+        // stand for, so sszvis' own number formatters can be passed directly.
+        .text((d, i) => props.tickFormat(Number(d), i));
       });
     }
     /**
@@ -11220,7 +11283,7 @@
         }
         // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
         function getMapFill(d) {
-          return hasValue(d) ? props.fill(d.datum) : `url(#${patternId})`;
+          return hasValue(d) ? colorToString(props.fill(d.datum)) : `url(#${patternId})`;
         }
         const mapAreas = selection
         // Typed to the element the join creates, so the fill filters below can read the fill
@@ -11469,7 +11532,7 @@
         }).attr("transform", d => {
           const position = anchorPosition(props.mapPath, d.geoJson);
           return translateString(position[0], position[1]);
-        }).style("fill", d => props.fill(d.datum)).style("stroke", d => props.strokeColor(d.datum)).style("stroke-width", d => props.strokeWidth(d.datum))
+        }).style("fill", d => colorToString(props.fill(d.datum))).style("stroke", d => colorToString(props.strokeColor(d.datum))).style("stroke-width", d => props.strokeWidth(d.datum))
         // The circles paint over the base layer's areas, which carry the map's event targets. Where
         // this component has no listeners of its own they are decoration, not a hit area, so they
         // let the pointer through to the area beneath - the same way the mesh and lake overlay
@@ -11640,10 +11703,10 @@
           };
         });
         function getMapFill(d) {
-          return defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : `url(#${patternId})`;
+          return defined(d.datum) && props.defined(d.datum) ? colorToString(props.fill(d.datum)) : `url(#${patternId})`;
         }
         function getMapStroke(d) {
-          return defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
+          return defined(d.datum) && props.defined(d.datum) ? colorToString(props.stroke(d.datum)) : "";
         }
         // Guarded like fill and stroke: an unmatched feature is not asked for a stroke width, and
         // returning null removes the attribute rather than handing the accessor undefined.
@@ -11934,7 +11997,7 @@
         highlightBorders
         // Keyed by map entity, so an element stays with its entity when the highlight array
         // shrinks or is reordered rather than being re-purposed by position.
-        .data(mergedHighlight, d => d.joinKey).join("path").classed("sszvis-map__highlight", true).attr(KEY_ATTRIBUTE$4, props.key).attr("d", d => props.mapPath(d.geoJson)).style("stroke", d => props.highlightStroke(d.datum)).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
+        .data(mergedHighlight, d => d.joinKey).join("path").classed("sszvis-map__highlight", true).attr(KEY_ATTRIBUTE$4, props.key).attr("d", d => props.mapPath(d.geoJson)).style("stroke", d => colorToString(props.highlightStroke(d.datum))).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
       });
     }
 
@@ -12193,6 +12256,15 @@
         return resolved ?? fallback;
       };
     }
+    /**
+     * Renders a resolved colour as the string d3 writes into a style - the same conversion d3 would
+     * do itself, made explicit so one of the library's colour objects reaches d3's style typings.
+     */
+    function asColorString(value) {
+      return function (datum, index, groups) {
+        return colorToString(value.call(this, datum, index, groups));
+      };
+    }
     function mapRendererMesh() {
       return component().prop("geoJson").prop("mapPath").prop("key").key(DEFAULT_KEY$1).prop("borderColor").borderColor(DEFAULT_BORDER_COLOR) // A function or string for the color of all borders. Note: all borders have the same color
       .prop("strokeWidth").strokeWidth(DEFAULT_STROKE_WIDTH).render(function () {
@@ -12217,7 +12289,7 @@
         const meshLine = selection.selectAll(":scope > path.sszvis-map__border").filter(function () {
           return this.getAttribute(KEY_ATTRIBUTE$2) === props.key;
         }).data([geoJson]).join("path").classed("sszvis-map__border", true).attr(KEY_ATTRIBUTE$2, props.key);
-        meshLine.attr("d", mapPath).style("stroke", withDefault(props.borderColor, DEFAULT_BORDER_COLOR)).style("stroke-width", withDefault(props.strokeWidth, DEFAULT_STROKE_WIDTH));
+        meshLine.attr("d", mapPath).style("stroke", asColorString(withDefault(props.borderColor, DEFAULT_BORDER_COLOR))).style("stroke-width", withDefault(props.strokeWidth, DEFAULT_STROKE_WIDTH));
       });
     }
 
@@ -12425,7 +12497,10 @@
         if (props.lakePathColor === undefined) {
           lakePath.style("stroke", null);
         } else {
-          lakePath.style("stroke", valueFn(props.lakePathColor));
+          const resolve = valueFn(props.lakePathColor);
+          lakePath.style("stroke", function (datum, index, groups) {
+            return colorToString(resolve.call(this, datum, index, groups));
+          });
         }
       });
     }
@@ -12723,7 +12798,9 @@
           }
           const x = at[0] - halfSide;
           const y = at[1] - halfSide;
-          const colour = fill(datum);
+          // Stringified here because the canvas fillStyle and the parse cache are both keyed by
+          // string; a colour object from one of the library's scales coerces the same way.
+          const colour = String(fill(datum));
           let parses = parsed.get(colour);
           if (parses === undefined) {
             parses = fillParses(ctx, colour);
@@ -13032,25 +13109,30 @@
      */
     const timeParse = d3.timeFormatLocale(timeLocale).parse;
     /**
-     * Parse Swiss date strings
-     * @param  {String} d A Swiss date string, e.g. 17.08.2014
-     * @return {Date}
+     * Parse Swiss date strings, e.g. "17.08.2014".
+     *
+     * Accepts `undefined` and `null`, because a d3 row callback types every CSV
+     * cell as `string | undefined` and a missing cell is normal input. Returns
+     * `null` for a missing or unparseable value.
      */
     const dateParser = timeParse("%d.%m.%Y");
-    const parseDate = d => dateParser(d);
+    const parseDate = d => d == null ? null : dateParser(d);
     /**
-     * Parse year values
-     * @param  {string} d   A string which should be parsed as if it were a year, like "2014"
-     * @return {Date}       A javascript date object for the first time in the given year
+     * Parse a year value like "2014" into a date at the first instant of that year.
+     *
+     * Accepts `undefined` and `null` for the same reason as `parseDate`, and
+     * returns `null` for a missing or unparseable value.
      */
     const yearParser = timeParse("%Y");
-    const parseYear = d => yearParser(d);
+    const parseYear = d => d == null ? null : yearParser(d);
     /**
-     * Parse untyped input
-     * @param  {String} d A value that could be a number
-     * @return {Number}   If d is not a number, NaN is returned
+     * Parse untyped input as a number.
+     *
+     * Accepts `undefined` and `null`, because a d3 row callback types every CSV
+     * cell as `string | undefined` and a missing cell is normal input. Returns
+     * `NaN` for a missing, empty, or non-numeric value.
      */
-    const parseNumber = d => d.trim() === "" ? Number.NaN : +d;
+    const parseNumber = d => d == null || d.trim() === "" ? Number.NaN : +d;
 
     /**
      * ResponsiveProps module
@@ -13091,8 +13173,11 @@
      * queryProps({width: 300, screenHeight: 400}).axisOrientation; // returns "left"
      * queryProps({width: 300, screenHeight: 400}).height; // returns the result of 200 or the function call
      *
-     * @param {{width: number, screenHeight: number}|{bounds: object, screenWidth: number, screenHeight: number}} arg dimensions object
-     * @return {object} An object containing the properties you configured for the matching breakpoint
+     * @param arg dimensions object - a measurement, or a bounds object plus the screen measurements.
+     *        Its width may be missing, as it is for an element that could not be measured; in that
+     *        case every property takes its `_` fallback value.
+     * @return An object containing the properties you configured for the matching breakpoint, typed
+     *        from the `.prop()` calls that configured them
      *
      * You can also configure different breakpoints than the defaults using:
      *
@@ -13110,7 +13195,7 @@
       /**
        * Constructor
        *
-       * @param   {Measurement} arg1 Accepts a 'measurement' object with a
+       * @param   arg1 Accepts a 'measurement' object with a
        *          width and screenHeight. You can also pass it a 'bounds' object which contains
        *          measurements, but you must also include the screen measurements. This is the shape
        *          of object returned by sszvis.measureDimensions
@@ -13120,10 +13205,13 @@
       function _responsiveProps(measurement) {
         if (!isObject(measurement) || !isBounds(measurement)) {
           warn("Could not determine the current breakpoint, returning the default props");
-          // We choose the _ option for all configured props as a default.
-          return Object.keys(propsConfig).reduce((memo, val, key) => {
-            // BUG: doesn't support fallback
-            memo[key] = val;
+          // We choose the _ option for all configured props as a default. There is no width to
+          // pass to a functorized value, so those are invoked with 0.
+          return Object.keys(propsConfig).reduce((memo, propKey) => {
+            const fallback = propsConfig[propKey]._;
+            if (defined(fallback)) {
+              memo[propKey] = fallback(0);
+            }
             return memo;
           }, {});
         }
@@ -13190,10 +13278,13 @@
        *
        * @return {responsiveProps}
        */
-      _responsiveProps.prop = (propName, propSpec) => {
+      const prop = (propName, propSpec) => {
         propsConfig[propName] = functorizeValues(propSpec);
         return _responsiveProps;
+        // The instance accumulates prop types across calls, which the untyped config object
+        // backing it cannot express; the generic signature on the interface is the contract.
       };
+      _responsiveProps.prop = prop;
       /**
        * responsiveProps.breakpoints
        *
@@ -13432,6 +13523,7 @@
     exports.choropleth = choropleth;
     exports.colorLegendDimensions = colorLegendDimensions;
     exports.colorLegendLayout = colorLegendLayout;
+    exports.colorToString = colorToString;
     exports.compose = compose;
     exports.contains = contains$1;
     exports.createBreadcrumbItems = createBreadcrumbItems;
