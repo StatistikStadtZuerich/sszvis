@@ -61,7 +61,11 @@ export function createSvgLayer<
       .attr("height", height)
       .attr("width", width);
 
-    svg.selectAll("title").data([0]).join("title").text(title);
+    // No <title> element. The layer is role="img" with an aria-label, which is already its
+    // accessible name for assistive technology; a <title> would add nothing there but would
+    // make the browser show a native tooltip over the whole chart, which fights the chart's
+    // own hover interactions. The description stays in <desc>, which browsers do not surface.
+    svg.selectAll("title").remove();
 
     svg
       .selectAll("desc")
