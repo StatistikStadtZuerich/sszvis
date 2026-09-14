@@ -1,4 +1,5 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
+import { measureDimensions } from "../src/measure.js";
 import { responsiveProps } from "../src/responsiveProps.js";
 import type { Measurement } from "../src/types.js";
 
@@ -25,13 +26,12 @@ describe("responsiveProps", () => {
       expect(result.test).toBe("default");
     });
 
-    test("should return empty object for invalid measurements", () => {
+    test("should return the fallback values for invalid measurements", () => {
       const rProps = responsiveProps().prop("test", {
         _: "fallback",
       });
       const result = rProps("invalid" as unknown as Measurement);
-      // BUG: There's a bug in the library where fallback values aren't properly returned
-      expect(result.test).toBeUndefined();
+      expect(result.test).toBe("fallback");
     });
   });
 
@@ -199,13 +199,19 @@ describe("responsiveProps", () => {
   });
 
   describe("error handling", () => {
+    test("should invoke a functorized fallback when there are no measurements", () => {
+      const rProps = responsiveProps().prop("height", {
+        _: (w) => w + 10,
+      });
+      expect(rProps(undefined as unknown as Measurement).height).toBe(10);
+    });
+
     test("should handle missing measurements gracefully", () => {
       const rProps = responsiveProps().prop("test", {
         _: "fallback",
       });
       const result = rProps(undefined as unknown as Measurement);
-      // BUG: Library bug - fallback not properly returned
-      expect(result.test).toBeUndefined();
+      expect(result.test).toBe("fallback");
     });
 
     test("should handle measurements without required properties", () => {
@@ -213,8 +219,7 @@ describe("responsiveProps", () => {
         _: "fallback",
       });
       const result = rProps({ someOtherProp: 100 } as unknown as Measurement);
-      // BUG: Library bug - fallback not properly returned
-      expect(result.test).toBeUndefined();
+      expect(result.test).toBe("fallback");
     });
 
     test("should handle empty prop specification gracefully", () => {
@@ -222,6 +227,30 @@ describe("responsiveProps", () => {
       const result = rProps({ width: 500, screenWidth: 1024, screenHeight: 768 });
       expect(typeof result).toBe("object");
       expect(Object.keys(result)).toHaveLength(0);
+    });
+  });
+
+  describe("types", () => {
+    test("should type the result from the prop definitions, not as unknown", () => {
+      const queryProps = responsiveProps()
+        .breakpoints(testBreakpoints)
+        .prop("barPadding", { small: 4, _: 8 })
+        .prop("axisOrientation", { small: "left" as const, _: "bottom" as const })
+        .prop("height", { _: (w) => w / 2 });
+
+      const props = queryProps({ width: 600, screenWidth: 1024, screenHeight: 768 });
+
+      expectTypeOf(props.barPadding).toEqualTypeOf<number>();
+      expectTypeOf(props.axisOrientation).toEqualTypeOf<"left" | "bottom">();
+      expectTypeOf(props.height).toEqualTypeOf<number>();
+    });
+
+    test("should accept what measureDimensions returns", () => {
+      const queryProps = responsiveProps().prop("barPadding", { _: 8 });
+      // measureDimensions reports an undefined width for an element it cannot measure;
+      // queryProps(measureDimensions(...)) is the most common line in any chart.
+      const props = queryProps(measureDimensions("#does-not-exist"));
+      expect(props.barPadding).toBe(8);
     });
   });
 

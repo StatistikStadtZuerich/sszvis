@@ -37,8 +37,11 @@
  * queryProps({width: 300, screenHeight: 400}).axisOrientation; // returns "left"
  * queryProps({width: 300, screenHeight: 400}).height; // returns the result of 200 or the function call
  *
- * @param {{width: number, screenHeight: number}|{bounds: object, screenWidth: number, screenHeight: number}} arg dimensions object
- * @return {object} An object containing the properties you configured for the matching breakpoint
+ * @param arg dimensions object - a measurement, or a bounds object plus the screen measurements.
+ *        Its width may be missing, as it is for an element that could not be measured; in that
+ *        case every property takes its `_` fallback value.
+ * @return An object containing the properties you configured for the matching breakpoint, typed
+ *        from the `.prop()` calls that configured them
  *
  * You can also configure different breakpoints than the defaults using:
  *
@@ -58,7 +61,7 @@ import {
 } from "./breakpoint.js";
 import * as fn from "./fn.js";
 import * as logger from "./logger.js";
-import type { Breakpoint, Measurement } from "./types.js";
+import type { Breakpoint, Measurement, PartialMeasurement } from "./types.js";
 
 // Type definitions
 export interface ResponsivePropValue<T = unknown> {
@@ -78,38 +81,52 @@ export interface ResponsivePropsConfig {
   [propName: string]: FunctorizedPropValue;
 }
 
-export interface ResponsivePropsInstance {
-  (measurements: Measurement): Record<string, unknown>;
-  prop<T>(propName: string, propSpec: ResponsivePropValue<T>): ResponsivePropsInstance;
+/**
+ * The properties an instance has accumulated so far. A fresh `responsiveProps()` has none;
+ * every `.prop(name, spec)` adds one, so the object the instance returns when called is
+ * typed from the `.prop()` calls that built it.
+ */
+export interface ResponsivePropsInstance<Props = Record<string, unknown>> {
+  (measurements: PartialMeasurement): Props;
+  prop<K extends string, T>(
+    propName: K,
+    propSpec: ResponsivePropValue<T>,
+  ): ResponsivePropsInstance<Props & { [P in K]: T }>;
   breakpoints(): Breakpoint[];
   /** Takes partial definitions - breakpointCreateSpec parses each into a full Breakpoint. */
-  breakpoints(bps: PartialBreakpoint[]): ResponsivePropsInstance;
+  breakpoints(bps: PartialBreakpoint[]): ResponsivePropsInstance<Props>;
 }
+
+/** The property bag of an instance that has not had `.prop()` called on it yet. */
+type NoProps = Record<never, never>;
 
 /* Exported module
 ----------------------------------------------- */
-export function responsiveProps(): ResponsivePropsInstance {
+export function responsiveProps(): ResponsivePropsInstance<NoProps> {
   let breakpointSpec = breakpointDefaultSpec();
   const propsConfig: ResponsivePropsConfig = {};
 
   /**
    * Constructor
    *
-   * @param   {Measurement} arg1 Accepts a 'measurement' object with a
+   * @param   arg1 Accepts a 'measurement' object with a
    *          width and screenHeight. You can also pass it a 'bounds' object which contains
    *          measurements, but you must also include the screen measurements. This is the shape
    *          of object returned by sszvis.measureDimensions
    * @returns {object} An object containing the configured properties and their values for the current
    *          breakpoint as defined by the parameter `arg1`
    */
-  function _responsiveProps(measurement: Measurement): Record<string, unknown> {
+  function _responsiveProps(measurement: PartialMeasurement): Record<string, unknown> {
     if (!fn.isObject(measurement) || !isBounds(measurement)) {
       logger.warn("Could not determine the current breakpoint, returning the default props");
-      // We choose the _ option for all configured props as a default.
+      // We choose the _ option for all configured props as a default. There is no width to
+      // pass to a functorized value, so those are invoked with 0.
       return Object.keys(propsConfig).reduce(
-        (memo, val, key) => {
-          // BUG: doesn't support fallback
-          memo[key] = val;
+        (memo, propKey) => {
+          const fallback = propsConfig[propKey]._;
+          if (fn.defined(fallback)) {
+            memo[propKey] = fallback(0);
+          }
           return memo;
         },
         {} as Record<string, unknown>,
@@ -188,13 +205,13 @@ export function responsiveProps(): ResponsivePropsInstance {
    *
    * @return {responsiveProps}
    */
-  _responsiveProps.prop = <T>(
-    propName: string,
-    propSpec: ResponsivePropValue<T>,
-  ): ResponsivePropsInstance => {
+  const prop = ((propName: string, propSpec: ResponsivePropValue<unknown>) => {
     propsConfig[propName] = functorizeValues(propSpec);
     return _responsiveProps;
-  };
+    // The instance accumulates prop types across calls, which the untyped config object
+    // backing it cannot express; the generic signature on the interface is the contract.
+  }) as ResponsivePropsInstance<NoProps>["prop"];
+  _responsiveProps.prop = prop;
 
   /**
    * responsiveProps.breakpoints
@@ -230,7 +247,7 @@ export function responsiveProps(): ResponsivePropsInstance {
    *   { name: 'large', width: 700 }
    * ])
    */
-  const breakpoints: ResponsivePropsInstance["breakpoints"] = ((
+  const breakpoints: ResponsivePropsInstance<NoProps>["breakpoints"] = ((
     ...args: [] | [PartialBreakpoint[]]
   ) => {
     if (args.length === 0) {
@@ -238,7 +255,7 @@ export function responsiveProps(): ResponsivePropsInstance {
     }
     breakpointSpec = breakpointCreateSpec(args[0]);
     return _responsiveProps;
-  }) as ResponsivePropsInstance["breakpoints"];
+  }) as ResponsivePropsInstance<NoProps>["breakpoints"];
   _responsiveProps.breakpoints = breakpoints;
 
   return _responsiveProps;

@@ -91,6 +91,17 @@ export interface Measurement {
 }
 
 /**
+ * A measurement whose values may be missing or explicitly undefined.
+ *
+ * This is what the measuring functions produce - `measureDimensions` reports an
+ * undefined width for an element it cannot measure - and what the breakpoint and
+ * responsiveProps APIs accept.
+ */
+export type PartialMeasurement = {
+  [K in keyof Measurement]?: Measurement[K] | undefined;
+};
+
+/**
  * A breakpoint definition with name and measurement constraints
  */
 export interface Breakpoint {
