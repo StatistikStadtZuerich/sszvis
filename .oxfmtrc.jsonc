@@ -21,6 +21,7 @@
     "**/contrib/**",
     "**/.reference/**",
     "apps/docs/docs/**",
+    "apps/new-docs/.react-router/**",
     "**/test/snapshot/__results__/**",
     "apps/regression-cli/__export__/**",
     "apps/regression-cli/__report__/**",

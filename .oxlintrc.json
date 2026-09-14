@@ -26,6 +26,7 @@
     "**/.reference/**",
     "packages/geodata/src/**",
     "apps/docs/docs/**",
+    "apps/new-docs/.react-router/**",
     "apps/project-specimen/src/**",
     "contrib/**",
     "apps/regression-cli/__export__/**",
