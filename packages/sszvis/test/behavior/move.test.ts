@@ -1,6 +1,6 @@
 import { scaleBand, scaleLinear, scalePoint } from "d3";
-import { afterEach, assert, beforeEach, describe, expect, test, vi } from "vitest";
-import move, { type MoveComponent } from "../../src/behavior/move.js";
+import { afterEach, assert, beforeEach, describe, expect, expectTypeOf, test, vi } from "vitest";
+import move, { type MoveComponent, type MoveEventHandler } from "../../src/behavior/move.js";
 import { bounds } from "../../src/bounds.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
@@ -652,6 +652,80 @@ describe("behavior/move", () => {
       );
       expect(overTouch[0]).toBeCloseTo(50, 10);
       expect(overTouch[0]).toBeCloseTo(overMouse[0] as number, 10);
+    });
+  });
+
+  describe("typed event handlers", () => {
+    test("accepts a handler shaped like the configured domains", () => {
+      const seen: [number | null, string | null][] = [];
+      // The point of this test is the handler's declared parameter types: before `MoveEventHandler`
+      // became generic, a handler narrowed to the component's own domains was a compile error.
+      const onMove = (_event: Event, x: number | null, y: string | null) => {
+        seen.push([x, y]);
+      };
+      expectTypeOf(onMove).toMatchTypeOf<MoveEventHandler<number, string>>();
+
+      const yBandScale = scaleBand<string>().domain(["a", "b"]).range([0, 200]);
+      const component = move<number, string>().xScale(xScale).yScale(yBandScale).on("move", onMove);
+      svg.call(component);
+
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      if (!rectNode) throw new Error("rectNode not found");
+      const rect = rectNode.getBoundingClientRect();
+      rectNode.dispatchEvent(
+        new MouseEvent("mousemove", {
+          clientX: rect.left + 150,
+          clientY: rect.top + 50,
+          bubbles: true,
+        }),
+      );
+
+      expect(seen).toHaveLength(1);
+      expect(seen[0][0]).toBeCloseTo(50, 10);
+      expect(seen[0][1]).toBe("a");
+    });
+
+    test("an end handler is passed only the event", () => {
+      const endHandler = vi.fn((_event: Event) => {});
+      svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("end", endHandler));
+
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      rectNode?.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+
+      expect(endHandler).toHaveBeenCalled();
+      // The mouse path forwards d3's listener arguments verbatim, so the only extra argument is
+      // the layer rect's bound datum (0), never an inverted position. That is why the "end"
+      // overload declares the event alone.
+      const [endEvent, ...rest] = endHandler.mock.calls[0] as unknown[];
+      expect(endEvent).toBeInstanceOf(Event);
+      expect(rest).toEqual([0]);
+    });
+
+    test("keeps accepting d3's namespaced typenames", () => {
+      const first = vi.fn();
+      const second = vi.fn();
+      const component = move<number, number>()
+        .xScale(xScale)
+        .yScale(yScale)
+        .on("move.one", first)
+        .on("move.two", second);
+      svg.call(component);
+
+      expect(component.on("move.one")).toBe(first);
+
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      if (!rectNode) throw new Error("rectNode not found");
+      const rect = rectNode.getBoundingClientRect();
+      rectNode.dispatchEvent(
+        new MouseEvent("mousemove", {
+          clientX: rect.left + 10,
+          clientY: rect.top + 10,
+          bubbles: true,
+        }),
+      );
+
+      expect(first).toHaveBeenCalled();
+      expect(second).toHaveBeenCalled();
     });
   });
 });

@@ -264,4 +264,28 @@ describe("behavior/panning", () => {
       expect(element.classed("sszvis-interactive")).toBe(true);
     });
   });
+
+  test("accepts handlers for every declared event, including namespaced typenames", () => {
+    const startHandler = vi.fn((_event: Event) => {});
+    const panHandler = vi.fn((_event: Event) => {});
+    const endHandler = vi.fn((_event: Event) => {});
+    const { circles } = createTestElements();
+    const component = panning()
+      .elementSelector("circle.test-element")
+      .on("start", startHandler)
+      .on("pan.tooltip", panHandler)
+      .on("end", endHandler);
+    svg.call(component);
+
+    expect(component.on("start")).toBe(startHandler);
+
+    const firstCircle = circles.nodes()[0] as SVGCircleElement;
+    firstCircle.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+    firstCircle.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+    firstCircle.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
+
+    expect(startHandler).toHaveBeenCalled();
+    expect(panHandler).toHaveBeenCalled();
+    expect(endHandler).toHaveBeenCalled();
+  });
 });
