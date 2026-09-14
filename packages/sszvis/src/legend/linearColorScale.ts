@@ -81,10 +81,10 @@ export default function legendColorLinear<T = number>(): LinearColorScaleCompone
       // fn.identity is the documented "no formatting" default. It returns its argument, so it
       // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
       // at render time, which its own types do not model.
-      .labelFormat(fn.identity as LabelFormatter)
+      .labelFormat(fn.identity as LabelFormatter<T>)
       .render(function (this: Element) {
         const selection = select(this);
-        const props = selection.props<LinearColorScaleProps>();
+        const props = selection.props<LinearColorScaleProps<T>>();
 
         if (!props.scale) {
           logger.error("legend.linearColorScale - a scale must be specified.");
@@ -121,10 +121,10 @@ export default function legendColorLinear<T = number>(): LinearColorScaleCompone
           .attr("y", 0)
           .attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
           .attr("height", segHeight)
-          .attr("fill", (d) => props.scale(d));
+          .attr("fill", (d) => colorToString(props.scale(d)));
 
         const startEnd = [domain[0], domainMax];
-        const labelText = props.labelText || startEnd;
+        const labelText: readonly (number | T)[] = props.labelText ?? startEnd;
 
         // rounded end caps for the segments
         const endCaps = selection
@@ -155,7 +155,7 @@ export default function legendColorLinear<T = number>(): LinearColorScaleCompone
             (_d, i) =>
               `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`,
           )
-          .text((d, i) => props.labelFormat(d, i));
+          .text((d, i) => props.labelFormat(d as T, i));
       })
   );
 }

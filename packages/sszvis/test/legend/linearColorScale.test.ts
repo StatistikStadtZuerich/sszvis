@@ -2,6 +2,7 @@ import { scaleLinear } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import legendColorLinear from "../../src/legend/linearColorScale.js";
+import type { LinearColorScaleComponent } from "../../src/legend/linearColorScale.js";
 import "../../src/d3-selectgroup.js";
 
 describe("legend/linearColorScale", () => {
@@ -24,7 +25,7 @@ describe("legend/linearColorScale", () => {
   const layer = (key: string) =>
     createSvgLayer("#chart-container", undefined, { key }).selectGroup("legend");
 
-  const render = (legend: ReturnType<typeof legendColorLinear>) => {
+  const render = <T>(legend: LinearColorScaleComponent<T>) => {
     const group = layer(`linear-${++layerKey}`);
     group.call(legend);
     return group.node() as SVGGElement;
@@ -125,7 +126,11 @@ describe("legend/linearColorScale", () => {
 
   test("should use labelText when supplied", () => {
     const node = render(
-      legendColorLinear().scale(scale()).displayValues([0, 50]).labelText(["wenig", "viel"]),
+      // A legend whose labels are words, not numbers, names that type.
+      legendColorLinear<string>()
+        .scale(scale())
+        .displayValues([0, 50])
+        .labelText(["wenig", "viel"]),
     );
     expect(
       [...node.querySelectorAll<SVGTextElement>("text.sszvis-legend__label")].map(
