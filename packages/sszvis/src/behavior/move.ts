@@ -84,7 +84,27 @@ type MoveProps<XDomain, YDomain> = {
   fireOnPanOnly: () => boolean;
 };
 type Domain = number | string;
-type EventHandler = (event: Event, x: number | string | null, y: number | string | null) => void;
+
+/**
+ * Handler for the "start", "move" and "drag" events. The position arguments are the pointer
+ * location inverted through the component's scales, so they carry the domain types of the
+ * configured scales. Band and point scales return null for a position outside any band, which
+ * is why the values are nullable.
+ *
+ * Note that the mouse path fires "start" straight from the DOM listener, so a "start" handler
+ * only receives inverted positions on touch devices.
+ */
+export type MoveEventHandler<XDomain = Domain, YDomain = Domain> = (
+  event: Event,
+  x: XDomain | null,
+  y: YDomain | null,
+) => void;
+
+/**
+ * Handler for the "end" event. It fires on mouseout and touchend, where there is no meaningful
+ * pointer position left to inspect, so no inverted values are passed.
+ */
+export type MoveEndHandler = (event: Event) => void;
 
 export interface MoveComponent<XDomain = Domain, YDomain = Domain> extends ComponentBuilder<
   MoveComponent<XDomain, YDomain>
@@ -112,11 +132,16 @@ export interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Compo
   fireOnPanOnly(): () => boolean;
   fireOnPanOnly(predicate: boolean | (() => boolean)): MoveComponent<XDomain, YDomain>;
 
-  on(eventName: "start", handler: EventHandler): MoveComponent<XDomain, YDomain>;
-  on(eventName: "move", handler: EventHandler): MoveComponent<XDomain, YDomain>;
-  on(eventName: "drag", handler: EventHandler): MoveComponent<XDomain, YDomain>;
-  on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
-  on(eventName: string): EventHandler | undefined;
+  on(
+    eventName: "start" | "move" | "drag",
+    handler: MoveEventHandler<XDomain, YDomain>,
+  ): MoveComponent<XDomain, YDomain>;
+  on(eventName: "end", handler: MoveEndHandler): MoveComponent<XDomain, YDomain>;
+  on(
+    eventName: string,
+    handler: MoveEventHandler<XDomain, YDomain> | MoveEndHandler,
+  ): MoveComponent<XDomain, YDomain>;
+  on(eventName: string): MoveEventHandler<XDomain, YDomain> | MoveEndHandler | undefined;
 }
 
 export default function move<XDomain = number | string, YDomain = number | string>(): MoveComponent<

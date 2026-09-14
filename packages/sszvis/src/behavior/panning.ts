@@ -47,22 +47,27 @@ type PanningProps = {
   elementSelector: string;
 };
 
-type PanEventHandler = (event: Event, ...args: unknown[]) => void;
+/**
+ * Handler for the "start", "pan" and "end" events. The behavior forwards d3's own listener
+ * arguments, so a handler receives the event and the datum bound to the pannable element it
+ * fired on - which is why this is generic over that datum rather than `unknown`.
+ */
+export type PanEventHandler<T = unknown> = (event: Event, datum: T) => void;
 
-interface PanningComponent extends ComponentBuilder<PanningComponent> {
+export interface PanningComponent<T = unknown> extends ComponentBuilder<PanningComponent<T>> {
   elementSelector(): string;
-  elementSelector(selector: string): PanningComponent;
+  elementSelector(selector: string): PanningComponent<T>;
 
-  on(eventName: "start", handler: PanEventHandler): PanningComponent;
-  on(eventName: "pan", handler: PanEventHandler): PanningComponent;
-  on(eventName: "end", handler: PanEventHandler): PanningComponent;
-  on(eventName: string): PanEventHandler | undefined;
+  on(eventName: "start" | "pan" | "end", handler: PanEventHandler<T>): PanningComponent<T>;
+  /** Accepts d3's namespaced typenames, such as "pan.tooltip". */
+  on(eventName: string, handler: PanEventHandler<T>): PanningComponent<T>;
+  on(eventName: string): PanEventHandler<T> | undefined;
 }
 
-export default function (): PanningComponent {
+export default function panning<T = unknown>(): PanningComponent<T> {
   const event = dispatch("start", "pan", "end");
 
-  const panningComponent = component()
+  const panningComponent = component<PanningComponent<T>>()
     .prop("elementSelector")
     .render(function (this: SVGElement) {
       const selection = select(this);
@@ -100,10 +105,13 @@ export default function (): PanningComponent {
         });
     });
 
-  panningComponent.on = function (this: PanningComponent, ...args: [string, never]) {
+  // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler callback
+  // to never. Narrowing to the three event names would type the callback properly but would also
+  // reject the namespaced typenames d3 accepts at runtime, such as "pan.tooltip".
+  panningComponent.on = ((...args: [string, never]) => {
     const value = event.on.apply(event, args);
     return value === event ? panningComponent : value;
-  };
+  }) as PanningComponent<T>["on"];
 
-  return panningComponent as PanningComponent;
+  return panningComponent;
 }
