@@ -28,7 +28,7 @@ import * as fn from "../fn.js";
 import { dataAreaPattern } from "../patterns.js";
 import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
 import { defaultTransition, OWN_TRANSITION } from "../transition.js";
-import type { NumberAccessor } from "../types.js";
+import type { ColorValue, NumberAccessor } from "../types.js";
 
 // Type definitions for confidence area component
 type Datum<T = unknown> = T;
@@ -40,9 +40,9 @@ interface ConfidenceAreaProps<T = unknown> {
   x: (d: Datum<T>) => NumberValue;
   y0: (d: Datum<T>) => NumberValue;
   y1: (d: Datum<T>) => NumberValue;
-  stroke?: string;
+  stroke?: ColorValue;
   strokeWidth?: number;
-  fill?: string;
+  fill?: ColorValue;
   key: KeyAccessor<T>;
   valuesAccessor: (d: Datum<T>[]) => Datum<T>[];
   transition: boolean;
@@ -54,9 +54,9 @@ interface ConfidenceAreaComponent<T = unknown> extends ComponentBuilder<
   x(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
   y0(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
   y1(accessor?: NumberAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
-  stroke(stroke?: string): ConfidenceAreaComponent<T>;
+  stroke(stroke?: ColorValue): ConfidenceAreaComponent<T>;
   strokeWidth(width?: number): ConfidenceAreaComponent<T>;
-  fill(fill?: string): ConfidenceAreaComponent<T>;
+  fill(fill?: ColorValue): ConfidenceAreaComponent<T>;
   key(accessor?: KeyAccessor<T>): ConfidenceAreaComponent<T>;
   valuesAccessor(accessor?: (d: Datum<T>[]) => Datum<T>[]): ConfidenceAreaComponent<T>;
   transition(enabled?: boolean): ConfidenceAreaComponent<T>;
@@ -98,7 +98,7 @@ export default function confidenceArea<T = unknown>(): ConfidenceAreaComponent<T
         .classed("sszvis-area", true);
 
       if (props.stroke) {
-        path.style("stroke", props.stroke);
+        path.style("stroke", String(props.stroke));
       }
 
       path.attr("fill", "url(#data-area-pattern)").order();
@@ -113,7 +113,7 @@ export default function confidenceArea<T = unknown>(): ConfidenceAreaComponent<T
       finalPath.attr("d", (d) => area(props.valuesAccessor(d)));
 
       if (props.stroke) {
-        finalPath.style("stroke", props.stroke);
+        finalPath.style("stroke", String(props.stroke));
       }
       if (props.strokeWidth) {
         finalPath.style("stroke-width", props.strokeWidth);

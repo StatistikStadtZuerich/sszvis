@@ -20,46 +20,55 @@
  */
 
 import { select } from "d3";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
+import type { ColorValue } from "../types.js";
 
 /** The subset of a d3 scale this legend relies on. */
 interface LinearColorScale {
-  (value: number): string;
+  (value: number): ColorValue;
   domain(): number[];
   ticks?(count?: number): number[];
 }
 
-type LabelFormatter = (value: unknown, index: number) => string | number;
+/**
+ * Formats one endpoint label. Generic over what `labelText` holds, which defaults to the
+ * scale's own numeric domain endpoints - so `sszvis.formatNumber` fits without a wrapper.
+ * A legend given string labels names its own type: `legendColorLinear<string>()`.
+ */
+type LabelFormatter<T = number> = (value: T, index: number) => string | number;
 
-type LinearColorScaleProps = {
+type LinearColorScaleProps<T = number> = {
   scale: LinearColorScale;
   displayValues: number[];
   width: number;
   segments: number;
-  labelText?: unknown[];
-  labelFormat: LabelFormatter;
+  labelText?: T[];
+  labelFormat: LabelFormatter<T>;
 };
 
-export interface LinearColorScaleComponent extends ComponentBuilder<LinearColorScaleComponent> {
+export interface LinearColorScaleComponent<T = number> extends ComponentBuilder<
+  LinearColorScaleComponent<T>
+> {
   scale(): LinearColorScale;
-  scale(scale: LinearColorScale): LinearColorScaleComponent;
+  scale(scale: LinearColorScale): LinearColorScaleComponent<T>;
   displayValues(): number[];
-  displayValues(values: number[]): LinearColorScaleComponent;
+  displayValues(values: number[]): LinearColorScaleComponent<T>;
   width(): number;
-  width(width: number): LinearColorScaleComponent;
+  width(width: number): LinearColorScaleComponent<T>;
   segments(): number;
-  segments(segments: number): LinearColorScaleComponent;
-  labelText(): unknown[] | undefined;
-  labelText(text: unknown[]): LinearColorScaleComponent;
-  labelFormat(): LabelFormatter;
-  labelFormat(format: LabelFormatter): LinearColorScaleComponent;
+  segments(segments: number): LinearColorScaleComponent<T>;
+  labelText(): T[] | undefined;
+  labelText(text: T[]): LinearColorScaleComponent<T>;
+  labelFormat(): LabelFormatter<T>;
+  labelFormat(format: LabelFormatter<T>): LinearColorScaleComponent<T>;
 }
 
-export default function legendColorLinear(): LinearColorScaleComponent {
+export default function legendColorLinear<T = number>(): LinearColorScaleComponent<T> {
   return (
-    component<LinearColorScaleComponent>()
+    component<LinearColorScaleComponent<T>>()
       .prop("scale")
       .prop("displayValues")
       .displayValues([])
@@ -128,7 +137,7 @@ export default function legendColorLinear(): LinearColorScaleComponent {
           .attr("cx", (_d, i) => i * props.width)
           .attr("cy", segHeight / 2)
           .attr("r", segHeight / 2)
-          .attr("fill", (d) => props.scale(d));
+          .attr("fill", (d) => colorToString(props.scale(d)));
 
         const labels = selection
           .selectAll(".sszvis-legend__label")

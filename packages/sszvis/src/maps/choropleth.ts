@@ -137,6 +137,7 @@ import {
 } from "d3";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import "../d3-selectgroup.js";
+import type { ColorValue } from "../types.js";
 import {
   GEO_KEY_DEFAULT,
   type MergedGeoDatum,
@@ -195,18 +196,14 @@ interface LakeRendererView extends ComponentBuilder<LakeRendererView> {
  */
 type BaseValue<T, R> = R | ((datum: T | undefined) => R);
 type HighlightValue<T, R> = R | ((datum: T) => R);
-type GeoStyleValue<R extends string | number> =
-  | R
-  | ValueFn<BaseType, GeoPermissibleObjects, R | null>;
+type GeoStyleValue<R> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null>;
 
 /**
  * The mesh renderer's own shape, which differs from GeoStyleValue in one way: an accessor there may
  * resolve to undefined as well as null, because the mesh reads either as "keep the default" rather
  * than passing it to d3. The lake overlay has no such guard, so lakePathColor keeps GeoStyleValue.
  */
-type MeshStyleValue<R extends string | number> =
-  | R
-  | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
+type MeshStyleValue<R> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
 
 /**
  * A handler as this component's event API delivers it: with the datum of the map entity the event
@@ -270,25 +267,25 @@ export interface ChoroplethComponent<T extends object = object> extends Componen
   defined(value: BaseValue<T, boolean>): ChoroplethComponent<T>;
   encodesData(): boolean | undefined;
   encodesData(value: boolean): ChoroplethComponent<T>;
-  fill(): (datum?: T) => string;
-  fill(value: BaseValue<T, string>): ChoroplethComponent<T>;
+  fill(): (datum?: T) => ColorValue;
+  fill(value: BaseValue<T, ColorValue>): ChoroplethComponent<T>;
   transitionColor(): boolean;
   transitionColor(value: boolean): ChoroplethComponent<T>;
   /** Delegated to the mesh renderer. */
-  borderColor(): MeshStyleValue<string>;
-  borderColor(value: MeshStyleValue<string>): ChoroplethComponent<T>;
+  borderColor(): MeshStyleValue<ColorValue>;
+  borderColor(value: MeshStyleValue<ColorValue>): ChoroplethComponent<T>;
   strokeWidth(): MeshStyleValue<number>;
   strokeWidth(value: MeshStyleValue<number>): ChoroplethComponent<T>;
   /** Delegated to the highlight renderer. */
   highlight(): (T | null | undefined)[];
   highlight(value: (T | null | undefined)[]): ChoroplethComponent<T>;
-  highlightStroke(): (datum: T) => string | null;
-  highlightStroke(value: HighlightValue<T, string | null>): ChoroplethComponent<T>;
+  highlightStroke(): (datum: T) => ColorValue | null;
+  highlightStroke(value: HighlightValue<T, ColorValue | null>): ChoroplethComponent<T>;
   highlightStrokeWidth(): (datum: T) => number | null;
   highlightStrokeWidth(value: HighlightValue<T, number | null>): ChoroplethComponent<T>;
   /** Delegated to the lake overlay renderer. */
-  lakePathColor(): GeoStyleValue<string> | undefined;
-  lakePathColor(value: GeoStyleValue<string>): ChoroplethComponent<T>;
+  lakePathColor(): GeoStyleValue<ColorValue> | undefined;
+  lakePathColor(value: GeoStyleValue<ColorValue>): ChoroplethComponent<T>;
   /**
    * Registers a handler for "over", "out" or "click", returning the component so it can be
    * chained; called with an event name alone it returns that handler. A handler is called with

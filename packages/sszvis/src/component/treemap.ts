@@ -27,13 +27,13 @@
 
 import { treemap as d3Treemap, type HierarchyNode, select, treemapSquarify } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { getAccessibleTextColor } from "../color.js";
+import { colorToString, getAccessibleTextColor } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import { nodeColor } from "../layout/hierarchy.js";
 import { defaultTransition } from "../transition.js";
-import type { StringAccessor } from "../types.js";
+import type { ColorValue, StringAccessor } from "../types.js";
 
 // TreemapNode represents a node in the treemap after D3 layout computation
 export type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
@@ -54,7 +54,7 @@ export type TreemapClickHandler<T = unknown> = (event: MouseEvent, node: Treemap
 type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
 
 type TreemapProps<T = unknown> = {
-  colorScale: (key: string) => string;
+  colorScale: (key: string) => ColorValue;
   transition?: boolean;
   containerWidth: number;
   containerHeight: number;
@@ -66,8 +66,8 @@ type TreemapProps<T = unknown> = {
 
 // Component interface with proper method overloads
 interface TreemapComponent<T = unknown> extends ComponentBuilder<TreemapComponent<T>> {
-  colorScale(): (key: string) => string;
-  colorScale(scale: string | ((key: string) => string)): TreemapComponent<T>;
+  colorScale(): (key: string) => ColorValue;
+  colorScale(scale: ColorValue | ((key: string) => ColorValue)): TreemapComponent<T>;
   transition(): boolean;
   transition(enabled: boolean): TreemapComponent<T>;
   containerWidth(): number;
@@ -158,7 +158,7 @@ export default function treemap<T = unknown>(): TreemapComponent<T> {
         .attr("width", (d) => d.x1 - d.x0)
         .attr("height", (d) => d.y1 - d.y0)
         .attr("fill", (d) => {
-          return nodeColor(d, props.colorScale);
+          return colorToString(nodeColor(d, props.colorScale));
         })
         .attr("stroke", "#ffffff")
         .attr("stroke-width", 1)

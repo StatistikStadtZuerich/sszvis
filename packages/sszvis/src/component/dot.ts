@@ -57,10 +57,12 @@
 
 import { select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { toFinite } from "../svgUtils/toFinite.js";
 import { defaultTransition, OWN_TRANSITION } from "../transition.js";
+import type { ColorValue } from "../types.js";
 
 /**
  * An accessor as d3 calls it, with the datum and its index. Declaring fewer parameters is
@@ -83,14 +85,14 @@ type StoredAccessor<T, R> = (datum?: T, index?: number) => R;
 type DotValue<T, R> = R | ValueAccessor<T, R>;
 
 /** A colour accessor may resolve to nothing, which leaves the attribute off. */
-type ColorValue<T> = DotValue<T, string | null | undefined>;
+type DotColorValue<T> = DotValue<T, ColorValue | null | undefined>;
 
 type DotProps<T> = {
   x: StoredAccessor<T, number> | undefined;
   y: StoredAccessor<T, number> | undefined;
   radius: StoredAccessor<T, number> | undefined;
-  stroke?: StoredAccessor<T, string | null | undefined>;
-  fill?: StoredAccessor<T, string | null | undefined>;
+  stroke?: StoredAccessor<T, ColorValue | null | undefined>;
+  fill?: StoredAccessor<T, ColorValue | null | undefined>;
   transition: boolean;
 };
 
@@ -104,10 +106,10 @@ export interface DotComponent<T = unknown> extends ComponentBuilder<DotComponent
   y<U = T>(value: DotValue<U, number>): DotComponent<T>;
   radius(): StoredAccessor<T, number> | undefined;
   radius<U = T>(value: DotValue<U, number>): DotComponent<T>;
-  stroke(): StoredAccessor<T, string | null | undefined> | undefined;
-  stroke<U = T>(value: ColorValue<U>): DotComponent<T>;
-  fill(): StoredAccessor<T, string | null | undefined> | undefined;
-  fill<U = T>(value: ColorValue<U>): DotComponent<T>;
+  stroke(): StoredAccessor<T, ColorValue | null | undefined> | undefined;
+  stroke<U = T>(value: DotColorValue<U>): DotComponent<T>;
+  fill(): StoredAccessor<T, ColorValue | null | undefined> | undefined;
+  fill<U = T>(value: DotColorValue<U>): DotComponent<T>;
   transition(): boolean;
   transition(enabled: boolean): DotComponent<T>;
 }
@@ -147,8 +149,8 @@ export default function dot<T = unknown>(): DotComponent<T> {
       // A negative r is invalid per the SVG spec and drops the circle, so it is clamped
       // rather than passed on.
       const rAt = (datum: T, index: number) => Math.max(0, toFinite(radiusProp(datum, index)));
-      const strokeAt = (datum: T, index: number) => props.stroke?.(datum, index) ?? null;
-      const fillAt = (datum: T, index: number) => props.fill?.(datum, index) ?? null;
+      const strokeAt = (datum: T, index: number) => colorToString(props.stroke?.(datum, index));
+      const fillAt = (datum: T, index: number) => colorToString(props.fill?.(datum, index));
 
       // Entering circles are given their geometry on the join, so they are in place before
       // any transition starts. The geometry is then applied exactly once more - to the

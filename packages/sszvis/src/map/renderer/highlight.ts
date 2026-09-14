@@ -126,9 +126,11 @@
 
 import type { ExtendedFeature, ExtendedFeatureCollection, GeoPath } from "d3";
 import { select } from "d3";
+import { colorToString } from "../../color.js";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import * as logger from "../../logger.js";
+import type { ColorValue } from "../../types.js";
 import { GEO_KEY_DEFAULT, toLookupKey } from "../mapUtils.js";
 
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
@@ -186,7 +188,7 @@ type HighlightProps<T> = {
   geoJson: ExtendedFeatureCollection;
   mapPath: HighlightPath;
   highlight: (T | null | undefined)[];
-  highlightStroke: StoredHighlightValue<T, string | null>;
+  highlightStroke: StoredHighlightValue<T, ColorValue | null>;
   highlightStrokeWidth: StoredHighlightValue<T, number | null>;
 };
 
@@ -203,8 +205,10 @@ export interface MapRendererHighlightComponent<T = unknown> extends ComponentBui
   mapPath(value: GeoPath | HighlightPath): MapRendererHighlightComponent<T>;
   highlight(): (T | null | undefined)[];
   highlight(value: (T | null | undefined)[]): MapRendererHighlightComponent<T>;
-  highlightStroke(): StoredHighlightValue<T, string | null>;
-  highlightStroke<U = T>(value: HighlightValue<U, string | null>): MapRendererHighlightComponent<T>;
+  highlightStroke(): StoredHighlightValue<T, ColorValue | null>;
+  highlightStroke<U = T>(
+    value: HighlightValue<U, ColorValue | null>,
+  ): MapRendererHighlightComponent<T>;
   highlightStrokeWidth(): StoredHighlightValue<T, number | null>;
   highlightStrokeWidth<U = T>(
     value: HighlightValue<U, number | null>,
@@ -328,7 +332,7 @@ export default function mapRendererHighlight<T = unknown>(): MapRendererHighligh
         .classed("sszvis-map__highlight", true)
         .attr(KEY_ATTRIBUTE, props.key)
         .attr("d", (d) => props.mapPath(d.geoJson))
-        .style("stroke", (d) => props.highlightStroke(d.datum))
+        .style("stroke", (d) => colorToString(props.highlightStroke(d.datum)))
         .style("stroke-width", (d) => props.highlightStrokeWidth(d.datum));
     });
 }

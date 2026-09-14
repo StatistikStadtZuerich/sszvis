@@ -106,13 +106,16 @@ import {
   partition,
   scaleLinear,
   select,
+  type ValueFn,
 } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
+import type { ColorValue } from "../types.js";
 
 const TWO_PI = 2 * Math.PI;
 
@@ -155,10 +158,10 @@ export type SunburstScale = (value: number) => number;
  * fill is called with a node's key, not with the node, and only for the segments of the
  * innermost ring - every ring further out derives its colour from its parent's.
  */
-export type FillAccessor = (key: string) => string;
+export type FillAccessor = (key: string) => ColorValue;
 
 /** fill is wrapped in fn.functor on set, so a constant colour is accepted as well. */
-export type FillValue = string | FillAccessor;
+export type FillValue = ColorValue | FillAccessor;
 
 /**
  * stroke accepts a constant or an accessor and is not normalised on set - the accessor is
@@ -171,8 +174,8 @@ export type StrokeAccessor<T = unknown> = (
   d: PositionedNode<T>,
   i: number,
   group: ArrayLike<SVGPathElement>,
-) => string | null;
-export type StrokeValue<T = unknown> = string | StrokeAccessor<T>;
+) => ColorValue | null;
+export type StrokeValue<T = unknown> = ColorValue | StrokeAccessor<T>;
 
 /**
  * The props as the render reads them. radiusScale, centerRadius and fill are typed as present
@@ -346,10 +349,10 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
       // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
       function getColorRecursive(node: SunburstNode<T>): HSLColor {
         if (!node.parent) {
-          return hsl(props.fill(colorKey(node)));
+          return hsl(String(props.fill(colorKey(node))));
         } else if (isRoot(node.parent)) {
           // Use the color scale
-          return hsl(props.fill(colorKey(node)));
+          return hsl(String(props.fill(colorKey(node))));
         } else {
           // Recurse up the tree and adjust the lightness value
           // Lighten by 15% of what is left between the parent's lightness and white,
@@ -367,6 +370,19 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
       // d3's attr only takes a primitive; setAttribute would have coerced it the same way.
       const fillColor = (node: SunburstNode<T>): string =>
         isRoot(node) ? "transparent" : String(getColorRecursive(node));
+
+      // The stroke prop may hold one of the library's colour objects, so it is resolved and
+      // then rendered as the string d3 writes - the same conversion d3 would do itself.
+      const strokeResolve = fn.valueFn<SVGPathElement, PositionedNode<T>, ColorValue | null>(
+        props.stroke,
+      );
+      const strokeColor: ValueFn<SVGPathElement, PositionedNode<T>, string | null> = function (
+        datum,
+        index,
+        groups,
+      ) {
+        return colorToString(strokeResolve.call(this, datum, index, groups));
+      };
 
       const arcGen = arc<PositionedNode<T>>()
         .startAngle(startAngle)
@@ -386,7 +402,7 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
           enter
             .append("path")
             .attr("class", "sszvis-sunburst-arc")
-            .attr("stroke", fn.valueFn(props.stroke))
+            .attr("stroke", strokeColor)
             .attr("fill", fillColor),
         );
 
@@ -394,7 +410,7 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
       // cancel this one.
       const arcTransition = arcs.transition(defaultTransition());
 
-      arcTransition.attr("stroke", fn.valueFn(props.stroke)).attr("fill", fillColor);
+      arcTransition.attr("stroke", strokeColor).attr("fill", fillColor);
 
       arcTransition.attrTween("d", (d) => {
         const x0Interp = interpolate(d.x0, d._x0);

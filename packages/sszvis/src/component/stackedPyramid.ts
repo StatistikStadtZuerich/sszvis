@@ -248,6 +248,7 @@ import { cascade } from "../cascade.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
+import type { ColorValue } from "../types.js";
 import bar, { type BarComponent } from "./bar.js";
 
 /* Constants
@@ -467,7 +468,7 @@ type StoredHeight<T, S extends string | number> = (
 ) => number;
 
 /** How barFill reads back. It is called with the slice's `data`, so it reads a source row. */
-type StoredFill<T> = (datum: T, index?: number) => string | undefined;
+type StoredFill<T> = (datum: T, index?: number) => ColorValue | undefined;
 
 /** Pulls one side's series out of the datum bound to the chart layer. */
 type SideAccessor<T, S extends string | number> = (
@@ -501,7 +502,7 @@ type PyramidValue<A, R> = R | ((value: A, index: number) => R);
  * standing for a series the row has no observation for - is zero-width, so the accessor is not
  * called for it and never has to handle a missing row.
  */
-type FillValue<U> = string | undefined | ((datum: U) => string | undefined);
+type FillValue<U> = ColorValue | undefined | ((datum: U) => ColorValue | undefined);
 
 type StackedPyramidProps<T, S extends string | number> = {
   barHeight: StoredHeight<T, S>;

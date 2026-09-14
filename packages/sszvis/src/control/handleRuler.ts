@@ -39,11 +39,12 @@
  */
 
 import { type NumberValue, select } from "d3";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
-import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types.js";
+import type { BooleanAccessor, ColorValue, NumberAccessor, StringAccessor } from "../types.js";
 
 /** The gap kept between the bottom of the rule and props.bottom. */
 const RULE_BOTTOM_INSET = 4;
@@ -75,7 +76,7 @@ interface HandleRulerProps<T> {
   bottom: number;
   /** Not functor-wrapped: a plain string label is passed straight to d3's .html(). */
   label: StringAccessor<T>;
-  color?: string | ((d: T) => string);
+  color?: ColorValue | ((d: T) => ColorValue);
   flip: (d: T) => boolean;
 }
 
@@ -92,8 +93,8 @@ export interface HandleRulerComponent<T = unknown> extends ComponentBuilder<
   bottom(value: number): HandleRulerComponent<T>;
   label(): StringAccessor<T>;
   label(accessor: StringAccessor<T>): HandleRulerComponent<T>;
-  color(): string | ((d: T) => string) | undefined;
-  color(accessor: StringAccessor<T>): HandleRulerComponent<T>;
+  color(): ColorValue | ((d: T) => ColorValue) | undefined;
+  color(accessor: ColorValue | ((d: T) => ColorValue)): HandleRulerComponent<T>;
   flip(): (d: T) => boolean;
   flip(accessor: BooleanAccessor<T>): HandleRulerComponent<T>;
 }
@@ -182,9 +183,11 @@ export default function handleRuler<T = unknown>(): HandleRulerComponent<T> {
         .attr("cx", crispX)
         .attr("cy", crispY)
         .attr("r", DOT_RADIUS)
-        // `?? null` only to satisfy d3's attr signature: it treats null and undefined
-        // alike (`value == null` removes the attribute), so this matches the original.
-        .attr("fill", props.color ?? null);
+        // Rendered to a string for d3's attr signature, which accepts no colour object;
+        // an unset color stays nullish, which d3 reads as "remove the attribute".
+        .attr("fill", (d: T) =>
+          colorToString(typeof props.color === "function" ? props.color(d) : props.color),
+        );
 
       selection
         .selectAll<SVGTextElement, T>(".sszvis-ruler__label-outline")

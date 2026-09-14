@@ -94,6 +94,7 @@ import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
+import type { ColorValue } from "../types.js";
 import bar from "./bar.js";
 
 /* Constants
@@ -138,7 +139,7 @@ type PyramidProps<T, D> = {
   barHeight: StoredAccessor<D, number>;
   barWidth: StoredAccessor<D, number>;
   barPosition: StoredAccessor<D, number>;
-  barFill: StoredAccessor<D, string | undefined>;
+  barFill: StoredAccessor<D, ColorValue | undefined>;
   tooltipAnchor: (number | string)[];
   leftAccessor: SideAccessor<T, D>;
   rightAccessor: SideAccessor<T, D>;
@@ -161,8 +162,8 @@ export interface PyramidComponent<T = unknown, D = unknown> extends ComponentBui
   barWidth<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
   barPosition(): StoredAccessor<D, number>;
   barPosition<V = D>(value: PyramidValue<V, number>): PyramidComponent<T, D>;
-  barFill(): StoredAccessor<D, string | undefined>;
-  barFill<V = D>(value: PyramidValue<V, string | undefined>): PyramidComponent<T, D>;
+  barFill(): StoredAccessor<D, ColorValue | undefined>;
+  barFill<V = D>(value: PyramidValue<V, ColorValue | undefined>): PyramidComponent<T, D>;
   tooltipAnchor(): (number | string)[];
   tooltipAnchor(anchor: (number | string)[]): PyramidComponent<T, D>;
   leftAccessor(): SideAccessor<T, D>;

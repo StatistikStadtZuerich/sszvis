@@ -56,10 +56,12 @@
 
 import { select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { toFinite } from "../svgUtils/toFinite.js";
 import { defaultTransition, OWN_TRANSITION } from "../transition.js";
+import type { ColorValue } from "../types.js";
 
 /**
  * Every visual property is wrapped by fn.functor on set, so it is always stored as a
@@ -73,7 +75,7 @@ type ValueAccessor<T> = (datum?: T, index?: number) => unknown;
  * nothing, or because the property was never set at all, in which case the prop itself is
  * undefined. d3 removes the attribute for null and undefined alike.
  */
-type ColorAccessor<T> = (datum?: T, index?: number) => string | null | undefined;
+type ColorAccessor<T> = (datum?: T, index?: number) => ColorValue | null | undefined;
 
 type BarProps<T> = {
   x: ValueAccessor<T>;
@@ -104,9 +106,9 @@ export interface BarComponent<T = unknown> extends ComponentBuilder<BarComponent
   height(): ValueAccessor<T>;
   height<U = T>(value: BarValue<U, number>): BarComponent<T>;
   fill(): ColorAccessor<T> | undefined;
-  fill<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
+  fill<U = T>(value: BarValue<U, ColorValue | undefined>): BarComponent<T>;
   stroke(): ColorAccessor<T> | undefined;
-  stroke<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
+  stroke<U = T>(value: BarValue<U, ColorValue | undefined>): BarComponent<T>;
   centerTooltip(): boolean | undefined;
   centerTooltip(center: boolean): BarComponent<T>;
   tooltipAnchor(): (number | string)[] | undefined;
@@ -135,8 +137,8 @@ export default function bar<T = unknown>(): BarComponent<T> {
       const yAt = (datum: T, index: number) => toFinite(props.y(datum, index));
       const wAt = (datum: T, index: number) => toFinite(props.width(datum, index));
       const hAt = (datum: T, index: number) => toFinite(props.height(datum, index));
-      const fillAt = (datum: T, index: number) => props.fill?.(datum, index) ?? null;
-      const strokeAt = (datum: T, index: number) => props.stroke?.(datum, index) ?? null;
+      const fillAt = (datum: T, index: number) => colorToString(props.fill?.(datum, index));
+      const strokeAt = (datum: T, index: number) => colorToString(props.stroke?.(datum, index));
 
       // Entering bars are given their geometry on the join, so they are in place before any
       // transition starts. The geometry is then applied exactly once more - to the transition

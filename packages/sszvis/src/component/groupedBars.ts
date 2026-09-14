@@ -85,11 +85,13 @@
 
 import { range, type ScaleBand, scaleBand, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { toFinite } from "../svgUtils/toFinite.js";
 import translateString from "../svgUtils/translateString.js";
 import { defaultTransition, OWN_TRANSITION } from "../transition.js";
+import type { ColorValue } from "../types.js";
 
 type GroupedBarsProps<T = unknown> = {
   groupScale: (datum: T) => number;
@@ -101,8 +103,8 @@ type GroupedBarsProps<T = unknown> = {
   y: (datum: T, index: number) => number;
   width: number | ((datum: T, index: number) => number);
   height: number | ((datum: T, index: number) => number);
-  fill: string | ((datum: T, index: number) => string);
-  stroke?: string | ((datum: T, index: number) => string);
+  fill: ColorValue | ((datum: T, index: number) => ColorValue);
+  stroke?: ColorValue | ((datum: T, index: number) => ColorValue);
   defined: (datum: T) => boolean;
   transition: boolean;
 };
@@ -277,13 +279,13 @@ function createGroupedBarsComponent<T = unknown>(
         );
       };
       const fillAt = function (this: SVGRectElement, d: T) {
-        return typeof props.fill === "function" ? props.fill(d, indexOfRect(this)) : props.fill;
+        return colorToString(
+          typeof props.fill === "function" ? props.fill(d, indexOfRect(this)) : props.fill,
+        );
       };
       const strokeAt = function (this: SVGRectElement, d: T) {
-        return (
-          (typeof props.stroke === "function"
-            ? props.stroke(d, indexOfRect(this))
-            : props.stroke) ?? null
+        return colorToString(
+          typeof props.stroke === "function" ? props.stroke(d, indexOfRect(this)) : props.stroke,
         );
       };
       const missingTransformAt = function (this: SVGGElement, d: T) {

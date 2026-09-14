@@ -4,7 +4,7 @@
  * @module sszvis/types
  */
 
-import type { BaseType, NumberValue, Selection } from "d3";
+import type { BaseType, HSLColor, LabColor, NumberValue, RGBColor, Selection } from "d3";
 
 /**
  * The one sanctioned `any` in this codebase. Use it where a type genuinely cannot be
@@ -16,6 +16,18 @@ import type { BaseType, NumberValue, Selection } from "d3";
  */
 // biome-ignore lint/suspicious/noExplicitAny: the alias exists so that every other `any` can be banned
 export type $IntentionalAny = any;
+
+/**
+ * A colour a component will accept: a CSS colour string, or one of the colour objects the
+ * library's own scales and colour helpers produce.
+ *
+ * `scaleQual12()` and the other scales in `color.ts` return d3 `LabColor` objects rather
+ * than strings, so the idiomatic `.fill((d) => colorScale(key(d)))` has to be describable.
+ * `slightlyDarker` and `muchDarker` return `HSLColor`, and `rgb()` conversions return
+ * `RGBColor`, so those belong here too. d3 stringifies such an object when it writes an
+ * attribute, which is what made this work at runtime all along.
+ */
+export type ColorValue = string | LabColor | HSLColor | RGBColor;
 
 /**
  * Generic type for SVG element selections with sensible defaults

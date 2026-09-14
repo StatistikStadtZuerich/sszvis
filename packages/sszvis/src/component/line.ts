@@ -68,9 +68,11 @@
  */
 
 import { line as d3Line, select, type ValueFn } from "d3";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition, OWN_TRANSITION } from "../transition.js";
+import type { ColorValue } from "../types.js";
 
 /**
  * Dimension accessors are handed to d3.line, which calls them with a single point, that
@@ -103,7 +105,7 @@ type LineProps<P, L> = {
   defined?: PointAccessor<P, boolean>;
   key: LineAccessor<L, string | number>;
   valuesAccessor: ValuesAccessor<L, P>;
-  stroke?: StyleValue<L, string>;
+  stroke?: StyleValue<L, ColorValue>;
   strokeWidth?: StyleValue<L, number>;
   transition: boolean;
 };
@@ -124,8 +126,8 @@ export interface LineComponent<P = unknown, L = unknown> extends ComponentBuilde
   key<M = L>(accessor: LineAccessor<M, string | number>): LineComponent<P, L>;
   valuesAccessor(): ValuesAccessor<L, P>;
   valuesAccessor<M = L, Q = P>(accessor: ValuesAccessor<M, Q>): LineComponent<P, L>;
-  stroke(): StyleValue<L, string> | undefined;
-  stroke<M = L>(value: StyleValue<M, string>): LineComponent<P, L>;
+  stroke(): StyleValue<L, ColorValue> | undefined;
+  stroke<M = L>(value: StyleValue<M, ColorValue>): LineComponent<P, L>;
   strokeWidth(): StyleValue<L, number> | undefined;
   strokeWidth<M = L>(value: StyleValue<M, number>): LineComponent<P, L>;
   transition(): boolean;
@@ -213,7 +215,12 @@ export default function line<P = unknown, L = unknown>(): LineComponent<P, L> {
         const pathData: ValueFn<SVGPathElement, L, string | null> = function (datum, index) {
           return line(props.valuesAccessor.call(this, datum, index));
         };
-        const stroke = fn.valueFn(props.stroke ?? null);
+        // The prop may hold one of the library's colour objects, so it is resolved first and
+        // then rendered as the string d3 writes - the same conversion d3 would do itself.
+        const strokeValue = fn.valueFn<SVGPathElement, L, ColorValue | null>(props.stroke ?? null);
+        const stroke: ValueFn<SVGPathElement, L, string | null> = function (datum, index, groups) {
+          return colorToString(strokeValue.call(this, datum, index, groups));
+        };
         const strokeWidth = fn.valueFn(props.strokeWidth ?? null);
 
         const path = selection
