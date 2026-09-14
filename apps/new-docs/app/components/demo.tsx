@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { typefaceBody } from "~/components/tokens/typeface";
+import { typefaceMeta } from "~/components/tokens/typeface";
 
 /**
  * Placeholder for the small runnable HTML snippets the old colors and tooltips
@@ -10,7 +10,7 @@ import { typefaceBody } from "~/components/tokens/typeface";
  */
 export const Demo = ({ children }: { readonly children?: ReactNode }) => (
   <div className="my-6 rounded-lg border border-dashed bg-muted/30 p-4">
-    <div className={typefaceBody("mb-2 text-muted-foreground text-sm")}>
+    <div className={typefaceMeta("mb-2 text-muted-foreground")}>
       Live demo coming soon — the snippet below is what it renders.
     </div>
     {children}

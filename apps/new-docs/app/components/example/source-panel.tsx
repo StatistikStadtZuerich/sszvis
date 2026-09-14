@@ -5,6 +5,7 @@ import { CopyButton } from "~/components/copy-button";
 import { JavaScriptIcon, TypeScriptIcon } from "~/components/ui/icons";
 import { Button } from "~/components/ui/button";
 import { ToggleButton, ToggleButtonGroup } from "~/components/ui/toggle-button-group";
+import { typefaceCode, typefaceCodeLabel, typefaceMeta } from "~/components/tokens/typeface";
 import { cn } from "~/lib/utils";
 
 export type { Sources };
@@ -99,7 +100,7 @@ export const SourcePanel = ({
         <span className="flex-1" />
 
         {expanded && (
-          <span className="pr-1 font-mono text-[0.7rem] text-muted-foreground">
+          <span className={typefaceCodeLabel("pr-1 text-muted-foreground")}>
             {VIEWS[active as keyof typeof VIEWS]?.filename ?? active}
           </span>
         )}
@@ -121,7 +122,9 @@ export const SourcePanel = ({
       <div id={bodyId} hidden={!expanded} className="group relative min-w-0">
         {source === undefined ? (
           <div
-            className="flex items-center gap-2 bg-code-block p-4 text-muted-foreground text-xs"
+            className={typefaceMeta(
+              "flex items-center gap-2 bg-code-block p-4 text-muted-foreground",
+            )}
             role="status"
           >
             <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />
@@ -129,12 +132,14 @@ export const SourcePanel = ({
           </div>
         ) : source.html === null ? (
           // No grammar for this file type - show it as plain text
-          <pre className="max-h-104 overflow-auto bg-code-block p-4 font-mono text-[0.8rem]">
+          <pre className={typefaceCode("max-h-104 overflow-auto bg-code-block p-4")}>
             {source.raw}
           </pre>
         ) : (
           <div
-            className="max-h-104 overflow-auto bg-code-block p-4 font-mono text-[0.8rem] [&_pre]:bg-transparent!"
+            className={typefaceCode(
+              "max-h-104 overflow-auto bg-code-block p-4 [&_pre]:bg-transparent!",
+            )}
             dangerouslySetInnerHTML={{ __html: source.html }}
           />
         )}
@@ -144,7 +149,7 @@ export const SourcePanel = ({
       </div>
 
       {expanded && source?.lines !== undefined && (
-        <p className="border-border border-t px-4 py-2 text-muted-foreground text-xs">
+        <p className={typefaceMeta("border-border border-t px-4 py-2 text-muted-foreground")}>
           Showing the first lines of {source.lines.toLocaleString()}.{" "}
           <a href={source.url} download className="underline hover:text-foreground">
             Open the full file

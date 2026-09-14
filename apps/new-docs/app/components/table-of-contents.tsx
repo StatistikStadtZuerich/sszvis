@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "~/component
 import { NavLink } from "~/components/ui/nav-link";
 import { useActiveHeading } from "~/hooks/use-active-heading";
 import type { TOCItem } from "~/lib/remark-toc-export";
+import { typefaceMeta } from "~/components/tokens/typeface";
 import { cn } from "~/lib/utils";
 
 interface TableOfContentsProps {
@@ -25,9 +26,7 @@ export const TableOfContents = ({ toc, desktopOnly, maxDepth }: TableOfContentsP
   if (desktopOnly) {
     return (
       <nav className="hidden xl:block fixed top-16 right-8 max-h-[calc(100vh-4rem)] w-48 overflow-y-auto scrollbar-none">
-        <p className="mb-3 text-xs font-semibold tracking-[-0.01em] text-foreground/70">
-          On this page
-        </p>
+        <p className={typefaceMeta("mb-3 text-foreground/70")}>On this page</p>
         <TOCList toc={visible} activeId={activeId} />
       </nav>
     );
@@ -45,7 +44,7 @@ const MobileTOC = ({ toc, activeId }: { toc: TOCItem[]; activeId: string }) => {
       onOpenChange={setOpen}
       className="xl:hidden mb-8 rounded-xl border bg-card/70 px-4 py-3 shadow-sm shadow-foreground/[0.03]"
     >
-      <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-semibold">
+      <CollapsibleTrigger className={typefaceMeta("flex w-full items-center justify-between")}>
         On this page
         <ChevronRight className={cn("h-4 w-4 transition-transform", open && "rotate-90")} />
       </CollapsibleTrigger>
@@ -110,7 +109,7 @@ const TOCList = ({
   const tree = useMemo(() => buildTree(toc), [toc]);
 
   return (
-    <ul className="text-sm">
+    <ul>
       {tree.map((node) => (
         <TOCNodeItem key={node.item.id} node={node} activeId={activeId} onClickLink={handleClick} />
       ))}

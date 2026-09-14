@@ -17,15 +17,18 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "~/components/ui/sidebar";
+import { typefaceBody, typefaceWordmark } from "~/components/tokens/typeface";
 import { cn } from "~/lib/utils";
 import { type NavEntry, navigation } from "~/nav.config";
 
 const REPO_URL = "https://github.com/StatistikStadtZuerich/sszvis";
 
 const sectionLabelClassName = (isCurrent: boolean) =>
-  cn(
-    "h-auto rounded-none px-10 pt-4 pb-4 font-normal text-base leading-[1.44] normal-case tracking-normal data-active:bg-transparent data-active:font-normal",
-    isCurrent ? "text-primary" : "text-sidebar-foreground",
+  typefaceBody(
+    cn(
+      "h-auto rounded-none px-10 pt-4 pb-4 font-normal normal-case data-active:bg-transparent data-active:font-normal",
+      isCurrent ? "text-primary" : "text-sidebar-foreground",
+    ),
   );
 
 const NavSectionGroup = ({
@@ -50,7 +53,7 @@ const NavSectionGroup = ({
             isCurrentSection ? "text-primary" : "text-sidebar-foreground",
           )}
         >
-          <span className="font-normal text-base leading-[1.44]">{section.title}</span>
+          <span className={typefaceBody("font-normal")}>{section.title}</span>
           <ChevronRight className="size-4 shrink-0 transition-transform group-data-panel-open/trigger:rotate-90" />
         </CollapsibleTrigger>
         <CollapsibleContent>
@@ -69,7 +72,9 @@ const NavSectionGroup = ({
                         />
                       }
                       isActive={isActive}
-                      className="h-auto rounded-none py-2 pr-6 pl-15 text-base leading-[1.44] data-active:bg-transparent data-active:font-normal"
+                      className={typefaceBody(
+                        "h-auto rounded-none py-2 pr-6 pl-15 data-active:bg-transparent data-active:font-normal",
+                      )}
                     >
                       {item.label}
                     </SidebarMenuButton>
@@ -99,9 +104,7 @@ export const AppSidebar = () => {
           onClick={closeMobileSidebar}
           className="block px-10 pt-12 pb-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
-          <span className="block max-w-43.5 font-heading font-bold text-[1.2rem] text-primary leading-[1.2]">
-            SSZ Visualization Library
-          </span>
+          <span className={typefaceWordmark("block max-w-43.5")}>SSZ Visualization Library</span>
         </Link>
       </SidebarHeader>
 

@@ -18,6 +18,7 @@ import { TableOfContents } from "~/components/table-of-contents";
 import { contentPages } from "~/content-pages";
 import { ThemeToggle } from "~/components/theme-toggle";
 import { proseComponents } from "~/components/tokens/prose-components";
+import { typefaceWordmark } from "~/components/tokens/typeface";
 import { buttonVariants } from "~/components/ui/button";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "~/components/ui/sidebar";
 import type { TOCItem } from "~/lib/remark-toc-export";
@@ -142,7 +143,7 @@ const SiteHeader = () => {
     <header className="sticky top-0 z-10 flex items-center gap-3 border-border/60 border-b bg-background/85 px-5 py-3.5 backdrop-blur-xl sm:px-8">
       <SidebarTrigger className="size-11 md:size-8" />
       {!sidebarVisible && (
-        <Link to="/" className="font-heading text-base font-semibold text-primary">
+        <Link to="/" className={typefaceWordmark()}>
           sszvis
         </Link>
       )}

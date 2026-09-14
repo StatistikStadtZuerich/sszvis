@@ -6,7 +6,7 @@ import { Button } from "~/components/ui/button";
 import { useAvailableWidth } from "~/hooks/use-available-width";
 
 import { examples } from "virtual:examples";
-import { typefaceBody } from "~/components/tokens/typeface";
+import { typefaceCodeLabel, typefaceMeta } from "~/components/tokens/typeface";
 
 import {
   DEFAULT_WIDTH,
@@ -36,8 +36,8 @@ export const Example = ({ id }: { readonly id: string }) => {
 
 const PendingExample = ({ id }: { readonly id: string }) => (
   <figure className="my-8 rounded-lg border border-dashed bg-muted/30 px-5 py-6 text-center">
-    <div className="font-mono text-foreground text-sm">{id}</div>
-    <figcaption className={typefaceBody("mt-2 text-muted-foreground text-sm")}>
+    <div className={typefaceCodeLabel("text-foreground")}>{id}</div>
+    <figcaption className={typefaceMeta("mt-2 text-muted-foreground")}>
       Not ported yet — add <code>examples/{id}/</code> and this becomes the live chart.
     </figcaption>
   </figure>
@@ -121,7 +121,7 @@ const ExamplePreview = ({
         >
           <figure className="@container overflow-hidden rounded-lg border border-border">
             <figcaption className="flex flex-wrap items-center justify-between gap-2 border-border border-b bg-muted/40 px-2 py-1.5">
-              <span className="pl-1.5 text-muted-foreground text-xs tabular-nums">
+              <span className={typefaceMeta("pl-1.5 text-muted-foreground tabular-nums")}>
                 {title}
                 {width !== null && <span className="ml-2">{Math.round(width)}px</span>}
               </span>
@@ -151,7 +151,9 @@ const ExamplePreview = ({
               />
               {!ready && (
                 <div
-                  className="absolute inset-0 flex items-center justify-center gap-2 bg-white text-muted-foreground text-xs"
+                  className={typefaceMeta(
+                    "absolute inset-0 flex items-center justify-center gap-2 bg-white text-muted-foreground",
+                  )}
                   role="status"
                 >
                   <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />
