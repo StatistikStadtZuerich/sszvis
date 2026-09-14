@@ -122,19 +122,23 @@ interface GroupedBarsComponent<T = unknown> extends ComponentBuilder<GroupedBars
   groupHeight(height: number): GroupedBarsComponent<T>;
   groupSpace(): number;
   groupSpace(space: number): GroupedBarsComponent<T>;
-  x(): (datum: T, index: number) => number;
-  x<U = T>(accessor: (datum: U, index: number) => number): GroupedBarsComponent<T>;
-  y(): (datum: T, index: number) => number;
-  y<U = T>(accessor: (datum: U, index: number) => number): GroupedBarsComponent<T>;
+  // Functorized like width and height, so a constant is as valid as an accessor - the
+  // horizontal config requires x, and a horizontal bar chart's x is normally just 0.
+  x(): number | ((datum: T, index: number) => number);
+  x<U = T>(value: number | ((datum: U, index: number) => number)): GroupedBarsComponent<T>;
+  y(): number | ((datum: T, index: number) => number);
+  y<U = T>(value: number | ((datum: U, index: number) => number)): GroupedBarsComponent<T>;
   width(): number | ((datum: T, index: number) => number);
   width<U = T>(value: number | ((datum: U, index: number) => number)): GroupedBarsComponent<T>;
   height(): number | ((datum: T, index: number) => number);
   height<U = T>(value: number | ((datum: U, index: number) => number)): GroupedBarsComponent<T>;
-  fill(): string | ((datum: T, index: number) => string);
-  fill<U = T>(value: string | ((datum: U, index: number) => string)): GroupedBarsComponent<T>;
-  stroke(): string | ((datum: T, index: number) => string) | undefined;
+  fill(): ColorValue | ((datum: T, index: number) => ColorValue);
+  fill<U = T>(
+    value: ColorValue | ((datum: U, index: number) => ColorValue),
+  ): GroupedBarsComponent<T>;
+  stroke(): ColorValue | ((datum: T, index: number) => ColorValue) | undefined;
   stroke<U = T>(
-    value: string | ((datum: U, index: number) => string) | undefined,
+    value: ColorValue | ((datum: U, index: number) => ColorValue) | undefined,
   ): GroupedBarsComponent<T>;
   defined(): (datum: T) => boolean;
   defined<U = T>(predicate: boolean | ((datum: U) => boolean)): GroupedBarsComponent<T>;
