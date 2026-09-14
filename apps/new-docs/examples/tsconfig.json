@@ -1,6 +1,16 @@
+/*
+ * Type-checks the examples against the library's real published types, which
+ * makes them the integration test for `packages/sszvis`. Run as part of
+ * `pnpm type-check`; the types it checks against come from the sszvis build
+ * output, so turbo.json makes this task depend on `sszvis#build`.
+ */
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    /*
+     * Examples are plain scripts with no imports, so without this every file
+     * shares one global scope and each `type State` collides with the next.
+     */
     "moduleDetection": "force"
   },
   "include": ["**/*"]
