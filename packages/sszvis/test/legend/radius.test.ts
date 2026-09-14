@@ -113,6 +113,57 @@ describe("legend/radius", () => {
     ]);
   });
 
+  test("should hand tickFormat the tick value and its index", () => {
+    const calls: Array<[unknown, number]> = [];
+    render(
+      legendRadius()
+        .scale(linear())
+        .tickValues([100, 50, 25])
+        .tickFormat((d, i) => {
+          calls.push([d, i]);
+          return String(d);
+        }),
+    );
+    expect(calls).toEqual([
+      [100, 0],
+      [50, 1],
+      [25, 2],
+    ]);
+    // the values arrive as numbers, not stringified or coerced away from their type
+    expect(calls.map(([d]) => typeof d)).toEqual(["number", "number", "number"]);
+  });
+
+  test("should give tickFormat d3's nodes argument and the label element as `this`", () => {
+    // No `this: unknown` annotation and no optional chaining on nodes: the formatter
+    // type declares both, so this test only compiles while that contract holds.
+    const seen: Array<{ node: SVGTextElement; count: number; self: SVGTextElement }> = [];
+    const node = render(
+      legendRadius()
+        .scale(linear())
+        .tickValues([100, 50])
+        .tickFormat(function (d, _i, nodes) {
+          seen.push({ node: nodes[0] as SVGTextElement, count: nodes.length, self: this });
+          return String(d);
+        }),
+    );
+    const labels = [...node.querySelectorAll("text.sszvis-legend__label")];
+    expect(seen.map((s) => s.count)).toEqual([2, 2]);
+    expect(seen.map((s) => s.node)).toEqual([labels[0], labels[0]]);
+    // d3 binds `this` to the element being rendered
+    expect(seen.map((s) => s.self)).toEqual(labels);
+  });
+
+  test("should render exactly what tickFormat returns, including non-string returns", () => {
+    const node = render(
+      legendRadius()
+        .scale(linear())
+        .tickValues([100, 50])
+        // a numeric return is stringified by d3 rather than dropped
+        .tickFormat((d, i) => d / 2 + i),
+    );
+    expect([...node.querySelectorAll("text")].map((t) => t.textContent)).toEqual(["50", "26"]);
+  });
+
   test("should render one circle, line and label per tick", () => {
     const node = render(legendRadius().scale(linear()).tickValues([100, 75, 50, 25]));
     expect(node.querySelectorAll("circle").length).toBe(4);
