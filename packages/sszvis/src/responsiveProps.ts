@@ -124,9 +124,10 @@ export function responsiveProps(): ResponsivePropsInstance<NoProps> {
       return Object.keys(propsConfig).reduce(
         (memo, propKey) => {
           const fallback = propsConfig[propKey]._;
-          if (fn.defined(fallback)) {
-            memo[propKey] = fallback(0);
-          }
+          // Always write the key, even for a propSpec with no '_' (only reachable from
+          // untyped callers). The result type declares every configured prop as present,
+          // so silently omitting one would make `props.foo.bar` throw on a typed read.
+          memo[propKey] = fn.defined(fallback) ? fallback(0) : undefined;
           return memo;
         },
         {} as Record<string, unknown>,
@@ -140,14 +141,17 @@ export function responsiveProps(): ResponsivePropsInstance<NoProps> {
       // Finds out which breakpoints the provided measurements match up with
       const matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
 
-      // Validate the propSpec for the current propKey
+      // Validate the propSpec for the current propKey. An invalid spec is a misconfiguration,
+      // so warn loudly - but keep resolving instead of dropping the key: the result type
+      // declares every configured prop as present, and an absent key turns a developer's
+      // typo into a TypeError at the point of use rather than a visible warning here.
+      // Unknown breakpoint names simply never match, so resolution lands on '_' below.
       if (!validatePropSpec(propSpec, breakpointSpec)) {
         logger.warn(
           "ResponsiveProps - invalid propSpec for " +
             propKey +
             ". Make sure you define the '_' fallback and that all breakpoint names are valid.",
         );
-        return memo;
       }
 
       // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints

@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, test } from "vitest";
+import { describe, expect, expectTypeOf, test, vi } from "vitest";
 import { measureDimensions } from "../src/measure.js";
 import { responsiveProps } from "../src/responsiveProps.js";
 import type { Measurement } from "../src/types.js";
@@ -220,6 +220,54 @@ describe("responsiveProps", () => {
       });
       const result = rProps({ someOtherProp: 100 } as unknown as Measurement);
       expect(result.test).toBe("fallback");
+    });
+
+    test("should warn but still resolve a prop whose spec names an unknown breakpoint", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      try {
+        const rProps = responsiveProps().breakpoints(testBreakpoints).prop("spacing", {
+          smal: 5, // typo for "small"
+          _: 20,
+        });
+
+        const result = rProps({ width: 300, screenWidth: 1024, screenHeight: 768 });
+
+        // The typo must be loud...
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("spacing"));
+        // ...but the key must still exist, because the result type says it does.
+        expect("spacing" in result).toBe(true);
+        expect(result.spacing).toBe(20);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    test("should warn but still write the key for a prop spec with no '_' fallback", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      try {
+        // Missing '_' is a type error, so this is only reachable from untyped callers.
+        const rProps = responsiveProps()
+          .breakpoints(testBreakpoints)
+          .prop("spacing", { small: 5 } as unknown as { _: number });
+
+        // Wider than every breakpoint, so resolution has to reach for the absent '_'.
+        const result = rProps({ width: 1500, screenWidth: 1600, screenHeight: 900 });
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("spacing"));
+        expect("spacing" in result).toBe(true);
+        expect(result.spacing).toBeUndefined();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    test("should write the key for a spec with no '_' fallback when measurements are missing", () => {
+      const rProps = responsiveProps().prop("spacing", { small: 5 } as unknown as { _: number });
+
+      const result = rProps(undefined as unknown as Measurement);
+
+      expect("spacing" in result).toBe(true);
+      expect(result.spacing).toBeUndefined();
     });
 
     test("should handle empty prop specification gracefully", () => {
