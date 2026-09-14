@@ -1,0 +1,9 @@
+{
+  "title": "Nested Bar Chart",
+  "config": {
+    "data": "data.csv",
+    "id": "#sszvis-chart",
+    "title": "Beschäftigte nach Berufsfeld und Jahr",
+    "fallback": "/preview/_static/fallback.png"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Stacked Bar Chart",
+  "config": {
+    "data": "data.csv",
+    "id": "#sszvis-chart",
+    "title": "Beschäftigte nach Berufsfeld und Jahr",
+    "description": "Die Anzahl der Beschäftigten nahm seit 1980 um 40% zu und liegt heute bei ca. 180000 Beschäftigten.",
+    "fallback": "/preview/_static/fallback.png"
+  }
+}
