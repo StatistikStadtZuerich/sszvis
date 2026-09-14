@@ -31,8 +31,8 @@ export const ThemeToggle = () => {
       className="size-11 text-muted-foreground hover:text-foreground md:size-8"
       aria-label="Toggle dark mode"
     >
-      <SunIcon size={16} className="hidden dark:block" />
-      <MoonIcon size={16} className="block dark:hidden" />
+      <SunIcon className="hidden dark:block" />
+      <MoonIcon className="block dark:hidden" />
     </Button>
   );
 };

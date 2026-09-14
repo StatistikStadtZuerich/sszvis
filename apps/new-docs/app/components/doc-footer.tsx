@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "react-router";
+import { NavLink, navLinkVariants } from "~/components/ui/nav-link";
 import { contentPages } from "~/content-pages";
 
 const REPO_URL = "https://github.com/StatistikStadtZuerich/sszvis";
@@ -29,37 +30,26 @@ export const DocFooter = () => {
       <div className="flex items-center justify-between">
         <div>
           {prev && (
-            <Link
-              to={prev.href}
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ChevronLeft className="size-4" />
+            <Link to={prev.href} className={navLinkVariants()}>
+              <ChevronLeft />
               {prev.label}
             </Link>
           )}
         </div>
         <div>
           {next && (
-            <Link
-              to={next.href}
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link to={next.href} className={navLinkVariants()}>
               {next.label}
-              <ChevronRight className="size-4" />
+              <ChevronRight />
             </Link>
           )}
         </div>
       </div>
       <div className="mt-4 flex justify-end">
-        <a
-          href={editUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
+        <NavLink href={editUrl} target="_blank" rel="noopener noreferrer" size="xs">
           View this page on GitHub
-          <ExternalLink className="size-3" />
-        </a>
+          <ExternalLink />
+        </NavLink>
       </div>
     </footer>
   );

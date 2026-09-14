@@ -25,13 +25,14 @@ export const CopyButton = ({ getValue, className }: CopyButtonProps) => {
     <Button
       onClick={handleCopy}
       variant="ghost"
+      size="icon-lg"
       className={cn(
-        "absolute top-2 right-2 flex size-10 items-center justify-center transition-[color,background-color,opacity] duration-150 hover:bg-background/70 hover:text-code-block-foreground",
+        "absolute top-2 right-2 transition-[color,background-color,opacity] duration-150 hover:bg-background/70 hover:text-code-block-foreground",
         className,
       )}
       aria-label={copied ? "Copied" : "Copy code"}
     >
-      {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+      {copied ? <CheckIcon /> : <CopyIcon />}
     </Button>
   );
 };
