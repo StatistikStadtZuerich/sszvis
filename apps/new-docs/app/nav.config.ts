@@ -1,8 +1,8 @@
 import { contentPages } from "./content-pages";
 
-export type NavItem = { readonly label: string; readonly href: string };
-export type NavLink = NavItem & { readonly kind: "link" };
-export type NavSection = {
+type NavItem = { readonly label: string; readonly href: string };
+type NavLink = NavItem & { readonly kind: "link" };
+type NavSection = {
   readonly kind: "section";
   readonly title: string;
   readonly items: ReadonlyArray<NavItem>;
