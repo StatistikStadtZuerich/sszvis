@@ -15,6 +15,7 @@ import remarkGfm from "remark-gfm";
 import { defineConfig } from "vite";
 import { catalogDark, catalogLight } from "./app/lib/shiki-catalog-theme.ts";
 import remarkTocExport from "./app/lib/remark-toc-export.ts";
+import { examplesPlugin } from "./vite-plugin-examples.ts";
 
 export default defineConfig({
   plugins: [
@@ -45,6 +46,7 @@ export default defineConfig({
         ],
       ],
     }),
+    examplesPlugin(),
     tailwindcss(),
     reactRouter(),
   ],

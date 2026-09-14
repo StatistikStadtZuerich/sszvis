@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{title}}</title>
+    <link href="{{assets}}/sszvis.css" rel="stylesheet" />
+    <style>
+      /*
+       * sszvis draws for a light page: its text and axes are dark and it sets
+       * no background of its own. Without this the standalone page inherits the
+       * browser's dark preference and the chart is drawn dark-on-dark.
+       */
+      html {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+      }
+      /*
+       * Breathing room inside the frame: embedded in the docs the page is the
+       * chart, and a chart drawn flush to the edge collides with the frame's
+       * own border. `box-sizing` keeps the padding inside the width the chart
+       * measures itself against, so it still fits the viewport it is given.
+       */
+      body {
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      /*
+       * A chart's marks are not always inside its bounds: sszvis places a point
+       * at its value and draws the symbol around it, so the outer half of an
+       * edge bubble - up to the largest radius - falls outside the SVG, which
+       * clips at its own viewport. Letting the SVG paint outside puts that
+       * overhang in the padding above rather than slicing it off.
+       *
+       * The viewport still clips, which matters: a chart given less width than
+       * it was written for can run far past its bounds (the overlapping line
+       * chart lays out ~240px of labels off its right edge at 800px), and that
+       * has to stay out of sight rather than stretching the page sideways.
+       */
+      svg {
+        overflow: visible;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sszvis-chart"></div>
+
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+{{scripts}}    <script src="{{assets}}/sszvis.js"></script>
+    <script>
+      var config = {{config}};
+    </script>
+    <script>
+      // {{chart}}
+    </script>
+  </body>
+</html>
