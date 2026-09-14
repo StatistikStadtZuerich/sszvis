@@ -132,20 +132,26 @@ as a guard.
    writes `packages/sszvis/CHANGELOG.md` and deletes the consumed changesets.
    Edit its changelog section before merging when a release deserves more than
    the accumulated bullets — 3.5.0 is the example to follow.
-4. The next `release.yml` run sees no changesets and an untagged version, so it
-   invokes `npm-publish.yml`, which checks, type-checks, unit-tests, builds and
-   publishes with `npm publish --provenance`, then tags `v<version>` and creates
-   the GitHub release.
+4. The next `release.yml` run sees no changesets and an untagged version, so its
+   `publish` job checks, type-checks, unit-tests, builds and publishes with
+   `npm publish --provenance`, then tags `v<version>` and creates the GitHub
+   release.
 5. Confirm at <https://www.npmjs.com/package/sszvis>, including the provenance badge.
 
 Publishing uses npm OIDC trusted publishing — no `NPM_TOKEN`. `pnpm publish` and
 `changeset publish` cannot do the OIDC exchange and would silently drop provenance,
-so the workflow uses `npm` directly. That is also why `release.yml` calls
-`npm-publish.yml` through `workflow_call` rather than letting the tag trigger it: a
-tag pushed with `GITHUB_TOKEN` does not start a workflow.
+so the workflow uses `npm` directly.
 
-`npm-publish.yml` keeps its `v*` tag trigger and `workflow_dispatch` for a manual
-release. Bump and tag by hand only when the automated path is broken.
+`release.yml` is the only workflow that publishes, and its publish steps are
+inlined rather than factored into a reusable workflow. npm matches the OIDC token
+against the workflow registered as the package's trusted publisher, and a
+`workflow_call` presents the caller's workflow reference instead, so the exchange
+fails and npm rejects the anonymous publish with a 404. The trusted publisher on
+npmjs.com must name `release.yml`; renaming or moving the file breaks publishing
+until that setting is updated to match.
+
+There is no tag-triggered or manual publish workflow. If the automated path is
+broken, publish from a clean checkout by hand.
 
 The changelog lives at `packages/sszvis/CHANGELOG.md` — with the package it
 describes, so it ships to npm. The docs site copies it in as a passthrough and

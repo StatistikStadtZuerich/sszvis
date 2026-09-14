@@ -31,9 +31,10 @@ jobs:
         uses: ./.github/actions/setup
 
       # Opens or updates the "Version Packages" pull request. It deliberately has
-      # no `publish` input: publishing goes through npm-publish.yml, which uses
-      # `npm publish --provenance` over OIDC. `changeset publish` shells out to
-      # the package manager and would drop the provenance attestation.
+      # no `publish` input: publishing goes through the `publish` job below,
+      # which uses `npm publish --provenance` over OIDC. `changeset publish`
+      # shells out to the package manager and would drop the provenance
+      # attestation.
       - name: Create or update the Version Packages pull request
         id: changesets
         uses: changesets/action@v1
@@ -55,18 +56,45 @@ jobs:
             echo "tag-exists=false" >>"$GITHUB_OUTPUT"
           fi
 
+  # These steps are deliberately inlined rather than kept in a reusable workflow
+  # called with `uses:`. npm's trusted publishing matches the OIDC token against
+  # the workflow registered for the package, and a `workflow_call` presents the
+  # caller's workflow reference instead — the exchange then fails, npm falls back
+  # to an anonymous request and rejects the publish with a 404. The trusted
+  # publisher on npmjs.com must therefore name this file, `release.yml`.
   publish:
     name: "Publish"
     needs: version
     # Reached when a Version Packages pull request has landed: the changesets are
     # consumed, the manifest carries a version, and nothing has published it yet.
     if: needs.version.outputs.has-changesets == 'false' && needs.version.outputs.tag-exists == 'false'
-    uses: ./.github/workflows/npm-publish.yml
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
-    with:
-      expected-version: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: ./.github/actions/setup
+
+      - run: pnpm run check
+      - run: pnpm run type-check
+      - run: pnpm --filter sszvis exec playwright install --with-deps
+      - run: pnpm run test
+      - run: pnpm run build
+
+      - name: Verify the version matches the one the release resolved
+        run: test "$(node -p "require('./package.json').version")" = "${{ needs.version.outputs.version }}"
+        working-directory: packages/sszvis
+
+      # `npm publish`, not `pnpm publish`: npm implements OIDC trusted publishing,
+      # so this needs no NPM_TOKEN and keeps the provenance attestation. pnpm
+      # cannot do the OIDC exchange and would silently drop provenance.
+      - name: Publish sszvis
+        run: npm publish --access public --provenance
+        working-directory: packages/sszvis
 
   tag:
     name: "Tag"
@@ -81,8 +109,8 @@ jobs:
         uses: actions/checkout@v4
 
       # After the publish, so a failed publish leaves the version re-releasable.
-      # This tag will not trigger npm-publish.yml — GITHUB_TOKEN pushes do not
-      # start workflows — which is why release.yml calls that workflow itself.
+      # The tag is a record of the release, not a trigger for it: a GITHUB_TOKEN
+      # push does not start workflows, and the publish above has already run.
       - name: Tag the release
         env:
           VERSION: ${{ needs.version.outputs.version }}
