@@ -1,3 +1,15 @@
+## 3.5.1 (2026-09-10)
+
+- ship `sszvis.css` from the library package, so `sszvis/sszvis.css` resolves from an install instead of only from the documentation site
+
+The stylesheet is now published with the library and exported under its own subpath, so a bundler or `<link>` can reach it directly from `node_modules` — copying it out of the documentation site is no longer necessary:
+
+```code
+import "sszvis/sszvis.css";
+```
+
+`sszvis/build/sszvis.css` resolves as well, for anyone who already points at that path.
+
 ## 3.5.0 (2026-09-08)
 
 - the library is now written entirely in TypeScript, and its types describe the datum your chart actually binds
