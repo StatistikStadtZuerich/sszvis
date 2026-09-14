@@ -1,21 +1,26 @@
 import { ChevronRight } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "~/components/ui/collapsible";
+import { NavLink } from "~/components/ui/nav-link";
 import { useActiveHeading } from "~/hooks/use-active-heading";
 import type { TOCItem } from "~/lib/remark-toc-export";
 import { cn } from "~/lib/utils";
 
 interface TableOfContentsProps {
   toc: TOCItem[];
-  /** Render only the desktop right-rail variant */
   desktopOnly?: boolean;
+  maxDepth?: number;
 }
 
-export const TableOfContents = ({ toc, desktopOnly }: TableOfContentsProps) => {
-  const ids = useMemo(() => toc.map((item) => item.id), [toc]);
+export const TableOfContents = ({ toc, desktopOnly, maxDepth }: TableOfContentsProps) => {
+  const visible = useMemo(
+    () => (maxDepth === undefined ? toc : toc.filter((item) => item.depth <= maxDepth)),
+    [toc, maxDepth],
+  );
+  const ids = useMemo(() => visible.map((item) => item.id), [visible]);
   const activeId = useActiveHeading(ids);
 
-  if (toc.length === 0) return null;
+  if (visible.length === 0) return null;
 
   if (desktopOnly) {
     return (
@@ -23,13 +28,12 @@ export const TableOfContents = ({ toc, desktopOnly }: TableOfContentsProps) => {
         <p className="mb-3 text-xs font-semibold tracking-[-0.01em] text-foreground/70">
           On this page
         </p>
-        <TOCList toc={toc} activeId={activeId} />
+        <TOCList toc={visible} activeId={activeId} />
       </nav>
     );
   }
 
-  // Mobile-only: collapsible above content
-  return <MobileTOC toc={toc} activeId={activeId} />;
+  return <MobileTOC toc={visible} activeId={activeId} />;
 };
 
 const MobileTOC = ({ toc, activeId }: { toc: TOCItem[]; activeId: string }) => {
@@ -57,7 +61,6 @@ interface TOCNode {
   children: TOCNode[];
 }
 
-/** Convert flat TOC array into a nested tree */
 const buildTree = (items: TOCItem[]): TOCNode[] => {
   const root: TOCNode[] = [];
   const stack: TOCNode[] = [];
@@ -65,7 +68,6 @@ const buildTree = (items: TOCItem[]): TOCNode[] => {
   for (const item of items) {
     const node: TOCNode = { item, children: [] };
 
-    // Pop stack until we find a parent with lower depth
     while (stack.length > 0 && (stack[stack.length - 1]?.item.depth || 0) >= item.depth) {
       stack.pop();
     }
@@ -130,17 +132,14 @@ const TOCNodeItem = ({
 
   return (
     <li>
-      <a
+      <NavLink
         href={`#${item.id}`}
+        variant="list"
         aria-current={isActive ? "location" : undefined}
         onClick={(e) => onClickLink(e, item.id)}
-        className={cn(
-          "flex min-h-10 items-center rounded-md px-2 py-1.5 transition-colors duration-150 hover:bg-accent/60 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring xl:min-h-0",
-          isActive ? "text-primary font-medium" : "text-muted-foreground",
-        )}
       >
         {item.value}
-      </a>
+      </NavLink>
       {children.length > 0 && (
         <ul className="ml-3 border-l border-border pl-3 space-y-0.5">
           {children.map((child) => (
