@@ -6,7 +6,7 @@
 
 ### sszvis.buttonGroup
 
-<Callout>
+<Callout variant="success">
 
 This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.selectMenu). The two take the same values and the same `change` callback and replace each other's DOM, but they do not show an overlong label the same way: a button group wraps the label onto more lines, while a select menu trims it with an ellipsis.
 
@@ -34,11 +34,7 @@ An accessible name for the group of buttons, written to the wrapper as `aria-lab
 
 ### Example
 
-<Example
-  name="bar-chart-horizontal-interactive"
-  source="bar-chart-horizontal/interactive.html"
-  data="bar-chart-horizontal/data/SHB_13Categories.csv"
-/>
+<Example id="bar-chart-horizontal/interactive" />
 
 ### Example with many long labels
 
@@ -46,17 +42,13 @@ With many options, each one only gets `width / values.length`. Labels too long f
 that share wrap onto as many lines as they need inside their own button, so the
 group still measures `width`.
 
-<Example
-  name="bar-chart-horizontal-long-labels"
-  source="bar-chart-horizontal/long-labels.html"
-  data="bar-chart-horizontal/data/SHB_13Categories_longNames.csv"
-/>
+<Example id="bar-chart-horizontal/long-labels" />
 
 ## Select Control
 
 ### sszvis.selectMenu
 
-<Callout>
+<Callout variant="success">
 
 This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.buttonGroup). A native select element cannot wrap or grow, so this control shortens a long label where a button group would wrap it — swapping between the two across a breakpoint keeps the values and the callback, but not necessarily the same label text.
 
@@ -86,11 +78,7 @@ An accessible name for the menu, written to the `select` element as `aria-label`
 
 This example shows how a button group can be used interchangeably with a select. The button group is used when enough horizontal space is available and falls back to the select on narrow screens. Note that the label text can differ between the two at a given width: the button group wraps a long label, the select ellipsises it.
 
-<Example
-  name="map-signature-statzone"
-  source="map-signature/signature-statzone.html"
-  data="map-signature/data/births_year_statisticalZones.csv"
-/>
+<Example id="map-signature/signature-statzone" />
 
 ## Slider Control
 
@@ -130,11 +118,7 @@ A callback function called whenever user interaction attempts to change the slid
 
 ### Example
 
-<Example
-  name="scatterplot-many-years"
-  source="scatterplot/years-fake.html"
-  data="scatterplot/data/SS_years_fake.csv"
-/>
+<Example id="scatterplot/years-fake" />
 
 ## Handle Ruler
 
@@ -170,8 +154,4 @@ A boolean or boolean function which determines whether the ruler should be flipp
 
 ### Example
 
-<Example
-  name="map-cml-quartier-years"
-  source="map-standard/cml-quartier-years.html"
-  data="map-standard/data/CML_quartier_years.csv"
-/>
+<Example id="map-standard/cml-quartier-years" />
