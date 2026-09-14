@@ -1,6 +1,12 @@
-/* Shiki dual theme: apply light variant colors by default */
-pre[data-theme] span,
-code[data-theme] span {
+/*
+ * Shiki dual theme: apply light variant colors by default.
+ *
+ * Keyed off the `.shiki` class, not `data-theme`: with two themes and
+ * `defaultColor: false` shiki emits `class="shiki shiki-themes ..."` and per-token
+ * CSS variables, and no data-theme attribute at all - so a selector waiting for
+ * one matches nothing and every code block renders in the inherited text colour.
+ */
+.shiki span {
   color: var(--shiki-light);
   background-color: var(--shiki-light-bg);
   font-style: var(--shiki-light-font-style);
@@ -14,8 +20,7 @@ pre [data-chars-id] span {
 }
 
 /* Shiki dual theme: switch to dark variant colors when .dark is active */
-html.dark pre[data-theme] span,
-html.dark code[data-theme] span {
+html.dark .shiki span {
   color: var(--shiki-dark);
   background-color: var(--shiki-dark-bg);
   font-style: var(--shiki-dark-font-style);
