@@ -292,6 +292,11 @@ describe("control/handleRuler", () => {
     expect(labels(node)[1]?.getAttribute("transform")).toBe("translate(50.5,120.5)");
   });
 
+  test("should pass the index to the color accessor", () => {
+    const node = render(ruler().color((_d: Datum, i: number) => ["red", "blue"][i]));
+    expect(dots(node).map((d) => d.getAttribute("fill"))).toEqual(["red", "blue"]);
+  });
+
   test("should render nothing per-datum for an empty data array", () => {
     const node = render(ruler(), []);
     expect(dots(node)).toEqual([]);

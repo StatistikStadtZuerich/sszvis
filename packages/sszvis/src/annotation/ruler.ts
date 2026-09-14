@@ -62,7 +62,7 @@ interface RulerProps<T = unknown> {
   x: (d: Datum<T>) => NumberValue;
   y: (d: Datum<T>) => NumberValue;
   label: (d: Datum<T>) => string;
-  color?: ColorValue | ((d: Datum<T>) => ColorValue);
+  color?: ColorValue | ((d: Datum<T>, i: number) => ColorValue);
   flip: (d: Datum<T>) => boolean;
   labelId?: (d: Datum<T>) => string;
   reduceOverlap: boolean;
@@ -74,7 +74,7 @@ interface RulerComponent<T = unknown> extends ComponentBuilder<RulerComponent<T>
   x(accessor?: NumberAccessor<Datum<T>>): RulerComponent<T>;
   y(accessor?: NumberAccessor<Datum<T>>): RulerComponent<T>;
   label(accessor?: StringAccessor<Datum<T>>): RulerComponent<T>;
-  color(accessor?: ColorValue | ((d: Datum<T>) => ColorValue)): RulerComponent<T>;
+  color(accessor?: ColorValue | ((d: Datum<T>, i: number) => ColorValue)): RulerComponent<T>;
   flip(accessor?: BooleanAccessor<Datum<T>>): RulerComponent<T>;
   labelId(accessor?: StringAccessor<Datum<T>>): RulerComponent<T>;
   reduceOverlap(enabled?: boolean): RulerComponent<T>;
@@ -84,9 +84,11 @@ interface RulerComponent<T = unknown> extends ComponentBuilder<RulerComponent<T>
  * The dot fill, as d3 wants it. An unset `color` - and, as before, any other falsy value -
  * falls back to black; an accessor is always asked, so a colour it returns is used as-is.
  */
-function fillOf<T>(color: RulerProps<T>["color"]): (d: Datum<T>) => string | null {
+function fillOf<T>(color: RulerProps<T>["color"]): (d: Datum<T>, i: number) => string | null {
   if (!color) return () => "black";
-  return typeof color === "function" ? (d) => colorToString(color(d)) : () => colorToString(color);
+  return typeof color === "function"
+    ? (d, i) => colorToString(color(d, i))
+    : () => colorToString(color);
 }
 
 export const annotationRuler = <T = unknown>(): RulerComponent<T> =>

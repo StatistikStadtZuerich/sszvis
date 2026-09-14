@@ -489,6 +489,27 @@ describe("annotation/ruler", () => {
     expect(updatedLabels.length).toBe(2);
   });
 
+  test("should pass the index to the color accessor", () => {
+    const rulerComponent = annotationRuler()
+      .x((d: unknown) => (d as TestDatum).x)
+      .y((d: unknown) => (d as TestDatum).y)
+      .top(30)
+      .bottom(150)
+      .label((d: unknown) => (d as TestDatum).label)
+      .color((_d: unknown, i: number) => ["red", "blue", "green"][i]);
+
+    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "color-index-layer" })
+      .selectGroup("ruler")
+      .datum(testData)
+      .call(rulerComponent);
+
+    const fills = chartLayer
+      .selectAll<SVGCircleElement, TestDatum>("circle.sszvis-ruler__dot")
+      .nodes()
+      .map((dot) => dot.getAttribute("fill"));
+    expect(fills).toEqual(["red", "blue", "green"]);
+  });
+
   test("should disable reduceOverlap when set to false", () => {
     const rulerComponent = annotationRuler()
       .x((d: unknown) => (d as TestDatum).x)

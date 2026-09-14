@@ -413,6 +413,16 @@ describe("component/sankey", () => {
       ]);
     });
 
+    test("should pass the index to the linkColor accessor", () => {
+      const palette = ["#111", "#222", "#333", "#444"];
+      const node = render(
+        sankeyOf().linkColor((_l: Link, i: number) => palette[i]),
+        testData,
+      );
+      // The paths are re-sorted after the stroke is set, so only the set is predictable.
+      expect([...attrs(node, "links", "path.sszvis-link", "stroke")].sort()).toEqual(palette);
+    });
+
     test("should leave the stroke unset when no linkColor is given", () => {
       const node = render(sankeyOf(), testData);
       expect(linkAttrs(node, "stroke")).toEqual([null, null, null, null]);
