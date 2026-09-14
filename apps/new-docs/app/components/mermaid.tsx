@@ -2,7 +2,6 @@ import mermaid from "mermaid";
 import { useEffect, useId, useState } from "react";
 
 export const Mermaid = ({ chart }: { chart: string }) => {
-  // mermaid needs a DOM-id-safe handle; useId's colons are not.
   const id = `mermaid-${useId().replaceAll(":", "")}`;
   const [svg, setSvg] = useState("");
 

@@ -41,7 +41,7 @@ export const proseComponents = {
     <h6 className={cn(typefaceHeading6(), "mt-8 scroll-m-20", className)} {...props} />
   ),
   p: ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-    <p className={cn(typefaceBody("[&:not(:first-child)]:mt-5"), className)} {...props} />
+    <p className={cn(typefaceBody("not-first:mt-5"), className)} {...props} />
   ),
   ul: ({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
     <ul className={cn(typefaceBody(), "my-5 ml-6 list-disc", className)} {...props} />
@@ -59,7 +59,7 @@ export const proseComponents = {
    */
   blockquote: ({ className, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
     <blockquote
-      className={cn(typefaceLead(), "mt-5 mb-8 *:text-[inherit] *:leading-[inherit]", className)}
+      className={cn(typefaceLead(), "mt-5 mb-8 *:text-inherit *:leading-[inherit]", className)}
       {...props}
     />
   ),

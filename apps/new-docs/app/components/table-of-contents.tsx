@@ -42,7 +42,7 @@ const MobileTOC = ({ toc, activeId }: { toc: TOCItem[]; activeId: string }) => {
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className="xl:hidden mb-8 rounded-xl border bg-card/70 px-4 py-3 shadow-sm shadow-foreground/[0.03]"
+      className="xl:hidden mb-8 rounded-xl border bg-card/70 px-4 py-3 shadow-sm shadow-foreground/3"
     >
       <CollapsibleTrigger className={typefaceMeta("flex w-full items-center justify-between")}>
         On this page
