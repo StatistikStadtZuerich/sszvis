@@ -76,7 +76,7 @@ interface HandleRulerProps<T> {
   bottom: number;
   /** Not functor-wrapped: a plain string label is passed straight to d3's .html(). */
   label: StringAccessor<T>;
-  color?: ColorValue | ((d: T) => ColorValue);
+  color?: ColorValue | ((d: T, i: number) => ColorValue);
   flip: (d: T) => boolean;
 }
 
@@ -93,8 +93,8 @@ export interface HandleRulerComponent<T = unknown> extends ComponentBuilder<
   bottom(value: number): HandleRulerComponent<T>;
   label(): StringAccessor<T>;
   label(accessor: StringAccessor<T>): HandleRulerComponent<T>;
-  color(): ColorValue | ((d: T) => ColorValue) | undefined;
-  color(accessor: ColorValue | ((d: T) => ColorValue)): HandleRulerComponent<T>;
+  color(): ColorValue | ((d: T, i: number) => ColorValue) | undefined;
+  color(accessor: ColorValue | ((d: T, i: number) => ColorValue)): HandleRulerComponent<T>;
   flip(): (d: T) => boolean;
   flip(accessor: BooleanAccessor<T>): HandleRulerComponent<T>;
 }
@@ -185,8 +185,8 @@ export default function handleRuler<T = unknown>(): HandleRulerComponent<T> {
         .attr("r", DOT_RADIUS)
         // Rendered to a string for d3's attr signature, which accepts no colour object;
         // an unset color stays nullish, which d3 reads as "remove the attribute".
-        .attr("fill", (d: T) =>
-          colorToString(typeof props.color === "function" ? props.color(d) : props.color),
+        .attr("fill", (d: T, i: number) =>
+          colorToString(typeof props.color === "function" ? props.color(d, i) : props.color),
         );
 
       selection

@@ -614,7 +614,7 @@ export default function sankey(): SankeyComponent {
         .attr("fill", "none")
         .attr("d", linkPath)
         .attr("stroke-width", linkThickness)
-        .attr("stroke", (link) => colorToString(props.linkColor?.(link)))
+        .attr("stroke", (link, i) => colorToString(props.linkColor?.(link, i)))
         .sort(props.linkSort);
 
       linksGroup.datum(drawableLinks);
