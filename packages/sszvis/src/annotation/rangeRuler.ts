@@ -26,7 +26,7 @@ import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { formatNumber } from "../format.js";
 import { halfPixel } from "../svgUtils/crisp.js";
-import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types.js";
+import type { BooleanAccessor, NumberAccessor } from "../types.js";
 
 // Type definitions for range ruler component
 type Datum<T = unknown> = T;
@@ -49,7 +49,11 @@ interface RangeRulerComponent<T = unknown> extends ComponentBuilder<RangeRulerCo
   y1(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;
   top(value?: number): RangeRulerComponent<T>;
   bottom(value?: number): RangeRulerComponent<T>;
-  label(accessor?: StringAccessor<Datum<T>>): RangeRulerComponent<T>;
+  /**
+   * The value each range is labelled with. It is piped through `formatNumber`, so return the
+   * number itself - a pre-stringified value cannot be formatted and renders as a dash.
+   */
+  label(accessor?: (d: Datum<T>) => string | number): RangeRulerComponent<T>;
   removeStroke(value?: boolean): RangeRulerComponent<T>;
   total(value?: number): RangeRulerComponent<T>;
   flip(accessor?: BooleanAccessor<Datum<T>>): RangeRulerComponent<T>;

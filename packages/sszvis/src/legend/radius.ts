@@ -41,7 +41,7 @@ interface RadiusScale {
 }
 
 /** Formats a tick label. The default is fn.identity, which passes the value through. */
-type TickFormatter = (value: NumberValue, index: number) => string | number;
+type TickFormatter = (value: number, index: number) => string | number;
 
 type RadiusLegendProps = {
   scale: RadiusScale;
@@ -116,7 +116,9 @@ export default function (): RadiusLegendComponent {
           .attr("dx", maxRadius + 18)
           .attr("y", getCircleEdge)
           .attr("dy", "0.35em") // vertically-center
-          .text(props.tickFormat);
+          // tickValues are d3 NumberValues; the formatter is handed the number they
+          // stand for, so sszvis' own number formatters can be passed directly.
+          .text((d, i) => props.tickFormat(Number(d), i));
       })
   );
 }
