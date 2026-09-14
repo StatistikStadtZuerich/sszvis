@@ -22,6 +22,7 @@
     "**/.reference/**",
     "apps/docs/docs/**",
     "apps/new-docs/.react-router/**",
+    "apps/new-docs/examples/_template.html",
     "**/test/snapshot/__results__/**",
     "apps/regression-cli/__export__/**",
     "apps/regression-cli/__report__/**",

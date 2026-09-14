@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  /*
+   * Opt-in, and deliberately not part of `pnpm type-check` yet: checking a
+   * typical example against the library's published types currently reports
+   * ~15 errors that are in those types, not in the example. Run this with
+   * `pnpm --filter @sszvis/new-docs run type-check:examples` to see them.
+   */
+  "include": ["examples/**/*"]
+}

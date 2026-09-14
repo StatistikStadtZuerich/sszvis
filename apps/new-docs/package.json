@@ -9,7 +9,8 @@
     "clean": "rm -rf build .react-router .turbo",
     "build": "react-router build",
     "dev": "react-router dev --port ${PORT:-3000}",
-    "type-check": "react-router typegen && tsc --noEmit"
+    "type-check": "react-router typegen && tsc --noEmit",
+    "type-check:examples": "tsc --noEmit -p tsconfig.examples.json"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -36,6 +37,7 @@
     "@repo/config-typescript": "workspace:*",
     "@shikijs/transformers": "^4.4.3",
     "@tailwindcss/vite": "^4.1.13",
+    "@types/d3": "^7.4.3",
     "@types/mdx": "^2.0.13",
     "@types/node": "^26.5.1",
     "@types/react": "^19.1.13",
@@ -46,7 +48,9 @@
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "shiki": "^4.4.3",
+    "sszvis": "workspace:^",
     "tailwindcss": "^4.1.13",
+    "ts-blank-space": "^0.9.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0"
   }
