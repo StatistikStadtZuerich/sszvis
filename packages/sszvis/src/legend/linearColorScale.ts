@@ -14,8 +14,9 @@
  * @property {number} width                     The pixel width of the legend (default 200).
  * @property {number} segments                  The number of segments to aim for. Note, this is only used if displayValues isn't specified,
  *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default)
- * @property {array} labelText                  Text or a text-returning function to use as the titles for the legend endpoints. If not supplied,
- *                                              defaults to using the first and last tick values.
+ * @property {array} labelText                  An array of labels for the legend endpoints. If not supplied, defaults to the
+ *                                              first and last tick values. For string labels, name the type:
+ *                                              `legendColorLinear<string>()`.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
  */
 
@@ -34,11 +35,12 @@ interface LinearColorScale {
 }
 
 /**
- * Formats one endpoint label. Generic over what `labelText` holds, which defaults to the
- * scale's own numeric domain endpoints - so `sszvis.formatNumber` fits without a wrapper.
- * A legend given string labels names its own type: `legendColorLinear<string>()`.
+ * Formats one endpoint label. The value is whatever `labelText` holds, or the scale's own
+ * numeric domain endpoints when `labelText` is not set - so a formatter always has to cope
+ * with a number. `sszvis.formatNumber` fits the default without a wrapper; a legend given
+ * string labels names its own type: `legendColorLinear<string>()`.
  */
-type LabelFormatter<T = number> = (value: T, index: number) => string | number;
+type LabelFormatter<T = number> = (value: T | number, index: number) => string | number;
 
 type LinearColorScaleProps<T = number> = {
   scale: LinearColorScale;
@@ -155,7 +157,7 @@ export default function legendColorLinear<T = number>(): LinearColorScaleCompone
             (_d, i) =>
               `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`,
           )
-          .text((d, i) => props.labelFormat(d as T, i));
+          .text((d, i) => props.labelFormat(d, i));
       })
   );
 }

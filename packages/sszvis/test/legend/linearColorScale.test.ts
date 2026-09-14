@@ -1,5 +1,5 @@
 import { scaleLinear } from "d3";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from "vitest";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import legendColorLinear from "../../src/legend/linearColorScale.js";
 import type { LinearColorScaleComponent } from "../../src/legend/linearColorScale.js";
@@ -159,6 +159,15 @@ describe("legend/linearColorScale", () => {
       [0, 0],
       [100, 1],
     ]);
+  });
+
+  test("should type labelFormat against the numbers it is really given", () => {
+    // The test above proves labelFormat receives the scale's numeric domain endpoints when
+    // labelText is not set. The type has to say so even for a string-labelled legend, or a
+    // formatter that only handles strings compiles and then throws at render.
+    expectTypeOf<
+      Parameters<Parameters<LinearColorScaleComponent<string>["labelFormat"]>[0]>[0]
+    >().toEqualTypeOf<string | number>();
   });
 
   test("should log an error and render nothing without a scale", () => {
