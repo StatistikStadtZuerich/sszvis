@@ -23,6 +23,10 @@
     "apps/docs/docs/**",
     "apps/new-docs/.react-router/**",
     "apps/new-docs/examples/_template.html",
+    // Chart example datasets are generated exports, not hand-written source. The
+    // per-example example.json metadata is edited by hand and stays formatted.
+    "apps/new-docs/examples/**/*.json",
+    "!apps/new-docs/examples/**/example.json",
     "**/test/snapshot/__results__/**",
     "apps/regression-cli/__export__/**",
     "apps/regression-cli/__report__/**",

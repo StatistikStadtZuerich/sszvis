@@ -42,5 +42,24 @@
     "changeset:version": "changeset version",
     "build:topo": "turbo run build --filter=@sszvis/geodata",
     "version": "echo 'Do not version the root. See the Releasing section in AGENTS.md.' && exit 1"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "current",
+        "linux",
+        "darwin"
+      ],
+      "cpu": [
+        "current",
+        "x64",
+        "arm64"
+      ],
+      "libc": [
+        "current",
+        "glibc",
+        "musl"
+      ]
+    }
   }
 }

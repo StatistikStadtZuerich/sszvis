@@ -26,6 +26,10 @@
       "dependsOn": ["^type-check"],
       "outputLogs": "new-only"
     },
+    "@sszvis/new-docs#type-check": {
+      "dependsOn": ["^type-check", "sszvis#build"],
+      "outputLogs": "new-only"
+    },
     "test": {
       "outputLogs": "new-only"
     },

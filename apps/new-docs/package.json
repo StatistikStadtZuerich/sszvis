@@ -9,8 +9,7 @@
     "clean": "rm -rf build .react-router .turbo",
     "build": "react-router build",
     "dev": "react-router dev --port ${PORT:-3000}",
-    "type-check": "react-router typegen && tsc --noEmit",
-    "type-check:examples": "tsc --noEmit -p tsconfig.examples.json"
+    "type-check": "react-router typegen && tsc --noEmit && tsc --noEmit -p examples/tsconfig.json"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
