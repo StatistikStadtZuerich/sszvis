@@ -180,21 +180,62 @@
 
 @layer components {
   /*
+   * A block that is wider than the prose it sits among, centred on it: as wide
+   * as the page's content area (`100cqw`, from the container query wrapper in
+   * root.tsx) with the overhang split evenly between the two margins. On a
+   * narrow screen the content area is the column, the margins go to zero, and
+   * the block is simply full width.
+   */
+  .breakout {
+    width: 100cqw;
+    margin-inline: calc((100% - 100cqw) / 2);
+  }
+
+  /*
+   * A gallery thumbnail: the example drawn at a realistic chart width and
+   * scaled into its tile, rather than drawn at the size of the tile. A chart
+   * asked for 180 real pixels picks its narrowest breakpoint and stacks its
+   * axis labels on top of each other, which reads as a broken chart rather
+   * than a small one; scaling keeps the proportions a reader meets on the
+   * page, and shows the whole of it rather than cropping the legend.
+   *
+   * The scale is the tile's width over the frame's - a ratio of two lengths,
+   * which `calc()` cannot divide. `atan2()` takes the two lengths and gives an
+   * angle, and `tan()` turns that angle back into the plain number that
+   * `scale()` wants. The tile is the query container, so this tracks the grid
+   * at any width with no measuring.
+   */
+  .thumbnail {
+    --thumbnail-frame: 420px;
+    container-type: inline-size;
+  }
+
+  .thumbnail > iframe {
+    width: var(--thumbnail-frame);
+    height: var(--thumbnail-frame);
+    transform: scale(tan(atan2(100cqw, var(--thumbnail-frame))));
+    transform-origin: top left;
+  }
+
+  /*
    * Code blocks and diagrams hang outside the prose column by exactly the inset
    * their own chrome adds, so the code glyphs land on the prose's left edge
    * rather than sitting indented from it. The measure is unchanged - the column
    * is still ~66 characters; the blocks only reclaim the space they lose to
    * padding.
    *
-   * Both parts must track styles/mdx.css and code-block.tsx: the outdent is the
-   * <pre> padding plus the per-line inset (padding-inline, plus the transparent
-   * border reserved for the diff/highlight marker). If either changes here
-   * without the other, the edges drift apart.
+   * Every part must track code-block.tsx and styles/mdx.css: the outdent is the
+   * block's border, plus its padding, plus the per-line inset (padding-inline
+   * plus the transparent border reserved for the diff/highlight marker). Change
+   * any of those there without changing it here and the edges drift apart.
    */
   .content-column {
+    --code-block-border: 1px;
     --code-block-padding: 1.25rem;
     --code-line-inset: 0.625rem;
-    --block-outdent: calc(var(--code-block-padding) + var(--code-line-inset));
+    --block-outdent: calc(
+      var(--code-block-border) + var(--code-block-padding) + var(--code-line-inset)
+    );
   }
 
   .content-column > figure[data-rehype-pretty-code-figure],

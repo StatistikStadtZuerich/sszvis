@@ -5,8 +5,24 @@
  * `section` groups consecutive pages under one collapsible heading in the
  * sidebar; `null` puts the page at the top level on its own, the way the old
  * Catalog docs listed the single-page chart types.
+ *
+ * `tocMaxDepth` caps the deepest heading level a page lists in its table of
+ * contents; omitted, the page lists everything down to `h4`. Every page ported
+ * from the old docs uses `h4` for one thing - an entry per configuration
+ * option - which is a reference listing rather than a section a reader
+ * navigates to, and dozens of them bury the page's actual structure. So each
+ * such page caps at 3; the pages without an option listing need no cap.
  */
-export const contentPages = [
+export interface ContentPage {
+  readonly section: string | null;
+  readonly label: string;
+  readonly href: string;
+  readonly routePath: string;
+  readonly contentPath: string;
+  readonly tocMaxDepth?: number;
+}
+
+export const contentPages: readonly ContentPage[] = [
   {
     section: "Introduction",
     label: "Installation",
@@ -23,10 +39,18 @@ export const contentPages = [
   },
   {
     section: "Introduction",
+    label: "Gallery",
+    href: "/gallery",
+    routePath: "gallery",
+    contentPath: "content/gallery.mdx",
+  },
+  {
+    section: "Introduction",
     label: "FAQ",
     href: "/faq",
     routePath: "faq",
     contentPath: "content/faq.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Guides",
@@ -41,6 +65,7 @@ export const contentPages = [
     href: "/guides/annotations",
     routePath: "guides/annotations",
     contentPath: "content/guides/annotations.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Guides",
@@ -76,6 +101,7 @@ export const contentPages = [
     href: "/guides/controls",
     routePath: "guides/controls",
     contentPath: "content/guides/controls.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Guides",
@@ -83,6 +109,7 @@ export const contentPages = [
     href: "/guides/formats",
     routePath: "guides/formats",
     contentPath: "content/guides/formats.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Guides",
@@ -90,6 +117,7 @@ export const contentPages = [
     href: "/guides/legends",
     routePath: "guides/legends",
     contentPath: "content/guides/legends.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Guides",
@@ -97,6 +125,7 @@ export const contentPages = [
     href: "/guides/tooltips",
     routePath: "guides/tooltips",
     contentPath: "content/guides/tooltips.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Layout",
@@ -104,6 +133,7 @@ export const contentPages = [
     href: "/layout/small-multiples",
     routePath: "layout/small-multiples",
     contentPath: "content/layout/small-multiples.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: null,
@@ -111,6 +141,7 @@ export const contentPages = [
     href: "/area-chart-stacked",
     routePath: "area-chart-stacked",
     contentPath: "content/charts/area-chart-stacked.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Bar chart",
@@ -118,6 +149,7 @@ export const contentPages = [
     href: "/bar-chart-vertical",
     routePath: "bar-chart-vertical",
     contentPath: "content/charts/bar-chart-vertical.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Bar chart",
@@ -125,6 +157,7 @@ export const contentPages = [
     href: "/bar-chart-vertical-stacked",
     routePath: "bar-chart-vertical-stacked",
     contentPath: "content/charts/bar-chart-vertical-stacked.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Bar chart",
@@ -132,6 +165,7 @@ export const contentPages = [
     href: "/bar-chart-vertical-nested",
     routePath: "bar-chart-vertical-nested",
     contentPath: "content/charts/bar-chart-vertical-nested.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Bar chart",
@@ -139,6 +173,7 @@ export const contentPages = [
     href: "/bar-chart-vertical-grouped",
     routePath: "bar-chart-vertical-grouped",
     contentPath: "content/charts/bar-chart-vertical-grouped.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Bar chart",
@@ -146,6 +181,7 @@ export const contentPages = [
     href: "/bar-chart-horizontal",
     routePath: "bar-chart-horizontal",
     contentPath: "content/charts/bar-chart-horizontal.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Bar chart",
@@ -153,6 +189,7 @@ export const contentPages = [
     href: "/bar-chart-horizontal-stacked",
     routePath: "bar-chart-horizontal-stacked",
     contentPath: "content/charts/bar-chart-horizontal-stacked.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Bar chart",
@@ -160,6 +197,7 @@ export const contentPages = [
     href: "/bar-chart-horizontal-grouped",
     routePath: "bar-chart-horizontal-grouped",
     contentPath: "content/charts/bar-chart-horizontal-grouped.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: null,
@@ -167,6 +205,7 @@ export const contentPages = [
     href: "/line-chart",
     routePath: "line-chart",
     contentPath: "content/charts/line-chart.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: null,
@@ -174,6 +213,7 @@ export const contentPages = [
     href: "/heat-table",
     routePath: "heat-table",
     contentPath: "content/charts/heat-table.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Hierarchical",
@@ -181,6 +221,7 @@ export const contentPages = [
     href: "/pack",
     routePath: "pack",
     contentPath: "content/charts/pack.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Hierarchical",
@@ -188,6 +229,7 @@ export const contentPages = [
     href: "/sunburst",
     routePath: "sunburst",
     contentPath: "content/charts/sunburst.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Hierarchical",
@@ -195,6 +237,7 @@ export const contentPages = [
     href: "/treemap",
     routePath: "treemap",
     contentPath: "content/charts/treemap.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Maps",
@@ -202,6 +245,7 @@ export const contentPages = [
     href: "/map-standard",
     routePath: "map-standard",
     contentPath: "content/charts/map-standard.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Maps",
@@ -209,6 +253,7 @@ export const contentPages = [
     href: "/map-extended",
     routePath: "map-extended",
     contentPath: "content/charts/map-extended.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Maps",
@@ -216,6 +261,7 @@ export const contentPages = [
     href: "/map-signature",
     routePath: "map-signature",
     contentPath: "content/charts/map-signature.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: null,
@@ -223,6 +269,7 @@ export const contentPages = [
     href: "/pie-charts",
     routePath: "pie-charts",
     contentPath: "content/charts/pie-charts.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: null,
@@ -230,6 +277,7 @@ export const contentPages = [
     href: "/population-pyramid",
     routePath: "population-pyramid",
     contentPath: "content/charts/population-pyramid.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: null,
@@ -237,6 +285,7 @@ export const contentPages = [
     href: "/sankey",
     routePath: "sankey",
     contentPath: "content/charts/sankey.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Scatterplot",
@@ -244,6 +293,7 @@ export const contentPages = [
     href: "/scatterplot",
     routePath: "scatterplot",
     contentPath: "content/charts/scatterplot.mdx",
+    tocMaxDepth: 3,
   },
   {
     section: "Scatterplot",

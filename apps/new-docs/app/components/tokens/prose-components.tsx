@@ -3,7 +3,10 @@ import type { ComponentPropsWithoutRef } from "react";
 import { Link } from "react-router";
 
 import { CodeBlock } from "~/components/code-block";
-import { Callout, Demo, Example } from "~/components/example";
+import { Callout } from "~/components/ui/callout";
+import { Demo } from "~/components/demo";
+import { Example } from "~/components/example";
+import { Gallery } from "~/components/gallery";
 import { Mermaid } from "~/components/mermaid";
 import {
   typefaceAnchor,
@@ -14,6 +17,7 @@ import {
   typefaceHeading4,
   typefaceHeading5,
   typefaceHeading6,
+  typefaceLead,
 } from "~/components/tokens/typeface";
 import { cn } from "~/lib/utils";
 
@@ -48,13 +52,14 @@ export const proseComponents = {
   li: ({ className, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
     <li className={cn(typefaceBody(), "mt-2", className)} {...props} />
   ),
+  /*
+   * In the ported docs a `>` block is never a quotation: it is the lead
+   * paragraph each page opens with. The old docs drew it as plain prose one
+   * step up in size, so it gets no rule, tint or italics here either.
+   */
   blockquote: ({ className, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
     <blockquote
-      className={cn(
-        typefaceBody(),
-        "*:text-muted-foreground mt-5 rounded-r-lg border-l-2 border-primary/50 bg-muted/50 px-5 py-4 italic",
-        className,
-      )}
+      className={cn(typefaceLead(), "mt-5 mb-8 *:text-[inherit] *:leading-[inherit]", className)}
       {...props}
     />
   ),
@@ -145,6 +150,7 @@ export const proseComponents = {
   ),
   mermaid: Mermaid,
   Example,
+  Gallery,
   Demo,
   Callout,
 };

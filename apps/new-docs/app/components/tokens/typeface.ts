@@ -27,11 +27,16 @@ export const typefaceHeading6 = (className?: string) =>
 export const typefaceBody = (className?: string) =>
   cn("font-sans text-[1.0625rem] leading-[1.44] tracking-normal", className);
 
-export const typefaceMeta = (className?: string) =>
-  cn("font-sans text-[0.8125rem] font-medium leading-[1.5] tracking-[0.01em]", className);
-
 export const typefaceAnchor = (className?: string) =>
   cn(
     "text-link underline decoration-link/40 underline-offset-[3px] hover:decoration-link transition-colors duration-150",
     className,
   );
+
+/**
+ * The lead paragraph a page opens with, written as a `>` blockquote in the
+ * ported docs. The old docs set it 1.2x body - larger, but otherwise ordinary
+ * prose, not a quotation - and that ratio is kept against this scale's body.
+ */
+export const typefaceLead = (className?: string) =>
+  cn("font-sans text-[1.275rem] leading-[1.44] tracking-normal text-foreground", className);
