@@ -1,0 +1,177 @@
+# Controls
+
+> Controls can be used to provide a graphical tool for interacting with a chart's state settings.
+
+## Button Group Control
+
+### sszvis.buttonGroup
+
+<Callout>
+
+This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.selectMenu). The two take the same values and the same `change` callback and replace each other's DOM, but they do not show an overlong label the same way: a button group wraps the label onto more lines, while a select menu trims it with an ellipsis.
+
+</Callout>
+
+#### `buttonGroup.values`
+
+an array of values which are the options available in the control. Each one will become a button
+
+#### `buttonGroup.current`
+
+the current value of the buttonGroup control. Should be one of the options passed to .values()
+
+#### `buttonGroup.[width]`
+
+The total width of the buttonGroup control, divided evenly between the options: each one is `width / values.length` wide. A label too long for its share wraps onto as many lines as it needs inside its own button, so the group still measures `width`. Only a single unbreakable word wider than an option's share makes that option — and with it the group — grow past `width`. Labels are never measured or shortened here. (default: 300px)
+
+#### `buttonGroup.change`
+
+A callback/event handler function to call when the user clicks on a value. Note that clicking on a value does not necessarily change any state unless this callback function does something.
+
+#### `buttonGroup.[ariaLabel]`
+
+An accessible name for the group of buttons, written to the wrapper as `aria-label`. The group carries `role="radiogroup"`, which assistive technology announces without saying what is being chosen — so pass the name of the dimension the buttons select, for example `"Ansicht"` or `"Jahr"`. No default: with none supplied, no attribute is written.
+
+### Example
+
+<Example
+  name="bar-chart-horizontal-interactive"
+  source="bar-chart-horizontal/interactive.html"
+  data="bar-chart-horizontal/data/SHB_13Categories.csv"
+/>
+
+### Example with many long labels
+
+With many options, each one only gets `width / values.length`. Labels too long for
+that share wrap onto as many lines as they need inside their own button, so the
+group still measures `width`.
+
+<Example
+  name="bar-chart-horizontal-long-labels"
+  source="bar-chart-horizontal/long-labels.html"
+  data="bar-chart-horizontal/data/SHB_13Categories_longNames.csv"
+/>
+
+## Select Control
+
+### sszvis.selectMenu
+
+<Callout>
+
+This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.buttonGroup). A native select element cannot wrap or grow, so this control shortens a long label where a button group would wrap it — swapping between the two across a breakpoint keeps the values and the callback, but not necessarily the same label text.
+
+</Callout>
+
+#### `selectMenu.values`
+
+an array of values which are the options available in the control.
+
+#### `selectMenu.current`
+
+the currently selected value of the select control. Should be one of the options passed to .values()
+
+#### `selectMenu.[width]`
+
+The total width of the select control. Labels wider than `width - 40` are trimmed to fit with an ellipsis mark, the 40px covering the select's own chrome; the select element itself is rendered 30px wider than `width`. (default: 300px)
+
+#### `selectMenu.change`
+
+A callback/event handler function to call when the user clicks on a value. Note that clicking on a value does not necessarily change any state unless this callback function does something.
+
+#### `selectMenu.[ariaLabel]`
+
+An accessible name for the menu, written to the `select` element as `aria-label`. No default: with none supplied, no attribute is written. Pass the same value you would give the equivalent `buttonGroup`, so the two stay interchangeable across breakpoints.
+
+### Example
+
+This example shows how a button group can be used interchangeably with a select. The button group is used when enough horizontal space is available and falls back to the select on narrow screens. Note that the label text can differ between the two at a given width: the button group wraps a long label, the select ellipsises it.
+
+<Example
+  name="map-signature-statzone"
+  source="map-signature/signature-statzone.html"
+  data="map-signature/data/births_year_statisticalZones.csv"
+/>
+
+## Slider Control
+
+### sszvis.slider
+
+#### `slider.scale`
+
+A scale function which this slider represents. The values in the scale's domain are used as the possible values of the slider.
+
+#### `slider.minorTicks`
+
+An array of ticks which become minor (smaller and unlabeled) ticks on the slider's axis.
+
+#### `slider.majorTicks`
+
+An array of ticks which become major (larger and labeled) ticks on the slider's axis.
+
+#### `slider.slant`
+
+A string which can be either "horizontal", "vertical" or "diagonal". This controls the orientation of the major tick labels. If not specified, the labels will be horizontal.
+
+#### `slider.tickLabels`
+
+A function to use to format the major tick labels.
+
+#### `slider.value`
+
+The display value of the slider.
+
+#### `slider.label`
+
+A string or function for the handle label. The datum associated with it is the current slider value.
+
+#### `slider.onchange`
+
+A callback function called whenever user interaction attempts to change the slider value. Note that this component will not change its own state. The callback function must affect some state change in order for this component's display to be updated.
+
+### Example
+
+<Example
+  name="scatterplot-many-years"
+  source="scatterplot/years-fake.html"
+  data="scatterplot/data/SS_years_fake.csv"
+/>
+
+## Handle Ruler
+
+### sszvis.handleRuler
+
+#### `handleRuler.x`
+
+A function or number which determines the x-position of the ruler
+
+#### `handleRuler.y`
+
+A function which determines the y-position of the ruler dots. Passed data values.
+
+#### `handleRuler.top`
+
+A number for the y-position of the top of the ruler.
+
+#### `handleRuler.bottom`
+
+A number for the y-position of the bottom of the ruler.
+
+#### `handleRuler.label`
+
+A string or string function for the labels of the ruler dots.
+
+#### `handleRuler.color`
+
+A string or color for the fill color of the ruler dots.
+
+#### `handleRuler.flip`
+
+A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
+
+### Example
+
+<Example
+  name="map-cml-quartier-years"
+  source="map-standard/cml-quartier-years.html"
+  data="map-standard/data/CML_quartier_years.csv"
+/>

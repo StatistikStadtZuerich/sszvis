@@ -1,0 +1,113 @@
+# Formatting
+
+> This library provides functions for formatting data following the SSZVIS style guide.
+
+## Formatting Functions
+
+### `sszvis.formatNumber(x)`
+
+A number greater than 9'999 will have a thousands separator space. Also, numbers will be shortened if they have insignificant decimals.
+
+| Function       | Example                       | Result   |
+| -------------- | ----------------------------- | -------- |
+| `formatNumber` | `sszvis.formatNumber(16000)`  | `16 000` |
+|                | `sszvis.formatNumber(5000)`   | `5000`   |
+|                | `sszvis.formatNumber(42.1)`   | `42.1`   |
+|                | `sszvis.formatNumber(42.001)` | `42`     |
+
+### `sszvis.formatPreciseNumber(p, d)`
+
+`p` = The desired precision `d` = The number to be formatted
+
+A number will be formatted to a particular precision. It is a function that accepts numbers and returns formatted values. This function is "curried", meaning that it is a function with multiple arguments, but when you call it with less than the full number of arguments, it returns a function that takes less arguments and has the arguments you did provide "pre-filled" as parameters.
+
+| Function              | Example                                  | Result   |
+| --------------------- | ---------------------------------------- | -------- |
+| `formatPreciseNumber` | `sszvis.formatPreciseNumber(2, 14.1234)` | `14.12`  |
+|                       | `sszvis.formatPreciseNumber(3, 14.1234)` | `14.123` |
+|                       | `sszvis.formatPreciseNumber(0, 14.1234)` | `14`     |
+
+### `sszvis.formatPercent(x)`
+
+A number will be transformed into a percent format. Formats percentages on the range 0–100.
+
+| Function        | Example                          | Result   |
+| --------------- | -------------------------------- | -------- |
+| `formatPercent` | `sszvis.formatPercent(55.3)`     | `55.3 %` |
+|                 | `sszvis.formatPercent(7)`        | `7 %`    |
+|                 | `sszvis.formatPercent(0.245875)` | `0.25 %` |
+
+### `sszvis.formatFractionPercent(x)`
+
+A number will be transformed into a percent format. Format percentages on the range 0–1.
+
+| Function                | Example                                  | Result    |
+| ----------------------- | ---------------------------------------- | --------- |
+| `formatFractionPercent` | `sszvis.formatFractionPercent(55.3)`     | `5530 %`  |
+|                         | `sszvis.formatFractionPercent(7)`        | `700 %`   |
+|                         | `sszvis.formatFractionPercent(0.245875)` | `24.59 %` |
+
+### `sszvis.formatText(x)`
+
+Any given data is returned as a string and will be formatted as Text.
+
+| Function     | Example                     | Result    |
+| ------------ | --------------------------- | --------- |
+| `formatText` | `sszvis.formatText(16000)`  | `'16000'` |
+|              | `sszvis.formatText("Jahr")` | `'Jahr'`  |
+
+#### `sszvis.formatAge(x)`
+
+A number will be formatted as an age. Means that any decimal number will be rounded to a full number.
+
+| Function    | Example                         | Result   |
+| ----------- | ------------------------------- | -------- |
+| `formatAge` | `sszvis.formatAge(55.54359375)` | `56`     |
+|             | `sszvis.formatAge(555435)`      | `555435` |
+
+### `sszvis.formatYear(x)`
+
+A date object will be formatted as a year. Gives the date's year.
+
+| Function     | Example                         | Result |
+| ------------ | ------------------------------- | ------ |
+| `formatYear` | `sszvis.formatYear(new Date())` | `2020` |
+
+### `sszvis.formatMonth(x)`
+
+A date object will be formatted as a month. It will return a capitalized three-letter abbreviation of the German month name.
+
+| Function      | Example                          | Result |
+| ------------- | -------------------------------- | ------ |
+| `formatMonth` | `sszvis.formatMonth(new Date())` | `JAN`  |
+
+### `sszvis.formatNone()`
+
+This is a Formatter for no label, only returning an empty string.
+
+| Function     | Example                                         | Result |
+| ------------ | ----------------------------------------------- | ------ |
+| `formatNone` | `sszvis.formatNone("500 People participated.")` |        |
+|              | `sszvis.formatNone(500343)`                     |        |
+
+## Live examples
+
+### `formatNumber`
+
+In this example, all Numbers in the y-Axis greater than 9999 use a thousands separator space.
+
+<Example
+  name="bar-chart-vertical-stacked"
+  source="bar-chart-vertical-stacked/basic.html"
+  data="bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv"
+/>
+
+### `formatFractionPercent`
+
+In this example, all Numbers in the y-Axis have been transformed into a percent format.
+
+<Example
+  name="line-chart-ordinal"
+  source="line-chart/ordinal.html"
+  data="line-chart/data/ML_school_years.csv"
+/>
