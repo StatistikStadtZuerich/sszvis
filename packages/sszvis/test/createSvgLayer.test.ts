@@ -72,7 +72,7 @@ describe("createSvgLayer", () => {
     expect(svg?.getAttribute("aria-label")).toContain("A test chart description");
   });
 
-  test("should include title and description elements", () => {
+  test("should name the chart with aria-label and a desc, without a title tooltip", () => {
     const container = document.createElement("div");
     document.body.append(container);
     createSvgLayer(container, undefined, {
@@ -80,11 +80,13 @@ describe("createSvgLayer", () => {
       description: "Chart Description",
     });
     const svg = container.querySelector("svg");
-    const title = svg?.querySelector("title");
     const desc = svg?.querySelector("desc");
-    expect(title).toBeTruthy();
+    // The accessible name is the aria-label, not a <title>: a <title> would also make the
+    // browser draw a native tooltip over the whole chart, on top of the chart's own hover.
+    expect(svg?.querySelector("title")).toBeNull();
+    expect(svg?.getAttribute("role")).toBe("img");
+    expect(svg?.getAttribute("aria-label")).toBe("Chart Title – Chart Description");
     expect(desc).toBeTruthy();
-    expect(title?.textContent).toBe("Chart Title");
     expect(desc?.textContent).toBe("Chart Description");
   });
 
