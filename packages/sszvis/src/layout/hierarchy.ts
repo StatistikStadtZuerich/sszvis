@@ -1,5 +1,6 @@
 import { type HierarchyNode, hierarchy, rollup } from "d3";
 import * as fn from "../fn.js";
+import type { ColorValue } from "../types.js";
 
 // Type definitions for hierarchical data structure using discriminated union
 export type NodeDatum<T> =
@@ -209,8 +210,8 @@ export function colorKeyOf<T>(node: HierarchyNode<NodeDatum<T>>): string | undef
 /** The fill a hierarchy node is drawn with, or the grey fallback when it has no key. */
 export function nodeColor<T>(
   node: HierarchyNode<NodeDatum<T>>,
-  colorScale: (key: string) => string,
-): string {
+  colorScale: (key: string) => ColorValue,
+): ColorValue {
   const key = colorKeyOf(node);
   return key === undefined ? HIERARCHY_FALLBACK_COLOR : colorScale(key);
 }

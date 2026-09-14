@@ -100,10 +100,12 @@
 
 import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
 import { select } from "d3";
+import { colorToString } from "../../color.js";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import { mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
+import type { ColorValue } from "../../types.js";
 
 /**
  * A path generator, as this component uses one. A d3.geoPath satisfies this shape, and so does a
@@ -118,7 +120,7 @@ type LakePath = ValueFn<BaseType, GeoPermissibleObjects, string | null>;
  * by d3 with the lakeBounds object itself rather than with a per-border datum - there is only one
  * path, so there is no such datum.
  */
-type LakePathColor = string | ValueFn<BaseType, GeoPermissibleObjects, string | null>;
+type LakePathColor = ColorValue | ValueFn<BaseType, GeoPermissibleObjects, ColorValue | null>;
 
 /**
  * The props as this component's contract describes them, which is deliberately narrower than what
@@ -315,7 +317,12 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
       if (props.lakePathColor === undefined) {
         lakePath.style("stroke", null);
       } else {
-        lakePath.style("stroke", fn.valueFn(props.lakePathColor));
+        const resolve = fn.valueFn<BaseType, GeoPermissibleObjects, ColorValue | null>(
+          props.lakePathColor,
+        );
+        lakePath.style("stroke", function (datum, index, groups) {
+          return colorToString(resolve.call(this, datum, index, groups));
+        });
       }
     });
 }

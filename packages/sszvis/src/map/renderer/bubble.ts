@@ -91,10 +91,12 @@
 
 import type { GeoPath, GeoProjection } from "d3";
 import { dispatch, select } from "d3";
+import { colorToString } from "../../color.js";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import translateString from "../../svgUtils/translateString.js";
 import { defaultTransition, OWN_TRANSITION } from "../../transition.js";
+import type { ColorValue } from "../../types.js";
 import { type GeoPoint, getGeoJsonCenter, type MergedGeoDatum } from "../mapUtils.js";
 
 /** A constant or an accessor; both are accepted, since these props are wrapped by fn.functor. */
@@ -113,8 +115,8 @@ type BubbleProps<T> = {
   mergedData: MergedGeoDatum<T>[];
   mapPath: GeoPath;
   radius: StoredBubbleValue<T, number>;
-  fill: StoredBubbleValue<T, string>;
-  strokeColor: StoredBubbleValue<T, string>;
+  fill: StoredBubbleValue<T, ColorValue>;
+  strokeColor: StoredBubbleValue<T, ColorValue>;
   strokeWidth: StoredBubbleValue<T, number>;
   transition: boolean;
 };
@@ -128,10 +130,10 @@ export interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilde
   mapPath(value: GeoPath): MapRendererBubbleComponent<T>;
   radius(): StoredBubbleValue<T, number> | undefined;
   radius<U = T>(value: BubbleValue<U, number>): MapRendererBubbleComponent<T>;
-  fill(): StoredBubbleValue<T, string> | undefined;
-  fill<U = T>(value: BubbleValue<U, string>): MapRendererBubbleComponent<T>;
-  strokeColor(): StoredBubbleValue<T, string>;
-  strokeColor<U = T>(value: BubbleValue<U, string>): MapRendererBubbleComponent<T>;
+  fill(): StoredBubbleValue<T, ColorValue> | undefined;
+  fill<U = T>(value: BubbleValue<U, ColorValue>): MapRendererBubbleComponent<T>;
+  strokeColor(): StoredBubbleValue<T, ColorValue>;
+  strokeColor<U = T>(value: BubbleValue<U, ColorValue>): MapRendererBubbleComponent<T>;
   strokeWidth(): StoredBubbleValue<T, number>;
   strokeWidth<U = T>(value: BubbleValue<U, number>): MapRendererBubbleComponent<T>;
   transition(): boolean;
@@ -305,8 +307,8 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
           const position = anchorPosition(props.mapPath, d.geoJson);
           return translateString(position[0], position[1]);
         })
-        .style("fill", (d) => props.fill(d.datum))
-        .style("stroke", (d) => props.strokeColor(d.datum))
+        .style("fill", (d) => colorToString(props.fill(d.datum)))
+        .style("stroke", (d) => colorToString(props.strokeColor(d.datum)))
         .style("stroke-width", (d) => props.strokeWidth(d.datum))
         // The circles paint over the base layer's areas, which carry the map's event targets. Where
         // this component has no listeners of its own they are decoration, not a hit area, so they

@@ -85,11 +85,13 @@
 import type { ExtendedFeatureCollection, GeoPath, GeoProjection } from "d3";
 import { select } from "d3";
 import tooltipAnchor from "../../annotation/tooltipAnchor.js";
+import { colorToString } from "../../color.js";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 import { slowTransition } from "../../transition.js";
+import type { ColorValue } from "../../types.js";
 import {
   type GeoPoint,
   getGeoJsonCenter,
@@ -140,7 +142,7 @@ type BaseProps<T> = {
   mapPath: GeoPath;
   defined: StoredMapValue<T, boolean>;
   encodesData?: boolean;
-  fill: StoredMapValue<T, string>;
+  fill: StoredMapValue<T, ColorValue>;
   transitionColor: boolean;
 };
 
@@ -159,8 +161,8 @@ export interface MapRendererBaseComponent<T = unknown> extends ComponentBuilder<
   defined<U = T>(value: MapValue<U, boolean>): MapRendererBaseComponent<T>;
   encodesData(): boolean | undefined;
   encodesData(value: boolean): MapRendererBaseComponent<T>;
-  fill(): StoredMapValue<T, string>;
-  fill<U = T>(value: MapValue<U, string>): MapRendererBaseComponent<T>;
+  fill(): StoredMapValue<T, ColorValue>;
+  fill<U = T>(value: MapValue<U, ColorValue>): MapRendererBaseComponent<T>;
   transitionColor(): boolean;
   transitionColor(enabled: boolean): MapRendererBaseComponent<T>;
 }
@@ -206,8 +208,8 @@ export default function mapRendererBase<T = unknown>(): MapRendererBaseComponent
       }
 
       // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
-      function getMapFill(d: MergedGeoDatum<T>): string {
-        return hasValue(d) ? props.fill(d.datum) : `url(#${patternId})`;
+      function getMapFill(d: MergedGeoDatum<T>): string | null {
+        return hasValue(d) ? colorToString(props.fill(d.datum)) : `url(#${patternId})`;
       }
 
       const mapAreas = selection

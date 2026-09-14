@@ -160,6 +160,7 @@
 
 import { interpolateNumber, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { colorToString } from "../color.js";
 import {
   type ComponentBuilder,
   component,
@@ -170,6 +171,7 @@ import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
+import type { ColorValue } from "../types.js";
 import bar from "./bar.js";
 
 /* Types
@@ -269,7 +271,7 @@ type StoredAccessor<D, R> = (datum?: D, index?: number) => R;
  * benefit: its attr overloads accept null but not undefined. Same convention as bar's fill
  * and stroke.
  */
-type ColorAccessor<D> = (datum?: D, index?: number) => string | null;
+type ColorAccessor<D> = (datum?: D, index?: number) => ColorValue | null;
 
 /** A label's text, or nothing when the property was never set. As ColorAccessor. */
 type LabelAccessor<D> = (datum?: D, index?: number) => string | null;
@@ -319,7 +321,7 @@ type SankeyProps = {
    * Handed to bar, whose fill accepts an accessor returning undefined, so this one keeps the
    * undefined that fn.functor actually yields where linkColor has to claim null.
    */
-  nodeColor?: StoredAccessor<SankeyNode, string | undefined>;
+  nodeColor?: StoredAccessor<SankeyNode, ColorValue | undefined>;
   linkColor?: ColorAccessor<SankeyLink>;
   linkSort: LinkComparator;
   labelSide: ColumnAccessor<LabelSide>;
@@ -368,10 +370,10 @@ export interface SankeyComponent extends SankeyBuilder {
   columnLabelOpacity(value: ColumnValue<number>): SankeyComponent;
   linkCurvature(): number;
   linkCurvature(curvature: number): SankeyComponent;
-  nodeColor(): StoredAccessor<SankeyNode, string | undefined> | undefined;
-  nodeColor<U = SankeyNode>(value: SankeyValue<U, string | undefined>): SankeyComponent;
+  nodeColor(): StoredAccessor<SankeyNode, ColorValue | undefined> | undefined;
+  nodeColor<U = SankeyNode>(value: SankeyValue<U, ColorValue | undefined>): SankeyComponent;
   linkColor(): ColorAccessor<SankeyLink> | undefined;
-  linkColor<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
+  linkColor<L = SankeyLink>(value: SankeyValue<L, ColorValue | undefined>): SankeyComponent;
   linkSort(): LinkComparator;
   linkSort<L = SankeyLink>(comparator: (a: L, b: L) => number): SankeyComponent;
   labelSide(): ColumnAccessor<LabelSide>;
@@ -612,7 +614,7 @@ export default function sankey(): SankeyComponent {
         .attr("fill", "none")
         .attr("d", linkPath)
         .attr("stroke-width", linkThickness)
-        .attr("stroke", props.linkColor ?? null)
+        .attr("stroke", (link) => colorToString(props.linkColor?.(link)))
         .sort(props.linkSort);
 
       linksGroup.datum(drawableLinks);

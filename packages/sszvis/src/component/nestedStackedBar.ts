@@ -68,7 +68,7 @@ import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import translateString from "../svgUtils/translateString.js";
-import type { AnySelection } from "../types.js";
+import type { AnySelection, ColorValue } from "../types.js";
 import type { StackedBarSeriesData, StackedBarSlice } from "./stackedBar.js";
 import { stackedBarVertical } from "./stackedBar.js";
 
@@ -100,12 +100,12 @@ type NestedStackedBarsProps<T, X extends string | number> = {
   offset: (datum: NestedStack<T, X>) => number | undefined;
   xScale: ScaleBand<X>;
   yScale: (value: number) => number;
-  fill: string | ((slice: StackedBarSlice<T, X>) => string);
+  fill: ColorValue | ((slice: StackedBarSlice<T, X>) => ColorValue);
   stroke:
-    | string
+    | ColorValue
     | null
     | undefined
-    | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
+    | ((slice: StackedBarSlice<T, X>, index: number) => ColorValue | undefined);
   tooltip: (selection: AnySelection) => void;
   /** Accepted and ignored; see the module JSDoc. */
   xAcc?: (datum: T) => X;
@@ -127,15 +127,15 @@ export interface NestedStackedBarsVerticalComponent<
   xScale(scale: ScaleBand<X>): this;
   yScale(): (value: number) => number;
   yScale(scale: (value: number) => number): this;
-  fill(): string | ((slice: StackedBarSlice<T, X>) => string);
-  fill<U = StackedBarSlice<T, X>>(value: string | ((slice: U) => string)): this;
+  fill(): ColorValue | ((slice: StackedBarSlice<T, X>) => ColorValue);
+  fill<U = StackedBarSlice<T, X>>(value: ColorValue | ((slice: U) => ColorValue)): this;
   stroke():
-    | string
+    | ColorValue
     | null
     | undefined
-    | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
+    | ((slice: StackedBarSlice<T, X>, index: number) => ColorValue | undefined);
   stroke<U = StackedBarSlice<T, X>>(
-    value: string | null | undefined | ((slice: U, index: number) => string | undefined),
+    value: ColorValue | null | undefined | ((slice: U, index: number) => ColorValue | undefined),
   ): this;
   tooltip(): (selection: AnySelection) => void;
   tooltip(tooltip: (selection: AnySelection) => void): this;

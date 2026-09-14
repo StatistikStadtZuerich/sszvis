@@ -25,13 +25,15 @@
  */
 
 import { scaleLinear, select } from "d3";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import { halfPixel } from "../svgUtils/crisp.js";
+import type { ColorValue } from "../types.js";
 
 /** The subset of a d3 scale this legend relies on. */
-type BinnedColorScale = (value: number) => string;
+type BinnedColorScale = (value: number) => ColorValue;
 
 type BinLabelFormatter = (value: number) => string | number;
 
@@ -47,7 +49,7 @@ type BinnedColorScaleProps = {
 interface Bin {
   x: number;
   w: number;
-  c: string;
+  c: string | null;
 }
 
 /** A bin whose upper edge is a display value, so it carries a tick line and a label. */
@@ -108,7 +110,7 @@ export default function (): BinnedColorScaleComponent {
         labelledBins.push({
           x: Math.floor(circleRad + sum),
           w: w + offset,
-          c: props.scale(pPrev),
+          c: colorToString(props.scale(pPrev)),
           p,
         });
         sum += w;
@@ -119,7 +121,7 @@ export default function (): BinnedColorScaleComponent {
       const finalBin: Bin = {
         x: Math.floor(circleRad + sum),
         w: innerRange[1] - sum,
-        c: props.scale(pPrev),
+        c: colorToString(props.scale(pPrev)),
       };
       const rectData: Bin[] = [...labelledBins, finalBin];
 
@@ -133,7 +135,7 @@ export default function (): BinnedColorScaleComponent {
         .attr("r", circleRad)
         .attr("cy", circleRad)
         .attr("cx", (_d, i) => (i === 0 ? circleRad : props.width - circleRad))
-        .attr("fill", props.scale);
+        .attr("fill", (d) => colorToString(props.scale(d)));
 
       const segments = selection
         .selectAll("rect.sszvis-legend__crispmark")

@@ -142,6 +142,7 @@ import { select } from "d3";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import * as logger from "../../logger.js";
+import type { ColorValue } from "../../types.js";
 
 /**
  * Marks the canvas a raster owns, so a second raster in the same layer draws its own rather than
@@ -161,10 +162,10 @@ type Position = [number, number];
  * A constant or an accessor; both are accepted, since fill is wrapped by fn.functor. The result is
  * assigned to fillStyle, which ignores a value it cannot parse.
  */
-type RasterFill<T> = string | ((datum: T) => string);
+type RasterFill<T> = ColorValue | ((datum: T) => ColorValue);
 
 /** How a functor-wrapped prop reads back once it is stored: always a function. */
-type StoredRasterFill<T> = (datum: T) => string;
+type StoredRasterFill<T> = (datum: T) => ColorValue;
 
 /**
  * The props as this component's contract describes them, which is deliberately narrower than what
@@ -401,7 +402,9 @@ export default function mapRendererRaster<T = unknown>(): MapRendererRasterCompo
         }
         const x = at[0] - halfSide;
         const y = at[1] - halfSide;
-        const colour = fill(datum);
+        // Stringified here because the canvas fillStyle and the parse cache are both keyed by
+        // string; a colour object from one of the library's scales coerces the same way.
+        const colour = String(fill(datum));
         let parses = parsed.get(colour);
         if (parses === undefined) {
           parses = fillParses(ctx, colour);

@@ -35,11 +35,18 @@
  */
 
 import { ascending, type NumberValue, select } from "d3";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
-import type { AnySelection, BooleanAccessor, NumberAccessor, StringAccessor } from "../types.js";
+import type {
+  AnySelection,
+  BooleanAccessor,
+  ColorValue,
+  NumberAccessor,
+  StringAccessor,
+} from "../types.js";
 
 /** Horizontal distance between a dot and its label. */
 const LABEL_OFFSET = 10;
@@ -55,7 +62,7 @@ interface RulerProps<T = unknown> {
   x: (d: Datum<T>) => NumberValue;
   y: (d: Datum<T>) => NumberValue;
   label: (d: Datum<T>) => string;
-  color?: string | ((d: Datum<T>) => string);
+  color?: ColorValue | ((d: Datum<T>) => ColorValue);
   flip: (d: Datum<T>) => boolean;
   labelId?: (d: Datum<T>) => string;
   reduceOverlap: boolean;
@@ -67,10 +74,19 @@ interface RulerComponent<T = unknown> extends ComponentBuilder<RulerComponent<T>
   x(accessor?: NumberAccessor<Datum<T>>): RulerComponent<T>;
   y(accessor?: NumberAccessor<Datum<T>>): RulerComponent<T>;
   label(accessor?: StringAccessor<Datum<T>>): RulerComponent<T>;
-  color(accessor?: StringAccessor<Datum<T>>): RulerComponent<T>;
+  color(accessor?: ColorValue | ((d: Datum<T>) => ColorValue)): RulerComponent<T>;
   flip(accessor?: BooleanAccessor<Datum<T>>): RulerComponent<T>;
   labelId(accessor?: StringAccessor<Datum<T>>): RulerComponent<T>;
   reduceOverlap(enabled?: boolean): RulerComponent<T>;
+}
+
+/**
+ * The dot fill, as d3 wants it. An unset `color` - and, as before, any other falsy value -
+ * falls back to black; an accessor is always asked, so a colour it returns is used as-is.
+ */
+function fillOf<T>(color: RulerProps<T>["color"]): (d: Datum<T>) => string | null {
+  if (!color) return () => "black";
+  return typeof color === "function" ? (d) => colorToString(color(d)) : () => colorToString(color);
 }
 
 export const annotationRuler = <T = unknown>(): RulerComponent<T> =>
@@ -122,7 +138,7 @@ export const annotationRuler = <T = unknown>(): RulerComponent<T> =>
         .attr("cx", fn.compose(halfPixel, props.x))
         .attr("cy", fn.compose(halfPixel, props.y))
         .attr("r", 3.5)
-        .attr("fill", props.color || "black");
+        .attr("fill", fillOf(props.color));
 
       selection
         .selectAll<SVGTextElement, Datum<T>>(".sszvis-ruler__label-outline")

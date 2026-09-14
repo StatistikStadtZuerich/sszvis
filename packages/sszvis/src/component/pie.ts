@@ -49,10 +49,12 @@
 
 import { arc, interpolate, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import { defaultTransition, OWN_TRANSITION } from "../transition.js";
+import type { ColorValue } from "../types.js";
 
 /** The angles of one wedge, in radians, as d3's arc generator wants them. */
 interface WedgeAngles {
@@ -69,13 +71,13 @@ export type AngleAccessor<T = unknown> = (d: T) => number;
  * reads both, so one nullish-aware alias describes what the setters accept and what the
  * getters return.
  */
-export type ColorAccessor<T = unknown> = (d: T, i: number) => string | null | undefined;
-export type ColorValue<T = unknown> = string | null | undefined | ColorAccessor<T>;
+export type ColorAccessor<T = unknown> = (d: T, i: number) => ColorValue | null | undefined;
+export type PieColorValue<T = unknown> = ColorValue | null | undefined | ColorAccessor<T>;
 
 type PieProps<T> = {
   radius: number;
-  fill?: ColorValue<T>;
-  stroke?: ColorValue<T>;
+  fill?: PieColorValue<T>;
+  stroke?: PieColorValue<T>;
   angle: AngleAccessor<T>;
   transition: boolean;
 };
@@ -88,10 +90,10 @@ type PieProps<T> = {
 export interface PieComponent<T = unknown> extends ComponentBuilder<PieComponent<T>> {
   radius(): number | undefined;
   radius(radius: number): PieComponent<T>;
-  fill(): ColorValue<T> | undefined;
-  fill<U = T>(fill: ColorValue<U>): PieComponent<T>;
-  stroke(): ColorValue<T> | undefined;
-  stroke<U = T>(stroke: ColorValue<U>): PieComponent<T>;
+  fill(): PieColorValue<T> | undefined;
+  fill<U = T>(fill: PieColorValue<U>): PieComponent<T>;
+  stroke(): PieColorValue<T> | undefined;
+  stroke<U = T>(stroke: PieColorValue<U>): PieComponent<T>;
   angle(): AngleAccessor<T> | undefined;
   angle<U = T>(angle: number | AngleAccessor<U>): PieComponent<T>;
   transition(): boolean;
@@ -111,13 +113,15 @@ function required<V>(value: V | undefined, name: string): V {
  * constant are equivalent to d3, and so are an unset property and one returning null:
  * either way d3 removes the attribute.
  */
-function toColorAccessor<T>(value: ColorValue<T> | undefined): (d: T, i: number) => string | null {
-  // An accessor is handed to d3 untouched. Its result is narrowed from
-  // `string | null | undefined` to `string | null` only because d3's own attr typings omit
-  // undefined; d3 removes the attribute for either one, so the two are interchangeable here.
+function toColorAccessor<T>(
+  value: PieColorValue<T> | undefined,
+): (d: T, i: number) => string | null {
+  // The result is rendered to a string because d3's own attr typings accept only strings -
+  // d3 would stringify a LabColor itself - and nullish stays nullish, which d3 reads as
+  // "remove the attribute" either way.
   return typeof value === "function"
-    ? (value as (d: T, i: number) => string | null)
-    : () => value ?? null;
+    ? (d: T, i: number) => colorToString(value(d, i))
+    : () => colorToString(value);
 }
 
 // The angles currently on screen, per wedge element. d3 cannot interpolate an arc path

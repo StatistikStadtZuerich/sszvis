@@ -134,6 +134,7 @@ import {
 import { cascade } from "../cascade.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import type { ColorValue } from "../types.js";
 import bar, { type BarComponent } from "./bar.js";
 
 const stackAcc = fn.prop("stack");
@@ -333,7 +334,7 @@ type StoredDimension<T, X extends string | number> = (
 /** fill is stored exactly as set, and may be left unset, in which case no fill is written. */
 type FillValue<T, X extends string | number> = SliceValue<
   StackedBarSlice<T, X>,
-  string | undefined
+  ColorValue | undefined
 >;
 
 /**
@@ -342,10 +343,10 @@ type FillValue<T, X extends string | number> = SliceValue<
  * string writes an empty one, stroke="".
  */
 type StrokeValue<T, X extends string | number> =
-  | string
+  | ColorValue
   | null
   | undefined
-  | ((slice: StackedBarSlice<T, X>, index: number) => string | undefined);
+  | ((slice: StackedBarSlice<T, X>, index: number) => ColorValue | undefined);
 
 /** The props the two orientations share. fill and stroke are stored exactly as they were set. */
 type ColorProps<T, X extends string | number> = {
@@ -394,11 +395,11 @@ export interface StackedBarVerticalComponent<
   ): StackedBarVerticalComponent<T, X>;
   fill(): FillValue<T, X>;
   fill<U = StackedBarSlice<T, X>>(
-    value: SliceValue<U, string | undefined>,
+    value: SliceValue<U, ColorValue | undefined>,
   ): StackedBarVerticalComponent<T, X>;
   stroke(): StrokeValue<T, X>;
   stroke<U = StackedBarSlice<T, X>>(
-    value: string | null | undefined | ((slice: U, index: number) => string | undefined),
+    value: ColorValue | null | undefined | ((slice: U, index: number) => ColorValue | undefined),
   ): StackedBarVerticalComponent<T, X>;
   transition(): boolean;
   transition(enabled: boolean): StackedBarVerticalComponent<T, X>;
@@ -422,11 +423,11 @@ export interface StackedBarHorizontalComponent<
   ): StackedBarHorizontalComponent<T, X>;
   fill(): FillValue<T, X>;
   fill<U = StackedBarSlice<T, X>>(
-    value: SliceValue<U, string | undefined>,
+    value: SliceValue<U, ColorValue | undefined>,
   ): StackedBarHorizontalComponent<T, X>;
   stroke(): StrokeValue<T, X>;
   stroke<U = StackedBarSlice<T, X>>(
-    value: string | null | undefined | ((slice: U, index: number) => string | undefined),
+    value: ColorValue | null | undefined | ((slice: U, index: number) => ColorValue | undefined),
   ): StackedBarHorizontalComponent<T, X>;
   transition(): boolean;
   transition(enabled: boolean): StackedBarHorizontalComponent<T, X>;
@@ -487,7 +488,7 @@ function fillOf<T, X extends string | number>(fill: FillValue<T, X> | undefined)
  */
 function strokeOf<T, X extends string | number>(
   stroke: StrokeValue<T, X>,
-): FillValue<T, X> | string {
+): FillValue<T, X> | ColorValue {
   if (stroke === undefined) return "#FFFFFF";
   return stroke ?? undefined;
 }

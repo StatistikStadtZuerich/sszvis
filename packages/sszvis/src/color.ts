@@ -55,6 +55,8 @@ import {
   scaleOrdinal,
 } from "d3";
 
+import type { ColorValue } from "./types.js";
+
 /**
  * Extended ordinal scale with additional methods for color manipulation
  */
@@ -301,12 +303,12 @@ export const scaleDimGry = greyColorScale(["#B8B8B8"]);
 export const scaleMedGry = greyColorScale(["#7C7C7C"]);
 export const scaleDeepGry = greyColorScale(["#545454"]);
 
-export const slightlyDarker = (c: string): HSLColor => hsl(c).darker(0.4);
+export const slightlyDarker = (c: ColorValue): HSLColor => hsl(String(c)).darker(0.4);
 
-export const muchDarker = (c: string): HSLColor => hsl(c).darker(0.7);
+export const muchDarker = (c: ColorValue): HSLColor => hsl(String(c)).darker(0.7);
 
-export const withAlpha = (c: string, a: number): string => {
-  const rgbColor = rgb(c);
+export const withAlpha = (c: ColorValue, a: number): string => {
+  const rgbColor = rgb(String(c));
   return `rgba(${rgbColor.r},${rgbColor.g},${rgbColor.b},${a})`;
 };
 
@@ -409,11 +411,23 @@ function convertLab(d: string): LabColor {
   return lab(d);
 }
 
-export const getAccessibleTextColor = (backgroundColor: string | null): string => {
+/**
+ * Renders a colour as the string an SVG attribute needs.
+ *
+ * The scales in this module return d3 `LabColor` objects, and d3 stringifies those itself
+ * when it writes an attribute. Doing it explicitly is the same conversion, and it lets a
+ * property typed as `ColorValue` reach d3's attribute typings, which accept only strings.
+ * Nullish stays nullish: d3 removes the attribute for it.
+ */
+export function colorToString(color: ColorValue | null | undefined): string | null {
+  return color == null ? null : String(color);
+}
+
+export const getAccessibleTextColor = (backgroundColor: ColorValue | null): string => {
   if (!backgroundColor) {
     return black;
   }
-  const bgColor = rgb(backgroundColor);
+  const bgColor = rgb(String(backgroundColor));
   const gammaCorrect = (c: number): number => {
     const normalized = c / 255;
     return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;

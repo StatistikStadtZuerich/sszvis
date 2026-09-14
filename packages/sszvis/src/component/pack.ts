@@ -30,13 +30,13 @@
 
 import { pack as d3Pack, type HierarchyCircularNode, type HierarchyNode, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { getAccessibleTextColor } from "../color.js";
+import { colorToString, getAccessibleTextColor } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import { HIERARCHY_FALLBACK_COLOR, inheritedColorKey, nodeColor } from "../layout/hierarchy.js";
 import { defaultTransition } from "../transition.js";
-import type { StringAccessor } from "../types.js";
+import type { ColorValue, StringAccessor } from "../types.js";
 
 // PackLayout represents a node in the pack layout after D3 layout computation
 export type PackLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
@@ -53,14 +53,14 @@ export type PackLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
 export type PackClickHandler<T = unknown> = (event: MouseEvent, node: PackLayout<T>) => void;
 
 type PackProps<T = unknown> = {
-  colorScale: (key: string) => string;
+  colorScale: (key: string) => ColorValue;
   transition?: boolean;
   containerWidth: number;
   containerHeight: number;
   showLabels?: boolean;
   label?: StringAccessor<PackLayout<T>>;
   minRadius?: number;
-  circleStroke: string;
+  circleStroke: ColorValue;
   circleStrokeWidth: number;
   radiusScale?: (d: HierarchyCircularNode<NodeDatum<T>>) => number;
   onClick?: PackClickHandler<T>;
@@ -68,8 +68,8 @@ type PackProps<T = unknown> = {
 
 // Component interface with proper method overloads
 interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> {
-  colorScale(): (key: string) => string;
-  colorScale(scale: string | ((key: string) => string)): PackComponent<T>;
+  colorScale(): (key: string) => ColorValue;
+  colorScale(scale: ColorValue | ((key: string) => ColorValue)): PackComponent<T>;
   transition(): boolean;
   transition(enabled: boolean): PackComponent<T>;
   containerWidth(): number;
@@ -82,8 +82,8 @@ interface PackComponent<T = unknown> extends ComponentBuilder<PackComponent<T>> 
   label(accessor: StringAccessor<PackLayout<T>>): PackComponent<T>;
   minRadius(): number;
   minRadius(radius: number): PackComponent<T>;
-  circleStroke(): string;
-  circleStroke(stroke: string): PackComponent<T>;
+  circleStroke(): ColorValue;
+  circleStroke(stroke: ColorValue): PackComponent<T>;
   circleStrokeWidth(): number;
   circleStrokeWidth(width: number): PackComponent<T>;
   radiusScale(): (d: HierarchyCircularNode<NodeDatum<T>>) => number;
@@ -173,13 +173,15 @@ export default function pack<T = unknown>(): PackComponent<T> {
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y)
         .attr("r", (d) => d.r)
-        .attr("fill", circleFillAcc)
+        .attr("fill", (d) => colorToString(circleFillAcc(d)))
         .attr("stroke", (d: PackLayout<T>) => {
           // Branches carry the category colour; leaves fall back to the configured stroke.
           const inherited = inheritedColorKey(d);
-          if (inherited !== undefined) return props.colorScale(inherited);
-          if (!d.children) return props.circleStroke;
-          return "key" in d.data ? props.colorScale(d.data.key) : HIERARCHY_FALLBACK_COLOR;
+          if (inherited !== undefined) return colorToString(props.colorScale(inherited));
+          if (!d.children) return colorToString(props.circleStroke);
+          return colorToString(
+            "key" in d.data ? props.colorScale(d.data.key) : HIERARCHY_FALLBACK_COLOR,
+          );
         })
         .attr("stroke-width", (d: PackLayout<T>) => {
           // Branch nodes get thicker stroke to make them more visible

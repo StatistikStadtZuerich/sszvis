@@ -129,10 +129,12 @@
  */
 
 import { area as d3Area, select, type ValueFn } from "d3";
+import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import { defaultTransition, OWN_TRANSITION } from "../transition.js";
+import type { ColorValue } from "../types.js";
 
 /**
  * The dimension accessors are handed to d3.area, which calls them with a single point, that
@@ -177,8 +179,8 @@ type StackedAreaProps<P, L> = {
    * between an unset upper bound and one set to null.
    */
   y1?: AreaValue<P> | null;
-  fill?: StyleValue<L, string> | null;
-  stroke?: StyleValue<L, string> | null;
+  fill?: StyleValue<L, ColorValue> | null;
+  stroke?: StyleValue<L, ColorValue> | null;
   strokeWidth?: StyleValue<L, number> | null;
   defined?: boolean | PointAccessor<P, boolean>;
   key: KeyAccessor<L, string | number>;
@@ -195,10 +197,10 @@ export interface StackedAreaComponent<
   y0<Q = P>(value: AreaValue<Q>): StackedAreaComponent<P, L>;
   y1(): AreaValue<P> | null | undefined;
   y1<Q = P>(value: AreaValue<Q> | null): StackedAreaComponent<P, L>;
-  fill(): StyleValue<L, string> | null | undefined;
-  fill<M = L>(value: StyleValue<M, string> | null): StackedAreaComponent<P, L>;
-  stroke(): StyleValue<L, string> | null | undefined;
-  stroke<M = L>(value: StyleValue<M, string> | null): StackedAreaComponent<P, L>;
+  fill(): StyleValue<L, ColorValue> | null | undefined;
+  fill<M = L>(value: StyleValue<M, ColorValue> | null): StackedAreaComponent<P, L>;
+  stroke(): StyleValue<L, ColorValue> | null | undefined;
+  stroke<M = L>(value: StyleValue<M, ColorValue> | null): StackedAreaComponent<P, L>;
   strokeWidth(): StyleValue<L, number> | null | undefined;
   strokeWidth<M = L>(value: StyleValue<M, number> | null): StackedAreaComponent<P, L>;
   defined(): boolean | PointAccessor<P, boolean> | undefined;
@@ -242,6 +244,19 @@ const isMissingVal = (value: unknown): boolean => value == null || Number.isNaN(
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
  */
+/**
+ * Resolves a colour prop - a constant or a per-layer accessor - to the string d3 writes into
+ * an attribute. Nullish stays nullish, which removes the attribute.
+ */
+function colorFn<L>(
+  value: StyleValue<L, ColorValue> | null,
+): ValueFn<SVGPathElement, L, string | null> {
+  const resolve = fn.valueFn<SVGPathElement, L, ColorValue | null>(value);
+  return function (datum, index, groups) {
+    return colorToString(resolve.call(this, datum, index, groups));
+  };
+}
+
 export default function stackedArea<
   P = unknown,
   L extends Iterable<P> = P[],
@@ -322,11 +337,13 @@ export default function stackedArea<
       // Rendering
 
       const pathData: ValueFn<SVGPathElement, L, string | null> = (datum) => areaGen(datum);
-      const fill = fn.valueFn(props.fill ?? null);
+      // The colour props may hold one of the library's colour objects, so each is resolved
+      // first and then rendered as the string d3 writes - the same conversion d3 would do.
+      const fill = colorFn<L>(props.fill ?? null);
       // The white hairline separating two touching layers. Applied with an explicit undefined
       // check, as strokeWidth is, so it stands in for an unset stroke only: null and "" are
       // supplied values and reach d3 as given. A ?? would have swallowed the null.
-      const stroke = fn.valueFn(props.stroke === undefined ? "#ffffff" : props.stroke);
+      const stroke = colorFn<L>(props.stroke === undefined ? "#ffffff" : props.stroke);
       const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
 
       // Matching on the stacked-area class rather than the generic .sszvis-path one, which pie

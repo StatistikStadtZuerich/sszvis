@@ -60,8 +60,10 @@
 
 import type { BaseType, GeoPermissibleObjects, ValueFn } from "d3";
 import { select } from "d3";
+import { colorToString } from "../../color.js";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
+import type { ColorValue } from "../../types.js";
 
 /**
  * A path generator, as this component uses one. A d3.geoPath satisfies this shape, and so does a
@@ -77,9 +79,7 @@ type MeshPath = ValueFn<BaseType, GeoPermissibleObjects, string | null>;
  * null or undefined, which is read as "keep the default" rather than as "remove the style", so a
  * border cannot silently vanish.
  */
-type MeshValue<R extends string | number> =
-  | R
-  | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
+type MeshValue<R> = R | ValueFn<BaseType, GeoPermissibleObjects, R | null | undefined>;
 
 /**
  * Marks the path a mesh owns, so a second mesh in the same group draws its own rather than
@@ -100,7 +100,7 @@ const DEFAULT_STROKE_WIDTH = 1.25;
  * outcome of an accessor written against a datum, the way every other map renderer's colour
  * accessor is written, so the default stands instead.
  */
-function withDefault<R extends string | number>(
+function withDefault<R>(
   value: MeshValue<R>,
   fallback: R,
 ): ValueFn<BaseType, GeoPermissibleObjects, R> {
@@ -109,6 +109,18 @@ function withDefault<R extends string | number>(
       .valueFn<BaseType, GeoPermissibleObjects, R | null | undefined>(value)
       .call(this, datum, index, groups);
     return resolved ?? fallback;
+  };
+}
+
+/**
+ * Renders a resolved colour as the string d3 writes into a style - the same conversion d3 would
+ * do itself, made explicit so one of the library's colour objects reaches d3's style typings.
+ */
+function asColorString(
+  value: ValueFn<BaseType, GeoPermissibleObjects, ColorValue>,
+): ValueFn<BaseType, GeoPermissibleObjects, string | null> {
+  return function (datum, index, groups) {
+    return colorToString(value.call(this, datum, index, groups));
   };
 }
 
@@ -122,7 +134,7 @@ type MeshProps = {
   geoJson?: GeoPermissibleObjects;
   mapPath?: MeshPath;
   key: string;
-  borderColor: MeshValue<string>;
+  borderColor: MeshValue<ColorValue>;
   strokeWidth: MeshValue<number>;
 };
 
@@ -133,8 +145,8 @@ export interface MapRendererMeshComponent extends ComponentBuilder<MapRendererMe
   mapPath(value: MeshPath): MapRendererMeshComponent;
   key(): string;
   key(value: string): MapRendererMeshComponent;
-  borderColor(): MeshValue<string>;
-  borderColor(value: MeshValue<string>): MapRendererMeshComponent;
+  borderColor(): MeshValue<ColorValue>;
+  borderColor(value: MeshValue<ColorValue>): MapRendererMeshComponent;
   strokeWidth(): MeshValue<number>;
   strokeWidth(value: MeshValue<number>): MapRendererMeshComponent;
 }
@@ -183,7 +195,7 @@ export default function mapRendererMesh(): MapRendererMeshComponent {
 
       meshLine
         .attr("d", mapPath)
-        .style("stroke", withDefault(props.borderColor, DEFAULT_BORDER_COLOR))
+        .style("stroke", asColorString(withDefault(props.borderColor, DEFAULT_BORDER_COLOR)))
         .style("stroke-width", withDefault(props.strokeWidth, DEFAULT_STROKE_WIDTH));
     });
 }

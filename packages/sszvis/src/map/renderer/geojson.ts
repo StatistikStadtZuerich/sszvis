@@ -72,11 +72,13 @@ import {
 } from "d3";
 import type { GeoJsonProperties } from "geojson";
 import tooltipAnchor from "../../annotation/tooltipAnchor.js";
+import { colorToString } from "../../color.js";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 import { slowTransition } from "../../transition.js";
+import type { ColorValue } from "../../types.js";
 import {
   GEO_KEY_DEFAULT,
   type GeoPoint,
@@ -112,14 +114,18 @@ type GeoJsonProps = {
   geoJson: ExtendedFeatureCollection;
   mapPath: GeoPath;
   defined: StoredGeoJsonValue<boolean>;
-  fill: StoredGeoJsonValue<string>;
-  stroke: StoredGeoJsonValue<string>;
+  fill: StoredGeoJsonValue<ColorValue>;
+  stroke: StoredGeoJsonValue<ColorValue>;
   strokeWidth: StoredGeoJsonValue<number>;
   transitionColor: boolean;
 };
 
-/** A handler as this component's own event API delivers it. */
-type GeoJsonEventHandler = (datum: unknown) => void;
+/**
+ * A handler as this component's own event API delivers it: with the hovered entity's datum,
+ * which is undefined for a feature that matched no data. Generic over the component's datum,
+ * as the choropleth and bubble renderers' handlers are.
+ */
+type GeoJsonEventHandler<T = unknown> = (datum: T | undefined) => void;
 
 export interface MapRendererGeoJsonComponent<T = unknown> extends ComponentBuilder<
   MapRendererGeoJsonComponent<T>
@@ -134,14 +140,14 @@ export interface MapRendererGeoJsonComponent<T = unknown> extends ComponentBuild
   mapPath(value: GeoPath): MapRendererGeoJsonComponent<T>;
   defined(): StoredGeoJsonValue<boolean>;
   defined<U = T>(value: GeoJsonValue<U, boolean>): MapRendererGeoJsonComponent<T>;
-  fill(): StoredGeoJsonValue<string>;
-  fill<U = T>(value: GeoJsonValue<U, string>): MapRendererGeoJsonComponent<T>;
-  stroke(): StoredGeoJsonValue<string>;
-  stroke<U = T>(value: GeoJsonValue<U, string>): MapRendererGeoJsonComponent<T>;
+  fill(): StoredGeoJsonValue<ColorValue>;
+  fill<U = T>(value: GeoJsonValue<U, ColorValue>): MapRendererGeoJsonComponent<T>;
+  stroke(): StoredGeoJsonValue<ColorValue>;
+  stroke<U = T>(value: GeoJsonValue<U, ColorValue>): MapRendererGeoJsonComponent<T>;
   strokeWidth(): StoredGeoJsonValue<number>;
   strokeWidth<U = T>(value: GeoJsonValue<U, number>): MapRendererGeoJsonComponent<T>;
-  on(eventName: string, handler: GeoJsonEventHandler): MapRendererGeoJsonComponent<T>;
-  on(eventName: string): GeoJsonEventHandler | undefined;
+  on(eventName: string, handler: GeoJsonEventHandler<T>): MapRendererGeoJsonComponent<T>;
+  on(eventName: string): GeoJsonEventHandler<T> | undefined;
   transitionColor(): boolean;
   transitionColor(enabled: boolean): MapRendererGeoJsonComponent<T>;
 }
@@ -211,14 +217,16 @@ export default function mapRendererGeoJson<
         };
       });
 
-      function getMapFill(d: MergedFeature): string {
+      function getMapFill(d: MergedFeature): string | null {
         return fn.defined(d.datum) && props.defined(d.datum)
-          ? props.fill(d.datum)
+          ? colorToString(props.fill(d.datum))
           : `url(#${patternId})`;
       }
 
-      function getMapStroke(d: MergedFeature): string {
-        return fn.defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
+      function getMapStroke(d: MergedFeature): string | null {
+        return fn.defined(d.datum) && props.defined(d.datum)
+          ? colorToString(props.stroke(d.datum))
+          : "";
       }
 
       // Guarded like fill and stroke: an unmatched feature is not asked for a stroke width, and
