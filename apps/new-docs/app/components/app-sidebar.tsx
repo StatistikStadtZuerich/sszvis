@@ -1,8 +1,10 @@
 import { ChevronRight, Package } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
-import { GithubIcon } from "~/components/icons";
+import { GithubIcon } from "~/components/ui/icons";
+import { Button } from "~/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "~/components/ui/collapsible";
+import { NavLink } from "~/components/ui/nav-link";
 import {
   Sidebar,
   SidebarContent,
@@ -26,10 +28,6 @@ const sectionLabelClassName = (isCurrent: boolean) =>
     isCurrent ? "text-primary" : "text-sidebar-foreground",
   );
 
-/**
- * A collapsible group. Like the old Catalog sidebar, a section starts expanded
- * only while it holds the current page, so the full page list stays short.
- */
 const NavSectionGroup = ({
   section,
   pathname,
@@ -43,19 +41,17 @@ const NavSectionGroup = ({
   const [isOpen, setIsOpen] = useState(isCurrentSection);
   return (
     <SidebarGroup className="gap-0 border-sidebar-border border-t p-0">
-      {/* The section holding the current page stays open, however the user
-          navigated to it - the footer's prev/next links can land here too. */}
       <Collapsible open={isOpen || isCurrentSection} onOpenChange={setIsOpen}>
         <CollapsibleTrigger
           className={cn(
             "group/trigger flex w-full items-center justify-between gap-2 px-10 py-4 text-left",
-            "data-[panel-open]:pb-2",
+            "data-panel-open:pb-2",
             "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
             isCurrentSection ? "text-primary" : "text-sidebar-foreground",
           )}
         >
           <span className="font-normal text-base leading-[1.44]">{section.title}</span>
-          <ChevronRight className="size-4 shrink-0 transition-transform group-data-[panel-open]/trigger:rotate-90" />
+          <ChevronRight className="size-4 shrink-0 transition-transform group-data-panel-open/trigger:rotate-90" />
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarGroupContent>
@@ -144,33 +140,42 @@ export const AppSidebar = () => {
 
       <SidebarFooter className="border-sidebar-border border-t">
         <div className="flex items-center justify-between gap-2 px-4 py-1">
-          <a
+          <NavLink
             href="https://www.stadt-zuerich.ch/statistik"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-10 items-center rounded-md text-muted-foreground text-xs transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            size="xs"
+            className="min-h-10 rounded-md"
           >
             Statistik Stadt Zürich
-          </a>
+          </NavLink>
           <div className="flex items-center gap-3">
-            <a
-              href={REPO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:size-8"
+            <Button
+              variant="ghost"
+              size="icon"
+              nativeButton={false}
+              render={<a href={REPO_URL} target="_blank" rel="noopener noreferrer" />}
               title="GitHub"
+              className="size-10 text-muted-foreground hover:bg-sidebar-accent md:size-8"
             >
-              <GithubIcon className="size-4" />
-            </a>
-            <a
-              href="https://www.npmjs.com/package/sszvis"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:size-8"
+              <GithubIcon />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              nativeButton={false}
+              render={
+                <a
+                  href="https://www.npmjs.com/package/sszvis"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
               title="npm package"
+              className="size-10 text-muted-foreground hover:bg-sidebar-accent md:size-8"
             >
-              <Package className="size-4" />
-            </a>
+              <Package />
+            </Button>
           </div>
         </div>
       </SidebarFooter>
