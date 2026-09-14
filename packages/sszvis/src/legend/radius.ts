@@ -40,8 +40,20 @@ interface RadiusScale {
   invert?(value: number): NumberValue;
 }
 
-/** Formats a tick label. The default is fn.identity, which passes the value through. */
-type TickFormatter = (value: number, index: number) => string | number;
+/**
+ * Formats a tick label. The default is fn.identity, which passes the value through.
+ *
+ * The value is a number even though `tickValues` accepts any d3 `NumberValue`: a tick has
+ * to be sized by the scale, so the legend resolves it before formatting, and `sszvis`' own
+ * number formatters can then be passed without a wrapper. The remaining arguments are d3's
+ * own - the index and the label nodes, with `this` bound to the label element.
+ */
+type TickFormatter = (
+  this: SVGTextElement,
+  value: number,
+  index: number,
+  nodes: ArrayLike<SVGTextElement>,
+) => string | number;
 
 type RadiusLegendProps = {
   scale: RadiusScale;
@@ -107,7 +119,9 @@ export default function (): RadiusLegendComponent {
           .attr("y2", getCircleEdge);
 
         const labels = group
-          .selectAll(".sszvis-legend__label")
+          // Typed so the join yields SVGTextElement, which is what the formatter's
+          // `this` is bound to.
+          .selectAll<SVGTextElement, NumberValue>(".sszvis-legend__label")
           .data(tickValues)
           .join("text")
           .attr("class", "sszvis-legend__label sszvis-legend__label--small");
@@ -116,9 +130,11 @@ export default function (): RadiusLegendComponent {
           .attr("dx", maxRadius + 18)
           .attr("y", getCircleEdge)
           .attr("dy", "0.35em") // vertically-center
-          // tickValues are d3 NumberValues; the formatter is handed the number they
-          // stand for, so sszvis' own number formatters can be passed directly.
-          .text((d, i) => props.tickFormat(Number(d), i));
+          // Wrapped only to resolve the tick to a number; `this` and the nodes are
+          // forwarded, so the formatter still gets d3's full callback contract.
+          .text(function (d, i, nodes) {
+            return props.tickFormat.call(this, Number(d), i, nodes);
+          });
       })
   );
 }
