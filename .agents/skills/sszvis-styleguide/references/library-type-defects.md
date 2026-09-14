@@ -45,17 +45,15 @@ registered by `.prop()` calls, so the return is a mapped type rather than a bag.
 That is the difference between `props.slant` being `unknown` and being
 `SlantDirection`.
 
-Related: `responsiveProps.ts:112` carries an in-source `// BUG: doesn't support
-fallback` — the "could not determine breakpoint" path does not return the
-configured `_` values.
-
-### 4. Colour scales return `LabColor`, components want `string`
+### 4. Colour scales return `LabColor`, components want `string` — FIXED
 
 `color.ts:61` — `ExtendedOrdinalScale extends ScaleOrdinal<string, LabColor>`.
-`bar().fill()` takes `BarValue<T, string | undefined>`. So
-`.fill((d) => cScale(d))` fails.
+`bar().fill()` took `BarValue<T, string | undefined>`, so `.fill((d) => cScale(d))`
+failed with `Type 'LabColor' is not assignable to type 'string'.`
 
-Looks like: `Type 'LabColor' is not assignable to type 'string'.`
+Colour properties now take `ColorValue` (`types.ts`), which covers the `LabColor`,
+`HSLColor` and `RGBColor` the scales return as well as a plain string, and the
+components stringify it for d3 themselves.
 
 ### 5. NOT a defect — pass the component its datum type
 
@@ -130,7 +128,10 @@ examples should be reviewed for it by hand, since the compiler will not help.
 
 ## Error inventory, for tracking progress
 
-Per-file isolated check, current state:
+> **Stale.** These counts predate the fixes for defects 1, 2, 3, 4, 6 and 7.
+> Regenerate them against `apps/new-docs/examples` before reading them as progress.
+
+Per-file isolated check, as of the original survey:
 
 | Code    | Count | Meaning                                                                |
 | ------- | ----- | ---------------------------------------------------------------------- |
