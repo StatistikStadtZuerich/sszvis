@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { catalog, examples } from "virtual:examples";
+import { typefaceCodeLabel, typefaceMeta } from "~/components/tokens/typeface";
 
 export const Gallery = () => (
   <div className="breakout my-8">
@@ -32,11 +33,19 @@ const Thumbnail = ({ id, page }: { readonly id: string; readonly page: string })
             />
           </div>
         ) : (
-          <div className="flex aspect-square items-center justify-center rounded-lg border border-border border-dashed bg-muted/30 text-center text-muted-foreground text-xs">
+          <div
+            className={typefaceMeta(
+              "flex aspect-square items-center justify-center rounded-lg border border-border border-dashed bg-muted/30 text-center text-muted-foreground",
+            )}
+          >
             <span className="px-4">Not ported yet</span>
           </div>
         )}
-        <span className="truncate font-mono text-muted-foreground text-xs group-hover:text-foreground">
+        <span
+          className={typefaceCodeLabel(
+            "truncate text-muted-foreground group-hover:text-foreground",
+          )}
+        >
           {example ? example.title : id}
         </span>
       </Link>
