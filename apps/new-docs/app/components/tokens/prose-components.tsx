@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import { Link } from "react-router";
 
 import { CodeBlock } from "~/components/code-block";
+import { Callout, Demo, Example } from "~/components/example";
 import { Mermaid } from "~/components/mermaid";
 import {
   typefaceAnchor,
@@ -143,4 +144,7 @@ export const proseComponents = {
     <img style={{ width: "100%", height: "auto" }} {...props} alt={props.alt ?? ""} />
   ),
   mermaid: Mermaid,
+  Example,
+  Demo,
+  Callout,
 };
