@@ -29,6 +29,11 @@ describe("parse", () => {
       expect(parseDate("invalid")).toBeNull();
       expect(parseDate("not-a-date")).toBeNull();
     });
+
+    test("should return null for a missing CSV cell", () => {
+      expect(parseDate(undefined)).toBeNull();
+      expect(parseDate(null)).toBeNull();
+    });
   });
 
   describe("parseYear", () => {
@@ -55,6 +60,11 @@ describe("parse", () => {
     test("should return null for non-year strings", () => {
       expect(parseYear("2014-01-01")).toBeNull();
       expect(parseYear("abc")).toBeNull();
+    });
+
+    test("should return null for a missing CSV cell", () => {
+      expect(parseYear(undefined)).toBeNull();
+      expect(parseYear(null)).toBeNull();
     });
   });
 
@@ -92,6 +102,11 @@ describe("parse", () => {
     test("should handle scientific notation", () => {
       expect(parseNumber("1e5")).toBe(100_000);
       expect(parseNumber("2.5e-3")).toBe(0.0025);
+    });
+
+    test("should return NaN for a missing CSV cell", () => {
+      expect(parseNumber(undefined)).toBeNaN();
+      expect(parseNumber(null)).toBeNaN();
     });
 
     test("should handle infinity", () => {
