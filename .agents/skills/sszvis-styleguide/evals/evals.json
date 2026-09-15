@@ -3,23 +3,23 @@
   "evals": [
     {
       "id": 0,
-      "name": "port-untyped-example",
-      "prompt": "In the sszvis repo, apps/new-docs/examples/bar-chart-horizontal/basic/chart.ts is supposed to be a TypeScript example but it isn't really typed. Please port it properly so it's a good example for people to copy. Don't edit the repo copy - write your result to the output directory.",
-      "expected_output": "A ported chart.ts using sszvis.app<State>(), named Datum/State interfaces, typed parseRow, no /* global */ pragma, config.id instead of hardcoded selector, wired fallback, no resize registration inside render.",
+      "name": "author-new-example",
+      "prompt": "I want to add a new example to the sszvis docs: a horizontal bar chart showing Zurich district populations, with a tooltip on hover. Write me the chart.ts and example.json. Put them in the output directory.",
+      "expected_output": "chart.ts with the JSDoc header carrying @category, the six top-level banners in order (Magic Numbers, Types, Responsive Props, Accessors, Application, Helper functions) and the render() banners (Scales, Layers, Components, Rendering, Interaction). Types are `type` aliases named Datum/State/Actions, never `interface`. Calls sszvis.app<State, Actions>(...) with both type arguments. Accessors are arrow consts suffixed Acc, not sszvis.prop. Generic factories are given their datum type (sszvis.bar<Datum>(), sszvis.tooltip<Datum>()) and callbacks carry no redundant annotations, except modularTextHTML which does. Reads config.id / config.data / config.fallback, never a hardcoded selector. Fallback wired in chart.ts AND a fallback key present in example.json. createSvgLayer given a real title and description. No resize listener, no sszvis.compose, no casts, no `: any`.",
       "files": []
     },
     {
       "id": 1,
-      "name": "review-example-for-issues",
-      "prompt": "Can you review apps/new-docs/examples/line-chart/basic/chart.ts in the sszvis repo and tell me everything wrong with it as a documentation example? Write your review to the output directory as review.md.",
-      "expected_output": "A review identifying the highlightTick(isSelected) closure bug, sszvis.compose type erasure, absence of type annotations, and correctly attributing responsiveProps/measureDimensions errors to library type defects rather than the example.",
-      "files": []
+      "name": "review-nonconformant-chart",
+      "prompt": "Review the attached chart.ts against our sszvis example house style and list everything that violates it, worst first. Write the review to the output directory as review.md.",
+      "expected_output": "A review that flags: sszvis.app<State> missing its Actions type argument; `interface` used instead of `type`; a hardcoded \"#sszvis-chart\" instead of config.id; a resize listener registered inside render(); sszvis.compose in the accessor pipeline; an undomained sszvis.scaleQual12() that will render one colour for every mark; a state-curried predicate passed uncalled to .highlightTick(); an `as` cast; createSvgLayer given empty title/description. Should NOT excuse type errors as known library defects - the corpus type-checks at zero errors today.",
+      "files": ["fixtures/nonconformant-chart.ts.txt"]
     },
     {
       "id": 2,
-      "name": "author-new-example",
-      "prompt": "I want to add a new example to the sszvis docs: a horizontal bar chart showing Zurich district populations, with a tooltip on hover. Write me the chart.ts and example.json. Put them in the output directory.",
-      "expected_output": "A new example with the canonical banner sections, sszvis.app<State>(), typed Datum/State, config-driven id/data/fallback, tooltip wired through createHtmlLayer, and a matching example.json.",
+      "name": "attribute-a-type-error",
+      "prompt": "In apps/new-docs/examples I'm getting: Type '(d: Datum) => boolean' is not assignable to type '(d: unknown) => boolean'. What's the right fix?",
+      "expected_output": "Identifies that the component was left at its `unknown` default and the fix is to name the datum - sszvis.tooltip<Datum>() - rather than annotate the callback, cast, or change the library. Should explicitly reject adding an `as` cast or a @ts-expect-error, and should not attribute the error to a library defect.",
       "files": []
     }
   ]

@@ -4,6 +4,18 @@ Signatures and gotchas that decide whether an example typechecks cleanly. All
 line references are in `packages/sszvis/src/`. For the full export list read
 `src/index.ts` — it is a flat barrel of `export *` over 26 modules.
 
+## Contents
+
+- Two things are not exported
+- Accessors and functional helpers
+- Parsing and formatting
+- Layout and measurement
+- Colour
+- `sszvis.app()`
+- Components
+- Deprecated
+- Known library bugs
+
 ## Two things are not exported
 
 - **`./types.js` is never re-exported.** `Measurement`, `Breakpoint`,
@@ -35,10 +47,14 @@ side effects. That is what installs `selection.selectGroup(key)` and
 
 ## Parsing and formatting
 
-`parseDate(d: string): Date | null`, `parseYear(d: string): Date | null`,
-`parseNumber(d: string): number` (`parse.ts:18,26,33`). None accept
-`string | undefined` — see `library-type-defects.md` defect 1. The two date
-parsers return `null`, so narrow before feeding a scale.
+All three parsers accept `string | undefined | null`, because a d3 row callback
+types every CSV cell as `string | undefined` and a missing cell is normal input
+(`parse.ts`). **So a `?? ""` before a parser is redundant** — hand it the raw
+cell. `parseDate` and `parseYear` return `Date | null`, so narrow before feeding
+a scale; `parseNumber` returns `NaN` for a missing, empty or non-numeric value.
+
+A plain string field still needs `?? ""`, since `d["Sektor"]` is
+`string | undefined` and your `Datum` declares `string`.
 
 `formatNumber(d: number | null | undefined): string` (`format.ts:72`)
 **explicitly accepts null/undefined** and returns an en-dash `"–"`. Hand it
@@ -55,9 +71,12 @@ and `formatFractionPercent` (`format.ts:139,147`) take a plain `number`.
 bottom 0, left 1; width falls back to `DEFAULT_WIDTH = 516`; height comes from
 `aspectRatioAuto` when unspecified.
 
-`responsiveProps()` — `_` is a required fallback key (`responsiveProps.ts:64`),
-and values may be `T` or `(width: number) => T`. Returns
-`Record<string, unknown>`, which is defect 3.
+`responsiveProps()` — `_` is a required fallback key, and values may be `T` or
+`(width: number) => T`. It is **generic over the props you register**:
+`.prop("ticks", { palm: 4, _: 5 })` widens the instance type, so `props.ticks` is
+`number`, not `unknown` (`responsiveProps.ts:90-94`). It takes a
+`PartialMeasurement`, so `queryProps(sszvis.measureDimensions(config.id))`
+typechecks directly.
 
 `aspectRatio12to5`, `aspectRatioSquare` and `aspectRatioPortrait` carry a
 **`.MAX_HEIGHT` property** (500 / 420 / 600) readable without a cast
@@ -86,16 +105,19 @@ writing a `(d) => cScale(cAcc(d))` accessor that implies a mapping which is not
 happening.
 
 `ExtendedOrdinalScale` (`color.ts:61-74`) adds `.darker()`, `.brighter()`,
-`.reverse()`, each returning a new scale so chaining typechecks. **`.darker()` and
-`.brighter()` are swapped in the implementation** (`color.ts:318-322`) — see the
-defects file.
+`.reverse()`, each returning a new scale so chaining typechecks. **`.darker()`
+and `.brighter()` are swapped in the implementation** (`color.ts:320-324`) — see
+Known library bugs below.
 
 Sequential and diverging scales patch `.domain()` so a two-value domain is
 expanded across their stops (`color.ts:341-404`). Call
 `scaleDivVal().domain([min, max])`; do not hand-build the full stop list.
 
-Scales return `LabColor` objects, not strings — defect 4. `withAlpha(c: string, a)`
-and `getAccessibleTextColor(bg)` (`color.ts:308,412`) take strings.
+Scales return `LabColor` objects, not strings. Component colour props take
+`ColorValue` (`types.ts`), which covers `LabColor`, `HSLColor`, `RGBColor` and a
+plain string, and the components stringify for d3 themselves — so
+`.fill((d) => cScale(cAcc(d)))` needs no conversion. `withAlpha(c: ColorValue, a)`
+also takes `ColorValue`; `getAccessibleTextColor(bg)` takes a string.
 
 ## `sszvis.app()`
 
@@ -118,18 +140,20 @@ and `getAccessibleTextColor(bg)` (`color.ts:308,412`) take strings.
 - An effect that throws is reported separately and does **not** render the
   fallback — it is not mistaken for a chart that could not be built.
 
-Two sharp edges. Actions must annotate their own props explicitly, because the
-inline `actions` object is contextually typed from `Action<State>`, which
-declares `...props: never[]` (`app.ts:33`).
+One sharp edge. A dispatch naming an action that does not exist typechecks and
+fails at runtime (`app.ts:96-102`) — **but only if you pass `State` alone**. The
+second type parameter is inferred from nothing when you supply a partial
+type-argument list, so it falls back to `Record<string, Action<State>>`, whose
+`Action<State>` declares `...props: never[]` (`app.ts:33`) — collapsing every
+dispatcher's props and leaving the inline `actions` object with nothing useful to
+infer from.
 
-And a dispatch naming an action that does not exist typechecks and fails at
-runtime (`app.ts:96-102`) — **but only if you pass `State` alone**. The second
-type parameter is inferred from nothing when you supply a partial type-argument
-list, so it falls back to `Record<string, Action<State>>`. Supply it:
-`app<State, Actions>(…)`, with `Actions` a `type` alias (an `interface` lacks the
-implicit index signature the `Record` constraint needs). Then `ActionProps<A>`
-(`app.ts:40`) can infer each dispatcher's real props, so both the name and the
-argument types are checked.
+Supply it: `app<State, Actions>(…)`, with `Actions` a `type` alias (an
+`interface` lacks the implicit index signature the `Record` constraint needs).
+Then `ActionProps<A>` (`app.ts:40`) infers each dispatcher's real props, both the
+name and the argument types are checked, **and the inline action parameters are
+contextually typed from your alias** — so they need no annotations of their own.
+Write `showTooltip(state, _e, _xValue, category)`.
 
 ## Components
 
@@ -164,7 +188,7 @@ Notes that affect examples:
 | `range`                          | `rangeExtent`                   | `scale.ts:31`                  |
 | `RATIO`                          | responsive aspect-ratio helpers | `bounds.ts:161`                |
 | `groupedBars`                    | `groupedBarsVertical`           | `component/groupedBars.ts:461` |
-| `sunburstLayout`                 | `prepareHierarchyData`          | `layout/sunburst.ts:45`        |
+| `sunburst` `prepareData`         | `prepareHierarchyData`          | `layout/sunburst.ts:45`        |
 | data-array `maxValue`/`minValue` | the layout's                    | `component/stackedBar.ts:179`  |
 | `base.ts` `geoJson` prop         | `mergedData`                    | `map/renderer/base.ts:13`      |
 
@@ -176,3 +200,19 @@ Write `.transition(sszvis.defaultTransition())`.
 Two doc comments are stale and should not be copied as style: `fallback.ts:6-10`
 and `breakpoint.ts:18-26` still show the old namespaced API
 (`sszvis.fallback.unsupported()`), which no longer matches the flat export names.
+
+## Known library bugs
+
+Real defects in the current library. Do not paper over them in an example — a
+cast in an example teaches the cast to every consumer who copies it. Fix the
+library, or leave the call site honest and note the bug.
+
+**`.darker()` and `.brighter()` are swapped.** `color.ts:320-324` — `darker()` is
+implemented as `.brighter(LIGHTNESS_STEP)` and vice versa, so any chart calling
+these renders the opposite shade from the one the code says.
+
+**`app()` accepts a mistyped action name when `Actions` is not named.** Passing
+`State` alone defaults `Actions` to `Record<string, Action<State>>`, so
+`actions.missng()` typechecks and fails at runtime. `app.ts:96-102` documents
+this as an accepted tradeoff for callers who cannot name their actions. Examples
+can, so always write `app<State, Actions>(…)` and the hole closes.
