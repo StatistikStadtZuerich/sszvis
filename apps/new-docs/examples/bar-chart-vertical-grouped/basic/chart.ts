@@ -34,7 +34,7 @@ type Actions = {
 // Responsive Props
 
 /** Typed here so the slant reads as the axis' own union rather than as `string`. */
-const TEXT_DIRECTION: { _: import("sszvis").SlantDirection } = { _: "diagonal" };
+const TEXT_DIRECTION = { _: "diagonal" } satisfies Record<string, import("sszvis").SlantDirection>;
 
 const queryProps = sszvis
   .responsiveProps()

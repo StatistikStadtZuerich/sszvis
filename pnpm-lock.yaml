@@ -78,6 +78,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      effect:
+        specifier: 4.0.0-rc.113
+        version: 4.0.0-rc.113
       isbot:
         specifier: ^5.1.31
         version: 5.2.2

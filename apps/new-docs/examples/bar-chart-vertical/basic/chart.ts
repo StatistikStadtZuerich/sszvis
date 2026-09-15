@@ -31,10 +31,10 @@ type Actions = {
 // Responsive Props
 
 /** Typed here so the slant reads as the axis' own union rather than as `string`. */
-const SLANT: { palm: import("sszvis").SlantDirection; _: import("sszvis").SlantDirection } = {
-  palm: "vertical",
-  _: "horizontal",
-};
+const SLANT = { palm: "vertical", _: "horizontal" } satisfies Record<
+  string,
+  import("sszvis").SlantDirection
+>;
 
 const queryProps = sszvis
   .responsiveProps()

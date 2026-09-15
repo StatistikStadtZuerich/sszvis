@@ -20,30 +20,30 @@ export const LANGUAGES = [
 
 export type Language = (typeof LANGUAGES)[number];
 
-const byExtension: Readonly<Record<string, Language>> = {
-  bash: "bash",
-  css: "css",
-  csv: "csv",
-  htm: "html",
-  html: "html",
-  js: "javascript",
-  json: "json",
-  md: "markdown",
-  mjs: "javascript",
-  sh: "bash",
-  ts: "typescript",
-  tsv: "csv",
-  txt: "markdown",
-};
+const byExtension: ReadonlyMap<string, Language> = new Map([
+  ["bash", "bash"],
+  ["css", "css"],
+  ["csv", "csv"],
+  ["htm", "html"],
+  ["html", "html"],
+  ["js", "javascript"],
+  ["json", "json"],
+  ["md", "markdown"],
+  ["mjs", "javascript"],
+  ["sh", "bash"],
+  ["ts", "typescript"],
+  ["tsv", "csv"],
+  ["txt", "markdown"],
+]);
 
-const byFilename: Readonly<Record<string, Language>> = {
-  ".env": "bash",
-  Dockerfile: "bash",
-};
+const byFilename: ReadonlyMap<string, Language> = new Map([
+  [".env", "bash"],
+  ["Dockerfile", "bash"],
+]);
 
 /** The grammar for a path, or `null` when the file should be shown unhighlighted. */
 export function languageForPath(path: string): Language | null {
   const filename = path.split("/").at(-1) ?? path;
   const extension = filename.split(".").at(-1)?.toLowerCase() ?? "";
-  return byFilename[filename] ?? byExtension[extension] ?? null;
+  return byFilename.get(filename) ?? byExtension.get(extension) ?? null;
 }

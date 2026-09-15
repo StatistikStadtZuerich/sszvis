@@ -21,7 +21,7 @@ import { proseComponents } from "~/components/tokens/prose-components";
 import { typefaceWordmark } from "~/components/tokens/typeface";
 import { buttonVariants } from "~/components/ui/button";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "~/components/ui/sidebar";
-import type { TOCItem } from "~/lib/remark-toc-export";
+import type { TocHandle, TOCItem } from "~/lib/remark-toc-export";
 import type { Route } from "./+types/root";
 import "./app.css";
 
@@ -79,7 +79,10 @@ export default function App() {
   const matches = useMatches();
   const location = useLocation();
   const lastMatch = matches[matches.length - 1];
-  const routeToc: TOCItem[] = (lastMatch?.handle as any)?.toc ?? [];
+  // SAFETY: the only route modules that export a `handle` are the MDX pages, and
+  // remark-toc-export writes every one of those as `{ toc }`.
+  const handle = lastMatch?.handle as TocHandle | undefined;
+  const routeToc: TOCItem[] = [...(handle?.toc ?? [])];
   const [toc, setToc] = useState(routeToc);
 
   useEffect(() => {

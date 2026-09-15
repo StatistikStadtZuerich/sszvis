@@ -91,7 +91,7 @@ sszvis.app<State, Actions>({
         quartername: d["Qname"] ?? "",
         value: sszvis.parseNumber(d["Ausländeranteil"]),
       })),
-      d3.json<{ objects: Record<string, unknown> }>(TOPO_URL),
+      d3.json<Topology>(TOPO_URL),
     ]).then(([data, topo]) => {
       if (topo === undefined) {
         throw new Error(`No topology at ${TOPO_URL}`);

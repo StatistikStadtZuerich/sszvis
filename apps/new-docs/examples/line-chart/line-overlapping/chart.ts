@@ -232,7 +232,7 @@ const closestDatum = (data: Datum[], year: number): Datum => {
 };
 
 /** Whether an x axis tick sits on the year the ruler is currently showing. */
-const isSelectedYear = (state: State) => (tick: unknown) => {
+const isSelectedYear = (state: State) => (tick: import("d3").AxisDomain) => {
   const shown = state.selection[0];
   return shown !== undefined && String(tick) === String(xAcc(shown));
 };

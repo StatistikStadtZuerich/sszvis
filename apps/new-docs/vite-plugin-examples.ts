@@ -5,6 +5,8 @@ import { existsSync } from "node:fs";
 import { createHighlighter } from "shiki";
 import tsBlankSpace from "ts-blank-space";
 import type { Plugin } from "vite";
+import type { Source, Sources } from "virtual:examples";
+import { Schema } from "effect";
 
 import { contentPages } from "./app/content-pages.ts";
 import { LANGUAGES, languageForPath } from "./app/lib/example-languages.ts";
@@ -95,18 +97,25 @@ const META_FILE = "example.json";
  */
 const DATA_PREVIEW_LINES = 60;
 
-const RUNTIME_TYPES: Readonly<Record<string, string>> = {
-  ".csv": "text/csv",
-  ".json": "application/json",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".svg": "image/svg+xml",
-};
+const RUNTIME_TYPES: ReadonlyMap<string, string> = new Map([
+  [".csv", "text/csv"],
+  [".json", "application/json"],
+  [".png", "image/png"],
+  [".jpg", "image/jpeg"],
+  [".svg", "image/svg+xml"],
+]);
 
-type ExampleMeta = {
-  readonly title: string;
-  readonly config: Record<string, unknown>;
-};
+/** `example.json`: the title, and the `config` the example page injects for the chart to read. */
+const ExampleMeta = Schema.Struct({
+  title: Schema.String,
+  config: Schema.Struct({
+    /** Absent for a chart that draws nothing but its map layers. */
+    data: Schema.optional(Schema.String),
+    id: Schema.String,
+    fallback: Schema.String,
+  }),
+});
+type ExampleMeta = typeof ExampleMeta.Type;
 
 type Example = {
   /** `bar-chart-vertical/basic` - the id used in MDX and in the URL. */
@@ -179,7 +188,7 @@ export function examplesPlugin(): Plugin {
         return {
           id: `${chart}/${name}`,
           dir,
-          meta: JSON.parse(metaJson) as ExampleMeta,
+          meta: Schema.decodeUnknownSync(ExampleMeta)(JSON.parse(metaJson)),
           ts,
           js: await stripTypes(ts, root),
           data,
@@ -220,21 +229,17 @@ export function examplesPlugin(): Plugin {
       }
     }
     /* Grouped and ordered by the page each example belongs to. */
-    const order = new Map(contentPages.map((page, index) => [page.href as string, index]));
+    const order = new Map(contentPages.map((page, index) => [page.href, index]));
     return [...home.values()].sort((a, b) => (order.get(a.page) ?? 0) - (order.get(b.page) ?? 0));
   }
 
   /** The data tab: the first lines of the file, and where to get the rest. */
-  async function dataSource(example: Example) {
+  async function dataSource(example: Example): Promise<Source> {
     const lines = (example.data ?? "").split("\n");
     const shown = lines.slice(0, DATA_PREVIEW_LINES).join("\n");
-    return {
-      raw: shown,
-      html: await highlight(shown, "data.csv"),
-      ...(lines.length > DATA_PREVIEW_LINES
-        ? { lines: lines.length, url: `${URL_PREFIX}/${example.id}/data.csv` }
-        : {}),
-    };
+    const html = await highlight(shown, "data.csv");
+    if (lines.length <= DATA_PREVIEW_LINES) return { raw: shown, html };
+    return { raw: shown, html, lines: lines.length, url: `${URL_PREFIX}/${example.id}/data.csv` };
   }
 
   /** What a page needs to put an example on screen, and nothing more. */
@@ -269,11 +274,12 @@ export function examplesPlugin(): Plugin {
     const examples = await readExamplesCached();
     const example = examples.find((candidate) => candidate.id === exampleId);
     if (example === undefined) return null;
-    const sources = {
+    const code = {
       ts: { raw: example.ts, html: await highlight(example.ts, "chart.ts") },
       js: { raw: example.js, html: await highlight(example.js, "chart.js") },
-      ...(example.data === null ? {} : { csv: await dataSource(example) }),
     };
+    const sources: Sources =
+      example.data === null ? code : { ...code, csv: await dataSource(example) };
     return `export default ${JSON.stringify(sources)};`;
   }
 
@@ -402,7 +408,7 @@ export function examplesPlugin(): Plugin {
 
           if (url.startsWith(STATIC_PREFIX)) {
             const name = url.slice(STATIC_PREFIX.length);
-            const type = RUNTIME_TYPES[path.extname(name).toLowerCase()];
+            const type = RUNTIME_TYPES.get(path.extname(name).toLowerCase());
             if (type === undefined || !/^[\w.-]+$/.test(name)) return missing();
             const body = await fs
               .readFile(path.join(root, EXAMPLES_DIR, STATIC_DIR, name))
@@ -423,7 +429,7 @@ export function examplesPlugin(): Plugin {
             return;
           }
 
-          const type = RUNTIME_TYPES[path.extname(url).toLowerCase()];
+          const type = RUNTIME_TYPES.get(path.extname(url).toLowerCase());
           // example.json describes the example to the build; it is not one of
           // the files the chart fetches, so it is not published either.
           if (type === undefined || path.basename(url) === META_FILE) return missing();
@@ -520,7 +526,7 @@ async function siblingFiles(dir: string) {
   return entries
     .filter(
       (e) =>
-        e.isFile() && e.name !== META_FILE && path.extname(e.name).toLowerCase() in RUNTIME_TYPES,
+        e.isFile() && e.name !== META_FILE && RUNTIME_TYPES.has(path.extname(e.name).toLowerCase()),
     )
     .map((e) => path.join(dir, e.name));
 }
