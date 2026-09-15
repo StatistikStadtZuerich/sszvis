@@ -52,7 +52,7 @@ sszvis.app<State, Actions>({
     d3
       .csv(config.data, (d) => ({
         year: d["Jahr"] ?? "",
-        value: sszvis.parseNumber(d["Hotelübernachtungen"] ?? ""),
+        value: sszvis.parseNumber(d["Hotelübernachtungen"]),
       }))
       .then((data) => {
         state.data = data;

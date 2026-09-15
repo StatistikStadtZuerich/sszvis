@@ -77,8 +77,8 @@ sszvis.app<State, Actions>({
   init: (state) =>
     Promise.all([
       d3.csv(config.data, (d) => ({
-        id: sszvis.parseNumber(d["zoneid"] ?? ""),
-        value: sszvis.parseNumber(d["value"] ?? ""),
+        id: sszvis.parseNumber(d["zoneid"]),
+        value: sszvis.parseNumber(d["value"]),
         zonename: d["zonename"] ?? "--",
       })),
       d3.json<Topology>("/preview/_static/topo/stadt-zurich.json"),

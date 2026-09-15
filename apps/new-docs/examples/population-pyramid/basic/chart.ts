@@ -88,9 +88,9 @@ sszvis.app<State, Actions>({
   init: (state) =>
     d3
       .csv(config.data, (d) => ({
-        age: sszvis.parseNumber(d["Alter"] ?? ""),
+        age: sszvis.parseNumber(d["Alter"]),
         gender: d["Geschlecht"] ?? "",
-        value: sszvis.parseNumber(d["Anzahl"] ?? ""),
+        value: sszvis.parseNumber(d["Anzahl"]),
       }))
       .then((data) => {
         const byGender = sszvis

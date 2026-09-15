@@ -57,7 +57,7 @@ sszvis.app<State, Actions>({
       .csv(config.data, (d) => ({
         region: d["Region"] ?? "",
         category: d["Kategorie"] ?? "",
-        value: sszvis.parseNumber(d["Wert"] ?? ""),
+        value: sszvis.parseNumber(d["Wert"]),
       }))
       .then((data) => {
         state.data = data;

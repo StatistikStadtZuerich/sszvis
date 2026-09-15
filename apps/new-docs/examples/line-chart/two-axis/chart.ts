@@ -69,13 +69,13 @@ sszvis.app<State, Actions>({
       .csv(config.data, (d) => {
         // NOTE: `parseDate` returns null for a cell it cannot read; returning null
         // from the row callback drops that row rather than plotting a broken point.
-        const date = sszvis.parseDate(d["Jahr"] ?? "");
+        const date = sszvis.parseDate(d["Jahr"]);
         return date === null
           ? null
           : {
               date,
               region: d["Region"] ?? "",
-              value: sszvis.parseNumber(d["Schweiz"] ?? ""),
+              value: sszvis.parseNumber(d["Schweiz"]),
             };
       })
       .then((rows) => {

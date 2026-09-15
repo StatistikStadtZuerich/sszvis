@@ -58,8 +58,8 @@ sszvis.app<State, Actions>({
     d3
       .csv(config.data, (d) => ({
         category: d["Sektor"] ?? "",
-        value: sszvis.parseNumber(d["Zupendler"] ?? ""),
-        year: sszvis.parseNumber(d["Jahr"] ?? ""),
+        value: sszvis.parseNumber(d["Zupendler"]),
+        year: sszvis.parseNumber(d["Jahr"]),
       }))
       .then((data) => {
         state.data = data;
