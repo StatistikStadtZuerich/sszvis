@@ -139,7 +139,7 @@ sszvis.app<State, Actions>({
       .csv(config.data, (d) => ({
         group: d["Gruppe"] ?? "",
         category: d["Kategorie"] ?? "",
-        value: sszvis.parseNumber(d["Anzahl"] ?? ""),
+        value: sszvis.parseNumber(d["Anzahl"]),
       }))
       .then((data) => {
         const groups = sszvis.set(data, gAcc);

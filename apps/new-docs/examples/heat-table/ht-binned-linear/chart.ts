@@ -66,7 +66,7 @@ sszvis.app<State, Actions>({
       .csv(config.data, (d) => ({
         g1: d["Group1"] ?? "",
         g2: d["Group2"] ?? "",
-        value: sszvis.parseNumber(d["Value"] ?? ""),
+        value: sszvis.parseNumber(d["Value"]),
       }))
       .then((data) => {
         const [minValue = 0, maxValue = 0] = d3.extent(data, vAcc);

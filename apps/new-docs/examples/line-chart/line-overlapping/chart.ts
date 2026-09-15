@@ -63,10 +63,10 @@ sszvis.app<State, Actions>({
         // before they ever reach the state.
         d["Raum"] === "Stadtkreis"
           ? {
-              year: sszvis.parseNumber(d["Jahr"] ?? ""),
-              value: sszvis.parseNumber(d["Wert"] ?? ""),
+              year: sszvis.parseNumber(d["Jahr"]),
+              value: sszvis.parseNumber(d["Wert"]),
               category: d["Kreis"] ?? "",
-              kreisNum: sszvis.parseNumber(d["KreisNum"] ?? ""),
+              kreisNum: sszvis.parseNumber(d["KreisNum"]),
             }
           : null,
       )

@@ -90,10 +90,10 @@ sszvis.app<State, Actions>({
   init: (state) =>
     Promise.all([
       d3.csv(config.data, (d) => ({
-        geoId: sszvis.parseNumber(d["Nr"] ?? ""),
+        geoId: sszvis.parseNumber(d["Nr"]),
         name: d["Gemeinde"] ?? "",
         category: d["Klasse"] ?? "",
-        value: sszvis.parseNumber(d["Wert"] ?? ""),
+        value: sszvis.parseNumber(d["Wert"]),
       })),
       d3.json<{ objects: Record<string, unknown> }>(TOPO_URL),
     ]).then(([data, topo]) => {

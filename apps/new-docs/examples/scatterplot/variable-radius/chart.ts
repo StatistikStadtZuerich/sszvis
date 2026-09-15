@@ -64,9 +64,9 @@ sszvis.app<State, Actions>({
   init: (state) =>
     d3
       .csv(config.data, (d) => ({
-        xPosition: sszvis.parseNumber(d["NeubauAbs (x-Achse)"] ?? ""),
-        yPosition: sszvis.parseNumber(d["LeerZunRel (y-Achse) "] ?? ""),
-        radius: sszvis.parseNumber(d["Best13Radius (bubble)"] ?? ""),
+        xPosition: sszvis.parseNumber(d["NeubauAbs (x-Achse)"]),
+        yPosition: sszvis.parseNumber(d["LeerZunRel (y-Achse) "]),
+        radius: sszvis.parseNumber(d["Best13Radius (bubble)"]),
         label: d["QuName"] ?? "",
       }))
       .then((data) => {

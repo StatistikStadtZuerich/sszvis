@@ -113,7 +113,7 @@ sszvis.app<State, Actions>({
       .csv(config.data, (d) => ({
         source: d["Zuzugsregion"] ?? "",
         target: d["Stadtquartier"] ?? "",
-        value: sszvis.parseNumber(d["Anzahl"] ?? ""),
+        value: sszvis.parseNumber(d["Anzahl"]),
       }))
       .then((data) => {
         state.data = sszvis

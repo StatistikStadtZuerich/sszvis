@@ -87,9 +87,9 @@ sszvis.app<State, Actions>({
   init: (state) =>
     Promise.all([
       d3.csv(config.data, (d) => ({
-        quarternum: sszvis.parseNumber(d["Qcode"] ?? ""),
+        quarternum: sszvis.parseNumber(d["Qcode"]),
         quartername: d["Qname"] ?? "",
-        value: sszvis.parseNumber(d["Ausländeranteil"] ?? ""),
+        value: sszvis.parseNumber(d["Ausländeranteil"]),
       })),
       d3.json<{ objects: Record<string, unknown> }>(TOPO_URL),
     ]).then(([data, topo]) => {

@@ -123,10 +123,10 @@ sszvis.app<State, Actions>({
   init: (state) =>
     Promise.all([
       d3.csv(config.data, (d) => ({
-        xpos: sszvis.parseNumber(d["xkoord"] ?? ""),
-        ypos: sszvis.parseNumber(d["ykoord"] ?? ""),
-        kinder: sszvis.parseNumber(d["kinder"] ?? ""),
-        random: sszvis.parseNumber(d["random"] ?? ""),
+        xpos: sszvis.parseNumber(d["xkoord"]),
+        ypos: sszvis.parseNumber(d["ykoord"]),
+        kinder: sszvis.parseNumber(d["kinder"]),
+        random: sszvis.parseNumber(d["random"]),
       })),
       d3.json<Topology>("/preview/_static/topo/stadt-zurich.json"),
     ]).then(([data, topo]) => {

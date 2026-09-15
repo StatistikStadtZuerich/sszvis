@@ -77,7 +77,7 @@ sszvis.app<State, Actions>({
         year: d["Jahr_F"] ?? "",
         category: d["Auspraegung_F"] ?? "",
         konfvalue: d["95 % Konfidenzintervall (in %)"] ?? "",
-        value: sszvis.parseNumber(d["Anteil (in %)"] ?? ""),
+        value: sszvis.parseNumber(d["Anteil (in %)"]),
         nestedCategory: d["Geschlecht_F"] ?? "",
         ageGroup: d["Alter_F"] ?? "",
       }))

@@ -75,7 +75,7 @@ sszvis.app<State, Actions>({
           ageGroup: d["Alter_F"] ?? "",
           gender: d["Geschlecht_F"] ?? "",
           response: d["Auspraegung_F"] ?? "",
-          value: sszvis.parseNumber(d["Anteil (in %)"] ?? ""),
+          value: sszvis.parseNumber(d["Anteil (in %)"]),
           confidenceLower: confidence.lower,
           confidenceUpper: confidence.upper,
           year: d["Jahr_F"] ?? "",

@@ -103,12 +103,12 @@ sszvis.app<State, Actions>({
   init: (state) =>
     Promise.all([
       d3.csv(config.data, (d) => ({
-        id: sszvis.parseNumber(d["id"] ?? ""),
+        id: sszvis.parseNumber(d["id"]),
         name: d["name"] ?? "",
         ownership: d["traegerschaft"] ?? "",
         // NOTE: A missing year is recorded as 0 in the data; it reads as "no value" here, so
         // that the development is drawn without a colour rather than as the oldest one.
-        year: parseYear(d["bezugsjahr"] ?? ""),
+        year: parseYear(d["bezugsjahr"]),
       })),
       d3.json<Topology>("/preview/_static/topo/stadt-zurich.json"),
       d3.json<ReturnType<typeof topojson.feature>>("gemeinnuetzige.json"),

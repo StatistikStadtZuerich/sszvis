@@ -85,7 +85,7 @@ sszvis.app<State, Actions>({
     Promise.all([
       d3.csv(config.data, (d) => ({
         name: d["ID"] ?? "",
-        value: sszvis.parseNumber(d["Value"] ?? "") / VALUE_SCALE,
+        value: sszvis.parseNumber(d["Value"]) / VALUE_SCALE,
       })),
       d3.json<{ objects: Record<string, unknown> }>(TOPO_URL),
     ]).then(([data, topo]) => {

@@ -66,7 +66,7 @@ sszvis.app<State, Actions>({
       .csv(config.data, (d) => ({
         manAge: d["Altersgruppe Männer"] ?? "",
         womAge: d["Altersgruppe Frauen"] ?? "",
-        value: sszvis.parseNumber(d["Anzahl"] ?? ""),
+        value: sszvis.parseNumber(d["Anzahl"]),
       }))
       .then((data) => {
         const [minValue = 0, maxValue = 0] = d3.extent(data, vAcc);

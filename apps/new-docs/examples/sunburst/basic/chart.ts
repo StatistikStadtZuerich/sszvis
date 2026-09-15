@@ -68,7 +68,7 @@ sszvis.app<State, Actions>({
         continent: d["kontinent"] ?? "",
         region: d["region"] ?? "",
         country: d["land"] ?? "",
-        number: sszvis.parseNumber(d["anzahl"] ?? ""),
+        number: sszvis.parseNumber(d["anzahl"]),
       }))
       .then((data) => {
         // NOTE: The hierarchy keeps the input order, so sorting the rows first is what puts

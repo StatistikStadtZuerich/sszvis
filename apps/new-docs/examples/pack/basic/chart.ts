@@ -93,7 +93,7 @@ sszvis.app<State, Actions>({
         subcategory: d["subcategory"] ?? "",
         division: d["division"] || null,
         team: d["team"] || null,
-        value: sszvis.parseNumber(d["value"] ?? ""),
+        value: sszvis.parseNumber(d["value"]),
       }))
       .then((data) => {
         state.data = sszvis

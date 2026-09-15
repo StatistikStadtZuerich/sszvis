@@ -58,8 +58,8 @@ sszvis.app<State, Actions>({
   init: (state) =>
     d3
       .csv(config.data, (d) => ({
-        xPosition: sszvis.parseNumber(d["Prozent"] ?? ""),
-        yPosition: sszvis.parseNumber(d["Wert"] ?? ""),
+        xPosition: sszvis.parseNumber(d["Prozent"]),
+        yPosition: sszvis.parseNumber(d["Wert"]),
         category: d["Stadt"] ?? "",
       }))
       .then((data) => {

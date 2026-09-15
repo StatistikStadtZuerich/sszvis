@@ -126,9 +126,9 @@ sszvis.app<State, Actions>({
         return year === null
           ? null
           : {
-              geoId: sszvis.parseNumber(d["QNr"] ?? ""),
+              geoId: sszvis.parseNumber(d["QNr"]),
               year,
-              value: sszvis.parseNumber(d["Anzahl"] ?? ""),
+              value: sszvis.parseNumber(d["Anzahl"]),
               name: d["Qname"] ?? "",
             };
       }),

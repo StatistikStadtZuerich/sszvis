@@ -73,7 +73,7 @@ sszvis.app<State, Actions>({
       .csv(config.data, (d) => ({
         xValue: d["Jahr"] ?? "",
         category: d["Berufsfeld"] ?? "",
-        yValue: sszvis.parseNumber(d["Anzahl"] ?? ""),
+        yValue: sszvis.parseNumber(d["Anzahl"]),
       }))
       .then((data) => {
         const layout = sszvis.stackedBarVerticalLayout(xAcc, cAcc, yAcc)(data);
