@@ -27,8 +27,8 @@ export const ThemeToggle = () => {
     <Button
       onClick={toggle}
       variant="ghost"
-      size="icon"
-      className="size-11 text-muted-foreground hover:text-foreground md:size-8"
+      size="icon-touch"
+      className="text-muted-foreground hover:text-foreground"
       aria-label="Toggle dark mode"
     >
       <SunIcon className="hidden dark:block" />

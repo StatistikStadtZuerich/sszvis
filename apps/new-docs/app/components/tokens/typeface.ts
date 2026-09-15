@@ -70,3 +70,26 @@ export const typefaceCodeLabel = (className?: string) =>
  */
 export const typefaceWordmark = (className?: string) =>
   cn("font-heading text-[1.2rem] font-bold leading-[1.2] text-primary", className);
+
+/**
+ * The title of a tool panel - the chart builder's heading - set in the body
+ * face, above its controls but below the prose pages' `h1`. At `text-sm` it
+ * read as another label in a page made of labels; one step over body gives the
+ * page somewhere to start without letting a tool shout like an article.
+ */
+export const typefaceHeadingSmall = (className?: string) =>
+  cn(
+    "font-sans text-[1.15rem] font-semibold leading-[1.3] tracking-[-0.005em] text-foreground",
+    className,
+  );
+
+/**
+ * A one-line explanation under a small heading or beside a control, at the
+ * same size as the form controls it accompanies and one shade quieter.
+ */
+export const typefaceCaption = (className?: string) =>
+  cn("font-sans text-xs leading-[1.4] tracking-normal text-muted-foreground", className);
+
+/** A numeral or short tag inside a small badge, sized to fit a 1rem circle. */
+export const typefaceBadge = (className?: string) =>
+  cn("font-sans text-[0.625rem] font-medium leading-none tracking-[0.02em]", className);

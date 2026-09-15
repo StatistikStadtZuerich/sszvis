@@ -41,6 +41,7 @@ const toggleButtonVariants = cva(
       size: {
         default: "px-2 py-1.5",
         sm: "px-2 py-1",
+        lg: "px-4 py-2",
       },
     },
     defaultVariants: { variant: "plain", size: "default" },
