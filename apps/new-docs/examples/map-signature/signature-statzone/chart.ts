@@ -17,9 +17,6 @@ const LEGEND_HALF_WIDTH = 205;
 
 // Types
 
-/** The TopoJSON topology as the examples read it: only its `objects` member is used. */
-type Topology = { objects: Record<string, unknown> };
-
 type MapData = {
   features: ReturnType<typeof topojson.feature>;
   borders: ReturnType<typeof topojson.mesh>;

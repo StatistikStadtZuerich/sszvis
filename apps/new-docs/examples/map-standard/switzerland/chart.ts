@@ -69,7 +69,7 @@ sszvis.app<State, Actions>({
         geoId: sszvis.parseNumber(d["KantonNr"]),
         value: sszvis.parseNumber(d["Wert"]),
       })),
-      d3.json<{ objects: Record<string, unknown> }>(TOPO_URL),
+      d3.json<Topology>(TOPO_URL),
     ]).then(([data, topo]) => {
       if (topo === undefined) {
         throw new Error(`No topology at ${TOPO_URL}`);

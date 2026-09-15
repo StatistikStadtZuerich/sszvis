@@ -21,6 +21,16 @@ declare const config: {
 };
 
 /**
+ * A geometry inside a TopoJSON topology: a layer under `objects`, or one of the
+ * two neighbours a `mesh` filter is asked about. The examples never read into
+ * one, they only hand it back to `topojson`, so the type carries no structure.
+ */
+type TopoGeometry = { readonly type: string };
+
+/** The topology the map examples fetch, as far as they read it: its layers by name. */
+type Topology = { readonly objects: Readonly<Record<string, TopoGeometry>> };
+
+/**
  * The map examples read `topojson` off the window too. `vite-plugin-examples`
  * adds the topojson-client script to any example whose code mentions it, so the
  * global exists exactly where it is used.
@@ -31,18 +41,15 @@ declare const config: {
  * components accept, which is the whole point of the declaration.
  */
 declare const topojson: {
-  /** The `objects` member of a TopoJSON topology, keyed by layer name. */
-  feature(
-    topology: { objects: Record<string, unknown> },
-    object: unknown,
-  ): import("d3").ExtendedFeatureCollection;
+  /** The feature collection of one layer of the topology. */
+  feature(topology: Topology, object: TopoGeometry): import("d3").ExtendedFeatureCollection;
   /**
    * The mesh of the shared boundaries. Pass a filter to keep only some arcs -
    * `(a, b) => a !== b` is the usual way to drop the outer boundary.
    */
   mesh(
-    topology: { objects: Record<string, unknown> },
-    object?: unknown,
-    filter?: (a: unknown, b: unknown) => boolean,
+    topology: Topology,
+    object?: TopoGeometry,
+    filter?: (a: TopoGeometry, b: TopoGeometry) => boolean,
   ): import("d3").GeoPermissibleObjects;
 };
