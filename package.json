@@ -1,7 +1,7 @@
 {
   "name": "sszvis-monorepo",
   "private": true,
-  "description": "Monorepo for the Statistik Stadt Z\u00fcrich Visualization Library",
+  "description": "Monorepo for the Statistik Stadt Zürich Visualization Library",
   "repository": {
     "type": "git",
     "url": "https://github.com/StatistikStadtZuerich/sszvis.git"
@@ -61,5 +61,9 @@
         "musl"
       ]
     }
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

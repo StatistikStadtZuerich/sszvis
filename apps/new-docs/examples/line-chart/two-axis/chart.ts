@@ -271,5 +271,5 @@ const closestDatum = (data: Datum[], date: Date): Datum => {
 };
 
 /** Whether an x axis tick sits on one of the dates the ruler is currently showing. */
-const isSelectedDate = (state: State) => (tick: unknown) =>
+const isSelectedDate = (state: State) => (tick: import("d3").AxisDomain) =>
   state.selection.map((d) => String(xAcc(d))).includes(String(tick));

@@ -127,9 +127,12 @@ export const proseComponents = {
       {children}
     </CodeBlock>
   ),
-  code: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => {
+  code: ({
+    className,
+    ...props
+  }: React.HTMLAttributes<HTMLElement> & { readonly "data-language"?: string }) => {
     // Code inside pre has data-language from rehype-pretty-code; skip styling
-    if ((props as Record<string, unknown>)["data-language"]) {
+    if (props["data-language"] !== undefined) {
       return <code className={className} {...props} />;
     }
     return (
