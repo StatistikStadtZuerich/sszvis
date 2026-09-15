@@ -11,7 +11,7 @@ var chart = sszvis.createSvgLayer('#sszvis-chart', bounds, {
 });
 ```
 
-- The `title` will be rendered as a native tooltip, showing the title of this chart.
+- The `title` names the chart for screen readers, as the first part of its `aria-label`. It is not shown on screen: rendering it as an SVG `<title>` would make the browser draw a native tooltip over the whole chart, which fights the chart's own hover interactions.
 - The `description` will only be used by screen readers. The text provided for the description should be a meaningful message of this chart.
 
 ### Using an external config
@@ -41,7 +41,7 @@ Typically, the title and description are provided through an external source lik
 </script>
 ```
 
-The following shows an example with accessible descriptions built-in. While this is meant to be consumed by screen readers, some browsers will show a small tooltip on hover if the mouse is kept still.
+The following shows an example with accessible descriptions built-in. This is meant to be consumed by screen readers; it is not shown on screen.
 
 ```project
 {

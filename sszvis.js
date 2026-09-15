@@ -1986,7 +1986,7 @@
      */
     function fillOf$1(color) {
       if (!color) return () => "black";
-      return typeof color === "function" ? d => colorToString(color(d)) : () => colorToString(color);
+      return typeof color === "function" ? (d, i) => colorToString(color(d, i)) : () => colorToString(color);
     }
     const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
       const selection = d3.select(this);
@@ -7249,7 +7249,7 @@
         });
         const linksGroup = selection.selectGroup("links");
         const linksElems = linksGroup.selectAll(".sszvis-link").data(drawableLinks, idAcc).join("path").attr("class", "sszvis-link");
-        linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", link => colorToString(props.linkColor?.(link))).sort(props.linkSort);
+        linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", (link, i) => colorToString(props.linkColor?.(link, i))).sort(props.linkSort);
         linksGroup.datum(drawableLinks);
         const linkTooltipAnchor = tooltipAnchor().position(link => {
           const bbox = linkBoundingBox(link);
@@ -8911,7 +8911,7 @@
         dots.attr("cx", crispX).attr("cy", crispY).attr("r", DOT_RADIUS)
         // Rendered to a string for d3's attr signature, which accepts no colour object;
         // an unset color stays nullish, which d3 reads as "remove the attribute".
-        .attr("fill", d => colorToString(typeof props.color === "function" ? props.color(d) : props.color));
+        .attr("fill", (d, i) => colorToString(typeof props.color === "function" ? props.color(d, i) : props.color));
         selection.selectAll(".sszvis-ruler__label-outline").data(data).join("text").classed("sszvis-ruler__label-outline", true);
         selection.selectAll(".sszvis-ruler__label").data(data).join("text").classed("sszvis-ruler__label", true);
         // Update both labelOutline and labelOutline selections
@@ -10721,8 +10721,9 @@
      * @property {number} width                     The pixel width of the legend (default 200).
      * @property {number} segments                  The number of segments to aim for. Note, this is only used if displayValues isn't specified,
      *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default)
-     * @property {array} labelText                  Text or a text-returning function to use as the titles for the legend endpoints. If not supplied,
-     *                                              defaults to using the first and last tick values.
+     * @property {array} labelText                  An array of labels for the legend endpoints. If not supplied, defaults to the
+     *                                              first and last tick values. For string labels, name the type:
+     *                                              `legendColorLinear<string>()`.
      * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
      */
     function legendColorLinear() {
@@ -10808,11 +10809,16 @@
         circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
         const lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues).join("line").classed("sszvis-legend__dashedline", true);
         lines.attr("x1", 0).attr("y1", getCircleEdge).attr("x2", maxRadius + 15).attr("y2", getCircleEdge);
-        const labels = group.selectAll(".sszvis-legend__label").data(tickValues).join("text").attr("class", "sszvis-legend__label sszvis-legend__label--small");
+        const labels = group
+        // Typed so the join yields SVGTextElement, which is what the formatter's
+        // `this` is bound to.
+        .selectAll(".sszvis-legend__label").data(tickValues).join("text").attr("class", "sszvis-legend__label sszvis-legend__label--small");
         labels.attr("dx", maxRadius + 18).attr("y", getCircleEdge).attr("dy", "0.35em") // vertically-center
-        // tickValues are d3 NumberValues; the formatter is handed the number they
-        // stand for, so sszvis' own number formatters can be passed directly.
-        .text((d, i) => props.tickFormat(Number(d), i));
+        // Wrapped only to resolve the tick to a number; `this` and the nodes are
+        // forwarded, so the formatter still gets d3's full callback contract.
+        .text(function (d, i, nodes) {
+          return props.tickFormat.call(this, Number(d), i, nodes);
+        });
       });
     }
     /**
@@ -13209,9 +13215,10 @@
           // pass to a functorized value, so those are invoked with 0.
           return Object.keys(propsConfig).reduce((memo, propKey) => {
             const fallback = propsConfig[propKey]._;
-            if (defined(fallback)) {
-              memo[propKey] = fallback(0);
-            }
+            // Always write the key, even for a propSpec with no '_' (only reachable from
+            // untyped callers). The result type declares every configured prop as present,
+            // so silently omitting one would make `props.foo.bar` throw on a typed read.
+            memo[propKey] = defined(fallback) ? fallback(0) : undefined;
             return memo;
           }, {});
         }
@@ -13220,10 +13227,13 @@
           const propSpec = propsConfig[propKey];
           // Finds out which breakpoints the provided measurements match up with
           const matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
-          // Validate the propSpec for the current propKey
+          // Validate the propSpec for the current propKey. An invalid spec is a misconfiguration,
+          // so warn loudly - but keep resolving instead of dropping the key: the result type
+          // declares every configured prop as present, and an absent key turns a developer's
+          // typo into a TypeError at the point of use rather than a visible warning here.
+          // Unknown breakpoint names simply never match, so resolution lands on '_' below.
           if (!validatePropSpec(propSpec, breakpointSpec)) {
             warn("ResponsiveProps - invalid propSpec for " + propKey + ". Make sure you define the '_' fallback and that all breakpoint names are valid.");
-            return memo;
           }
           // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
           // This function should always at least find '_' at the end of the array.
