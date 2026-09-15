@@ -9,16 +9,25 @@
     "clean": "rm -rf build .react-router .turbo",
     "build": "react-router build",
     "dev": "react-router dev --port ${PORT:-3000}",
-    "type-check": "react-router typegen && tsc --noEmit && tsc --noEmit -p examples/tsconfig.json"
+    "type-check": "react-router typegen && tsc --noEmit && tsc --noEmit -p examples/tsconfig.json && tsc --noEmit -p app/builder/domain/recipes/tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
+    "@effect/atom-react": "4.0.0-rc.115",
+    "@effect/platform-browser": "4.0.0-rc.115",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@mdx-js/react": "^3.1.1",
     "@react-router/node": "8.3.1",
+    "@shikijs/langs": "4.4.3",
+    "@shikijs/themes": "4.4.3",
+    "@tanstack/react-form": "^1.33.5",
+    "@tanstack/react-table": "^9.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "effect": "4.0.0-rc.113",
+    "d3-dsv": "^3.0.1",
+    "effect": "4.0.0-rc.115",
     "isbot": "^5.1.31",
     "lucide-react": "^1.45.0",
     "mdast-util-to-string": "^4.0.0",
@@ -38,11 +47,13 @@
     "@shikijs/transformers": "^4.4.3",
     "@tailwindcss/vite": "^4.1.13",
     "@types/d3": "^7.4.3",
+    "@types/d3-dsv": "^3.0.7",
     "@types/mdx": "^2.0.13",
     "@types/node": "^26.5.1",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "mdx-mermaid": "^2.0.3",
+    "prettier": "^3.9.6",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-pretty-code": "^0.14.1",
     "rehype-slug": "^6.0.0",
@@ -52,6 +63,7 @@
     "tailwindcss": "^4.1.13",
     "ts-blank-space": "^0.9.0",
     "typescript": "^7.0.2",
-    "vite": "^8.3.0"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
   }
 }

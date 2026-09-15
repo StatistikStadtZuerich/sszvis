@@ -1,26 +1,16 @@
-import { Eye, EyeOff, LoaderCircle, Table2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import type { Sources } from "virtual:examples";
-import { CopyButton } from "~/components/copy-button";
-import { JavaScriptIcon, TypeScriptIcon } from "~/components/ui/icons";
+import { SourceView, VIEWS, ViewButton, isView } from "~/components/source-view";
 import { Button } from "~/components/ui/button";
-import { ToggleButton, ToggleButtonGroup } from "~/components/ui/toggle-button-group";
-import { typefaceCode, typefaceCodeLabel, typefaceMeta } from "~/components/tokens/typeface";
+import { ToggleButtonGroup } from "~/components/ui/toggle-button-group";
+import { typefaceCodeLabel, typefaceMeta } from "~/components/tokens/typeface";
 import { cn } from "~/lib/utils";
 
 export type { Sources };
 export type LoadSources = () => Promise<{ readonly default: Sources }>;
 
-const VIEWS = {
-  ts: { label: "TypeScript", filename: "chart.ts", icon: TypeScriptIcon },
-  js: { label: "JavaScript", filename: "chart.js", icon: JavaScriptIcon },
-  csv: { label: "Data", filename: "data.csv", icon: Table2 },
-} as const;
-
 const LANGUAGE_VIEWS: ReadonlyArray<string> = ["ts", "js"];
-
-/** Whether a view name is one the panel has a label and icon for. */
-const isView = (view: string): view is keyof typeof VIEWS => view in VIEWS;
 
 export const SourcePanel = ({
   views,
@@ -120,33 +110,8 @@ export const SourcePanel = ({
         </Button>
       </div>
 
-      <div id={bodyId} hidden={!expanded} className="group relative min-w-0">
-        {source === undefined ? (
-          <div
-            className={typefaceMeta(
-              "flex items-center gap-2 bg-code-block p-4 text-muted-foreground",
-            )}
-            role="status"
-          >
-            <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />
-            Loading the source…
-          </div>
-        ) : source.html === null ? (
-          // No grammar for this file type - show it as plain text
-          <pre className={typefaceCode("max-h-104 overflow-auto bg-code-block p-4")}>
-            {source.raw}
-          </pre>
-        ) : (
-          <div
-            className={typefaceCode(
-              "max-h-104 overflow-auto bg-code-block p-4 [&_pre]:bg-transparent!",
-            )}
-            dangerouslySetInnerHTML={{ __html: source.html }}
-          />
-        )}
-        {source !== undefined && (
-          <CopyButton getValue={() => source.raw} className="opacity-0 group-hover:opacity-100" />
-        )}
+      <div id={bodyId} hidden={!expanded}>
+        <SourceView source={source} className="max-h-104" />
       </div>
 
       {expanded && source?.lines !== undefined && (
@@ -159,16 +124,5 @@ export const SourcePanel = ({
         </p>
       )}
     </div>
-  );
-};
-
-const ViewButton = ({ view }: { readonly view: string }) => {
-  const meta = isView(view) ? VIEWS[view] : undefined;
-  const Icon = meta?.icon;
-  return (
-    <ToggleButton value={view} title={meta ? `${meta.label} — ${meta.filename}` : view}>
-      {Icon ? <Icon /> : null}
-      <span className="hidden @[26rem]:inline">{meta?.label ?? view}</span>
-    </ToggleButton>
   );
 };

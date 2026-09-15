@@ -109,36 +109,40 @@ export const AppSidebar = () => {
       </SidebarHeader>
 
       <SidebarContent>
-        {navigation.map((entry) =>
-          entry.kind === "link" ? (
-            <SidebarGroup key={entry.href} className="gap-0 border-sidebar-border border-t p-0">
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    render={
-                      <Link
-                        to={entry.href}
-                        onClick={closeMobileSidebar}
-                        aria-current={location.pathname === entry.href ? "page" : undefined}
-                      />
-                    }
-                    isActive={location.pathname === entry.href}
-                    className={sectionLabelClassName(location.pathname === entry.href)}
-                  >
-                    {entry.label}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroup>
-          ) : (
-            <NavSectionGroup
-              key={entry.title}
-              section={entry}
-              pathname={location.pathname}
-              onNavigate={closeMobileSidebar}
-            />
-          ),
-        )}
+        {/* The one navigation landmark on the page: without it a screen reader has no
+            way to jump to the docs tree, and no way to skip past it. */}
+        <nav aria-label="Documentation">
+          {navigation.map((entry) =>
+            entry.kind === "link" ? (
+              <SidebarGroup key={entry.href} className="gap-0 border-sidebar-border border-t p-0">
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      render={
+                        <Link
+                          to={entry.href}
+                          onClick={closeMobileSidebar}
+                          aria-current={location.pathname === entry.href ? "page" : undefined}
+                        />
+                      }
+                      isActive={location.pathname === entry.href}
+                      className={sectionLabelClassName(location.pathname === entry.href)}
+                    >
+                      {entry.label}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroup>
+            ) : (
+              <NavSectionGroup
+                key={entry.title}
+                section={entry}
+                pathname={location.pathname}
+                onNavigate={closeMobileSidebar}
+              />
+            ),
+          )}
+        </nav>
       </SidebarContent>
 
       <SidebarFooter className="border-sidebar-border border-t">
@@ -155,17 +159,17 @@ export const AppSidebar = () => {
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-touch"
               nativeButton={false}
               render={<a href={REPO_URL} target="_blank" rel="noopener noreferrer" />}
               title="GitHub"
-              className="size-10 text-muted-foreground hover:bg-sidebar-accent md:size-8"
+              className="text-muted-foreground hover:bg-sidebar-accent"
             >
               <GithubIcon />
             </Button>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-touch"
               nativeButton={false}
               render={
                 <a
@@ -175,7 +179,7 @@ export const AppSidebar = () => {
                 />
               }
               title="npm package"
-              className="size-10 text-muted-foreground hover:bg-sidebar-accent md:size-8"
+              className="text-muted-foreground hover:bg-sidebar-accent"
             >
               <Package />
             </Button>
