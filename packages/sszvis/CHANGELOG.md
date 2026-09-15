@@ -1,3 +1,29 @@
+## 3.5.2
+
+### Patch Changes
+
+- [`bc37604`](https://github.com/StatistikStadtZuerich/sszvis/commit/bc37604fa4d46878ffea993ae389726c49b17be4) Thanks [@lloydrichards](https://github.com/lloydrichards)! - accept the library's own colour scales wherever a component takes a colour, so `.fill((d) => cScale(cAcc(d)))` typechecks
+
+- [#416](https://github.com/StatistikStadtZuerich/sszvis/pull/416) [`722cd15`](https://github.com/StatistikStadtZuerich/sszvis/commit/722cd15ae1330b54785057d4cf89240063b93577) Thanks [@lloydrichards](https://github.com/lloydrichards)! - pass d3's index to the colour accessors of `sszvis.annotationRuler()`, `sszvis.handleRuler()` and `sszvis.sankey()`, as the other components already do
+
+- [`9790cf1`](https://github.com/StatistikStadtZuerich/sszvis/commit/9790cf1e470953e95a00c4fd1625641cfe8cdbf4) Thanks [@lloydrichards](https://github.com/lloydrichards)! - let `sszvis.groupedBarsVertical()` and `groupedBarsHorizontal()` take a constant for `x` and `y`, as `width` and `height` already did
+
+- [`e9e6d88`](https://github.com/StatistikStadtZuerich/sszvis/commit/e9e6d88fe97167500dfee7f05c0206d12f9020d5) Thanks [@lloydrichards](https://github.com/lloydrichards)! - type label and tick formatters against the values they actually receive, not against `string`
+
+- [#416](https://github.com/StatistikStadtZuerich/sszvis/pull/416) [`1bf1115`](https://github.com/StatistikStadtZuerich/sszvis/commit/1bf11159450e3c1ab548ed46c548d2433db61c7d) Thanks [@lloydrichards](https://github.com/lloydrichards)! - type `sszvis.legendColorLinear().labelFormat()` against the numbers it is handed when `labelText` is unset, and give `sszvis.legendRadius().tickFormat()` d3's index, nodes and `this`
+
+- [`223203e`](https://github.com/StatistikStadtZuerich/sszvis/commit/223203e8fb4f64a22b1651899691aedd09d91a6f) Thanks [@lloydrichards](https://github.com/lloydrichards)! - type the handlers of `sszvis.move().on(…)` against the component's own scales
+
+- [`842d1ec`](https://github.com/StatistikStadtZuerich/sszvis/commit/842d1ec9eadcdfcfc328ce7d43f8a8d7621ce060) Thanks [@lloydrichards](https://github.com/lloydrichards)! - accept missing values in `sszvis.parseNumber`, `sszvis.parseDate` and `sszvis.parseYear`, so a `d3.csv` row whose cells are `string | undefined` typechecks
+
+- [#416](https://github.com/StatistikStadtZuerich/sszvis/pull/416) [`1e17771`](https://github.com/StatistikStadtZuerich/sszvis/commit/1e1777162003f7fec011a13572c592ef36f48c57) Thanks [@lloydrichards](https://github.com/lloydrichards)! - export `ColorValue`, `Measurement` and `PartialMeasurement`, and `sszvis.colorToString`, so a chart can name the types its own accessors return
+
+- [#416](https://github.com/StatistikStadtZuerich/sszvis/pull/416) [`61657d9`](https://github.com/StatistikStadtZuerich/sszvis/commit/61657d967dec919a8c70b513fe1b506debdd0772) Thanks [@lloydrichards](https://github.com/lloydrichards)! - keep a prop in the result of `sszvis.responsiveProps()` when its spec is invalid, so a mistyped breakpoint name warns and falls back to `_` instead of throwing at the point of use
+
+- [`ea9f2b0`](https://github.com/StatistikStadtZuerich/sszvis/commit/ea9f2b0264c28dc396f26da6dbaafbeb7eb34987) Thanks [@lloydrichards](https://github.com/lloydrichards)! - type the result of `sszvis.responsiveProps()` from the `.prop()` calls that built it
+
+- [#412](https://github.com/StatistikStadtZuerich/sszvis/pull/412) [`4c21db3`](https://github.com/StatistikStadtZuerich/sszvis/commit/4c21db338230a261d3d6a4d5049d0227d2c52d67) Thanks [@lloydrichards](https://github.com/lloydrichards)! - stop writing a `<title>` element into the chart's SVG, where the browser drew a native tooltip over the whole chart
+
 ## 3.5.1 (2026-09-10)
 
 - ship `sszvis.css` from the library package, so `sszvis/sszvis.css` resolves from an install instead of only from the documentation site
