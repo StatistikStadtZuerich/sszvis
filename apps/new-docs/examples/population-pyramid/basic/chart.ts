@@ -290,9 +290,7 @@ sszvis.app<State, Actions>({
  * Aggregates the single-year rows of each gender into five-year bins, and builds
  * the lookup table that turns a continuous age back into a bin label.
  */
-const binByAge = (
-  byGender: Record<string, Datum[]>,
-): { binnedData: BinnedDatum[]; ages: string[]; ageLookupIndex: string[] } => {
+const binByAge = (byGender: Record<string, Datum[]>) => {
   const binnedData: BinnedDatum[] = [];
   const ages: string[] = [];
   // NOTE: One entry per single year of age. A gender missing rows for some ages

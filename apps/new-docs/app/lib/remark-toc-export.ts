@@ -1,6 +1,9 @@
 import { toString } from "mdast-util-to-string";
 import { visit } from "unist-util-visit";
 
+/** What an MDX route exports as its `handle`, so the layout can show its table of contents. */
+export type TocHandle = { readonly toc: ReadonlyArray<TOCItem> };
+
 export interface TOCItem {
   id: string;
   value: string;

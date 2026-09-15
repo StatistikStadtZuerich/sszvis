@@ -17,7 +17,10 @@ const VIEWS = {
   csv: { label: "Data", filename: "data.csv", icon: Table2 },
 } as const;
 
-const LANGUAGE_VIEWS = ["ts", "js"] as const;
+const LANGUAGE_VIEWS: ReadonlyArray<string> = ["ts", "js"];
+
+/** Whether a view name is one the panel has a label and icon for. */
+const isView = (view: string): view is keyof typeof VIEWS => view in VIEWS;
 
 export const SourcePanel = ({
   views,
@@ -58,9 +61,7 @@ export const SourcePanel = ({
   };
 
   const languages = LANGUAGE_VIEWS.filter((key) => keys.includes(key));
-  const extras = keys.filter(
-    (key) => !LANGUAGE_VIEWS.includes(key as (typeof LANGUAGE_VIEWS)[number]),
-  );
+  const extras = keys.filter((key) => !LANGUAGE_VIEWS.includes(key));
 
   return (
     <div className="@container min-w-0">
@@ -101,7 +102,7 @@ export const SourcePanel = ({
 
         {expanded && (
           <span className={typefaceCodeLabel("pr-1 text-muted-foreground")}>
-            {VIEWS[active as keyof typeof VIEWS]?.filename ?? active}
+            {active !== undefined && isView(active) ? VIEWS[active].filename : active}
           </span>
         )}
 
@@ -162,7 +163,7 @@ export const SourcePanel = ({
 };
 
 const ViewButton = ({ view }: { readonly view: string }) => {
-  const meta = VIEWS[view as keyof typeof VIEWS];
+  const meta = isView(view) ? VIEWS[view] : undefined;
   const Icon = meta?.icon;
   return (
     <ToggleButton value={view} title={meta ? `${meta.label} — ${meta.filename}` : view}>
