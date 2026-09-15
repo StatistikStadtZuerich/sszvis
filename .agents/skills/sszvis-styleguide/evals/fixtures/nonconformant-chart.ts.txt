@@ -1,0 +1,85 @@
+/* global d3, sszvis */
+
+/**
+ * Bar chart of commuters by sector.
+ */
+
+interface Datum {
+  category: string;
+  xValue: number;
+}
+
+interface State {
+  data: Datum[];
+  categories: string[];
+  selection: Datum[];
+}
+
+const MAX_WIDTH = 800;
+const THRESHOLD = 1000;
+
+const xAcc = sszvis.prop("xValue");
+const cAcc = sszvis.prop("category");
+
+const isSelected = (state: State) => (d: Datum) => sszvis.contains(state.selection, d);
+
+sszvis.app<State>({
+  init: (state) =>
+    d3
+      .csv("data.csv", (d) => ({
+        category: d["Sektor"] as string,
+        xValue: sszvis.parseNumber(d["Zupendler"] as string),
+      }))
+      .then((data) => {
+        state.data = data;
+        state.categories = sszvis.set(data);
+        state.selection = [];
+      }),
+
+  actions: {
+    showTooltip(state: State, e: Event, xValue: number, category: string) {
+      state.selection = state.data.filter((d: Datum) => cAcc(d) === category);
+    },
+    hideTooltip(state: State) {
+      state.selection = [];
+    },
+  },
+
+  render(state, actions) {
+    const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+    const bounds = sszvis.bounds({ top: 30, bottom: 40 }, "#sszvis-chart");
+
+    const widthScale = d3
+      .scaleLinear()
+      .range([0, Math.min(bounds.innerWidth, MAX_WIDTH)])
+      .domain([0, d3.max(state.data, xAcc) as number]);
+
+    const cScale = sszvis.scaleQual12();
+
+    const chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds, {
+      title: "",
+      description: "",
+    });
+
+    const barGen = sszvis
+      .bar()
+      .x(0)
+      .width(sszvis.compose(widthScale, xAcc))
+      .height(24)
+      .fill((d: any) => cScale(cAcc(d)));
+
+    const xAxis = sszvis.axisX().scale(widthScale).orient("bottom").highlightTick(isSelected);
+
+    chartLayer.selectGroup("bars").call(barGen);
+    chartLayer.selectGroup("xAxis").call(xAxis);
+
+    sszvis.viewport.on("resize", actions.resize);
+  },
+});
+
+const queryProps = sszvis.responsiveProps().prop("ticks", { _: 5 });
+
+function formatLabel(d: Datum) {
+  const value = xAcc(d);
+  return value < THRESHOLD ? "k. A." : sszvis.formatNumber(value);
+}
