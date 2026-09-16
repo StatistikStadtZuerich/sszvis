@@ -210,7 +210,12 @@ export const TableEditor = ({
       const width = Math.max(0, ...block.map((cells) => cells.length));
       if (block.length <= 1 && width <= 1) return false;
 
-      const target = at(row);
+      /* NOTE: Every pasted row lands where the user sees it, so each one is mapped
+         through the visible order - not just the first. Past the last visible row
+         `at` is the identity, which is where the appended rows go. */
+      const targets = block.map((_, index) => at(row + index));
+      const pasted = new Map(targets.map((source, index) => [source, block[index]]));
+
       const columns = [...table.columns];
       while (columns.length < column + width)
         columns.push(ColumnName.make(`Spalte ${columns.length + 1}`));
@@ -218,14 +223,14 @@ export const TableEditor = ({
         ...cells,
         ...Array.from({ length: columns.length - cells.length }, () => ""),
       ]);
-      while (grown.length < target + block.length) grown.push(columns.map(() => ""));
+      while (grown.length <= Math.max(...targets)) grown.push(columns.map(() => ""));
 
       const addedColumns = columns.length - table.columns.length;
       const addedRows = grown.length - table.rows.length;
       replace({
         columns,
         rows: grown.map((cells, index) => {
-          const source = block[index - target];
+          const source = pasted.get(index);
           return source === undefined
             ? cells
             : cells.map((cell, spot) => source[spot - column] ?? cell);

@@ -116,7 +116,7 @@ export const PastePanel = ({
             <TableRow>
               {table.columns.map((column, index) => (
                 <TableHead key={`${column}-${index}`} density="compact">
-                  {column === "" ? `Spalte ${index + 1}` : column}
+                  {column}
                 </TableHead>
               ))}
             </TableRow>
