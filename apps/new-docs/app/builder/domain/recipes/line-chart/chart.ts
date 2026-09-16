@@ -74,7 +74,10 @@ sszvis.app<State, Actions>({
             };
       })
       .then((data) => {
-        state.data = data;
+        // NOTE: The rows arrive in the order the table holds them, which need not be
+        // chronological. The line is drawn point to point and the ruler finds its datum
+        // by bisection, and both read the order as the x axis - so it is imposed here.
+        state.data = data.sort((a, b) => d3.ascending(xAcc(a), xAcc(b)));
         // NOTE: One array of points per category; the line component draws each.
         state.lineData = sszvis.cascade<Datum>().arrayBy(cAcc, d3.ascending).apply<Datum[][]>(data);
         state.xValues = [d3.min(data, xAcc) ?? new Date(), d3.max(data, xAcc) ?? new Date()];
