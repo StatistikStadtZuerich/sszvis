@@ -22,6 +22,8 @@
     "**/.reference/**",
     "apps/docs/docs/**",
     "apps/new-docs/.react-router/**",
+    // Critiques written by the impeccable design agent are a record of its review, not source.
+    "apps/new-docs/.impeccable/**",
     "apps/new-docs/examples/_template.html",
     // Chart example datasets are generated exports, not hand-written source. The
     // per-example example.json metadata is edited by hand and stays formatted.
