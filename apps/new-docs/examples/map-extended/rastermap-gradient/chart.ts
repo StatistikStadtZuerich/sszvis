@@ -1,7 +1,10 @@
 /**
  * Raster map of Zurich where each 50m cell is shaded by a continuous colour gradient.
  *
- * @category map-extended
+ * @sszvis   3.5.1
+ * @chart    map-extended
+ * @features legend, raster-layer, image-layer
+ * @date     2026-09-14
  */
 
 // Magic Numbers

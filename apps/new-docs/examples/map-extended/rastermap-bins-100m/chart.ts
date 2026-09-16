@@ -1,7 +1,10 @@
 /**
  * Raster map of Zurich where each 100m cell is shaded by a binned colour scale.
  *
- * @category map-extended
+ * @sszvis   3.5.1
+ * @chart    map-extended
+ * @features legend, raster-layer, image-layer
+ * @date     2026-09-14
  */
 
 // Magic Numbers

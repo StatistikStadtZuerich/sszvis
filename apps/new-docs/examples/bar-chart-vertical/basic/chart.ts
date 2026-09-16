@@ -1,7 +1,10 @@
 /**
  * Basic vertical bar chart example using sszvis.
  *
- * @category bar-chart-vertical
+ * @sszvis   3.5.1
+ * @chart    bar-chart-vertical
+ * @features tooltip
+ * @date     2026-09-14
  */
 
 // Magic Numbers

@@ -1,7 +1,10 @@
 /**
  * Population pyramid aggregated into five-year age groups.
  *
- * @category population-pyramid
+ * @sszvis   3.5.1
+ * @chart    population-pyramid
+ * @features tooltip, legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers

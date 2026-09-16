@@ -1,7 +1,10 @@
 /**
  * Line chart example drawing one overlapping line per Stadtkreis.
  *
- * @category line-chart
+ * @sszvis   3.5.1
+ * @chart    line-chart
+ * @features ruler, legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers

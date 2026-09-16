@@ -32,5 +32,18 @@
     "**/test/snapshot/__results__/**",
     "apps/regression-cli/__export__/**",
     "apps/regression-cli/__report__/**",
+    // Coding-agent assets - skills, prompts and configuration installed by each tool - are not
+    // owned source, and each tool rewrites its own directory in its own style.
+    ".agent/**",
+    ".agents/**",
+    ".claude/**",
+    ".codex/**",
+    ".continue/**",
+    ".cursor/**",
+    ".gemini/**",
+    ".opencode/**",
+    ".pi/**",
+    ".roo/**",
+    ".windsurf/**",
   ],
 }

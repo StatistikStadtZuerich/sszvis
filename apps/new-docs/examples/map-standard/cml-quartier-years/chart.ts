@@ -2,7 +2,10 @@
  * Choropleth map of the Zurich quarters, linked to a line chart of the same
  * values over time: dragging the ruler picks a year, hovering picks a quarter.
  *
- * @category map-standard
+ * @sszvis   3.5.1
+ * @chart    map-standard
+ * @features tooltip, ruler, legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers

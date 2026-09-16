@@ -1,7 +1,10 @@
 /**
  * Scatterplot with a voronoi interaction layer and a categorical colour legend.
  *
- * @category scatterplot
+ * @sszvis   3.5.1
+ * @chart    scatterplot
+ * @features tooltip, voronoi
+ * @date     2026-09-14
  */
 
 // Magic Numbers

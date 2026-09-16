@@ -1,7 +1,10 @@
 /**
  * Horizontal bar chart whose button group carries long, multi-word labels.
  *
- * @category bar-chart-horizontal
+ * @sszvis   3.5.1
+ * @chart    bar-chart-horizontal
+ * @features button-group
+ * @date     2026-09-14
  */
 
 // Magic Numbers

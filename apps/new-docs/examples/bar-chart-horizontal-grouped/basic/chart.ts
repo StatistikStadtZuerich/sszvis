@@ -1,7 +1,10 @@
 /**
  * Horizontal grouped bar chart example using sszvis.
  *
- * @category bar-chart-horizontal-grouped
+ * @sszvis   3.5.1
+ * @chart    bar-chart-horizontal-grouped
+ * @features tooltip, legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers

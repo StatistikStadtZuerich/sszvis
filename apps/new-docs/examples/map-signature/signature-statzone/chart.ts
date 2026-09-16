@@ -1,7 +1,10 @@
 /**
  * Signature map of the statistical zones of Zurich, with one bubble of births per zone.
  *
- * @category map-signature
+ * @sszvis   3.5.1
+ * @chart    map-signature
+ * @features tooltip, legend, button-group, select-menu, bubble-overlay
+ * @date     2026-09-14
  */
 
 // Magic Numbers

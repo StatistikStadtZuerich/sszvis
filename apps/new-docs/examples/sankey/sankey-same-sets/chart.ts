@@ -1,7 +1,10 @@
 /**
  * Sankey diagram between two sets drawn from the same nodes.
  *
- * @category sankey
+ * @sszvis   3.5.1
+ * @chart    sankey
+ * @features tooltip
+ * @date     2026-09-14
  */
 
 // Magic Numbers

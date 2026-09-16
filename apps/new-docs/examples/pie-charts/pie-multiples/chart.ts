@@ -1,7 +1,10 @@
 /**
  * Small multiples of pie charts, one per group.
  *
- * @category pie-charts
+ * @sszvis   3.5.1
+ * @chart    pie-charts
+ * @features tooltip, legend, small-multiples
+ * @date     2026-09-14
  */
 
 // Magic Numbers

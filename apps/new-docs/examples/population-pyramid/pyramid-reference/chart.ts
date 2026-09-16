@@ -1,7 +1,10 @@
 /**
  * Population pyramid with a reference outline drawn over the bars.
  *
- * @category population-pyramid
+ * @sszvis   3.5.1
+ * @chart    population-pyramid
+ * @features legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers

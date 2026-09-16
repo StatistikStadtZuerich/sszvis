@@ -28,7 +28,10 @@ difference noted under Typing.
 /**
  * Basic horizontal bar chart example using sszvis.
  *
- * @category bar-chart-horizontal
+ * @sszvis   3.5.1
+ * @chart    bar-chart-horizontal
+ * @features tooltip
+ * @date     2026-09-14
  */
 
 // Magic Numbers
@@ -119,8 +122,27 @@ resize, **you never register a resize listener yourself**.
 
 ### Sections
 
-Open with a JSDoc block: one line on what the chart is, then
-`@category <chart-type>`. Then plain section comments, no separator rule:
+Open with a JSDoc block: one line on what the chart shows, then the provenance
+tags. They are the same tags the chart builder stamps on its output, because a
+reader who copies an example out of the docs ends up holding the same kind of
+file as a reader who generated one, and neither will have the folder it came
+from:
+
+| Tag | Value |
+| --- | --- |
+| `@sszvis` | the library version the example is written against |
+| `@chart` | the chart type — always the example's own `<chart-type>` folder |
+| `@features` | what it demonstrates beyond the mark, from the vocabulary below; omit the tag when there is nothing |
+| `@date` | the day the example was written, `YYYY-MM-DD` |
+
+The `@features` vocabulary, in this order: `tooltip`, `ruler`, `range-flag`,
+`confidence`, `annotation`, `legend`, `button-group`, `select-menu`, `slider`,
+`voronoi`, `small-multiples`, `breadcrumb`, `raster-layer`, `image-layer`,
+`bubble-overlay`, `geojson-overlay`, `missing-values`. It names what a reader
+would search for, so leave out what nearly every example has — `move`,
+`panning`, `modularText` say nothing.
+
+Then plain section comments, no separator rule:
 
 `// Magic Numbers` → `// Types` → `// Responsive Props` → `// Accessors` →
 `// Application` → `// Helper functions`
@@ -350,7 +372,7 @@ Copy this and tick it off before calling a chart done.
 
 ```
 Structure
-- [ ] JSDoc header with a one-line summary and @category <chart-type>
+- [ ] JSDoc header: one-line summary, then @sszvis, @chart, @features, @date
 - [ ] Top-level banners in order: Magic Numbers, Types, Responsive Props,
       Accessors, Application, Helper functions
 - [ ] Inside render(): Scales, Layers, Components, Rendering, Interaction

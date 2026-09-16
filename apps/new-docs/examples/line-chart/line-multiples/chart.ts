@@ -1,7 +1,10 @@
 /**
  * Small multiples line chart, one panel per Stadtkreis.
  *
- * @category line-chart
+ * @sszvis   3.5.1
+ * @chart    line-chart
+ * @features ruler, legend, small-multiples
+ * @date     2026-09-14
  */
 
 // Magic Numbers

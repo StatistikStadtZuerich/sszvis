@@ -1,7 +1,10 @@
 /**
  * Basic pie chart example using sszvis.
  *
- * @category pie-charts
+ * @sszvis   3.5.1
+ * @chart    pie-charts
+ * @features tooltip, legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers

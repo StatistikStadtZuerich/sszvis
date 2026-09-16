@@ -1,7 +1,9 @@
 /**
  * Choropleth map of the statistical zones of the city of Zurich.
  *
- * @category map-standard
+ * @sszvis   3.5.1
+ * @chart    map-standard
+ * @date     2026-09-14
  */
 
 // Magic Numbers

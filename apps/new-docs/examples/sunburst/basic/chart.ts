@@ -1,7 +1,10 @@
 /**
  * Basic sunburst chart example using sszvis.
  *
- * @category sunburst
+ * @sszvis   3.5.1
+ * @chart    sunburst
+ * @features tooltip
+ * @date     2026-09-14
  */
 
 // Magic Numbers

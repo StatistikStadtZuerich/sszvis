@@ -1,7 +1,10 @@
 /**
  * Scatterplot whose dot radius carries a third variable, with a radius legend.
  *
- * @category scatterplot
+ * @sszvis   3.5.1
+ * @chart    scatterplot
+ * @features tooltip, legend, voronoi
+ * @date     2026-09-14
  */
 
 // Magic Numbers
