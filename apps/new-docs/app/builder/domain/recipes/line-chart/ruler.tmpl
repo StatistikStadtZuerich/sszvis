@@ -31,13 +31,14 @@ resetDate(state) {
 },
 
 changeDate(state, _e, inputDate: Date | null) {
-  if (inputDate === null) {
+  // Find the datum closest to the input date, then take the first datum on
+  // each line that shares its date and has a value to display.
+  const closest = inputDate === null ? undefined : closestDatum(state.data, xAcc, inputDate);
+  if (closest === undefined) {
     state.selection = [];
     return;
   }
-  // Find the date of the datum closest to the input date, then take the
-  // first datum on each line that shares it and has a value to display.
-  const closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
+  const closestDate = xAcc(closest);
   state.selection = state.lineData.flatMap((linePoints) => {
     const match = sszvis.find((d) => xAcc(d).toString() === closestDate.toString(), linePoints);
     return match === undefined || Number.isNaN(yAcc(match)) ? [] : [match];
@@ -92,10 +93,15 @@ chartLayer.selectGroup("interaction").call(interactionLayer);
 const isSelected = (state: State) => (d: AxisDomain) =>
   sszvis.contains(state.selection.map(xAcc).map(String), String(d));
 
-/** The datum whose x-value lies closest to `datum`, by bisection. */
+/**
+ * The datum whose x-value lies closest to `datum`, by bisection, or `undefined`
+ * when there is nothing to point at: every row whose date cannot be parsed is
+ * dropped, so the data can be empty while the chart still draws its axes.
+ */
 const closestDatum = (data: Datum[], accessor: (d: Datum) => Date, datum: Date) => {
   const i = d3.bisector(accessor).left(data, datum, 1);
   const d0 = data[i - 1];
+  if (d0 === undefined) return undefined;
   const d1 = data[i] ?? d0;
   return datum.valueOf() - accessor(d0).valueOf() > accessor(d1).valueOf() - datum.valueOf()
     ? d1

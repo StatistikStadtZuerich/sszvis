@@ -35,7 +35,7 @@ import { TooltipFields } from "./components/tooltip-fields";
 import { columnKinds, parse, serialize } from "./domain/csv";
 import { applySample, switchRecipe, unmappedRoles } from "./domain/initial-spec";
 import { isPristine, type Sample, samples } from "./domain/samples";
-import { type RecipeSummary, TITLE } from "./domain/spec";
+import { optionValue, type RecipeSummary, TITLE } from "./domain/spec";
 
 export const clientLoader = () => null;
 clientLoader.hydrate = true as const;
@@ -126,13 +126,17 @@ const Builder = ({
           : { kind: "ready" };
 
   const note =
-    missingRoles.length > 0
-      ? `Showing the last chart that compiled. Step 3 still needs a column for ${roleList(missingRoles)}.`
-      : freshness === "stale"
-        ? "Showing the last chart that compiled."
-        : compiling
-          ? "Rebuilding from your changes…"
-          : null;
+    /* An error stops the compile, so the sources below stay visibly stale rather
+       than reading as a rebuild that will never land. */
+    error !== null
+      ? "Showing the last chart that compiled."
+      : missingRoles.length > 0
+        ? `Showing the last chart that compiled. Step 3 still needs a column for ${roleList(missingRoles)}.`
+        : freshness === "stale"
+          ? "Showing the last chart that compiled."
+          : compiling
+            ? "Rebuilding from your changes…"
+            : null;
 
   return (
     <div className="mx-auto w-full max-w-[1600px]">
@@ -332,7 +336,9 @@ const Builder = ({
             <Preview
               js={settled?.generated.js.raw ?? ""}
               csv={settled?.generated.csv.raw ?? ""}
-              title={settled?.spec.options[TITLE] ?? "Chart"}
+              /* The exported page titles itself from the resolved option (workers/pipeline.ts),
+                 so an empty Title field has to fall back to the recipe's German default here too. */
+              title={settled === undefined ? "" : optionValue(recipe.options, settled.spec, TITLE)}
               status={status}
             />
           </div>

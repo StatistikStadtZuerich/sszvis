@@ -67,8 +67,14 @@ export const lineChart: RecipeDef = {
       spec.fields[SERIES] === undefined || spec.fields[SERIES] === ""
         ? str("")
         : code(`d[${str(spec.fields[SERIES])}] ?? ""`),
-    /* The legend feature overrides both. */
-    C_SCALE: code("sszvis.scaleQual12()"),
+    /* The legend feature overrides both, with a scale it has already laid out. This has
+       to reach the same colours by itself, or unticking the legend would repaint the
+       chart: `colorLegendLayout` picks its palette by the same count, and the domain is
+       set because an sszvis qualitative scale declares an `unknown` colour, which stops
+       d3 extending the domain implicitly and paints every series alike. */
+    C_SCALE: code(
+      "state.categories.length > 6\n      ? sszvis.scaleQual12().domain(state.categories)\n      : sszvis.scaleQual6().domain(state.categories)",
+    ),
     BOTTOM_PADDING: code("45"),
     RULER_LABEL: tooltipText(
       "SVG",

@@ -63,7 +63,11 @@ sszvis.app<State, Actions>({
       .then((data) => {
         state.data = data;
         // {{block:init}}
-        state.categories = state.data.map(xAcc);
+        // NOTE: One band per distinct category. `scaleBand` interns its domain,
+        // so counting the rows instead would lay the chart out for more bars
+        // than are ever drawn. Rows repeating a category still share a band:
+        // they are drawn on top of each other and the tooltip names them all.
+        state.categories = sszvis.set(state.data, xAcc);
       }),
 
   // {{block:actions}}
