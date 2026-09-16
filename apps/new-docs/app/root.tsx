@@ -21,6 +21,7 @@ import { proseComponents } from "~/components/tokens/prose-components";
 import { typefaceWordmark } from "~/components/tokens/typeface";
 import { buttonVariants } from "~/components/ui/button";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "~/components/ui/sidebar";
+import { cn } from "~/lib/utils";
 import type { TocHandle, TOCItem } from "~/lib/remark-toc-export";
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -61,11 +62,23 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <Links />
       </head>
       <body>
+        <a
+          href="#main"
+          className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-50 focus-visible:rounded-md focus-visible:bg-background focus-visible:px-3 focus-visible:py-2 focus-visible:text-foreground"
+        >
+          Skip to content
+        </a>
         <SidebarProvider>
           <AppSidebar />
           <div className="flex min-w-0 flex-1 flex-col">
             <SiteHeader />
-            <main className="w-full flex-1 px-8 py-9 lg:py-12 xl:px-14 xl:pr-60">{children}</main>
+            <main
+              id="main"
+              tabIndex={-1}
+              className="w-full flex-1 px-8 py-9 lg:py-12 xl:px-14 focus-visible:outline-none"
+            >
+              {children}
+            </main>
           </div>
         </SidebarProvider>
         <ScrollRestoration />
@@ -79,8 +92,7 @@ export default function App() {
   const matches = useMatches();
   const location = useLocation();
   const lastMatch = matches[matches.length - 1];
-  // SAFETY: the only route modules that export a `handle` are the MDX pages, and
-  // remark-toc-export writes every one of those as `{ toc }`.
+  // SAFETY: the only route modules that export a `handle` are the MDX pages, and remark-toc-export writes every one of those as `{ toc }`.
   const handle = lastMatch?.handle as TocHandle | undefined;
   const routeToc: TOCItem[] = [...(handle?.toc ?? [])];
   const [toc, setToc] = useState(routeToc);
@@ -98,15 +110,18 @@ export default function App() {
     );
   }, [location.pathname]);
 
+  /* The chart builder is a two-column tool, not prose, so it opts out of the reading measure. */
+  const isWide = location.pathname.startsWith("/builder");
+
   const hasToc = toc.length > 0;
   const tocMaxDepth = contentPages.find((page) => page.href === location.pathname)?.tocMaxDepth;
   return (
     <MDXProvider components={proseComponents}>
       {hasToc && <TableOfContents toc={toc} maxDepth={tocMaxDepth} />}
-      <div className="@container w-full">
-        <div className="content-column mx-auto w-full max-w-[70ch]">
+      <div className={cn("@container/page w-full", hasToc && "xl:pr-46")}>
+        <div className={isWide ? "w-full" : "content-column mx-auto w-full max-w-[70ch]"}>
           <Outlet />
-          <DocFooter />
+          {!isWide && <DocFooter />}
         </div>
       </div>
       {hasToc && <TableOfContents toc={toc} desktopOnly maxDepth={tocMaxDepth} />}
@@ -143,8 +158,8 @@ const SiteHeader = () => {
   const { state, isMobile } = useSidebar();
   const sidebarVisible = state === "expanded" && !isMobile;
   return (
-    <header className="sticky top-0 z-10 flex items-center gap-3 border-border/60 border-b bg-background/85 px-5 py-3.5 backdrop-blur-xl sm:px-8">
-      <SidebarTrigger className="size-11 md:size-8" />
+    <header className="sticky top-0 z-(--z-chrome) flex h-(--header-height) shrink-0 items-center gap-3 border-border/60 border-b bg-background/85 px-5 backdrop-blur-xl sm:px-8">
+      <SidebarTrigger size="icon-touch" />
       {!sidebarVisible && (
         <Link to="/" className={typefaceWordmark()}>
           sszvis
@@ -158,8 +173,8 @@ const SiteHeader = () => {
         aria-label="GitHub"
         className={buttonVariants({
           variant: "ghost",
-          size: "icon",
-          className: "size-11 text-muted-foreground hover:text-foreground md:size-8",
+          size: "icon-touch",
+          className: "text-muted-foreground hover:text-foreground",
         })}
       >
         <GithubIcon />

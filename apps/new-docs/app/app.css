@@ -71,13 +71,16 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/*
- * Ported from the old Catalog docs theme (apps/docs/docs/index.html). The
- * source palette is fully neutral - every surface is an untinted grey - with
- * two chromatic accents: the SSZ brand indigo #0F05A0 and the rose #CC6171
- * Catalog used for links. Hex equivalents are noted per token.
- */
+
 :root {
+  /* NOTE: Not a Tailwind theme namespace, so these are read with `z-(--z-chrome)`. */
+  --z-raised: 1; /* sticky within a scroll container */
+  --z-chrome: 10; /* the app frame: site header, sidebar */
+  --z-rail: 20; /* the sidebar's drag rail, over the frame it resizes */
+  --z-overlay: 50; /* popovers, sheets, tooltips, the skip link */
+
+  --header-height: 4.5625rem;
+
   --radius: 0.25rem;
   --background: oklch(0.994 0 0); /* #fdfdfd */
   --foreground: oklch(0.321 0 0); /* #333333 */
@@ -90,11 +93,11 @@
   --secondary: oklch(0.97 0 0); /* #f5f5f5 */
   --secondary-foreground: oklch(0.321 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.569 0 0); /* #777777 */
+  /* #676767, the darkest #777 could go and still clear 4.5:1 on --accent */
+  --muted-foreground: oklch(0.515 0 0);
   --accent: oklch(0.94 0 0); /* #ebebeb */
   --accent-foreground: oklch(0.326 0.216 267);
-  /* Catalog styled links rose, deliberately apart from the brand indigo. */
-  --link: oklch(0.626 0.136 12.5); /* #CC6171 */
+  --link: oklch(0.533 0.136 12.5);
   --destructive: oklch(0.58 0.22 25);
   --warning: oklch(0.8 0.16 85);
   --warning-foreground: oklch(0.321 0 0);
@@ -126,11 +129,12 @@
   --sidebar-ring: oklch(0.326 0.216 267);
 }
 
-/*
- * The old docs were light-only, so dark is derived: neutrals inverted, and the
- * two accents lifted in lightness / eased in chroma to stay legible on a dark
- * ground while holding their hue.
- */
+@media (width >= 48rem) {
+  :root {
+    --header-height: 3.8125rem;
+  }
+}
+
 .dark {
   --background: oklch(0.175 0 0);
   --foreground: oklch(0.92 0 0);
@@ -179,32 +183,11 @@
 }
 
 @layer components {
-  /*
-   * A block that is wider than the prose it sits among, centred on it: as wide
-   * as the page's content area (`100cqw`, from the container query wrapper in
-   * root.tsx) with the overhang split evenly between the two margins. On a
-   * narrow screen the content area is the column, the margins go to zero, and
-   * the block is simply full width.
-   */
   .breakout {
     width: 100cqw;
     margin-inline: calc((100% - 100cqw) / 2);
   }
 
-  /*
-   * A gallery thumbnail: the example drawn at a realistic chart width and
-   * scaled into its tile, rather than drawn at the size of the tile. A chart
-   * asked for 180 real pixels picks its narrowest breakpoint and stacks its
-   * axis labels on top of each other, which reads as a broken chart rather
-   * than a small one; scaling keeps the proportions a reader meets on the
-   * page, and shows the whole of it rather than cropping the legend.
-   *
-   * The scale is the tile's width over the frame's - a ratio of two lengths,
-   * which `calc()` cannot divide. `atan2()` takes the two lengths and gives an
-   * angle, and `tan()` turns that angle back into the plain number that
-   * `scale()` wants. The tile is the query container, so this tracks the grid
-   * at any width with no measuring.
-   */
   .thumbnail {
     --thumbnail-frame: 420px;
     container-type: inline-size;
@@ -217,18 +200,6 @@
     transform-origin: top left;
   }
 
-  /*
-   * Code blocks and diagrams hang outside the prose column by exactly the inset
-   * their own chrome adds, so the code glyphs land on the prose's left edge
-   * rather than sitting indented from it. The measure is unchanged - the column
-   * is still ~66 characters; the blocks only reclaim the space they lose to
-   * padding.
-   *
-   * Every part must track code-block.tsx and styles/mdx.css: the outdent is the
-   * block's border, plus its padding, plus the per-line inset (padding-inline
-   * plus the transparent border reserved for the diff/highlight marker). Change
-   * any of those there without changing it here and the edges drift apart.
-   */
   .content-column {
     --code-block-border: 1px;
     --code-block-padding: 1.25rem;
@@ -246,7 +217,11 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
   body {
     @apply bg-background text-foreground;
