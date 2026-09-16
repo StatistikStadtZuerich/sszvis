@@ -549,12 +549,12 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "fill")).toEqual([null, null, null]);
       const schedules = (elements(node)[0] as Element & { __transition?: Record<string, unknown> })
         .__transition;
-      const scheduled = Object.values(schedules ?? {}).filter(
+      const scheduled = Object.values(schedules ?? {}).find(
         (v): v is { duration: number; ease: (t: number) => number } =>
           typeof v === "object" && v !== null && "duration" in v,
       );
-      expect(scheduled[0].duration).toBe(500);
-      expect(scheduled[0].ease).toBe(easePolyOut);
+      expect(scheduled?.duration).toBe(500);
+      expect(scheduled?.ease).toBe(easePolyOut);
     });
 
     // d3 has no interpolator for a paint-server reference, so a colour-to-texture tween would
