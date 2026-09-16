@@ -33,6 +33,10 @@
     "test": {
       "outputLogs": "new-only"
     },
+    "@sszvis/new-docs#test": {
+      "dependsOn": ["sszvis#build"],
+      "outputLogs": "new-only"
+    },
     "test:snapshot": {
       "dependsOn": ["sszvis#build", "@sszvis/docs#build"],
       "cache": false

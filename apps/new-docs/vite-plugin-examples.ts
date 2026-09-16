@@ -1,3 +1,12 @@
+/**
+ * Turns every folder under `examples/<chart>/<name>/` into a standalone page at
+ * `/examples/<chart>/<name>/`, and exposes the sources to the docs app through
+ * the virtual module `virtual:examples`.
+ *
+ * The generated page is the artifact in both senses: it is what the docs
+ * iframe loads, and it is exactly the file a consumer would write by hand -
+ * script tags, a `config` global, and the example's own code inlined.
+ */
 import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -9,93 +18,34 @@ import type { Source, Sources } from "virtual:examples";
 import { Schema } from "effect";
 
 import { contentPages } from "./app/content-pages.ts";
-import { LANGUAGES, languageForPath } from "./app/lib/example-languages.ts";
-import { catalogDark, catalogLight } from "./app/lib/shiki-catalog-theme.ts";
+import { LANGUAGES } from "./app/lib/example-languages.ts";
+import { HIGHLIGHT_THEMES, highlightOptions } from "./app/lib/highlight.ts";
 
-/**
- * Turns every folder under `examples/<chart>/<name>/` into a standalone page at
- * `/examples/<chart>/<name>/`, and exposes the sources to the docs app through
- * the virtual module `virtual:examples`.
- *
- * The generated page is the artifact in both senses: it is what the docs
- * iframe loads, and it is exactly the file a consumer would write by hand -
- * script tags, a `config` global, and the example's own code inlined.
- */
-
-const EXAMPLES_DIR = "examples";
 const CONTENT_DIR = "app/content";
-
-/** Pages that document a chart type; an example belongs to one of these. */
 const CHART_PAGES = "content/charts/";
-
-/** Finds the examples a page asks for, in the order the page asks for them. */
+const EXAMPLES_DIR = "examples";
 const EXAMPLE_TAG = /<Example\s+id="([^"]+)"/g;
-
-/*
- * The generated pages are served under their own prefix, not under /examples/.
- * The example folder lives inside the Vite project, so /examples/... is already
- * the URL of its real source files - a middleware on that prefix swallows
- * Vite's own module requests for the example's own chart.ts.
- */
 const URL_PREFIX = "/preview";
 const VIRTUAL_ID = "virtual:examples";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 
-/**
- * One module per example, holding its highlighted sources.
- *
- * The index is imported by every page that shows an example, so it carries
- * only what is needed to render one: a title and a URL. The sources are far
- * larger than the rest put together - highlighted code is a span per token -
- * and the panel that shows them starts collapsed, so they are split off and
- * fetched when a reader actually opens the code.
- */
 const SOURCE_PREFIX = "virtual:example-source:";
 
-/** Where the library build is copied from; the docs app never imports these. */
-const LIB_DIR = "../../packages/sszvis/build";
 const ASSET_FILES = ["sszvis.js", "sszvis.css"] as const;
-
-/**
- * The TopoJSON bundles the map examples load, built by `@sszvis/geodata`. They
- * are shared - fourteen examples draw the same city - so they are served once
- * under the preview namespace rather than copied into every map folder.
- */
+const LIB_DIR = "../../packages/sszvis/build";
 const TOPO_DIR = "../../packages/geodata/dist/topo";
 
-/**
- * Assets more than one example loads - the fallback image, the rastermaps'
- * relief basemap - kept in `examples/_static/` and served once, rather than
- * copied into every folder that draws them.
- */
 const STATIC_DIR = "_static";
 const STATIC_PREFIX = `${URL_PREFIX}/${STATIC_DIR}/`;
 const TOPO_PREFIX = `${STATIC_PREFIX}topo/`;
 
-/**
- * Maps need topojson-client beside d3. Detected from the example's own code
- * rather than declared in its metadata, so the two can never disagree: an
- * example that stops using topojson stops loading it.
- */
 const TOPOJSON_SCRIPT =
   '    <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>\n';
-const usesTopojson = (code: string) => /\btopojson\./.test(code);
 
-/**
- * The files an example may serve beside its page: what a chart fetches at
- * runtime, never its sources. Dev and build read the same list, so a file that
- * works in one works in the other.
- */
 const META_FILE = "example.json";
-
-/**
- * How much of a data file the source panel shows. Some examples plot a raster
- * grid of a few hundred thousand rows; highlighting one of those produces a
- * span per token, and inlining the result in the manifest exhausted the dev
- * server's heap before the page could load. A reader wants the shape of the
- * data anyway - the whole file is one click away, served beside the example.
- */
 const DATA_PREVIEW_LINES = 60;
+
+const usesTopojson = (code: string) => /\btopojson\./.test(code);
 
 const RUNTIME_TYPES: ReadonlyMap<string, string> = new Map([
   [".csv", "text/csv"],
@@ -105,11 +55,9 @@ const RUNTIME_TYPES: ReadonlyMap<string, string> = new Map([
   [".svg", "image/svg+xml"],
 ]);
 
-/** `example.json`: the title, and the `config` the example page injects for the chart to read. */
 const ExampleMeta = Schema.Struct({
   title: Schema.String,
   config: Schema.Struct({
-    /** Absent for a chart that draws nothing but its map layers. */
     data: Schema.optional(Schema.String),
     id: Schema.String,
     fallback: Schema.String,
@@ -118,48 +66,26 @@ const ExampleMeta = Schema.Struct({
 type ExampleMeta = typeof ExampleMeta.Type;
 
 type Example = {
-  /** `bar-chart-vertical/basic` - the id used in MDX and in the URL. */
   readonly id: string;
   readonly dir: string;
   readonly meta: ExampleMeta;
-  /** Authored TypeScript. */
   readonly ts: string;
-  /** The same file with types stripped: what the page runs and what you copy. */
   readonly js: string;
   readonly data: string | null;
 };
 
-/**
- * Every example the documentation references, whether or not it has been
- * ported. This is what the gallery is built from: an id with no folder under
- * `examples/` is a gap, and naming the page it belongs to is how you find the
- * one to port next.
- */
 type CatalogEntry = {
   readonly id: string;
-  /** The documentation page that embeds it. */
   readonly page: string;
   readonly pageLabel: string;
 };
 
 export function examplesPlugin(): Plugin {
   let root = "";
-  /*
-   * The promise, not the highlighter: every source of every example is
-   * highlighted concurrently, and caching the resolved value lets all of them
-   * get past the check before the first one finishes - building one grammar-
-   * and-theme-laden highlighter each. At seven examples that was merely
-   * wasteful; at fifty-three it exhausted the heap.
-   */
   let highlighter: ReturnType<typeof createHighlighter> | null = null;
 
   const examplesRoot = () => path.join(root, EXAMPLES_DIR);
 
-  /*
-   * Reading an example means stripping its types, which means a formatter
-   * process each time. Without this cache every request for a preview page
-   * re-read and re-formatted every example in the repository.
-   */
   let cache: Promise<Example[]> | null = null;
   const readExamplesCached = () => (cache ??= readExamples());
 
@@ -199,8 +125,6 @@ export function examplesPlugin(): Plugin {
 
   /**
    * Walks the pages in sidebar order and records the examples each one embeds.
-   * Derived rather than declared, so porting an example or adding it to a page
-   * is the only step - there is no second list to keep in sync.
    */
   async function readCatalog(): Promise<CatalogEntry[]> {
     const pages = await Promise.all(
@@ -211,11 +135,6 @@ export function examplesPlugin(): Plugin {
       }),
     );
 
-    /*
-     * An example can appear on more than one page - a guide borrows one to
-     * illustrate a point. It belongs to its chart type, so that page wins and
-     * the guide is not listed as its home.
-     */
     const chartPages = new Set<string>(
       contentPages
         .filter((page) => page.contentPath.startsWith(CHART_PAGES))
@@ -228,7 +147,6 @@ export function examplesPlugin(): Plugin {
         home.set(entry.id, entry);
       }
     }
-    /* Grouped and ordered by the page each example belongs to. */
     const order = new Map(contentPages.map((page, index) => [page.href, index]));
     return [...home.values()].sort((a, b) => (order.get(a.page) ?? 0) - (order.get(b.page) ?? 0));
   }
@@ -245,17 +163,12 @@ export function examplesPlugin(): Plugin {
   /** What a page needs to put an example on screen, and nothing more. */
   async function loadIndex() {
     const examples = await readExamplesCached();
-    /*
-     * One literal import per example, so rollup can see each one and give it
-     * its own chunk. A computed specifier would defeat that and leave the
-     * imports unresolved in the build.
-     */
+
     const entries = examples.map((example) => {
       const meta = {
         id: example.id,
         title: example.meta.title,
         url: `${URL_PREFIX}/${example.id}/`,
-        /* Which tabs the source panel offers before it has loaded them. */
         views: ["ts", "js", ...(example.data === null ? [] : ["csv"])],
       };
       const specifier = JSON.stringify(`${SOURCE_PREFIX}${example.id}`);
@@ -269,7 +182,7 @@ export function examplesPlugin(): Plugin {
       `export const catalog = ${JSON.stringify(catalog)};`,
     ].join("\n");
   }
-
+  /** Load the sources for a given example by its ID. */
   async function loadSources(exampleId: string) {
     const examples = await readExamplesCached();
     const example = examples.find((candidate) => candidate.id === exampleId);
@@ -283,6 +196,7 @@ export function examplesPlugin(): Plugin {
     return `export default ${JSON.stringify(sources)};`;
   }
 
+  /** Render a page for a given example using the provided template and assets base. */
   async function renderPage(example: Example, assetsBase: string, template: string) {
     return template
       .replaceAll("{{title}}", example.meta.title)
@@ -292,23 +206,12 @@ export function examplesPlugin(): Plugin {
       .replaceAll("// {{chart}}", indent(example.js, 6).trimStart());
   }
 
-  /**
-   * Highlighted at build time, with the site's own themes, so the source panel
-   * ships no highlighter. The grammar comes from the filename, so a new kind of
-   * example file needs no change here.
-   */
+  /** Highlighted at build time, with the site's own themes, so the source panel ships no highlighter. */
   async function highlight(code: string, filename: string) {
-    const lang = languageForPath(filename);
-    if (lang === null) return null;
-    highlighter ??= createHighlighter({
-      themes: [catalogLight, catalogDark],
-      langs: [...LANGUAGES],
-    });
-    return (await highlighter).codeToHtml(code, {
-      lang,
-      themes: { light: catalogLight.name ?? "", dark: catalogDark.name ?? "" },
-      defaultColor: false,
-    });
+    const options = highlightOptions(filename);
+    if (options === null) return null;
+    highlighter ??= createHighlighter({ themes: HIGHLIGHT_THEMES, langs: [...LANGUAGES] });
+    return (await highlighter).codeToHtml(code, options);
   }
 
   return {
@@ -334,13 +237,6 @@ export function examplesPlugin(): Plugin {
 
     /** Dev: serve the generated pages and their assets straight from memory. */
     configureServer(server) {
-      /*
-       * The manifest is a virtual module, so Vite caches it for the life of the
-       * server: without this, adding an example folder shows up at its own
-       * /preview/ URL (the middleware below reads the disk every request) while
-       * the docs page still renders the "not ported yet" placeholder, until the
-       * server is restarted.
-       */
       const watched = examplesRoot();
       const content = path.join(root, CONTENT_DIR);
       server.watcher.add(watched);
@@ -349,7 +245,6 @@ export function examplesPlugin(): Plugin {
         const inContent = file.startsWith(content);
         if (!inExamples && !inContent) return;
         if (inExamples) cache = null;
-        // A page gaining or losing an <Example> changes the gallery
         catalogCache = null;
         const module = server.environments.client.moduleGraph.getModuleById(RESOLVED_ID);
         if (module) server.environments.client.moduleGraph.invalidateModule(module);
@@ -363,7 +258,6 @@ export function examplesPlugin(): Plugin {
         const [rawPath] = (req.url ?? "").split("?");
         if (!rawPath.startsWith(`${URL_PREFIX}/`)) return next();
 
-        /* A miss inside this namespace is a miss, not a documentation page. */
         const missing = () => {
           res.statusCode = 404;
           res.end("Not found");
@@ -371,7 +265,6 @@ export function examplesPlugin(): Plugin {
 
         const send = (type: string, body: string | Buffer) => {
           res.setHeader("content-type", type);
-          // HEAD asks for the headers only
           res.end(req.method === "HEAD" ? undefined : body);
         };
 
@@ -430,15 +323,8 @@ export function examplesPlugin(): Plugin {
           }
 
           const type = RUNTIME_TYPES.get(path.extname(url).toLowerCase());
-          // example.json describes the example to the build; it is not one of
-          // the files the chart fetches, so it is not published either.
           if (type === undefined || path.basename(url) === META_FILE) return missing();
 
-          /*
-           * Resolve first, then check the result is still inside the examples
-           * directory: `..` segments in the URL would otherwise walk out of it
-           * and serve any file of a matching type on the machine.
-           */
           const base = examplesRoot();
           const file = path.resolve(base, `.${url.slice(URL_PREFIX.length)}`);
           if (file !== base && !file.startsWith(base + path.sep)) return missing();
@@ -448,8 +334,6 @@ export function examplesPlugin(): Plugin {
           send(type, body);
           return;
         } catch (error) {
-          // An example mid-edit should surface as a failed request, not as a
-          // dead dev server: an unhandled rejection here takes the process down.
           return next(error);
         }
       });
@@ -479,7 +363,6 @@ export function examplesPlugin(): Plugin {
         });
       }
 
-      /* The map examples share these, so they are emitted once. */
       for (const name of await fs.readdir(path.join(root, TOPO_DIR)).catch(() => [])) {
         if (!name.endsWith(".json")) continue;
         this.emitFile({
@@ -540,6 +423,7 @@ async function siblingFiles(dir: string) {
  * formatter to close the gaps. Together the two give a JS file that reads like
  * one somebody wrote, and that cannot drift from the TypeScript beside it.
  */
+
 /** The workspace's own oxfmt; `pnpm exec` costs ~165ms more per call to find it. */
 const OXFMT = path.join(import.meta.dirname, "../../node_modules/.bin/oxfmt");
 

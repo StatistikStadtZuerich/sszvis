@@ -1,6 +1,16 @@
 {
   "extends": "@repo/config-typescript/vite.json",
   "include": ["app/**/*", "vite.config.ts", "vite-plugin-examples.ts", "react-router.config.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    "coverage",
+    "app/builder/domain/recipes/*/chart.ts",
+    "app/builder/domain/recipes/holes.d.ts",
+    "app/builder/domain/recipes/tsconfig.json"
+  ],
   "compilerOptions": {
     "rootDirs": [".", "./.react-router/types"],
     "paths": { "~/*": ["./app/*"] }

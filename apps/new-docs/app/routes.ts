@@ -1,8 +1,11 @@
 import { index, route, type RouteConfig } from "@react-router/dev/routes";
 import { contentPages } from "./content-pages";
 
-const routes = contentPages.map(({ routePath, contentPath }) =>
-  routePath === "" ? index(contentPath) : route(routePath, contentPath),
-) satisfies RouteConfig;
+const routes = [
+  ...contentPages.map(({ routePath, contentPath }) =>
+    routePath === "" ? index(contentPath) : route(routePath, contentPath),
+  ),
+  route("builder", "builder/page.tsx"),
+] satisfies RouteConfig;
 
 export default routes;

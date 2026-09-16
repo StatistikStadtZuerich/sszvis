@@ -7,12 +7,13 @@ import type { ThemeRegistrationRaw } from "shiki";
  *   #00263e  default: strings, numbers, identifiers, operators
  *   #535353  punctuation and brackets
  *   #3f7397  keywords (var, function, return, ...) and comments
- *   #ff5555  function names, at declaration and at the call site
+ *   #d33944  function names, at declaration and at the call site (Catalog's #ff5555,
+ *             darkened to clear 4.5:1 on the white code ground)
  *
  * Markup is the exception: in an HTML block Prism painted tag names, attribute
- * names and attribute values all #ff5555, leaving only punctuation grey - so
+ * names and attribute values all in the function colour, leaving only punctuation grey - so
  * markup carries a few extra scopes below. Note that HTML attribute values are
- * #ff5555 while JavaScript strings stay at the base, which is why the string
+ * the function colour while JavaScript strings stay at the base, which is why the string
  * scopes here are language-qualified rather than a bare `string`.
  *
  * Nothing else was coloured; Prism's remaining token types fell through to the
@@ -23,7 +24,7 @@ import type { ThemeRegistrationRaw } from "shiki";
 const BASE = "#00263e";
 const PUNCTUATION = "#535353";
 const KEYWORD = "#3f7397";
-const FUNCTION = "#ff5555";
+const FUNCTION = "#d33944";
 
 const KEYWORD_SCOPES = [
   "comment",
