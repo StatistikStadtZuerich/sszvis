@@ -3,7 +3,7 @@
  *
  * @sszvis   3.5.1
  * @chart    bar-chart-vertical-nested
- * @features tooltip
+ * @features tooltip, legend
  * @date     2026-09-14
  */
 

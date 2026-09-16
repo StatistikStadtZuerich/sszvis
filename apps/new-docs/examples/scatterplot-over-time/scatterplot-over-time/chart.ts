@@ -3,7 +3,7 @@
  *
  * @sszvis   3.5.1
  * @chart    scatterplot-over-time
- * @features tooltip, slider, voronoi
+ * @features tooltip, legend, slider, voronoi
  * @date     2026-09-14
  */
 

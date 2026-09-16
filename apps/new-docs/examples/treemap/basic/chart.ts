@@ -3,7 +3,7 @@
  *
  * @sszvis   3.5.1
  * @chart    treemap
- * @features tooltip, breadcrumb
+ * @features tooltip, legend, breadcrumb
  * @date     2026-09-14
  */
 

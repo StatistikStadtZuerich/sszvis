@@ -3,7 +3,7 @@
  *
  * @sszvis   3.5.1
  * @chart    scatterplot
- * @features slider
+ * @features legend, slider
  * @date     2026-09-14
  */
 
