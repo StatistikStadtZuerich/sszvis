@@ -266,7 +266,7 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
         .map((element) => {
           // A path inserted without d3 has no datum at all, which throws here rather than
           // silently shifting the handover - see test/component/sunburst.test.ts.
-          const d = Reflect.get(element, "__data__") as SunburstNode<T>;
+          const d = Reflect.get(element, "__data__");
           return {
             angles: [d.x0, d.x1] as const,
             // Absent until a render has drawn this arc once, in which case it starts at

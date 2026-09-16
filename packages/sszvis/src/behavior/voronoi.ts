@@ -114,7 +114,7 @@ export default function voronoi<T = unknown>(): VoronoiComponent<T> {
         .attr("d", (d) => `M${d.join("L")}Z`)
         .attr("fill", "transparent")
         .on("mouseover", function (e) {
-          const parent = this.parentNode as SVGElement | null;
+          const parent = this.parentNode;
           if (!parent) return;
 
           const position = pointer(e, parent);
@@ -123,7 +123,7 @@ export default function voronoi<T = unknown>(): VoronoiComponent<T> {
             event.apply("over", this, [e, data[datumIdx]]);
         })
         .on("mousemove", function (e) {
-          const parent = this.parentNode as SVGElement;
+          const parent = this.parentNode;
           if (!parent) return;
 
           const position = pointer(e, parent);
@@ -138,7 +138,7 @@ export default function voronoi<T = unknown>(): VoronoiComponent<T> {
           if (this) event.apply("out", this, args);
         })
         .on("touchstart", function (e: TouchEvent) {
-          const parent = this.parentNode as SVGElement;
+          const parent = this.parentNode;
           if (!parent) return;
 
           const firstTouch = fn.firstTouch(e);
@@ -224,7 +224,7 @@ export default function voronoi<T = unknown>(): VoronoiComponent<T> {
   // callback to never. Narrowing to "over" | "out" would type the callback properly but would
   // also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
   voronoiComponent.on = ((...args: [string, never]) => {
-    const value = (event.on as (...args: unknown[]) => unknown).apply(event, args);
+    const value = event.on.apply(event, args);
     return value === event ? voronoiComponent : value;
   }) as VoronoiComponent<T>["on"];
 

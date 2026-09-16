@@ -67,7 +67,7 @@ export default function <T = unknown>(): RangeFlagComponent<T> {
       ]);
 
       selection.call(ta);
-    }) as RangeFlagComponent<T>;
+    });
 }
 
 function makeFlagDot<T>(classed: string, cx: (d: Datum<T>) => number, cy: (d: Datum<T>) => number) {

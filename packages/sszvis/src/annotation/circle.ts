@@ -88,5 +88,5 @@ export default function <T = unknown>(): CircleComponent<T> {
           .attr("dy", props.dy ? (d) => Number(props.dy?.(d)) : null)
           .text(props.caption ? (d) => props.caption?.(d) || "" : null);
       }
-    }) as CircleComponent<T>;
+    });
 }

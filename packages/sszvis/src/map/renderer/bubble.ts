@@ -267,7 +267,7 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
       // Composed rather than written as an arrow: fn.compose invokes each stage with .call(this),
       // so a radius accessor written as a function receives d3's circle node as `this`, exactly as
       // the JavaScript did. An arrow here would call it with `this === undefined`.
-      const radiusAcc = fn.compose(props.radius, datumAcc) as (d: MergedGeoDatum<T>) => number;
+      const radiusAcc = fn.compose(props.radius, datumAcc);
 
       const anchoredCircles = selection
         .selectGroup("anchoredCircles")

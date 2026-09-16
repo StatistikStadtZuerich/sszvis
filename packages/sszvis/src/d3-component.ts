@@ -135,7 +135,7 @@ export function component<C extends Component = Component>(): C {
       prop,
       accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent),
     );
-    return sszvisComponent as Component;
+    return sszvisComponent;
   };
 
   /**
@@ -148,12 +148,12 @@ export function component<C extends Component = Component>(): C {
   sszvisComponent.delegate = (prop: string, delegate: PropertyDelegate): Component => {
     // Same as in prop(): a runtime prop name on both the component and the delegate.
     const delegated = (...args: $IntentionalAny[]): $IntentionalAny => {
-      const target = Reflect.get(delegate, prop) as (...a: $IntentionalAny[]) => $IntentionalAny;
+      const target = Reflect.get(delegate, prop);
       const result = target.apply(delegate, slice(args));
       return args.length === 0 ? result : sszvisComponent;
     };
     Reflect.set(sszvisComponent, prop, delegated);
-    return sszvisComponent as Component;
+    return sszvisComponent;
   };
 
   /**
@@ -167,7 +167,7 @@ export function component<C extends Component = Component>(): C {
    */
   sszvisComponent.renderSelection = (callback: SelectionRenderCallback): Component => {
     selectionRenderer = callback;
-    return sszvisComponent as Component;
+    return sszvisComponent;
   };
 
   /**
@@ -181,7 +181,7 @@ export function component<C extends Component = Component>(): C {
    */
   sszvisComponent.render = (callback: RenderCallback): Component => {
     renderer = callback;
-    return sszvisComponent as Component;
+    return sszvisComponent;
   };
 
   // The accessors declared by `.prop()` only exist once the component is built, so a
@@ -215,7 +215,7 @@ d3Selection.prototype.props = function (): ComponentProps {
   const node = this.node();
   if (!node) throw new Error("only one node is supported");
   // The props were stashed on the node itself by the component that rendered it.
-  return (Reflect.get(node as object, "__props__") as ComponentProps | undefined) || {};
+  return Reflect.get(node, "__props__") || {};
 };
 
 /**

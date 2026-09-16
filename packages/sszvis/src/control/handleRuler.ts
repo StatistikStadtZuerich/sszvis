@@ -59,12 +59,6 @@ const LABEL_OFFSET = 10;
 /** Vertical nudge that drops a label's baseline clear of its dot. */
 const LABEL_BASELINE_NUDGE = 5;
 
-/**
- * A half-pixel position accessor as d3 invokes it: the datum plus d3's remaining
- * (i, nodes) arguments, with `this` bound to the element.
- */
-type CrispAccessor<D> = (this: unknown, d: D, ...rest: unknown[]) => number;
-
 interface HandleRulerProps<T> {
   /**
    * Called with a data value. The rule, the handle and the grip mark are bound to the
@@ -120,8 +114,8 @@ export default function handleRuler<T = unknown>(): HandleRulerComponent<T> {
       // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
       // Composed with fn.compose rather than written as arrow functions so that d3's full
       // (d, i, nodes) argument list and its element-bound `this` still reach the accessor.
-      const crispX = fn.compose(halfPixel, props.x) as CrispAccessor<T>;
-      const crispY = fn.compose(halfPixel, props.y) as CrispAccessor<T>;
+      const crispX = fn.compose(halfPixel, props.x);
+      const crispY = fn.compose(halfPixel, props.y);
 
       const bottom = props.bottom - RULE_BOTTOM_INSET;
       const handleTop = props.top - HANDLE_HEIGHT;
@@ -130,7 +124,7 @@ export default function handleRuler<T = unknown>(): HandleRulerComponent<T> {
       // live in is bound to one datum - the first - and `props.x` is read from that. The
       // dots and labels below are joined on the whole data array as usual. The array holds
       // one slot even for empty data, so the ruler still renders (from a constant `x`).
-      const rulerDatum = [data[0]] as T[];
+      const rulerDatum = [data[0]];
 
       const group = selection
         .selectAll<SVGGElement, T>(".sszvis-handleRuler__group")

@@ -43,7 +43,7 @@ export const range = rangeExtent;
  */
 function extent(domain: number[]): [number, number] {
   // borrowed from d3 source - svg.axis
-  const start = domain[0] as number;
-  const stop = domain[domain.length - 1] as number;
+  const start = domain[0];
+  const stop = domain[domain.length - 1];
   return start < stop ? [start, stop] : [stop, start];
 }

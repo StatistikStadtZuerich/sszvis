@@ -154,7 +154,7 @@ export default function slider(): SliderComponent {
         const scaleRange = rangeExtent(props.scale);
         // Inset each end of the configured range towards the middle rather than rebuilding
         // it from the sorted extent, so that a descending range keeps its direction.
-        const [rangeStart, rangeEnd] = props.scale.range() as [number, number];
+        const [rangeStart, rangeEnd] = props.scale.range();
         const rangeSign = rangeStart <= rangeEnd ? 1 : -1;
         // Clamped so that a value outside the domain pins the handle to the end of the
         // track, and so that a drag past either end reports that end of the domain.
@@ -287,7 +287,7 @@ export default function slider(): SliderComponent {
          */
         const handleSide = (d: SliderValue) => {
           const x = alteredScale(d);
-          const [insetStart, insetEnd] = alteredScale.range() as [number, number];
+          const [insetStart, insetEnd] = alteredScale.range();
           const low = Math.min(insetStart, insetEnd);
           const high = Math.max(insetStart, insetEnd);
           if (x <= low + 1) return -1;

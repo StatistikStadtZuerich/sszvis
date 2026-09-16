@@ -81,7 +81,7 @@ export const datumFromPannableElement = <T = unknown>(
   element: Element | null,
 ): DatumContainer<T> | null => {
   if (!fn.isNull(element)) {
-    const selection = select(element as Element);
+    const selection = select(element);
     if (!fn.isNull(selection.attr("data-sszvis-behavior-pannable"))) {
       const datum = selection.datum() as DatumContainer<T> | undefined;
       if (fn.defined(datum)) {

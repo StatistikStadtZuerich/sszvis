@@ -78,7 +78,7 @@ export default function (): RadiusLegendComponent {
       // fn.identity is the documented "no formatting" default. It returns its argument, so it
       // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
       // at render time, which its own types do not model.
-      .tickFormat(fn.identity as TickFormatter)
+      .tickFormat(fn.identity)
       .prop("tickValues")
       .render(function (this: Element) {
         const selection = select(this);

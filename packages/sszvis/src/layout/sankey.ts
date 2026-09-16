@@ -160,8 +160,8 @@ export const prepareData = <T = unknown>(): SankeyDataPreparation<T> => {
             nodeIndex: 0, // This will be overwritten at a later stage with the index of this node within its column
             value: 0,
             valueOffset: 0,
-            linksFrom: [] as SankeyLink[],
-            linksTo: [] as SankeyLink[],
+            linksFrom: [],
+            linksTo: [],
           };
 
           index.set(id, item);

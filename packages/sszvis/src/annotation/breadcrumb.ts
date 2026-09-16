@@ -216,5 +216,5 @@ export default function <T = unknown>(): BreadcrumbComponent<T> {
 
       // Exit: remove old breadcrumbs
       crumbs.exit().remove();
-    }) as BreadcrumbComponent<T>;
+    });
 }
