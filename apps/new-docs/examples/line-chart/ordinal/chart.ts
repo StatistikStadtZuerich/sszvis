@@ -3,7 +3,7 @@
  *
  * @sszvis   3.5.1
  * @chart    line-chart
- * @features ruler
+ * @features ruler, legend
  * @date     2026-09-14
  */
 

@@ -3,7 +3,7 @@
  *
  * @sszvis   3.5.1
  * @chart    area-chart-stacked
- * @features tooltip, ruler, range-flag, button-group, small-multiples
+ * @features tooltip, ruler, range-flag, legend, button-group, small-multiples
  * @date     2026-09-14
  */
 
