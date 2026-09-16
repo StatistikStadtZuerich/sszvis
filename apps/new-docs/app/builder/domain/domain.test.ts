@@ -158,6 +158,14 @@ describe("csv", () => {
   });
 });
 
+describe("parse", () => {
+  test("should read a saved header back as it stands", () => {
+    /* The saved table is what the user last typed: renaming a header on the way back
+       would move the caret as they clear it, and name a column the csv does not have. */
+    expect(parse("a,,c\n1,2,3").columns).toEqual(["a", "", "c"]);
+  });
+});
+
 describe("escaping", () => {
   test("should produce a literal that parses back to the input when str gets quotes, backslashes or newlines", () => {
     /* A header becomes `d[<str>]`; only the round trip matters, prettier renormalises the spelling. */
@@ -1083,6 +1091,18 @@ describe("parseDelimited", () => {
   test("should agree with parse when the separator is the comma", () => {
     const csv = "a,b\n1,2";
     expect(parseDelimited(csv, "comma")).toEqual(parse(csv));
+  });
+
+  test("should name the blank and repeated headers of an import apart", () => {
+    /* A blank name is the unmapped sentinel, and repeated names address one column. */
+    const table = parseDelimited("a,,a\n1,2,3", "comma");
+    expect(table.columns).toEqual(["a", "Spalte 2", "a 2"]);
+    expect(table.rows).toEqual([["1", "2", "3"]]);
+  });
+
+  test("should survive the round trip through the saved csv", () => {
+    const table = parseDelimited("a,,a\n1,2,3", "comma");
+    expect(parse(serialize(table)).columns).toEqual(table.columns);
   });
 });
 

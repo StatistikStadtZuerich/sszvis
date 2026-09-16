@@ -21,8 +21,24 @@ export const DELIMITER_LABELS = {
 const rowsOf = (text: string, name: DelimiterName): readonly (readonly string[])[] =>
   dsvFormat(DELIMITERS[name])
     .parseRows(text.replace(/^\ufeff/, ""))
-    .map((cells) => cells.map((cell) => cell.trim()))
-    .filter((cells) => cells.length > 1 || cells[0] !== "");
+    .map((cells) => cells.map((cell) => cell.trim()));
+
+/**
+ * The blank lines a file carries between its rows. Dropping them is right for a file
+ * being read in and wrong for the saved table, so it is done only where a file arrives
+ * - and it is done to the text, because once parsed a blank line and an explicit empty
+ * value (`""`) are the same single empty cell and only the text still tells them apart.
+ * A quoted field may hold newlines of its own, so the scan steps over what it opens.
+ */
+const withoutBlankLines = (text: string): string => {
+  const kept: string[] = [];
+  let quoted = false;
+  for (const line of text.split("\n")) {
+    if (quoted || line.trim() !== "") kept.push(line);
+    for (const character of line) if (character === '"') quoted = !quoted;
+  }
+  return kept.join("\n");
+};
 
 export const detectDelimiter = (text: string): DelimiterName => {
   const sample = text
@@ -33,7 +49,9 @@ export const detectDelimiter = (text: string): DelimiterName => {
   let best: DelimiterName = "comma";
   let widest = 1;
   for (const name of ["comma", "semicolon", "tab"] as const) {
-    const rows = rowsOf(sample, name);
+    /* A row of one empty cell is a blank line or an empty value; either way it says
+       nothing about the separator, and counting it would rule the right one out. */
+    const rows = rowsOf(sample, name).filter((cells) => cells.length > 1 || cells[0] !== "");
     const header = rows[0];
     if (header === undefined) continue;
     if (rows.every((cells) => cells.length === header.length) && header.length > widest) {
@@ -44,26 +62,84 @@ export const detectDelimiter = (text: string): DelimiterName => {
   return best;
 };
 
+/**
+ * Every column downstream is addressed by its name alone, and the empty name is the
+ * builder's "unmapped" sentinel - so a blank header cannot be picked and repeated
+ * headers collapse onto one column. Both are given a distinct name as the table is
+ * read in, before it is saved, so the names the user sees are the names in the CSV.
+ */
+const named = (header: readonly string[]): ColumnName[] => {
+  const taken = new Set<string>();
+  return header.map((value, index) => {
+    const base = value === "" ? `Spalte ${index + 1}` : value;
+    let name = base;
+    for (let n = 2; taken.has(name); n++) name = `${base} ${n}`;
+    taken.add(name);
+    return ColumnName.make(name);
+  });
+};
+
 const headed = (rows: readonly (readonly string[])[]): Table => {
   const [header, ...body] = rows;
   if (header === undefined) return { columns: [], rows: [] };
+  /* A row may carry more fields than the header names, and the surplus is the user's
+     data - so the header grows to the widest row rather than the body being clipped.
+     The names given match the ones the table editor uses for a column it adds. */
+  const width = Math.max(header.length, ...body.map((cells) => cells.length));
+  /* A generated name steps past one the header already uses: `parse` may not rename what
+     the user typed, so the only name it can move is the one it is inventing. */
+  const taken = new Set(header);
+  const columns = Array.from({ length: width }, (_, index) => {
+    const given = header[index];
+    if (given !== undefined) return ColumnName.make(given);
+    let spare = `Spalte ${index + 1}`;
+    for (let n = width + 1; taken.has(spare); n++) spare = `Spalte ${n}`;
+    taken.add(spare);
+    return ColumnName.make(spare);
+  });
   return {
-    columns: header.map((value) => ColumnName.make(value)),
-    rows: body.map((cells) => header.map((_, index) => cells[index] ?? "")),
+    columns,
+    rows: body.map((cells) => columns.map((_, index) => cells[index] ?? "")),
   };
 };
 
 /** A table whose first row names the columns, read with a known separator. */
-export const parseDelimited = (text: string, name: DelimiterName): Table =>
-  headed(rowsOf(text, name));
+export const parseDelimited = (text: string, name: DelimiterName): Table => {
+  const table = headed(rowsOf(withoutBlankLines(text), name));
+  return { ...table, columns: named(table.columns) };
+};
 
-export const parse = (csv: string): Table => parseDelimited(csv, "comma");
+/**
+ * The saved table, read back. Unlike an import this keeps the header cells exactly as
+ * they stand: they are what the user last typed, and renaming one under the caret
+ * would fight the editing - and name a column the saved CSV does not have. For the same
+ * reason every row is kept, empty ones included: a row must not vanish under the caret.
+ */
+export const parse = (csv: string): Table => {
+  const rows = rowsOf(csv, "comma");
+  /* Past one column `serialize` writes an empty row as its bare delimiters, so a blank
+     line there can only be padding. In a one-column table the two are the same text,
+     and dropping it would delete the row the user just emptied or added. */
+  return rows.some((cells) => cells.length > 1)
+    ? headed(rowsOf(withoutBlankLines(csv), "comma"))
+    : headed(rows);
+};
 
 export const parseBlock = (text: string): readonly (readonly string[])[] =>
-  rowsOf(text, detectDelimiter(text));
+  rowsOf(withoutBlankLines(text), detectDelimiter(text));
 
+/**
+ * A one-column table writes its empty cells as a quoted empty field. `csvFormatRows`
+ * leaves such a line blank, and a blank last line is swallowed by the parser - so a row
+ * the user just added would not survive the round trip the form makes on every
+ * keystroke. The quoted form is ordinary CSV that `d3.csv` reads back as "".
+ */
 export const serialize = (table: Table): string => {
-  return csvFormatRows([table.columns, ...table.rows].map((cells) => [...cells]));
+  const rows = [table.columns, ...table.rows];
+  if (table.columns.length > 1) return csvFormatRows(rows.map((cells) => [...cells]));
+  return rows
+    .map((cells) => (cells.length === 1 && cells[0] === "" ? '""' : csvFormatRows([[...cells]])))
+    .join("\n");
 };
 
 export type ColumnKind = typeof RoleKind.Type;
