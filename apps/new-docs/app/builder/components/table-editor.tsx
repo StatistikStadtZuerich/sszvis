@@ -21,6 +21,7 @@ import {
 } from "~/components/ui/table";
 
 import {
+  distinctName,
   parseBlock,
   reorder,
   serialize,
@@ -40,6 +41,7 @@ const WINDOW_FROM = 40;
 
 type EditorMeta = {
   readonly setColumn: (column: number, value: string) => void;
+  readonly settleColumn: (column: number) => void;
   readonly sortBy: (column: number) => void;
   readonly sorted: Sorted | null;
   readonly setCell: (row: number, column: number, value: string) => void;
@@ -89,6 +91,9 @@ const HeaderCell = ({ column, table: grid }: HeaderContext<typeof features, Row,
       <Input
         value={name}
         onChange={(event) => grid.options.meta?.setColumn(index, event.target.value)}
+        /* Typing stays free; the name is settled on the way out, so a header is never
+           left blank or repeated - either would address the wrong column downstream. */
+        onBlur={() => grid.options.meta?.settleColumn(index)}
         variant="cell-heading"
         aria-label={`Name of column ${index + 1}`}
       />
@@ -183,6 +188,15 @@ export const TableEditor = ({
         columns: table.columns.map((name, index) =>
           index === column ? ColumnName.make(value) : name,
         ),
+      });
+    },
+    settleColumn: (column) => {
+      const taken = new Set(table.columns.filter((_, index) => index !== column));
+      const settled = distinctName(table.columns[column] ?? "", taken, column);
+      if (settled === table.columns[column]) return;
+      onChange({
+        ...table,
+        columns: table.columns.map((name, index) => (index === column ? settled : name)),
       });
     },
     sortBy: (column) => {

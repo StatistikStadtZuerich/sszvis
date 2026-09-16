@@ -69,14 +69,24 @@ export const detectDelimiter = (text: string): DelimiterName => {
  * headers collapse onto one column. Both are given a distinct name as the table is
  * read in, before it is saved, so the names the user sees are the names in the CSV.
  */
+/** A name for one column that is neither blank nor one another column already uses. */
+export const distinctName = (
+  value: string,
+  taken: ReadonlySet<string>,
+  index: number,
+): ColumnName => {
+  const base = value === "" ? `Spalte ${index + 1}` : value;
+  let name = base;
+  for (let n = 2; taken.has(name); n++) name = `${base} ${n}`;
+  return ColumnName.make(name);
+};
+
 const named = (header: readonly string[]): ColumnName[] => {
   const taken = new Set<string>();
   return header.map((value, index) => {
-    const base = value === "" ? `Spalte ${index + 1}` : value;
-    let name = base;
-    for (let n = 2; taken.has(name); n++) name = `${base} ${n}`;
+    const name = distinctName(value, taken, index);
     taken.add(name);
-    return ColumnName.make(name);
+    return name;
   });
 };
 
