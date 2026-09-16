@@ -47,8 +47,8 @@ export function createSvgLayer<
   const title = metadata.title || "";
   const description = metadata.description || "";
 
-  const render = <G extends BaseType, D, P extends BaseType, PD>(
-    root: Selection<G, D, P, PD>,
+  const render = <RG extends BaseType, RD, RP extends BaseType, RPD>(
+    root: Selection<RG, RD, RP, RPD>,
   ): LayerSelection<SVGGElement, number> => {
     const svg = root
       .selectAll<SVGSVGElement, number>(`svg[${elementDataKey}]`)

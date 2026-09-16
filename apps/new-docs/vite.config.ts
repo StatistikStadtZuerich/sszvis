@@ -9,7 +9,7 @@ import tailwindcss from "@tailwindcss/vite";
 import mdxMermaid from "mdx-mermaid";
 import path from "node:path";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypePrettyCode from "rehype-pretty-code";
+import rehypePrettyCodePlugin from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import { defineConfig } from "vite";
@@ -32,7 +32,7 @@ export default defineConfig({
           },
         ],
         [
-          rehypePrettyCode,
+          rehypePrettyCodePlugin,
           {
             theme: { dark: catalogDark, light: catalogLight },
             defaultColor: false,

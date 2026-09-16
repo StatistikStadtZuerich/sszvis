@@ -291,12 +291,12 @@ function stackedBarData(order: StackOrder) {
 function stackedBarSeriesData(order: StackOrder) {
   const layout = stackedBarData(order);
   return <T, X extends string | number = string>(
-    stackAcc: (datum: T) => X,
+    _stackAcc: (datum: T) => X,
     seriesAcc: (datum: T) => string | number,
     valueAcc: (datum: T) => number,
   ) =>
     (data: T[]): StackedBarSeriesData<T, X> => {
-      const { series, maxValue, minValue } = layout<T, X>(stackAcc, seriesAcc, valueAcc)(data);
+      const { series, maxValue, minValue } = layout<T, X>(_stackAcc, seriesAcc, valueAcc)(data);
       // `keys` is deliberately not assigned: it shadows Array.prototype.keys, and no caller
       // reads it off the array. stackedBar*Layout returns it beside the series instead.
       return Object.assign(series, { maxValue, minValue });

@@ -206,14 +206,14 @@ export default function line<P = unknown, L = unknown>(): LineComponent<P, L> {
                 !isMissingVal(x(datum, index, points)) && !isMissingVal(y(datum, index, points))
             : props.defined;
 
-        const line = d3Line<P>().defined(defined).x(x).y(y);
+        const linePath = d3Line<P>().defined(defined).x(x).y(y);
 
         // Rendering
 
         // Declared with `function` so that `this` is still forwarded to valuesAccessor, as
         // it was when this was built with fn.compose.
         const pathData: ValueFn<SVGPathElement, L, string | null> = function (datum, index) {
-          return line(props.valuesAccessor.call(this, datum, index));
+          return linePath(props.valuesAccessor.call(this, datum, index));
         };
         // The prop may hold one of the library's colour objects, so it is resolved first and
         // then rendered as the string d3 writes - the same conversion d3 would do itself.
