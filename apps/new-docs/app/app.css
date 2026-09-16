@@ -71,7 +71,6 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-
 :root {
   /* NOTE: Not a Tailwind theme namespace, so these are read with `z-(--z-chrome)`. */
   --z-raised: 1; /* sticky within a scroll container */
