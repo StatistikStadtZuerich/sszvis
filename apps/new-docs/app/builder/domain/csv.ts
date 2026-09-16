@@ -1,6 +1,7 @@
 import { csvFormatRows, dsvFormat } from "d3-dsv";
 import { Option, Schema } from "effect";
 
+import { escapeHtml } from "./host";
 import { ColumnName, RoleKind } from "./spec";
 
 export type Table = {
@@ -220,4 +221,17 @@ const compareByKind = (kind: ColumnKind, a: string, b: string): number => {
     case "category":
       return collator.compare(a, b);
   }
+};
+
+/**
+ * The table's own text, made safe to draw in the preview. A chart installs its tooltip
+ * and ruler labels as markup - sszvis's `modularText` interpolates without escaping -
+ * which is fine for an exported chart, whose author trusts the data file it is given.
+ * The preview frame is same-origin with the builder and is handed whatever was pasted
+ * into the table, so its copy is escaped and the reader cannot catch themselves out.
+ * Only the values: the headers are the keys the generated accessors read the rows by.
+ */
+export const harmlessValues = (csv: string): string => {
+  const table = parse(csv);
+  return serialize({ ...table, rows: table.rows.map((cells) => cells.map(escapeHtml)) });
 };
