@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 
-import { BuilderCompileError, code, type Safe } from "./emit";
+import { BuilderCompileError, code, scalarHoles, type Safe } from "./emit";
 import { FeatureKey, type Feature, type Recipe, type RecipeDef, type Spec } from "./spec";
 
 export type Sources = Readonly<Record<string, string>>;
@@ -29,6 +29,7 @@ export const buildRecipe = Effect.fnUntraced(function* (
       : parseFeature(name, source);
   });
   yield* checkHoles(def, template, features);
+  yield* checkScalars(def, template, features);
   yield* checkImplied(def, features);
   return { ...def, template, features };
 });
@@ -59,6 +60,38 @@ const checkHoles = Effect.fnUntraced(function* (
   if (unknown.length > 0) {
     return yield* recipeError(
       `${def.key} has no {{block:...}} for ${unknown.join(", ")} - add the hole to chart.ts, or list it in INDIRECT_HOLES if compile.ts reads it`,
+    );
+  }
+});
+
+/*
+ * The mirror of `checkHoles` for the other kind of hole. `fill` reports a hole with no
+ * value; nothing reported a value with no hole, and nothing type-checks a `.tmpl`, so a
+ * mistyped `#scalar` name - or a hole renamed in chart.ts - compiled green and drew a
+ * wrong chart. Two enabled features may still set the same scalar: that is what `#scalar`
+ * is for (the line chart's legend overrides the recipe's `C_SCALE`), and features that
+ * never appear together cannot be told apart here anyway.
+ */
+const checkScalars = Effect.fnUntraced(function* (
+  def: RecipeDef,
+  template: string,
+  features: readonly Feature[],
+) {
+  /* `fill` lays the fragments in before it substitutes, so a hole is just as valid in a
+     feature's own template as in chart.ts - four of the shipped ones are. */
+  const bodies = [
+    template,
+    ...features.flatMap((feature) => Object.values(feature.fragments).flat()),
+  ];
+  const known = new Set(bodies.flatMap(scalarHoles));
+  const unknown = features.flatMap((feature) =>
+    Object.keys(feature.scalars ?? {})
+      .filter((scalar) => !known.has(scalar))
+      .map((scalar) => `${feature.key}.tmpl -> ${scalar}`),
+  );
+  if (unknown.length > 0) {
+    return yield* recipeError(
+      `${def.key} has no __...__ hole for ${unknown.join(", ")} - add the hole to chart.ts, or fix the #scalar name`,
     );
   }
 });

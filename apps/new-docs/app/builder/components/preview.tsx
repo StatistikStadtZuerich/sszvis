@@ -163,6 +163,14 @@ export const Preview = ({
             key={srcDoc}
             ref={frameRef}
             title="Chart preview"
+            /*
+             * NOTE: Not sandboxed, though it runs generated code. `sandbox` gives the
+             * frame an opaque origin, and Chrome then refuses it every subresource on
+             * localhost - sszvis.js included - so the preview cannot run in local
+             * development at all. `str` neutralises `</script>` in the values that
+             * reach the code instead. Isolating the frame properly means serving the
+             * preview from its own document rather than `srcDoc`.
+             */
             srcDoc={srcDoc}
             tabIndex={-1}
             style={{ height }}

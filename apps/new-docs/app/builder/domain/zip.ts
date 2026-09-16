@@ -1,13 +1,16 @@
 /**
- * A minimal ZIP writer: three small text files gain nothing from deflate, and
- * `CompressionStream` would make this async. One archive rather than three
- * downloads because browsers prompt for, or drop, repeated saves.
+ * A minimal ZIP writer: a few small sources and an already-compressed image gain
+ * nothing from deflate, and `CompressionStream` would make this async. One archive
+ * rather than four downloads because browsers prompt for, or drop, repeated saves.
  */
 
 export type ZipEntry = {
   readonly name: string;
-  readonly text: string;
+  readonly content: Uint8Array;
 };
+
+/** Source files reach the archive as bytes, like every other entry. */
+export const utf8 = (value: string): Uint8Array => new TextEncoder().encode(value);
 
 const LOCAL = 0x04034b50;
 const CENTRAL = 0x02014b50;
@@ -47,7 +50,7 @@ function crc32(bytes: Uint8Array): number {
 export function zip(entries: readonly ZipEntry[]): Uint8Array<ArrayBuffer> {
   const encoder = new TextEncoder();
   const files = entries.map((entry) => {
-    const body = encoder.encode(entry.text);
+    const body = entry.content;
     return { name: encoder.encode(entry.name), body, crc: crc32(body), offset: 0 };
   });
 

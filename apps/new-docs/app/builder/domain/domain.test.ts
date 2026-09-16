@@ -45,7 +45,7 @@ import {
 } from "./spec";
 import { resolveTooltip, tooltipText, type TooltipRoles } from "./tooltip";
 import { identity } from "./identity";
-import { zip } from "./zip";
+import { utf8, zip } from "./zip";
 
 /*
  * The spec's keys are branded. Tests author them as literals, so these three
@@ -175,6 +175,15 @@ describe("escaping", () => {
   test("should neutralise a comment terminator when comment receives one", () => {
     expect(comment("before */ after")).not.toContain("*/");
     expect(comment("before */ after")).toContain("before");
+  });
+
+  test("should neutralise a script terminator when str or comment receives one", () => {
+    /* Both reach the preview's inline `<script>`: str as a literal, comment as the banner. */
+    const value = "</script><img src=x onerror=alert(1)>";
+    expect(str(value)).not.toContain("</script>");
+    expect(JSON.parse(str(value).replaceAll("<\\/", "</"))).toBe(value);
+    expect(comment(value)).not.toContain("</script>");
+    expect(comment(value)).toContain("script");
   });
 
   test("should flatten whitespace when comment receives newlines or padding", () => {
@@ -518,8 +527,8 @@ describe("host", () => {
 describe("zip", () => {
   test("should write a well-formed archive when given two entries", () => {
     const bytes = zip([
-      { name: "a.txt", text: "one" },
-      { name: "b.txt", text: "two" },
+      { name: "a.txt", content: utf8("one") },
+      { name: "b.txt", content: utf8("two") },
     ]);
     const view = new DataView(bytes.buffer);
     expect(view.getUint32(0, true)).toBe(0x04034b50);
@@ -533,13 +542,25 @@ describe("zip", () => {
   });
 
   test("should produce identical bytes when zipping the same input twice", () => {
-    const entry = [{ name: "a.txt", text: "one" }];
+    const entry = [{ name: "a.txt", content: utf8("one") }];
     expect(Array.from(zip(entry))).toEqual(Array.from(zip(entry)));
+  });
+
+  test("should store an image beside the sources", () => {
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const bytes = zip([
+      { name: "chart.js", content: utf8("x") },
+      { name: "fallback.png", content: png },
+    ]);
+    expect(Array.from(bytes).join(",")).toContain(Array.from(png).join(","));
+    expect(new TextDecoder().decode(bytes)).toContain("fallback.png");
   });
 
   test("should store text verbatim when it contains replacement patterns", () => {
     const text = 'const k = "Umsatz $& Kosten";';
-    expect(new TextDecoder().decode(zip([{ name: "chart.js", text }]))).toContain(text);
+    expect(new TextDecoder().decode(zip([{ name: "chart.js", content: utf8(text) }]))).toContain(
+      text,
+    );
   });
 });
 

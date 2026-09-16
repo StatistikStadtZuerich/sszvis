@@ -8,6 +8,7 @@ export const BUNDLE = {
   html: "index.html",
   chart: "chart.js",
   data: "data.csv",
+  fallback: "fallback.png",
 } as const;
 
 export const escapeHtml = (value: string) =>
@@ -62,6 +63,8 @@ export const host = (title: string): string => {
       var config = {
         data: ${str(BUNDLE.data)},
         id: "#sszvis-chart",
+        /* Drawn in place of the chart when the data fails to load; it is in the bundle. */
+        fallback: ${str(BUNDLE.fallback)},
       };
     </script>
     <script src="${BUNDLE.chart}"></script>

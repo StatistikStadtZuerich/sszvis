@@ -5,8 +5,9 @@ import { Button } from "~/components/ui/button";
 import { ToggleButtonGroup } from "~/components/ui/toggle-button-group";
 import { cn } from "~/lib/utils";
 
+import fallbackUrl from "../../../examples/_static/fallback.png?url";
 import { BUNDLE } from "../domain/host";
-import { zip } from "../domain/zip";
+import { utf8, zip } from "../domain/zip";
 import type { Generated } from "../workers/domain";
 
 const ORDER = ["ts", "js", "html", "csv"] satisfies ReadonlyArray<keyof Generated>;
@@ -29,16 +30,24 @@ export const CodePanel = ({
   const source = generated?.[view];
   const ready = generated !== undefined && note == null;
 
-  const downloadBundle = () => {
+  const downloadBundle = async () => {
     if (!ready || generated === undefined) return;
+    /* The image the chart shows in place of itself when the data fails to load. The
+       page names it either way, so it travels with the bundle rather than 404ing. */
+    const fallback = await fetch(fallbackUrl)
+      /* `fetch` rejects only when the network does, so a 404 arrives here as a perfectly
+         good response carrying an error page - which would ship as the image. */
+      .then(async (response) => (response.ok ? new Uint8Array(await response.arrayBuffer()) : null))
+      .catch(() => null);
     save(
       "chart-bundle.zip",
       new Blob(
         [
           zip([
-            { name: BUNDLE.html, text: generated.html.raw },
-            { name: BUNDLE.chart, text: generated.js.raw },
-            { name: BUNDLE.data, text: generated.csv.raw },
+            { name: BUNDLE.html, content: utf8(generated.html.raw) },
+            { name: BUNDLE.chart, content: utf8(generated.js.raw) },
+            { name: BUNDLE.data, content: utf8(generated.csv.raw) },
+            ...(fallback === null ? [] : [{ name: BUNDLE.fallback, content: fallback }]),
           ]),
         ],
         { type: "application/zip" },
