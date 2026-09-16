@@ -1,7 +1,10 @@
 /**
  * Choropleth map of the Swiss cantons on a diverging colour scale.
  *
- * @category map-standard
+ * @sszvis   3.5.1
+ * @chart    map-standard
+ * @features legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers

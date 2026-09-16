@@ -1,7 +1,10 @@
 /**
  * Zoomable treemap example using sszvis.
  *
- * @category treemap
+ * @sszvis   3.5.1
+ * @chart    treemap
+ * @features tooltip, breadcrumb
+ * @date     2026-09-14
  */
 
 // Magic Numbers

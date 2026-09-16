@@ -1,7 +1,10 @@
 /**
  * Signature map of the statistical quarters of Zurich, with one bubble per quarter.
  *
- * @category map-signature
+ * @sszvis   3.5.1
+ * @chart    map-signature
+ * @features tooltip, legend, bubble-overlay
+ * @date     2026-09-14
  */
 
 // Magic Numbers

@@ -1,7 +1,10 @@
 /**
  * Zoomable circle packing example using sszvis.
  *
- * @category pack
+ * @sszvis   3.5.1
+ * @chart    pack
+ * @features tooltip, breadcrumb
+ * @date     2026-09-14
  */
 
 // Magic Numbers

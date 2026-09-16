@@ -1,7 +1,10 @@
 /**
  * Grouped vertical bar chart example with two small groups per region.
  *
- * @category bar-chart-vertical-grouped
+ * @sszvis   3.5.1
+ * @chart    bar-chart-vertical-grouped
+ * @features tooltip
+ * @date     2026-09-14
  */
 
 // Magic Numbers

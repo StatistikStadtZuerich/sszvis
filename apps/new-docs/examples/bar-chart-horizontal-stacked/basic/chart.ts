@@ -1,7 +1,10 @@
 /**
  * Stacked horizontal bar chart example using sszvis.
  *
- * @category bar-chart-horizontal-stacked
+ * @sszvis   3.5.1
+ * @chart    bar-chart-horizontal-stacked
+ * @features tooltip
+ * @date     2026-09-14
  */
 
 // Magic Numbers

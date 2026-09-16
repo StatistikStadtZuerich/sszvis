@@ -1,7 +1,10 @@
 /**
  * Scatterplot of one quarter at a time, with a slider to move through the quarters.
  *
- * @category scatterplot
+ * @sszvis   3.5.1
+ * @chart    scatterplot
+ * @features slider
+ * @date     2026-09-14
  */
 
 // Magic Numbers

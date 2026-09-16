@@ -1,7 +1,10 @@
 /**
  * Horizontal bar chart with a button group for switching between years.
  *
- * @category bar-chart-horizontal
+ * @sszvis   3.5.1
+ * @chart    bar-chart-horizontal
+ * @features tooltip, button-group
+ * @date     2026-09-14
  */
 
 // Magic Numbers

@@ -1,7 +1,10 @@
 /**
  * Heat table of the population of each Zurich Kreis by age group.
  *
- * @category heat-table
+ * @sszvis   3.5.1
+ * @chart    heat-table
+ * @features tooltip, legend, missing-values
+ * @date     2026-09-14
  */
 
 // Magic Numbers

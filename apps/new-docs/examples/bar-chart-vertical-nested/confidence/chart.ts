@@ -1,7 +1,10 @@
 /**
  * Grouped vertical bar chart with 95% confidence bars.
  *
- * @category bar-chart-vertical-nested
+ * @sszvis   3.5.1
+ * @chart    bar-chart-vertical-nested
+ * @features tooltip, confidence
+ * @date     2026-09-14
  */
 
 // Magic Numbers

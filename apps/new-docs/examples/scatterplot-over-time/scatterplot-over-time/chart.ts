@@ -1,7 +1,10 @@
 /**
  * Scatterplot whose points trace a path over time, with a slider to move through the years.
  *
- * @category scatterplot-over-time
+ * @sszvis   3.5.1
+ * @chart    scatterplot-over-time
+ * @features tooltip, slider, voronoi
+ * @date     2026-09-14
  */
 
 // Magic Numbers

@@ -1,7 +1,10 @@
 /**
  * Line chart example with a circular annotation highlighting a single day.
  *
- * @category line-chart
+ * @sszvis   3.5.1
+ * @chart    line-chart
+ * @features annotation
+ * @date     2026-09-14
  */
 
 // Magic Numbers

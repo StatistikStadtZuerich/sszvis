@@ -2,7 +2,10 @@
  * Map of the statistical quarters of Zurich, with subsidised housing developments drawn
  * over a topographic image layer.
  *
- * @category map-extended
+ * @sszvis   3.5.1
+ * @chart    map-extended
+ * @features tooltip, image-layer, geojson-overlay
+ * @date     2026-09-14
  */
 
 // Magic Numbers

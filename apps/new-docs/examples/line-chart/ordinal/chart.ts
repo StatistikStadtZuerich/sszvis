@@ -1,7 +1,10 @@
 /**
  * Line chart example with an ordinal x axis and a ruler highlight.
  *
- * @category line-chart
+ * @sszvis   3.5.1
+ * @chart    line-chart
+ * @features ruler
+ * @date     2026-09-14
  */
 
 // Magic Numbers

@@ -1,7 +1,10 @@
 /**
  * Map of the Zurich city districts drawn over a clipped topographic image layer.
  *
- * @category map-extended
+ * @sszvis   3.5.1
+ * @chart    map-extended
+ * @features image-layer
+ * @date     2026-09-14
  */
 
 // Magic Numbers

@@ -1,4 +1,5 @@
 import type { Effect } from "effect";
+import { version as SSZVIS_VERSION } from "sszvis/package.json";
 
 import {
   code,
@@ -12,6 +13,9 @@ import {
 import { DESCRIPTION, optionValue, TITLE, type OptionKey, type Recipe, type Spec } from "./spec";
 
 const EMPTY_ACTIONS = "Record<string, never>";
+
+/* What the header's @features reads when nothing was switched on; an empty tag says less than "none". */
+const NO_FEATURES = "none";
 
 type Surround = {
   readonly before: readonly string[];
@@ -53,6 +57,16 @@ export const compile = (recipe: Recipe, spec: Spec): Effect.Effect<string, Build
     TITLE_TEXT: str(option(TITLE)),
     DESCRIPTION: str(option(DESCRIPTION)),
     ACTIONS_PARAM: code("_actions"),
+    SSZVIS_VERSION: code(SSZVIS_VERSION),
+    CHART: code(recipe.key),
+    /* Only the features the reader chose: the hidden ones a recipe implies are an implementation detail. */
+    FEATURES: code(
+      active
+        .filter((feature) => feature.hidden !== true)
+        .map((feature) => feature.key)
+        .join(", ") || NO_FEATURES,
+    ),
+    DATE: code(new Date().toISOString().slice(0, "yyyy-mm-dd".length)),
     ...recipe.scalars(spec, option),
     ...Object.fromEntries(active.flatMap((feature) => Object.entries(feature.scalars ?? {}))),
     ACTIONS_TYPE: actionsType(fragments.actionTypes ?? []),

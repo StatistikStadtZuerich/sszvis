@@ -1,7 +1,10 @@
 /**
  * Heat table whose values are binned onto a diverging colour scale.
  *
- * @category heat-table
+ * @sszvis   3.5.1
+ * @chart    heat-table
+ * @features tooltip, legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers

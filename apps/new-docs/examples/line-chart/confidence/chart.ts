@@ -1,7 +1,10 @@
 /**
  * Line chart example with a confidence interval around the highlighted series.
  *
- * @category line-chart
+ * @sszvis   3.5.1
+ * @chart    line-chart
+ * @features ruler, confidence, legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers

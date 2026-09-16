@@ -1,7 +1,10 @@
 /**
  * Vertical bar chart example showing a single series over many years.
  *
- * @category bar-chart-vertical
+ * @sszvis   3.5.1
+ * @chart    bar-chart-vertical
+ * @features tooltip
+ * @date     2026-09-14
  */
 
 // Magic Numbers

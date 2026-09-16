@@ -1,7 +1,10 @@
 /**
  * Stacked area chart with a range ruler that reads off the highlighted date.
  *
- * @category area-chart-stacked
+ * @sszvis   3.5.1
+ * @chart    area-chart-stacked
+ * @features tooltip, ruler, range-flag
+ * @date     2026-09-14
  */
 
 // Magic Numbers

@@ -1,7 +1,10 @@
 /**
  * Population pyramid whose bars are stacked by level of education.
  *
- * @category population-pyramid
+ * @sszvis   3.5.1
+ * @chart    population-pyramid
+ * @features legend
+ * @date     2026-09-14
  */
 
 // Magic Numbers
