@@ -128,7 +128,7 @@ function structuredText(): TextBody {
         // fn.functor is typed for nullary thunks, so it cannot express an accessor that
         // receives the datum. The public methods accept `unknown` so that a consumer's
         // (d: Artist) => string still type-checks, which leaves this narrowing to us.
-        text: fn.functor(text) as (datum?: unknown) => unknown,
+        text: fn.functor(text),
         style,
       });
     },

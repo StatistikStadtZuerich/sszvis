@@ -154,7 +154,7 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
             textContour
               .classed("sszvis-rangeRuler__label-contour", true)
               .classed("sszvis-rangeRuler__label", false);
-            const contourNode = textContour.node() as SVGTextElement | null;
+            const contourNode = textContour.node();
             if (contourNode && this instanceof Element) {
               this.insertBefore(contourNode, textNode);
             }
@@ -165,7 +165,7 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
               const offset = props.flip(d) ? -10 : 10;
               return crispX(d) + offset;
             })
-            .attr("y", (d) => middleY(d as Datum<T>))
+            .attr("y", (d) => middleY(d))
             .attr("dy", "0.35em") // vertically-center
             .style("text-anchor", (d) => {
               return props.flip(d) ? "end" : "start";
@@ -206,7 +206,7 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
           totalContour
             .classed("sszvis-rangeRuler__total-contour", true)
             .classed("sszvis-rangeRuler__total", false);
-          const contourNode = totalContour.node() as SVGTextElement | null;
+          const contourNode = totalContour.node();
           if (contourNode && this instanceof Element) {
             this.insertBefore(contourNode, totalNode);
           }
@@ -229,5 +229,5 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
       if (!props.removeStroke) {
         total.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
       }
-    }) as RangeRulerComponent<T>;
+    });
 }

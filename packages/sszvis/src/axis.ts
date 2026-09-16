@@ -356,8 +356,8 @@ function axis(): AxisComponent {
             (d) =>
               domainExtent[0] !== undefined &&
               domainExtent[1] !== undefined &&
-              !fn.stringEqual(d as AxisDomain, domainExtent[0]) &&
-              !fn.stringEqual(d as AxisDomain, domainExtent[1]),
+              !fn.stringEqual(d, domainExtent[0]) &&
+              !fn.stringEqual(d, domainExtent[1]),
           );
           const orientation = props.orient;
 
@@ -596,14 +596,14 @@ const setOrdinalTicks = function (this: AxisComponent, count: number): number {
     step = Math.max(1, Math.round(domain.length / count));
 
   // include the first value
-  if (domain[0] !== undefined) values.push(domain[0] as AxisDomain);
+  if (domain[0] !== undefined) values.push(domain[0]);
   for (let i = step, l = domain.length; i < l - 1; i += step) {
-    if (domain[i] !== undefined) values.push(domain[i] as AxisDomain);
+    if (domain[i] !== undefined) values.push(domain[i]);
   }
   // include the last value, unless it is the first one again — a single-element domain
   // would otherwise render two identical, overlapping ticks
   if (domain.length > 1 && domain[domain.length - 1] !== undefined) {
-    values.push(domain[domain.length - 1] as AxisDomain);
+    values.push(domain[domain.length - 1]);
   }
 
   this.tickValues(values);
@@ -619,7 +619,7 @@ export const axisX = () =>
     .tickSizeOuter(6.5)
     .tickPadding(6)
     // The x-axis is numeric; arity(1, ...) drops the index d3 passes as a second argument.
-    .tickFormat(fn.arity(1, formatNumber) as (d: AxisDomain) => string);
+    .tickFormat(fn.arity(1, formatNumber));
 
 axisX.time = () =>
   axisX()

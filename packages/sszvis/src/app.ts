@@ -224,7 +224,7 @@ export const app = <
     const draft = createDraft(state);
     // Each action declares the props it accepts, but which action is being dispatched is
     // only known from a string at this point, so the props cannot be checked here.
-    const call = handler as (state: Draft<State>, ...props: readonly unknown[]) => Effect | void;
+    const call = handler;
     // Called on actionMap so that `this` is the actions object, as `actions[action](...)`
     // in the original implementation made it.
     const effect = Reflect.apply(call, actionMap, [draft, ...props]);

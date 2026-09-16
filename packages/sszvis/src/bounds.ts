@@ -108,14 +108,14 @@ export function bounds(
       _bounds = arg1 as BoundsConfig;
     } else if (fn.isSelection(arg1)) {
       _bounds = {};
-      selection = arg1 as AnySelection;
+      selection = arg1;
     } else {
       _bounds = {};
       selection = select(arg1 as string);
     }
   } else {
     _bounds = arg1 as BoundsConfig;
-    selection = fn.isSelection(arg2) ? (arg2 as AnySelection) : select(arg2 as string);
+    selection = fn.isSelection(arg2) ? arg2 : select(arg2 as string);
   }
 
   // All padding sides have default values

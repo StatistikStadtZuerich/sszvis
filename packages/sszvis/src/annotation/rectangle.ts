@@ -93,5 +93,5 @@ export default function <T = unknown>(): RectangleComponent<T> {
           .attr("dy", props.dy ? (d) => Number(props.dy?.(d)) : null)
           .text((d) => props.caption?.(d) || "");
       }
-    }) as RectangleComponent<T>;
+    });
 }

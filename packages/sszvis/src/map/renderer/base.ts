@@ -128,7 +128,7 @@ interface StoredMapValue<T, R> {
 function storeMapValue<T, R>(value: MapValue<T, R>): StoredMapValue<T, R> {
   const needsDatum = typeof value === "function";
   const accessor = value as (datum?: T) => R;
-  const stored = (needsDatum ? (datum?: T) => accessor(datum) : () => value as R) as StoredMapValue<
+  const stored = (needsDatum ? (datum?: T) => accessor(datum) : () => value) as StoredMapValue<
     T,
     R
   >;

@@ -164,7 +164,7 @@ export default function move<XDomain = number | string, YDomain = number | strin
       for (const prop in p) {
         const key = prop as keyof Padding;
         if (key in defaults && p[key] !== undefined) {
-          defaults[key] = p[key] as number;
+          defaults[key] = p[key];
         }
       }
       return defaults;
@@ -231,9 +231,9 @@ export default function move<XDomain = number | string, YDomain = number | strin
           doc.on("mouseout.sszvis-behavior-move", () => {
             // toElement is a legacy, non-standard alias for relatedTarget and is not in
             // the DOM types; read it reflectively rather than restating the event's type.
-            const legacyToElement = Reflect.get(args[0] as object, "toElement");
+            const legacyToElement = Reflect.get(args[0], "toElement");
             const from =
-              (args[0].relatedTarget as Element | null) ||
+              args[0].relatedTarget ||
               (legacyToElement instanceof Element ? legacyToElement : null);
             if (!from || from.nodeName === "HTML") {
               stopDragging();
@@ -248,16 +248,12 @@ export default function move<XDomain = number | string, YDomain = number | strin
 
           // Skip touch-originated mouse events on devices that support both
           // This check helps avoid duplicate event handling on touch devices
-          const sourceCapabilities = (
-            e as MouseEvent & {
-              sourceCapabilities?: { firesTouchEvents?: boolean };
-            }
-          ).sourceCapabilities;
+          const sourceCapabilities = e.sourceCapabilities;
           if (sourceCapabilities?.firesTouchEvents) return;
 
           let xy: [number, number];
           try {
-            xy = pointer(e) as [number, number];
+            xy = pointer(e);
           } catch {
             // Silently fail on invalid events (e.g., when pointer() throws due to invalid coordinates)
             return;
@@ -302,7 +298,7 @@ export default function move<XDomain = number | string, YDomain = number | strin
           // Resolve through the extracted `Touch`, not the event: `pointer()` only needs
           // clientX/clientY on its source, and inverting the rect's screen CTM keeps touch in
           // the same user-space units as the mouse path under a scaled ancestor.
-          const xy = pointer(touch, target) as [number, number];
+          const xy = pointer(touch, target);
 
           const x = scaleInvert(props.xScale, xy[0]);
           const y = scaleInvert(props.yScale, xy[1]);
@@ -345,7 +341,7 @@ export default function move<XDomain = number | string, YDomain = number | strin
                 return;
               }
 
-              const panXY = pointer(panTouch, target) as [number, number];
+              const panXY = pointer(panTouch, target);
 
               const panX = scaleInvert(props.xScale, panXY[0]);
               const panY = scaleInvert(props.yScale, panXY[1]);

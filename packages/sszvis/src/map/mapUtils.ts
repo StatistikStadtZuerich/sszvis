@@ -324,7 +324,7 @@ export type MapFeature = ExtendedFeature<GeoGeometryObjects | null, MapFeaturePr
  *                                          (or user-specified center) of the object.
  */
 export function getGeoJsonCenter(geoJson: MapFeature): GeoPoint {
-  return parseCenter(geoJson.properties?.center, geoJson.id) ?? (geoCentroid(geoJson) as GeoPoint);
+  return parseCenter(geoJson.properties?.center, geoJson.id) ?? geoCentroid(geoJson);
 }
 
 /**
