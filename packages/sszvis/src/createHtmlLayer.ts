@@ -65,8 +65,8 @@ export function createHtmlLayer<
   const key = metadata.key || "default";
   const elementDataKey = `data-sszvis-html-${key}`;
 
-  const render = <G extends BaseType, D, P extends BaseType, PD>(
-    root: Selection<G, D, P, PD>,
+  const render = <RG extends BaseType, RD, RP extends BaseType, RPD>(
+    root: Selection<RG, RD, RP, RPD>,
   ): LayerSelection<HTMLDivElement, number> => {
     root.classed("sszvis-outer-container", true);
     return root

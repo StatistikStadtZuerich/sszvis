@@ -1,4 +1,4 @@
-import babel from "@rollup/plugin-babel";
+import babelPlugin from "@rollup/plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
@@ -117,7 +117,7 @@ const createConfig = ({ input, output, plugins = [] }) => ({
       "process.env.NODE_ENV": JSON.stringify("production"),
       preventAssignment: true,
     }),
-    babel({
+    babelPlugin({
       babelHelpers: "bundled",
       exclude: "node_modules/**",
     }),

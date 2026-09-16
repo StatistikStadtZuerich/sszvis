@@ -100,11 +100,11 @@ export default function voronoi<T = unknown>(): VoronoiComponent<T> {
         (d) => props.x(d),
         (d) => props.y(d),
       );
-      const voronoi = delaunay.voronoi(props.bounds);
+      const voronoiDiagram = delaunay.voronoi(props.bounds);
 
       const polys = selection
         .selectAll<SVGPathElement, T>("[data-sszvis-behavior-voronoi]")
-        .data(voronoi.cellPolygons())
+        .data(voronoiDiagram.cellPolygons())
         .join("path")
         .attr("data-sszvis-behavior-voronoi", "")
         .attr("data-sszvis-behavior-pannable", "")
