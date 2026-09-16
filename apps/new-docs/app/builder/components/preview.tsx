@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { typefaceCaption, typefaceMeta } from "~/components/tokens/typeface";
 import { Button } from "~/components/ui/button";
 import template from "../../../examples/_template.html?raw";
+import { harmlessValues } from "../domain/csv";
 import { escapeHtml } from "../domain/host";
 import { Notice } from "./notice";
 
@@ -109,7 +110,7 @@ export const Preview = ({
   const frameRef = useRef<HTMLIFrameElement>(null);
 
   const config = {
-    data: `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`,
+    data: `data:text/csv;charset=utf-8,${encodeURIComponent(harmlessValues(csv))}`,
     id: "#sszvis-chart",
     fallback: FALLBACK,
   };

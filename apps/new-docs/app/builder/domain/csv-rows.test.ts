@@ -2,7 +2,15 @@ import { csvParse } from "d3-dsv";
 import { describe, expect, test } from "vitest";
 
 import { ColumnName } from "./spec";
-import { detectDelimiter, parse, parseBlock, parseDelimited, serialize, type Table } from "./csv";
+import {
+  detectDelimiter,
+  harmlessValues,
+  parse,
+  parseBlock,
+  parseDelimited,
+  serialize,
+  type Table,
+} from "./csv";
 
 /* The builder holds the table as a CSV string in the form, so every keystroke goes
    through serialize -> parse. A row lost here is a row lost under the user's caret. */
@@ -141,5 +149,25 @@ describe("surplus columns", () => {
     expect(serialize({ columns: [ColumnName.make("a")], rows: [["", "keepme"]] })).toContain(
       "keepme",
     );
+  });
+});
+
+describe("the values the preview is given", () => {
+  const payload = '<img src=x onerror="alert(1)">';
+
+  test("should escape a cell that would otherwise be drawn as markup", () => {
+    /* The chart installs its tooltip and ruler labels with `.html()`, and the preview
+       frame is same-origin with the builder, so a pasted cell must not run there. */
+    const out = harmlessValues(`Sektor,Anzahl\n${JSON.stringify(payload)},1`);
+    expect(out).not.toContain("<img");
+    expect(out).toContain("&lt;img");
+  });
+
+  test("should leave the headers alone, since the accessors read the rows by them", () => {
+    expect(harmlessValues("Sektor,Anzahl\na,1").split("\n")[0]).toBe("Sektor,Anzahl");
+  });
+
+  test("should leave ordinary values as they are", () => {
+    expect(harmlessValues("a,b\nAffoltern,12340")).toBe("a,b\nAffoltern,12340");
   });
 });
