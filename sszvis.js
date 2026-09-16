@@ -4868,8 +4868,8 @@
           return;
         }
         const delaunay = d3.Delaunay.from(data, d => props.x(d), d => props.y(d));
-        const voronoi = delaunay.voronoi(props.bounds);
-        const polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoi.cellPolygons()).join("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
+        const voronoiDiagram = delaunay.voronoi(props.bounds);
+        const polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoiDiagram.cellPolygons()).join("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
         polys.attr("d", d => `M${d.join("L")}Z`).attr("fill", "transparent").on("mouseover", function (e) {
           const parent = this.parentNode;
           if (!parent) return;
@@ -5973,12 +5973,12 @@
         // segment after it, silently truncating the series. An explicitly set predicate
         // replaces this one rather than composing with it.
         const defined = props.defined === undefined ? (datum, index, points) => !isMissingVal$2(x(datum, index, points)) && !isMissingVal$2(y(datum, index, points)) : props.defined;
-        const line = d3.line().defined(defined).x(x).y(y);
+        const linePath = d3.line().defined(defined).x(x).y(y);
         // Rendering
         // Declared with `function` so that `this` is still forwarded to valuesAccessor, as
         // it was when this was built with fn.compose.
         const pathData = function (datum, index) {
-          return line(props.valuesAccessor.call(this, datum, index));
+          return linePath(props.valuesAccessor.call(this, datum, index));
         };
         // The prop may hold one of the library's colour objects, so it is resolved first and
         // then rendered as the string d3 writes - the same conversion d3 would do itself.
@@ -6189,12 +6189,12 @@
      */
     function stackedBarSeriesData(order) {
       const layout = stackedBarData(order);
-      return (stackAcc, seriesAcc, valueAcc) => data => {
+      return (_stackAcc, seriesAcc, valueAcc) => data => {
         const {
           series,
           maxValue,
           minValue
-        } = layout(stackAcc, seriesAcc, valueAcc)(data);
+        } = layout(_stackAcc, seriesAcc, valueAcc)(data);
         // `keys` is deliberately not assigned: it shadows Array.prototype.keys, and no caller
         // reads it off the array. stackedBar*Layout returns it beside the series instead.
         return Object.assign(series, {
