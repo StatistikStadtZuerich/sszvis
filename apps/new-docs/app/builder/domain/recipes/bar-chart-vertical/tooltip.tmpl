@@ -1,0 +1,72 @@
+// #label Tooltip
+// #hint Highlights the hovered bar and shows its value.
+
+/* BAR_FILL is a scalar, not a block: the template uses it above the components hole. */
+
+// #scalar ACTIONS_PARAM actions
+// #scalar BAR_FILL (d) => (isSelected(state)(d) ? barFillHighlight : barFill)
+
+// #region stateTypes
+selection: Datum[];
+// #endregion
+
+// #region actionTypes
+showTooltip: (state: State, e: Event, category: string | null, yValue: number | null) => void;
+hideTooltip: (state: State) => void;
+// #endregion
+
+// #region init
+state.selection = [];
+// #endregion
+
+// #region actions
+showTooltip(state, _e, category) {
+  state.selection = state.data.filter((d) => xAcc(d) === category);
+},
+
+hideTooltip(state) {
+  state.selection = [];
+},
+// #endregion
+
+// #region colors
+const barFillHighlight = cScale.darker()(SERIES_KEY);
+// #endregion
+
+// #region layers
+const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+// #endregion
+
+// #region components
+const tooltipText = __TOOLTIP_TEXT__;
+
+const tooltip = sszvis
+  .tooltip<Datum>()
+  .renderInto(tooltipLayer)
+  .orientation(sszvis.fitTooltip("bottom", bounds))
+  .header(tooltipText)
+  .visible(isSelected(state));
+// #endregion
+
+// #region render
+bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+// #endregion
+
+// #region interaction
+// Interaction
+
+// NOTE: The move behavior provides tooltips in the absence of a bar, i.e.
+// when we have missing data.
+const interactionLayer = sszvis
+  .move<string, number>()
+  .xScale(xScale)
+  .yScale(yPosScale)
+  .on("move", actions.showTooltip)
+  .on("end", actions.hideTooltip);
+
+bars.selectGroup("interaction").call(interactionLayer);
+// #endregion
+
+// #region helpers
+const isSelected = (state: State) => (d: Datum) => sszvis.contains(state.selection, d);
+// #endregion

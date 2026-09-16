@@ -1,0 +1,8 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "moduleDetection": "force"
+  },
+  "exclude": ["node_modules"],
+  "include": ["*/chart.ts", "holes.d.ts", "../../../../examples/globals.d.ts"]
+}

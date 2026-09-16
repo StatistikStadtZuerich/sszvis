@@ -1,0 +1,20 @@
+// #label Point markers
+// #hint Draws a dot at every data point.
+
+// #region magicNumbers
+/** Radius of the point markers, in pixels. */
+const DOT_RADIUS = 3;
+// #endregion
+
+// #region components
+const dots = sszvis
+  .dot<Datum>()
+  .x((d) => xScale(xAcc(d)))
+  .y((d) => yScale(yAcc(d)))
+  .radius(DOT_RADIUS)
+  .fill((d) => String(cScale(cAcc(d))));
+// #endregion
+
+// #region render
+chartLayer.selectGroup("dots").datum(state.data).call(dots);
+// #endregion

@@ -1,0 +1,64 @@
+// #hidden
+
+/* Drawn whenever the spec carries a reference line; the recipe's `implied` turns it on. */
+
+// #region magicNumbers
+/** Reference lines: vertical at a date, or horizontal at a value or at the mean of the data. */
+const REFERENCE_LINES: ReferenceLine[] = __REFERENCE_LINES__;
+// #endregion
+
+// #region types
+type ReferenceLine =
+  | { axis: "x"; at: Date | null; label: string }
+  | { axis: "y"; at: number | "mean"; label: string };
+// #endregion
+
+// #region components
+const meanValue = d3.mean(state.data, yAcc) ?? 0;
+
+const referenceLines = REFERENCE_LINES.flatMap((line) => {
+  if (line.axis === "x") {
+    // NOTE: A date that does not parse has no position on the time axis, so it draws nothing.
+    if (line.at === null) return [];
+    return [
+      sszvis
+        .annotationLine()
+        .x1(line.at)
+        .x2(line.at)
+        .y1(0)
+        .y2(state.maxY)
+        .xScale(xScale)
+        .yScale(yScale)
+        .dy(-10)
+        .caption(line.label !== "" ? line.label : sszvis.formatAxisTimeFormat(line.at)),
+    ];
+  }
+  const value = line.at === "mean" ? meanValue : line.at;
+  return [
+    sszvis
+      .annotationLine()
+      .x1(state.xValues[0])
+      .x2(state.xValues[1])
+      .y1(value)
+      .y2(value)
+      .xScale(xScale)
+      .yScale(yScale)
+      .dy(-10)
+      .caption(line.label !== "" ? line.label : referenceCaption(line.at, value)),
+  ];
+});
+// #endregion
+
+// #region render
+const referenceLineLayer = chartLayer.selectGroup("referenceLines");
+
+for (const [index, referenceLine] of referenceLines.entries()) {
+  referenceLineLayer.selectGroup(`referenceLine-${index}`).datum([0]).call(referenceLine);
+}
+// #endregion
+
+// #region helpers
+/** A mean line says what it is; a fixed line shows its value. */
+const referenceCaption = (at: number | "mean", value: number) =>
+  at === "mean" ? `Mittelwert: ${sszvis.formatNumber(value)}` : sszvis.formatNumber(value);
+// #endregion

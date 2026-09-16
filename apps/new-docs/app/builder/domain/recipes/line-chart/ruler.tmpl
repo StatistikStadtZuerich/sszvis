@@ -1,0 +1,104 @@
+// #label Hover ruler
+// #hint A vertical line following the pointer, labelling every series at that date.
+
+// #scalar ACTIONS_PARAM actions
+
+// #region types
+
+/** `app()`'s effect type, which the `sszvis` global cannot name. */
+type Effect = (dispatch: (action: string, props: readonly unknown[]) => void) => void;
+// #endregion
+
+// #region stateTypes
+selection: Datum[];
+// #endregion
+
+// #region actionTypes
+resetDate: (state: State) => Effect;
+changeDate: (state: State, e: Event, inputDate: Date | null) => void;
+// #endregion
+
+// #region init
+state.selection = [];
+// NOTE: The chart opens with the most recent date highlighted.
+return (dispatch) => dispatch("resetDate", []);
+// #endregion
+
+// #region actions
+resetDate(state) {
+  const mostRecentDate = d3.max(state.data, xAcc) ?? null;
+  return (dispatch) => dispatch("changeDate", [null, mostRecentDate]);
+},
+
+changeDate(state, _e, inputDate: Date | null) {
+  if (inputDate === null) {
+    state.selection = [];
+    return;
+  }
+  // Find the date of the datum closest to the input date, then take the
+  // first datum on each line that shares it and has a value to display.
+  const closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
+  state.selection = state.lineData.flatMap((linePoints) => {
+    const match = sszvis.find((d) => xAcc(d).toString() === closestDate.toString(), linePoints);
+    return match === undefined || Number.isNaN(yAcc(match)) ? [] : [match];
+  });
+},
+// #endregion
+
+// #region components
+// NOTE: The highlighted dates are added to the regular ticks, so the ruler
+// always has a labelled tick underneath it. Two equal dates are different
+// objects, so the duplicates are removed by their string form.
+const xTickValues = [
+  ...new Map(
+    [...xScale.ticks(props.ticks), ...state.selection.map(xAcc)].map((d) => [String(d), d]),
+  ).values(),
+];
+
+xAxis.tickValues(xTickValues).highlightTick(isSelected(state));
+
+const rulerLabel = __RULER_LABEL__;
+
+const highlightLayer = sszvis
+  .annotationRuler<Datum>()
+  .top(0)
+  .bottom(bounds.innerHeight)
+  .x((d) => xScale(xAcc(d)))
+  .y((d) => yScale(yAcc(d)))
+  .label(rulerLabel)
+  .flip((d) => xScale(xAcc(d)) >= bounds.innerWidth / 2)
+  .color((d) => cScale(cAcc(d)));
+// #endregion
+
+// #region render
+chartLayer.selectGroup("highlight").datum(state.selection).call(highlightLayer);
+// #endregion
+
+// #region interaction
+// Interaction
+
+const interactionLayer = sszvis
+  .move<Date, number>()
+  .xScale(xScale)
+  .yScale(yScale)
+  .on("move", actions.changeDate)
+  .on("end", actions.resetDate);
+
+chartLayer.selectGroup("interaction").call(interactionLayer);
+// #endregion
+
+// #region helpers
+/** Whether an axis tick sits under the current ruler position. */
+const isSelected = (state: State) => (d: AxisDomain) =>
+  sszvis.contains(state.selection.map(xAcc).map(String), String(d));
+
+/** The datum whose x-value lies closest to `datum`, by bisection. */
+const closestDatum = (data: Datum[], accessor: (d: Datum) => Date, datum: Date) => {
+  const i = d3.bisector(accessor).left(data, datum, 1);
+  const d0 = data[i - 1];
+  const d1 = data[i] ?? d0;
+  return datum.valueOf() - accessor(d0).valueOf() > accessor(d1).valueOf() - datum.valueOf()
+    ? d1
+    : d0;
+};
+// #endregion

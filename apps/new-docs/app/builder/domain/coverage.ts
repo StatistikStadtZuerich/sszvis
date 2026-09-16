@@ -1,0 +1,54 @@
+import { initialSpec } from "./initial-spec";
+import { summarize, type Annotation, type AnnotationAxis, type Recipe, type Spec } from "./spec";
+
+type Case = {
+  readonly label: string;
+  readonly recipe: Recipe;
+  readonly spec: Omit<Spec, "features">;
+};
+
+const SAMPLE_VALUE = { number: "10", date: "01.01.2020", category: "x" } as const;
+
+const sampleAnnotations = (axes: readonly AnnotationAxis[]): readonly Annotation[] =>
+  axes.flatMap((axis) => [
+    {
+      kind: "reference-line",
+      axis: axis.axis,
+      at: { kind: "value", value: SAMPLE_VALUE[axis.kind] },
+      label: "Sample",
+    },
+    ...(axis.kind === "number"
+      ? [{ kind: "reference-line", axis: axis.axis, at: { kind: "mean" }, label: "" } as const]
+      : []),
+  ]);
+
+export const cases = (recipes: readonly Recipe[]): readonly Case[] =>
+  recipes.flatMap((recipe) => {
+    const summary = summarize(recipe);
+    const { features: _features, ...spec } = initialSpec(summary);
+    const single = recipe.roles
+      .filter((role) => role.optional === true && spec.fields[role.key] !== "")
+      .map((role) => ({
+        label: `${recipe.key}-single-${role.key}`,
+        recipe,
+        spec: { ...spec, fields: { ...spec.fields, [role.key]: "" } },
+      }));
+    const annotated =
+      recipe.annotationAxes.length === 0
+        ? []
+        : [
+            {
+              label: `${recipe.key}-annotated`,
+              recipe,
+              spec: { ...spec, annotations: sampleAnnotations(recipe.annotationAxes) },
+            },
+          ];
+    return [{ label: recipe.key, recipe, spec }, ...single, ...annotated];
+  });
+
+/** Only checkbox features vary; hidden ones follow the spec's content. */
+export const checkboxFeatures = (recipe: Recipe) =>
+  recipe.features.filter((feature) => feature.hidden !== true).map((feature) => feature.key);
+
+export const combinations = ([first, ...others]: readonly string[]): string[][] =>
+  first === undefined ? [[]] : combinations(others).flatMap((rest) => [rest, [first, ...rest]]);
