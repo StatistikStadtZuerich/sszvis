@@ -1,0 +1,40 @@
+// #label Colour legend
+// #hint Names each series below the chart. Needs a series column.
+
+// #scalar C_SCALE legendLayout.scale
+// #scalar BOTTOM_PADDING legendLayout.bottomPadding
+
+// #region preBounds
+// NOTE: The legend is laid out first because it takes height from the
+// chart: its measurements feed both the colour scale and the bounds.
+const legendLayout = sszvis.colorLegendLayout(
+  {
+    axisLabels: state.xValues.map(xLabelFormat),
+    legendLabels: state.categories,
+  },
+  config.id,
+);
+
+const colorLegend = legendLayout.legend;
+// #endregion
+
+// #region render
+if (showLegend(state.categories)) {
+  chartLayer
+    .selectGroup("colorLegend")
+    .attr(
+      "transform",
+      sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding),
+    )
+    .call(colorLegend);
+}
+// #endregion
+
+// #region helpers
+/**
+ * The categories are read from the data, so a single unnamed series produces
+ * one empty category - and a legend with one blank entry, which is worse
+ * than none.
+ */
+const showLegend = (categories: string[]) => categories[0] != null && categories[0] !== "";
+// #endregion

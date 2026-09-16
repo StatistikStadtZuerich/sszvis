@@ -1,4 +1,8 @@
 {
+  /* The Go extension claims `.tmpl` and reports the builder's templates as Go syntax errors. */
+  "files.associations": {
+    "**/app/builder/**/*.tmpl": "plaintext"
+  },
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "[javascript]": {

@@ -1,0 +1,49 @@
+// #hidden
+
+/* Drawn whenever the spec carries a reference line; the recipe's `implied` turns it on. */
+
+// #region magicNumbers
+/** Horizontal reference lines, at a value or at the mean of the data. */
+const REFERENCE_LINES: { at: number | "mean"; label: string }[] = __REFERENCE_LINES__;
+// #endregion
+
+// #region components
+// NOTE: The reference lines span the full plot width, so they are positioned
+// through a scale of their own rather than through the band scale.
+const annotationXScale = d3
+  .scaleLinear()
+  .domain([0, 1])
+  .range([0, chartDimensions.totalWidth]);
+
+const meanValue = d3.mean(state.data, yAcc) ?? 0;
+
+const referenceLines = REFERENCE_LINES.map((line) => {
+  const value = line.at === "mean" ? meanValue : line.at;
+  return sszvis
+    .annotationLine()
+    .x1(0)
+    .x2(1)
+    .y1(value)
+    .y2(value)
+    .xScale(annotationXScale)
+    .yScale(yPosScale)
+    .dy(-10)
+    .caption(line.label !== "" ? line.label : referenceCaption(line.at, value));
+});
+// #endregion
+
+// #region render
+const referenceLineLayer = chartLayer
+  .selectGroup("referenceLines")
+  .attr("transform", sszvis.translateString(bounds.padding.left, 0));
+
+for (const [index, referenceLine] of referenceLines.entries()) {
+  referenceLineLayer.selectGroup(`referenceLine-${index}`).datum([0]).call(referenceLine);
+}
+// #endregion
+
+// #region helpers
+/** A mean line says what it is; a fixed line shows its value. */
+const referenceCaption = (at: number | "mean", value: number) =>
+  at === "mean" ? `Mittelwert: ${sszvis.formatNumber(value)}` : sszvis.formatNumber(value);
+// #endregion
