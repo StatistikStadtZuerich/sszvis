@@ -54,6 +54,7 @@ export const Tooltip = Schema.Struct({
 
 export type Tooltip = typeof Tooltip.Type;
 
+/** Where a mark sits on screen. Recipes emit it; an annotation is not stated in these terms. */
 export const Axis = Schema.Literals(["x", "y"]);
 
 export type Axis = typeof Axis.Type;
@@ -65,9 +66,17 @@ export const Position = Schema.Union([
 
 export type Position = typeof Position.Type;
 
+/*
+ * A reference line names the role it marks, not the screen axis it lands on. The
+ * two differ per recipe - a vertical bar chart puts its value on y, a horizontal
+ * one puts the same value on x - so a line stated as "y" would mean something
+ * different under each chart type, and switching between them would either move
+ * the line or lose it. Stated as a role it means the same thing everywhere, and
+ * the recipe's `annotationAxes` says which axis to draw it on.
+ */
 export const ReferenceLine = Schema.Struct({
   kind: Schema.Literal("reference-line"),
-  axis: Axis,
+  role: RoleKey,
   at: Position,
   label: Schema.String,
 });
@@ -115,7 +124,12 @@ const FeatureSummary = Schema.Struct({
 
 export type FeatureSummary = typeof FeatureSummary.Type;
 
+/**
+ * One axis a recipe accepts annotations on: the role it carries, the screen axis
+ * it draws on, the kind of value that positions a line there, and its label.
+ */
 const AnnotationAxis = Schema.Struct({
+  role: RoleKey,
   axis: Axis,
   kind: RoleKind,
   label: Schema.String,

@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
 import { BuilderCompileError, code, scalarHoles, type Safe } from "./emit";
-import { FeatureKey, type Feature, type Recipe, type RecipeDef, type Spec } from "./spec";
+import { FeatureKey, VALUE, type Feature, type Recipe, type RecipeDef, type Spec } from "./spec";
 
 export type Sources = Readonly<Record<string, string>>;
 
@@ -99,7 +99,7 @@ const checkScalars = Effect.fnUntraced(function* (
 const IMPLIED_PROBES: readonly Partial<Spec>[] = [
   {},
   {
-    annotations: [{ kind: "reference-line", axis: "x", at: { kind: "mean" }, label: "" }],
+    annotations: [{ kind: "reference-line", role: VALUE, at: { kind: "mean" }, label: "" }],
   },
 ];
 

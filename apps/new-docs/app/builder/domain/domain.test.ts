@@ -29,12 +29,14 @@ import { recipes } from "./recipes";
 import { isPristine, sampleFor, samples } from "./samples";
 import {
   ColumnName,
+  DATE,
   FeatureKey,
   OptionKey,
   optionValue,
   RecipeKey,
   RoleKey,
   summarize,
+  VALUE,
   type Annotation,
   type Fields,
   type Recipe,
@@ -231,7 +233,7 @@ const RECIPE: RecipeSummary = {
   sample: "beschaeftigte-sektor",
   tooltipFeature: FeatureKey.make("one"),
   defaultTooltip: tip("num"),
-  annotationAxes: [{ axis: "y", kind: "number", label: "Value axis" }],
+  annotationAxes: [{ role: RoleKey.make("num"), axis: "y", kind: "number", label: "Value axis" }],
 };
 
 const DEMO_CSV = "Name,Anzahl\nx,1\ny,2";
@@ -282,7 +284,7 @@ describe("sample data", () => {
       annotations: [
         {
           kind: "reference-line",
-          axis: "y",
+          role: RoleKey.make("num"),
           at: { kind: "mean" },
           label: "Mittel",
         },
@@ -349,8 +351,8 @@ const LINE: RecipeSummary = {
   tooltipFeature: FeatureKey.make("two"),
   defaultTooltip: tip("num", ["series"]),
   annotationAxes: [
-    { axis: "x", kind: "date", label: "Date axis" },
-    { axis: "y", kind: "number", label: "Value axis" },
+    { role: RoleKey.make("date"), axis: "x", kind: "date", label: "Date axis" },
+    { role: RoleKey.make("num"), axis: "y", kind: "number", label: "Value axis" },
   ],
 };
 
@@ -393,10 +395,10 @@ describe("unmetRoles", () => {
 });
 
 describe("switchRecipe", () => {
-  test("should keep the data, shared bindings, shared options and same-kind annotations, and reset the rest", () => {
+  test("should keep the data, shared bindings, shared options and same-role annotations, and reset the rest", () => {
     const yLine = {
       kind: "reference-line",
-      axis: "y",
+      role: RoleKey.make("num"),
       at: { kind: "mean" },
       label: "",
     } as const;
@@ -421,19 +423,38 @@ describe("switchRecipe", () => {
     });
   });
 
-  test("should drop an annotation whose axis the new recipe positions by another kind", () => {
+  test("should drop an annotation whose role the new recipe positions by another kind", () => {
     const xDate = {
       kind: "reference-line",
-      axis: "x",
+      role: RoleKey.make("date"),
       at: { kind: "value", value: "01.01.2020" },
       label: "",
     } as const;
     const spec: Spec = { ...initialSpec(LINE, DEMO_CSV), annotations: [xDate] };
     const bar = {
       ...RECIPE,
-      annotationAxes: [{ axis: "x", kind: "category", label: "" }],
+      annotationAxes: [{ role: RoleKey.make("date"), axis: "x", kind: "category", label: "" }],
     } as const;
     expect(switchRecipe(spec, LINE, bar).annotations).toEqual([]);
+  });
+
+  test("should keep an annotation whose role the new recipe draws on the other axis", () => {
+    const valueLine = {
+      kind: "reference-line",
+      role: RoleKey.make("num"),
+      at: { kind: "mean" },
+      label: "Mittel",
+    } as const;
+    const spec: Spec = { ...initialSpec(RECIPE, DEMO_CSV), annotations: [valueLine] };
+    /* The same chart lying down: the value axis is still the value axis, drawn along x. */
+    const horizontal = {
+      ...RECIPE,
+      key: RecipeKey.make("horizontal"),
+      annotationAxes: [
+        { role: RoleKey.make("num"), axis: "x", kind: "number", label: "Value axis" },
+      ],
+    } as const;
+    expect(switchRecipe(spec, RECIPE, horizontal).annotations).toEqual([valueLine]);
   });
 });
 
@@ -843,12 +864,12 @@ describe("compile", () => {
 
 describe("annotations", () => {
   const axes = [
-    { axis: "x", kind: "date", label: "Date axis" },
-    { axis: "y", kind: "number", label: "Value axis" },
+    { role: DATE, axis: "x", kind: "date", label: "Date axis" },
+    { role: VALUE, axis: "y", kind: "number", label: "Value axis" },
   ] as const;
-  const line = (axis: "x" | "y", at: Annotation["at"], label = ""): Annotation => ({
+  const line = (role: RoleKey, at: Annotation["at"], label = ""): Annotation => ({
     kind: "reference-line",
-    axis,
+    role,
     at,
     label,
   });
@@ -882,9 +903,9 @@ describe("annotations", () => {
   test("should emit dates through parseDate, numbers as literals and the mean as a string", () => {
     const out = referenceLinesCode(
       [
-        line("x", { kind: "value", value: "01.01.2020" }, "Start"),
-        line("y", { kind: "value", value: "30000" }, "Ziel"),
-        line("y", { kind: "mean" }),
+        line(DATE, { kind: "value", value: "01.01.2020" }, "Start"),
+        line(VALUE, { kind: "value", value: "30000" }, "Ziel"),
+        line(VALUE, { kind: "mean" }),
       ],
       axes,
     );
@@ -895,12 +916,12 @@ describe("annotations", () => {
     );
   });
 
-  test("should leave out a line when its value does not parse or its axis is not offered", () => {
+  test("should leave out a line when its value does not parse or its role is not offered", () => {
     const out = referenceLinesCode(
       [
-        line("y", { kind: "value", value: "abc" }),
-        line("x", { kind: "value", value: "01.01.2020" }),
-        line("y", { kind: "value", value: "10" }),
+        line(VALUE, { kind: "value", value: "abc" }),
+        line(DATE, { kind: "value", value: "01.01.2020" }),
+        line(VALUE, { kind: "value", value: "10" }),
       ],
       [axes[1]],
     );
@@ -908,7 +929,7 @@ describe("annotations", () => {
   });
 
   test("should name no axis when the recipe offers a single one", () => {
-    expect(referenceLinesCode([line("y", { kind: "mean" })], [axes[1]])).toBe(
+    expect(referenceLinesCode([line(VALUE, { kind: "mean" })], [axes[1]])).toBe(
       '[{ at: "mean", label: "" }]',
     );
   });

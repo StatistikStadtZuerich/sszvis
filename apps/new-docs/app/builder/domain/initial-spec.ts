@@ -101,8 +101,14 @@ const carryAnnotations = (
   to: RecipeSummary,
 ) =>
   annotations.filter((annotation) => {
-    const before = from.annotationAxes.find((axis) => axis.axis === annotation.axis);
-    const after = to.annotationAxes.find((axis) => axis.axis === annotation.axis);
+    /*
+     * Matched by role, so a line survives a switch that moves its axis: the value
+     * axis of a vertical bar chart is the same axis as a horizontal one's, drawn
+     * sideways. The kinds still have to agree - a role reused at another kind
+     * cannot hold the position the user typed.
+     */
+    const before = from.annotationAxes.find((axis) => axis.role === annotation.role);
+    const after = to.annotationAxes.find((axis) => axis.role === annotation.role);
     return before !== undefined && after !== undefined && before.kind === after.kind;
   });
 
