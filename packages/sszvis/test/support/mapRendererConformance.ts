@@ -78,17 +78,22 @@ export function describesMapPathGeometry(
 /**
  * That a renderer's `key` decides which elements a second `.call()` on the same group takes over.
  *
- * mesh, the lake overlay, highlight and raster all implement the same `:scope > ...` selector plus
- * `data-<name>-key` filter. Only the element identity is shared here, through two adapters: a
+ * Two renderers adopt this: mesh and the lake overlay. highlight and raster implement the same
+ * `:scope > ...` selector plus `data-<name>-key` filter, but assert it in their own files instead -
+ * raster proves isolation by reading back the pixels painted into each canvas
+ * (test/map/renderer/raster.test.ts:340-342), which this helper's string-valued `variantOf` cannot
+ * express, and highlight's same-key case is written around issue #216, which has no counterpart in
+ * the three cases below.
+ *
+ * Only the element identity is shared here, through two adapters: a
  * `render` that draws one instance into a fresh group, with `key` left off to mean "the default
  * key" and `variant` a colour the caller can tell apart afterwards, and a `marks` that returns the
  * elements whose identity the key governs together with a `variantOf` reading back which render
  * produced one.
  *
- * What the renderers do *not* share stays in their own files, because folding it in would have
- * meant asserting less than each file asserts today: the lake overlay also owns a pattern,
- * gradient and mask per scope (issue #258), raster proves isolation by reading back painted
- * pixels rather than a style, and highlight's same-key case is written around issue #216.
+ * What an adopting renderer does *not* share stays in its own file, because folding it in would
+ * have meant asserting less than that file asserts today: the lake overlay also owns a pattern,
+ * gradient and mask per scope (issue #258).
  */
 export function describesKeyScopedElements<Variant, Drawn>(options: {
   /** Draws one instance into a group, returning the group's node. */

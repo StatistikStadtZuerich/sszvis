@@ -1,7 +1,8 @@
 import { geoCentroid, geoPath } from "d3";
-import type { Feature, FeatureCollection, Polygon } from "geojson";
+import type { FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { resolvedColor } from "../../support/domValues.js";
+import { missingFill, missingId, square, tweenNames } from "../../support/mapReaders.js";
 import { describesMapPathGeometry } from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
@@ -13,28 +14,6 @@ import {
 import mapRendererBase from "../../../src/map/renderer/base.js";
 
 type Datum = { geoId: string; value: number | null };
-
-/**
- * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
- * counter-clockwise would describe the whole globe minus the square.
- */
-const square = (id: string, offset = 0): Feature<Polygon> => ({
-  type: "Feature",
-  id,
-  properties: {},
-  geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [offset, offset],
-        [offset, offset + 1],
-        [offset + 1, offset + 1],
-        [offset + 1, offset],
-        [offset, offset],
-      ],
-    ],
-  },
-});
 
 describe("map/renderer/base", () => {
   let container: HTMLDivElement;
@@ -69,19 +48,6 @@ describe("map/renderer/base", () => {
   const areas = (node: Element) => [...node.querySelectorAll("path.sszvis-map__area")];
   const attrs = (node: Element, attr: string) => areas(node).map((a) => a.getAttribute(attr));
   const anchors = (node: Element) => [...node.querySelectorAll("[data-tooltip-anchor]")];
-  /** The id the layer generated for its own missing-value pattern. */
-  const missingId = (node: Element) => node.querySelector("defs > pattern")?.getAttribute("id");
-  /** That pattern as a fill reference, which is what the areas carry. */
-  const missingFill = (node: Element) => `url(#${missingId(node)})`;
-
-  /** The names of the tweens d3 scheduled on a node, e.g. ["attr.fill"]. */
-  const tweenNames = (node: Element) => {
-    const schedules = (node as Element & { __transition?: Record<string, unknown> }).__transition;
-    if (!schedules) return null;
-    return Object.values(schedules)
-      .filter((s): s is { tween: { name: string }[] } => typeof s === "object" && s !== null)
-      .flatMap((s) => s.tween.map((t) => t.name));
-  };
 
   /** Renders the base layer over `data`, returning the group node it drew into. */
   const render = (
@@ -106,7 +72,7 @@ describe("map/renderer/base", () => {
   ];
 
   describe("rendering", () => {
-    test("should render one classed path per merged datum", () => {
+    test("should render one classed path per merged datum when every feature matched a datum", () => {
       const node = render(fullData);
       expect(areas(node)).toHaveLength(3);
       for (const area of areas(node)) expect(area.tagName).toBe("path");

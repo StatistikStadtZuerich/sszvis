@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { captureWarnings as captureWarningsInto } from "../../support/mapReaders.js";
 import { describesNoScheduledTransition } from "../../support/mapRendererConformance.js";
 import { createHtmlLayer } from "../../../src/createHtmlLayer.js";
 import mapRendererRaster from "../../../src/map/renderer/raster.js";
@@ -29,19 +30,7 @@ describe("map/renderer/raster", () => {
     warnedSpies.length = 0;
   });
 
-  /**
-   * Captures the warnings a render emits, restoring console.warn afterwards. The renderer warns
-   * through sszvis.logger, which delegates to console.warn - spying on the console rather than on
-   * the logger keeps the test on the observable output, and the same idiom as the highlight suite.
-   */
-  const captureWarnings = () => {
-    const warnings: string[] = [];
-    const spy = vi.spyOn(console, "warn").mockImplementation((...args: unknown[]) => {
-      warnings.push(args.map(String).join(" "));
-    });
-    warnedSpies.push(spy);
-    return warnings;
-  };
+  const captureWarnings = () => captureWarningsInto(warnedSpies);
 
   const layer = (key?: string) =>
     createHtmlLayer("#chart-container", undefined, { key: key ?? `raster-${++layerKey}` });

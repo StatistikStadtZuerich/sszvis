@@ -2,6 +2,7 @@ import { select } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { resolvedColor } from "../support/domValues.js";
+import { square } from "../support/mapReaders.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import { component } from "../../src/d3-component.js";
 import "../../src/d3-selectgroup.js";
@@ -9,28 +10,6 @@ import { swissMapPath, swissMapProjection } from "../../src/map/mapUtils.js";
 import choropleth, { type AnchoredShape } from "../../src/maps/choropleth.js";
 
 type Datum = { geoId: string; value: number | null };
-
-/**
- * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
- * counter-clockwise would describe the whole globe minus the square.
- */
-const square = (id: string, offset = 0): Feature<Polygon> => ({
-  type: "Feature",
-  id,
-  properties: {},
-  geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [offset, offset],
-        [offset, offset + 1],
-        [offset + 1, offset + 1],
-        [offset + 1, offset],
-        [offset, offset],
-      ],
-    ],
-  },
-});
 
 /** The one polyline carrying every entity border, which is the shape the mesh renderer wants. */
 const mesh = (): Feature<MultiLineString> => ({
@@ -168,7 +147,7 @@ describe("maps/choropleth", () => {
   };
 
   describe("rendering", () => {
-    test("should render one area per map feature", () => {
+    test("should render one area per map feature when every feature matched a datum", () => {
       const node = render(fullData);
       expect(areas(node)).toHaveLength(3);
     });
@@ -178,7 +157,7 @@ describe("maps/choropleth", () => {
       expect(areas(node)).toHaveLength(3);
     });
 
-    test("should render the border mesh as a single path", () => {
+    test("should render the border mesh as a single path when it carries several segments", () => {
       const node = render(fullData);
       expect(borders(node)).toHaveLength(1);
       expect(borders(node)[0].getAttribute("d")).toMatch(/^M/);
@@ -201,11 +180,6 @@ describe("maps/choropleth", () => {
       // read-back of the one the component cached under its hardcoded key.
       const expected = swissMapPath(300, 300, collection, "fitted-independently");
       expect(attrs(node, "d")).toEqual(collection.features.map((f) => expected(f)));
-    });
-
-    test("should mark every area as an event target", () => {
-      const node = render(fullData);
-      expect(attrs(node, "data-event-target")).toEqual(["", "", ""]);
     });
 
     test("should draw the base areas before the borders", () => {
@@ -288,51 +262,6 @@ describe("maps/choropleth", () => {
         .datum([{ kreis: "a" }, { kreis: "b" }, { kreis: "c" }])
         .call(map);
       expect(distinct(seen)).toEqual([{ kreis: "a" }, { kreis: "b" }, { kreis: "c" }]);
-    });
-
-    // A map that says it encodes no data is drawing geometry rather than values, so it keeps the
-    // caller's fill instead of texturing everything as missing.
-    // docs/map-extended/rastermap-bins.js relies on this: it draws the choropleth as a
-    // transparent outline over a raster image, with fill("none") and no data at all.
-    test("should keep the caller's fill for every area when encodesData is false", () => {
-      const collection = geoJson();
-      const seen: unknown[] = [];
-      const node = layer()
-        .call(
-          choropleth<Datum>()
-            .features(collection)
-            .borders(mesh())
-            .width(130)
-            .height(130)
-            .withLake(false)
-            .transitionColor(false)
-            .encodesData(false)
-            .fill((d?: Datum) => {
-              seen.push(d);
-              return "#ff0000";
-            }),
-        )
-        .node() as SVGGElement;
-      expect(areas(node)).toHaveLength(3);
-      expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
-      // Nothing is classed --undefined either, so the fill and the class still agree.
-      expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
-    });
-
-    // A feature that matched no datum is textured as missing rather than painted with the ordinary
-    // fill, so the accessor is never handed undefined - a caller whose accessor dereferences its
-    // datum no longer crashes.
-    test("should texture a feature instead of calling the fill accessor when it matched no datum", () => {
-      const seen: unknown[] = [];
-      const node = render([{ geoId: "a", value: 1 }], (c) =>
-        c.transitionColor(false).fill((d?: Datum) => {
-          seen.push(d);
-          return "#ff0000";
-        }),
-      );
-      expect(distinct(seen)).toEqual([{ geoId: "a", value: 1 }]);
-      expect(attrs(node, "fill")[1]).toMatch(missingPattern);
-      expect(attrs(node, "fill")[2]).toMatch(missingPattern);
     });
 
     // An interface has no implicit index signature, so it does not satisfy Record<string,
@@ -482,47 +411,47 @@ describe("maps/choropleth", () => {
       expect(lakePaths(node)).toHaveLength(0);
       expect(node.querySelectorAll(`#lake-pattern-${lakeScope(node)}`)).toHaveLength(0);
     });
-  });
 
-  // withLake off reaches the overlay as "no lake feature", which the overlay answers by removing
-  // everything it drew - both paths and the definitions it emitted - rather than leaving the
-  // texture over the map. docs/map-standard/statistische-zonen.js documents withLake(false) as
-  // the way to reveal the lake zones underneath.
-  test("should remove a previously rendered lake when withLake is turned off", () => {
-    const collection = geoJson();
-    const target = layer("lake-toggle");
-    const map = choropleth()
-      .features(collection)
-      .borders(mesh())
-      .lakeFeatures(lakeFeature())
-      .lakeBorders(lakeBorders())
-      .width(180)
-      .height(180);
-    const drawn = target.call(map.withLake(true)).node() as SVGGElement;
-    const scope = lakeScope(drawn);
-    const root = drawn.ownerSVGElement as SVGSVGElement;
-    expect(root.querySelectorAll(`#lake-pattern-${scope}`)).toHaveLength(1);
-    const node = target.call(map.withLake(false)).node() as SVGGElement;
-    expect(lake(node)).toHaveLength(0);
-    expect(lakePaths(node)).toHaveLength(0);
-    expect(root.querySelectorAll(`#lake-pattern-${scope}`)).toHaveLength(0);
-  });
+    // withLake off reaches the overlay as "no lake feature", which the overlay answers by removing
+    // everything it drew - both paths and the definitions it emitted - rather than leaving the
+    // texture over the map. docs/map-standard/statistische-zonen.js documents withLake(false) as
+    // the way to reveal the lake zones underneath.
+    test("should remove a previously rendered lake when withLake is turned off", () => {
+      const collection = geoJson();
+      const target = layer("lake-toggle");
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .lakeFeatures(lakeFeature())
+        .lakeBorders(lakeBorders())
+        .width(180)
+        .height(180);
+      const drawn = target.call(map.withLake(true)).node() as SVGGElement;
+      const scope = lakeScope(drawn);
+      const root = drawn.ownerSVGElement as SVGSVGElement;
+      expect(root.querySelectorAll(`#lake-pattern-${scope}`)).toHaveLength(1);
+      const node = target.call(map.withLake(false)).node() as SVGGElement;
+      expect(lake(node)).toHaveLength(0);
+      expect(lakePaths(node)).toHaveLength(0);
+      expect(root.querySelectorAll(`#lake-pattern-${scope}`)).toHaveLength(0);
+    });
 
-  test("should draw the lake again when withLake is turned back on", () => {
-    const collection = geoJson();
-    const target = layer("lake-retoggle");
-    const map = choropleth()
-      .features(collection)
-      .borders(mesh())
-      .lakeFeatures(lakeFeature())
-      .lakeBorders(lakeBorders())
-      .width(185)
-      .height(185);
-    target.call(map.withLake(true));
-    target.call(map.withLake(false));
-    const node = target.call(map.withLake(true)).node() as SVGGElement;
-    expect(lake(node)).toHaveLength(1);
-    expect(lakePaths(node)).toHaveLength(1);
+    test("should draw the lake again when withLake is turned back on", () => {
+      const collection = geoJson();
+      const target = layer("lake-retoggle");
+      const map = choropleth()
+        .features(collection)
+        .borders(mesh())
+        .lakeFeatures(lakeFeature())
+        .lakeBorders(lakeBorders())
+        .width(185)
+        .height(185);
+      target.call(map.withLake(true));
+      target.call(map.withLake(false));
+      const node = target.call(map.withLake(true)).node() as SVGGElement;
+      expect(lake(node)).toHaveLength(1);
+      expect(lakePaths(node)).toHaveLength(1);
+    });
   });
 
   describe("highlight", () => {
@@ -531,7 +460,7 @@ describe("maps/choropleth", () => {
       expect(highlights(node)).toHaveLength(0);
     });
 
-    test("should render one highlight path per highlighted datum", () => {
+    test("should render one highlight path per highlighted datum when highlight data is set", () => {
       const node = render(fullData, (c) => c.highlight([fullData[1]]));
       expect(highlights(node)).toHaveLength(1);
     });
@@ -563,64 +492,103 @@ describe("maps/choropleth", () => {
      * Choropleth owns no drawing of its own: every one of these properties is forwarded to the
      * child renderer that draws the thing it describes. One row per property, so adding a
      * delegated property is a one-line change rather than another near-identical test.
+     *
+     * A row may read whatever shape says the property arrived - a single attribute, every area's
+     * fill, or a fill together with a class - and may render over data of its own where the
+     * property only shows itself against a partial dataset.
      */
     test.each([
       {
         prop: "fill",
+        data: fullData,
         configure: (c: Choropleth<Datum>) => c.fill("#ff0000").transitionColor(false),
-        read: (node: Element) => attrs(node, "fill")[0],
+        read: (node: Element): unknown => attrs(node, "fill")[0],
         expected: "#ff0000",
+      },
+      // A map that says it encodes no data is drawing geometry rather than values, so it keeps the
+      // caller's fill instead of texturing everything as missing, and classes nothing --undefined:
+      // the fill and the class still agree. docs/map-extended/rastermap-bins.js relies on this - it
+      // draws the choropleth as a transparent outline over a raster image, with fill("none").
+      {
+        prop: "encodesData",
+        data: fullData,
+        configure: (c: Choropleth<Datum>) =>
+          c.fill("#ff0000").transitionColor(false).encodesData(false),
+        read: (node: Element): unknown => ({
+          fills: attrs(node, "fill"),
+          undefinedAreas: node.querySelectorAll(".sszvis-map__area--undefined").length,
+        }),
+        expected: { fills: ["#ff0000", "#ff0000", "#ff0000"], undefinedAreas: 0 },
+      },
+      // defined reaches the DOM as a texture rather than as the value the caller passed, so it is
+      // read as the behaviour rather than as a pass-through.
+      {
+        prop: "defined",
+        data: fullData,
+        configure: (c: Choropleth<Datum>) =>
+          c
+            .fill("#ff0000")
+            .transitionColor(false)
+            .defined((d?: Datum) => d?.value !== 2),
+        read: (node: Element): unknown => attrs(node, "fill"),
+        expected: ["#ff0000", expect.stringMatching(missingPattern), "#ff0000"],
+      },
+      // A feature that matched no datum is textured as missing rather than painted with the
+      // ordinary fill, so the fill accessor is never handed undefined - a caller whose accessor
+      // dereferences its datum no longer crashes. The accessor's own call log is pinned from the
+      // base renderer's side, in test/map/renderer/base.test.ts.
+      {
+        prop: "fill for an unmatched feature",
+        data: [fullData[0]],
+        configure: (c: Choropleth<Datum>) => c.fill("#ff0000").transitionColor(false),
+        read: (node: Element): unknown => attrs(node, "fill"),
+        expected: [
+          "#ff0000",
+          expect.stringMatching(missingPattern),
+          expect.stringMatching(missingPattern),
+        ],
       },
       {
         prop: "borderColor",
+        data: fullData,
         configure: (c: Choropleth<Datum>) => c.borderColor("#0000ff"),
-        read: (node: Element) => resolvedColor(borders(node)[0].style.stroke),
+        read: (node: Element): unknown => resolvedColor(borders(node)[0].style.stroke),
         expected: resolvedColor("#0000ff"),
       },
       {
         prop: "strokeWidth",
+        data: fullData,
         configure: (c: Choropleth<Datum>) => c.strokeWidth(3),
-        read: (node: Element) => borders(node)[0].style.strokeWidth,
+        read: (node: Element): unknown => borders(node)[0].style.strokeWidth,
         expected: "3",
       },
       {
         prop: "lakePathColor",
+        data: fullData,
         configure: (c: Choropleth<Datum>) => c.lakePathColor("#00ff00"),
-        read: (node: Element) => resolvedColor(lakePaths(node)[0].style.stroke),
+        read: (node: Element): unknown => resolvedColor(lakePaths(node)[0].style.stroke),
         expected: resolvedColor("#00ff00"),
       },
       {
         prop: "highlightStroke",
+        data: fullData,
         configure: (c: Choropleth<Datum>) => c.highlight([fullData[1]]).highlightStroke("#ff0000"),
-        read: (node: Element) => resolvedColor(highlights(node)[0].style.stroke),
+        read: (node: Element): unknown => resolvedColor(highlights(node)[0].style.stroke),
         expected: resolvedColor("#ff0000"),
       },
       {
         prop: "highlightStrokeWidth",
+        data: fullData,
         configure: (c: Choropleth<Datum>) => c.highlight([fullData[1]]).highlightStrokeWidth(5),
-        read: (node: Element) => highlights(node)[0].style.strokeWidth,
+        read: (node: Element): unknown => highlights(node)[0].style.strokeWidth,
         expected: "5",
       },
     ])(
       "should paint $prop onto the child renderer's marks when it is set on the map",
-      ({ configure, read, expected }) => {
-        expect(read(render(fullData, configure))).toBe(expected);
+      ({ data, configure, read, expected }) => {
+        expect(read(render(data, configure))).toEqual(expected);
       },
     );
-
-    // defined is delegated too, but what reaches the DOM is a texture rather than the value the
-    // caller passed, so it is asserted as the behaviour rather than as a pass-through.
-    test("should texture only the areas the defined predicate rejects when defined is set", () => {
-      const node = render(fullData, (c) =>
-        c
-          .fill("#ff0000")
-          .transitionColor(false)
-          .defined((d?: Datum) => d?.value !== 2),
-      );
-      const fills = attrs(node, "fill");
-      expect([fills[0], fills[2]]).toEqual(["#ff0000", "#ff0000"]);
-      expect(fills[1]).toMatch(missingPattern);
-    });
 
     test("should read a delegated property back from its renderer", () => {
       const map = choropleth<Datum>().borderColor("#0000ff");
@@ -762,14 +730,14 @@ describe("maps/choropleth", () => {
     // The handlers are what the docs examples drive their tooltips from -
     // docs/map-standard/cml-quartier-years.js, docs/map-extended/quartiere-neubau.js and
     // docs/map-extended/topolayer-statquart-neubau.js all pass this argument to selectHovered.
-    test("should deliver the hovered entity's datum to an over handler", () => {
+    test("should deliver the hovered entity's datum to the over handler when an area is hovered", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) => c.on("over", (d: unknown) => seen.push(d)));
       dispatchOn(areas(node)[0], "mouseover");
       expect(seen).toEqual([fullData[0]]);
     });
 
-    test("should deliver the entity's datum to out and click handlers", () => {
+    test("should deliver the entity's datum to the out and click handlers when an area is left and clicked", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
         c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d)),

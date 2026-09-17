@@ -1,5 +1,6 @@
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { describe, expect, test, vi } from "vitest";
+import { square } from "../support/mapReaders.js";
 import { MEMOIZE_CACHE_LIMIT } from "../../src/fn.js";
 import type { PointProjection } from "../../src/map/mapUtils.js";
 import {
@@ -17,28 +18,6 @@ import {
   WAHL_KREISE_KEY,
   widthAdaptiveMapPathStroke,
 } from "../../src/map/mapUtils.js";
-
-/**
- * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
- * counter-clockwise would describe the whole globe minus the square.
- */
-const square = (id: string, offset = 0): Feature<Polygon> => ({
-  type: "Feature",
-  id,
-  properties: {},
-  geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [offset, offset],
-        [offset, offset + 1],
-        [offset + 1, offset + 1],
-        [offset + 1, offset],
-        [offset, offset],
-      ],
-    ],
-  },
-});
 
 const collection = (...features: Feature<Polygon>[]): FeatureCollection<Polygon> => ({
   type: "FeatureCollection",
@@ -251,7 +230,7 @@ describe("map utils", () => {
       expect(unmatched.every((d) => d.datum === undefined)).toBe(true);
     });
 
-    test("should follow the feature order of the geojson rather than the order of the data", () => {
+    test("should follow the feature order of the geojson when the data is given in another order", () => {
       const merged = prepareMergedGeoData(
         [
           { id: "c", value: 3 },
@@ -432,7 +411,7 @@ describe("map utils", () => {
       },
     );
 
-    test("should name the offending feature in the warning", () => {
+    test("should name the offending feature in the warning when its center property is unusable", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const feature = square("kreis-7");
       feature.properties = { center: "nope" };

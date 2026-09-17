@@ -2,6 +2,7 @@ import { geoPath } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { resolvedColor } from "../../support/domValues.js";
+import { square as squareFeature } from "../../support/mapReaders.js";
 import {
   describesKeyScopedElements,
   describesMapPathGeometry,
@@ -13,27 +14,8 @@ import "../../../src/d3-selectgroup.js";
 import { swissMapProjection } from "../../../src/map/mapUtils.js";
 import mapRendererMesh from "../../../src/map/renderer/mesh.js";
 
-/**
- * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
- * counter-clockwise would describe the whole globe minus the square.
- */
-const square = (id: string, offset = 0): Feature<Polygon> => ({
-  type: "Feature",
-  id,
-  properties: { id },
-  geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [offset, offset],
-        [offset, offset + 1],
-        [offset + 1, offset + 1],
-        [offset + 1, offset],
-        [offset, offset],
-      ],
-    ],
-  },
-});
+/** A unit square whose properties repeat its id, which is what this renderer matches on. */
+const square = (id: string | undefined, offset = 0) => squareFeature(id, offset, { id });
 
 /** The kind of object this renderer documents: one polyline carrying every border. */
 const mesh = (): Feature<MultiLineString> => ({

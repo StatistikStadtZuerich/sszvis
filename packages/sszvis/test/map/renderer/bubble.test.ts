@@ -1,6 +1,7 @@
 import { geoCentroid, select } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { square, tweenNames } from "../../support/mapReaders.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
 import {
@@ -11,28 +12,6 @@ import {
 import mapRendererBubble from "../../../src/map/renderer/bubble.js";
 
 type Datum = { geoId: string; value: number };
-
-/**
- * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
- * counter-clockwise would describe the whole globe minus the square.
- */
-const square = (id: string, offset = 0): Feature<Polygon> => ({
-  type: "Feature",
-  id,
-  properties: {},
-  geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [offset, offset],
-        [offset, offset + 1],
-        [offset + 1, offset + 1],
-        [offset + 1, offset],
-        [offset, offset],
-      ],
-    ],
-  },
-});
 
 describe("map/renderer/bubble", () => {
   let container: HTMLDivElement;
@@ -66,15 +45,6 @@ describe("map/renderer/bubble", () => {
   const circles = (node: Element) => [
     ...node.querySelectorAll<SVGCircleElement>("circle.sszvis-anchored-circle"),
   ];
-
-  /** The names of the tweens d3 scheduled on a node, e.g. ["attr.r"]. */
-  const tweenNames = (node: Element) => {
-    const schedules = (node as Element & { __transition?: Record<string, unknown> }).__transition;
-    if (!schedules) return null;
-    return Object.values(schedules)
-      .filter((s): s is { tween: { name: string }[] } => typeof s === "object" && s !== null)
-      .flatMap((s) => s.tween.map((t) => t.name));
-  };
 
   /** Waits out a default transition (300ms) so its final values are in the DOM. */
   const settle = () => new Promise((resolve) => setTimeout(resolve, 450));
@@ -122,7 +92,7 @@ describe("map/renderer/bubble", () => {
   ];
 
   describe("rendering", () => {
-    test("should render one classed circle per merged datum", () => {
+    test("should render one classed circle per merged datum when every feature matched a datum", () => {
       const node = render(fullData);
       expect(circles(node)).toHaveLength(3);
       expect(circles(node)[0].tagName).toBe("circle");
@@ -505,7 +475,7 @@ describe("map/renderer/bubble", () => {
 
     // The radius is written exactly once, through the transition, so the tween has the previous
     // radius - zero for an entering circle - to interpolate from rather than the final value.
-    test("should grow an entering circle from zero to its radius", async () => {
+    test("should grow an entering circle from zero to its radius when a transition is scheduled", async () => {
       const node = render(fullData, (c) => c.radius(9));
       expect(circles(node)[0].getAttribute("r")).toBe("0");
       expect(tweenNames(circles(node)[0])).toContain("attr.r");

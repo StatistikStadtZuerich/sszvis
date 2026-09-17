@@ -2,6 +2,7 @@ import { geoPath } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { resolvedColor } from "../../support/domValues.js";
+import { square } from "../../support/mapReaders.js";
 import {
   describesKeyScopedElements,
   describesNoScheduledTransition,
@@ -11,26 +12,8 @@ import "../../../src/d3-selectgroup.js";
 import { swissMapProjection } from "../../../src/map/mapUtils.js";
 import mapRendererPatternedLakeOverlay from "../../../src/map/renderer/patternedlakeoverlay.js";
 
-/**
- * A unit square standing in for the lake outline. The ring is wound clockwise because d3-geo
- * interprets rings on the sphere: counter-clockwise would describe the whole globe minus the square.
- */
-const lake = (offset = 0): Feature<Polygon> => ({
-  type: "Feature",
-  properties: {},
-  geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [offset, offset],
-        [offset, offset + 1],
-        [offset + 1, offset + 1],
-        [offset + 1, offset],
-        [offset, offset],
-      ],
-    ],
-  },
-});
+/** A unit square standing in for the lake outline. */
+const lake = (offset = 0) => square(undefined, offset);
 
 /** The entity borders that lie over the lake, as one polyline - the shape choropleth passes. */
 const bounds = (): Feature<MultiLineString> => ({

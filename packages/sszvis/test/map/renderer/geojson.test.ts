@@ -1,7 +1,12 @@
 import { type GeoProjection, geoCentroid, geoPath } from "d3";
-import type { Feature, FeatureCollection, Polygon } from "geojson";
+import type { FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { resolvedColor } from "../../support/domValues.js";
+import {
+  missingFill,
+  missingId,
+  square as squareFeature,
+} from "../../support/mapReaders.js";
 import { describesMapPathGeometry } from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
@@ -10,27 +15,8 @@ import mapRendererGeoJson from "../../../src/map/renderer/geojson.js";
 
 type Datum = { geoId: string; value: number };
 
-/**
- * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
- * counter-clockwise would describe the whole globe minus the square.
- */
-const square = (id: string, offset = 0): Feature<Polygon> => ({
-  type: "Feature",
-  id,
-  properties: { id },
-  geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [offset, offset],
-        [offset, offset + 1],
-        [offset + 1, offset + 1],
-        [offset + 1, offset],
-        [offset, offset],
-      ],
-    ],
-  },
-});
+/** A unit square whose properties repeat its id, which is what this renderer matches on. */
+const square = (id: string | undefined, offset = 0) => squareFeature(id, offset, { id });
 
 describe("map/renderer/geojson", () => {
   let container: HTMLDivElement;
@@ -64,10 +50,6 @@ describe("map/renderer/geojson", () => {
   const elements = (node: Element) => [...node.querySelectorAll("path.sszvis-map__geojsonelement")];
   const attrs = (node: Element, attr: string) => elements(node).map((e) => e.getAttribute(attr));
   const anchors = (node: Element) => [...node.querySelectorAll("[data-tooltip-anchor]")];
-  /** The id the layer generated for its own missing-value pattern. */
-  const missingId = (node: Element) => node.querySelector("defs > pattern")?.getAttribute("id");
-  /** That pattern as a fill reference, which is what the elements carry. */
-  const missingFill = (node: Element) => `url(#${missingId(node)})`;
 
   const fullData: Datum[] = [
     { geoId: "a", value: 1 },
@@ -641,7 +623,7 @@ describe("map/renderer/geojson", () => {
 
     // The base renderer names its pattern from the same counter, so an overlay drawn over a base
     // layer references its own definition rather than whichever came first in the document.
-    test("should not collide with a base layer's pattern id", async () => {
+    test("should not collide with a base layer's pattern id when both draw into the same document", async () => {
       const mapRendererBase = (await import("../../../src/map/renderer/base.js")).default;
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
