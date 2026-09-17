@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import line from "../../src/component/line.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 type Point = { x: number; y: number };
@@ -81,6 +82,17 @@ describe("component/line", () => {
     ],
   ];
 
+  describesTheMarkJoin<Point[]>(() => ({
+    make: lineOf,
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    data: twoLines,
+    marks: paths,
+  }));
+
   describe("rendering", () => {
     test("should render one classed path per inner array", () => {
       const node = render(lineOf(), twoLines);
@@ -94,27 +106,6 @@ describe("component/line", () => {
 
     test("should keep the lines independent of one another", () => {
       expect(ds(render(lineOf(), twoLines))).toEqual(["M0,0L10,10", "M0,50L10,60"]);
-    });
-
-    test("should render nothing for an empty data array", () => {
-      const node = render(lineOf(), []);
-      expect(paths(node).length).toBe(0);
-    });
-
-    test("should re-render in place rather than appending duplicates", () => {
-      const component = lineOf();
-      const g = group("rerender");
-      g.datum(twoLines).call(component as never);
-      g.datum(twoLines).call(component as never);
-      expect(paths(g.node() as SVGGElement).length).toBe(2);
-    });
-
-    test("should remove paths when the data shrinks", () => {
-      const component = lineOf();
-      const g = group("shrink");
-      g.datum(twoLines).call(component as never);
-      g.datum([twoLines[0]]).call(component as never);
-      expect(paths(g.node() as SVGGElement).length).toBe(1);
     });
 
     test("should update the geometry when the data changes", () => {
