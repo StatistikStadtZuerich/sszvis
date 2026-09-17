@@ -379,7 +379,9 @@ const Builder = ({
               title={settled === undefined ? "" : optionValue(recipe.options, settled.spec, TITLE)}
               status={status}
               assets={settled?.generated.assets}
-              scripts={recipe.scripts}
+              /* From the settled build, not the live recipe: mid-rebuild the two are
+                 different charts, and the source decides which globals it needs. */
+              scripts={settled?.generated.scripts}
             />
           </div>
           <CodePanel generated={settled?.generated} note={note} />

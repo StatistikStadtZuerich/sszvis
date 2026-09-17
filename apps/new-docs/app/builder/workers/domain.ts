@@ -12,6 +12,13 @@ export const Generated = Schema.Struct({
   csv: Source,
   /* What else the bundle carries. The code panel shows none of it; the download needs all of it. */
   assets: Schema.Array(Asset),
+  /*
+   * The globals this source expects the page to have already loaded, carried here rather
+   * than read off the live recipe: while a rebuild is in flight the two disagree, and a
+   * preview given the new recipe's scripts beside the old recipe's source is how the map
+   * came back as `topojson is not defined` for a moment after switching away from it.
+   */
+  scripts: Schema.Array(Schema.String),
 });
 
 export type Generated = typeof Generated.Type;
