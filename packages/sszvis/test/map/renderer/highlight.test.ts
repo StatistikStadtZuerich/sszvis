@@ -2,6 +2,7 @@ import { geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
+  describesMapPathGeometry,
   describesNoDecorations,
   describesNoScheduledTransition,
 } from "../../support/mapRendererConformance.js";
@@ -125,7 +126,9 @@ describe("map/renderer/highlight", () => {
       expect(highlights(node)[0].tagName).toBe("path");
     });
 
-    test("takes the path data from the mapPath generator, applied to the matched feature", () => {
+    // Only the matched feature is drawn, so the expectation names it rather than the whole
+    // collection: the geoId "b" datum must pick up feature[1]'s geometry.
+    describesMapPathGeometry(() => {
       const features = collection();
       const mapPath = mapPathOf();
       const node = group()
@@ -136,7 +139,7 @@ describe("map/renderer/highlight", () => {
             .highlight([{ geoId: "b" }]),
         )
         .node() as SVGGElement;
-      expect(highlights(node)[0].getAttribute("d")).toBe(mapPath(features.features[1]));
+      return { marks: highlights(node), expected: [mapPath(features.features[1])] };
     });
 
     test("matches a datum to a feature by the feature's id", () => {

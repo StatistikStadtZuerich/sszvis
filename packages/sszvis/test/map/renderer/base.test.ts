@@ -1,6 +1,7 @@
 import { easePolyOut, geoCentroid, geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { describesMapPathGeometry } from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
 import {
@@ -115,7 +116,7 @@ describe("map/renderer/base", () => {
       expect(areas(node)).toHaveLength(3);
     });
 
-    test("takes the path data from the mapPath generator", () => {
+    describesMapPathGeometry(() => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const node = group()
@@ -126,7 +127,8 @@ describe("map/renderer/base", () => {
             .mapPath(mapPath),
         )
         .node() as SVGGElement;
-      expect(attrs(node, "d")).toEqual(collection.features.map((f) => mapPath(f)));
+      // Every feature is drawn, so every feature is checked.
+      return { marks: areas(node), expected: collection.features.map((f) => mapPath(f)) };
     });
 
     test("marks every area as an event target", () => {
