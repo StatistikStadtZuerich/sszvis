@@ -45,6 +45,8 @@ const csvUrl = (csv: string) => `data:text/csv;charset=utf-8,${encodeURIComponen
 const EXPECTED: Readonly<Record<string, { readonly marks: string; readonly count: number }>> = {
   /* Six rows in `beschaeftigte-sektor`, one bar each. */
   "bar-chart-vertical": { marks: "rect.sszvis-bar", count: 6 },
+  /* The same sample lying down, so the same six bars. */
+  "bar-chart-horizontal": { marks: "rect.sszvis-bar", count: 6 },
   /* `zu-und-wegzuege` splits five dates into two series, so two lines. */
   "line-chart": { marks: "path.sszvis-line", count: 2 },
 };
