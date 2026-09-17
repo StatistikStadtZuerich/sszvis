@@ -50,12 +50,12 @@ describe("layout/smallMultiples", () => {
   const transformOf = (el: Element) => el.getAttribute("transform");
 
   describe("grid", () => {
-    test("creates one group per datum", () => {
+    test("should create one group per datum", () => {
       const node = render(grid(), groups(6));
       expect(multiples(node)).toHaveLength(6);
     });
 
-    test("divides the space into equal units, minus the gutters", () => {
+    test("should divide the space into equal units, minus the gutters", () => {
       const node = render(grid(), groups(6));
       const [first] = multiples(node) as [SVGGElement];
       const datum = (first as SVGGElement & { __data__: Group }).__data__;
@@ -63,7 +63,7 @@ describe("layout/smallMultiples", () => {
       expect(datum.gh).toBe(100);
     });
 
-    test("places the groups left to right, then top to bottom", () => {
+    test("should place the groups left to right, then top to bottom", () => {
       const node = render(grid(), groups(6));
       expect(multiples(node).map(transformOf)).toEqual([
         "translate(0,0)",
@@ -75,7 +75,7 @@ describe("layout/smallMultiples", () => {
       ]);
     });
 
-    test("reports the centre of a unit, not of the whole grid", () => {
+    test("should report the centre of a unit rather than of the whole grid", () => {
       const node = render(grid(), groups(6));
       for (const el of multiples(node)) {
         const datum = (el as SVGGElement & { __data__: Group }).__data__;
@@ -84,7 +84,7 @@ describe("layout/smallMultiples", () => {
       }
     });
 
-    test("a single column stacks the groups vertically", () => {
+    test("should stack the groups vertically when there is a single column", () => {
       const layout = layoutSmallMultiples<Group>()
         .width(100)
         .height(320)
@@ -100,7 +100,7 @@ describe("layout/smallMultiples", () => {
       ]);
     });
 
-    test("zero padding lets the units touch", () => {
+    test("should let the units touch when the padding is zero", () => {
       const layout = layoutSmallMultiples<Group>()
         .width(300)
         .height(200)
@@ -116,7 +116,7 @@ describe("layout/smallMultiples", () => {
   });
 
   describe("chart groups", () => {
-    test("nests one chart group per multiple, bound to the values", () => {
+    test("should nest one chart group per multiple, bound to its values", () => {
       const node = render(grid(), groups(6));
       const charts = node.querySelectorAll("g.sszvis-multiple-chart");
       expect(charts).toHaveLength(6);
@@ -124,7 +124,7 @@ describe("layout/smallMultiples", () => {
       expect(bound).toEqual([0]);
     });
 
-    test("removes the groups that a shorter dataset no longer needs", () => {
+    test("should remove the surplus groups when the dataset gets shorter", () => {
       const selection = createSvgLayer("#chart-container", undefined, {
         key: "multiples-shrink",
       }).selectGroup("multiples");
@@ -134,7 +134,7 @@ describe("layout/smallMultiples", () => {
       expect(multiples(selection.node() as SVGGElement)).toHaveLength(3);
     });
 
-    test("re-renders in place rather than appending duplicates", () => {
+    test("should re-render in place rather than append duplicates when called twice", () => {
       const layout = grid();
       const data = groups(6);
       const selection = createSvgLayer("#chart-container", undefined, {
@@ -149,12 +149,12 @@ describe("layout/smallMultiples", () => {
   });
 
   describe("titles", () => {
-    test("draws no title by default", () => {
+    test("should draw no title when showTitle is not set", () => {
       const node = render(grid(), groups(6));
       expect(node.querySelectorAll(".sszvis-multiple-title")).toHaveLength(0);
     });
 
-    test("draws one title per multiple when enabled", () => {
+    test("should draw one title per multiple when showTitle is set", () => {
       const layout = grid()
         .showTitle(true)
         .titleLabel((d: Group) => d.name);
@@ -171,16 +171,14 @@ describe("layout/smallMultiples", () => {
       ]);
     });
 
-    test("centres the title over its unit by default", () => {
+    test("should centre the title over its unit by default and anchor it to either edge on request", () => {
       const layout = grid()
         .showTitle(true)
         .titleLabel(() => "t");
       const title = render(layout, groups(6)).querySelector(".sszvis-multiple-title");
       expect(title?.getAttribute("x")).toBe("50");
       expect(title?.getAttribute("text-anchor")).toBe("middle");
-    });
 
-    test("anchors the title to either edge of the unit", () => {
       const start = render(
         grid()
           .showTitle(true)
@@ -200,7 +198,7 @@ describe("layout/smallMultiples", () => {
       expect(end?.getAttribute("x")).toBe("100");
     });
 
-    test("offsets the title vertically", () => {
+    test("should offset the title vertically when titleY is set", () => {
       const layout = grid()
         .showTitle(true)
         .titleY(-8)
@@ -209,7 +207,7 @@ describe("layout/smallMultiples", () => {
       expect(title?.getAttribute("y")).toBe("-8");
     });
 
-    test("removes the titles again when the flag is turned off", () => {
+    test("should remove the titles again when showTitle is turned off", () => {
       const data = groups(6);
       const selection = createSvgLayer("#chart-container", undefined, {
         key: "multiples-titles-off",
@@ -230,7 +228,7 @@ describe("layout/smallMultiples", () => {
   });
 
   describe("required properties", () => {
-    test("rejects a layout that is missing a geometry property", () => {
+    test("should throw when a geometry property is missing", () => {
       for (const missing of ["width", "height", "rows", "cols"] as const) {
         const layout = layoutSmallMultiples<Group>().paddingX(10).paddingY(10);
         if (missing !== "width") layout.width(320);
@@ -241,7 +239,7 @@ describe("layout/smallMultiples", () => {
       }
     });
 
-    test("draws nothing at all when a required property is missing", () => {
+    test("should draw nothing at all when a required property is missing", () => {
       const layout = layoutSmallMultiples<Group>().width(320).height(210).paddingX(10);
       const selection = createSvgLayer("#chart-container", undefined, {
         key: "multiples-required",
@@ -250,22 +248,18 @@ describe("layout/smallMultiples", () => {
       expect(multiples(selection.node() as SVGGElement)).toHaveLength(0);
     });
 
-    test("rejects more data than the declared grid has room for", () => {
+    test("should throw when there is more data than the declared grid has room for", () => {
       // eight groups in a 3 x 2 grid used to spill into a third row below the declared height
       expect(() => render(grid(), groups(8))).toThrow(/2 x 3/);
     });
 
-    test("fills the grid exactly to its last cell", () => {
-      expect(multiples(render(grid(), groups(6)))).toHaveLength(6);
-    });
-
-    test("rejects a group with no values property", () => {
+    test("should throw when a group has no values property", () => {
       expect(() => render(grid(), [{ name: "no values" }] as unknown as Group[])).toThrow(
         /group 0 has no values/,
       );
     });
 
-    test("rejects a titleAnchor it cannot position", () => {
+    test("should throw when the titleAnchor cannot be positioned", () => {
       const layout = grid()
         .showTitle(true)
         .titleAnchor("centre" as unknown as "middle")
@@ -273,7 +267,7 @@ describe("layout/smallMultiples", () => {
       expect(() => render(layout, groups(6))).toThrow(/titleAnchor/);
     });
 
-    test("defaults the paddings to zero", () => {
+    test("should default the paddings to zero when they are not set", () => {
       const layout = layoutSmallMultiples<Group>().width(300).height(200).cols(3).rows(2);
       const node = render(layout, groups(6));
       const datum = (multiples(node)[0] as SVGGElement & { __data__: Group }).__data__;

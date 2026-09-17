@@ -18,36 +18,31 @@ const DATA: Row[] = [
 
 describe("layout/sunburst", () => {
   describe("computeLayout", () => {
-    test("gives the centre circle a third of the radius", () => {
+    test("should give the centre circle a third of the radius", () => {
       const layout = computeLayout(3, 600);
       expect(layout.centerRadius).toBe(100);
       expect(layout.centerRadius).toBe(600 / 6);
     });
 
-    test("divides the remaining radius between the rings", () => {
+    test("should divide the remaining radius between the rings", () => {
       const layout = computeLayout(4, 600);
       // (300 - 100) / 4
       expect(layout.ringWidth).toBe(50);
       expect(layout.centerRadius + layout.ringWidth * 4).toBe(300);
     });
 
-    test("passes the layer count straight through", () => {
-      expect(computeLayout(3, 600).numLayers).toBe(3);
-      expect(computeLayout(7, 600).numLayers).toBe(7);
-    });
-
-    test("caps a ring at 60px", () => {
+    test("should cap a ring at 60px when a shallow hierarchy has room to spare", () => {
       // one layer in a wide chart would otherwise take the whole 200px
       const layout = computeLayout(1, 600);
       expect(layout.ringWidth).toBe(MAX_SUNBURST_RING_WIDTH);
     });
 
-    test("floors a ring at 10px", () => {
+    test("should floor a ring at 10px when a deep hierarchy runs out of room", () => {
       const layout = computeLayout(40, 600);
       expect(layout.ringWidth).toBe(MIN_SUNBURST_RING_WIDTH);
     });
 
-    test("scales with the chart width between the two limits", () => {
+    test("should scale with the chart width between the two limits", () => {
       const small = computeLayout(4, 300);
       const large = computeLayout(4, 600);
       expect(small.centerRadius).toBe(large.centerRadius / 2);
@@ -56,7 +51,7 @@ describe("layout/sunburst", () => {
   });
 
   describe("getRadiusExtent", () => {
-    test("returns the smallest y0 and the largest y1", () => {
+    test("should return the smallest y0 and the largest y1", () => {
       const nodes = [
         { y0: 1, y1: 2 },
         { y0: 2, y1: 3 },
@@ -65,7 +60,7 @@ describe("layout/sunburst", () => {
       expect(getRadiusExtent(nodes)).toEqual([0, 3]);
     });
 
-    test("ignores the pairing, taking each extreme independently", () => {
+    test("should take each extreme independently of its pairing", () => {
       const nodes = [
         { y0: 5, y1: 6 },
         { y0: 1, y1: 2 },
@@ -73,7 +68,7 @@ describe("layout/sunburst", () => {
       expect(getRadiusExtent(nodes)).toEqual([1, 6]);
     });
 
-    test("works on the output of prepareData", () => {
+    test("should start the extent at the first layer's inner edge when given prepareData output", () => {
       const data = prepareData<Row>()
         .layer((d: Row) => d.continent)
         .layer((d: Row) => d.country)
@@ -88,7 +83,7 @@ describe("layout/sunburst", () => {
   });
 
   describe("prepareData", () => {
-    test("returns one flat node per branch and leaf, without the root", () => {
+    test("should return one flat node per branch and leaf, without the root", () => {
       const data = prepareData<Row>()
         .layer((d: Row) => d.continent)
         .layer((d: Row) => d.country)
@@ -99,7 +94,7 @@ describe("layout/sunburst", () => {
       expect(data.every((d) => d.data._tag !== "root")).toBe(true);
     });
 
-    test("gives every node the partition positions the chart needs", () => {
+    test("should give every node the partition positions the chart needs", () => {
       const data = prepareData<Row>()
         .layer((d: Row) => d.continent)
         .value((d: Row) => d.value)
@@ -112,7 +107,7 @@ describe("layout/sunburst", () => {
       }
     });
 
-    test("sums the values up the hierarchy", () => {
+    test("should sum the values up the hierarchy", () => {
       const data = prepareData<Row>()
         .layer((d: Row) => d.continent)
         .layer((d: Row) => d.country)
@@ -124,7 +119,7 @@ describe("layout/sunburst", () => {
   });
 
   describe("fitting the rings to the chart", () => {
-    test("shrinks the centre when the floored rings need the room", () => {
+    test("should shrink the centre when the floored rings need the room", () => {
       // 12 rings would each be 8.33px wide, so the 10px floor takes 20px off the centre
       const layout = computeLayout(12, 300);
       expect(layout.ringWidth).toBe(MIN_SUNBURST_RING_WIDTH);
@@ -132,12 +127,12 @@ describe("layout/sunburst", () => {
       expect(layout.centerRadius + layout.ringWidth * layout.numLayers).toBe(300 / 2);
     });
 
-    test("leaves the centre alone when the rings already fit", () => {
+    test("should leave the centre alone when the rings already fit", () => {
       const layout = computeLayout(4, 600);
       expect(layout.centerRadius).toBe(100);
     });
 
-    test("warns when even a centre of nothing cannot hold the rings", () => {
+    test("should warn when even a centre of nothing cannot hold the rings", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const layout = computeLayout(40, 300);
       expect(layout.centerRadius).toBe(0);
@@ -147,24 +142,24 @@ describe("layout/sunburst", () => {
   });
 
   describe("degenerate inputs", () => {
-    test("a hierarchy with no layers has no rings", () => {
+    test("should report no rings when the hierarchy has no layers", () => {
       expect(computeLayout(0, 600)).toEqual({ centerRadius: 0, numLayers: 0, ringWidth: 0 });
     });
 
-    test("a chart of no width has no rings", () => {
+    test("should report no rings when the chart has no width", () => {
       expect(computeLayout(3, 0)).toEqual({ centerRadius: 0, numLayers: 3, ringWidth: 0 });
     });
 
-    test("rejects a layer count that is not a whole number of layers", () => {
+    test("should throw when the layer count is not a whole number of layers", () => {
       expect(() => computeLayout(-3, 600)).toThrow(/numLayers/);
       expect(() => computeLayout(2.5, 600)).toThrow(/numLayers/);
     });
 
-    test("rejects a negative width", () => {
+    test("should throw when the width is negative", () => {
       expect(() => computeLayout(4, -300)).toThrow(/chartWidth/);
     });
 
-    test("an empty data array has an empty radius extent", () => {
+    test("should report an empty radius extent when the data array is empty", () => {
       expect(getRadiusExtent([])).toEqual([0, 0]);
     });
   });

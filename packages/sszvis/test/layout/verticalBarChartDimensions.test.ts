@@ -9,7 +9,7 @@ const MAX_PADDING = 100;
 
 describe("verticalBarChartDimensions", () => {
   describe("unclamped layout", () => {
-    test("splits the available width in the target 70/30 ratio", () => {
+    test("should split the available width in the target 70/30 ratio", () => {
       const dim = dimensionsVerticalBarChart(200, 10);
       // padding = width * 0.3 / (0.3 * numPads + 0.7 * numBars)
       expect(dim.padWidth).toBeCloseTo(6.185_567, 5);
@@ -18,14 +18,14 @@ describe("verticalBarChartDimensions", () => {
       expect(dim.padRatio).toBeCloseTo(0.3, 12);
     });
 
-    test("fills the available width exactly when nothing is clamped", () => {
+    test("should fill the available width exactly when nothing is clamped", () => {
       const dim = dimensionsVerticalBarChart(200, 10);
       expect(dim.barGroupWidth).toBeCloseTo(200, 9);
       expect(dim.outerRatio).toBeCloseTo(0, 12);
       expect(dim.totalWidth).toBe(200);
     });
 
-    test("scales linearly with the available width", () => {
+    test("should scale linearly with the available width", () => {
       const small = dimensionsVerticalBarChart(100, 12);
       const large = dimensionsVerticalBarChart(200, 12);
       expect(large.barWidth).toBeCloseTo(small.barWidth * 2, 9);
@@ -33,14 +33,14 @@ describe("verticalBarChartDimensions", () => {
       expect(large.padRatio).toBeCloseTo(small.padRatio, 12);
     });
 
-    test("always reports the requested width as totalWidth", () => {
+    test("should always report the requested width as totalWidth", () => {
       expect(dimensionsVerticalBarChart(640, 4).totalWidth).toBe(640);
       expect(dimensionsVerticalBarChart(0, 4).totalWidth).toBe(0);
     });
   });
 
   describe("bar width clamping", () => {
-    test("caps the bar width at 48px and redistributes the slack into the padding", () => {
+    test("should cap the bar width at 48px and redistribute the slack into the padding", () => {
       const dim = dimensionsVerticalBarChart(800, 10);
       expect(dim.barWidth).toBe(MAX_BAR_WIDTH);
       // padding = (width - barWidth * numBars) / numPads
@@ -49,7 +49,7 @@ describe("verticalBarChartDimensions", () => {
       expect(dim.outerRatio).toBeCloseTo(0, 12);
     });
 
-    test("is continuous at the 48px cap", () => {
+    test("should not jump when the width crosses the 48px cap", () => {
       // width chosen so that the unclamped bar width lands exactly on the cap: both
       // branches agree there, so the layout does not jump as the width crosses it
       const width = 665.142_857_142_857_1;
@@ -60,13 +60,16 @@ describe("verticalBarChartDimensions", () => {
   });
 
   describe("padding clamping", () => {
-    test("raises padding to the 2px minimum for very dense charts", () => {
-      const dim = dimensionsVerticalBarChart(100, 40);
+    test("should raise the padding to the 2px minimum when the chart is very dense", () => {
+      const numBars = 40;
+      const dim = dimensionsVerticalBarChart(100, numBars);
       expect(dim.padWidth).toBe(MIN_PADDING);
-      expect(dim.barWidth).toBeCloseTo(1.763_224, 5);
+      // the bar width comes from the unclamped 70/30 target and is never recomputed:
+      // width * 0.7 / (0.3 * numPads + 0.7 * numBars)
+      expect(dim.barWidth).toBeCloseTo((100 * 0.7) / (0.3 * (numBars - 1) + 0.7 * numBars), 9);
     });
 
-    test("lowers padding to the 100px maximum for very sparse charts", () => {
+    test("should lower the padding to the 100px maximum when the chart is very sparse", () => {
       const dim = dimensionsVerticalBarChart(10_000, 2);
       expect(dim.barWidth).toBe(MAX_BAR_WIDTH);
       expect(dim.padWidth).toBe(MAX_PADDING);
@@ -77,27 +80,29 @@ describe("verticalBarChartDimensions", () => {
   });
 
   describe("derived ratios", () => {
-    test("padRatio is the padding's share of one step", () => {
-      const dim = dimensionsVerticalBarChart(800, 10);
-      expect(dim.padRatio).toBeCloseTo(dim.padWidth / (dim.barWidth + dim.padWidth), 12);
-    });
+    test("should report ratios that agree with the reported widths", () => {
+      const clamped = dimensionsVerticalBarChart(800, 10);
+      // padRatio is the padding's share of one step
+      expect(clamped.padRatio).toBeCloseTo(
+        clamped.padWidth / (clamped.barWidth + clamped.padWidth),
+        12,
+      );
 
-    test("outerRatio is the leftover width, halved, in step units", () => {
-      const dim = dimensionsVerticalBarChart(10_000, 2);
-      expect(dim.outerRatio).toBeCloseTo(
-        (dim.totalWidth - dim.barGroupWidth) / 2 / (dim.barWidth + dim.padWidth),
+      const sparse = dimensionsVerticalBarChart(10_000, 2);
+      // outerRatio is the leftover width, halved, in step units
+      expect(sparse.outerRatio).toBeCloseTo(
+        (sparse.totalWidth - sparse.barGroupWidth) / 2 / (sparse.barWidth + sparse.padWidth),
         9,
       );
-    });
 
-    test("barGroupWidth counts all bars and the inner padding only", () => {
-      const dim = dimensionsVerticalBarChart(500, 7);
-      expect(dim.barGroupWidth).toBeCloseTo(dim.barWidth * 7 + dim.padWidth * 6, 9);
+      const seven = dimensionsVerticalBarChart(500, 7);
+      // barGroupWidth counts all the bars and the inner padding only
+      expect(seven.barGroupWidth).toBeCloseTo(seven.barWidth * 7 + seven.padWidth * 6, 9);
     });
   });
 
   describe("a single bar", () => {
-    test("reports no padding, because it draws no gaps", () => {
+    test("should report no padding when a single bar draws no gaps", () => {
       // the padding used to be recomputed over zero gaps, and the resulting Infinity was
       // masked by the 100px clamp and then fed into padRatio
       const dim = dimensionsVerticalBarChart(1000, 1);
@@ -107,7 +112,7 @@ describe("verticalBarChartDimensions", () => {
       expect(dim.barGroupWidth).toBe(MAX_BAR_WIDTH);
     });
 
-    test("reports no padding below the 48px cap either", () => {
+    test("should report no padding when a single bar stays below the 48px cap", () => {
       const dim = dimensionsVerticalBarChart(30, 1);
       expect(dim.barWidth).toBe(30);
       expect(dim.padWidth).toBe(0);
@@ -117,7 +122,7 @@ describe("verticalBarChartDimensions", () => {
   });
 
   describe("degenerate inputs", () => {
-    test("zero bars have no dimensions to report", () => {
+    test("should report no dimensions but echo the width when there are no bars", () => {
       const dim = dimensionsVerticalBarChart(500, 0);
       expect(dim).toEqual({
         barWidth: 0,
@@ -130,7 +135,7 @@ describe("verticalBarChartDimensions", () => {
       });
     });
 
-    test("a zero width has no dimensions to report", () => {
+    test("should report no dimensions when the width is zero", () => {
       // a container measured before its first paint reports a width of 0
       const dim = dimensionsVerticalBarChart(0, 10);
       expect(dim).toEqual({
@@ -143,11 +148,11 @@ describe("verticalBarChartDimensions", () => {
       });
     });
 
-    test("rejects a negative width", () => {
+    test("should throw when the width is negative", () => {
       expect(() => dimensionsVerticalBarChart(-200, 10)).toThrow(/width/);
     });
 
-    test("rejects a bar count that is not a whole number of bars", () => {
+    test("should throw when the bar count is not a whole number of bars", () => {
       expect(() => dimensionsVerticalBarChart(500, -3)).toThrow(/numBars/);
       expect(() => dimensionsVerticalBarChart(500, 2.5)).toThrow(/numBars/);
     });

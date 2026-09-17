@@ -18,29 +18,29 @@ const EIGHT = [...SIX, "Eta", "Theta"];
 describe("colorLegendLayout", () => {
   describe("colorLegendDimensions", () => {
     describe("columns", () => {
-      test("uses a single column for four or fewer labels", () => {
+      test("should use a single column when there are four or fewer labels", () => {
         for (const labels of [["A"], ["A", "B"], FOUR]) {
           expect(colorLegendDimensions(labels, 800).columns).toBe(1);
         }
       });
 
-      test("uses two columns for more than four labels when they fit", () => {
+      test("should use two columns when more than four labels fit side by side", () => {
         expect(colorLegendDimensions(SIX, 2000).columns).toBe(2);
       });
 
-      test("falls back to one column when two would not fit", () => {
+      test("should fall back to one column when two would not fit", () => {
         // a container narrower than twice the widest label
         const narrow = maxLabelWidth(SIX) * 2 - 1;
         expect(colorLegendDimensions(SIX, narrow).columns).toBe(1);
       });
 
-      test("fits exactly two columns at twice the widest label", () => {
+      test("should fit two columns when the container is exactly twice the widest label", () => {
         expect(colorLegendDimensions(SIX, maxLabelWidth(SIX) * 2).columns).toBe(2);
       });
     });
 
     describe("horizontal layout", () => {
-      test("floats the labels on one line when they all fit", () => {
+      test("should float the labels on one line when they all fit", () => {
         const dims = colorLegendDimensions(FOUR, totalLabelWidth(FOUR) + 1);
         expect(dims.horizontalFloat).toBe(true);
         expect(dims.rows).toBe(1);
@@ -48,14 +48,14 @@ describe("colorLegendLayout", () => {
         expect(dims.columnWidth).toBeNull();
       });
 
-      test("stacks the labels vertically when they do not fit on one line", () => {
+      test("should stack the labels vertically when they do not fit on one line", () => {
         const dims = colorLegendDimensions(FOUR, totalLabelWidth(FOUR) - 1);
         expect(dims.horizontalFloat).toBe(false);
         expect(dims.rows).toBe(4);
         expect(dims.orientation).toBe("vertical");
       });
 
-      test("never floats a two-column legend, however wide the container", () => {
+      test("should never float a two-column legend, however wide the container", () => {
         const dims = colorLegendDimensions(SIX, 100_000);
         expect(dims.columns).toBe(2);
         expect(dims.horizontalFloat).toBe(false);
@@ -64,7 +64,7 @@ describe("colorLegendLayout", () => {
     });
 
     describe("rows", () => {
-      test("splits the labels over the columns, rounding up", () => {
+      test("should round the row count up when the labels do not divide evenly over the columns", () => {
         expect(colorLegendDimensions(SIX, 2000).rows).toBe(3);
         expect(colorLegendDimensions(EIGHT, 2000).rows).toBe(4);
         // an odd count leaves the last column one short
@@ -73,28 +73,27 @@ describe("colorLegendLayout", () => {
     });
 
     describe("widths", () => {
-      test("reports the column width only for a multi-column legend", () => {
+      test("should report a column width only when the legend has more than one column", () => {
         expect(colorLegendDimensions(SIX, 2000).columnWidth).toBe(maxLabelWidth(SIX));
         expect(colorLegendDimensions(FOUR, 2000).columnWidth).toBeNull();
       });
 
-      test("legendWidth is the column count times the widest label", () => {
+      test("should report one 40px-padded widest label per column when the labels are stacked", () => {
         expect(colorLegendDimensions(SIX, 2000).legendWidth).toBe(maxLabelWidth(SIX) * 2);
         // a stacked single column is as wide as its widest label
         expect(colorLegendDimensions(FOUR, totalLabelWidth(FOUR) - 1).legendWidth).toBe(
           maxLabelWidth(FOUR),
         );
+        // and the width of a label is its text plus the 40px padding
+        expect(colorLegendDimensions(["Alpha"], 2000).legendWidth).toBe(
+          measureLegendLabel("Alpha") + LABEL_PADDING,
+        );
       });
 
-      test("legendWidth is the width of the whole line for a floated legend", () => {
+      test("should report the width of the whole line when the legend floats", () => {
         const dims = colorLegendDimensions(FOUR, 2000);
         expect(dims.horizontalFloat).toBe(true);
         expect(dims.legendWidth).toBe(totalLabelWidth(FOUR));
-      });
-
-      test("every label is padded by 40px", () => {
-        const one = colorLegendDimensions(["Alpha"], 2000);
-        expect(one.legendWidth).toBe(measureLegendLabel("Alpha") + LABEL_PADDING);
       });
     });
   });
@@ -113,21 +112,21 @@ describe("colorLegendLayout", () => {
       container.remove();
     });
 
-    test("returns a legend component, a scale and the paddings", () => {
+    test("should return a legend component, a scale and the legend width", () => {
       const layout = colorLegendLayout({ legendLabels: FOUR }, container);
       expect(typeof layout.legend).toBe("function");
       expect(layout.scale.domain()).toEqual(FOUR);
       expect(layout.legendWidth).toBe(colorLegendDimensions(FOUR, 800).legendWidth);
     });
 
-    test("uses the six-colour scale up to six labels and the twelve-colour scale beyond", () => {
+    test("should switch to the twelve-colour scale when there are more than six labels", () => {
       const six = colorLegendLayout({ legendLabels: SIX }, container);
       const seven = colorLegendLayout({ legendLabels: [...SIX, "Eta"] }, container);
       expect(new Set(six.scale.range()).size).toBe(6);
       expect(new Set(seven.scale.range()).size).toBe(12);
     });
 
-    test("reserves 60px for horizontal axis labels", () => {
+    test("should reserve 60px when the axis labels are horizontal", () => {
       const layout = colorLegendLayout(
         { legendLabels: FOUR, axisLabels: ["2020", "2021"] },
         container,
@@ -135,7 +134,7 @@ describe("colorLegendLayout", () => {
       expect(layout.axisLabelPadding).toBe(60);
     });
 
-    test("reserves the widest label plus 40px for vertical axis labels", () => {
+    test("should reserve the widest label plus 40px when the axis labels are vertical", () => {
       const axisLabels = ["2020", "a much longer label"];
       const layout = colorLegendLayout(
         { legendLabels: FOUR, axisLabels, slant: "vertical" },
@@ -144,7 +143,7 @@ describe("colorLegendLayout", () => {
       expect(layout.axisLabelPadding).toBe(40 + measureAxisLabel("a much longer label"));
     });
 
-    test("reserves the diagonal of the widest label for diagonal axis labels", () => {
+    test("should reserve the widest label's diagonal plus 40px when the axis labels are diagonal", () => {
       const axisLabels = ["2020", "a much longer label"];
       const widest = measureAxisLabel("a much longer label");
       const layout = colorLegendLayout(
@@ -154,20 +153,16 @@ describe("colorLegendLayout", () => {
       expect(layout.axisLabelPadding).toBeCloseTo(40 + widest / Math.SQRT2, 9);
     });
 
-    test("legendPadding is one row height per row", () => {
+    test("should reserve one row height per legend row and add it to the axis padding", () => {
       const layout = colorLegendLayout({ legendLabels: EIGHT }, container);
       const rows = colorLegendDimensions(EIGHT, 800).rows;
       expect(layout.legendPadding).toBe(rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT);
-    });
-
-    test("bottomPadding is the sum of the axis and legend paddings", () => {
-      const layout = colorLegendLayout({ legendLabels: EIGHT }, container);
       expect(layout.bottomPadding).toBe(layout.axisLabelPadding + layout.legendPadding);
     });
   });
 
   describe("rejected and reported options", () => {
-    test("rejects a slant it cannot lay out", () => {
+    test("should throw when the slant cannot be laid out", () => {
       const container = document.createElement("div");
       container.style.width = "800px";
       document.body.append(container);
@@ -184,7 +179,7 @@ describe("colorLegendLayout", () => {
       container.remove();
     });
 
-    test("treats an omitted or null slant as horizontal", () => {
+    test("should reserve the horizontal padding when the slant is null", () => {
       const container = document.createElement("div");
       container.style.width = "800px";
       document.body.append(container);
@@ -193,7 +188,7 @@ describe("colorLegendLayout", () => {
       container.remove();
     });
 
-    test("warns when there are more labels than the scale has colours", () => {
+    test("should warn and recycle the colours when there are more labels than the scale has", () => {
       // d3's ordinal scale recycles its range rather than running out, so labels 13 and up
       // repeat the colours of labels 1 and up
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
@@ -209,7 +204,7 @@ describe("colorLegendLayout", () => {
       warn.mockRestore();
     });
 
-    test("says nothing when the labels fit the scale", () => {
+    test("should not warn when the labels fit the scale", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const container = document.createElement("div");
       container.style.width = "800px";
@@ -222,14 +217,14 @@ describe("colorLegendLayout", () => {
   });
 
   describe("degenerate inputs", () => {
-    test("an empty label list gives a zero-width legend", () => {
+    test("should report a zero-width legend when the label list is empty", () => {
       const dims = colorLegendDimensions([], 800);
       expect(dims.legendWidth).toBe(0);
       expect(dims.rows).toBe(1);
       expect(dims.horizontalFloat).toBe(true);
     });
 
-    test("a vertical or diagonal slant with no axis labels reserves only the base padding", () => {
+    test("should reserve only the 40px base padding when a slanted axis has no labels", () => {
       const container = document.createElement("div");
       container.style.width = "800px";
       document.body.append(container);
@@ -239,7 +234,7 @@ describe("colorLegendLayout", () => {
       container.remove();
     });
 
-    test("warns when the container cannot be measured", () => {
+    test("should warn when the container cannot be measured", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const detached = document.createElement("div");
       colorLegendLayout({ legendLabels: EIGHT }, detached);
@@ -251,7 +246,7 @@ describe("colorLegendLayout", () => {
       warn.mockRestore();
     });
 
-    test("lays an unmeasurable container out as a single vertical column", () => {
+    test("should lay out a single vertical column when the container cannot be measured", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const detached = document.createElement("div");
       const layout = colorLegendLayout({ legendLabels: EIGHT }, detached);
