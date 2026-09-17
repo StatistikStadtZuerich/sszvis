@@ -160,6 +160,7 @@ describe("spec text in the generated code", () => {
       tooltip: tip("value"),
       annotations: [],
       kinds: {},
+      chosen: [],
       ...over,
     });
     return ts.raw;

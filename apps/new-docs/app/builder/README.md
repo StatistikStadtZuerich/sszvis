@@ -70,6 +70,17 @@ Replacing a table the user has edited discards that work, so the picker asks
 first; a table still exactly as a sample left it (`isPristine`) is swapped
 without a prompt.
 
+`spec.chosen` names the roles whose column the user picked in step 3, as against
+the ones `bindRoles` guessed, and changing the chart type carries only those. A
+guess is about the chart it was made for, and `rank` prefers a role's existing
+column over any other - so a carried guess takes a column the new chart wants for
+something else. A map is where that shows: its area code and its value are both
+numbers, and a value guessed under a bar chart holds the code column, leaving the
+geometry to be matched against the measure and drawing nothing. Loading a sample
+clears `chosen` with the table it was about, while still offering the old
+bindings as a preference, so a role whose column the new table also has stays
+where it is.
+
 ## Kinds
 
 Two vocabularies, because a column's data and a chart's appetite are different

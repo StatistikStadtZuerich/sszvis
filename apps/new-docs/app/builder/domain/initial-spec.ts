@@ -101,11 +101,23 @@ export function initialSpec(
     tooltip: recipe.defaultTooltip,
     annotations: [],
     kinds: {},
+    chosen: [],
   };
 }
 
+/*
+ * The pins and the hand-picked roles both go with the old table - they were about
+ * its columns. The bindings are still offered as a preference, so a role whose
+ * column the new table also has stays where it is rather than moving for no reason.
+ */
 export function applySample(spec: Spec, recipe: RecipeSummary, csv: string): Spec {
-  return { ...spec, csv, kinds: {}, fields: bindRoles(recipe, parse(csv), {}, spec.fields) };
+  return {
+    ...spec,
+    csv,
+    kinds: {},
+    chosen: [],
+    fields: bindRoles(recipe, parse(csv), {}, spec.fields),
+  };
 }
 
 const carryAnnotations = (
@@ -119,12 +131,24 @@ const carryAnnotations = (
     return before !== undefined && after !== undefined && before.kind === after.kind;
   });
 
+/** The bindings the user made themselves, which are the only ones worth carrying. */
+const chosenFields = (spec: Spec, roles: readonly RoleKey[]): Fields =>
+  Object.fromEntries(
+    roles.flatMap((role) => {
+      const column = spec.fields[role];
+      return column === undefined ? [] : [[role, column] as const];
+    }),
+  );
+
 export function switchRecipe(spec: Spec, from: RecipeSummary, next: RecipeSummary): Spec {
+  /* A role the new recipe does not have has nothing to carry. */
+  const kept = spec.chosen.filter((role) => next.roles.some((entry) => entry.key === role));
   return {
     recipe: next.key,
     csv: spec.csv,
     kinds: spec.kinds,
-    fields: bindRoles(next, parse(spec.csv), spec.kinds, spec.fields),
+    chosen: kept,
+    fields: bindRoles(next, parse(spec.csv), spec.kinds, chosenFields(spec, kept)),
     options: Object.fromEntries(
       Array.getSomes(
         next.options.map((option) =>
