@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { bundleEntries } from "./bundle";
+import { bundleEntries, MissingAssetError } from "./bundle";
 import type { Asset } from "./spec";
 
 const GENERATED = { html: "<html></html>", js: "// chart", csv: "a,b\n1,2" };
@@ -34,18 +34,35 @@ describe("bundleEntries", () => {
     expect(new TextDecoder().decode(topo?.content)).toBe('{"objects":{}}');
   });
 
-  test("should leave a file out rather than ship an error page as its contents", async () => {
-    /* A 404 is a perfectly good response carrying HTML, which would otherwise be the geometry. */
+  test("should refuse the archive rather than ship an error page as the geometry", async () => {
+    /*
+     * A 404 is a perfectly good response carrying HTML, which would otherwise be the
+     * geometry. Dropping it instead would hand back an archive whose index.html still
+     * names topo.json - a chart guaranteed to fail the moment it is opened - so the
+     * download fails here, where it can still be reported.
+     */
     const read = ((url: string) =>
       reply("<!doctype html>not found", !url.endsWith(".json"))) as unknown as typeof fetch;
-    const entries = await bundleEntries(GENERATED, [TOPO], "/fallback.png", read);
-    expect(names(entries)).not.toContain("topo.json");
-    expect(names(entries)).toContain("fallback.png");
+    await expect(bundleEntries(GENERATED, [TOPO], "/fallback.png", read)).rejects.toThrow(
+      MissingAssetError,
+    );
   });
 
-  test("should still produce the sources when the network is gone entirely", async () => {
+  test("should name every asset it could not read", async () => {
     const read = (() => Promise.reject(new Error("offline"))) as unknown as typeof fetch;
+    await expect(bundleEntries(GENERATED, [TOPO], "/fallback.png", read)).rejects.toThrow(
+      /topo\.json/,
+    );
+  });
+
+  test("should still build the archive when only the fallback image is missing", async () => {
+    /* The fallback is decoration: a chart without it still draws, so it stays optional. */
+    const read = ((url: string) =>
+      reply(
+        url.endsWith(".json") ? '{"objects":{}}' : "",
+        !url.endsWith(".png"),
+      )) as unknown as typeof fetch;
     const entries = await bundleEntries(GENERATED, [TOPO], "/fallback.png", read);
-    expect(names(entries)).toEqual(["index.html", "chart.js", "data.csv"]);
+    expect(names(entries)).toEqual(["index.html", "chart.js", "data.csv", "topo.json"]);
   });
 });

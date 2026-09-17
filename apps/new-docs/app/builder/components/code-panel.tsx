@@ -6,13 +6,13 @@ import { ToggleButtonGroup } from "~/components/ui/toggle-button-group";
 import { cn } from "~/lib/utils";
 
 import fallbackUrl from "../../../examples/_static/fallback.png?url";
-import { bundleEntries } from "../domain/bundle";
+import { bundleEntries, MissingAssetError } from "../domain/bundle";
 import { BUNDLE } from "../domain/host";
 import { zip } from "../domain/zip";
 import type { Generated } from "../workers/domain";
 
 /* The generated files the panel can show. `assets` is bytes the bundle carries, not source. */
-type SourceKey = Exclude<keyof Generated, "assets">;
+type SourceKey = Exclude<keyof Generated, "assets" | "scripts">;
 
 const ORDER = ["ts", "js", "html", "csv"] satisfies ReadonlyArray<SourceKey>;
 
@@ -31,17 +31,32 @@ export const CodePanel = ({
   readonly note?: string | null;
 }) => {
   const [view, setView] = useState<View>("ts");
+  /* A download that could not read one of the chart's files, reported where `note` is. */
+  const [bundleError, setBundleError] = useState<string | null>(null);
   const source = generated?.[view];
   const ready = generated !== undefined && note == null;
 
   const downloadBundle = async () => {
     if (!ready || generated === undefined) return;
-    const entries = await bundleEntries(
-      { html: generated.html.raw, js: generated.js.raw, csv: generated.csv.raw },
-      generated.assets,
-      fallbackUrl,
-    );
-    save("chart-bundle.zip", new Blob([zip(entries)], { type: "application/zip" }));
+    setBundleError(null);
+    try {
+      const entries = await bundleEntries(
+        { html: generated.html.raw, js: generated.js.raw, csv: generated.csv.raw },
+        generated.assets,
+        fallbackUrl,
+      );
+      save("chart-bundle.zip", new Blob([zip(entries)], { type: "application/zip" }));
+    } catch (cause) {
+      /*
+       * An archive missing one of the chart's own files would download happily and then
+       * fail to draw, with nothing to say why - so the failure is reported here instead.
+       */
+      setBundleError(
+        cause instanceof MissingAssetError
+          ? cause.message
+          : "The archive could not be built. Please try again.",
+      );
+    }
   };
 
   return (
@@ -83,10 +98,12 @@ export const CodePanel = ({
       <p
         role="status"
         className={
-          note == null ? "sr-only" : typefaceMeta("border-b bg-muted px-3 py-2 text-foreground")
+          (bundleError ?? note) == null
+            ? "sr-only"
+            : typefaceMeta("border-b bg-muted px-3 py-2 text-foreground")
         }
       >
-        {note ?? ""}
+        {bundleError ?? note ?? ""}
       </p>
       <SourceView
         source={source}
