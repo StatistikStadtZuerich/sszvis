@@ -91,8 +91,58 @@ describe("component/pack", () => {
     vi.restoreAllMocks();
   });
 
+  /** The hierarchy the pack is normally given: rows grouped by category, then subcategory. */
+  const nested = (rows: TestDatum[] = data) =>
+    prepareHierarchyData<TestDatum>()
+      .layer((d) => d.category)
+      .layer((d) => d.subcategory)
+      .value((d) => d.value)
+      .calculate(rows);
+
+  /** The same rows grouped by category only, for the cases that want a two-level tree. */
+  const flat = (rows: TestDatum[] = data) =>
+    prepareHierarchyData<TestDatum>()
+      .layer((d) => d.category)
+      .value((d) => d.value)
+      .calculate(rows);
+
+  /**
+   * Renders a pack of the given hierarchy at a fixed size with transitions off, so every
+   * assertion reads the settled geometry on the same tick. `configure` adds whatever the
+   * test under way needs on top.
+   */
+  const renderPack = (
+    hierarchy: ReturnType<typeof nested>,
+    configure: (c: ReturnType<typeof pack<TestDatum>>) => ReturnType<typeof pack<TestDatum>> = (
+      c,
+    ) => c,
+  ) => {
+    svg
+      .datum(hierarchy)
+      .call(
+        configure(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .transition(false),
+        ),
+      );
+    return svg;
+  };
+
+  const circleNodes = () => [
+    ...svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes(),
+  ];
+  const labelNodes = () => [
+    ...svg.selectAll<SVGTextElement, unknown>(".sszvis-pack-label").nodes(),
+  ];
+  const anchorNodes = () => [
+    ...svg.selectAll<SVGRectElement, unknown>("[data-tooltip-anchor]").nodes(),
+  ];
+
   describe("pack component", () => {
-    test("should have default values for all properties", () => {
+    test("should report the documented defaults when nothing has been configured", () => {
       const packComponent = pack<TestDatum>();
       expect(packComponent.containerWidth()).toBe(800);
       expect(packComponent.containerHeight()).toBe(600);
@@ -103,7 +153,7 @@ describe("component/pack", () => {
       expect(packComponent.circleStrokeWidth()).toBe(1);
     });
 
-    test("should accept a constant colour as well as an accessor", () => {
+    test("should paint the same stroke whether colorScale is a constant or an accessor", () => {
       // colorScale is wrapped in fn.functor on set, so a colour and an accessor returning
       // that colour agree - the rule every other colour property in the library follows.
       const hierarchy = () =>
@@ -179,152 +229,48 @@ describe("component/pack", () => {
       }
     });
 
-    test("should handle labels when showLabels is enabled", () => {
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .showLabels(true)
-            .transition(false),
-        );
-      expect(svg.selectAll(".sszvis-pack-label").empty()).toBe(false);
+    test("should draw a label per labelled circle when showLabels is on and none when it is off", () => {
+      renderPack(nested(), (c) => c.showLabels(true));
+      expect(labelNodes().length).toBeGreaterThan(0);
+
+      renderPack(flat(), (c) => c.showLabels(false));
+      expect(labelNodes()).toEqual([]);
     });
 
-    test("should not show labels when showLabels is disabled", () => {
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .showLabels(false)
-            .transition(false),
-        );
-      expect(svg.selectAll(".sszvis-pack-label").empty()).toBe(true);
+    test("should take every label's text from the label accessor when one is given", () => {
+      renderPack(flat(), (c) =>
+        c.showLabels(true).label((d) => `Label: ${d.data && "key" in d.data ? d.data.key : ""}`),
+      );
+      const labels = labelNodes();
+      // Asserted before the loop, so an empty render fails here rather than passing an
+      // assertion that never runs.
+      expect(labels.length).toBeGreaterThan(0);
+      for (const label of labels) expect(label.textContent).toMatch(/^Label: /);
     });
 
-    test("should support custom label accessor", () => {
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .showLabels(true)
-            .label((d) => `Label: ${d.data && "key" in d.data ? d.data.key : ""}`)
-            .transition(false),
-        );
-      const firstLabel = svg.selectAll<SVGTextElement, TestDatum>(".sszvis-pack-label").node();
-      if (firstLabel) {
-        const text = firstLabel.textContent;
-        expect(text).toMatch(/^Label: /);
+    test("should draw no circle below minRadius when minRadius is set", () => {
+      renderPack(
+        nested([
+          { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
+          { category: "B", subcategory: "B1", value: 100, name: "Normal" },
+        ]),
+        (c) => c.minRadius(5),
+      );
+      const circles = circleNodes();
+      expect(circles.length).toBeGreaterThan(0);
+      for (const circle of circles) {
+        expect(parseFloat(circle.getAttribute("r") || "0")).toBeGreaterThanOrEqual(5);
       }
     });
 
-    test("should filter out circles smaller than minRadius", () => {
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate([
-              { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
-              { category: "B", subcategory: "B1", value: 100, name: "Normal" },
-            ]),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .minRadius(5)
-            .transition(false),
-        );
-      svg
-        .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
-        .nodes()
-        .forEach((circle) => {
-          expect(parseFloat(circle.getAttribute("r") || "0")).toBeGreaterThanOrEqual(5);
-        });
+    test("should draw nothing at all, without throwing, when the data is empty", () => {
+      expect(() => renderPack(flat([]))).not.toThrow();
+      expect(circleNodes()).toEqual([]);
+      expect(anchorNodes()).toEqual([]);
     });
 
-    test("should support custom radius scale", () => {
-      const customRScale = vi.fn().mockReturnValue(10);
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .radiusScale(customRScale)
-            .transition(false),
-        );
-      expect(customRScale).toHaveBeenCalled();
-    });
-
-    test("should handle empty or invalid data gracefully", () => {
-      expect(() => {
-        svg
-          .datum(
-            prepareHierarchyData<TestDatum>()
-              .layer((d) => d.category)
-              .value((d) => d.value)
-              .calculate([]),
-          )
-          .call(
-            pack<TestDatum>()
-              .colorScale(cScale)
-              .containerWidth(360)
-              .containerHeight(250)
-              .transition(false),
-          );
-      }).not.toThrow();
-    });
-
-    test("should differentiate between branch and leaf nodes", () => {
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .transition(false),
-        );
+    test("should paint branch nodes white with a thicker stroke than the leaves they contain", () => {
+      renderPack(nested());
       let branchCount = 0;
       let leafCount = 0;
       svg
@@ -347,36 +293,22 @@ describe("component/pack", () => {
       expect(leafCount).toBeGreaterThan(0);
     });
 
-    test("should have proper circle positioning", () => {
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .transition(false),
-        );
-      svg
-        .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
-        .nodes()
-        .forEach((circle) => {
-          const cx = parseFloat(circle.getAttribute("cx") || "0");
-          const cy = parseFloat(circle.getAttribute("cy") || "0");
-          const r = parseFloat(circle.getAttribute("r") || "0");
-          expect(cx - r).toBeGreaterThanOrEqual(0);
-          expect(cy - r).toBeGreaterThanOrEqual(0);
-          expect(cx + r).toBeLessThanOrEqual(360);
-          expect(cy + r).toBeLessThanOrEqual(250);
-        });
+    test("should keep every circle inside the container when one is configured", () => {
+      renderPack(flat());
+      const circles = circleNodes();
+      expect(circles.length).toBeGreaterThan(0);
+      for (const circle of circles) {
+        const cx = parseFloat(circle.getAttribute("cx") || "0");
+        const cy = parseFloat(circle.getAttribute("cy") || "0");
+        const r = parseFloat(circle.getAttribute("r") || "0");
+        expect(cx - r).toBeGreaterThanOrEqual(0);
+        expect(cy - r).toBeGreaterThanOrEqual(0);
+        expect(cx + r).toBeLessThanOrEqual(360);
+        expect(cy + r).toBeLessThanOrEqual(250);
+      }
     });
 
-    test("should re-render on a group the caller does not re-bind", () => {
+    test("should re-render without throwing when the caller does not re-bind the group", () => {
       // The render binds the flattened nodes to the group for the tooltip anchors and then
       // restores the hierarchy, so the group's datum is still a root the next time round. A
       // caller holding its own group selection can re-render without re-binding; leaving the
@@ -437,28 +369,11 @@ describe("component/pack", () => {
       expect(clickHandler).toHaveBeenCalledTimes(1);
     });
 
-    test("should pass correct node data to onClick handler", () => {
+    test("should hand the handler the click event and the clicked node's laid-out data", () => {
       const clickHandler = vi.fn();
+      renderPack(nested(), (c) => c.onClick(clickHandler));
 
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .onClick(clickHandler)
-            .transition(false),
-        );
-
-      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
-      circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      circleNodes()[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
       expect(clickHandler).toHaveBeenCalledWith(
         expect.any(MouseEvent),
@@ -472,274 +387,40 @@ describe("component/pack", () => {
       );
     });
 
-    test("should pass MouseEvent to onClick handler", () => {
-      const clickHandler = vi.fn();
+    test("should show a pointer cursor on every circle when onClick is provided and none when it is not", () => {
+      const cursors = () =>
+        circleNodes().map((circle) => circle.style.cursor || circle.getAttribute("cursor"));
 
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .onClick(clickHandler)
-            .transition(false),
-        );
+      renderPack(nested(), (c) => c.onClick(vi.fn()));
+      expect(cursors().length).toBeGreaterThan(0);
+      for (const cursor of cursors()) expect(cursor).toBe("pointer");
 
-      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
-      const mouseEvent = new MouseEvent("click", {
-        bubbles: true,
-        clientX: 100,
-        clientY: 50,
-      });
-      circle.dispatchEvent(mouseEvent);
-
-      const [eventArg] = clickHandler.mock.calls[0];
-      expect(eventArg).toBeInstanceOf(MouseEvent);
-      expect(eventArg.type).toBe("click");
+      renderPack(nested());
+      expect(cursors().length).toBeGreaterThan(0);
+      for (const cursor of cursors()) expect(cursor).not.toBe("pointer");
     });
 
-    test("should show pointer cursor when onClick is provided", () => {
+    test("should report the clicked node's own place in the tree whether it is a leaf or a branch", () => {
       const clickHandler = vi.fn();
+      renderPack(nested(), (c) => c.onClick(clickHandler));
 
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .onClick(clickHandler)
-            .transition(false),
-        );
-
-      const circles = svg.selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle");
-      circles.each(function () {
-        const cursor = this.style.cursor || this.getAttribute("cursor");
-        expect(cursor).toBe("pointer");
-      });
-    });
-
-    test("should show default cursor when onClick is not provided", () => {
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .transition(false),
-        );
-
-      const circles = svg.selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle");
-      circles.each(function () {
-        const cursor = this.style.cursor || this.getAttribute("cursor");
-        expect(cursor).not.toBe("pointer");
-      });
-    });
-
-    test("should handle clicks on leaf nodes", () => {
-      const clickHandler = vi.fn();
-
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .onClick(clickHandler)
-            .transition(false),
-        );
-
-      // Find a leaf node (circle with fill color, not "white")
-      const leafCircle = svg
-        .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
-        .nodes()
-        .find((circle) => circle.getAttribute("fill") !== "white");
-
+      // Leaves carry a category colour; branches are painted white.
+      const leafCircle = circleNodes().find((circle) => circle.getAttribute("fill") !== "white");
+      const branchCircle = circleNodes().find((circle) => circle.getAttribute("fill") === "white");
       expect(leafCircle).toBeDefined();
-      if (leafCircle) {
-        leafCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-        expect(clickHandler).toHaveBeenCalledTimes(1);
-
-        const [, nodeArg] = clickHandler.mock.calls[0];
-        // Leaf nodes should not have children or have an empty children array
-        expect(!nodeArg.children || nodeArg.children.length === 0).toBe(true);
-      }
-    });
-
-    test("should handle clicks on branch nodes (category circles)", () => {
-      const clickHandler = vi.fn();
-
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .onClick(clickHandler)
-            .transition(false),
-        );
-
-      // Find a branch node (circle with fill="white")
-      const branchCircle = svg
-        .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
-        .nodes()
-        .find((circle) => circle.getAttribute("fill") === "white");
-
       expect(branchCircle).toBeDefined();
-      if (branchCircle) {
-        branchCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-        expect(clickHandler).toHaveBeenCalledTimes(1);
 
-        const [, nodeArg] = clickHandler.mock.calls[0];
-        // Branch nodes should have children
-        expect(nodeArg.children).toBeDefined();
-        expect(Array.isArray(nodeArg.children)).toBe(true);
-        expect(nodeArg.children.length).toBeGreaterThan(0);
-      }
+      leafCircle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      const [, leafNode] = clickHandler.mock.calls[0];
+      expect(!leafNode.children || leafNode.children.length === 0).toBe(true);
+
+      branchCircle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      const [, branchNode] = clickHandler.mock.calls[1];
+      expect(Array.isArray(branchNode.children)).toBe(true);
+      expect(branchNode.children.length).toBeGreaterThan(0);
     });
 
-    test("should not interfere with existing hover behavior", () => {
-      const clickHandler = vi.fn();
-
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .onClick(clickHandler)
-            .transition(false),
-        );
-
-      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
-
-      // Simulate hover
-      circle.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
-      circle.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
-
-      // Click should still work after hover
-      circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-
-      expect(clickHandler).toHaveBeenCalledTimes(1);
-    });
-
-    test("onClick should receive node with hierarchy structure", () => {
-      const clickHandler = vi.fn();
-
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .onClick(clickHandler)
-            .transition(false),
-        );
-
-      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
-      circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-
-      const [, nodeArg] = clickHandler.mock.calls[0];
-      // Node should have hierarchy data structure with traversal methods
-      expect(nodeArg).toBeDefined();
-      expect(nodeArg.data).toBeDefined();
-      expect(typeof nodeArg.ancestors).toBe("function");
-      expect(typeof nodeArg.descendants).toBe("function");
-      // Ancestors should include at least the node itself
-      expect(nodeArg.ancestors().length).toBeGreaterThanOrEqual(1);
-    });
-
-    test("should handle multiple clicks correctly", () => {
-      const clickHandler = vi.fn();
-
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .onClick(clickHandler)
-            .transition(false),
-        );
-
-      const circles = svg.selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle");
-      const firstCircle = circles.nodes()[0];
-      const secondCircle = circles.nodes()[1];
-
-      firstCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      secondCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      firstCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-
-      expect(clickHandler).toHaveBeenCalledTimes(3);
-    });
-
-    test("should support onClick getter/setter API", () => {
-      const clickHandler = vi.fn();
-      const packComponent = pack<TestDatum>()
-        .colorScale(cScale)
-        .containerWidth(360)
-        .containerHeight(250)
-        .onClick(clickHandler);
-
-      expect(packComponent.onClick()).toBe(clickHandler);
-    });
-
-    test("should work with 4-level hierarchy data", () => {
+    test("should still draw and report clicks when the tree is deep or uneven", () => {
       type DeepDatum = {
         category: string;
         subcategory: string;
@@ -772,8 +453,23 @@ describe("component/pack", () => {
         },
       ];
 
+      type UnevenDatum = {
+        category: string;
+        subcategory: string;
+        division: string | null;
+        value: number;
+      };
+
+      const unevenData: UnevenDatum[] = [
+        { category: "Technology", subcategory: "Software", division: "Frontend", value: 100 },
+        // Missing division, so this branch is one level shorter than its siblings.
+        { category: "Technology", subcategory: "Hardware", division: null, value: 80 },
+        { category: "Finance", subcategory: "Banking", division: "Retail", value: 150 },
+      ];
+
       const clickHandler = vi.fn();
 
+      // Four levels deep, every branch the same length.
       svg
         .datum(
           prepareHierarchyData<DeepDatum>()
@@ -793,48 +489,12 @@ describe("component/pack", () => {
             .transition(false),
         );
 
-      const circle = svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes()[0];
-      expect(circle).toBeDefined();
-
-      circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-
+      expect(circleNodes().length).toBeGreaterThan(0);
+      circleNodes()[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
       expect(clickHandler).toHaveBeenCalledTimes(1);
-      const [, nodeArg] = clickHandler.mock.calls[0];
-      expect(nodeArg).toBeDefined();
-      expect(nodeArg.data).toBeDefined();
-    });
+      expect(clickHandler.mock.calls[0][1].data).toBeDefined();
 
-    test("should work with uneven tree structures", () => {
-      type UnevenDatum = {
-        category: string;
-        subcategory: string;
-        division: string | null;
-        value: number;
-      };
-
-      const unevenData: UnevenDatum[] = [
-        {
-          category: "Technology",
-          subcategory: "Software",
-          division: "Frontend",
-          value: 100,
-        },
-        {
-          category: "Technology",
-          subcategory: "Hardware",
-          division: null, // Missing division
-          value: 80,
-        },
-        {
-          category: "Finance",
-          subcategory: "Banking",
-          division: "Retail",
-          value: 150,
-        },
-      ];
-
-      const clickHandler = vi.fn();
-
+      // The same again with a branch that runs out of layers early.
       svg
         .datum(
           prepareHierarchyData<UnevenDatum>()
@@ -853,51 +513,24 @@ describe("component/pack", () => {
             .transition(false),
         );
 
-      const circles = svg.selectAll<SVGCircleElement, UnevenDatum>(".sszvis-pack-circle");
-      expect(circles.size()).toBeGreaterThan(0);
-
-      // Click on multiple circles to ensure all work with uneven structure
-      const firstCircle = circles.nodes()[0];
-      const lastCircle = circles.nodes()[circles.size() - 1];
-
-      firstCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      lastCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-
-      expect(clickHandler).toHaveBeenCalledTimes(2);
+      const uneven = circleNodes();
+      expect(uneven.length).toBeGreaterThan(0);
+      uneven[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      uneven[uneven.length - 1].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(clickHandler).toHaveBeenCalledTimes(3);
+      expect(clickHandler.mock.calls[2][1].data).toBeDefined();
     });
   });
 
   describe("tooltip anchors", () => {
-    const anchorNodes = () => [
-      ...svg.selectAll<SVGRectElement, unknown>("[data-tooltip-anchor]").nodes(),
-    ];
     const anchorData = () =>
       anchorNodes().map((el) => select<SVGRectElement, PackLayout<TestDatum>>(el).datum());
-    const circleNodes = () => [
-      ...svg.selectAll<SVGCircleElement, unknown>(".sszvis-pack-circle").nodes(),
-    ];
     const keyOf = (d: PackLayout<TestDatum>) => ("key" in d.data ? d.data.key : undefined);
+    const withAnchors = (rows: TestDatum[] = data) =>
+      renderPack(nested(rows), (c) => c.minRadius(5));
 
-    const renderPack = (rows: TestDatum[], minRadius: number) =>
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(rows),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .minRadius(minRadius)
-            .transition(false),
-        );
-
-    test("should render one anchor per drawn circle, in the same order", () => {
-      renderPack(data, 5);
+    test("should render one anchor per drawn circle, in the same order and at its centre", () => {
+      withAnchors();
       const circles = circleNodes();
       expect(circles.length).toBeGreaterThan(0);
       expect(anchorNodes().length).toBe(circles.length);
@@ -906,10 +539,9 @@ describe("component/pack", () => {
         select<SVGCircleElement, PackLayout<TestDatum>>(el).datum(),
       );
       expect(anchorData().map(keyOf)).toEqual(circleData.map(keyOf));
-    });
 
-    test("should place each anchor at the centre of its own circle", () => {
-      renderPack(data, 5);
+      // Same order is not enough on its own - each anchor also has to sit on the circle it
+      // is paired with, which is what a tooltip reads.
       for (const el of anchorNodes()) {
         const d = select<SVGRectElement, PackLayout<TestDatum>>(el).datum();
         expect(el.getAttribute("transform")).toBe(`translate(${d.x},${d.y})`);
@@ -920,19 +552,16 @@ describe("component/pack", () => {
       // The tiny node's circle is below minRadius and is never drawn, so it must not
       // gain an anchor either - a tooltip bound to the anchors would otherwise point at
       // a node the reader cannot see.
-      renderPack(
-        [
-          { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
-          { category: "B", subcategory: "B1", value: 100, name: "Normal" },
-        ],
-        5,
-      );
+      withAnchors([
+        { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
+        { category: "B", subcategory: "B1", value: 100, name: "Normal" },
+      ]);
       expect(anchorNodes().length).toBe(circleNodes().length);
       expect(anchorData().map(keyOf)).not.toContain("A1");
     });
 
-    test("should not give the invisible root an anchor", () => {
-      renderPack(data, 5);
+    test("should give no anchor to the invisible root, which has no circle either", () => {
+      withAnchors();
       expect(anchorNodes().length).toBeGreaterThan(0);
       for (const d of anchorData()) {
         expect(d.data._tag).not.toBe("root");
@@ -940,15 +569,11 @@ describe("component/pack", () => {
       }
     });
 
-    test("should render no anchors for an empty data array", () => {
-      renderPack([], 5);
-      expect(anchorNodes().length).toBe(0);
-    });
-
-    test("should re-render anchors in place rather than appending duplicates", () => {
-      renderPack(data, 5);
+    test("should re-render the anchors in place rather than appending duplicates", () => {
+      withAnchors();
       const first = anchorNodes().length;
-      renderPack(data, 5);
+      expect(first).toBeGreaterThan(0);
+      withAnchors();
       expect(anchorNodes().length).toBe(first);
     });
   });
