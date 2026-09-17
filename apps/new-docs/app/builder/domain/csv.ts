@@ -224,23 +224,70 @@ const SWISS_DATE = /^\d{1,2}\.\d{1,2}\.\d{4}$/;
 /* `Number(...)` would admit "Infinity", whose comparator then returns NaN. */
 const decodeFinite = Schema.decodeUnknownOption(Schema.FiniteFromString);
 
+/** A column's values, blanks dropped - a blank says nothing about what a column holds. */
+const valuesOf = (table: Table, index: number) =>
+  table.rows.map((row) => row[index] ?? "").filter((value) => value !== "");
+
+/**
+ * Whether values could be read as a kind at all. Detection and the warning on a
+ * pin are both this question - one asked of every kind, one asked of the kind the
+ * user chose - so they answer it in the same place and cannot drift apart.
+ */
+const admits = (values: readonly string[], kind: ColumnKind): boolean => {
+  switch (kind) {
+    /* Any value can serve as a label, so nothing ever fails to be nominal. */
+    case "nominal":
+      return true;
+    case "temporal":
+      return values.every((value) => SWISS_DATE.test(value));
+    case "continuous":
+      return values.every((value) => Option.isSome(decodeFinite(value)));
+  }
+};
+
 /** What each column looks like from its values alone, before anyone overrules it. */
 export const detectedKinds = (table: Table): ReadonlyMap<string, ColumnKind> => {
   const kinds = new Map<string, ColumnKind>();
   for (const [index, column] of table.columns.entries()) {
-    const values = table.rows.map((row) => row[index] ?? "").filter((value) => value !== "");
-    if (values.length === 0) {
-      kinds.set(column, "nominal");
-    } else if (values.every((value) => SWISS_DATE.test(value))) {
-      kinds.set(column, "temporal");
-    } else if (values.every((value) => Option.isSome(decodeFinite(value)))) {
-      kinds.set(column, "continuous");
-    } else {
-      kinds.set(column, "nominal");
-    }
+    const values = valuesOf(table, index);
+    /* The most particular reading the values bear. An empty column bears all three,
+       and is read as labels rather than being called a date on no evidence. */
+    const kind: ColumnKind =
+      values.length === 0
+        ? "nominal"
+        : admits(values, "temporal")
+          ? "temporal"
+          : admits(values, "continuous")
+            ? "continuous"
+            : "nominal";
+    kinds.set(column, kind);
   }
   return kinds;
 };
+
+/**
+ * The pinned columns whose values will not bear the pin - a column called a number
+ * that holds words, or called a date that holds anything but `dd.mm.yyyy`.
+ *
+ * The pin stands: it is what the user said, and overruling it silently would fight
+ * the editing. But a chart reading that column drops the rows it cannot parse, and
+ * a chart that draws nothing is worth a word of warning first.
+ */
+export const unsupportedPins = (table: Table, kinds: ColumnKinds): ReadonlySet<string> => {
+  const unsupported = new Set<string>();
+  for (const [index, column] of table.columns.entries()) {
+    const pinned = kinds[column];
+    if (pinned !== undefined && !admits(valuesOf(table, index), pinned)) unsupported.add(column);
+  }
+  return unsupported;
+};
+
+/* The three in a fixed round, so the control is one button: a click moves on by one. */
+const CYCLE = ["nominal", "continuous", "temporal"] as const;
+
+/** The kind a click moves a column to. */
+export const nextKind = (kind: ColumnKind): ColumnKind =>
+  CYCLE[(CYCLE.indexOf(kind) + 1) % CYCLE.length] ?? "nominal";
 
 /**
  * What each column holds, the user's pins laid over what the values say. A pin

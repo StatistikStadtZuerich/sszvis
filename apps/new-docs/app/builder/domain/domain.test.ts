@@ -6,8 +6,10 @@ import { compile } from "./compile";
 import {
   addedName,
   columnKinds,
+  nextKind,
   renameKind,
   settleColumn,
+  unsupportedPins,
   detectDelimiter,
   parse,
   parseBlock,
@@ -459,6 +461,29 @@ describe("pinned column kinds", () => {
     const columns = [ColumnName.make("Spalte 2")];
     expect(addedName(columns)).toBe("Spalte 2 2");
     expect(addedName([...columns, addedName(columns)])).toBe("Spalte 3");
+  });
+
+  test("should move on by one and come back round when a column's kind is clicked", () => {
+    expect(nextKind("nominal")).toBe("continuous");
+    expect(nextKind("continuous")).toBe("temporal");
+    expect(nextKind("temporal")).toBe("nominal");
+  });
+
+  test("should report a pin the column's values will not bear", () => {
+    const table = parse("Wort,Zahl,Datum\nx,1,01.02.2020");
+    /* Any value can serve as a label, so a column called text never disagrees. */
+    expect(unsupportedPins(table, pin("Wort", "nominal"))).toEqual(new Set());
+    expect(unsupportedPins(table, pin("Wort", "continuous"))).toEqual(new Set(["Wort"]));
+    expect(unsupportedPins(table, pin("Zahl", "temporal"))).toEqual(new Set(["Zahl"]));
+    /* The values bear it, so pinning what was detected anyway says nothing. */
+    expect(unsupportedPins(table, pin("Datum", "temporal"))).toEqual(new Set());
+    /* A column of dates reads as text quite happily. */
+    expect(unsupportedPins(table, pin("Datum", "nominal"))).toEqual(new Set());
+  });
+
+  test("should hold nothing against a column with no values to disagree with", () => {
+    const table = parse("Leer\n\n");
+    expect(unsupportedPins(table, pin("Leer", "temporal"))).toEqual(new Set());
   });
 
   test("should keep a pin under the column's new name when it is renamed", () => {
