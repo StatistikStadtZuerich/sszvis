@@ -51,23 +51,42 @@ const EXPECTED: Readonly<Record<string, { readonly marks: string; readonly count
   "line-chart": { marks: "path.sszvis-line", count: 2 },
 };
 
+/** How long to let a chart finish drawing before reading it. */
+const PAINT_TIMEOUT_MS = 5000;
+
+const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+
 /**
- * Waits for the app's render loop to have painted.
+ * Waits until the chart has drawn the marks it is going to draw.
  *
- * `sszvis.app` renders on an animation frame, and its `init` awaits a fetch first, so a
- * test that asserts straight after mounting sees an empty container every time. A
- * macrotask lets the fetch settle; two frames after it is the first tick at which marks
- * exist.
+ * `sszvis.app` renders on an animation frame and its `init` awaits a fetch first, so a
+ * test that reads the container straight after mounting sees it empty. Waiting a fixed
+ * number of frames is what this did first, and it failed about one run in seven on a
+ * loaded machine - a wait long enough on an idle laptop is not long enough beside a
+ * type-check, and a flaky harness is worse than none.
+ *
+ * So it waits for the count to reach `expected` and then settle for a frame, rather than
+ * for a duration. A chart that draws the wrong number still fails, by timing out and
+ * asserting whatever it did draw.
  */
-const painted = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  await new Promise((resolve) => {
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve(undefined)));
-  });
+const painted = async (container: HTMLElement, marks: string, expected: number) => {
+  const deadline = Date.now() + PAINT_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    await frame();
+    if (container.querySelectorAll(marks).length >= expected) {
+      /* One more frame, so a count still being appended to is read whole. */
+      await frame();
+      return;
+    }
+  }
 };
 
 /** Runs a recipe's emitted chart in a container of its own and hands back that container. */
-const draw = async (recipe: Recipe, spec: Spec): Promise<HTMLElement> => {
+const draw = async (
+  recipe: Recipe,
+  spec: Spec,
+  expected: { readonly marks: string; readonly count: number },
+): Promise<HTMLElement> => {
   const ts = Effect.runSync(compile(recipe, spec));
   const js = tsBlankSpace(ts);
 
@@ -84,7 +103,7 @@ const draw = async (recipe: Recipe, spec: Spec): Promise<HTMLElement> => {
    */
   new Function("d3", "sszvis", "config", js)(d3, sszvis, config);
 
-  await painted();
+  await painted(container, expected.marks, expected.count);
   return container;
 };
 
@@ -99,7 +118,7 @@ describe("generated charts", () => {
       expect(expected, `no expected mark count for the recipe "${recipe.key}"`).toBeDefined();
       if (expected === undefined) return;
 
-      const container = await draw(recipe, initialSpec(summarize(recipe)));
+      const container = await draw(recipe, initialSpec(summarize(recipe)), expected);
 
       const marks = [...container.querySelectorAll<SVGGraphicsElement>(expected.marks)];
       expect(marks).toHaveLength(expected.count);
