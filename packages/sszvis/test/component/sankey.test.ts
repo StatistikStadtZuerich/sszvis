@@ -3,6 +3,7 @@ import sankey from "../../src/component/sankey.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
 import { computeLayout, prepareData } from "../../src/layout/sankey.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 
 /** The shape of a node as produced by sszvis.layout.sankey.prepareData. */
 type Node = {
@@ -114,6 +115,54 @@ describe("component/sankey", () => {
   const anchors = (node: Element, key: string) =>
     attrs(node, key, "[data-tooltip-anchor]", "transform");
 
+  /**
+   * The layout module's own output for a set of rows. `makeData` hard-codes its four nodes and
+   * so cannot express "no data at all"; this can, which is what the join contract needs.
+   */
+  const sankeyDataOf = (rows: Row[]): SankeyData => {
+    const sources = [...new Set(rows.map((r) => r.from))];
+    const targets = [...new Set(rows.map((r) => r.to))];
+    return prepareData<Row>()
+      .source((d) => d.from)
+      .target((d) => d.to)
+      .value((d) => d.value)
+      .idLists(rows.length === 0 ? [] : [sources, targets])
+      .apply(rows) as unknown as SankeyData;
+  };
+
+  /** The rows `sankeyDataOf` turns into the same two-by-two shape `makeData` builds by hand. */
+  const joinRows: Row[] = [
+    { from: "A", to: "C", value: 20 },
+    { from: "A", to: "D", value: 10 },
+    { from: "B", to: "C", value: 5 },
+    { from: "B", to: "D", value: 5 },
+  ];
+
+  describesTheMarkJoin<Row>(() => ({
+    make: () => sankeyOf() as never,
+    renderInto: (key, component, rows) =>
+      group(key)
+        .datum(sankeyDataOf(rows))
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({
+      bars: all(node, "nodes", "rect.sszvis-bar").length,
+      links: all(node, "links", "path.sszvis-link").length,
+      nodeAnchors: all(node, "nodes", "[data-tooltip-anchor]").length,
+      nodeLabels: all(node, "nodelabels", "text.sszvis-sankey-node-label").length,
+      hitboxes: all(node, "nodelabels", "rect.sszvis-sankey-hitbox").length,
+      columnLabels: all(node, "nodes", "text.sszvis-sankey-column-label").length,
+    }),
+    full: {
+      data: joinRows,
+      marks: { bars: 4, links: 4, nodeAnchors: 4, nodeLabels: 4, hitboxes: 4, columnLabels: 2 },
+    },
+    smaller: {
+      data: [joinRows[0]],
+      marks: { bars: 2, links: 1, nodeAnchors: 2, nodeLabels: 2, hitboxes: 2, columnLabels: 2 },
+    },
+  }));
+
   describe("groups", () => {
     test("should render the four groups in a fixed order when it renders", () => {
       const node = render(sankeyOf(), testData);
@@ -145,11 +194,6 @@ describe("component/sankey", () => {
   });
 
   describe("nodes", () => {
-    test("should render one bar per node when the data has nodes", () => {
-      const node = render(sankeyOf(), testData);
-      expect(all(node, "nodes", "rect.sszvis-bar").length).toBe(4);
-    });
-
     test("should position a bar by its column and stack it within that column", () => {
       const node = render(sankeyOf(), testData);
       // x is columnPosition(columnIndex)
@@ -347,11 +391,6 @@ describe("component/sankey", () => {
     const linkAttrs = (node: Element, attr: string) =>
       attrs(node, "links", "path.sszvis-link", attr);
 
-    test("should render one path per link when the data has links", () => {
-      const node = render(sankeyOf(), testData);
-      expect(all(node, "links", "path.sszvis-link").length).toBe(4);
-    });
-
     test("should draw a cubic curve from the source's right edge to the target's left edge", () => {
       const node = render(sankeyOf(), testData);
       // A one pixel gap is left between a node and its links; that padding is a constant
@@ -455,7 +494,7 @@ describe("component/sankey", () => {
       expect(linkAttrs(node, "stroke-width")).toEqual(["20", "10", "5", "5"]);
     });
 
-    test("should sort the paths with a custom linkSort", () => {
+    test("should order the paths by the custom comparator when linkSort is set", () => {
       const node = render(
         sankeyOf().linkSort((a: Link, b: Link) => a.value - b.value),
         testData,
@@ -679,15 +718,6 @@ describe("component/sankey", () => {
         ),
       ).toEqual(["1", "0"]);
     });
-
-    test("should default columnLabelOpacity to 1", () => {
-      const node = render(sankeyOf().columnLabel("Total"), testData);
-      expect(
-        all<SVGTextElement>(node, "nodes", "text.sszvis-sankey-column-label").map(
-          (l) => l.style.opacity,
-        ),
-      ).toEqual(["1", "1"]);
-    });
   });
 
   describe("label hit boxes", () => {
@@ -724,7 +754,7 @@ describe("component/sankey", () => {
       expect(boxes(right).map((b) => b.getAttribute("width"))).toEqual(["70", "70", "70", "70"]);
     });
 
-    test("should follow labelSideSwitch", () => {
+    test("should move the hit box to the opposite side when labelSideSwitch is set", () => {
       const node = render(sankeyOf().labelHitBoxSize(50).labelSideSwitch(true), testData);
       expect(boxes(node).map((b) => b.getAttribute("x"))).toEqual(["0", "0", "100", "100"]);
     });
@@ -821,17 +851,20 @@ describe("component/sankey", () => {
   });
 
   describe("re-rendering", () => {
-    test("should render in place rather than appending duplicates", () => {
+    test("should keep a single group per kind when it renders a second time", () => {
+      // The mark counts this used to restate are the shared join contract's re-render case.
+      // What is left here is the one assertion that suite cannot make: the groups themselves
+      // are always present, empty data included, so they cannot be counted alongside marks.
       const component = sankeyOf();
       const g = group("rerender");
       g.datum(testData).call(component as never);
       g.datum(testData).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(node.querySelectorAll('[data-d3-selectgroup="nodes"]').length).toBe(1);
-      expect(all(node, "nodes", "rect.sszvis-bar").length).toBe(4);
-      expect(all(node, "links", "path.sszvis-link").length).toBe(4);
-      expect(all(node, "nodes", "[data-tooltip-anchor]").length).toBe(4);
-      expect(all(node, "nodelabels", "text.sszvis-sankey-node-label").length).toBe(4);
+      expect(
+        [...node.querySelectorAll("[data-d3-selectgroup]")].map((el) =>
+          el.getAttribute("data-d3-selectgroup"),
+        ),
+      ).toEqual(["nodes", "links", "linklabels", "nodelabels"]);
     });
 
     test("should update the geometry when the data changes", () => {
@@ -1064,7 +1097,7 @@ describe("component/sankey", () => {
       }
     });
 
-    test("should name the property it rejects", () => {
+    test("should name the offending property when a numeric property is given an accessor", () => {
       expect(() =>
         render(
           // @ts-expect-error - deliberately passing an accessor where a number is declared

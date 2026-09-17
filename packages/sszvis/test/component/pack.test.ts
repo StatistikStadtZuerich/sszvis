@@ -7,6 +7,7 @@ import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
 import { type NodeDatum, prepareHierarchyData } from "../../src/layout/hierarchy.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 
 // Test data structures
 type TestDatum = {
@@ -21,6 +22,46 @@ describe("component/pack", () => {
   let svg: LayerSelection<SVGGElement, number>;
   let data: TestDatum[];
   let cScale: (key: string) => string;
+
+  /** The rows every case starts from. A factory, so no test can mutate another's data. */
+  const makeData = (): TestDatum[] => [
+    {
+      category: "Technology",
+      subcategory: "Software",
+      value: 100,
+      name: "App A",
+    },
+    {
+      category: "Technology",
+      subcategory: "Software",
+      value: 80,
+      name: "App B",
+    },
+    {
+      category: "Technology",
+      subcategory: "Hardware",
+      value: 150,
+      name: "Device A",
+    },
+    {
+      category: "Finance",
+      subcategory: "Banking",
+      value: 200,
+      name: "Bank A",
+    },
+    {
+      category: "Finance",
+      subcategory: "Investment",
+      value: 90,
+      name: "Fund A",
+    },
+    {
+      category: "Healthcare",
+      subcategory: "Pharma",
+      value: 120,
+      name: "Drug A",
+    },
+  ];
 
   beforeEach(() => {
     container = document.createElement("div");
@@ -41,45 +82,7 @@ describe("component/pack", () => {
       }),
     );
 
-    // Sample hierarchical data
-    data = [
-      {
-        category: "Technology",
-        subcategory: "Software",
-        value: 100,
-        name: "App A",
-      },
-      {
-        category: "Technology",
-        subcategory: "Software",
-        value: 80,
-        name: "App B",
-      },
-      {
-        category: "Technology",
-        subcategory: "Hardware",
-        value: 150,
-        name: "Device A",
-      },
-      {
-        category: "Finance",
-        subcategory: "Banking",
-        value: 200,
-        name: "Bank A",
-      },
-      {
-        category: "Finance",
-        subcategory: "Investment",
-        value: 90,
-        name: "Fund A",
-      },
-      {
-        category: "Healthcare",
-        subcategory: "Pharma",
-        value: 120,
-        name: "Drug A",
-      },
-    ];
+    data = makeData();
 
     cScale = scaleOrdinal<string, string>()
       .domain(["Technology", "Finance", "Healthcare"])
@@ -141,6 +144,37 @@ describe("component/pack", () => {
     ...svg.selectAll<SVGRectElement, unknown>("[data-tooltip-anchor]").nodes(),
   ];
 
+  /**
+   * A layer of its own, keyed, so the join contract can render twice into the same layer and
+   * once into a fresh one. `beforeEach` builds a single unkeyed layer, which cannot express that.
+   */
+  const layer = (key: string) =>
+    createSvgLayer(
+      container,
+      bounds({ width: 400, height: 300, top: 20, right: 20, bottom: 30, left: 40 }),
+      { key },
+    );
+
+  describesTheMarkJoin<TestDatum>(() => ({
+    make: () =>
+      pack<TestDatum>()
+        .colorScale(cScale)
+        .containerWidth(360)
+        .containerHeight(250)
+        .transition(false) as never,
+    renderInto: (key, component, rows) =>
+      layer(key)
+        .datum(nested(rows))
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({
+      circles: node.querySelectorAll(".sszvis-pack-circle").length,
+      anchors: node.querySelectorAll("[data-tooltip-anchor]").length,
+    }),
+    full: { data: makeData(), marks: { circles: 13, anchors: 13 } },
+    smaller: { data: makeData().slice(0, 3), marks: { circles: 5, anchors: 5 } },
+  }));
+
   describe("pack component", () => {
     test("should report the documented defaults when nothing has been configured", () => {
       const packComponent = pack<TestDatum>();
@@ -182,7 +216,7 @@ describe("component/pack", () => {
       expect(strokes(() => "#ff0000")).toEqual(constant);
     });
 
-    test("should fill every leaf with the colour of its own top-level category", () => {
+    test("should fill every leaf with the colour of its own top-level category when the rows span several categories", () => {
       // Each expected fill is derived from the source row's category rather than from the
       // component's own colorKeyOf, so this fails when the scale is applied to the wrong
       // node even though every fill is still a legitimate palette colour. The test this
@@ -263,34 +297,19 @@ describe("component/pack", () => {
       }
     });
 
-    test("should draw nothing at all, without throwing, when the data is empty", () => {
-      expect(() => renderPack(flat([]))).not.toThrow();
-      expect(circleNodes()).toEqual([]);
-      expect(anchorNodes()).toEqual([]);
-    });
-
-    test("should paint branch nodes white with a thicker stroke than the leaves they contain", () => {
-      renderPack(nested());
-      let branchCount = 0;
-      let leafCount = 0;
-      svg
-        .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
-        .nodes()
-        .forEach((circle) => {
-          const fill = circle.getAttribute("fill");
-          const strokeWidth = circle.getAttribute("stroke-width");
-
-          if (fill === "white") {
-            branchCount++;
-            expect(strokeWidth).toBe("2"); // Branch nodes have thicker stroke
-          } else {
-            leafCount++;
-            // Leaf nodes can have stroke-width of 1 or 2 depending on hierarchy
-            expect(["1", "2"].includes(strokeWidth || "")).toBe(true);
-          }
-        });
-      expect(branchCount).toBeGreaterThan(0);
-      expect(leafCount).toBeGreaterThan(0);
+    test("should stroke every branch at 2 and every leaf at circleStrokeWidth when one is set", () => {
+      // The rule is `d.children ? 2 : props.circleStrokeWidth`, so the branch width is a
+      // constant and the leaf width is the configured one. Setting circleStrokeWidth to a
+      // third value separates the two: the previous version of this test accepted "1" or "2"
+      // for a leaf, which no change to the rule could have failed.
+      renderPack(nested(), (c) => c.circleStrokeWidth(3));
+      const widths = circleNodes().map((circle) => ({
+        branch: circle.getAttribute("fill") === "white",
+        width: circle.getAttribute("stroke-width"),
+      }));
+      expect(widths.filter((c) => c.branch).length).toBeGreaterThan(0);
+      expect(widths.filter((c) => !c.branch).length).toBeGreaterThan(0);
+      for (const { branch, width } of widths) expect(width).toBe(branch ? "2" : "3");
     });
 
     test("should keep every circle inside the container when one is configured", () => {
@@ -369,7 +388,7 @@ describe("component/pack", () => {
       expect(clickHandler).toHaveBeenCalledTimes(1);
     });
 
-    test("should hand the handler the click event and the clicked node's laid-out data", () => {
+    test("should hand the handler the click event and the clicked node's laid-out data when a circle is clicked", () => {
       const clickHandler = vi.fn();
       renderPack(nested(), (c) => c.onClick(clickHandler));
 
@@ -568,18 +587,10 @@ describe("component/pack", () => {
         expect(keyOf(d)).toBeDefined();
       }
     });
-
-    test("should re-render the anchors in place rather than appending duplicates", () => {
-      withAnchors();
-      const first = anchorNodes().length;
-      expect(first).toBeGreaterThan(0);
-      withAnchors();
-      expect(anchorNodes().length).toBe(first);
-    });
   });
 
   describe("label contrast", () => {
-    test("should compute every label's colour from the fill on its own circle", () => {
+    test("should give a label the contrast colour of its own circle when showLabels is on", () => {
       // The fill and the contrast source are one expression, so they cannot drift apart:
       // whatever a node's circle is painted, its label is legible against that. There is
       // no failing case at master - branch nodes are never labelled - so this pins the

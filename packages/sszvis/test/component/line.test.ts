@@ -295,7 +295,7 @@ describe("component/line", () => {
   });
 
   describe("stroke and strokeWidth", () => {
-    test("should apply a constant stroke to every line", () => {
+    test("should stroke every line the same when stroke is a constant", () => {
       // Note that stroke and strokeWidth are written as inline styles here, where bar and
       // dot write fill and stroke as attributes. An inline style outranks a stylesheet
       // rule, so a theme can restyle a bar but never a line.
@@ -303,7 +303,7 @@ describe("component/line", () => {
       expect(styles(node, "stroke")).toEqual(["rgb(255, 0, 0)", "rgb(255, 0, 0)"]);
     });
 
-    test("should apply a stroke derived from the line's own data", () => {
+    test("should stroke each line from its own data when stroke is an accessor", () => {
       const node = render(
         lineOf().stroke((d: Point[]) => (d[0].y === 0 ? "#f00" : "#00f")),
         twoLines,
