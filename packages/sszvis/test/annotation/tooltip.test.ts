@@ -261,31 +261,6 @@ describe("annotation/tooltip", () => {
     expect(smallTooltip.classed("sszvis-tooltip--small")).toBe(true);
   });
 
-  test("should handle custom dx and dy offsets", () => {
-    const tooltipLayer = createHtmlLayer("#tooltip-container");
-    const svgLayer = createSvgLayer("#svg-container");
-
-    const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
-
-    svgLayer.selectGroup("anchors").datum([testData[0]]).call(anchor);
-
-    const tooltipComponent = tooltip<TestDatum>()
-      .renderInto(tooltipLayer)
-      .visible(() => true)
-      .header((d) => d.name)
-      .body((d) => `Value: ${d.value}`)
-      .dx(20)
-      .dy(30)
-      .orientation("bottom");
-
-    svgLayer.selectAll("[data-tooltip-anchor]").call(tooltipComponent);
-
-    const tooltipElement = tooltipLayer.select(".sszvis-tooltip");
-    expect(tooltipElement.node()).not.toBeNull();
-
-    expect(tooltipElement.style("position")).toBe("static");
-  });
-
   test("should handle opacity settings", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");

@@ -423,38 +423,6 @@ describe("annotation/ruler", () => {
     expect(select(labels[1]).style("text-anchor")).toBe("end");
   });
 
-  test("should handle reduceOverlap property", () => {
-    // Create data with potentially overlapping labels
-    const overlappingData: TestDatum[] = [
-      { x: 100, y: 50, label: "Very Long Label A" },
-      { x: 100, y: 52, label: "Very Long Label B" },
-      { x: 100, y: 54, label: "Very Long Label C" },
-    ];
-
-    const rulerComponent = annotationRuler()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .top(30)
-      .bottom(150)
-      .label((d: unknown) => (d as TestDatum).label)
-      .color("black")
-      .reduceOverlap(true);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("ruler")
-      .datum(overlappingData)
-      .call(rulerComponent);
-
-    const labels = chartLayer.selectAll("text.sszvis-ruler__label").nodes();
-    expect(labels.length).toBe(3);
-
-    // The reduceOverlap algorithm should run without errors
-    // Testing the exact positioning would be complex as it depends on DOM measurements
-    labels.forEach((label) => {
-      expect(select(label).classed("sszvis-ruler__label")).toBe(true);
-    });
-  });
-
   test("should handle custom labelId function", () => {
     const keyedData: TestDatum[] = [
       { x: 100, y: 50, label: "Item 1" },

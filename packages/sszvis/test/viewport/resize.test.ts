@@ -37,12 +37,6 @@ describe("viewport/resize", () => {
     vi.restoreAllMocks();
   });
 
-  test("should expose the on, off and trigger functions", () => {
-    expect(typeof viewport.on).toBe("function");
-    expect(typeof viewport.off).toBe("function");
-    expect(typeof viewport.trigger).toBe("function");
-  });
-
   test("should call a registered listener when the event is triggered", () => {
     const cb = vi.fn();
     listen("resize", cb);

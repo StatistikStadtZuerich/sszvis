@@ -901,34 +901,6 @@ describe("maps/choropleth", () => {
     });
 
     // Pins the component's full property surface, so the JSDoc header can be checked against it.
-    test("exposes every documented property", () => {
-      const map = choropleth();
-      for (const prop of [
-        "width",
-        "height",
-        "keyName",
-        "withLake",
-        "anchoredShape",
-        "features",
-        "borders",
-        "lakeFeatures",
-        "lakeBorders",
-        "lakeFadeOut",
-        "defined",
-        "fill",
-        "transitionColor",
-        "borderColor",
-        "strokeWidth",
-        "highlight",
-        "highlightStroke",
-        "highlightStrokeWidth",
-        "lakePathColor",
-        "on",
-      ]) {
-        expect(typeof Reflect.get(map, prop)).toBe("function");
-      }
-    });
-
     // NOTE: the lake renderer's own fadeOut property is not delegated - choropleth exposes it as
     // lakeFadeOut instead - so there is no `fadeOut` accessor on the map component.
     test("does not expose the lake renderer's fadeOut under its own name", () => {

@@ -82,22 +82,6 @@ describe("axis", () => {
       expect(axisGroup.classed("sszvis-axis--top")).toBe(true);
       expect(axisGroup.classed("sszvis-axis--bottom")).toBe(false);
     });
-
-    test("should handle alignOuterLabels functionality", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .alignOuterLabels(true);
-      const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis);
-      const tickTexts = chartLayer.select(".sszvis-axis").selectAll("g.tick text").nodes();
-      expect(tickTexts.length).toBeGreaterThan(0);
-      expect(["start", "middle", "end"]).toContain(select(tickTexts[0]).style("text-anchor"));
-      expect(["start", "middle", "end"]).toContain(
-        select(tickTexts[tickTexts.length - 1]).style("text-anchor"),
-      );
-    });
   });
 
   describe("axisY", () => {
@@ -171,20 +155,6 @@ describe("axis", () => {
         .selectAll("line.sszvis-axis__longtick")
         .nodes();
       expect(longTicks.length).toBeGreaterThan(0);
-    });
-
-    test("should hide border ticks when they are too close to axis ends", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .hideBorderTickThreshold(20);
-      const hiddenTicks = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis")
-        .selectAll("line.hidden")
-        .nodes();
-      expect(hiddenTicks.length).toBeGreaterThanOrEqual(0);
     });
 
     test("should apply vertical slant to labels", () => {

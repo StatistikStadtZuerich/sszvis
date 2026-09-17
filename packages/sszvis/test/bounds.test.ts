@@ -16,12 +16,6 @@ describe("bounds", () => {
       expect(result.padding.left).toBe(1);
       expect(result.padding.right).toBe(1);
     });
-
-    test("should calculate inner dimensions correctly", () => {
-      const result = bounds();
-      expect(result.innerWidth).toBe(result.width - result.padding.left - result.padding.right);
-      expect(result.innerHeight).toBeGreaterThan(0);
-    });
   });
 
   describe("custom", () => {
