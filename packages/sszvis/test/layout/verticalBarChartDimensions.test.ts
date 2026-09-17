@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import dimensionsVerticalBarChart from "../../src/layout/verticalBarChartDimensions.js";
+import { describesTheLayoutContract } from "../support/layoutConformance.js";
 
 // The layout uses a target ratio of 0.7 bar to 0.3 padding, then clamps the bar
 // width to 48px and the padding to [2, 100].
@@ -25,7 +26,7 @@ describe("verticalBarChartDimensions", () => {
       expect(dim.totalWidth).toBe(200);
     });
 
-    test("should scale linearly with the available width", () => {
+    test("should scale the bar width linearly when the available width grows and nothing is clamped", () => {
       const small = dimensionsVerticalBarChart(100, 12);
       const large = dimensionsVerticalBarChart(200, 12);
       expect(large.barWidth).toBeCloseTo(small.barWidth * 2, 9);
@@ -40,7 +41,7 @@ describe("verticalBarChartDimensions", () => {
   });
 
   describe("bar width clamping", () => {
-    test("should cap the bar width at 48px and redistribute the slack into the padding", () => {
+    test("should cap the bar width at 48px and redistribute the slack when the bars would be wider", () => {
       const dim = dimensionsVerticalBarChart(800, 10);
       expect(dim.barWidth).toBe(MAX_BAR_WIDTH);
       // padding = (width - barWidth * numBars) / numPads
@@ -121,41 +122,39 @@ describe("verticalBarChartDimensions", () => {
     });
   });
 
-  describe("degenerate inputs", () => {
-    test("should report no dimensions but echo the width when there are no bars", () => {
-      const dim = dimensionsVerticalBarChart(500, 0);
-      expect(dim).toEqual({
-        barWidth: 0,
-        padWidth: 0,
-        padRatio: 0,
-        outerRatio: 0,
-        barGroupWidth: 0,
-        // the requested width is still reported back
-        totalWidth: 500,
-      });
-    });
-
-    test("should report no dimensions when the width is zero", () => {
-      // a container measured before its first paint reports a width of 0
-      const dim = dimensionsVerticalBarChart(0, 10);
-      expect(dim).toEqual({
-        barWidth: 0,
-        padWidth: 0,
-        padRatio: 0,
-        outerRatio: 0,
-        barGroupWidth: 0,
-        totalWidth: 0,
-      });
-    });
-
-    test("should throw when the width is negative", () => {
-      expect(() => dimensionsVerticalBarChart(-200, 10)).toThrow(/width/);
-    });
-
-    test("should throw when the bar count is not a whole number of bars", () => {
-      expect(() => dimensionsVerticalBarChart(500, -3)).toThrow(/numBars/);
-      expect(() => dimensionsVerticalBarChart(500, 2.5)).toThrow(/numBars/);
-    });
+  describesTheLayoutContract({
+    layoutName: "dimensionsVerticalBarChart",
+    slots: [
+      { name: "width", kind: "size", callWith: (bad) => dimensionsVerticalBarChart(bad, 10) },
+      { name: "numBars", kind: "count", callWith: (bad) => dimensionsVerticalBarChart(500, bad) },
+    ],
+    zeroed: [
+      {
+        when: "there are no bars, though the requested width is still reported back",
+        call: () => dimensionsVerticalBarChart(500, 0),
+        expected: {
+          barWidth: 0,
+          padWidth: 0,
+          padRatio: 0,
+          outerRatio: 0,
+          barGroupWidth: 0,
+          totalWidth: 500,
+        },
+      },
+      {
+        // a container measured before its first paint reports a width of 0
+        when: "the width is zero",
+        call: () => dimensionsVerticalBarChart(0, 10),
+        expected: {
+          barWidth: 0,
+          padWidth: 0,
+          padRatio: 0,
+          outerRatio: 0,
+          barGroupWidth: 0,
+          totalWidth: 0,
+        },
+      },
+    ],
   });
 
   describe("known quirks", () => {

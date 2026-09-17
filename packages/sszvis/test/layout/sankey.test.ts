@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { computeLayout, prepareData } from "../../src/layout/sankey.js";
+import { describesTheLayoutContract } from "../support/layoutConformance.js";
 
 type Row = { from: string; to: string; value: number };
 
@@ -31,7 +32,7 @@ describe("layout/sankey", () => {
       expect(nodes.map((n) => n.id).sort()).toEqual(["a", "b", "c", "d"]);
     });
 
-    test("should give each node the value of its heavier side", () => {
+    test("should give a node the value of its heavier side when its in- and outflow differ", () => {
       const { nodes } = prepare();
       // a sources 10 + 5 and targets nothing
       expect(byId(nodes, "a")?.value).toBe(15);
@@ -117,7 +118,7 @@ describe("layout/sankey", () => {
       warn.mockRestore();
     });
 
-    test("should drop several invalid links without crashing the value sort", () => {
+    test("should drop the invalid links without crashing the value sort when several are unresolvable", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const prepared = prepare(
         [
@@ -190,7 +191,7 @@ describe("layout/sankey", () => {
       expect(layout().nodePadding).toBe(50);
     });
 
-    test("should clamp the node padding to [12, 50]", () => {
+    test("should clamp the node padding to [12, 50] when the computed gap falls outside it", () => {
       // a tall column of many nodes: 400 * 0.15 / 19 = 3.2, floored at 12
       expect(computeLayout([20, 20], [18, 18], 400, 600).nodePadding).toBe(12);
       // a short chart with two nodes: 100 * 0.15 / 1 = 15
@@ -245,7 +246,7 @@ describe("layout/sankey", () => {
       expect(one.valueRange[1]).toBe(400);
     });
 
-    test("should leave a one-node column out of the padding minimum", () => {
+    test("should leave a column out of the padding minimum when it holds a single node", () => {
       // it has no gap of its own, so it must not charge one to the columns that do
       const mixed = computeLayout([1, 2], [18, 18], 400, 600);
       const alone = computeLayout([2, 2], [18, 18], 400, 600);
@@ -259,6 +260,43 @@ describe("layout/sankey", () => {
       const oneNode = computeLayout([1, 1], [18, 18], 400, 600);
       expect(oneNode.columnRange).toEqual([0, 600 - 20]);
     });
+  });
+
+  describesTheLayoutContract({
+    layoutName: "sankeyLayout",
+    slots: [
+      {
+        name: "columnHeight",
+        kind: "size",
+        callWith: (bad) => computeLayout([2, 2], [18, 18], bad, 600),
+      },
+      {
+        name: "columnWidth",
+        kind: "size",
+        callWith: (bad) => computeLayout([2, 2], [18, 18], 400, bad),
+      },
+      {
+        name: "columnLengths",
+        kind: "count",
+        callWith: (bad) => computeLayout([2, bad], [18, 18], 400, 600),
+      },
+    ],
+    zeroed: [
+      {
+        when: "the diagram has no columns",
+        call: () => computeLayout([], [], 400, 600),
+        expected: {
+          valuePadding: 0,
+          nodePadding: 0,
+          columnPaddings: [],
+          valueDomain: [0, 0],
+          valueRange: [0, 0],
+          nodeThickness: 20,
+          columnDomain: [0, 1],
+          columnRange: [0, 0],
+        },
+      },
+    ],
   });
 
   describe("degenerate layouts", () => {
@@ -276,19 +314,6 @@ describe("layout/sankey", () => {
       expect(partial.valueRange).toEqual(computeLayout([2, 2], [18, 18], 400, 600).valueRange);
     });
 
-    test("should zero the layout when the diagram has no columns", () => {
-      expect(computeLayout([], [], 400, 600)).toEqual({
-        valuePadding: 0,
-        nodePadding: 0,
-        columnPaddings: [],
-        valueDomain: [0, 0],
-        valueRange: [0, 0],
-        nodeThickness: 20,
-        columnDomain: [0, 1],
-        columnRange: [0, 0],
-      });
-    });
-
     test("should zero the value range when the diagram has no room", () => {
       expect(computeLayout([2, 2], [18, 18], 0, 600).valueRange).toEqual([0, 0]);
       expect(computeLayout([2, 2], [18, 18], 400, 0).valueRange).toEqual([0, 0]);
@@ -300,16 +325,6 @@ describe("layout/sankey", () => {
       // container that has no room for either.
       expect(computeLayout([2, 2], [18, 18], 400, 0).columnRange).toEqual([0, 0]);
       expect(computeLayout([2, 2], [18, 18], 0, 600).columnRange).toEqual([0, 0]);
-    });
-
-    test("should throw when the height or the width is negative", () => {
-      expect(() => computeLayout([2, 2], [18, 18], -400, 600)).toThrow(/columnHeight/);
-      expect(() => computeLayout([2, 2], [18, 18], 400, -600)).toThrow(/columnWidth/);
-    });
-
-    test("should throw when a column length is not a whole number of nodes", () => {
-      expect(() => computeLayout([2, 2.5], [18, 18], 400, 600)).toThrow(/columnLengths/);
-      expect(() => computeLayout([2, -1], [18, 18], 400, 600)).toThrow(/columnLengths/);
     });
 
     test("should throw when the totals list does not match the columns", () => {

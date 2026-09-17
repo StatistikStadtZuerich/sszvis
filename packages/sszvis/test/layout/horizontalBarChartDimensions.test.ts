@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import dimensionsHorizontalBarChart from "../../src/layout/horizontalBarChartDimensions.js";
+import { describesTheLayoutContract } from "../support/layoutConformance.js";
 
 // The layout is fixed: 24px bars separated by 20px of padding, with no outer padding.
 const DEFAULT_HEIGHT = 24;
@@ -28,7 +29,7 @@ describe("horizontalBarChartDimensions", () => {
   });
 
   describe("group height", () => {
-    test("should count every bar and the padding between them", () => {
+    test("should count every bar and the padding between them when several bars are laid out", () => {
       const dim = dimensionsHorizontalBarChart(4);
       expect(dim.barGroupHeight).toBe(DEFAULT_HEIGHT * 4 + MIN_PADDING * 3);
       expect(dim.barGroupHeight).toBe(156);
@@ -50,7 +51,18 @@ describe("horizontalBarChartDimensions", () => {
     });
   });
 
-  describe("degenerate inputs", () => {
+  describesTheLayoutContract({
+    layoutName: "dimensionsHorizontalBarChart",
+    slots: [
+      { name: "numBars", kind: "count", callWith: (bad) => dimensionsHorizontalBarChart(bad) },
+    ],
+    // The layout takes no size argument and its geometry is a set of constants, so there is no
+    // zeroed layout to return: a zero bar count leaves every fixed property in place. That case
+    // stays below, where it can assert the constants rather than a zeroed object.
+    zeroed: [],
+  });
+
+  describe("no bars", () => {
     test("should occupy no height when there are no bars", () => {
       const dim = dimensionsHorizontalBarChart(0);
       expect(dim.barGroupHeight).toBe(0);
@@ -59,11 +71,6 @@ describe("horizontalBarChartDimensions", () => {
       expect(dim.barHeight).toBe(DEFAULT_HEIGHT);
       expect(dim.padHeight).toBe(MIN_PADDING);
       expect(dim.axisOffset).toBe(-22);
-    });
-
-    test("should throw when the bar count is not a whole number of bars", () => {
-      expect(() => dimensionsHorizontalBarChart(2.5)).toThrow(/numBars/);
-      expect(() => dimensionsHorizontalBarChart(-3)).toThrow(/numBars/);
     });
   });
 

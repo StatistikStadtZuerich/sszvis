@@ -1,10 +1,13 @@
 import { describe, expect, test } from "vitest";
 import dimensionsHeatTable from "../../src/layout/heatTableDimensions.js";
+import { describesTheLayoutContract } from "../support/layoutConformance.js";
 
 // A box side is the available width divided between the columns, capped at 30px.
 const DEFAULT_SIDE = 30;
 
 describe("heatTableDimensions", () => {
+  const EMPTY = { side: 0, paddedSide: 0, padRatio: 0, width: 0, height: 0, centeredOffset: 0 };
+
   describe("box sizing", () => {
     test("should cap the box side at 30px when there is room to spare", () => {
       const dim = dimensionsHeatTable(800, 2, 10, 5);
@@ -47,7 +50,7 @@ describe("heatTableDimensions", () => {
   });
 
   describe("centering", () => {
-    test("should centre the table in the leftover space", () => {
+    test("should centre the table when the container is wider than the table", () => {
       const dim = dimensionsHeatTable(800, 2, 10, 5);
       expect(dim.centeredOffset).toBe((800 - dim.width) / 2);
     });
@@ -64,7 +67,7 @@ describe("heatTableDimensions", () => {
   });
 
   describe("chart padding", () => {
-    test("should treat a missing chartPadding as zero on every side", () => {
+    test("should treat chartPadding as zero on every side when it is missing", () => {
       const without = dimensionsHeatTable(800, 2, 10, 5);
       const zeroed = dimensionsHeatTable(800, 2, 10, 5, { top: 0, right: 0, bottom: 0, left: 0 });
       expect(without).toEqual(zeroed);
@@ -79,35 +82,38 @@ describe("heatTableDimensions", () => {
     });
   });
 
-  describe("degenerate inputs", () => {
-    const EMPTY = { side: 0, paddedSide: 0, padRatio: 0, width: 0, height: 0, centeredOffset: 0 };
-
-    test("should report no dimensions when the table has no columns", () => {
-      expect(dimensionsHeatTable(100, 2, 0, 5)).toEqual(EMPTY);
-    });
-
-    test("should report no dimensions when the table has no rows", () => {
-      expect(dimensionsHeatTable(100, 2, 5, 0)).toEqual(EMPTY);
-    });
-
-    test("should report no dimensions when the container has no width", () => {
-      expect(dimensionsHeatTable(0, 2, 10, 5)).toEqual(EMPTY);
-    });
-
-    test("should throw when the column or row count is not a whole number", () => {
-      expect(() => dimensionsHeatTable(800, 2, 2.5, 5)).toThrow(/numX/);
-      expect(() => dimensionsHeatTable(800, 2, 10, -5)).toThrow(/numY/);
-    });
-
-    test("should throw when the width or the padding is negative", () => {
-      expect(() => dimensionsHeatTable(-800, 2, 10, 5)).toThrow(/spaceWidth/);
-      expect(() => dimensionsHeatTable(800, -4, 10, 5)).toThrow(/squarePadding/);
-    });
+  describesTheLayoutContract({
+    layoutName: "dimensionsHeatTable",
+    slots: [
+      { name: "spaceWidth", kind: "size", callWith: (bad) => dimensionsHeatTable(bad, 2, 10, 5) },
+      {
+        name: "squarePadding",
+        kind: "size",
+        callWith: (bad) => dimensionsHeatTable(800, bad, 10, 5),
+      },
+      { name: "numX", kind: "count", callWith: (bad) => dimensionsHeatTable(800, 2, bad, 5) },
+      { name: "numY", kind: "count", callWith: (bad) => dimensionsHeatTable(800, 2, 10, bad) },
+    ],
+    zeroed: [
+      {
+        when: "the table has no columns",
+        call: () => dimensionsHeatTable(100, 2, 0, 5),
+        expected: EMPTY,
+      },
+      {
+        when: "the table has no rows",
+        call: () => dimensionsHeatTable(100, 2, 5, 0),
+        expected: EMPTY,
+      },
+      {
+        when: "the container has no width",
+        call: () => dimensionsHeatTable(0, 2, 10, 5),
+        expected: EMPTY,
+      },
+    ],
   });
 
   describe("no room for a box", () => {
-    const EMPTY = { side: 0, paddedSide: 0, padRatio: 0, width: 0, height: 0, centeredOffset: 0 };
-
     test("should report no dimensions when there are too many columns for a box", () => {
       // the side used to go negative, taking padRatio above the [0, 1) a band scale accepts
       expect(dimensionsHeatTable(100, 2, 100, 5)).toEqual(EMPTY);

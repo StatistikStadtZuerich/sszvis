@@ -103,25 +103,19 @@ describe("component/stackedArea", () => {
   }));
 
   describe("rendering", () => {
-    test("should render one classed path per layer", () => {
-      const node = render(areaOf(), twoLayers);
-      expect(paths(node).length).toBe(2);
-      for (const p of paths(node)) expect(p.tagName).toBe("path");
-    });
-
-    test("should trace the top line forwards and the baseline backwards", () => {
+    test("should trace the top line forwards and the baseline backwards when a layer is drawn", () => {
       // An area is a closed shape: out along y1, back along y0 in reverse, then closed.
       expect(ds(render(areaOf(), oneLayer))).toEqual(["M0,10L10,20L10,50L0,40Z"]);
     });
 
-    test("should keep the layers independent of one another", () => {
+    test("should draw each layer from its own points only when several are stacked", () => {
       expect(ds(render(areaOf(), twoLayers))).toEqual([
         "M0,60L10,50L10,100L0,100Z",
         "M0,20L10,10L10,50L0,60Z",
       ]);
     });
 
-    test("should keep a class a caller added to a path across rerenders", () => {
+    test("should keep a class a caller added to a path when the chart re-renders", () => {
       const component = areaOf();
       const g = group("consumer-class");
       g.datum(oneLayer).call(component as never);
@@ -145,7 +139,7 @@ describe("component/stackedArea", () => {
       expect(ds(g.node() as SVGGElement)).toEqual(["M5,5L15,15L15,25L5,15Z"]);
     });
 
-    test("should render the output of a d3 stack layout, as the examples do", () => {
+    test("should draw the bands when the output of a d3 stack layout is bound to it", () => {
       // The shape docs/area-chart-stacked feeds in: each series is an array of [y0, y1]
       // tuples carrying the source row on .data and the series name on .key.
       const series = stack().keys(["a", "b"])([
@@ -214,14 +208,14 @@ describe("component/stackedArea", () => {
       expect(Array.from(seen[0][2] as ArrayLike<Element>)).toEqual(paths(node));
     });
 
-    test("should accept constants in place of the dimension accessors", () => {
+    test("should draw the band when constants are given in place of the dimension accessors", () => {
       // d3.area wraps a non-function in its own constant(), so a fixed baseline needs no
       // functor of its own.
       const node = render(stackedArea().transition(false).x(5).y0(30).y1(20), oneLayer);
       expect(ds(node)).toEqual(["M5,20L5,20L5,30L5,30Z"]);
     });
 
-    test("should accept a numeric string, which d3 coerces", () => {
+    test("should draw the band when a dimension is a numeric string, which d3 coerces", () => {
       const node = render(
         stackedArea()
           .transition(false)
@@ -234,7 +228,7 @@ describe("component/stackedArea", () => {
       expect(ds(node)).toEqual(["M7,1L7,1L7,2L7,2Z"]);
     });
 
-    test("should accept composed accessors, as the docs examples do", () => {
+    test("should draw the band when the accessors are composed, as the docs examples do", () => {
       const yScale = (v: number) => 100 - v;
       const node = render(
         stackedArea()
@@ -249,11 +243,11 @@ describe("component/stackedArea", () => {
   });
 
   describe("fill", () => {
-    test("should apply a constant fill to every layer", () => {
+    test("should paint every layer alike when fill is a constant colour", () => {
       expect(attrs(render(areaOf().fill("#abc"), twoLayers), "fill")).toEqual(["#abc", "#abc"]);
     });
 
-    test("should apply a fill derived from the layer's own data", () => {
+    test("should paint each layer apart when fill is an accessor over its own data", () => {
       const node = render(
         areaOf().fill((d: Layer) => (d[0].y1 === 60 ? "#f00" : "#00f")),
         twoLayers,
@@ -287,16 +281,16 @@ describe("component/stackedArea", () => {
   });
 
   describe("stroke and strokeWidth", () => {
-    test("should default the stroke to white", () => {
+    test("should outline the band in white when no stroke is given", () => {
       // The white hairline is what visually separates two touching layers.
       expect(attrs(render(areaOf(), twoLayers), "stroke")).toEqual(["#ffffff", "#ffffff"]);
     });
 
-    test("should apply a constant stroke", () => {
+    test("should outline every layer alike when stroke is a constant colour", () => {
       expect(attrs(render(areaOf().stroke("#f00"), oneLayer), "stroke")).toEqual(["#f00"]);
     });
 
-    test("should apply a stroke derived from the layer's own data", () => {
+    test("should outline each layer apart when stroke is an accessor over its own data", () => {
       const node = render(
         areaOf().stroke((d: Layer) => (d[0].y1 === 60 ? "#f00" : "#00f")),
         twoLayers,
@@ -304,18 +298,18 @@ describe("component/stackedArea", () => {
       expect(attrs(node, "stroke")).toEqual(["#f00", "#00f"]);
     });
 
-    test("should default the strokeWidth to 1", () => {
+    test("should draw a 1px hairline when no strokeWidth is given", () => {
       expect(attrs(render(areaOf(), oneLayer), "stroke-width")).toEqual(["1"]);
     });
 
-    test("should apply a constant strokeWidth, including zero", () => {
+    test("should use the given width when strokeWidth is a constant, including zero", () => {
       // The default is applied with an explicit undefined check, so 0 survives where a
       // falsy fallback would have replaced it.
       expect(attrs(render(areaOf().strokeWidth(4), oneLayer), "stroke-width")).toEqual(["4"]);
       expect(attrs(render(areaOf().strokeWidth(0), oneLayer), "stroke-width")).toEqual(["0"]);
     });
 
-    test("should apply a strokeWidth derived from the layer's own data", () => {
+    test("should vary the outline when strokeWidth is an accessor over the layer's own data", () => {
       const node = render(
         areaOf().strokeWidth((d: Layer) => d.length),
         twoLayers,
@@ -323,7 +317,7 @@ describe("component/stackedArea", () => {
       expect(attrs(node, "stroke-width")).toEqual(["2", "2"]);
     });
 
-    test("should pass a falsy stroke through, so a caller can opt out of the hairline", () => {
+    test("should pass a falsy stroke through when a caller opts out of the hairline", () => {
       // The default stands in for an unset stroke only: null and "" reach d3 as given, null
       // removing the attribute and "" writing an invalid paint. Both compute to none, which
       // is also what an accessor returning either of them does. A ?? would have swallowed
@@ -363,7 +357,7 @@ describe("component/stackedArea", () => {
       ],
     ];
 
-    test("should use an explicit defined predicate to break the area", () => {
+    test("should break the area when an explicit defined predicate rejects a point", () => {
       const node = render(
         areaOf().defined((d: Point) => !Number.isNaN(d.y1)),
         withGap,
@@ -387,12 +381,12 @@ describe("component/stackedArea", () => {
       expect(seen.map((args) => args[2])).toEqual([oneLayer[0], oneLayer[0]]);
     });
 
-    test("should accept a constant predicate, which d3 coerces to a boolean", () => {
+    test("should draw the whole area when defined is a constant, which d3 coerces to a boolean", () => {
       expect(ds(render(areaOf().defined(false), oneLayer))).toEqual([null]);
       expect(ds(render(areaOf().defined(true), oneLayer))).toEqual(["M0,10L10,20L10,50L0,40Z"]);
     });
 
-    test("should skip a point whose bounds are missing, breaking the area", () => {
+    test("should break the area into subpaths when a point is missing one of its bounds", () => {
       // The default guard tests both vertical bounds. Each surviving run becomes its own
       // subpath, exactly as it does when defined is set explicitly above.
       expect(ds(render(areaOf(), withGap))).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
@@ -409,7 +403,7 @@ describe("component/stackedArea", () => {
       ).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
     });
 
-    test("should warn once per render, however many points are missing", () => {
+    test("should warn exactly once per render when several points are missing", () => {
       // A gap is transient and recoverable - the area simply breaks around it - so the
       // caller is told about the chart, not about each point. The guard runs twice per
       // point (once for each bound), which is why a per-point warning would be noisy.
@@ -426,14 +420,14 @@ describe("component/stackedArea", () => {
       warn.mockRestore();
     });
 
-    test("should keep the surviving points renderable", () => {
+    test("should still draw the surviving points when one point is missing", () => {
       // The consequence for the browser: where a NaN in the d attribute used to truncate the
       // whole layer at the invalid command, the healthy runs are drawn.
       const node = render(areaOf(), withGap);
       expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBeGreaterThan(0);
     });
 
-    test("should treat undefined and null as missing too", () => {
+    test("should treat undefined and null as missing when they reach a bound", () => {
       // A plain isNaN guard would catch undefined and let null through - isNaN(null) is
       // false, so it coerces to 0 and is plotted, pinning the point to the top of the chart.
       // A null measurement is missing data, so both are skipped here. line still lets null
@@ -473,7 +467,7 @@ describe("component/stackedArea", () => {
   });
 
   describe("key", () => {
-    test("should default to the index, matching layers by position", () => {
+    test("should match the layers by position when no key function is given", () => {
       const component = areaOf();
       const g = group("defaultkey");
       g.datum(twoLayers).call(component as never);
@@ -512,7 +506,7 @@ describe("component/stackedArea", () => {
       expect(seen.map((args) => args[1])).toEqual([0, 1]);
     });
 
-    test("should reorder the paths to match the data order", () => {
+    test("should reorder the paths when the data order changes", () => {
       // .join() orders the merged selection for free, so the paint order of the layers
       // follows the data even when the nodes are reused.
       const component = areaOf().key((d: Layer) => d[0].y1);
@@ -576,7 +570,7 @@ describe("component/stackedArea", () => {
       expect(paths(g.node() as SVGGElement).length).toBe(0);
     });
 
-    test("should keep the d3 meaning of an explicit null y1", () => {
+    test("should keep the d3 meaning of a null y1 when one is given explicitly", () => {
       // Only an unset property is caught. A caller who says .y1(null) is asking d3 for "no
       // upper bound", which makes it fall back to y0 - a zero-height sliver on its baseline.
       const node = render(
@@ -592,13 +586,13 @@ describe("component/stackedArea", () => {
   });
 
   describe("edge cases", () => {
-    test("should render an empty path element for a layer with no points", () => {
+    test("should render an empty path element when a layer has no points", () => {
       const node = render(areaOf(), [[]]);
       expect(paths(node).length).toBe(1);
       expect(ds(node)).toEqual([null]);
     });
 
-    test("should emit a degenerate closed shape for a single point", () => {
+    test("should emit a degenerate closed shape when a layer has a single point", () => {
       // The single point is emitted as its own top and bottom bound, closed - which is how
       // a one-point layer reaches the DOM. It encloses no area, but the default white stroke
       // still draws a vertical hairline.
@@ -607,7 +601,7 @@ describe("component/stackedArea", () => {
       expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBe(20);
     });
 
-    test("should handle negative and fractional coordinates", () => {
+    test("should write the coordinates unclamped when they are negative or fractional", () => {
       const node = render(areaOf(), [
         [
           { x: -10, y0: -5, y1: -12.5 },
@@ -617,7 +611,7 @@ describe("component/stackedArea", () => {
       expect(ds(node)).toEqual(["M-10,-12.5L0.25,1L0.25,3.5L-10,-5Z"]);
     });
 
-    test("should accept an inverted band, where y1 is below y0", () => {
+    test("should still close the band when y1 is below y0", () => {
       // Nothing enforces an orientation; the shape simply winds the other way.
       expect(
         ds(
@@ -668,7 +662,7 @@ describe("component/stackedArea", () => {
         .fill("#ff0000")
         .strokeWidth(3);
 
-    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+    test("should drop an in-flight tween when a later synchronous render lands", async () => {
       const g = group("interrupted");
       g.datum(oneLayer).call(animated() as never);
       await new Promise((resolve) => setTimeout(resolve, 400));
@@ -686,7 +680,7 @@ describe("component/stackedArea", () => {
 
     const settle = () => new Promise((resolve) => setTimeout(resolve, 400));
 
-    test("should default to true", () => {
+    test("should animate by default when transition is not set", () => {
       expect(stackedArea().transition()).toBe(true);
     });
 
@@ -791,7 +785,7 @@ describe("component/stackedArea", () => {
       return foreign;
     };
 
-    test("should leave a foreign generic path in the same group alone", () => {
+    test("should leave a foreign generic path alone when it shares the group", () => {
       const g = group("foreign-untouched");
       const foreign = plant(g.node() as SVGGElement);
       g.datum(twoLayers).call(areaOf().fill("#f00") as never);
@@ -801,7 +795,7 @@ describe("component/stackedArea", () => {
       expect(foreign.getAttribute("class")).toBe("sszvis-path");
     });
 
-    test("should join only the paths it drew, so every layer still gets one", () => {
+    test("should join only the paths it drew when a foreign path shares the group", () => {
       const g = group("foreign-count");
       plant(g.node() as SVGGElement);
       g.datum(twoLayers).call(areaOf() as never);
@@ -811,7 +805,7 @@ describe("component/stackedArea", () => {
       expect(node.querySelectorAll("path.sszvis-path").length).toBe(3);
     });
 
-    test("should keep the generic class on its own paths, so the stylesheet is unaffected", () => {
+    test("should keep the generic class on its own paths when a foreign path shares the group", () => {
       const node = render(areaOf(), oneLayer);
       const own = node.querySelector("path.sszvis-stacked-area-path") as Element;
       expect(own.classList.contains("sszvis-path")).toBe(true);

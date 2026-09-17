@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import layoutPopulationPyramid from "../../src/layout/populationPyramidLayout.js";
+import { describesTheLayoutContract } from "../support/layoutConformance.js";
 
 // The chart height follows a 4:5 portrait aspect ratio, capped at 480px; bars are at least
 // 2px tall and always separated by exactly 1px.
@@ -8,6 +9,15 @@ const MIN_BAR_HEIGHT = 2;
 const PADDING = 1;
 
 describe("populationPyramidLayout", () => {
+  const EMPTY = {
+    barHeight: 0,
+    padding: 0,
+    totalHeight: 0,
+    positions: [],
+    maxBarLength: 0,
+    chartPadding: 0,
+  };
+
   describe("bar sizing", () => {
     test("should divide the available height between the bars and their 1px gaps", () => {
       const layout = layoutPopulationPyramid(600, 20);
@@ -17,14 +27,14 @@ describe("populationPyramidLayout", () => {
       expect(layout.totalHeight).toBe(20 * 23 + 19);
     });
 
-    test("should round the bar height to a whole pixel", () => {
+    test("should round the bar height to a whole pixel when the division is not exact", () => {
       for (const numBars of [7, 13, 20, 91]) {
         const layout = layoutPopulationPyramid(600, numBars);
         expect(Number.isInteger(layout.barHeight)).toBe(true);
       }
     });
 
-    test("should cap the chart height at 480px, however wide the container is", () => {
+    test("should cap the chart height at 480px when the container is wider than the 4:5 ratio allows", () => {
       const wide = layoutPopulationPyramid(2000, 20);
       const atCap = layoutPopulationPyramid(600, 20);
       expect(wide.barHeight).toBe(atCap.barHeight);
@@ -93,38 +103,30 @@ describe("populationPyramidLayout", () => {
       expect(layout.chartPadding).toBe((1000 - 480) / 2);
     });
 
-    test("should cap a half-pyramid at half the chart's own maximum height", () => {
+    test("should cap a half-pyramid at half the maximum height when the chart itself is capped", () => {
       const layout = layoutPopulationPyramid(5000, 20);
       expect(layout.maxBarLength).toBe(MAX_HEIGHT / 2);
     });
   });
 
-  describe("degenerate inputs", () => {
-    const EMPTY = {
-      barHeight: 0,
-      padding: 0,
-      totalHeight: 0,
-      positions: [],
-      maxBarLength: 0,
-      chartPadding: 0,
-    };
-
-    test("should report no dimensions when the pyramid has no bars", () => {
-      expect(layoutPopulationPyramid(600, 0)).toEqual(EMPTY);
-    });
-
-    test("should report no dimensions when the container has no width", () => {
-      expect(layoutPopulationPyramid(0, 10)).toEqual(EMPTY);
-    });
-
-    test("should throw when the width is negative", () => {
-      expect(() => layoutPopulationPyramid(-200, 10)).toThrow(/spaceWidth/);
-    });
-
-    test("should throw when the bar count is not a whole number of bars", () => {
-      expect(() => layoutPopulationPyramid(600, 2.5)).toThrow(/numBars/);
-      expect(() => layoutPopulationPyramid(600, -1)).toThrow(/numBars/);
-    });
+  describesTheLayoutContract({
+    layoutName: "layoutPopulationPyramid",
+    slots: [
+      { name: "spaceWidth", kind: "size", callWith: (bad) => layoutPopulationPyramid(bad, 10) },
+      { name: "numBars", kind: "count", callWith: (bad) => layoutPopulationPyramid(600, bad) },
+    ],
+    zeroed: [
+      {
+        when: "the pyramid has no bars",
+        call: () => layoutPopulationPyramid(600, 0),
+        expected: EMPTY,
+      },
+      {
+        when: "the container has no width",
+        call: () => layoutPopulationPyramid(0, 10),
+        expected: EMPTY,
+      },
+    ],
   });
 
   describe("known quirks", () => {

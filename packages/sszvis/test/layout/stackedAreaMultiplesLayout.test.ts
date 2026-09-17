@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vitest";
 import layoutStackedAreaMultiples from "../../src/layout/stackedAreaMultiplesLayout.js";
+import { describesTheLayoutContract } from "../support/layoutConformance.js";
 
 describe("stackedAreaMultiplesLayout", () => {
+  const EMPTY = { range: [], bandHeight: 0, padHeight: 0 };
+
   describe("band geometry", () => {
     test("should split the height into one band per stack, separated by padding", () => {
       const layout = layoutStackedAreaMultiples(300, 3);
@@ -11,12 +14,12 @@ describe("stackedAreaMultiplesLayout", () => {
       expect(layout.bandHeight + layout.padHeight).toBeCloseTo(300 / (3 - 0.1), 9);
     });
 
-    test("should default the padding ratio to 0.1 of a step", () => {
+    test("should use a padding ratio of 0.1 of a step when none is given", () => {
       const layout = layoutStackedAreaMultiples(300, 3);
       expect(layout.padHeight / (layout.bandHeight + layout.padHeight)).toBeCloseTo(0.1, 12);
     });
 
-    test("should honour an explicit padding ratio", () => {
+    test("should widen the padding when an explicit ratio is given", () => {
       const layout = layoutStackedAreaMultiples(300, 3, 0.5);
       expect(layout.bandHeight).toBe(60);
       expect(layout.padHeight).toBe(60);
@@ -65,20 +68,31 @@ describe("stackedAreaMultiplesLayout", () => {
     });
   });
 
+  describesTheLayoutContract({
+    layoutName: "layoutStackedAreaMultiples",
+    slots: [
+      { name: "height", kind: "size", callWith: (bad) => layoutStackedAreaMultiples(bad, 3) },
+      { name: "num", kind: "count", callWith: (bad) => layoutStackedAreaMultiples(300, bad) },
+      { name: "pct", kind: "ratio", callWith: (bad) => layoutStackedAreaMultiples(300, 3, bad) },
+    ],
+    zeroed: [
+      {
+        // the step would be 0, so the baseline loop could never reach the bottom of the chart
+        when: "the height is zero",
+        call: () => layoutStackedAreaMultiples(0, 5),
+        expected: EMPTY,
+      },
+      {
+        // the step would be negative, so the baselines would march upwards without bound
+        when: "there are no stacks",
+        call: () => layoutStackedAreaMultiples(300, 0),
+        expected: EMPTY,
+      },
+    ],
+  });
+
   describe("degenerate inputs", () => {
-    const EMPTY = { range: [], bandHeight: 0, padHeight: 0 };
-
-    test("should report no band when the height is zero", () => {
-      // the step would be 0, so the baseline loop could never reach the bottom of the chart
-      expect(layoutStackedAreaMultiples(0, 5)).toEqual(EMPTY);
-    });
-
-    test("should report no band when there are no stacks", () => {
-      // the step would be negative, so the baselines would march upwards without bound
-      expect(layoutStackedAreaMultiples(300, 0)).toEqual(EMPTY);
-    });
-
-    test("should report no band when the step would be infinite", () => {
+    test("should report no band when the padding ratio would make the step infinite", () => {
       // num - pct is exactly zero in both of these, so the step divides by zero. Guarding
       // only on step > 0 let Infinity through, which gave bandHeight = Infinity * 0 = NaN
       // for the first and a NaN padHeight for the second.
@@ -86,22 +100,10 @@ describe("stackedAreaMultiplesLayout", () => {
       expect(layoutStackedAreaMultiples(300, 0, 0)).toEqual(EMPTY);
     });
 
-    test("should throw when the height is negative", () => {
-      expect(() => layoutStackedAreaMultiples(-300, 3)).toThrow(/height/);
-    });
-
-    test("should throw when the padding ratio is outside [0, 1]", () => {
-      expect(() => layoutStackedAreaMultiples(300, 3, 4)).toThrow(/pct/);
-      expect(() => layoutStackedAreaMultiples(300, 3, 3)).toThrow(/pct/);
-      expect(() => layoutStackedAreaMultiples(300, 3, -1)).toThrow(/pct/);
-      expect(() => layoutStackedAreaMultiples(300, 3, Number.NaN)).toThrow(/pct/);
-    });
-
-    test("should throw when the stack count is not a whole number of stacks", () => {
+    test("should throw when the stack count is a fraction that used to divide by zero", () => {
       // 0.1 and 0.5 are the counts that used to divide by zero and to empty the range
       expect(() => layoutStackedAreaMultiples(300, 0.1)).toThrow(/num/);
       expect(() => layoutStackedAreaMultiples(300, 0.5)).toThrow(/num/);
-      expect(() => layoutStackedAreaMultiples(300, -2)).toThrow(/num/);
     });
   });
 
