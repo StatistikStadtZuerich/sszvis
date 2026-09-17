@@ -299,13 +299,17 @@ describe("map utils", () => {
       expect(merged[0].datum).toEqual({ id: 1, value: 1 });
     });
 
-    // BUG: the dataset argument is carefully guarded with Array.isArray, but geoJson is not
-    // guarded at all - the asymmetry means a missing map throws where missing data does not.
-    test("throws for a missing geojson, unlike a missing dataset", () => {
+    // BUG(#450): the dataset argument is carefully guarded with Array.isArray, but geoJson is not
+    // guarded at all - the asymmetry means a missing map throws where missing data does not, and
+    // the throw is a bare TypeError naming nothing, unlike the named errors the mesh and raster
+    // renderers now raise for their own missing properties.
+    // Skipped, not deleted: it fails with "expected [Function] to throw error matching /geoJson/
+    // but got 'Cannot read properties of undefined (reading 'features')'".
+    test.skip("should report the missing property by name for a missing geojson", () => {
       expect(() =>
         // @ts-expect-error - deliberately exercising the unguarded geoJson path
         prepareMergedGeoData([{ id: "a" }], undefined, "id"),
-      ).toThrow();
+      ).toThrow(/geoJson/);
     });
 
     test("should return an empty array when the geojson has no features", () => {

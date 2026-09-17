@@ -751,8 +751,9 @@ describe("component/stackedBar", () => {
   });
 
   describe("known quirks", () => {
-    test("returns the vertical series in key order rather than in stacking order", () => {
-      // BUG: the vertical layout stacks with d3's reverse order, which sets each series'
+    // Skipped, not deleted: it fails with "expected [ 1, +0 ] to deeply equal [ +0, 1 ]".
+    test.skip("returns the vertical series in stacking order", () => {
+      // BUG(#441): the vertical layout stacks with d3's reverse order, which sets each series'
       // `index` to its position in the stacking order but leaves the returned array in key
       // order. So `series[i].index !== i`, and a caller that trusts the array order - or
       // reads `index` to drive a legend - gets the stack the wrong way up. The horizontal
@@ -764,7 +765,7 @@ describe("component/stackedBar", () => {
       // expected: the array order and `index` agree, or the layout reports the difference.
       const vertical = verticalData();
       expect(vertical.map((series) => series.key)).toEqual(["X", "Y"]);
-      expect(vertical.map((series) => series.index)).toEqual([1, 0]);
+      expect(vertical.map((series) => series.index)).toEqual([0, 1]);
       expect(horizontalData().map((series) => series.index)).toEqual([0, 1]);
     });
 

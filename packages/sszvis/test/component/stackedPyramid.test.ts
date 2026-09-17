@@ -415,35 +415,35 @@ describe("component/stackedPyramid", () => {
         expect(numbers[0][0][0].side).toBe(0);
       });
 
-      test("stringifies the series keys, losing a numeric series order", () => {
-        // BUG: the same key coercion applies to the series, and the key order is the
-        // stacking order, so a series accessor returning years or numeric codes silently
-        // restacks the chart in ascending numeric order. Shared with stackedBarData, where
-        // it is filed as a bug for the same reason.
-        // current: 2010 arrives first but stacks on top of 2000. expected: the accessor's
-        // order decides the stacking order.
+      // BUG(#432): the same key coercion applies to the series, and the key order is the
+      // stacking order, so a series accessor returning years or numeric codes silently
+      // restacks the chart in ascending numeric order. Shared with stackedBarData, where it
+      // was filed as #109 for the stackedBar layouts only and fixed there.
+      // current: 2010 arrives first but stacks on top of 2000. expected: the accessor's
+      // order decides the stacking order.
+      // Skipped, not deleted: it fails with "expected [ '2000', '2010' ] to deeply equal [ '2010', '2000' ]".
+      test.skip("stacks the series in the order the accessor first returns them", () => {
         const sides = layout([
           { side: "f", row: 0, series: 2010 as unknown as string, value: 1 },
           { side: "f", row: 0, series: 2000 as unknown as string, value: 2 },
         ]);
-        expect(sides[0].map((series) => series.key)).toEqual(["2000", "2010"]);
-        // ...and the series key is now a string even though the accessor returned a number.
-        expect(sides[0][0][0].series).toBe("2000");
+        expect(sides[0].map((series) => series.key)).toEqual(["2010", "2000"]);
       });
 
-      test("stacks only the first row of a cell", () => {
-        // BUG: the stack value is read as x[key][0], so data that is not already aggregated
-        // to one row per (side, row, series) triplet is silently truncated rather than
-        // summed. The header says the triplet "MUST appear only once" and that the function
-        // "makes no effort to normalize the data if that's not the case", but nothing
-        // reports a violation. Shared with stackedBarData.
-        // current: the second 100 is dropped. expected: 101, or a reported error.
+      // BUG(#433): the stack value is read as x[key][0], so data that is not already
+      // aggregated to one row per (side, row, series) triplet is silently truncated rather
+      // than summed. The header says the triplet "MUST appear only once" and that the
+      // function "makes no effort to normalize the data if that's not the case", but nothing
+      // reports a violation. Shared with stackedBarData, where it was filed as #107 for the
+      // stackedBar layouts only and fixed there.
+      // current: the second 100 is dropped. expected: 101, or a reported error.
+      // Skipped, not deleted: it fails with "expected 1 to be 101".
+      test.skip("sums every row the accessors place in one cell", () => {
         const sides = layout([
           { side: "f", row: 0, series: "a", value: 1 },
           { side: "f", row: 0, series: "a", value: 100 },
         ]);
-        expect(sides[0][0][0][1]).toBe(1);
-        expect(sides[0][0].length).toBe(1);
+        expect(sides[0][0][0][1]).toBe(101);
       });
 
       test("does not check that there are exactly two sides", () => {
@@ -933,19 +933,21 @@ describe("component/stackedPyramid", () => {
     });
 
     describe("known quirks", () => {
-      test("silently renders zero-height bars when barHeight is missing", () => {
-        // BUG: barHeight is the one dimension passed straight through to bar, which runs it
-        // through its NaN guard, so an unset prop becomes 0 instead of an error. The chart
-        // renders as an empty axis frame with no visible bars and no warning. Of the three
-        // required dimensions only this one fails silently; the other two throw, with two
-        // different messages. Shared with pyramid.
-        // current: height="0". expected: an error naming the missing prop.
-        const node = render(
-          bare()
-            .barWidth((v: number) => v)
-            .barPosition(0),
-        );
-        expect(attrs(node, "rightStack", "height")).toEqual(["0", "0", "0", "0"]);
+      // BUG(#78): barHeight is the one dimension passed straight through to bar, which runs
+      // it through its NaN guard, so an unset prop becomes 0 instead of an error. The chart
+      // renders as an empty axis frame with no visible bars and no warning. Of the three
+      // required dimensions only this one fails silently; the other two throw, with two
+      // different messages. Shared with pyramid, where the named-error guard has landed.
+      // current: height="0". expected: an error naming the missing prop.
+      // Skipped, not deleted: it fails with "expected [Function] to throw an error".
+      test.skip("reports the missing prop when barHeight is unset", () => {
+        expect(() =>
+          render(
+            bare()
+              .barWidth((v: number) => v)
+              .barPosition(0),
+          ),
+        ).toThrow(/barHeight/);
       });
 
       test("throws when a side accessor returns undefined", () => {
@@ -1054,26 +1056,32 @@ describe("component/stackedPyramid", () => {
       expect(seen).toContain(30);
     });
 
-    test("drops d3's index when computing the bars' width and x", () => {
-      // BUG: barWidth is invoked as props.barWidth(d[1]) with a single argument, while bar
-      // passes (d, i, nodes) to the accessors it owns. An index-aware or node-aware barWidth
-      // therefore sees undefined for i on every bar of both sides, and 30 + undefined is
-      // NaN, which bar's guard turns into 0. Shared with pyramid, which has it on the left
-      // side only.
-      // current: every width and every x collapses to 0. expected: the index is forwarded.
-      const node = render(pyramidOf().barWidth((v: number, i: number) => v + i));
-      expect(attrs(node, "rightStack", "width")).toEqual(["0", "0", "0", "0"]);
-      expect(attrs(node, "rightStack", "x")).toEqual(["0", "0", "0", "0"]);
+    // BUG(#79): barWidth is invoked as props.barWidth(d[1]) with a single argument, while
+    // bar passes (d, i, nodes) to the accessors it owns. An index-aware or node-aware
+    // barWidth therefore sees undefined for i on every bar of both sides, and 30 + undefined
+    // is NaN, which bar's guard turns into 0. Shared with pyramid, where the index is now
+    // forwarded. The index cancels out of the stacked width, so an index-aware accessor has
+    // to produce the same widths as a plain one; today it produces none at all.
+    // current: every width and every x collapses to 0. expected: the index is forwarded.
+    // Skipped, not deleted: it fails with "expected [ '0', '0', '0', '0' ] to deeply equal [ '30', '1', '40', '2' ]".
+    test.skip("forwards d3's index when computing the bars' width and x", () => {
+      const indexed = render(pyramidOf().barWidth((v: number, i: number) => v + i));
+      const plain = render(pyramidOf().barWidth((v: number) => v));
+      expect(attrs(indexed, "rightStack", "width")).toEqual(attrs(plain, "rightStack", "width"));
     });
 
-    test("drops d3's index when computing the bars' vertical position and fill too", () => {
-      // BUG: the same happens for barPosition and barFill, with the same consequence - an
-      // index-aware accessor returns NaN and bar's guard flattens it to 0 - but by a
-      // different route: they are composed with an accessor, fn.compose(props.barPosition,
-      // rowAcc), and fn.compose forwards every argument only to the innermost function.
-      // barPosition and barFill are the outer ones, so they receive exactly one.
-      // current: every argument after the first is dropped. expected: the index is
-      // forwarded, as it is to the accessors bar owns.
+    // BUG(#434): barPosition and barFill are both called with one argument too, by two
+    // different routes. barPosition is composed with the row accessor, .y(fn.compose(
+    // props.barPosition, rowAcc)) on both bars, and fn.compose forwards every argument only
+    // to the innermost function - barPosition is the outer one, so it receives exactly one,
+    // returns NaN for an index-aware accessor, and bar's guard flattens that to y="0".
+    // barFill is never composed: it goes through barFillOf, a one-parameter arrow, so no
+    // index can reach it at all. A fill accessor returns a colour string rather than NaN,
+    // so the consequence there is an undefined-indexed lookup, not a flattened 0.
+    // current: every argument after the first is dropped. expected: the index is
+    // forwarded, as it is to the accessors bar owns.
+    // Skipped, not deleted: it fails with "expected false to be true".
+    test.skip("forwards d3's index to barPosition and barFill too", () => {
       const positionArgs: unknown[][] = [];
       const fillArgs: unknown[][] = [];
       render(
@@ -1087,8 +1095,8 @@ describe("component/stackedPyramid", () => {
             return "#000";
           }),
       );
-      expect(positionArgs.every((args) => args.length === 1)).toBe(true);
-      expect(fillArgs.every((args) => args.length === 1)).toBe(true);
+      expect(positionArgs.every((args) => typeof args[1] === "number")).toBe(true);
+      expect(fillArgs.every((args) => typeof args[1] === "number")).toBe(true);
     });
 
     test("the reference line ignores the spine padding", async () => {
@@ -1120,23 +1128,18 @@ describe("component/stackedPyramid", () => {
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
     });
 
-    test("crashes when a reference accessor returns undefined", () => {
-      // BUG: the reference line is guarded on the accessor existing, not on it returning
-      // data - `props.rightRefAccessor ? [props.rightRefAccessor(data)] : []`. An accessor
-      // that returns undefined for some states throws instead of hiding the line.
-      // current: TypeError. expected: no line. Shared with pyramid.
-      expect(() =>
-        render(
-          // @ts-expect-error - deliberately violating the accessor's return contract
-          pyramidOf().rightRefAccessor(() => undefined),
-        ),
-      ).toThrow(TypeError);
-      expect(() =>
-        render(
-          // @ts-expect-error - deliberately violating the accessor's return contract
-          pyramidOf().rightRefAccessor(() => null),
-        ),
-      ).toThrow(TypeError);
+    // BUG(#77): the reference line is guarded on the accessor existing, not on it returning
+    // data - `props.rightRefAccessor ? [props.rightRefAccessor(data)] : []`. An accessor
+    // that returns undefined for some states throws instead of hiding the line.
+    // current: TypeError. expected: no line. Shared with pyramid, where `referenceSeries`
+    // now resolves an empty series to no path at all.
+    // Skipped, not deleted: it fails with "TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))".
+    test.skip("draws no reference line when a reference accessor returns no data", () => {
+      const node = render(
+        // @ts-expect-error - deliberately violating the accessor's return contract
+        pyramidOf().rightRefAccessor(() => undefined),
+      );
+      expect(lines(node, "rightReference").length).toBe(0);
     });
 
     test("leaves an empty path element behind for empty reference data", async () => {
@@ -1147,11 +1150,13 @@ describe("component/stackedPyramid", () => {
       await vi.waitFor(() => expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull());
     });
 
-    test("never removes a reference path once it has been rendered", async () => {
-      // BUG: the reference datum is wrapped in an array - [props.rightRefAccessor(data)] -
-      // so the join always has exactly one element and the exit selection can never fire.
-      // When the reference series goes away the stale path stays in the DOM; only `d` is
-      // dropped. The same wrapping caps each side at one reference line. Shared with pyramid.
+    // BUG(#81): the reference datum is wrapped in an array - [props.rightRefAccessor(data)] -
+    // so the join always has exactly one element and the exit selection can never fire.
+    // When the reference series goes away the stale path stays in the DOM; only `d` is
+    // dropped. The same wrapping caps each side at one reference line. Shared with pyramid,
+    // where the path is now removed.
+    // Skipped, not deleted: it fails with "expected 1 to be +0".
+    test.skip("removes the reference path when the reference series goes away", async () => {
       let ref = [
         { row: 0, value: 0 },
         { row: 1, value: 1 },
@@ -1164,31 +1169,33 @@ describe("component/stackedPyramid", () => {
 
       ref = [];
       g.datum(layout()).call(component as never);
-      await vi.waitFor(() => expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull());
-      expect(lines(node, "rightReference").length).toBe(1);
+      expect(lines(node, "rightReference").length).toBe(0);
     });
 
-    test("does not guard the reference line against missing values", async () => {
-      // BUG: bar runs every geometry value through a NaN guard, but the reference line
-      // passes barWidth and barPosition straight to d3.line. One missing value poisons the
-      // path string; the browser renders the valid prefix and drops the rest of the line.
-      // current: d="MNaN,NaNL1,12". expected: the point is skipped, or coerced to 0.
-      // Shared with pyramid.
+    // BUG(#80): bar runs every geometry value through a NaN guard, but the reference line
+    // passes barWidth and barPosition straight to d3.line. One missing value poisons the
+    // path string; the browser renders the valid prefix and drops the rest of the line.
+    // current: d="MNaN,NaNL1,12". expected: the point is skipped, or coerced to 0 - either
+    // way no NaN reaches the attribute. Shared with pyramid, which now skips such points.
+    // Skipped, not deleted: it fails with "expected 'MNaN,NaNL1,12' not to contain 'NaN'".
+    test.skip("keeps a missing value out of the reference line's path", async () => {
       const node = render(
         pyramidOf().rightRefAccessor(() => [
           { row: Number.NaN, value: Number.NaN },
           { row: 1, value: 1 },
         ]),
       );
-      expect(await lineD(node, "rightReference")).toBe("MNaN,NaNL1,12");
+      expect(await lineD(node, "rightReference")).not.toContain("NaN");
     });
 
-    test("traces the top edges of the bars, not their mid-lines", async () => {
-      // BUG: the reference line takes y straight from barPosition, which is a bar's top
-      // edge, and never accounts for barHeight. The outline is drawn half a bar height above
-      // the values it describes, and the error grows with barHeight. Shared with pyramid.
-      // current: the line passes through the bars' top edges. expected: through their
-      // mid-height, or as a step path along their outer edges.
+    // BUG(#76): the reference line takes y straight from barPosition, which is a bar's top
+    // edge, and never accounts for barHeight. The outline is drawn half a bar height above
+    // the values it describes, and the error grows with barHeight. Shared with pyramid,
+    // where the outline now runs through barPosition + barHeight / 2.
+    // current: the line passes through the bars' top edges, at 0 and 12. expected: through
+    // their mid-height, at 5 and 17.
+    // Skipped, not deleted: it fails with "expected 'M0,0L1,12' to be 'M0,5L1,17'".
+    test.skip("traces the mid-lines of the bars it describes", async () => {
       const node = render(
         pyramidOf().rightRefAccessor(() => [
           { row: 0, value: 0 },
@@ -1197,8 +1204,7 @@ describe("component/stackedPyramid", () => {
       );
       expect(attrs(node, "rightStack", "y")).toEqual(["0", "12", "0", "12"]);
       expect(attrs(node, "rightStack", "height")).toEqual(["10", "10", "10", "10"]);
-      // Bar mid-lines are at y = 5 and y = 17, but the line is drawn at 0 and 12.
-      expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
+      expect(await lineD(node, "rightReference")).toBe("M0,5L1,17");
     });
 
     test("should animate the bars in step with the reference line", async () => {

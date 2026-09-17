@@ -139,7 +139,7 @@ describe("annotation/rangeRuler", () => {
     },
   );
 
-  // BUG: the total label is drawn unconditionally. src/annotation/rangeRuler.ts:186 joins
+  // BUG(#443): the total label is drawn unconditionally. src/annotation/rangeRuler.ts:191 joins
   // `.data([fn.last(data)])` with no check on props.total, then sets its text to
   // `Total ${formatNumber(props.total)}`. With no total configured that formats `undefined`
   // as a dash, so every rangeRuler carries a "Total -" label it was never asked for.
@@ -150,7 +150,7 @@ describe("annotation/rangeRuler", () => {
     expect(chartLayer.selectAll("text.sszvis-rangeRuler__total").nodes()).toHaveLength(0);
   });
 
-  // BUG: an empty data array throws. The same join at src/annotation/rangeRuler.ts:186 binds
+  // BUG(#443): an empty data array throws. The same join at src/annotation/rangeRuler.ts:191 binds
   // `[fn.last([])]`, which is `[undefined]` rather than `[]`, so one total element is still
   // created and its `x` accessor runs against `undefined`.
   // Skipped, not deleted: it fails with

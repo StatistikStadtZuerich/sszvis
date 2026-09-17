@@ -513,11 +513,11 @@ describe("map/renderer/base", () => {
       ]);
     });
 
-    // BUG: an unparseable `center` property (see the getGeoJsonCenter validation issue) reaches
-    // the anchor as NaN coordinates, the projection maps those to [null, null], and the transform
-    // is built from them unguarded, giving a transform of "translate(NaN,NaN)" rather than the
-    // anchor being skipped. A typo in an authored map file silently detaches that entity's
-    // tooltip instead of reporting anything.
+    // BUG(#167): STALE - this no longer reproduces. #167 has been fixed: getGeoJsonCenter now
+    // validates an authored `center` and falls back to the computed centroid, so an unparseable
+    // one never reaches the anchor as NaN. The "should position an anchor from the computed
+    // centroid when the center property is %s" cases below prove it. What remains below is only
+    // the hand-written-projection case, which is a separate thing.
     /** A mapPath whose projection reports what it was handed, and where it sent it. */
     const spyPath = (project: (point: number[]) => [number, number] | null, seen: unknown[]) =>
       Object.assign(() => "M0,0Z", {

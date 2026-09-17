@@ -259,11 +259,15 @@ describe("component/line", () => {
         expect(yOf("50")).toBe("M0,0L10,50L20,20");
       });
 
-      test("Infinity passes the guard and truncates the rendered line", () => {
-        // BUG: a scale over a zero-width domain returns Infinity, which is a number as far
-        // as isNaN is concerned. It reaches the d attribute, where it is not a valid SVG
-        // coordinate, so the browser drops that segment and everything after it. bar has
-        // the same hole in handleMissingVal, and it fails just as silently here.
+      // BUG(#440): a scale over a zero-width domain returns Infinity, which is a number as
+      // far as isNaN is concerned. It reaches the d attribute, where it is not a valid SVG
+      // coordinate, so the browser drops that segment and everything after it - the line is
+      // truncated at the bad point rather than broken across it, the way a NaN is. bar has
+      // the same hole in handleMissingVal, and it fails just as silently here.
+      // current: d="M0,0L30,40L10,InfinityL60,80". expected: the non-finite point is treated
+      // as missing, as a NaN already is.
+      // Skipped, not deleted: it fails with "expected 'M0,0L30,40L10,InfinityL60,80' not to contain 'Infinity'".
+      test.skip("treats a non-finite value as missing, the way it treats NaN", () => {
         const node = render(lineOf(), [
           [
             { x: 0, y: 0 },
@@ -272,8 +276,7 @@ describe("component/line", () => {
             { x: 60, y: 80 },
           ],
         ]);
-        expect(ds(node)).toEqual(["M0,0L30,40L10,InfinityL60,80"]);
-        expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBe(50);
+        expect(ds(node)[0]).not.toContain("Infinity");
       });
 
       test("setting defined silently gives up the NaN guard", () => {
@@ -597,12 +600,16 @@ describe("component/line", () => {
     });
 
     describe("known quirks", () => {
-      test("an entering line has no d attribute at all on the first tick", () => {
-        // BUG: with the default transition, d and stroke-width are only written through
-        // the transition, so a freshly rendered chart has an empty <path> until the
-        // first animation frame runs. Anything that measures the path immediately -
-        // getTotalLength, a bounding box, a server-side or synchronous screenshot -
-        // sees nothing. bar and dot both write their geometry synchronously first.
+      // BUG(#438): with the default transition, d and stroke-width are only written through
+      // the transition, so a freshly rendered chart has an empty <path> until the
+      // first animation frame runs. Anything that measures the path immediately -
+      // getTotalLength, a bounding box, a server-side or synchronous screenshot -
+      // sees nothing. bar and dot both write their geometry synchronously first.
+      // current: d is null and stroke-width unset on the render tick. expected: both are
+      // written first, with the transition interpolating on top of them. stackedArea has the
+      // widest version of the same hole, deferring its fill and stroke as well.
+      // Skipped, not deleted: it fails with "expected [ null ] to not deeply equal [ null ]".
+      test.skip("writes an entering line's d and stroke-width on the first tick", () => {
         const node = render(
           line()
             .x((d: Point) => d.x)
@@ -611,8 +618,8 @@ describe("component/line", () => {
           oneLine,
         );
         expect(paths(node).length).toBe(1);
-        expect(ds(node)).toEqual([null]);
-        expect(styles(node, "stroke-width")).toEqual([""]);
+        expect(ds(node)).not.toEqual([null]);
+        expect(styles(node, "stroke-width")).not.toEqual([""]);
       });
 
       test("an entering line snaps to its final shape instead of animating", async () => {
