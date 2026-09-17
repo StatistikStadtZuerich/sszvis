@@ -1,0 +1,75 @@
+// #label Tooltip
+// #hint Highlights the hovered bar and shows its value.
+
+/* BAR_FILL is a scalar, not a block: the template uses it above the components hole. */
+
+// #scalar ACTIONS_PARAM actions
+// #scalar BAR_FILL (d) => (isSelected(state)(d) ? barFillHighlight : _barFill)
+
+// #region stateTypes
+selection: Datum[];
+// #endregion
+
+// #region actionTypes
+showTooltip: (state: State, e: Event, xValue: number | null, category: string | null) => void;
+hideTooltip: (state: State) => void;
+// #endregion
+
+// #region init
+state.selection = [];
+// #endregion
+
+// #region actions
+// NOTE: `move` reports the x value first and the category second here, the
+// opposite of the vertical chart, because the category is the y dimension.
+showTooltip(state, _e, _xValue, category) {
+  state.selection = state.data.filter((d) => cAcc(d) === category);
+},
+
+hideTooltip(state) {
+  state.selection = [];
+},
+// #endregion
+
+// #region colors
+const barFillHighlight = cScale.darker()(SERIES_KEY);
+// #endregion
+
+// #region layers
+const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+// #endregion
+
+// #region components
+const tooltipText = __TOOLTIP_TEXT__;
+
+const tooltip = sszvis
+  .tooltip<Datum>()
+  .renderInto(tooltipLayer)
+  .orientation(sszvis.fitTooltip("bottom", bounds))
+  .header(tooltipText)
+  .visible(isSelected(state));
+// #endregion
+
+// #region render
+bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+// #endregion
+
+// #region interaction
+// Interaction
+
+// NOTE: The move behavior provides tooltips in the absence of a bar, i.e.
+// when we have missing data.
+const interactionLayer = sszvis
+  .move<number, string>()
+  .xScale(widthScale)
+  .yScale(yScale)
+  .fireOnPanOnly(true)
+  .on("move", actions.showTooltip)
+  .on("end", actions.hideTooltip);
+
+chartLayer.selectGroup("interaction").call(interactionLayer);
+// #endregion
+
+// #region helpers
+const isSelected = (state: State) => (d: Datum) => sszvis.contains(state.selection, d);
+// #endregion

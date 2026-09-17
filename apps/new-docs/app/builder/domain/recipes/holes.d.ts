@@ -12,7 +12,7 @@ type __ACTIONS_TYPE__ = Record<string, never>;
 /** The reference lines, as an array literal; the template's constant supplies the element type. */
 declare const __REFERENCE_LINES__: never[];
 
-// Bar chart
+// Bar charts, vertical and horizontal
 
 /** The single series' name, which is also its key in the colour scale. */
 declare const __SERIES_KEY__: string;
@@ -25,7 +25,7 @@ declare const __BAR_FILL__: string;
 /** The tooltip's text: a `modularTextHTML` chain over the roles `spec.tooltip` names. */
 declare const __TOOLTIP_TEXT__: ReturnType<typeof sszvis.modularTextHTML>;
 
-// Line chart
+// Line chart (X_LABEL and Y_LABEL are shared with the bar charts)
 
 /** CSV column holding the date. */
 declare const __DATE_FIELD__: string;
