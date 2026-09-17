@@ -2,11 +2,7 @@ import { type GeoProjection, geoCentroid, geoPath } from "d3";
 import type { FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { resolvedColor } from "../../support/domValues.js";
-import {
-  missingFill,
-  missingId,
-  square as squareFeature,
-} from "../../support/mapReaders.js";
+import { missingFill, missingId, square as squareFeature } from "../../support/mapReaders.js";
 import { describesMapPathGeometry } from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";

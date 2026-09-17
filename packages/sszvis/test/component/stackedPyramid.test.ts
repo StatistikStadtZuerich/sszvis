@@ -530,7 +530,10 @@ describe("component/stackedPyramid", () => {
       leftBars: bars(node, "leftStack").length,
       rightBars: bars(node, "rightStack").length,
     }),
-    full: { data: layout()[0], marks: { leftStacks: 2, rightStacks: 2, leftBars: 4, rightBars: 4 } },
+    full: {
+      data: layout()[0],
+      marks: { leftStacks: 2, rightStacks: 2, leftBars: 4, rightBars: 4 },
+    },
     // No shrink case: losing a series and losing a row empty different halves of this nested
     // join, and both keep tests of their own under "bars" below.
   }));

@@ -305,7 +305,6 @@ describe("component/groupedBars", () => {
 
       expect(anchorTransforms()).toEqual([`translate(${valueScale(25)},${meanSlotCentre()})`]);
     });
-
   });
 
   describe("missing value rendering", () => {
