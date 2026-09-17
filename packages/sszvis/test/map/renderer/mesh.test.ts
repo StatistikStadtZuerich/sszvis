@@ -1,7 +1,9 @@
 import { geoPath } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { resolvedColor } from "../../support/domValues.js";
 import {
+  describesKeyScopedElements,
   describesMapPathGeometry,
   describesNoDecorations,
   describesNoScheduledTransition,
@@ -204,50 +206,24 @@ describe("map/renderer/mesh", () => {
     // restyled the first one's path instead of drawing its own. Each mesh now owns the path
     // carrying its own key, so two border sets - administrative boundaries and lake outlines,
     // say - coexist in one group.
-    test("two meshes with distinct keys draw two paths", () => {
-      const layer = group("two-meshes");
-      layer.call(
-        mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key("admin").borderColor("#ff0000"),
-      );
-      const first = borders(layer.node() as SVGGElement)[0];
-      layer.call(
-        mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key("lakes").borderColor("#00ff00"),
-      );
-      const after = borders(layer.node() as SVGGElement);
-      expect(after).toHaveLength(2);
-      expect(after[0]).toBe(first);
-      expect(after.map((b) => b.style.stroke)).toEqual(["rgb(255, 0, 0)", "rgb(0, 255, 0)"]);
-    });
-
-    test("re-rendering one key reuses that key's path and leaves the other alone", () => {
-      const layer = group("two-meshes-rerender");
-      const draw = (key: string, color: string) =>
-        layer.call(
-          mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).key(key).borderColor(color),
-        );
-      draw("admin", "#ff0000");
-      draw("lakes", "#00ff00");
-      const before = borders(layer.node() as SVGGElement);
-      draw("admin", "#0000ff");
-      const after = borders(layer.node() as SVGGElement);
-      expect(after).toEqual(before);
-      expect(after.map((b) => b.style.stroke)).toEqual(["rgb(0, 0, 255)", "rgb(0, 255, 0)"]);
-    });
-
-    // Two meshes sharing a key are still one path: the key is what identifies a mesh, and the
-    // default key is what makes a re-render reuse its element.
-    test("two meshes sharing a key still share one path", () => {
-      const layer = group("two-meshes-same-key");
-      layer.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#ff0000"));
-      layer.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#00ff00"));
-      const after = borders(layer.node() as SVGGElement);
-      expect(after).toHaveLength(1);
-      expect(after[0].style.stroke).toBe("rgb(0, 255, 0)");
+    describesKeyScopedElements({
+      render: ({ group: key, key: meshKey, variant }) => {
+        const component = mapRendererMesh()
+          .geoJson(mesh())
+          .mapPath(mapPathOf())
+          .borderColor(variant);
+        const layer = group(key);
+        layer.call(meshKey === undefined ? component : component.key(meshKey));
+        return layer.node() as SVGGElement;
+      },
+      marks: (node) => borders(node),
+      variantOf: (mark) => resolvedColor((mark as SVGPathElement).style.stroke),
+      variants: ["#ff0000", "#00ff00"],
     });
 
     // The selector is scoped to the layer's own children, so a mesh in a nested group is not
     // rebound by an outer one.
-    test("does not rebind a mesh nested in a child group", () => {
+    test("should leave a nested mesh alone when an outer group renders over it", () => {
       const layer = group("nested-mesh");
       const inner = layer.append("g");
       inner.call(mapRendererMesh().geoJson(mesh()).mapPath(mapPathOf()).borderColor("#ff0000"));

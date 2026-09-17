@@ -1,5 +1,6 @@
 import { scaleThreshold } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { translationOf } from "../support/domValues.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import legendColorBinned from "../../src/legend/binnedColorScale.js";
 import "../../src/d3-selectgroup.js";
@@ -45,7 +46,8 @@ describe("legend/binnedColorScale", () => {
     expect(node.querySelectorAll("rect.sszvis-legend__crispmark").length).toBe(4);
   });
 
-  test("should lay the bins out across the width inset by the end circles", () => {
+  // One bin is one rect, so its four geometry attributes are one contract rather than four.
+  test("should lay the bins out along a single baseline across the inset width", () => {
     const node = render(standard());
     // innerRange is [0, width - 2 * circleRad] = [0, 190], offset by circleRad = 5
     expect(attrs(node, "rect.sszvis-legend__crispmark", "x")).toEqual(["5", "52", "100", "147"]);
@@ -55,16 +57,7 @@ describe("legend/binnedColorScale", () => {
       "47.5",
       "47.5",
     ]);
-  });
-
-  test("should colour each bin with the scale value below its upper edge", () => {
-    const node = render(standard());
-    // the first rect covers [0, 25) so it takes scale(0), and so on
-    expect(attrs(node, "rect.sszvis-legend__crispmark", "fill")).toEqual(["#a", "#b", "#c", "#d"]);
-  });
-
-  test("should give every bin the same height and sit them at y=0", () => {
-    const node = render(standard());
+    // Every bin shares the ramp's height and baseline, so the row reads as one band.
     expect(attrs(node, "rect.sszvis-legend__crispmark", "height")).toEqual([
       "10",
       "10",
@@ -72,6 +65,12 @@ describe("legend/binnedColorScale", () => {
       "10",
     ]);
     expect(attrs(node, "rect.sszvis-legend__crispmark", "y")).toEqual(["0", "0", "0", "0"]);
+  });
+
+  test("should colour each bin with the scale value below its upper edge", () => {
+    const node = render(standard());
+    // the first rect covers [0, 25) so it takes scale(0), and so on
+    expect(attrs(node, "rect.sszvis-legend__crispmark", "fill")).toEqual(["#a", "#b", "#c", "#d"]);
   });
 
   test("should cap each end with a circle coloured from the endpoints", () => {
@@ -98,15 +97,18 @@ describe("legend/binnedColorScale", () => {
     expect(lines.map((l) => l.getAttribute("stroke"))).toEqual(["#B8B8B8", "#B8B8B8", "#B8B8B8"]);
   });
 
-  test("should label each internal bin edge with its display value", () => {
+  test("should label each internal bin edge with its display value, placed on that edge", () => {
     const node = render(standard());
     const labels = [...node.querySelectorAll("text.sszvis-legend__axislabel")];
     expect(labels.length).toBe(3);
     expect(labels.map((l) => l.textContent)).toEqual(["25", "50", "75"]);
-    expect(labels.map((l) => l.getAttribute("transform"))).toEqual([
-      "translate(52.5,30)",
-      "translate(100,30)",
-      "translate(147.5,30)",
+    // Read as numbers rather than as strings: where the label sits is the contract, how the
+    // transform happens to be spelled is not. The half-pixel disagreement with the tick line at
+    // the middle edge is deliberate and owned by the quirk test below.
+    expect(labels.map((l) => translationOf(l))).toEqual([
+      { x: 52.5, y: 30 },
+      { x: 100, y: 30 },
+      { x: 147.5, y: 30 },
     ]);
   });
 
@@ -123,22 +125,20 @@ describe("legend/binnedColorScale", () => {
     ).toEqual(["25%", "50%", "75%"]);
   });
 
-  test("should scale the layout with the width property", () => {
-    const node = render(
+  test("should span the width it is given, and 200 when it is given none", () => {
+    const capsAt = (node: Element) =>
+      [...node.querySelectorAll("circle.sszvis-legend__circle")].map((c) => c.getAttribute("cx"));
+    const narrow = render(
       legendColorBinned().scale(scale()).displayValues([50]).endpoints([0, 100]).width(100),
     );
     // innerRange becomes [0, 90]; the single display value splits it in half
-    expect(attrs(node, "rect.sszvis-legend__crispmark", "x")).toEqual(["5", "50"]);
-    expect(
-      [...node.querySelectorAll("circle.sszvis-legend__circle")].map((c) => c.getAttribute("cx")),
-    ).toEqual(["5", "95"]);
-  });
+    expect(attrs(narrow, "rect.sszvis-legend__crispmark", "x")).toEqual(["5", "50"]);
+    expect(capsAt(narrow)).toEqual(["5", "95"]);
 
-  test("should default the width to 200", () => {
-    const node = render(legendColorBinned().scale(scale()).displayValues([50]).endpoints([0, 100]));
-    expect(
-      [...node.querySelectorAll("circle.sszvis-legend__circle")].map((c) => c.getAttribute("cx")),
-    ).toEqual(["5", "195"]);
+    const byDefault = render(
+      legendColorBinned().scale(scale()).displayValues([50]).endpoints([0, 100]),
+    );
+    expect(capsAt(byDefault)).toEqual(["5", "195"]);
   });
 
   test("should re-render in place rather than appending duplicates", () => {
@@ -155,26 +155,27 @@ describe("legend/binnedColorScale", () => {
   });
 
   describe("required properties", () => {
-    test("should log an error and render nothing without a scale", () => {
-      const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-      const node = render(legendColorBinned().displayValues([50]).endpoints([0, 100]));
-      expect(spy).toHaveBeenCalled();
-      expect(node.querySelectorAll("rect").length).toBe(0);
-    });
-
-    test("should log an error and render nothing without displayValues", () => {
-      const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-      const node = render(legendColorBinned().scale(scale()).endpoints([0, 100]));
-      expect(spy).toHaveBeenCalled();
-      expect(node.querySelectorAll("rect").length).toBe(0);
-    });
-
-    test("should log an error and render nothing without endpoints", () => {
-      const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-      const node = render(legendColorBinned().scale(scale()).displayValues([50]));
-      expect(spy).toHaveBeenCalled();
-      expect(node.querySelectorAll("rect").length).toBe(0);
-    });
+    // All three are reported the same way, and none of them can draw a ramp: without a scale
+    // there is no colour, without displayValues no edges, without endpoints no extent.
+    test.each([
+      {
+        missing: "a scale",
+        build: () => legendColorBinned().displayValues([50]).endpoints([0, 100]),
+      },
+      {
+        missing: "displayValues",
+        build: () => legendColorBinned().scale(scale()).endpoints([0, 100]),
+      },
+      { missing: "endpoints", build: () => legendColorBinned().scale(scale()).displayValues([50]) },
+    ])(
+      "should report the problem and draw nothing when it is built without $missing",
+      ({ build }) => {
+        const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+        const node = render(build());
+        expect(spy).toHaveBeenCalled();
+        expect(node.querySelectorAll("rect").length).toBe(0);
+      },
+    );
   });
 
   describe("known quirks", () => {

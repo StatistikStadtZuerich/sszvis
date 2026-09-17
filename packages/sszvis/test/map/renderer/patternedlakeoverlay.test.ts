@@ -1,7 +1,11 @@
 import { geoPath } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { describesNoScheduledTransition } from "../../support/mapRendererConformance.js";
+import { resolvedColor } from "../../support/domValues.js";
+import {
+  describesKeyScopedElements,
+  describesNoScheduledTransition,
+} from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
 import { swissMapProjection } from "../../../src/map/mapUtils.js";
@@ -349,33 +353,46 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(idOf(node, "defs > pattern")).toBe(firstId);
     });
 
-    // Two overlays in one group each own their definitions and paths when given distinct keys.
-    test("keeps two keyed overlays in one group apart", () => {
+    // The key decides which paths a second overlay in the same group takes over. The shared
+    // cases cover the path identity; the definitions each key owns are this renderer's own
+    // concern and stay below.
+    describesKeyScopedElements({
+      render: ({ group: groupKey, key, variant }) => {
+        const component = mapRendererPatternedLakeOverlay()
+          .mapPath(mapPathOf())
+          .lakeFeature(lake())
+          .lakeBounds(bounds())
+          .lakePathColor(variant);
+        const layer = group(groupKey);
+        layer.call(key === undefined ? component : component.key(key));
+        return layer.node() as SVGGElement;
+      },
+      marks: (node) => defs(node, "path.sszvis-map__lakepath"),
+      variantOf: (mark) => resolvedColor((mark as SVGPathElement).style.stroke),
+      variants: ["#ff0000", "#00ff00"],
+    });
+
+    // Unlike the other keyed renderers, each overlay also emits a pattern, gradient and mask of
+    // its own, and its lake shape has to reference the ones belonging to its own key (issue #258).
+    test("should give each keyed overlay its own definitions when two share a group", () => {
       const layer = group("two-overlays");
-      const renderWith = (key: string, lakeFeature: ReturnType<typeof lake>, colour: string) =>
+      const renderWith = (key: string, lakeFeature: ReturnType<typeof lake>) =>
         layer.call(
           mapRendererPatternedLakeOverlay()
             .key(key)
             .mapPath(mapPathOf())
             .lakeFeature(lakeFeature)
-            .lakeBounds(bounds())
-            .lakePathColor(colour),
+            .lakeBounds(bounds()),
         );
-      renderWith("a", lake(), "#ff0000");
-      renderWith("b", lake(2), "#00ff00");
+      renderWith("a", lake());
+      renderWith("b", lake(2));
       const node = layer.node() as SVGGElement;
       expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(2);
-      expect(defs(node, "path.sszvis-map__lakepath")).toHaveLength(2);
       expect(defs(node, "defs > pattern")).toHaveLength(2);
       expect(idOf(node, 'defs > pattern[id$="a"]')).toBe("lake-pattern-a");
       expect(
         defs(node, 'path.sszvis-map__lakezurich[data-lake-key="b"]')[0]?.getAttribute("fill"),
       ).toBe("url(#lake-pattern-b)");
-      expect(
-        defs(node, "path.sszvis-map__lakepath").map(
-          (path) => (path as SVGPathElement).style.stroke,
-        ),
-      ).toEqual(["rgb(255, 0, 0)", "rgb(0, 255, 0)"]);
     });
 
     // The path selectors are scoped to the rendering group's own children, so an overlay drawn
@@ -401,24 +418,6 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(
         defs(inner.node() as SVGGElement, ":scope > path.sszvis-map__lakezurich"),
       ).toHaveLength(1);
-    });
-
-    test("re-renders a keyed overlay into its own existing paths", () => {
-      const layer = group("keyed-rerender");
-      const renderWith = () =>
-        layer.call(
-          mapRendererPatternedLakeOverlay()
-            .key("only")
-            .mapPath(mapPathOf())
-            .lakeFeature(lake())
-            .lakeBounds(bounds()),
-        );
-      renderWith();
-      const first = lakeShape(layer.node() as SVGGElement);
-      renderWith();
-      const node = layer.node() as SVGGElement;
-      expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(1);
-      expect(lakeShape(node)).toBe(first);
     });
 
     // The pattern helpers data-join their contents, so a map re-rendering on resize updates its
@@ -696,23 +695,6 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(renderKeyed("numeric-key", "1")).toThrow(
         /\[mapRendererPatternedLakeOverlay\] the key property/,
       );
-    });
-
-    test("shares one scope between two unkeyed overlays in a group", () => {
-      const layer = group("two-unkeyed-overlays");
-      const renderWith = (lakeFeature: ReturnType<typeof lake>) =>
-        layer.call(
-          mapRendererPatternedLakeOverlay()
-            .mapPath(mapPathOf())
-            .lakeFeature(lakeFeature)
-            .lakeBounds(bounds()),
-        );
-      renderWith(lake());
-      const first = lakeShape(layer.node() as SVGGElement);
-      renderWith(lake(2));
-      const node = layer.node() as SVGGElement;
-      expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(1);
-      expect(lakeShape(node)).toBe(first);
     });
 
     // The path data is reapplied on every render rather than only on enter, so a lakeFeature

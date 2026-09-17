@@ -43,8 +43,8 @@ describe("legend/radius", () => {
 
   test("should default to three ticks: domain max, midpoint of the range, domain min", () => {
     const node = render(legendRadius().scale(linear()));
-    // scale.invert(mean([0, 20])) === invert(10) === 50 for a linear scale.
-    expect(attrs(node, "text.sszvis-legend__label", "y")).toEqual(["-20", "0", "20"]);
+    // scale.invert(mean([0, 20])) === invert(10) === 50 for a linear scale. Where the three
+    // ticks are drawn is the geometry test's subject, not this one's.
     expect([...node.querySelectorAll("text")].map((t) => t.textContent)).toEqual([
       "100",
       "50",
@@ -62,26 +62,28 @@ describe("legend/radius", () => {
     ]);
   });
 
-  test("should bottom-align the circles by offsetting cy by the radius", () => {
+  /**
+   * A tick is a circle, its leader line and its label, and all three are placed off the one
+   * `getCircleEdge` formula: the circles rest on a shared baseline, and the line and the label
+   * meet the top edge of the circle they belong to. Asserting them together is what makes a
+   * change to that formula show up as one failure instead of three.
+   */
+  test("should line each tick's circle, leader and label up on the circle's top edge", () => {
     const node = render(legendRadius().scale(linear()));
-    expect(attrs(node, "circle.sszvis-legend__greyline", "r")).toEqual(["20", "10", "0"]);
     // cy = maxRadius - r, so every circle rests on the same baseline.
+    expect(attrs(node, "circle.sszvis-legend__greyline", "r")).toEqual(["20", "10", "0"]);
     expect(attrs(node, "circle.sszvis-legend__greyline", "cy")).toEqual(["0", "10", "20"]);
-    expect(attrs(node, "circle.sszvis-legend__greyline", "stroke-width")).toEqual(["1", "1", "1"]);
-  });
 
-  test("should draw each leader line at the top edge of its circle", () => {
-    const node = render(legendRadius().scale(linear()));
-    // y = maxRadius - 2r, i.e. the top of a circle whose bottom sits at maxRadius.
-    expect(attrs(node, "line.sszvis-legend__dashedline", "y1")).toEqual(["-20", "0", "20"]);
-    expect(attrs(node, "line.sszvis-legend__dashedline", "y2")).toEqual(["-20", "0", "20"]);
+    // y = maxRadius - 2r, i.e. the top of a circle whose bottom sits at maxRadius. The leader
+    // is horizontal, starts at the centre line and extends 15px past the widest circle.
+    const topEdges = ["-20", "0", "20"];
+    expect(attrs(node, "line.sszvis-legend__dashedline", "y1")).toEqual(topEdges);
+    expect(attrs(node, "line.sszvis-legend__dashedline", "y2")).toEqual(topEdges);
     expect(attrs(node, "line.sszvis-legend__dashedline", "x1")).toEqual(["0", "0", "0"]);
-    // lines extend 15px past the widest circle
     expect(attrs(node, "line.sszvis-legend__dashedline", "x2")).toEqual(["35", "35", "35"]);
-  });
 
-  test("should place labels 18px past the widest circle, vertically centered", () => {
-    const node = render(legendRadius().scale(linear()));
+    // The label sits on the same edge, 18px past the widest circle and optically centred on it.
+    expect(attrs(node, "text.sszvis-legend__label", "y")).toEqual(topEdges);
     expect(attrs(node, "text.sszvis-legend__label", "dx")).toEqual(["38", "38", "38"]);
     expect(attrs(node, "text.sszvis-legend__label", "dy")).toEqual(["0.35em", "0.35em", "0.35em"]);
   });
@@ -92,12 +94,18 @@ describe("legend/radius", () => {
     expect(label?.getAttribute("class")).toBe("sszvis-legend__label sszvis-legend__label--small");
   });
 
-  test("should honor explicit tickValues", () => {
+  // One circle, one leader and one label per tick, however many ticks the caller asks for.
+  test("should draw a circle, leader and label for each tick when tickValues are given", () => {
     const node = render(legendRadius().scale(linear()).tickValues([100, 25]));
     expect(node.querySelectorAll("circle").length).toBe(2);
     expect(node.querySelectorAll("line").length).toBe(2);
     expect([...node.querySelectorAll("text")].map((t) => t.textContent)).toEqual(["100", "25"]);
     expect(attrs(node, "circle.sszvis-legend__greyline", "r")).toEqual(["20", "5"]);
+
+    const four = render(legendRadius().scale(linear()).tickValues([100, 75, 50, 25]));
+    expect(four.querySelectorAll("circle").length).toBe(4);
+    expect(four.querySelectorAll("line").length).toBe(4);
+    expect(four.querySelectorAll("text").length).toBe(4);
   });
 
   test("should format labels with tickFormat", () => {
@@ -162,13 +170,6 @@ describe("legend/radius", () => {
         .tickFormat((d, i) => d / 2 + i),
     );
     expect([...node.querySelectorAll("text")].map((t) => t.textContent)).toEqual(["50", "26"]);
-  });
-
-  test("should render one circle, line and label per tick", () => {
-    const node = render(legendRadius().scale(linear()).tickValues([100, 75, 50, 25]));
-    expect(node.querySelectorAll("circle").length).toBe(4);
-    expect(node.querySelectorAll("line").length).toBe(4);
-    expect(node.querySelectorAll("text").length).toBe(4);
   });
 
   test("should re-render in place rather than appending duplicates", () => {

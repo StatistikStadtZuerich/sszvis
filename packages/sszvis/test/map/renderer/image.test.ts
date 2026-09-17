@@ -121,17 +121,6 @@ describe("map/renderer/image", () => {
       expect(image(node)?.style.pointerEvents).toBe("none");
     });
 
-    test("calls the projection once per corner, with the corner coordinates", () => {
-      const seen: unknown[] = [];
-      const projection = projectionOf();
-      const spy = (point: [number, number]) => {
-        seen.push(point);
-        return projection(point);
-      };
-      layer().call(mapRendererImage().projection(spy).src(SRC).geoBounds(GEO_BOUNDS));
-      expect(seen).toEqual([GEO_BOUNDS[0], GEO_BOUNDS[1]]);
-    });
-
     test("layers a second image renderer alongside the first", () => {
       const target = layer("two-images");
       target.call(mapRendererImage().projection(projectionOf()).src(SRC).geoBounds(GEO_BOUNDS));

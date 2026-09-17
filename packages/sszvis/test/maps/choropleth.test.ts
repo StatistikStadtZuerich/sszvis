@@ -1,6 +1,7 @@
 import { select } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { resolvedColor } from "../support/domValues.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import { component } from "../../src/d3-component.js";
 import "../../src/d3-selectgroup.js";
@@ -481,11 +482,6 @@ describe("maps/choropleth", () => {
       expect(lakePaths(node)).toHaveLength(0);
       expect(node.querySelectorAll(`#lake-pattern-${lakeScope(node)}`)).toHaveLength(0);
     });
-
-    test("delegates lakePathColor to the lake renderer", () => {
-      const node = render(fullData, (c) => c.lakePathColor("#00ff00"));
-      expect(lakePaths(node)[0].style.stroke).toBe("rgb(0, 255, 0)");
-    });
   });
 
   // withLake off reaches the overlay as "no lake feature", which the overlay answers by removing
@@ -540,14 +536,6 @@ describe("maps/choropleth", () => {
       expect(highlights(node)).toHaveLength(1);
     });
 
-    test("delegates the highlight stroke and its width", () => {
-      const node = render(fullData, (c) =>
-        c.highlight([fullData[1]]).highlightStroke("#ff0000").highlightStrokeWidth(5),
-      );
-      expect(highlights(node)[0].style.stroke).toBe("rgb(255, 0, 0)");
-      expect(highlights(node)[0].style.strokeWidth).toBe("5");
-    });
-
     test("matches the highlight data with the map's keyName", () => {
       const collection = geoJson();
       const map = choropleth<{ kreis: string }>()
@@ -571,12 +559,58 @@ describe("maps/choropleth", () => {
   });
 
   describe("delegated base and mesh properties", () => {
-    test("delegates fill to the base renderer", () => {
-      const node = render(fullData, (c) => c.fill("#ff0000").transitionColor(false));
-      expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
-    });
+    /**
+     * Choropleth owns no drawing of its own: every one of these properties is forwarded to the
+     * child renderer that draws the thing it describes. One row per property, so adding a
+     * delegated property is a one-line change rather than another near-identical test.
+     */
+    test.each([
+      {
+        prop: "fill",
+        configure: (c: Choropleth<Datum>) => c.fill("#ff0000").transitionColor(false),
+        read: (node: Element) => attrs(node, "fill")[0],
+        expected: "#ff0000",
+      },
+      {
+        prop: "borderColor",
+        configure: (c: Choropleth<Datum>) => c.borderColor("#0000ff"),
+        read: (node: Element) => resolvedColor(borders(node)[0].style.stroke),
+        expected: resolvedColor("#0000ff"),
+      },
+      {
+        prop: "strokeWidth",
+        configure: (c: Choropleth<Datum>) => c.strokeWidth(3),
+        read: (node: Element) => borders(node)[0].style.strokeWidth,
+        expected: "3",
+      },
+      {
+        prop: "lakePathColor",
+        configure: (c: Choropleth<Datum>) => c.lakePathColor("#00ff00"),
+        read: (node: Element) => resolvedColor(lakePaths(node)[0].style.stroke),
+        expected: resolvedColor("#00ff00"),
+      },
+      {
+        prop: "highlightStroke",
+        configure: (c: Choropleth<Datum>) => c.highlight([fullData[1]]).highlightStroke("#ff0000"),
+        read: (node: Element) => resolvedColor(highlights(node)[0].style.stroke),
+        expected: resolvedColor("#ff0000"),
+      },
+      {
+        prop: "highlightStrokeWidth",
+        configure: (c: Choropleth<Datum>) => c.highlight([fullData[1]]).highlightStrokeWidth(5),
+        read: (node: Element) => highlights(node)[0].style.strokeWidth,
+        expected: "5",
+      },
+    ])(
+      "should paint $prop onto the child renderer's marks when it is set on the map",
+      ({ configure, read, expected }) => {
+        expect(read(render(fullData, configure))).toBe(expected);
+      },
+    );
 
-    test("delegates defined to the base renderer", () => {
+    // defined is delegated too, but what reaches the DOM is a texture rather than the value the
+    // caller passed, so it is asserted as the behaviour rather than as a pass-through.
+    test("should texture only the areas the defined predicate rejects when defined is set", () => {
       const node = render(fullData, (c) =>
         c
           .fill("#ff0000")
@@ -586,12 +620,6 @@ describe("maps/choropleth", () => {
       const fills = attrs(node, "fill");
       expect([fills[0], fills[2]]).toEqual(["#ff0000", "#ff0000"]);
       expect(fills[1]).toMatch(missingPattern);
-    });
-
-    test("delegates borderColor and strokeWidth to the mesh renderer", () => {
-      const node = render(fullData, (c) => c.borderColor("#0000ff").strokeWidth(3));
-      expect(borders(node)[0].style.stroke).toBe("rgb(0, 0, 255)");
-      expect(borders(node)[0].style.strokeWidth).toBe("3");
     });
 
     test("reads a delegated property back from its renderer", () => {
@@ -823,59 +851,74 @@ describe("maps/choropleth", () => {
   });
 
   describe("required properties", () => {
-    // A map with no size can never render: the projection is fitted to undefined, its scale is
-    // NaN, and every area is drawn with NaN coordinates the browser drops. Reported instead.
-    test("throws when width and height are left out, naming the missing property", () => {
-      const collection = geoJson();
-      const map = choropleth().features(collection).borders(mesh()).withLake(false);
-      const target = layer();
-      expect(() => target.call(map)).toThrow(
-        "[choropleth] the width property is required, and must be a finite, non-negative number",
-      );
-      expect(() => target.call(map.width(100))).toThrow(/the height property is required/);
-    });
+    const SIZE_MESSAGE = "is required, and must be a finite, non-negative number";
+    const FEATURES_MESSAGE =
+      "[choropleth] the features property is required, and must be a GeoJSON feature collection";
 
-    test("throws for a non-finite or negative size", () => {
-      const map = choropleth().features(geoJson()).borders(mesh()).withLake(false);
-      expect(() => layer().call(map.width(Number.NaN).height(100))).toThrow(
-        /the width property is required/,
-      );
-      expect(() => layer().call(map.width(100).height(-1))).toThrow(
-        /the height property is required/,
-      );
+    /**
+     * Every one of these used to fail somewhere downstream instead: a map with no size fits its
+     * projection to undefined and draws every area at NaN coordinates the browser silently drops,
+     * and missing features failed as a bare TypeError out of prepareMergedGeoData, naming neither
+     * the component nor the property. They are all reported in the same shape now.
+     *
+     * A bare object carrying a features array is in the table too: it is not a FeatureCollection,
+     * and would otherwise reach projection fitting and render blank.
+     */
+    test.each([
+      {
+        missing: "width",
+        build: () => choropleth().features(geoJson()).borders(mesh()).withLake(false),
+        message: `[choropleth] the width property ${SIZE_MESSAGE}`,
+      },
+      {
+        missing: "height",
+        build: () => choropleth().features(geoJson()).borders(mesh()).withLake(false).width(100),
+        message: `[choropleth] the height property ${SIZE_MESSAGE}`,
+      },
+      {
+        missing: "a finite width",
+        build: () =>
+          choropleth()
+            .features(geoJson())
+            .borders(mesh())
+            .withLake(false)
+            .width(Number.NaN)
+            .height(100),
+        message: `[choropleth] the width property ${SIZE_MESSAGE}`,
+      },
+      {
+        missing: "a non-negative height",
+        build: () =>
+          choropleth().features(geoJson()).borders(mesh()).withLake(false).width(100).height(-1),
+        message: `[choropleth] the height property ${SIZE_MESSAGE}`,
+      },
+      {
+        missing: "features",
+        build: () => choropleth().width(100).height(100),
+        message: FEATURES_MESSAGE,
+      },
+      {
+        missing: "a features value that is a FeatureCollection",
+        build: () =>
+          choropleth()
+            .features({ type: "Feature", features: [] } as unknown as FeatureCollection<Polygon>)
+            .width(100)
+            .height(100),
+        message: FEATURES_MESSAGE,
+      },
+    ])("should name $missing when it is missing", ({ build, message }) => {
+      expect(() => layer().call(build())).toThrow(message);
     });
 
     // Nothing is drawn before the size is validated, so a misconfigured map leaves an empty layer
     // rather than a half-rendered one.
-    test("draws nothing at all when the size is missing", () => {
+    test("should leave the layer empty when it throws for a missing size", () => {
       const target = layer();
       expect(() =>
         target.call(choropleth().features(geoJson()).borders(mesh()).withLake(false)),
       ).toThrow();
       expect(areas(target.node() as SVGGElement)).toHaveLength(0);
     });
-
-    // features used to fail as a bare TypeError from prepareMergedGeoData, naming neither the
-    // component nor the property; it is reported in the same shape as the size now.
-    test("throws when features are missing, naming the missing property", () => {
-      expect(() => layer().call(choropleth().width(100).height(100))).toThrow(
-        "[choropleth] the features property is required, and must be a GeoJSON feature collection",
-      );
-    });
-  });
-
-  // A bare object carrying a features array is not a FeatureCollection, and would otherwise reach
-  // projection fitting and render blank rather than being reported.
-  test("throws when features is not a GeoJSON FeatureCollection", () => {
-    const notACollection = {
-      type: "Feature",
-      features: [],
-    } as unknown as FeatureCollection<Polygon>;
-    expect(() =>
-      layer().call(choropleth().features(notACollection).width(100).height(100)),
-    ).toThrow(
-      "[choropleth] the features property is required, and must be a GeoJSON feature collection",
-    );
   });
 
   describe("known quirks", () => {
