@@ -26,12 +26,12 @@ const byId = <N extends { id: string }>(nodes: N[], id: string) => nodes.find((n
 
 describe("layout/sankey", () => {
   describe("prepareData", () => {
-    test("creates one node per id in the column lists", () => {
+    test("should create one node per id in the column lists", () => {
       const { nodes } = prepare();
       expect(nodes.map((n) => n.id).sort()).toEqual(["a", "b", "c", "d"]);
     });
 
-    test("gives each node the value of its heavier side", () => {
+    test("should give each node the value of its heavier side", () => {
       const { nodes } = prepare();
       // a sources 10 + 5 and targets nothing
       expect(byId(nodes, "a")?.value).toBe(15);
@@ -40,24 +40,24 @@ describe("layout/sankey", () => {
       expect(byId(nodes, "d")?.value).toBe(5);
     });
 
-    test("records the column each node belongs to", () => {
+    test("should record the column each node belongs to", () => {
       const { nodes } = prepare();
       expect(byId(nodes, "a")?.columnIndex).toBe(0);
       expect(byId(nodes, "d")?.columnIndex).toBe(1);
     });
 
-    test("totals the values and counts the nodes of each column", () => {
+    test("should total the values and count the nodes of each column", () => {
       const { columnTotals, columnLengths } = prepare();
       expect(columnTotals).toEqual([18, 18]);
       expect(columnLengths).toEqual([2, 2]);
     });
 
-    test("sorts the nodes by descending value across all columns", () => {
+    test("should sort the nodes by descending value across all columns", () => {
       const { nodes } = prepare();
       expect(nodes.map((n) => n.id)).toEqual(["a", "c", "d", "b"]);
     });
 
-    test("sorts the nodes ascending when asked", () => {
+    test("should sort the nodes by ascending value when ascendingSort is set", () => {
       const data = prepareData<Row>()
         .source((d: Row) => d.from)
         .target((d: Row) => d.to)
@@ -68,7 +68,7 @@ describe("layout/sankey", () => {
       expect(data.nodes.map((n) => n.id)).toEqual(["b", "d", "c", "a"]);
     });
 
-    test("stacks the nodes within their own column", () => {
+    test("should stack the nodes within their own column", () => {
       const { nodes } = prepare();
       // a is first in column 0, b second; c is first in column 1, d second
       expect(byId(nodes, "a")).toMatchObject({ nodeIndex: 0, valueOffset: 0 });
@@ -77,18 +77,18 @@ describe("layout/sankey", () => {
       expect(byId(nodes, "d")).toMatchObject({ nodeIndex: 1, valueOffset: 13 });
     });
 
-    test("sorts the links by descending value so small ones paint last", () => {
+    test("should sort the links by descending value, so the small ones paint last", () => {
       const links = prepare().links;
       expect(links.map((l) => l.value)).toEqual([10, 5, 3]);
     });
 
-    test("links point at the node objects, not at ids", () => {
+    test("should point the links at the node objects rather than at ids", () => {
       const { nodes, links } = prepare();
       expect(links[0]?.src).toBe(byId(nodes, "a"));
       expect(links[0]?.tgt).toBe(byId(nodes, "c"));
     });
 
-    test("stacks the links within each node, ordered by the node they attach to", () => {
+    test("should stack the links within each node in the order of the nodes they attach to", () => {
       const links = prepare().links;
       const ac = links.find((l) => l.src.id === "a" && l.tgt.id === "c");
       const ad = links.find((l) => l.src.id === "a" && l.tgt.id === "d");
@@ -101,18 +101,15 @@ describe("layout/sankey", () => {
       expect(bc?.tgtOffset).toBe(10);
     });
 
-    test("gives the same links the same ids on every render", () => {
+    test("should key the links by their source row, so the ids are stable and unique", () => {
       // the component keys its link join on the id, so an id that changed between renders
       // would remove and re-add every path instead of transitioning it
       expect(prepare().links.map((l) => l.id)).toEqual(prepare().links.map((l) => l.id));
-    });
-
-    test("gives every link a unique id", () => {
       const links = prepare().links;
       expect(new Set(links.map((l) => l.id)).size).toBe(links.length);
     });
 
-    test("warns about a link to an unknown id and drops it", () => {
+    test("should warn and drop the link when it names an unknown id", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const { links } = prepare([{ from: "a", to: "nowhere", value: 1 }], COLUMNS);
       expect(links).toEqual([]);
@@ -120,7 +117,7 @@ describe("layout/sankey", () => {
       warn.mockRestore();
     });
 
-    test("drops several invalid links without crashing the value sort", () => {
+    test("should drop several invalid links without crashing the value sort", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const prepared = prepare(
         [
@@ -134,14 +131,14 @@ describe("layout/sankey", () => {
       warn.mockRestore();
     });
 
-    test("requires the source, target and value accessors", () => {
+    test("should throw when the source, target or value accessor is missing", () => {
       const bare = prepareData().idLists(COLUMNS);
       expect(() =>
         (bare as unknown as { apply: (d: Row[]) => unknown }).apply([LINKS[0] as Row]),
       ).toThrow(/source, target, value/);
     });
 
-    test("warns about a value that is not a number and drops the link", () => {
+    test("should warn and drop the link when its value is not a number", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const { links, nodes } = prepare(
         [{ from: "a", to: "c", value: "not a number" as unknown as number }],
@@ -153,7 +150,7 @@ describe("layout/sankey", () => {
       warn.mockRestore();
     });
 
-    test("warns about a negative value and drops the link", () => {
+    test("should warn and drop the link when its value is negative", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const prepared = prepare(
         [
@@ -170,7 +167,7 @@ describe("layout/sankey", () => {
       warn.mockRestore();
     });
 
-    test("warns about a link within one column and drops it", () => {
+    test("should warn and drop the link when it stays within one column", () => {
       // a sankey link runs between columns; one that does not is drawn as a chord that goes
       // nowhere
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
@@ -180,7 +177,7 @@ describe("layout/sankey", () => {
       warn.mockRestore();
     });
 
-    test("coerces the link value to a number", () => {
+    test("should coerce the link value when it is a numeric string", () => {
       const { nodes } = prepare([{ from: "a", to: "c", value: "7" as unknown as number }], COLUMNS);
       expect(byId(nodes, "a")?.value).toBe(7);
     });
@@ -189,66 +186,66 @@ describe("layout/sankey", () => {
   describe("computeLayout", () => {
     const layout = () => computeLayout([2, 2], [18, 18], 400, 600);
 
-    test("pads the nodes by a sixth of the height, capped at 50px", () => {
+    test("should pad the nodes by a sixth of the height, capped at 50px", () => {
       expect(layout().nodePadding).toBe(50);
     });
 
-    test("keeps the padding within [12, 50]", () => {
+    test("should clamp the node padding to [12, 50]", () => {
       // a tall column of many nodes: 400 * 0.15 / 19 = 3.2, floored at 12
       expect(computeLayout([20, 20], [18, 18], 400, 600).nodePadding).toBe(12);
       // a short chart with two nodes: 100 * 0.15 / 1 = 15
       expect(computeLayout([2, 2], [18, 18], 100, 600).nodePadding).toBe(15);
     });
 
-    test("scales the values to the space left over after padding", () => {
+    test("should scale the values to the space left over after the padding", () => {
       const { valueRange, valueDomain } = layout();
       // 400 - 50 padding pixels = 350 for 18 units
       expect(valueDomain).toEqual([0, 18]);
       expect(valueRange).toEqual([0, 350]);
     });
 
-    test("reports the padding in value units as well as pixels", () => {
+    test("should report the padding in value units as well as pixels", () => {
       const { valuePadding, nodePadding } = layout();
       expect(nodePadding).toBe(50);
       expect(valuePadding).toBeCloseTo(50 / (350 / 18), 9);
     });
 
-    test("centres the shorter columns vertically", () => {
+    test("should centre a column vertically when it carries less than the fullest one", () => {
       // column 1 carries half the value of column 0
       const { columnPaddings } = computeLayout([2, 2], [18, 9], 400, 600);
       expect(columnPaddings[0]).toBe(0);
       expect(columnPaddings[1]).toBeGreaterThan(0);
     });
 
-    test("gives equal columns no vertical padding", () => {
+    test("should give the columns no vertical padding when they carry equal values", () => {
       expect(layout().columnPaddings).toEqual([0, 0]);
     });
 
-    test("spreads the columns across the width, leaving room for the last node", () => {
+    test("should spread the columns across the width, leaving room for the last node", () => {
       const { columnRange, columnDomain, nodeThickness } = layout();
       expect(nodeThickness).toBe(20);
       expect(columnDomain).toEqual([0, 1]);
       expect(columnRange).toEqual([0, 600 - 20]);
     });
 
-    test("the column range is per column step, not the total width", () => {
+    test("should report the column range per column step rather than as the total width", () => {
       const three = computeLayout([2, 2, 2], [18, 18, 18], 400, 600);
       expect(three.columnRange).toEqual([0, (600 - 20) / 2]);
     });
 
-    test("a single column has no step at all", () => {
+    test("should report no column step when there is only one column", () => {
       // there is nothing to space out, so the column offset is 0 rather than a division by zero
       const single = computeLayout([2], [18], 400, 600);
       expect(single.columnRange).toEqual([0, 0]);
     });
 
-    test("columns of one node draw no gaps, so they report no padding", () => {
+    test("should report no padding when every column holds a single node", () => {
       const one = computeLayout([1, 1], [18, 18], 400, 600);
       expect(one.nodePadding).toBe(0);
       expect(one.valueRange[1]).toBe(400);
     });
 
-    test("a one-node column is left out of the padding minimum", () => {
+    test("should leave a one-node column out of the padding minimum", () => {
       // it has no gap of its own, so it must not charge one to the columns that do
       const mixed = computeLayout([1, 2], [18, 18], 400, 600);
       const alone = computeLayout([2, 2], [18, 18], 400, 600);
@@ -258,14 +255,14 @@ describe("layout/sankey", () => {
       expect(computeLayout([1, 20], [18, 18], 400, 600).nodePadding).toBe(12);
     });
 
-    test("a single node in a column still spreads the columns normally", () => {
+    test("should still spread the columns normally when each one holds a single node", () => {
       const oneNode = computeLayout([1, 1], [18, 18], 400, 600);
       expect(oneNode.columnRange).toEqual([0, 600 - 20]);
     });
   });
 
   describe("degenerate layouts", () => {
-    test("a diagram with no values at all is zeroed", () => {
+    test("should zero the layout when the diagram has no values at all", () => {
       const empty = computeLayout([2, 2], [0, 0], 400, 600);
       expect(empty.valueDomain).toEqual([0, 0]);
       expect(empty.valueRange).toEqual([0, 0]);
@@ -274,12 +271,12 @@ describe("layout/sankey", () => {
       expect(empty.columnPaddings).toEqual([0, 0]);
     });
 
-    test("one empty column among populated ones changes nothing", () => {
+    test("should leave the value range unchanged when one column among populated ones is empty", () => {
       const partial = computeLayout([2, 2], [18, 0], 400, 600);
       expect(partial.valueRange).toEqual(computeLayout([2, 2], [18, 18], 400, 600).valueRange);
     });
 
-    test("a diagram with no columns is zeroed", () => {
+    test("should zero the layout when the diagram has no columns", () => {
       expect(computeLayout([], [], 400, 600)).toEqual({
         valuePadding: 0,
         nodePadding: 0,
@@ -292,12 +289,12 @@ describe("layout/sankey", () => {
       });
     });
 
-    test("a diagram with no room is zeroed", () => {
+    test("should zero the value range when the diagram has no room", () => {
       expect(computeLayout([2, 2], [18, 18], 0, 600).valueRange).toEqual([0, 0]);
       expect(computeLayout([2, 2], [18, 18], 400, 0).valueRange).toEqual([0, 0]);
     });
 
-    test("a zeroed diagram zeroes its column range too", () => {
+    test("should zero the column range too when the diagram has no room", () => {
       // The multiplier is (columnWidth - nodeThickness) / (numColumns - 1), so a zero
       // columnWidth used to yield -20 here and place the second column to the left of a
       // container that has no room for either.
@@ -305,17 +302,17 @@ describe("layout/sankey", () => {
       expect(computeLayout([2, 2], [18, 18], 0, 600).columnRange).toEqual([0, 0]);
     });
 
-    test("rejects a negative height or width", () => {
+    test("should throw when the height or the width is negative", () => {
       expect(() => computeLayout([2, 2], [18, 18], -400, 600)).toThrow(/columnHeight/);
       expect(() => computeLayout([2, 2], [18, 18], 400, -600)).toThrow(/columnWidth/);
     });
 
-    test("rejects a column length that is not a whole number of nodes", () => {
+    test("should throw when a column length is not a whole number of nodes", () => {
       expect(() => computeLayout([2, 2.5], [18, 18], 400, 600)).toThrow(/columnLengths/);
       expect(() => computeLayout([2, -1], [18, 18], 400, 600)).toThrow(/columnLengths/);
     });
 
-    test("rejects a totals list that does not match the columns", () => {
+    test("should throw when the totals list does not match the columns", () => {
       expect(() => computeLayout([2, 2], [18], 400, 600)).toThrow(/columnTotals/);
     });
   });

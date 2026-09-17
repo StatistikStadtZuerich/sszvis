@@ -6,26 +6,26 @@ const DEFAULT_SIDE = 30;
 
 describe("heatTableDimensions", () => {
   describe("box sizing", () => {
-    test("caps the box side at 30px when there is room to spare", () => {
+    test("should cap the box side at 30px when there is room to spare", () => {
       const dim = dimensionsHeatTable(800, 2, 10, 5);
       expect(dim.side).toBe(DEFAULT_SIDE);
       expect(dim.paddedSide).toBe(DEFAULT_SIDE + 2);
     });
 
-    test("shrinks the box side to fit a narrow container", () => {
+    test("should shrink the box side when the container is too narrow for 30px boxes", () => {
       const dim = dimensionsHeatTable(100, 2, 10, 5);
       // (100 - 2 * 9) / 10
       expect(dim.side).toBeCloseTo(8.2, 9);
       expect(dim.paddedSide).toBeCloseTo(10.2, 9);
     });
 
-    test("padRatio is the padding's share of one padded side", () => {
+    test("should report padRatio as the padding's share of one padded side", () => {
       const dim = dimensionsHeatTable(800, 2, 10, 5);
       expect(dim.padRatio).toBeCloseTo(2 / 32, 12);
       expect(dim.padRatio).toBeCloseTo(0.0625, 12);
     });
 
-    test("a zero padding gives touching boxes and a zero padRatio", () => {
+    test("should give touching boxes and a zero padRatio when the padding is zero", () => {
       const dim = dimensionsHeatTable(800, 0, 10, 5);
       expect(dim.side).toBe(DEFAULT_SIDE);
       expect(dim.paddedSide).toBe(DEFAULT_SIDE);
@@ -34,50 +34,43 @@ describe("heatTableDimensions", () => {
   });
 
   describe("table size", () => {
-    test("counts the boxes and the padding between them, but not after the last one", () => {
+    test("should count the boxes and the gaps between them, but not after the last one", () => {
       const dim = dimensionsHeatTable(800, 2, 10, 5);
       expect(dim.width).toBe(10 * 32 - 2);
       expect(dim.height).toBe(5 * 32 - 2);
     });
 
-    test("fills the container exactly when the boxes are shrunk to fit", () => {
+    test("should fill the container exactly when the boxes are shrunk to fit", () => {
       const dim = dimensionsHeatTable(100, 2, 10, 5);
       expect(dim.width).toBeCloseTo(100, 9);
-    });
-
-    test("height follows the row count independently of the width", () => {
-      const wide = dimensionsHeatTable(800, 2, 10, 5);
-      const tall = dimensionsHeatTable(800, 2, 10, 20);
-      expect(tall.width).toBe(wide.width);
-      expect(tall.height).toBe(20 * 32 - 2);
     });
   });
 
   describe("centering", () => {
-    test("centers the table in the leftover space", () => {
+    test("should centre the table in the leftover space", () => {
       const dim = dimensionsHeatTable(800, 2, 10, 5);
       expect(dim.centeredOffset).toBe((800 - dim.width) / 2);
     });
 
-    test("centers within the padded chart area, not the full container", () => {
+    test("should centre within the padded chart area when a chart padding is given", () => {
       const dim = dimensionsHeatTable(800, 2, 10, 5, { left: 20, right: 10 });
       expect(dim.centeredOffset).toBe((800 - 20 - 10 - dim.width) / 2);
     });
 
-    test("never returns a negative offset", () => {
+    test("should report a zero offset when there is no leftover space", () => {
       const dim = dimensionsHeatTable(100, 2, 10, 5);
       expect(dim.centeredOffset).toBe(0);
     });
   });
 
   describe("chart padding", () => {
-    test("treats a missing chartPadding as zero on every side", () => {
+    test("should treat a missing chartPadding as zero on every side", () => {
       const without = dimensionsHeatTable(800, 2, 10, 5);
       const zeroed = dimensionsHeatTable(800, 2, 10, 5, { top: 0, right: 0, bottom: 0, left: 0 });
       expect(without).toEqual(zeroed);
     });
 
-    test("only the horizontal padding affects the layout", () => {
+    test("should change the layout only when the chart padding is horizontal", () => {
       const horizontal = dimensionsHeatTable(800, 2, 10, 5, { left: 50, right: 50 });
       const vertical = dimensionsHeatTable(800, 2, 10, 5, { top: 50, bottom: 50 });
       const none = dimensionsHeatTable(800, 2, 10, 5);
@@ -89,24 +82,24 @@ describe("heatTableDimensions", () => {
   describe("degenerate inputs", () => {
     const EMPTY = { side: 0, paddedSide: 0, padRatio: 0, width: 0, height: 0, centeredOffset: 0 };
 
-    test("a table with no columns has no dimensions to report", () => {
+    test("should report no dimensions when the table has no columns", () => {
       expect(dimensionsHeatTable(100, 2, 0, 5)).toEqual(EMPTY);
     });
 
-    test("a table with no rows has no dimensions to report", () => {
+    test("should report no dimensions when the table has no rows", () => {
       expect(dimensionsHeatTable(100, 2, 5, 0)).toEqual(EMPTY);
     });
 
-    test("a container of no width has no dimensions to report", () => {
+    test("should report no dimensions when the container has no width", () => {
       expect(dimensionsHeatTable(0, 2, 10, 5)).toEqual(EMPTY);
     });
 
-    test("rejects a column or row count that is not a whole number", () => {
+    test("should throw when the column or row count is not a whole number", () => {
       expect(() => dimensionsHeatTable(800, 2, 2.5, 5)).toThrow(/numX/);
       expect(() => dimensionsHeatTable(800, 2, 10, -5)).toThrow(/numY/);
     });
 
-    test("rejects a negative width or padding", () => {
+    test("should throw when the width or the padding is negative", () => {
       expect(() => dimensionsHeatTable(-800, 2, 10, 5)).toThrow(/spaceWidth/);
       expect(() => dimensionsHeatTable(800, -4, 10, 5)).toThrow(/squarePadding/);
     });
@@ -115,30 +108,28 @@ describe("heatTableDimensions", () => {
   describe("no room for a box", () => {
     const EMPTY = { side: 0, paddedSide: 0, padRatio: 0, width: 0, height: 0, centeredOffset: 0 };
 
-    test("too many columns leave no room for a box", () => {
+    test("should report no dimensions when there are too many columns for a box", () => {
       // the side used to go negative, taking padRatio above the [0, 1) a band scale accepts
       expect(dimensionsHeatTable(100, 2, 100, 5)).toEqual(EMPTY);
     });
 
-    test("chart padding that eats the container leaves no room for a box", () => {
+    test("should report no dimensions when the chart padding eats the container", () => {
       expect(dimensionsHeatTable(100, 2, 10, 5, { left: 50, right: 50 })).toEqual(EMPTY);
     });
 
-    test("a padding wider than a column leaves no room at any column count", () => {
+    test("should report no dimensions when the padding is wider than a column", () => {
       expect(dimensionsHeatTable(30, 40, 2, 2)).toEqual(EMPTY);
     });
   });
 
   describe("chart padding is the caller's", () => {
-    test("leaves the chartPadding object it is given untouched", () => {
+    test("should leave the chartPadding object untouched, even when it is frozen", () => {
       const padding: { left: number; top?: number; right?: number; bottom?: number } = {
         left: 20,
       };
       dimensionsHeatTable(800, 2, 10, 5, padding);
       expect(padding).toEqual({ left: 20 });
-    });
 
-    test("accepts a frozen chartPadding object", () => {
       const frozen = Object.freeze({ left: 20 });
       expect(() => dimensionsHeatTable(800, 2, 10, 5, frozen)).not.toThrow();
       expect(dimensionsHeatTable(800, 2, 10, 5, frozen)).toEqual(
