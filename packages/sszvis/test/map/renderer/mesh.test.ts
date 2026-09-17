@@ -1,6 +1,10 @@
 import { geoPath } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import {
+  describesNoDecorations,
+  describesNoScheduledTransition,
+} from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
 import { swissMapProjection } from "../../../src/map/mapUtils.js";
@@ -123,13 +127,7 @@ describe("map/renderer/mesh", () => {
       expect(borders(renderWith())[0]).toBe(first);
     });
 
-    test("adds no tooltip anchors, event targets or missing-value pattern", () => {
-      const node = render();
-      const root = node.ownerSVGElement as SVGSVGElement;
-      expect(node.querySelectorAll("[data-tooltip-anchor]")).toHaveLength(0);
-      expect(node.querySelectorAll("[data-event-target]")).toHaveLength(0);
-      expect(root.querySelectorAll("#missing-pattern")).toHaveLength(0);
-    });
+    describesNoDecorations(() => render());
   });
 
   describe("borderColor and strokeWidth", () => {
@@ -341,12 +339,7 @@ describe("map/renderer/mesh", () => {
     // This renderer is genuinely free of the quirk family its siblings share: there is no
     // transition to interpolate a colour onto itself, no slowTransition no-op, no stale-class
     // repaint and no missing-value pattern. Pinned so the port cannot introduce one.
-    test("schedules no transition at all", () => {
-      const node = render();
-      expect(
-        (borders(node)[0] as Element & { __transition?: unknown }).__transition,
-      ).toBeUndefined();
-    });
+    describesNoScheduledTransition(() => borders(render())[0]);
 
     // The path data is reapplied on every render rather than only on enter, so a geoJson mutated
     // in place still repaints even though the bound datum is identical. The siblings' keyed joins

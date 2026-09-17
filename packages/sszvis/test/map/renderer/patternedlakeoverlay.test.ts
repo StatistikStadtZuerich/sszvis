@@ -1,6 +1,7 @@
 import { geoPath } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { describesNoScheduledTransition } from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
 import { swissMapProjection } from "../../../src/map/mapUtils.js";
@@ -766,10 +767,6 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // Free of the transition quirks its siblings share: no transition is scheduled, so the lake
     // appears instantly. Pinned so the port cannot introduce one.
-    test("schedules no transition at all", () => {
-      const node = render();
-      const shape = lakeShape(node) as Element & { __transition?: unknown };
-      expect(shape.__transition).toBeUndefined();
-    });
+    describesNoScheduledTransition(() => lakeShape(render()) as Element);
   });
 });
