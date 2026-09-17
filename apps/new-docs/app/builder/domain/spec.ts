@@ -106,6 +106,14 @@ export const Spec = Schema.Struct({
   tooltip: Tooltip,
   annotations: Schema.Array(Annotation),
   kinds: ColumnKinds,
+  /*
+   * The roles whose column the user picked themselves, as against the ones the
+   * search guessed. Only these are carried when the chart type changes: a guess is
+   * about the chart it was made for, and carrying one lets it take a column the new
+   * chart wants for something else - a map whose area code is a number and whose
+   * value is a number will hand the geometry the measure and draw nothing.
+   */
+  chosen: Schema.Array(RoleKey),
 });
 
 export type Spec = typeof Spec.Type;

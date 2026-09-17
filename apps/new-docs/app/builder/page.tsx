@@ -282,12 +282,18 @@ const Builder = ({
                   <FieldLabel htmlFor={id}>{role.label}</FieldLabel>
                   <Select
                     value={spec.fields[role.key] || null}
-                    onValueChange={(next) =>
+                    onValueChange={(next) => {
                       form.setFieldValue("fields", {
                         ...spec.fields,
                         [role.key]: next ?? "",
-                      })
-                    }
+                      });
+                      /* Picking a column here is the difference between a binding
+                         the user means and one the search guessed, and only the
+                         first is carried when the chart type changes. */
+                      if (!spec.chosen.includes(role.key)) {
+                        form.setFieldValue("chosen", [...spec.chosen, role.key]);
+                      }
+                    }}
                     items={items}
                   >
                     <SelectTrigger

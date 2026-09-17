@@ -219,6 +219,7 @@ describe("optionValue", () => {
     tooltip: tip(""),
     annotations: [],
     kinds: {},
+    chosen: [],
   });
 
   test("should return the typed value when set, the fallback when blank and nothing when unknown", () => {
@@ -644,6 +645,8 @@ describe("switchRecipe", () => {
       /* Pinned to the kind it already reads as, so it proves the pin travels
          without also moving a binding and confusing what this test shows. */
       kinds: { [ColumnName.make("Anzahl")]: "continuous" },
+      /* Picked by hand, so they are the user's and travel with the switch. */
+      chosen: [RoleKey.make("num")],
     };
     expect(switchRecipe(spec, RECIPE, LINE)).toEqual({
       recipe: "line",
@@ -655,7 +658,41 @@ describe("switchRecipe", () => {
       tooltip: LINE.defaultTooltip,
       annotations: [yLine],
       kinds: { Anzahl: "continuous" },
+      chosen: ["num"],
     });
+  });
+
+  test("should re-derive a binding the search guessed rather than carry it", () => {
+    /*
+     * A guess is about the chart it was made for. Carried into a chart that wants
+     * that column for something else, it takes it: a map binds both its area code
+     * and its value to numbers, and a value guessed under a bar chart holds the
+     * code column, so the geometry is matched against the measure and nothing is
+     * drawn. The real recipes, because it is their two number roles that collide.
+     */
+    const real = (key: string) => {
+      const found = recipes.find((entry) => entry.key === key);
+      if (found === undefined) throw new Error(`no recipe ${key}`);
+      return summarize(found);
+    };
+    const bar = real("bar-chart-vertical");
+    const map = real("map-choropleth");
+    const guessed = applySample(
+      initialSpec(bar),
+      bar,
+      "Qcode,Qname,Anteil\n111,Affoltern,0.32\n091,Albisrieden,0.25",
+    );
+    /* The bar chart measures the code column, which is a fair guess for a bar. */
+    expect(guessed.chosen).toEqual([]);
+    expect(guessed.fields).toMatchObject({ value: "Qcode" });
+    expect(switchRecipe(guessed, bar, map).fields).toMatchObject({
+      geo: "Qcode",
+      value: "Anteil",
+    });
+
+    /* The same binding, chosen rather than guessed, is the user's and is kept. */
+    const picked: Spec = { ...guessed, chosen: [VALUE] };
+    expect(switchRecipe(picked, bar, map).fields).toMatchObject({ value: "Qcode" });
   });
 
   test("should drop an annotation whose role the new recipe positions by another kind", () => {
@@ -1038,6 +1075,7 @@ describe("compile", () => {
     tooltip: tip(""),
     annotations: [],
     kinds: {},
+    chosen: [],
   });
 
   const feature = (key: string, fragments: Record<string, string[]>) => ({
@@ -1217,6 +1255,7 @@ describe("tooltipText", () => {
     tooltip,
     annotations: [],
     kinds: {},
+    chosen: [],
   });
 
   const bound = mapping({ category: "Sektor", value: "Anzahl", date: "Datum" });
