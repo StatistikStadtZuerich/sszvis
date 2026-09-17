@@ -33,445 +33,449 @@ describe("behavior/move", () => {
   });
 
   afterEach(() => {
+    // A mouse drag installs listeners on `window` and `document` that outlive the chart. A
+    // real mouseup is how a user ends one, so it is also how this suite stops a drag from one
+    // test reaching into the next.
+    window.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
     container?.parentNode?.removeChild(container);
     vi.restoreAllMocks();
   });
 
-  test("should create move component with proper API", () => {
-    const moveComponent = move<number, number>()
-      .xScale(xScale)
-      .yScale(yScale)
-      .debug(true)
-      .draggable(true);
-    expect(moveComponent.xScale()).toBe(xScale);
-    expect(moveComponent.yScale()).toBe(yScale);
-    expect(moveComponent.debug()).toBe(true);
-    expect(moveComponent.draggable()).toBe(true);
-    expect(moveComponent.fireOnPanOnly()()).toBe(false);
+  /**
+   * A touch event carries no position of its own: a `Touch` in `event.touches` does. Safari
+   * mobile is the reason every touch case here is built this way rather than with clientX/clientY
+   * on the event.
+   */
+  function touchEvent(type: string, touches: Array<Record<string, number>>): Event {
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    const list = touches.map((touch, i) => ({ identifier: i, ...touch }));
+    Object.defineProperty(event, "touches", { value: list, writable: false });
+    Object.defineProperty(event, "changedTouches", { value: list, writable: false });
+    return event;
+  }
+
+  function hitLayer() {
+    return svg.select<SVGRectElement>("[data-sszvis-behavior-move]");
+  }
+
+  function hitLayerNode(): SVGRectElement {
+    const node = hitLayer().node();
+    assert(node);
+    return node;
+  }
+
+  test("should default padding to zero on every side, and neither cancel scrolling nor restrict itself to pans, when nothing is configured", () => {
+    const moveComponent = move<number, number>().xScale(xScale).yScale(yScale);
+    expect(moveComponent.padding()).toEqual({ top: 0, left: 0, bottom: 0, right: 0 });
     expect(moveComponent.cancelScrolling()()).toBe(false);
-    expect(moveComponent.padding()).toEqual({
-      top: 0,
-      left: 0,
-      bottom: 0,
-      right: 0,
-    });
+    expect(moveComponent.fireOnPanOnly()()).toBe(false);
   });
 
-  test("should attach interactive rectangle when rendered", () => {
+  test("should cover the chart with an invisible hit layer when rendered", () => {
     svg.call(move<number, number>().xScale(xScale).yScale(yScale));
-    const interactiveRect = svg.select("[data-sszvis-behavior-move]");
-    expect(interactiveRect.empty()).toBe(false);
-    expect(interactiveRect.attr("class")).toBe("sszvis-interactive");
-    expect(interactiveRect.attr("fill")).toBe("transparent");
+    expect(hitLayer().empty()).toBe(false);
+    expect(hitLayer().attr("class")).toBe("sszvis-interactive");
+    expect(hitLayer().attr("fill")).toBe("transparent");
   });
 
-  test("should apply draggable class when draggable is true", () => {
+  test("should mark the hit layer draggable when the component is configured as draggable", () => {
     svg.call(move<number, number>().xScale(xScale).yScale(yScale).draggable(true));
-    const interactiveRect = svg.select("[data-sszvis-behavior-move]");
-    expect(interactiveRect.classed("sszvis-interactive--draggable")).toBe(true);
+    expect(hitLayer().classed("sszvis-interactive--draggable")).toBe(true);
   });
 
-  test("should apply padding to rect dimensions", () => {
+  test("should grow the hit area on every side when padding is configured", () => {
     svg.call(
       move<number, number>()
         .xScale(xScale)
         .yScale(yScale)
         .padding({ top: 10, right: 15, bottom: 20, left: 25 }),
     );
-    const interactiveRect = svg.select("[data-sszvis-behavior-move]");
-    expect(interactiveRect.attr("x")).toBe("-25"); // 0 - 25 = -25
-    expect(interactiveRect.attr("y")).toBe("-10"); // 0 - 10 = -10
-    expect(interactiveRect.attr("width")).toBe("340"); // 300 + 25 + 15 = 340
-    expect(interactiveRect.attr("height")).toBe("230"); // 200 + 10 + 20 = 230
+    expect(hitLayer().attr("x")).toBe("-25"); // 0 - 25 = -25
+    expect(hitLayer().attr("y")).toBe("-10"); // 0 - 10 = -10
+    expect(hitLayer().attr("width")).toBe("340"); // 300 + 25 + 15 = 340
+    expect(hitLayer().attr("height")).toBe("230"); // 200 + 10 + 20 = 230
   });
 
-  test("should dispatch move event on mousemove when not dragging", () => {
-    const moveHandler = vi.fn();
-    svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("move", moveHandler));
-    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-    rectNode?.dispatchEvent(
-      new MouseEvent("mouseover", {
-        clientX: 150,
-        clientY: 100,
-        bubbles: true,
-      }),
-    );
-    rectNode?.dispatchEvent(
-      new MouseEvent("mousemove", {
-        clientX: 150,
-        clientY: 100,
-        bubbles: true,
-      }),
-    );
-    expect(moveHandler).toHaveBeenCalled();
-  });
-
-  test("should dispatch drag event on mousemove when dragging", () => {
-    const dragHandler = vi.fn();
-    svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("drag", dragHandler));
-    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-    rectNode?.dispatchEvent(
-      new MouseEvent("mousedown", {
-        clientX: 150,
-        clientY: 100,
-        bubbles: true,
-      }),
-    );
-    rectNode?.dispatchEvent(
-      new MouseEvent("mousemove", {
-        clientX: 150,
-        clientY: 100,
-        bubbles: true,
-      }),
-    );
-    expect(dragHandler).toHaveBeenCalled();
-  });
-
-  test("should dispatch start event on mouseover", () => {
-    const startHandler = vi.fn();
-    svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("start", startHandler));
-    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-    rectNode?.dispatchEvent(
-      new MouseEvent("mouseover", {
-        clientX: 150,
-        clientY: 100,
-        bubbles: true,
-      }),
-    );
-    expect(startHandler).toHaveBeenCalled();
-  });
-
-  test("should dispatch end event on mouseout", () => {
-    const endHandler = vi.fn();
-    svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("end", endHandler));
-    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-    rectNode?.dispatchEvent(
-      new MouseEvent("mouseout", {
-        clientX: 150,
-        clientY: 100,
-        bubbles: true,
-      }),
-    );
-    expect(endHandler).toHaveBeenCalled();
-  });
-
-  test("should set up touchmove listeners after touchstart", () => {
-    const dragHandler = vi.fn();
-    const moveHandler = vi.fn();
-    const endHandler = vi.fn();
-    svg.call(
-      move<number, number>()
-        .xScale(xScale)
-        .yScale(yScale)
-        .on("drag", dragHandler)
-        .on("move", moveHandler)
-        .on("end", endHandler),
-    );
-    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-    expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).toBeUndefined();
-    const touchstartEvent = new Event("touchstart", { bubbles: true });
-    Object.defineProperty(touchstartEvent, "touches", {
-      value: [{ clientX: 150, clientY: 100, identifier: 0 }],
-      writable: false,
-    });
-    rectNode?.dispatchEvent(touchstartEvent);
-    expect(dragHandler).toHaveBeenCalled();
-    expect(moveHandler).toHaveBeenCalled();
-    expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).not.toBeNull();
-    expect(svg.select("[data-sszvis-behavior-move]").on("touchend")).not.toBeNull();
-    rectNode?.dispatchEvent(new Event("touchend", { bubbles: true }));
-    expect(endHandler).toHaveBeenCalled();
-    expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).toBeUndefined();
-    expect(svg.select("[data-sszvis-behavior-move]").on("touchend")).toBeUndefined();
-  });
-
-  describe("using band scale", () => {
-    let xBandScale: d3.ScaleBand<string>;
-    let yBandScale: d3.ScaleBand<string>;
-
-    beforeEach(() => {
-      xBandScale = scaleBand().domain(["A", "B", "C", "D"]).range([0, 300]).padding(0.1);
-      yBandScale = scaleBand().domain(["1", "2", "3"]).range([200, 0]).padding(0.2);
-    });
-
-    test("should create move component with band scales", () => {
-      const moveComponent = move<string, string>().xScale(xBandScale).yScale(yBandScale);
-      expect(moveComponent.xScale()).toBe(xBandScale);
-      expect(moveComponent.yScale()).toBe(yBandScale);
-    });
-
-    test("should dispatch move event with band scales", () => {
-      const moveHandler = vi.fn();
-      svg.call(
-        move<string, string>().xScale(xBandScale).yScale(yBandScale).on("move", moveHandler),
-      );
-      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-      rectNode?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
-      rectNode?.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
-      expect(moveHandler).toHaveBeenCalled();
-    });
-
-    test("should handle band scale drag events", () => {
-      const dragHandler = vi.fn();
-      svg.call(
-        move<string, string>().xScale(xBandScale).yScale(yBandScale).on("drag", dragHandler),
-      );
-      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-      rectNode?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-      rectNode?.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
-      expect(dragHandler).toHaveBeenCalled();
-    });
-  });
-
-  describe("using point scale", () => {
-    let xPointScale: d3.ScalePoint<string>;
-    let yPointScale: d3.ScalePoint<string>;
-
-    beforeEach(() => {
-      xPointScale = scalePoint().domain(["A", "B", "C", "D"]).range([0, 300]).padding(0.1);
-      yPointScale = scalePoint().domain(["1", "2", "3"]).range([200, 0]).padding(0.2);
-    });
-
-    test("should create move component with point scales", () => {
-      const moveComponent = move<string, string>().xScale(xPointScale).yScale(yPointScale);
-      expect(moveComponent.xScale()).toBe(xPointScale);
-      expect(moveComponent.yScale()).toBe(yPointScale);
-    });
-
-    test("should dispatch move event with point scales", () => {
-      const moveHandler = vi.fn();
-      svg.call(
-        move<string, string>().xScale(xPointScale).yScale(yPointScale).on("move", moveHandler),
-      );
-      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-      rectNode?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
-      rectNode?.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
-      expect(moveHandler).toHaveBeenCalled();
-    });
-
-    test("should handle point scale drag events", () => {
-      const dragHandler = vi.fn();
-      svg.call(
-        move<string, string>().xScale(xPointScale).yScale(yPointScale).on("drag", dragHandler),
-      );
-      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-      rectNode?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-      rectNode?.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
-      expect(dragHandler).toHaveBeenCalled();
-    });
-
-    test("should handle point scale start and end events", () => {
-      const startHandler = vi.fn();
-      const endHandler = vi.fn();
-      svg.call(
-        move<string, string>()
-          .xScale(xPointScale)
-          .yScale(yPointScale)
-          .on("start", startHandler)
-          .on("end", endHandler),
-      );
-      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-      rectNode?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
-      expect(startHandler).toHaveBeenCalled();
-      rectNode?.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
-      expect(endHandler).toHaveBeenCalled();
-    });
-  });
-
-  describe("Safari mobile touch event handling", () => {
-    // Helper to create a TouchEvent-like object that mimics Safari mobile behavior
-    // where clientX/clientY are NOT on the event itself, only in the touches array
-    const createSafariTouchEvent = (
-      type: string,
-      touches: Array<{ clientX: number; clientY: number; identifier?: number }>,
-    ): Event => {
-      const event = new Event(type, { bubbles: true, cancelable: true });
-      Object.defineProperty(event, "touches", {
-        value: touches.map((t, i) => ({
-          clientX: t.clientX,
-          clientY: t.clientY,
-          identifier: t.identifier ?? i,
-        })),
-        writable: false,
-      });
-      Object.defineProperty(event, "changedTouches", {
-        value: touches.map((t, i) => ({
-          clientX: t.clientX,
-          clientY: t.clientY,
-          identifier: t.identifier ?? i,
-        })),
-        writable: false,
-      });
-      return event;
-    };
-
-    test("should handle touchstart with coordinates only in touches array (Safari mobile)", () => {
-      const startHandler = vi.fn();
-      const moveHandler = vi.fn();
-      const dragHandler = vi.fn();
-
+  describe("over the mouse", () => {
+    function handlers() {
+      const spies = { start: vi.fn(), move: vi.fn(), drag: vi.fn(), end: vi.fn() };
       svg.call(
         move<number, number>()
           .xScale(xScale)
           .yScale(yScale)
-          .on("start", startHandler)
-          .on("move", moveHandler)
-          .on("drag", dragHandler),
+          .on("start", spies.start)
+          .on("move", spies.move)
+          .on("drag", spies.drag)
+          .on("end", spies.end),
       );
+      return spies;
+    }
 
-      const touchEvent = createSafariTouchEvent("touchstart", [{ clientX: 150, clientY: 100 }]);
+    function counts(spies: ReturnType<typeof handlers>) {
+      return {
+        start: spies.start.mock.calls.length,
+        move: spies.move.mock.calls.length,
+        drag: spies.drag.mock.calls.length,
+        end: spies.end.mock.calls.length,
+      };
+    }
 
-      expect((touchEvent as unknown as { clientX?: number }).clientX).toBeUndefined();
-      expect((touchEvent as unknown as { clientY?: number }).clientY).toBeUndefined();
+    function mouseAt(node: SVGRectElement, type: string, init: MouseEventInit = {}) {
+      const box = node.getBoundingClientRect();
+      node.dispatchEvent(
+        new MouseEvent(type, {
+          clientX: box.left + 150,
+          clientY: box.top + 100,
+          bubbles: true,
+          ...init,
+        }),
+      );
+    }
 
-      svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node()?.dispatchEvent(touchEvent);
-      expect(startHandler).toHaveBeenCalled();
-      expect(moveHandler).toHaveBeenCalled();
-      expect(dragHandler).toHaveBeenCalled();
+    // Each verb must reach exactly one handler. Asserting only that a spy fired cannot catch a
+    // handler wired to the wrong verb, which is why the counts below are checked as a set after
+    // every step.
+    test("should report exactly one event per pointer verb when the mouse enters, moves, presses, drags and leaves", () => {
+      const spies = handlers();
+      const node = hitLayerNode();
+
+      mouseAt(node, "mouseover");
+      expect(counts(spies)).toEqual({ start: 1, move: 0, drag: 0, end: 0 });
+
+      mouseAt(node, "mousemove");
+      expect(counts(spies)).toEqual({ start: 1, move: 1, drag: 0, end: 0 });
+
+      // Pressing the button is not itself an event; it turns the next move into a drag.
+      mouseAt(node, "mousedown");
+      expect(counts(spies)).toEqual({ start: 1, move: 1, drag: 0, end: 0 });
+
+      mouseAt(node, "mousemove");
+      expect(counts(spies)).toEqual({ start: 1, move: 1, drag: 1, end: 0 });
+
+      mouseAt(node, "mouseout");
+      expect(counts(spies)).toEqual({ start: 1, move: 1, drag: 1, end: 1 });
     });
 
-    test("should pass correct data values from touch coordinates", () => {
-      const moveHandler = vi.fn();
+    // A drag started inside the chart can be released anywhere, so the mouseup that ends it is
+    // listened for on `window` rather than on the hit layer. Until it arrives every move is a
+    // drag; afterwards they are plain moves again.
+    test("should end the drag and report plain moves again when the button is released outside the chart", () => {
+      const spies = handlers();
+      const node = hitLayerNode();
 
-      svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("move", moveHandler));
+      mouseAt(node, "mousedown");
+      mouseAt(node, "mousemove");
+      expect(counts(spies)).toEqual({ start: 0, move: 0, drag: 1, end: 0 });
 
-      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-      assert(rectNode);
-      const rect = rectNode.getBoundingClientRect();
+      window.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      expect(spies.end).toHaveBeenCalledTimes(1);
 
-      rectNode.dispatchEvent(
-        createSafariTouchEvent("touchstart", [
-          { clientX: rect.left + 150, clientY: rect.top + 100 },
-        ]),
-      );
-      expect(moveHandler).toHaveBeenCalled();
-      const [, x, y] = moveHandler.mock.calls[0];
-      expect(x).toBeCloseTo(50, 0);
-      expect(y).toBeCloseTo(25, 0);
+      mouseAt(node, "mousemove");
+      expect(counts(spies)).toEqual({ start: 0, move: 1, drag: 1, end: 1 });
     });
 
-    test("should handle touchmove with updated coordinates (Safari mobile)", () => {
-      const moveHandler = vi.fn();
+    // BUG: the second escape hatch, a mouseout on `document`, never ends a drag in Chromium.
+    // It is meant to catch the pointer leaving the page, and it decides that by reading
+    // `relatedTarget` and the legacy `toElement` alias - but it reads them off the *mousedown*
+    // it closed over rather than off the mouseout that fired, and Chromium reports `toElement`
+    // on a mousedown as the event's own target. The element it finds is therefore always the
+    // hit layer, never null and never HTML, so the branch is unreachable and only the window
+    // mouseup above ends a drag. Pinned as observed, not as intended: a fix should turn this
+    // test red.
+    test("should keep reporting drags when a mouseout reaches the document, whatever the press it started from", () => {
+      const spies = handlers();
+      const node = hitLayerNode();
 
-      svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("move", moveHandler));
-
-      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-      assert(rectNode);
-
-      const rect = rectNode.getBoundingClientRect();
-
-      rectNode.dispatchEvent(
-        createSafariTouchEvent("touchstart", [
-          { clientX: rect.left + 150, clientY: rect.top + 100 },
-        ]),
-      );
-
-      expect(moveHandler).toHaveBeenCalledTimes(1);
-
-      rectNode.dispatchEvent(
-        createSafariTouchEvent("touchmove", [{ clientX: rect.left + 200, clientY: rect.top + 50 }]),
-      );
-
-      expect(moveHandler).toHaveBeenCalledTimes(2);
-      const [, x, y] = moveHandler.mock.calls[1];
-      expect(x).toBeCloseTo(66.67, 0);
-      expect(y).toBeCloseTo(37.5, 0);
-    });
-
-    test("should handle touchend and clean up listeners", () => {
-      const endHandler = vi.fn();
-
-      svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("end", endHandler));
-
-      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-      if (!rectNode) throw new Error("rectNode not found");
-
-      const rect = rectNode.getBoundingClientRect();
-
-      rectNode.dispatchEvent(
-        createSafariTouchEvent("touchstart", [
-          { clientX: rect.left + 150, clientY: rect.top + 100 },
-        ]),
-      );
-
-      expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).not.toBeNull();
-      expect(svg.select("[data-sszvis-behavior-move]").on("touchend")).not.toBeNull();
-
-      const touchEndEvent = new Event("touchend", { bubbles: true });
-      Object.defineProperty(touchEndEvent, "touches", {
-        value: [],
-        writable: false,
-      });
-      Object.defineProperty(touchEndEvent, "changedTouches", {
-        value: [{ clientX: rect.left + 150, clientY: rect.top + 100, identifier: 0 }],
-        writable: false,
-      });
-      rectNode.dispatchEvent(touchEndEvent);
-
-      expect(endHandler).toHaveBeenCalled();
-      expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).toBeUndefined();
-      expect(svg.select("[data-sszvis-behavior-move]").on("touchend")).toBeUndefined();
-    });
-
-    test("should not fire events when touch has no coordinates", () => {
-      const moveHandler = vi.fn();
-      const startHandler = vi.fn();
-
-      svg.call(
-        move<number, number>()
-          .xScale(xScale)
-          .yScale(yScale)
-          .on("start", startHandler)
-          .on("move", moveHandler),
-      );
-
-      const emptyTouchEvent = new Event("touchstart", { bubbles: true });
-      Object.defineProperty(emptyTouchEvent, "touches", {
-        value: [],
-        writable: false,
-      });
-      Object.defineProperty(emptyTouchEvent, "changedTouches", {
-        value: [],
-        writable: false,
-      });
-
-      svg
-        .select<SVGRectElement>("[data-sszvis-behavior-move]")
-        .node()
-        ?.dispatchEvent(emptyTouchEvent);
-
-      expect(startHandler).not.toHaveBeenCalled();
-      expect(moveHandler).not.toHaveBeenCalled();
-    });
-
-    test("should not fire events when touch coordinates are invalid (NaN)", () => {
-      const moveHandler = vi.fn();
-      const startHandler = vi.fn();
-
-      svg.call(
-        move<number, number>()
-          .xScale(xScale)
-          .yScale(yScale)
-          .on("start", startHandler)
-          .on("move", moveHandler),
-      );
-
-      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
-
-      // Create event with NaN coordinates
-      const invalidTouchEvent = new Event("touchstart", { bubbles: true });
-      Object.defineProperty(invalidTouchEvent, "touches", {
-        value: [{ clientX: NaN, clientY: NaN, identifier: 0 }],
-        writable: false,
-      });
-
-      rectNode?.dispatchEvent(invalidTouchEvent);
-
-      // Handlers should not be called when coordinates are invalid
-      expect(startHandler).not.toHaveBeenCalled();
-      expect(moveHandler).not.toHaveBeenCalled();
+      for (const relatedTarget of [container, null]) {
+        mouseAt(node, "mousedown", { relatedTarget });
+        document.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+        mouseAt(node, "mousemove");
+      }
+      expect(counts(spies)).toEqual({ start: 0, move: 0, drag: 2, end: 0 });
     });
   });
+
+  describe("over touch", () => {
+    // A touch opens a pan session: the three "pointer is here" events fire at once, further
+    // positions arrive as drags, and the session is torn down on touchend. Teardown is asserted
+    // the way a user would notice it - a stray touchmove afterwards reports nothing - rather
+    // than by reading d3's listener registry.
+    test("should open a pan session on touchstart, report each position, and fall silent once the finger lifts", () => {
+      const spies = { start: vi.fn(), move: vi.fn(), drag: vi.fn(), end: vi.fn() };
+      svg.call(
+        move<number, number>()
+          .xScale(xScale)
+          .yScale(yScale)
+          .on("start", spies.start)
+          .on("move", spies.move)
+          .on("drag", spies.drag)
+          .on("end", spies.end),
+      );
+      const node = hitLayerNode();
+      const box = node.getBoundingClientRect();
+
+      node.dispatchEvent(
+        touchEvent("touchstart", [{ clientX: box.left + 150, clientY: box.top + 100 }]),
+      );
+      expect(spies.start).toHaveBeenCalledTimes(1);
+      expect(spies.drag).toHaveBeenCalledTimes(1);
+      expect(spies.move).toHaveBeenCalledTimes(1);
+      expect(spies.end).not.toHaveBeenCalled();
+
+      node.dispatchEvent(
+        touchEvent("touchmove", [{ clientX: box.left + 200, clientY: box.top + 50 }]),
+      );
+      expect(spies.drag).toHaveBeenCalledTimes(2);
+      expect(spies.move).toHaveBeenCalledTimes(2);
+
+      const touchend = touchEvent("touchend", []);
+      node.dispatchEvent(touchend);
+      expect(spies.end).toHaveBeenCalledTimes(1);
+      expect(spies.end.mock.calls[0][0]).toBe(touchend);
+
+      node.dispatchEvent(
+        touchEvent("touchmove", [{ clientX: box.left + 250, clientY: box.top + 20 }]),
+      );
+      node.dispatchEvent(touchEvent("touchend", []));
+      expect(spies.drag).toHaveBeenCalledTimes(2);
+      expect(spies.move).toHaveBeenCalledTimes(2);
+      expect(spies.end).toHaveBeenCalledTimes(1);
+    });
+
+    test("should report the touch when its coordinates live only in the touches array, as they do on Safari mobile", () => {
+      const spies = { start: vi.fn(), move: vi.fn(), drag: vi.fn() };
+      svg.call(
+        move<number, number>()
+          .xScale(xScale)
+          .yScale(yScale)
+          .on("start", spies.start)
+          .on("move", spies.move)
+          .on("drag", spies.drag),
+      );
+
+      const event = touchEvent("touchstart", [{ clientX: 150, clientY: 100 }]);
+      // Guards the premise: d3's `pointer()` reads clientX/clientY off its argument, and on
+      // Safari mobile the event does not have them.
+      expect(Reflect.get(event, "clientX")).toBeUndefined();
+      expect(Reflect.get(event, "clientY")).toBeUndefined();
+
+      hitLayerNode().dispatchEvent(event);
+      expect(spies.start).toHaveBeenCalled();
+      expect(spies.move).toHaveBeenCalled();
+      expect(spies.drag).toHaveBeenCalled();
+    });
+
+    // A malformed touch must be ignored rather than resolved: `pointer()` throws when it sets a
+    // non-finite `SVGPoint.x`, so without the guard the handler would throw for every case
+    // below. The throw has to be observed through `window.onerror`, not `expect().toThrow()`:
+    // `dispatchEvent` reports a listener's exception as an uncaught error and returns normally,
+    // so a `toThrow` assertion would pass whether or not the guard is present.
+    test("should report nothing and throw nothing when a touch carries no usable coordinates", () => {
+      const spies = { start: vi.fn(), move: vi.fn(), drag: vi.fn(), end: vi.fn() };
+      svg.call(
+        move<number, number>()
+          .xScale(xScale)
+          .yScale(yScale)
+          .on("start", spies.start)
+          .on("move", spies.move)
+          .on("drag", spies.drag)
+          .on("end", spies.end),
+      );
+      const node = hitLayerNode();
+      const box = node.getBoundingClientRect();
+
+      const uncaught: string[] = [];
+      const recordError = (errorEvent: ErrorEvent) => {
+        uncaught.push(errorEvent.message);
+        errorEvent.preventDefault();
+      };
+      window.addEventListener("error", recordError);
+
+      try {
+        // No touch at all, then each axis alone - a guard that checked only one of them would
+        // let the other through - then NaN and infinite coordinates, which separate a
+        // finiteness test from a mere missing-value test.
+        const malformed: Array<Array<Record<string, number>>> = [
+          [],
+          [{}],
+          [{ clientX: box.left + 150 }],
+          [{ clientY: box.top + 100 }],
+          [{ clientX: Number.NaN, clientY: Number.NaN }],
+          [{ clientX: Number.POSITIVE_INFINITY, clientY: box.top + 100 }],
+          [{ clientX: box.left + 150, clientY: Number.NEGATIVE_INFINITY }],
+        ];
+        for (const touches of malformed) {
+          node.dispatchEvent(touchEvent("touchstart", touches));
+          expect(uncaught).toEqual([]);
+          expect(spies.start).not.toHaveBeenCalled();
+          expect(spies.move).not.toHaveBeenCalled();
+          expect(spies.drag).not.toHaveBeenCalled();
+          expect(spies.end).not.toHaveBeenCalled();
+        }
+
+        // The same probe on the pan path, which needs a real touchstart to open a session
+        // first.
+        node.dispatchEvent(
+          touchEvent("touchstart", [{ clientX: box.left + 150, clientY: box.top + 100 }]),
+        );
+        expect(spies.move).toHaveBeenCalledTimes(1);
+        spies.move.mockClear();
+        spies.drag.mockClear();
+
+        for (const touches of malformed) {
+          node.dispatchEvent(touchEvent("touchmove", touches));
+          expect(uncaught).toEqual([]);
+          expect(spies.move).not.toHaveBeenCalled();
+          expect(spies.drag).not.toHaveBeenCalled();
+        }
+      } finally {
+        window.removeEventListener("error", recordError);
+        node.dispatchEvent(touchEvent("touchend", []));
+      }
+    });
+
+    // `cancelScrolling` and `fireOnPanOnly` are the two switches behind the bar charts' "pan
+    // over the bars" interaction, and they are independent: the first decides whether the
+    // browser scrolls, the second whether the chart reports anything at all. Together they give
+    // the three configurations below - area and line charts (report always, never cancel), bar
+    // charts (report only over a bar, and cancel there), and the in-between case where a chart
+    // cancels scrolling but still reports everywhere.
+    describe("with cancelScrolling and fireOnPanOnly configured", () => {
+      // Positions in the left half of the 300px range are "over a bar".
+      const overABar = (x: number | null) => x !== null && x < 50;
+
+      function render(
+        handlers: Record<"start" | "move" | "drag" | "end", ReturnType<typeof vi.fn>>,
+        fireOnPanOnly: boolean,
+        cancelScrolling: (x: number | null) => boolean,
+      ) {
+        svg.call(
+          move<number, number>()
+            .xScale(xScale)
+            .yScale(yScale)
+            .cancelScrolling(cancelScrolling)
+            .fireOnPanOnly(fireOnPanOnly)
+            .on("start", handlers.start)
+            .on("move", handlers.move)
+            .on("drag", handlers.drag)
+            .on("end", handlers.end),
+        );
+        return hitLayerNode();
+      }
+
+      function makeSpies() {
+        return { start: vi.fn(), move: vi.fn(), drag: vi.fn(), end: vi.fn() };
+      }
+
+      test("should cancel the browser's scroll when the touch position satisfies the cancelScrolling predicate", () => {
+        const handlers = makeSpies();
+        const node = render(handlers, false, overABar);
+        const box = node.getBoundingClientRect();
+
+        const onBar = touchEvent("touchstart", [
+          { clientX: box.left + 30, clientY: box.top + 100 },
+        ]);
+        node.dispatchEvent(onBar);
+        expect(onBar.defaultPrevented).toBe(true);
+        expect(handlers.move).toHaveBeenCalledTimes(1);
+
+        node.dispatchEvent(touchEvent("touchend", []));
+
+        const offBar = touchEvent("touchstart", [
+          { clientX: box.left + 250, clientY: box.top + 100 },
+        ]);
+        node.dispatchEvent(offBar);
+        expect(offBar.defaultPrevented).toBe(false);
+      });
+
+      test("should still report the touch when cancelScrolling rejects it and fireOnPanOnly is left off", () => {
+        const handlers = makeSpies();
+        const node = render(handlers, false, overABar);
+        const box = node.getBoundingClientRect();
+
+        node.dispatchEvent(
+          touchEvent("touchstart", [{ clientX: box.left + 250, clientY: box.top + 100 }]),
+        );
+        expect(handlers.start).toHaveBeenCalledTimes(1);
+        expect(handlers.move).toHaveBeenCalledTimes(1);
+        expect(handlers.drag).toHaveBeenCalledTimes(1);
+      });
+
+      test("should report nothing at all when cancelScrolling rejects the touch and fireOnPanOnly is set", () => {
+        const handlers = makeSpies();
+        const node = render(handlers, true, overABar);
+        const box = node.getBoundingClientRect();
+
+        node.dispatchEvent(
+          touchEvent("touchstart", [{ clientX: box.left + 250, clientY: box.top + 100 }]),
+        );
+        expect(handlers.start).not.toHaveBeenCalled();
+        expect(handlers.move).not.toHaveBeenCalled();
+        expect(handlers.drag).not.toHaveBeenCalled();
+        expect(handlers.end).not.toHaveBeenCalled();
+
+        // No session was opened either, so a following touchmove reports nothing.
+        node.dispatchEvent(
+          touchEvent("touchmove", [{ clientX: box.left + 30, clientY: box.top + 100 }]),
+        );
+        expect(handlers.drag).not.toHaveBeenCalled();
+      });
+
+      test("should end the pan instead of dragging when the finger leaves the panning profile and fireOnPanOnly is set", () => {
+        const handlers = makeSpies();
+        const node = render(handlers, true, overABar);
+        const box = node.getBoundingClientRect();
+
+        node.dispatchEvent(
+          touchEvent("touchstart", [{ clientX: box.left + 30, clientY: box.top + 100 }]),
+        );
+        expect(handlers.drag).toHaveBeenCalledTimes(1);
+        expect(handlers.end).not.toHaveBeenCalled();
+
+        node.dispatchEvent(
+          touchEvent("touchmove", [{ clientX: box.left + 60, clientY: box.top + 100 }]),
+        );
+        expect(handlers.drag).toHaveBeenCalledTimes(2);
+
+        node.dispatchEvent(
+          touchEvent("touchmove", [{ clientX: box.left + 250, clientY: box.top + 100 }]),
+        );
+        expect(handlers.drag).toHaveBeenCalledTimes(2);
+        expect(handlers.end).toHaveBeenCalledTimes(1);
+
+        // Back over a bar, the pan resumes: leaving the profile ends the reported interaction
+        // without closing the session.
+        node.dispatchEvent(
+          touchEvent("touchmove", [{ clientX: box.left + 30, clientY: box.top + 100 }]),
+        );
+        expect(handlers.drag).toHaveBeenCalledTimes(3);
+
+        node.dispatchEvent(touchEvent("touchend", []));
+      });
+
+      test("should pass the inverted position, not the pixel position, to the cancelScrolling predicate", () => {
+        const seen: Array<[number | null, number | null]> = [];
+        const handlers = makeSpies();
+        svg.call(
+          move<number, number>()
+            .xScale(xScale)
+            .yScale(yScale)
+            .cancelScrolling((x, y) => {
+              seen.push([x, y]);
+              return false;
+            })
+            .on("move", handlers.move),
+        );
+        const node = hitLayerNode();
+        const box = node.getBoundingClientRect();
+        node.dispatchEvent(
+          touchEvent("touchstart", [{ clientX: box.left + 150, clientY: box.top + 100 }]),
+        );
+        expect(seen).toEqual([[50, 25]]);
+      });
+    });
+  });
+
   describe("resolving the pointer into the scale's coordinate space", () => {
     /**
      * Dispatches a pointer at an offset measured from the interaction rect's own box, and
@@ -485,12 +489,7 @@ describe("behavior/move", () => {
       clientX: number,
       clientY: number,
     ) {
-      const touchEvent = new Event(type, { bubbles: true, cancelable: true });
-      Object.defineProperty(touchEvent, "touches", {
-        value: [{ clientX, clientY, identifier: 0 }],
-        writable: false,
-      });
-      node.dispatchEvent(touchEvent);
+      node.dispatchEvent(touchEvent(type, [{ clientX, clientY }]));
     }
 
     function valueAt<XDomain, YDomain>(
@@ -604,6 +603,32 @@ describe("behavior/move", () => {
         const seenLast = valueAt(
           move<string, string>()
             .xScale(scaleBand<string>().domain(["A", "B", "C"]).range([90, 390]))
+            .yScale(yScale),
+          path,
+          290,
+          200,
+        );
+        expect(seenLast[0]).toBe("C");
+      });
+    });
+
+    // A point scale has its own inverter, with its own padding arithmetic: it divides the step
+    // rather than the band, so a position that a band scale resolves correctly can still land
+    // on the wrong point.
+    describe.each(["mouse", "touch"] as const)("with an inset point range, over %s", (path) => {
+      test("should report the point under the pointer without double-counting the origin", () => {
+        const seenFirst = valueAt(
+          move<string, string>()
+            .xScale(scalePoint<string>().domain(["A", "B", "C"]).range([90, 390]).padding(0.1))
+            .yScale(yScale),
+          path,
+          10,
+          200,
+        );
+        expect(seenFirst[0]).toBe("A");
+        const seenLast = valueAt(
+          move<string, string>()
+            .xScale(scalePoint<string>().domain(["A", "B", "C"]).range([90, 390]).padding(0.1))
             .yScale(yScale),
           path,
           290,

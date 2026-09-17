@@ -49,7 +49,7 @@ describe("control/slider", () => {
   const tickLabels = (node: Element) =>
     [...node.querySelectorAll("g.tick text")].map((t) => t.textContent);
 
-  test("should render a background group, an axis, a handle and an interaction layer", () => {
+  test("should draw a track, an axis, a handle and an interaction layer when rendered", () => {
     const node = render(basic());
     expect(node.querySelector("g.sszvis-control-slider__backgroundgroup")).toBeTruthy();
     expect(node.querySelector("g.sszvis-axisGroup")).toBeTruthy();
@@ -58,72 +58,48 @@ describe("control/slider", () => {
     expect(node.querySelector("g.sszvis-control-slider--interactionLayer")).toBeTruthy();
   });
 
-  test("should offset the axis below the slider track", () => {
-    const node = render(basic());
-    expect(node.querySelector("g.sszvis-axisGroup")?.getAttribute("transform")).toBe(
-      "translate(0,28)",
-    );
-  });
-
-  test("should give the axis the slider-specific classes", () => {
+  test("should place the axis below the track and style it as a slider axis when rendered", () => {
     const node = render(basic());
     const axis = node.querySelector("g.sszvis-axisGroup") as SVGGElement;
+    expect(axis.getAttribute("transform")).toBe("translate(0,28)");
     for (const cls of ["sszvis-axis", "sszvis-axis--bottom", "sszvis-axis--slider"]) {
       expect(axis.classList.contains(cls)).toBe(true);
     }
   });
 
-  test("should draw a tick for every major and minor tick value", () => {
+  test("should draw every tick, but label and lengthen only the major ones, when both kinds are configured", () => {
     const node = render(basic());
     expect(ticks(node).length).toBe(5);
-  });
-
-  test("should label the major ticks only", () => {
-    const node = render(basic());
     // Ticks are rendered in track order, so the unlabelled minors sit between the majors.
     expect(tickLabels(node)).toEqual(["0", "", "5", "", "10"]);
+    // majorTickSize is 12; the minor ticks are shortened to 4.
+    expect([...node.querySelectorAll("g.tick line")].map((l) => l.getAttribute("y2"))).toEqual([
+      "12",
+      "4",
+      "12",
+      "4",
+      "12",
+    ]);
   });
 
-  test("should render minor ticks shorter than major ticks", () => {
-    const node = render(basic());
-    const lengths = [...node.querySelectorAll("g.tick line")].map((l) => l.getAttribute("y2"));
-    // majorTickSize is 12; the minor ticks are shortened to 4. In track order:
-    // 0, 2.5, 5, 7.5, 10.
-    expect(lengths).toEqual(["12", "4", "12", "4", "12"]);
-  });
-
-  test("should anchor the first and last major label inside the track", () => {
-    const node = render(basic());
-    const anchors = [...node.querySelectorAll<SVGTextElement>("g.tick text")]
-      .filter((t) => t.textContent !== "")
-      .map((t) => t.style.textAnchor);
-    expect(anchors).toEqual(["start", "middle", "end"]);
-  });
-
-  test("should draw the track inset by half the track width at both ends", () => {
+  test("should draw the track as a rounded grey rail with a narrower white one on top when rendered", () => {
     const node = render(basic());
     const bg1 = node.querySelector("line.sszvis-slider__background__bg1") as SVGLineElement;
     // range [0, 300], inset by bgWidth / 2 = 3 at each end
     expect(bg1.getAttribute("x1")).toBe("3");
     expect(bg1.getAttribute("x2")).toBe("297");
     expect(bg1.style.strokeWidth).toBe("6");
-  });
 
-  test("should draw a narrower white track on top of the grey one", () => {
-    const node = render(basic());
     const bg2 = node.querySelector("line.sszvis-slider__background__bg2") as SVGLineElement;
     expect(bg2.style.strokeWidth).toBe("5");
     expect(bg2.style.stroke).toBe("rgb(255, 255, 255)");
-  });
 
-  test("should centre the track vertically on a half pixel", () => {
-    const node = render(basic());
     expect(node.querySelector("g.sszvis-slider__background")?.getAttribute("transform")).toBe(
       "translate(0,18.5)",
     );
   });
 
-  test("should fill the track up to the current value", () => {
+  test("should fill the track up to the handle when a value is configured", () => {
     const node = render(basic());
     const shadow = node.querySelector("line.sszvis-slider__backgroundshadow") as SVGLineElement;
     expect(shadow.getAttribute("x1")).toBe("3");
@@ -131,18 +107,13 @@ describe("control/slider", () => {
     expect(shadow.getAttribute("x2")).toBe("150");
   });
 
-  test("should position the handle at the current value", () => {
-    const node = render(basic());
-    expect(handle(node)?.getAttribute("transform")).toBe("translate(150.5,0.5)");
-  });
-
-  test("should move the handle when the value changes", () => {
-    const node = render(basic().value(0));
+  test("should put the handle where the value sits on the track, inset so it stays on the rail", () => {
+    expect(handle(render(basic()))?.getAttribute("transform")).toBe("translate(150.5,0.5)");
     // the scale is inset by half the handle width so the handle stays inside the track
-    expect(handle(node)?.getAttribute("transform")).toBe("translate(5.5,0.5)");
+    expect(handle(render(basic().value(0)))?.getAttribute("transform")).toBe("translate(5.5,0.5)");
   });
 
-  test("should draw a 10x23 rounded handle box straddling the track", () => {
+  test("should draw the handle as a 10x23 rounded box with a grip inside it when rendered", () => {
     const node = render(basic());
     const box = handleBox(node) as SVGRectElement;
     expect(box.getAttribute("x")).toBe("-5");
@@ -151,16 +122,13 @@ describe("control/slider", () => {
     expect(box.getAttribute("height")).toBe("23");
     expect(box.getAttribute("rx")).toBe("2");
     expect(box.getAttribute("ry")).toBe("2");
-  });
 
-  test("should draw a grip line inside the handle box", () => {
-    const node = render(basic());
     const line = handleLine(node) as SVGLineElement;
     expect(line.getAttribute("y1")).toBe("11");
     expect(line.getAttribute("y2")).toBe("26");
   });
 
-  test("should accept any continuous numeric scale, not just a linear one", () => {
+  test("should place the handle correctly when the scale is continuous but not linear", () => {
     // The slider only ever calls domain/range/copy on its scale, and the move behaviour
     // inverts through it, so d3's other continuous numeric scales work here too. Typed as
     // ScaleContinuousNumeric rather than ScaleLinear so the types do not narrow that.
@@ -177,34 +145,25 @@ describe("control/slider", () => {
   });
 
   describe("handle label", () => {
-    test("should show the current value by default", () => {
+    test("should show the current value when no label is configured", () => {
       const node = render(basic());
       expect(handleLabel(node)?.textContent).toBe("5");
     });
 
-    test("should keep a single, correct label across re-renders", () => {
+    test("should keep exactly one handle and one label, showing the latest value, across re-renders", () => {
+      const group = d3Select(svg).append("g");
       const control = basic();
-      const group = d3Select(svg).append("g");
       group.call(control);
       group.call(control);
-      group.call(control);
-      const node = group.node() as SVGGElement;
-      expect(node.querySelectorAll("g.sszvis-control-slider__handle").length).toBe(1);
-      expect(node.querySelectorAll("text.sszvis-control-slider--label").length).toBe(1);
-      expect(handleLabel(node)?.textContent).toBe("5");
-    });
-
-    test("should re-label the single handle label after a value change", () => {
-      const group = d3Select(svg).append("g");
-      group.call(basic().value(0));
       group.call(basic().value(10));
       const node = group.node() as SVGGElement;
+      expect(node.querySelectorAll("g.sszvis-control-slider__handle").length).toBe(1);
       expect(
         [...node.querySelectorAll("text.sszvis-control-slider--label")].map((t) => t.textContent),
       ).toEqual(["10"]);
     });
 
-    test("should not adopt a label element that belongs to something else", () => {
+    test("should leave a stray label of the same class alone when it sits outside the handle", () => {
       const group = d3Select(svg).append("g");
       // a stray label outside the handle group, as another render might leave behind
       const foreign = group
@@ -219,73 +178,48 @@ describe("control/slider", () => {
       expect(handleGroup.querySelector("text.sszvis-control-slider--label")?.textContent).toBe("5");
     });
 
-    test("should use a label function when one is given", () => {
-      const node = render(basic().label((d) => `Year ${String(d)}`));
-      expect(handleLabel(node)?.textContent).toBe("Year 5");
-    });
-
-    test("should centre the label over the handle inside the domain", () => {
-      const node = render(basic());
-      expect(handleLabel(node)?.style.textAnchor).toBe("middle");
-      expect(handleLabel(node)?.getAttribute("dx")).toBe("0");
-    });
-
-    test("should push the label inwards at the domain ends", () => {
-      const low = render(basic().value(0));
-      expect(handleLabel(low)?.style.textAnchor).toBe("start");
-      expect(handleLabel(low)?.getAttribute("dx")).toBe("-5");
-
-      const high = render(basic().value(10));
-      expect(handleLabel(high)?.style.textAnchor).toBe("end");
-      expect(handleLabel(high)?.getAttribute("dx")).toBe("5");
+    test("should read the label through a label function, or a plain string, when one is configured", () => {
+      expect(handleLabel(render(basic().label((d) => `Year ${String(d)}`)))?.textContent).toBe(
+        "Year 5",
+      );
+      const fixed = render(basic().label("Fixed").tickLabels("tick"));
+      expect(handleLabel(fixed)?.textContent).toBe("Fixed");
+      expect(tickLabels(fixed).filter(Boolean)).toEqual(["tick", "tick", "tick"]);
     });
   });
 
   describe("slanted tick labels", () => {
-    test("should nudge vertical labels into place", () => {
-      const node = render(basic().slant("vertical"));
-      const label = [...node.querySelectorAll("g.tick text")].find((t) => t.textContent === "5");
-      expect(label?.getAttribute("dx")).toBe("-1.8em");
-      expect(label?.getAttribute("dy")).toBe("-1.5em");
-    });
+    test.each([
+      { slant: "vertical", dx: "-1.8em", dy: "-1.5em" },
+      { slant: "diagonal", dx: "-1.6em", dy: "0.2em" },
+    ] as const)(
+      "should nudge the labels to $dx, $dy when the slant is $slant",
+      ({ slant, dx, dy }) => {
+        const node = render(basic().slant(slant));
+        const label = [...node.querySelectorAll("g.tick text")].find((t) => t.textContent === "5");
+        expect(label?.getAttribute("dx")).toBe(dx);
+        expect(label?.getAttribute("dy")).toBe(dy);
+      },
+    );
 
-    test("should nudge diagonal labels into place", () => {
-      const node = render(basic().slant("diagonal"));
-      const label = [...node.querySelectorAll("g.tick text")].find((t) => t.textContent === "5");
-      expect(label?.getAttribute("dx")).toBe("-1.6em");
-      expect(label?.getAttribute("dy")).toBe("0.2em");
-    });
-
-    test("should leave the axis anchoring alone when slanted", () => {
-      const node = render(basic().slant("vertical"));
-      const anchors = [...node.querySelectorAll<SVGTextElement>("g.tick text")]
-        .filter((t) => t.textContent !== "")
-        .map((t) => t.style.textAnchor);
-      // the outer-label anchoring only runs for a horizontal slant
-      expect(anchors).toEqual(["end", "end", "end"]);
-    });
-
-    test("should re-enable the outer anchoring for an explicit horizontal slant", () => {
-      const node = render(basic().slant("horizontal"));
-      const anchors = [...node.querySelectorAll<SVGTextElement>("g.tick text")]
-        .filter((t) => t.textContent !== "")
-        .map((t) => t.style.textAnchor);
-      expect(anchors).toEqual(["start", "middle", "end"]);
+    test("should tuck the outer labels into the track only when the labels are horizontal", () => {
+      const anchorsOf = (node: Element) =>
+        [...node.querySelectorAll<SVGTextElement>("g.tick text")]
+          .filter((t) => t.textContent !== "")
+          .map((t) => t.style.textAnchor);
+      // Slanted labels run along their own baseline, so the outer-label anchoring that keeps a
+      // horizontal label inside the track would push them the wrong way.
+      expect(anchorsOf(render(basic().slant("vertical")))).toEqual(["end", "end", "end"]);
+      expect(anchorsOf(render(basic().slant("horizontal")))).toEqual(["start", "middle", "end"]);
     });
   });
 
-  test("should format tick labels with tickLabels", () => {
+  test("should write the tick labels through tickLabels when a formatter is configured", () => {
     const node = render(basic().tickLabels((d) => `${String(d)}%`));
     expect(tickLabels(node).filter(Boolean)).toEqual(["0%", "5%", "10%"]);
   });
 
-  test("should accept plain strings for label and tickLabels", () => {
-    const node = render(basic().label("Fixed").tickLabels("tick"));
-    expect(handleLabel(node)?.textContent).toBe("Fixed");
-    expect(tickLabels(node).filter(Boolean)).toEqual(["tick", "tick", "tick"]);
-  });
-
-  test("should not throw on a drag when no onchange is configured", () => {
+  test("should do nothing rather than throw when the handle is dragged and no onchange is configured", () => {
     const node = render(slider().scale(scale()).value(5));
     const layer = node.querySelector(
       "g.sszvis-control-slider--interactionLayer rect",
@@ -296,7 +230,7 @@ describe("control/slider", () => {
     ).not.toThrow();
   });
 
-  test("should place the interaction layer above the handle", () => {
+  test("should put the interaction layer above the handle, so the pointer reaches it", () => {
     const node = render(basic());
     const classes = [...node.children].map((c) => c.getAttribute("class"));
     expect(classes.indexOf("sszvis-control-slider--interactionLayer")).toBeGreaterThan(
@@ -304,24 +238,13 @@ describe("control/slider", () => {
     );
   });
 
-  test("should default to no ticks at all", () => {
+  test("should draw no ticks at all when none are configured", () => {
     const node = render(slider().scale(scale()).value(5));
     expect(ticks(node).length).toBe(0);
   });
 
-  test("should call onchange while the handle is dragged", () => {
-    const onchange = vi.fn();
-    const node = render(basic().onchange(onchange));
-    const layer = node.querySelector(
-      "g.sszvis-control-slider--interactionLayer rect",
-    ) as SVGRectElement;
-    layer.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    layer.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 20, clientY: 5 }));
-    expect(onchange).toHaveBeenCalled();
-  });
-
   describe("tick label anchoring", () => {
-    test("should anchor by track position, not by configuration order", () => {
+    test("should anchor the labels by track position when the ticks are configured out of order", () => {
       const node = render(basic().majorTicks([10, 0, 5]));
       const anchors = [...node.querySelectorAll<SVGTextElement>("g.tick text")]
         .filter((t) => t.textContent !== "")
@@ -333,52 +256,40 @@ describe("control/slider", () => {
       ]);
     });
 
-    test("should centre a lone major label", () => {
-      const node = render(basic().majorTicks([5]));
-      const label = [...node.querySelectorAll<SVGTextElement>("g.tick text")].find(
-        (t) => t.textContent === "5",
+    // Only the outermost labels are tucked in; everything between them stays centred. The
+    // degenerate counts are where that rule has to be stated rather than derived.
+    test.each([
+      { majorTicks: [], expected: [] },
+      { majorTicks: [5], expected: ["middle"] },
+      { majorTicks: [0, 10], expected: ["start", "end"] },
+      { majorTicks: [0, 5, 10], expected: ["start", "middle", "end"] },
+    ])("should anchor $expected.length major labels as $expected", ({ majorTicks, expected }) => {
+      const node = render(
+        slider().scale(scale()).value(5).majorTicks(majorTicks).minorTicks([2.5, 7.5]),
       );
-      expect(label?.style.textAnchor).toBe("middle");
-    });
-
-    test("should anchor both labels inwards when there are only two", () => {
-      const node = render(slider().scale(scale()).value(5).majorTicks([0, 10]));
       const anchors = [...node.querySelectorAll<SVGTextElement>("g.tick text")]
         .filter((t) => t.textContent !== "")
         .map((t) => t.style.textAnchor);
-      expect(anchors).toEqual(["start", "end"]);
-    });
-
-    test("should not throw when there are no major ticks at all", () => {
-      expect(() => render(slider().scale(scale()).value(5).minorTicks([2.5, 7.5]))).not.toThrow();
-      const node = render(slider().scale(scale()).value(5).minorTicks([2.5, 7.5]));
-      expect(tickLabels(node)).toEqual(["", ""]);
+      expect(anchors).toEqual(expected);
     });
   });
 
   describe("value clamping and validation", () => {
-    test("should pin the handle to the end of the track for a value above the domain", () => {
-      const node = render(basic().value(20));
-      expect(handle(node)?.getAttribute("transform")).toBe("translate(294.5,0.5)");
+    test("should pin the handle to the nearer end of the track when the value is outside the domain", () => {
+      expect(handle(render(basic().value(20)))?.getAttribute("transform")).toBe(
+        "translate(294.5,0.5)",
+      );
+      expect(handle(render(basic().value(-20)))?.getAttribute("transform")).toBe(
+        "translate(5.5,0.5)",
+      );
     });
 
-    test("should pin the handle to the start of the track for a value below the domain", () => {
-      const node = render(basic().value(-20));
-      expect(handle(node)?.getAttribute("transform")).toBe("translate(5.5,0.5)");
-    });
-
-    test("should throw before rendering anything when value is missing", () => {
-      const node = d3Select(svg).append("g");
-      expect(() => node.call(slider().scale(scale()))).toThrow(/value/);
-      const el = node.node() as SVGGElement;
-      expect(el.childElementCount).toBe(0);
-    });
-
-    test("should name the component and the property in that error", () => {
+    test("should leave nothing half-drawn, and name what is missing, when value is not configured", () => {
       const node = d3Select(svg).append("g");
       expect(() => node.call(slider().scale(scale()))).toThrow(
         "[sszvis.control.slider] the `value` property is required",
       );
+      expect((node.node() as SVGGElement).childElementCount).toBe(0);
     });
   });
 
@@ -402,7 +313,7 @@ describe("control/slider", () => {
       return onchange.mock.calls.at(-1)?.[1];
     };
 
-    test("should keep the interaction layer spanning the whole configured range", () => {
+    test("should let the pointer reach both ends of the range, not just the inset track", () => {
       const node = render(basic());
       const layer = node.querySelector(
         "g.sszvis-control-slider--interactionLayer rect",
@@ -411,20 +322,20 @@ describe("control/slider", () => {
       expect(layer.getAttribute("width")).toBe("300");
     });
 
-    test("should report the domain maximum at the pixel its handle is drawn at", () => {
+    test("should report the domain maximum when the handle is dragged to the pixel it is drawn at", () => {
       const onchange = vi.fn();
       const node = render(basic().onchange(onchange));
       // 294.5 is where the handle sits for the domain maximum; clientX is an integer
       expect(dragTo(node, onchange, 294) as number).toBeCloseTo(10, 1);
     });
 
-    test("should report the domain minimum at the low end of the track", () => {
+    test("should report the domain minimum when the handle is dragged to the low end of the track", () => {
       const onchange = vi.fn();
       const node = render(basic().onchange(onchange));
       expect(dragTo(node, onchange, 5) as number).toBe(0);
     });
 
-    test("should round trip through a time scale at both ends", () => {
+    test("should report the domain ends when the handle is dragged to them on a time scale", () => {
       const domain: [Date, Date] = [new Date(2020, 0, 1), new Date(2020, 0, 31)];
       const onchange = vi.fn();
       const node = render(
@@ -439,7 +350,7 @@ describe("control/slider", () => {
       expect(+domain[1] - +high).toBeLessThan(2 * 60 * 60 * 1000);
     });
 
-    test("should agree with its own rendering on a reversed scale", () => {
+    test("should report the value it drew at that pixel when the handle is dragged on a reversed scale", () => {
       const reversed = scaleLinear().domain([0, 10]).range([300, 0]);
       const onchange = vi.fn();
       const node = render(slider().scale(reversed).value(0).onchange(onchange));
@@ -452,14 +363,14 @@ describe("control/slider", () => {
   });
 
   describe("reversed range", () => {
-    test("should draw the handle at the right-hand end for the domain minimum", () => {
+    test("should draw the handle at the right-hand end when the domain minimum is the current value", () => {
       const reversed = scaleLinear().domain([0, 10]).range([300, 0]);
       const node = render(slider().scale(reversed).value(0).majorTicks([0, 10]));
       expect(reversed(0)).toBe(300);
       expect(handle(node)?.getAttribute("transform")).toBe("translate(294.5,0.5)");
     });
 
-    test("should draw the ticks right to left", () => {
+    test("should lay the ticks out right to left when the range descends", () => {
       const reversed = scaleLinear().domain([0, 10]).range([300, 0]);
       const node = render(slider().scale(reversed).value(0).majorTicks([0, 10]));
       const labelled = [...node.querySelectorAll<SVGTextElement>("g.tick text")].filter(
@@ -472,7 +383,7 @@ describe("control/slider", () => {
       ]);
     });
 
-    test("should anchor the handle label into the track, not by domain order", () => {
+    test("should tuck the handle label into the track at whichever end the handle is drawn at", () => {
       // The anchor comes from the pixel the handle is drawn at. With a descending range the
       // domain minimum is drawn at the right-hand end, so it has to be anchored "end" and
       // nudged left; keying off the domain index anchored it "start" and pushed a long
@@ -488,7 +399,7 @@ describe("control/slider", () => {
       expect(labelAnchor(render(slider().scale(ascending()).value(5)))).toEqual(["middle", "0"]);
     });
 
-    test("should anchor an out-of-domain value at the end it is clamped to", () => {
+    test("should tuck the handle label in at the end it was clamped to when the value is out of domain", () => {
       // The clamp pins the handle to an end, but the value equals neither bound, so a
       // domain-keyed anchor centred the label over the edge of the track.
       const scale = () => scaleLinear().domain([0, 10]).range([0, 300]);
@@ -496,7 +407,7 @@ describe("control/slider", () => {
       expect(labelAnchor(render(slider().scale(scale()).value(99)))).toEqual(["end", "5"]);
     });
 
-    test("should keep the direction of a descending time range", () => {
+    test("should keep the handle at the right-hand end when a descending range is a time range", () => {
       const domain: [Date, Date] = [new Date(2020, 0, 1), new Date(2020, 0, 31)];
       const node = render(
         slider()
@@ -531,19 +442,19 @@ describe("control/slider", () => {
       ]);
     });
 
-    test("the handle label compares against the domain by string, not by identity", () => {
-      // NOTE: the anchoring uses fn.stringEqual rather than ===, which is what makes it
-      // work for time scales: a value that is a different Date object for the same
-      // instant as the domain endpoint is still recognised as that endpoint. The flip
-      // side is that anything stringifying like an endpoint is treated as one.
+    test("should tuck the label in at the endpoint when the value is an equal-but-distinct Date", () => {
+      // A value rebuilt from state - parsed afresh out of a URL or a store - is a different
+      // Date object from the one in the domain, so neither `===` nor object identity would
+      // recognise it as the endpoint. The anchoring never compares against the domain at all:
+      // it asks which end of the inset range the handle was drawn at, so any value that lands
+      // on an end is anchored there whatever object it is.
       const domain: [Date, Date] = [new Date(2020, 0, 1), new Date(2020, 0, 31)];
       const node = render(
         slider()
           .scale(scaleTime().domain(domain).range([0, 300]))
-          // an equal-but-distinct Date, as a rebuilt state value would be
           .value(new Date(2020, 0, 1)),
       );
-      expect(handleLabel(node)?.style.textAnchor).toBe("start");
+      expect(labelAnchor(node)).toEqual(["start", "-5"]);
     });
 
     test("the interaction layer reports a meaningless second argument", () => {
