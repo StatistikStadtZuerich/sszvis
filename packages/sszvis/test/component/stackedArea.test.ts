@@ -2,6 +2,7 @@ import { stack } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import stackedArea from "../../src/component/stackedArea.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 /**
@@ -89,6 +90,18 @@ describe("component/stackedArea", () => {
     ],
   ];
 
+  describesTheMarkJoin<Layer>(() => ({
+    make: areaOf,
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({ paths: paths(node).length }),
+    full: { data: twoLayers, marks: { paths: 2 } },
+    smaller: { data: [twoLayers[0]], marks: { paths: 1 } },
+  }));
+
   describe("rendering", () => {
     test("should render one classed path per layer", () => {
       const node = render(areaOf(), twoLayers);
@@ -108,18 +121,6 @@ describe("component/stackedArea", () => {
       ]);
     });
 
-    test("should render nothing for an empty data array", () => {
-      expect(paths(render(areaOf(), [])).length).toBe(0);
-    });
-
-    test("should re-render in place rather than appending duplicates", () => {
-      const component = areaOf();
-      const g = group("rerender");
-      g.datum(twoLayers).call(component as never);
-      g.datum(twoLayers).call(component as never);
-      expect(paths(g.node() as SVGGElement).length).toBe(2);
-    });
-
     test("should keep a class a caller added to a path across rerenders", () => {
       const component = areaOf();
       const g = group("consumer-class");
@@ -129,14 +130,6 @@ describe("component/stackedArea", () => {
       g.datum(oneLayer).call(component as never);
       expect(paths(node)[0]?.classList.contains("consumer-decoration")).toBe(true);
       expect(paths(node)[0]?.classList.contains("sszvis-stacked-area-path")).toBe(true);
-    });
-
-    test("should remove paths when the data shrinks", () => {
-      const component = areaOf();
-      const g = group("shrink");
-      g.datum(twoLayers).call(component as never);
-      g.datum([twoLayers[0]]).call(component as never);
-      expect(paths(g.node() as SVGGElement).length).toBe(1);
     });
 
     test("should update the geometry when the data changes", () => {

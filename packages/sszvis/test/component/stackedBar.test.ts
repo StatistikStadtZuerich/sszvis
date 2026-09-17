@@ -13,6 +13,7 @@ import {
   stackedBarVerticalLayout,
 } from "../../src/component/stackedBar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 type Row = { region: string; category: string; value: number };
@@ -374,6 +375,19 @@ describe("component/stackedBar", () => {
     });
   });
 
+  describesTheMarkJoin<Series[number]>(() => ({
+    make: verticalOf,
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({ stacks: stacks(node).length, rects: rects(node).length }),
+    full: { data: verticalData(), marks: { stacks: 2, rects: 4 } },
+    // No shrink case here: losing a series and losing a stack empty different halves of the
+    // nested join, so both keep tests of their own further down this file.
+  }));
+
   describe("stackedBarVertical rendering", () => {
     test("should render one classed group per series", () => {
       const node = render(verticalOf());
@@ -542,16 +556,6 @@ describe("component/stackedBar", () => {
   });
 
   describe("re-rendering", () => {
-    test("should render in place rather than appending duplicates", () => {
-      const component = verticalOf();
-      const g = group("rerender");
-      g.datum(verticalData()).call(component as never);
-      g.datum(verticalData()).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(stacks(node).length).toBe(2);
-      expect(rects(node).length).toBe(4);
-    });
-
     test("should remove the groups when the series disappear", () => {
       const component = verticalOf();
       const g = group("shrink-series");
