@@ -39,3 +39,10 @@ declare const __C_SCALE__: ReturnType<typeof sszvis.scaleQual12>;
 declare const __BOTTOM_PADDING__: number;
 /** The ruler's label: a `modularTextSVG` chain over the roles `spec.tooltip` names. */
 declare const __RULER_LABEL__: ReturnType<typeof sszvis.modularTextSVG>;
+
+// Stacked area chart
+
+/** The x axis' ticks; the hover ruler adds the highlighted date to them. */
+declare const __X_TICK_VALUES__: Date[];
+/** Which x tick to single out, if any. */
+declare const __HIGHLIGHT_TICK__: (d: import("d3").AxisDomain) => boolean;

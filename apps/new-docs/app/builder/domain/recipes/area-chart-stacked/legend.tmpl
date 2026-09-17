@@ -1,0 +1,53 @@
+// #label Colour legend
+// #hint Names each band below the chart. Needs a series column.
+
+// #scalar C_SCALE legendLayout.scale
+// #scalar BOTTOM_PADDING legendBottomPadding(legendLayout, state.categories)
+
+// #region preBounds
+// NOTE: The legend is laid out first because it takes height from the
+// chart: its measurements feed both the colour scale and the bounds.
+const legendLayout = sszvis.colorLegendLayout(
+  {
+    axisLabels: state.timeExtent.map(xLabelFormat),
+    legendLabels: state.categories,
+  },
+  config.id,
+);
+
+const colorLegend = legendLayout.legend;
+// #endregion
+
+// #region render
+if (showLegend(state.categories)) {
+  chartLayer
+    .selectGroup("colorLegend")
+    .attr(
+      "transform",
+      sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding),
+    )
+    .call(colorLegend);
+}
+// #endregion
+
+// #region helpers
+/**
+ * The categories are read from the data, so a single unnamed series produces
+ * one empty category - and a legend with one blank entry, which is worse
+ * than none.
+ */
+const showLegend = (categories: string[]) => categories[0] != null && categories[0] !== "";
+
+/**
+ * How much room to leave below the chart.
+ *
+ * NOTE: `bottomPadding` is the axis labels plus a row per legend row, and the layout
+ * counts a row for the blank category too - so a chart whose legend is suppressed would
+ * be shortened to make space for a legend it never draws. Without one it needs only the
+ * ordinary padding, which is what the recipe uses when the feature is off at all.
+ */
+const legendBottomPadding = (
+  layout: import("sszvis").ColorLegendLayout,
+  categories: string[],
+) => (showLegend(categories) ? layout.bottomPadding : 45);
+// #endregion
