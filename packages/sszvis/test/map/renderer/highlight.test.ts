@@ -1,6 +1,10 @@
 import { geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import {
+  describesNoDecorations,
+  describesNoScheduledTransition,
+} from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
 import { swissMapProjection } from "../../../src/map/mapUtils.js";
@@ -174,13 +178,7 @@ describe("map/renderer/highlight", () => {
       expect(highlights(renderWith())[0]).toBe(first);
     });
 
-    test("adds no tooltip anchors, event targets or missing-value pattern", () => {
-      const node = render((c) => c.highlight([{ geoId: "a" }]));
-      const root = node.ownerSVGElement as SVGSVGElement;
-      expect(node.querySelectorAll("[data-tooltip-anchor]")).toHaveLength(0);
-      expect(node.querySelectorAll("[data-event-target]")).toHaveLength(0);
-      expect(root.querySelectorAll("#missing-pattern")).toHaveLength(0);
-    });
+    describesNoDecorations(() => render((c) => c.highlight([{ geoId: "a" }])));
   });
 
   describe("empty highlight", () => {
@@ -810,12 +808,9 @@ describe("map/renderer/highlight", () => {
 
     // NOTE: no transition is scheduled, so a highlight appears and disappears instantly. Pinned
     // so the port cannot introduce one.
-    test("schedules no transition at all", () => {
-      const node = render((c) => c.highlight([{ geoId: "a" }]));
-      expect(
-        (highlights(node)[0] as Element & { __transition?: unknown }).__transition,
-      ).toBeUndefined();
-    });
+    describesNoScheduledTransition(
+      () => highlights(render((c) => c.highlight([{ geoId: "a" }])))[0],
+    );
 
     // NOTE: neither required property is validated, so omitting either throws a bare TypeError
     // from inside the component once there is something to highlight, rather than reporting
