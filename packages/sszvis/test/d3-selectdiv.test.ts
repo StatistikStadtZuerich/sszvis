@@ -2,73 +2,79 @@ import { select } from "d3";
 import { describe, expect, test } from "vitest";
 import "../src/d3-selectdiv.js"; // Import to add prototype method
 
+/**
+ * The "adds selectDiv to the d3 prototype" test that used to open this file is gone: every
+ * test below calls `select(...).selectDiv(...)` and so fails with a TypeError if the
+ * prototype method is missing, which makes each of them a strictly stronger version of it.
+ */
 describe("selectDiv", () => {
-  test("should add selectDiv method to d3 selection prototype", () => {
+  const container = () => {
     const div = document.createElement("div");
     document.body.append(div);
-    expect(typeof select(div).selectDiv).toBe("function");
+    return div;
+  };
+
+  const child = (parent: Element, key: string) =>
+    parent.querySelector(`[data-d3-selectdiv="${key}"]`);
+
+  test("should create a div keyed by the data-d3-selectdiv attribute other code selects on", () => {
+    const parent = container();
+    select(parent).selectDiv("test-key");
+    expect(child(parent, "test-key")?.tagName).toBe("DIV");
   });
 
-  test("should create div with data-d3-selectdiv attribute", () => {
-    const container = document.createElement("div");
-    document.body.append(container);
-    select(container).selectDiv("test-key");
-    expect(container?.querySelector('[data-d3-selectdiv="test-key"]')?.tagName).toBe("DIV");
+  test("should position the div absolutely, so it overlays rather than displaces the chart", () => {
+    const parent = container();
+    select(parent).selectDiv("positioned");
+    expect((child(parent, "positioned") as HTMLDivElement).style.position).toBe("absolute");
   });
 
-  test("should set position absolute style", () => {
-    const container = document.createElement("div");
-    document.body.append(container);
-    select(container).selectDiv("positioned");
-    expect(
-      (container.querySelector('[data-d3-selectdiv="positioned"]') as HTMLDivElement).style
-        .position,
-    ).toBe("absolute");
-  });
-
-  test("should be idempotent - not recreate existing div", () => {
-    const container = document.createElement("div");
-    document.body.append(container);
-    const selection = select(container);
+  test("should return the existing div rather than append a second when the key repeats", () => {
+    // The behaviour the module exists for: a re-render must not accumulate layers.
+    const parent = container();
+    const selection = select(parent);
     selection.selectDiv("same-key");
-    const element1 = container.querySelector('[data-d3-selectdiv="same-key"]');
+    const first = child(parent, "same-key");
     selection.selectDiv("same-key");
-    const element2 = container.querySelector('[data-d3-selectdiv="same-key"]');
-    expect(element1).toBe(element2);
-    expect(container.querySelectorAll('[data-d3-selectdiv="same-key"]')).toHaveLength(1);
+
+    expect(child(parent, "same-key")).toBe(first);
+    expect(parent.querySelectorAll('[data-d3-selectdiv="same-key"]')).toHaveLength(1);
   });
 
-  test("should create different divs for different keys", () => {
-    const container = document.createElement("div");
-    document.body.append(container);
-    const selection = select(container);
+  test("should create a separate div for each distinct key", () => {
+    const parent = container();
+    const selection = select(parent);
     selection.selectDiv("key1");
     selection.selectDiv("key2");
-    const div1 = container.querySelector('[data-d3-selectdiv="key1"]');
-    const div2 = container.querySelector('[data-d3-selectdiv="key2"]');
-    expect(div1).toBeTruthy();
-    expect(div2).toBeTruthy();
-    expect(div1).not.toBe(div2);
+
+    expect(child(parent, "key1")).toBeTruthy();
+    expect(child(parent, "key2")).toBeTruthy();
+    expect(child(parent, "key1")).not.toBe(child(parent, "key2"));
   });
 
-  test("should bind data to created div", () => {
-    const container = document.createElement("div");
-    document.body.append(container);
+  test("should bind the parent's datum to the div, which the components render from", () => {
+    const parent = container();
     const testData = { value: 42 };
-    select(container).datum(testData).selectDiv("data-test");
-    const divSelection = select(container.querySelector('[data-d3-selectdiv="data-test"]'));
-    const boundData = divSelection.datum();
-    expect(boundData).toEqual(testData);
+    select(parent).datum(testData).selectDiv("data-test");
+
+    expect(select(child(parent, "data-test")).datum()).toEqual(testData);
   });
 
-  test("should work with selection containing multiple elements", () => {
-    const container1 = document.createElement("div");
-    const container2 = document.createElement("div");
-    container1.className = "container";
-    container2.className = "container";
-    document.body.append(container1, container2);
+  test("should create one div per parent when the selection holds several", () => {
+    const first = container();
+    const second = container();
+    first.className = "container";
+    second.className = "container";
+
     select(document.body).selectAll(".container").data([1, 2]).selectDiv("multi-test");
-    expect(container1.querySelector('[data-d3-selectdiv="multi-test"]')).toBeTruthy();
-    expect(container2.querySelector('[data-d3-selectdiv="multi-test"]')).toBeTruthy();
+
+    // Each parent gets exactly one, carrying that parent's own datum.
+    for (const [parent, datum] of [
+      [first, 1],
+      [second, 2],
+    ] as const) {
+      expect(parent.querySelectorAll('[data-d3-selectdiv="multi-test"]')).toHaveLength(1);
+      expect(select(child(parent, "multi-test")).datum()).toBe(datum);
+    }
   });
 });

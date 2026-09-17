@@ -3,115 +3,81 @@ import { parseDate, parseNumber, parseYear } from "../src/parse.js";
 
 describe("parse", () => {
   describe("parseDate", () => {
-    test("should parse valid Swiss date format", () => {
-      const result = parseDate("17.08.2014");
-      expect(result).toBeInstanceOf(Date);
-      expect(result?.getFullYear()).toBe(2014);
-      expect(result?.getMonth()).toBe(7); // Month is 0-indexed
-      expect(result?.getDate()).toBe(17);
-    });
+    test.each([
+      ["17.08.2014", { year: 2014, month: 7, date: 17 }], // Month is 0-indexed
+      ["5.3.2020", { year: 2020, month: 2, date: 5 }],
+    ])(
+      "should return the Swiss date %s as a Date when given a parseable cell",
+      (input, expected) => {
+        const result = parseDate(input);
+        expect(result).toBeInstanceOf(Date);
+        expect(result?.getFullYear()).toBe(expected.year);
+        expect(result?.getMonth()).toBe(expected.month);
+        expect(result?.getDate()).toBe(expected.date);
+      },
+    );
 
-    test("should parse date with single-digit day and month", () => {
-      const result = parseDate("5.3.2020");
-      expect(result).toBeInstanceOf(Date);
-      expect(result?.getFullYear()).toBe(2020);
-      expect(result?.getMonth()).toBe(2);
-      expect(result?.getDate()).toBe(5);
-    });
-
-    test("should return null for invalid date format", () => {
-      expect(parseDate("2014-08-17")).toBeNull();
-      expect(parseDate("invalid")).toBeNull();
-      expect(parseDate("")).toBeNull();
-    });
-
-    test("should return null for invalid date values", () => {
-      expect(parseDate("invalid")).toBeNull();
-      expect(parseDate("not-a-date")).toBeNull();
-    });
-
-    test("should return null for a missing CSV cell", () => {
-      expect(parseDate(undefined)).toBeNull();
-      expect(parseDate(null)).toBeNull();
-    });
+    test.each([["2014-08-17"], ["invalid"], ["not-a-date"], [""]])(
+      "should return null when given %s",
+      (input) => {
+        expect(parseDate(input)).toBeNull();
+      },
+    );
   });
 
   describe("parseYear", () => {
-    test("should parse valid year string", () => {
-      const result = parseYear("2014");
-      expect(result).toBeInstanceOf(Date);
-      expect(result?.getFullYear()).toBe(2014);
-      expect(result?.getMonth()).toBe(0);
-      expect(result?.getDate()).toBe(1);
-    });
+    test.each([
+      ["2014", 2014],
+      ["0001", 1],
+    ])(
+      "should return the year %s as its first instant when given a parseable cell",
+      (input, year) => {
+        const result = parseYear(input);
+        expect(result).toBeInstanceOf(Date);
+        expect(result?.getFullYear()).toBe(year);
+        expect(result?.getMonth()).toBe(0);
+        expect(result?.getDate()).toBe(1);
+      },
+    );
 
-    test("should parse year with leading zeros", () => {
-      const result = parseYear("0001");
-      expect(result).toBeInstanceOf(Date);
-      expect(result?.getFullYear()).toBe(1);
-    });
-
-    test("should return null for invalid year format", () => {
-      expect(parseYear("invalid")).toBeNull();
-      expect(parseYear("")).toBeNull();
-      expect(parseYear("not-a-year")).toBeNull();
-    });
-
-    test("should return null for non-year strings", () => {
-      expect(parseYear("2014-01-01")).toBeNull();
-      expect(parseYear("abc")).toBeNull();
-    });
-
-    test("should return null for a missing CSV cell", () => {
-      expect(parseYear(undefined)).toBeNull();
-      expect(parseYear(null)).toBeNull();
-    });
+    test.each([["invalid"], ["not-a-year"], ["abc"], ["2014-01-01"], [""]])(
+      "should return null when given %s",
+      (input) => {
+        expect(parseYear(input)).toBeNull();
+      },
+    );
   });
 
   describe("parseNumber", () => {
-    test("should parse valid number strings", () => {
-      expect(parseNumber("42")).toBe(42);
-      expect(parseNumber("3.14")).toBe(3.14);
-      expect(parseNumber("-10")).toBe(-10);
-      expect(parseNumber("0")).toBe(0);
+    test.each<[string, number]>([
+      ["42", 42],
+      ["3.14", 3.14],
+      ["-10", -10],
+      ["0", 0],
+      ["  42  ", 42],
+      ["\t123\n", 123],
+      ["1e5", 100_000],
+      ["2.5e-3", 0.0025],
+      ["Infinity", Number.POSITIVE_INFINITY],
+      ["-Infinity", Number.NEGATIVE_INFINITY],
+    ])("should return the number %s when given a numeric cell", (input, expected) => {
+      expect(parseNumber(input)).toBe(expected);
     });
 
-    test("should parse numbers with whitespace", () => {
-      expect(parseNumber("  42  ")).toBe(42);
-      expect(
-        parseNumber(`	123
-`),
-      ).toBe(123);
-    });
-
-    test("should return NaN for empty or whitespace-only strings", () => {
-      expect(parseNumber("")).toBeNaN();
-      expect(parseNumber("   ")).toBeNaN();
-      expect(
-        parseNumber(`	
-`),
-      ).toBeNaN();
-    });
-
-    test("should return NaN for invalid number strings", () => {
-      expect(parseNumber("abc")).toBeNaN();
-      expect(parseNumber("12abc")).toBeNaN();
-      expect(parseNumber("")).toBeNaN();
-    });
-
-    test("should handle scientific notation", () => {
-      expect(parseNumber("1e5")).toBe(100_000);
-      expect(parseNumber("2.5e-3")).toBe(0.0025);
-    });
-
-    test("should return NaN for a missing CSV cell", () => {
-      expect(parseNumber(undefined)).toBeNaN();
-      expect(parseNumber(null)).toBeNaN();
-    });
-
-    test("should handle infinity", () => {
-      expect(parseNumber("Infinity")).toBe(Number.POSITIVE_INFINITY);
-      expect(parseNumber("-Infinity")).toBe(Number.NEGATIVE_INFINITY);
-    });
+    test.each([[""], ["   "], ["\t\n"], ["abc"], ["12abc"]])(
+      "should return NaN when given %s",
+      (input) => {
+        expect(parseNumber(input)).toBeNaN();
+      },
+    );
   });
+
+  test.each([[undefined], [null]])(
+    "should return an empty result from every parser when given a missing CSV cell (%s)",
+    (cell) => {
+      expect(parseDate(cell)).toBeNull();
+      expect(parseYear(cell)).toBeNull();
+      expect(parseNumber(cell)).toBeNaN();
+    },
+  );
 });

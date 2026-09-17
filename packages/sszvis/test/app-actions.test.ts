@@ -6,7 +6,7 @@ describe("app actions", () => {
   installResizeListenerIsolation();
 
   describe("actions", () => {
-    test("exposes an action dispatcher for every action", async () => {
+    test("should expose a dispatcher for every action when the app first renders", async () => {
       const render = vi.fn();
       app({
         init: async (state) => {
@@ -26,7 +26,7 @@ describe("app actions", () => {
       expect(Object.keys(render.mock.calls[0][1])).toEqual(["increment", "reset"]);
     });
 
-    test("updates the state and re-renders when an action is dispatched", async () => {
+    test("should update the state and re-render when an action is dispatched", async () => {
       const render = vi.fn();
       app({
         init: async (state) => {
@@ -46,7 +46,7 @@ describe("app actions", () => {
       expect(render.mock.lastCall?.[0]).toEqual({ count: 1 });
     });
 
-    test("passes the dispatcher arguments on to the action", async () => {
+    test("should pass the arguments on to the action when a dispatcher is called with them", async () => {
       const action = vi.fn();
       const render = vi.fn();
       app({ init: async () => {}, render, actions: { act: action } });
@@ -55,7 +55,7 @@ describe("app actions", () => {
       expect(action.mock.lastCall?.slice(1)).toEqual(["a", "b"]);
     });
 
-    test("calls the action with the actions object as `this`", async () => {
+    test("should bind `this` to the actions object when an action runs", async () => {
       const render = vi.fn();
       const receivers: unknown[] = [];
       const actions = {
@@ -69,7 +69,7 @@ describe("app actions", () => {
       expect(receivers).toEqual([actions]);
     });
 
-    test("runs an effect returned from an action, passing dispatch", async () => {
+    test("should apply the effect's dispatch when an action returns an effect", async () => {
       const render = vi.fn();
       app({
         init: async (state) => {
@@ -91,7 +91,7 @@ describe("app actions", () => {
       expect(render.mock.lastCall?.[0]).toEqual({ count: 1 });
     });
 
-    test("batches several dispatches within one frame into a single render", async () => {
+    test("should render once when several dispatches land within one frame", async () => {
       const render = vi.fn();
       app({
         init: async (state) => {
@@ -114,7 +114,7 @@ describe("app actions", () => {
       expect(render.mock.lastCall?.[0]).toEqual({ count: 3 });
     });
 
-    test("state objects handed to render are not shared between renders", async () => {
+    test("should hand render a fresh state object when a render follows an action", async () => {
       const render = vi.fn();
       app({
         init: async (state) => {
@@ -137,7 +137,7 @@ describe("app actions", () => {
   });
 
   describe("an unknown action name", () => {
-    test("is reported rather than thrown out of the effect that dispatched it", async () => {
+    test("should be reported as a dispatch failure, not thrown, when an effect dispatches it", async () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
       const render = vi.fn();
       app({
@@ -157,7 +157,7 @@ describe("app actions", () => {
       expect(reported.message).not.toContain("An effect failed");
     });
 
-    test("is reported for a name inherited from Object.prototype", async () => {
+    test("should be reported as a dispatch failure when the name is inherited from Object.prototype", async () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
       const render = vi.fn();
       app({
@@ -174,7 +174,7 @@ describe("app actions", () => {
       );
     });
 
-    test("leaves the app rendering, with the state the last real action produced", async () => {
+    test("should leave the app rendering later actions when an effect dispatched it", async () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
       const render = vi.fn();
       app<{ count: number }>({
@@ -223,7 +223,7 @@ describe("app actions", () => {
   });
 
   describe("dispatching from render", () => {
-    test("renders the state the dispatch produced", async () => {
+    test("should render the produced state when render dispatches an action once", async () => {
       const seen: number[] = [];
       let dispatched = false;
       app<{ count: number }>({
@@ -248,7 +248,7 @@ describe("app actions", () => {
       expect(seen).toEqual([0, 1]);
     });
 
-    test("terminates when render dispatches unconditionally", async () => {
+    test("should stop after ten cascaded renders and warn when render dispatches unconditionally", async () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       const seen: number[] = [];
       app<{ count: number }>({
@@ -274,7 +274,7 @@ describe("app actions", () => {
       );
     });
 
-    test("does not count a dispatch made outside render towards the cascade", async () => {
+    test("should keep re-rendering past the cascade cap when the dispatches are made outside render", async () => {
       vi.spyOn(console, "warn").mockImplementation(() => {});
       const render = vi.fn();
       app<{ count: number }>({

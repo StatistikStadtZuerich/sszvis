@@ -7,69 +7,47 @@ import {
 
 describe("svgUtils/crisp", () => {
   describe("halfPixel", () => {
-    test("should snap an integer position to the following half pixel", () => {
-      expect(halfPixel(0)).toBe(0.5);
-      expect(halfPixel(10)).toBe(10.5);
+    test.each([
+      [0, 0.5],
+      [10, 10.5],
+      [10.1, 10.5],
+      [10.4, 10.5],
+      [10.6, 10.5],
+      [10.999, 10.5],
+      [-1, -0.5],
+      [-0.5, -0.5],
+      [-1.5, -1.5],
+      [-1.2, -1.5],
+    ])("should return the half pixel of the enclosing pixel when given %s", (input, expected) => {
+      expect(halfPixel(input)).toBe(expected);
     });
 
-    test("should snap a fractional position down to the enclosing half pixel", () => {
-      expect(halfPixel(10.1)).toBe(10.5);
-      expect(halfPixel(10.4)).toBe(10.5);
-      expect(halfPixel(10.6)).toBe(10.5);
-      expect(halfPixel(10.999)).toBe(10.5);
-    });
-
-    test("should be idempotent", () => {
+    test("should return an unchanged position when given an already snapped position", () => {
       expect(halfPixel(10.5)).toBe(10.5);
       expect(halfPixel(halfPixel(10.3))).toBe(halfPixel(10.3));
-    });
-
-    test("should handle negative positions", () => {
-      expect(halfPixel(-1)).toBe(-0.5);
-      expect(halfPixel(-0.5)).toBe(-0.5);
-      expect(halfPixel(-1.5)).toBe(-1.5);
-      expect(halfPixel(-1.2)).toBe(-1.5);
     });
   });
 
   describe("roundTransformString", () => {
-    test("should round the translate coordinates and leave other instructions untouched", () => {
-      expect(roundTransformString("translate(12.3,4.56789) rotate(3.5)")).toBe(
-        "translate(12,4) rotate(3.5)",
-      );
-    });
-
-    test("should normalize a space separator to a comma", () => {
-      expect(roundTransformString("translate(12.3 4.56789)")).toBe("translate(12,4)");
-    });
-
-    test("should handle a translate with only an x component", () => {
-      expect(roundTransformString("translate(12.3)")).toBe("translate(12)");
-    });
-
-    test("should leave a transform without a translate untouched", () => {
-      expect(roundTransformString("rotate(45)")).toBe("rotate(45)");
-      expect(roundTransformString("scale(1.5)")).toBe("scale(1.5)");
-      expect(roundTransformString("")).toBe("");
-    });
-
-    test("should match the translate instruction case-insensitively and preserve its casing", () => {
-      expect(roundTransformString("TRANSLATE(1.9,2.9)")).toBe("TRANSLATE(1,2)");
-    });
-
-    test("should leave already-rounded coordinates unchanged", () => {
-      expect(roundTransformString("translate(12,4)")).toBe("translate(12,4)");
-    });
-
-    test("should round negative translate coordinates", () => {
-      expect(roundTransformString("translate(-12.3,-4.9)")).toBe("translate(-13,-5)");
-      expect(roundTransformString("translate(12.3,-4.9)")).toBe("translate(12,-5)");
-    });
-
-    test("should handle coordinates padded with spaces", () => {
-      expect(roundTransformString("translate( 12.3 , 4.9 )")).toBe("translate(12,4)");
-      expect(roundTransformString("translate(  12.3   4.9  )")).toBe("translate(12,4)");
-    });
+    test.each([
+      ["translate(12.3,4.56789) rotate(3.5)", "translate(12,4) rotate(3.5)"],
+      ["translate(12.3 4.56789)", "translate(12,4)"],
+      ["translate(12.3)", "translate(12)"],
+      ["rotate(45)", "rotate(45)"],
+      ["scale(1.5)", "scale(1.5)"],
+      ["", ""],
+      ["TRANSLATE(1.9,2.9)", "TRANSLATE(1,2)"],
+      ["translate(12,4)", "translate(12,4)"],
+      ["translate(-12.3,-4.9)", "translate(-13,-5)"],
+      ["translate(12.3,-4.9)", "translate(12,-5)"],
+      ["translate( 12.3 , 4.9 )", "translate(12,4)"],
+      ["translate(  12.3   4.9  )", "translate(12,4)"],
+    ])(
+      'should return "%s" as "%s" when crisping its translate and leaving other instructions untouched',
+      (input, expected) => {
+        expect(roundTransformString(input)).toBe(expected);
+      },
+    );
 
     // Characterization tests: these pin down defects in the current implementation so a
     // behaviour-preserving port stays verifiable. Each carries a defect marker naming the
@@ -101,21 +79,21 @@ describe("svgUtils/crisp", () => {
   });
 
   describe("transformTranslateSubpixelShift", () => {
-    test("should return the subpixel offset of both components", () => {
-      const [dx, dy] = transformTranslateSubpixelShift("translate(12.3,4.56789)");
-      expect(dx).toBeCloseTo(0.3, 10);
-      expect(dy).toBeCloseTo(0.56789, 10);
-    });
-
-    test("should accept a space separator", () => {
-      const [dx, dy] = transformTranslateSubpixelShift("translate(12.3 4.9)");
-      expect(dx).toBeCloseTo(0.3, 10);
-      expect(dy).toBeCloseTo(0.9, 10);
-    });
-
-    test("should return a zero shift for integer coordinates", () => {
-      expect(transformTranslateSubpixelShift("translate(12,4)")).toEqual([0, 0]);
-    });
+    test.each<[string, [number, number]]>([
+      ["translate(12.3,4.56789)", [0.3, 0.56789]],
+      ["translate(12.3 4.9)", [0.3, 0.9]],
+      ["translate(12,4)", [0, 0]],
+      ["translate(12.3,4.9) rotate(3.5)", [0.3, 0.9]],
+      ["rotate(45)", [0, 0]],
+      ["", [0, 0]],
+    ])(
+      'should return the subpixel shift of the translate when given "%s"',
+      (input, [expectedDx, expectedDy]) => {
+        const [dx, dy] = transformTranslateSubpixelShift(input);
+        expect(dx).toBeCloseTo(expectedDx, 10);
+        expect(dy).toBeCloseTo(expectedDy, 10);
+      },
+    );
 
     test("should return a zero y shift for a translate with only an x component", () => {
       // NOTE: resolved by the TypeScript port. The original padded the vector with
@@ -126,23 +104,12 @@ describe("svgUtils/crisp", () => {
       expect(dy).toBe(0);
     });
 
-    test("should ignore other transform instructions", () => {
-      const [dx, dy] = transformTranslateSubpixelShift("translate(12.3,4.9) rotate(3.5)");
-      expect(dx).toBeCloseTo(0.3, 10);
-      expect(dy).toBeCloseTo(0.9, 10);
-    });
-
     test("should return the distance above the enclosing pixel for negative coordinates", () => {
       // NOTE: not a defect. The shift is measured from Math.floor for consistency with
       // halfPixel, so -12.3 shifts by 0.7 rather than -0.3.
       const [dx, dy] = transformTranslateSubpixelShift("translate(-12.3,-4.9)");
       expect(dx).toBeCloseTo(0.7, 10);
       expect(dy).toBeCloseTo(0.1, 10);
-    });
-
-    test("should return a zero shift when the transform contains no translate", () => {
-      expect(transformTranslateSubpixelShift("rotate(45)")).toEqual([0, 0]);
-      expect(transformTranslateSubpixelShift("")).toEqual([0, 0]);
     });
   });
 

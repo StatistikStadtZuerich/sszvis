@@ -10,7 +10,7 @@ describe("app errors", () => {
   installResizeListenerIsolation();
 
   describe("a failing init", () => {
-    test("renders the fallback image", async () => {
+    test("should render the fallback image instead of the chart when init rejects", async () => {
       vi.spyOn(console, "error").mockImplementation(() => {});
       const container = document.createElement("div");
       container.id = "fallback-target";
@@ -30,7 +30,7 @@ describe("app errors", () => {
       expect(render).not.toHaveBeenCalled();
     });
 
-    test("does not escape as an unhandled rejection", async () => {
+    test("should not escape as an unhandled rejection when init rejects", async () => {
       vi.spyOn(console, "error").mockImplementation(() => {});
       const { reasons, restore } = captureUnhandledRejections();
       app({ init: () => Promise.reject(new Error("boom")), render: () => {} });
@@ -39,7 +39,7 @@ describe("app errors", () => {
       expect(reasons).toEqual([]);
     });
 
-    test("reports an error that keeps the original message and cause", async () => {
+    test("should report an error keeping the original message and cause when init rejects", async () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
       const cause = new Error("no data");
       app({ init: () => Promise.reject(cause), render: () => {} });
@@ -50,7 +50,7 @@ describe("app errors", () => {
       expect(reported.cause).toBe(cause);
     });
 
-    test("reports the failure even when no fallback is configured", async () => {
+    test("should report the failure and skip render when no fallback is configured", async () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
       const render = vi.fn();
       app({ init: () => Promise.reject(new Error("boom")), render });
@@ -61,7 +61,7 @@ describe("app errors", () => {
   });
 
   describe("a failing effect", () => {
-    test("is reported as an effect failure, not an init failure", async () => {
+    test("should be reported as an effect failure, not an init failure, when an init effect throws", async () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
       app({
         init: async () => () => {
@@ -75,7 +75,7 @@ describe("app errors", () => {
       expect(reported.message).toBe("[sszvis.app] An effect failed: boom");
     });
 
-    test("does not render the fallback, since the chart itself was built", async () => {
+    test("should keep the chart rendered and show no fallback when an init effect throws", async () => {
       vi.spyOn(console, "error").mockImplementation(() => {});
       const container = document.createElement("div");
       container.id = "effect-fallback-target";
@@ -95,7 +95,7 @@ describe("app errors", () => {
       expect(render).toHaveBeenCalledTimes(1);
     });
 
-    test("takes the same path when the effect came from an action", async () => {
+    test("should be reported as an effect failure without throwing when the effect came from an action", async () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
       const render = vi.fn();
       app({
