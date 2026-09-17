@@ -6,7 +6,7 @@ import pack, { type PackLayout } from "../../src/component/pack.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
-import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
+import { type NodeDatum, prepareHierarchyData } from "../../src/layout/hierarchy.js";
 
 // Test data structures
 type TestDatum = {
@@ -132,7 +132,13 @@ describe("component/pack", () => {
       expect(strokes(() => "#ff0000")).toEqual(constant);
     });
 
-    test("should apply color scale correctly", () => {
+    test("should fill every leaf with the colour of its own top-level category", () => {
+      // Each expected fill is derived from the source row's category rather than from the
+      // component's own colorKeyOf, so this fails when the scale is applied to the wrong
+      // node even though every fill is still a legitimate palette colour. The test this
+      // replaces asserted only that the first circle's fill was "none" or somewhere in the
+      // palette, and the whole file passed with one category's colour painted over all of
+      // them.
       svg
         .datum(
           prepareHierarchyData<TestDatum>()
@@ -147,16 +153,29 @@ describe("component/pack", () => {
             .containerHeight(250)
             .transition(false),
         );
-      const circles = svg.selectAll(".sszvis-pack-circle");
-      expect(circles.size()).toBeGreaterThan(0);
-      const firstCircle = circles.node() as SVGCircleElement;
-      if (firstCircle) {
-        const fill = firstCircle.getAttribute("fill");
-        expect(fill).toBeDefined();
-        // Leaf nodes should have color fill, branch nodes should have "none"
-        expect(fill === "none" || ["#1f77b4", "#ff7f0e", "#2ca02c"].includes(fill || "")).toBe(
-          true,
-        );
+
+      const painted = svg
+        .selectAll<SVGCircleElement, { data: NodeDatum<TestDatum> }>(".sszvis-pack-circle")
+        .nodes()
+        .map((circle) => ({
+          datum: select<SVGCircleElement, { data: NodeDatum<TestDatum> }>(circle).datum().data,
+          fill: circle.getAttribute("fill"),
+        }));
+
+      const leaves = painted.filter((c) => c.datum._tag === "leaf");
+      expect(leaves.length).toBeGreaterThan(1);
+      for (const leaf of leaves) {
+        const row = (leaf.datum as Extract<NodeDatum<TestDatum>, { _tag: "leaf" }>).data;
+        expect(leaf.fill).toBe(cScale(row.category));
+      }
+
+      // More than one category is on screen, so a scale collapsed onto a single key fails
+      // here as well as in the per-leaf assertion above.
+      expect(new Set(leaves.map((c) => c.fill)).size).toBeGreaterThan(1);
+
+      // Branch nodes are painted white rather than left unfilled, so they stay clickable.
+      for (const branch of painted.filter((c) => c.datum._tag === "branch")) {
+        expect(branch.fill).toBe("white");
       }
     });
 
