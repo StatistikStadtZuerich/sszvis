@@ -53,3 +53,13 @@ declare const __HIGHLIGHT_TICK__: (d: import("d3").AxisDomain) => boolean;
 declare const __SERIES_FIELD__: string;
 /** One slice's fill: its series colour, darkened once tooltips are on. */
 declare const __SLICE_FILL__: string | undefined;
+
+/* The map's holes. The geometry is named by strings the topology uses as keys. */
+declare const __TOPO_PATH__: string;
+/** A map's fill runs over a continuous range, so its scale is sequential rather than ordinal. */
+declare const __COLOR_SCALE__: ReturnType<typeof sszvis.scaleSeqBlu>;
+declare const __LAYER__: string;
+declare const __LAKE_LAYER__: string;
+declare const __LAKE_BOUNDS_LAYER__: string;
+declare const __GEO_FIELD__: string;
+declare const __LABEL_EXPR__: string;

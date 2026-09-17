@@ -1,0 +1,19 @@
+The shoreline. A geography whose areas stop at the water has a matching mesh of
+just that edge, which the lake overlay fades along; the agglomeration has no such
+mesh, so its lake is drawn without one.
+
+// #hidden
+// #label Shoreline
+// #hint The edge where the areas meet the water.
+
+// #region mapDataTypes
+lakeBorders: import("d3").GeoPermissibleObjects;
+// #endregion
+
+// #region mapData
+lakeBorders: topojson.mesh(topo, topo.objects[__LAKE_BOUNDS_LAYER__]),
+// #endregion
+
+// #region mapProps
+.lakeBorders(state.mapData.lakeBorders)
+// #endregion

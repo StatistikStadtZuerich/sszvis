@@ -6,6 +6,7 @@ import { barChartVertical } from "./bar-chart-vertical/recipe";
 import { barChartVerticalGrouped } from "./bar-chart-vertical-grouped/recipe";
 import { barChartVerticalStacked } from "./bar-chart-vertical-stacked/recipe";
 import { lineChart } from "./line-chart/recipe";
+import { mapChoropleth } from "./map-choropleth/recipe";
 
 export const recipeDefs: readonly RecipeDef[] = [
   barChartVertical,
@@ -15,4 +16,5 @@ export const recipeDefs: readonly RecipeDef[] = [
   barChartVerticalGrouped,
   lineChart,
   areaChartStacked,
+  mapChoropleth,
 ];
