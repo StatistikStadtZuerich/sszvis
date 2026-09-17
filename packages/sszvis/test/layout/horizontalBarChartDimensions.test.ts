@@ -7,32 +7,18 @@ const MIN_PADDING = 20;
 
 describe("horizontalBarChartDimensions", () => {
   describe("fixed dimensions", () => {
-    test("uses a constant 24px bar height and 20px padding", () => {
-      const dim = dimensionsHorizontalBarChart(5);
-      expect(dim.barHeight).toBe(DEFAULT_HEIGHT);
-      expect(dim.padHeight).toBe(MIN_PADDING);
-    });
-
-    test("keeps the bar height and padding independent of the bar count", () => {
-      for (const numBars of [1, 2, 17, 500]) {
+    test("should report the fixed 24/20 geometry and its derived ratios, whatever the bar count", () => {
+      for (const numBars of [1, 2, 17, 50, 500]) {
         const dim = dimensionsHorizontalBarChart(numBars);
         expect(dim.barHeight).toBe(DEFAULT_HEIGHT);
         expect(dim.padHeight).toBe(MIN_PADDING);
+        expect(dim.padRatio).toBeCloseTo(MIN_PADDING / (DEFAULT_HEIGHT + MIN_PADDING), 12);
+        expect(dim.padRatio).toBeCloseTo(0.454_545, 5);
+        expect(dim.outerRatio).toBe(0);
       }
     });
 
-    test("padRatio is the padding's share of one step", () => {
-      const dim = dimensionsHorizontalBarChart(5);
-      expect(dim.padRatio).toBeCloseTo(MIN_PADDING / (DEFAULT_HEIGHT + MIN_PADDING), 12);
-      expect(dim.padRatio).toBeCloseTo(0.454_545, 5);
-    });
-
-    test("outerRatio is always zero", () => {
-      expect(dimensionsHorizontalBarChart(1).outerRatio).toBe(0);
-      expect(dimensionsHorizontalBarChart(50).outerRatio).toBe(0);
-    });
-
-    test("axisOffset lifts the axis half a bar plus 10px", () => {
+    test("should lift the axis half a bar plus 10px, whatever the bar count", () => {
       expect(dimensionsHorizontalBarChart(5).axisOffset).toBe(-(DEFAULT_HEIGHT / 2) - 10);
       expect(dimensionsHorizontalBarChart(5).axisOffset).toBe(-22);
       // it is derived from the constant bar height, so it never varies
@@ -42,13 +28,13 @@ describe("horizontalBarChartDimensions", () => {
   });
 
   describe("group height", () => {
-    test("counts every bar and the padding between them", () => {
+    test("should count every bar and the padding between them", () => {
       const dim = dimensionsHorizontalBarChart(4);
       expect(dim.barGroupHeight).toBe(DEFAULT_HEIGHT * 4 + MIN_PADDING * 3);
       expect(dim.barGroupHeight).toBe(156);
     });
 
-    test("grows by one step per additional bar", () => {
+    test("should grow by one step when one more bar is added", () => {
       const step = DEFAULT_HEIGHT + MIN_PADDING;
       for (let n = 1; n < 6; n++) {
         expect(dimensionsHorizontalBarChart(n + 1).barGroupHeight).toBe(
@@ -57,7 +43,7 @@ describe("horizontalBarChartDimensions", () => {
       }
     });
 
-    test("a single bar has no padding at all", () => {
+    test("should report no padding at all when there is a single bar", () => {
       const dim = dimensionsHorizontalBarChart(1);
       expect(dim.barGroupHeight).toBe(DEFAULT_HEIGHT);
       expect(dim.totalHeight).toBe(DEFAULT_HEIGHT);
@@ -65,7 +51,7 @@ describe("horizontalBarChartDimensions", () => {
   });
 
   describe("degenerate inputs", () => {
-    test("zero bars occupy no height", () => {
+    test("should occupy no height when there are no bars", () => {
       const dim = dimensionsHorizontalBarChart(0);
       expect(dim.barGroupHeight).toBe(0);
       expect(dim.totalHeight).toBe(0);
@@ -75,7 +61,7 @@ describe("horizontalBarChartDimensions", () => {
       expect(dim.axisOffset).toBe(-22);
     });
 
-    test("rejects a bar count that is not a whole number of bars", () => {
+    test("should throw when the bar count is not a whole number of bars", () => {
       expect(() => dimensionsHorizontalBarChart(2.5)).toThrow(/numBars/);
       expect(() => dimensionsHorizontalBarChart(-3)).toThrow(/numBars/);
     });
