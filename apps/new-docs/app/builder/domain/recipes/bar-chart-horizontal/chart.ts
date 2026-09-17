@@ -103,7 +103,7 @@ sszvis.app<State, Actions>({
       .rangeRound([0, chartDimensions.totalHeight]);
 
     const cScale = sszvis.scaleQual12();
-    const _barFill = cScale(SERIES_KEY);
+    const barFill = cScale(SERIES_KEY);
     // {{block:colors}}
 
     // Layers
