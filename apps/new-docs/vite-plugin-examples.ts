@@ -363,7 +363,17 @@ export function examplesPlugin(): Plugin {
         });
       }
 
-      for (const name of await fs.readdir(path.join(root, TOPO_DIR)).catch(() => [])) {
+      // A missing topo dir used to emit nothing and still "succeed", so every
+      // map shipped its fallback image. Treat it like the library assets.
+      const topo = await fs.readdir(path.join(root, TOPO_DIR)).catch(() => null);
+      if (!topo?.some((name) => name.endsWith(".json"))) {
+        this.error(
+          `No TopoJSON in ${TOPO_DIR}. The map examples load it at runtime, ` +
+            "so build it first (`pnpm run build:topo`).",
+        );
+      }
+
+      for (const name of topo) {
         if (!name.endsWith(".json")) continue;
         this.emitFile({
           type: "asset",

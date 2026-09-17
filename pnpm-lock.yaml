@@ -148,6 +148,9 @@ importers:
       '@shikijs/transformers':
         specifier: ^4.4.3
         version: 4.4.3
+      '@sszvis/geodata':
+        specifier: workspace:*
+        version: link:../../packages/geodata
       '@tailwindcss/vite':
         specifier: ^4.1.13
         version: 4.3.3(vite@8.3.0(@types/node@26.5.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
