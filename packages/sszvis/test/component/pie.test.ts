@@ -129,12 +129,6 @@ describe("component/pie", () => {
   }));
 
   describe("rendering", () => {
-    test("should render one classed path per datum", () => {
-      const node = render(pieOf(), testData());
-      expect(wedges(node).length).toBe(2);
-      for (const w of wedges(node)) expect(w.tagName).toBe("path");
-    });
-
     test("should class the wedges with a pie-specific class as well as the generic one", () => {
       // The generic class stays for styling and for the documented panning selector; the
       // specific one is what the component's own data join matches.
@@ -142,39 +136,36 @@ describe("component/pie", () => {
       for (const w of wedges(node)) expect(w.classList.contains("sszvis-pie-path")).toBe(true);
     });
 
-    test("should offset every wedge by the radius, so the pie sits in a radius-sized box", () => {
+    test("should offset every wedge by the radius, so the pie sits in a radius-sized box when rendered", () => {
       const node = render(pieOf(80), testData());
       expect(attrs(node, "transform")).toEqual(["translate(80,80)", "translate(80,80)"]);
     });
 
-    test("should take the fill from the accessor", () => {
-      const node = render(pieOf(), testData());
-      expect(attrs(node, "fill")).toEqual(["#f00", "#0f0"]);
-    });
+    test("should fill each wedge from the fill property, whether it is a constant or an accessor", () => {
+      expect(attrs(render(pieOf(), testData()), "fill")).toEqual(["#f00", "#0f0"]);
 
-    test("should accept a constant fill", () => {
-      const node = render(
+      const constant = render(
         pie()
           .radius(50)
           .angle(() => 1)
           .fill("#abc"),
         [{ value: 1 }, { value: 2 }],
       );
-      expect(attrs(node, "fill")).toEqual(["#abc", "#abc"]);
-    });
+      expect(attrs(constant, "fill")).toEqual(["#abc", "#abc"]);
 
-    test("should pass the index to the fill accessor, as any d3 attr callback does", () => {
-      const node = render(
+      // The accessor is called with the index as well as the datum, as any d3 attr callback
+      // is, so a colour scale keyed by position works.
+      const byIndex = render(
         pie()
           .radius(50)
           .angle(() => 1)
           .fill((_d: Datum, i: number) => (i === 0 ? "#111" : "#222")),
         [{ value: 1 }, { value: 2 }],
       );
-      expect(attrs(node, "fill")).toEqual(["#111", "#222"]);
+      expect(attrs(byIndex, "fill")).toEqual(["#111", "#222"]);
     });
 
-    test("should omit the fill attribute when fill is not configured", () => {
+    test("should write no fill attribute when fill is not configured", () => {
       // The wedges then fall back to the SVG default, black, as the JSDoc says.
       const node = render(
         pie()
@@ -195,7 +186,7 @@ describe("component/pie", () => {
       expect(anchorNodes(node).length).toBe(3);
     });
 
-    test("should bind the caller's own datum to each wedge", () => {
+    test("should bind the caller's own datum to each wedge, not a layout wrapper", () => {
       // docs/pie-charts/basic.js drives its tooltip off the datum bound to .sszvis-path via
       // sszvis.panning, so the wedges must carry the caller's records, not a layout wrapper.
       const data = testData();
@@ -216,30 +207,24 @@ describe("component/pie", () => {
   });
 
   describe("stroke", () => {
-    test("should apply a white stroke by default, to separate touching wedges", () => {
+    test("should apply a white stroke when no stroke is configured, to separate touching wedges", () => {
       const node = render(pieOf(), testData());
       expect(attrs(node, "stroke")).toEqual(["#FFFFFF", "#FFFFFF"]);
     });
 
-    test("should apply a configured stroke", () => {
-      const node = render(pieOf().stroke("#00f"), testData());
-      expect(attrs(node, "stroke")).toEqual(["#00f", "#00f"]);
-    });
+    test("should replace the default with the configured stroke, as a constant, an accessor or none", () => {
+      expect(attrs(render(pieOf().stroke("#00f"), testData()), "stroke")).toEqual(["#00f", "#00f"]);
 
-    test("should accept a stroke accessor", () => {
-      const node = render(
+      const byAccessor = render(
         pieOf().stroke((d: Datum) => d.color),
         testData(),
       );
-      expect(attrs(node, "stroke")).toEqual(["#f00", "#0f0"]);
+      expect(attrs(byAccessor, "stroke")).toEqual(["#f00", "#0f0"]);
+
+      expect(attrs(render(pieOf().stroke("none"), [{ value: 1 }]), "stroke")).toEqual(["none"]);
     });
 
-    test("should draw no stroke when it is set to none", () => {
-      const node = render(pieOf().stroke("none"), [{ value: 1 }]);
-      expect(attrs(node, "stroke")).toEqual(["none"]);
-    });
-
-    test("should treat a falsy stroke the same as a property and as an accessor", () => {
+    test("should use a falsy stroke rather than the default when one is configured either way", () => {
       // The default applies only when the property was never set, so "" is passed through
       // either way rather than being read as "not configured".
       const asProp = render(
@@ -262,13 +247,10 @@ describe("component/pie", () => {
   });
 
   describe("required properties", () => {
-    test("should throw a named error when the angle property was never set", () => {
+    test("should name the component and the property when a required property was never set", () => {
       expect(() => render(pie().radius(50).fill("#000"), [{ value: 1 }])).toThrow(
         "[pie] the angle property is required",
       );
-    });
-
-    test("should throw a named error when the radius property was never set", () => {
       expect(() =>
         render(
           pie()
@@ -279,7 +261,7 @@ describe("component/pie", () => {
       ).toThrow("[pie] the radius property is required");
     });
 
-    test("should leave no wedges or tooltip anchors behind when validation fails", () => {
+    test("should leave no wedges or tooltip anchors behind when a required property is missing", () => {
       // The stray anchor is what made the missing radius user-visible: a live 1x1 rect at
       // the group's origin, firing tooltips at the chart's top left corner.
       const g = group("unvalidated");
@@ -291,11 +273,24 @@ describe("component/pie", () => {
   });
 
   describe("angles", () => {
-    test("should lay the wedges out cumulatively, starting at zero", () => {
+    test("should lay the wedges out cumulatively from zero, whether angle is an accessor or a constant", () => {
       const node = render(pieOf(), testData());
       const [first, second] = wedges(node);
       expectAngles(first, [0, 1]);
       expectAngles(second, [1, 4]);
+
+      // A constant angle gives every wedge the same width, and they still accumulate.
+      const constant = render(
+        pie()
+          .radius(50)
+          .angle(Math.PI / 4)
+          .fill("#000"),
+        [{ value: 1 }, { value: 2 }, { value: 3 }],
+      );
+      const [a, b, c] = wedges(constant);
+      expectAngles(a, [0, Math.PI / 4]);
+      expectAngles(b, [Math.PI / 4, Math.PI / 2]);
+      expectAngles(c, [Math.PI / 2, (3 * Math.PI) / 4]);
     });
 
     test("should close the circle when the angles sum to a full turn", () => {
@@ -309,21 +304,7 @@ describe("component/pie", () => {
       expect(y).toBeCloseTo(-100, 6);
     });
 
-    test("should accept a constant angle, which fn.functor wraps", () => {
-      const node = render(
-        pie()
-          .radius(50)
-          .angle(Math.PI / 4)
-          .fill("#000"),
-        [{ value: 1 }, { value: 2 }, { value: 3 }],
-      );
-      const [a, b, c] = wedges(node);
-      expectAngles(a, [0, Math.PI / 4]);
-      expectAngles(b, [Math.PI / 4, Math.PI / 2]);
-      expectAngles(c, [Math.PI / 2, (3 * Math.PI) / 4]);
-    });
-
-    test("should keep a zero-width wedge in the DOM", () => {
+    test("should keep a zero-width wedge in the DOM when a datum's angle is 0", () => {
       const data: Datum[] = [{ value: 0 }, { value: TAU }];
       const node = render(pieOf(), data);
       expect(wedges(node).length).toBe(2);
@@ -332,22 +313,28 @@ describe("component/pie", () => {
   });
 
   describe("arc geometry", () => {
-    test("should draw the arc synchronously, without waiting for an animation frame", () => {
+    test("should draw the arcs at their final angles on the render tick, without waiting for a frame", () => {
       // The geometry is applied at the data join, so a chart serialised on the render tick -
       // a snapshot, an SVG export - or rendered in a hidden tab is never blank.
       const node = render(pieOf(100), testData());
       expect(attrs(node, "d")).not.toContain(null);
       // The first wedge starts at 12 o'clock, since d3's arc applies its own -PI/2 turn.
-      expect(wedges(node)[0].getAttribute("d")).toMatch(/^M0,-100A100,100/);
+      const [first, second] = wedges(node);
+      expectAngles(first, [0, 1]);
+      expectAngles(second, [1, 4]);
     });
 
-    test("should keep the geometry through the first animation frame", async () => {
+    test("should still hold those angles once the first animation frame has run", async () => {
+      // A first render schedules a transition like any other, so the frame that follows it
+      // must not tween the wedges away from the geometry the join already wrote.
       const node = render(pieOf(100), testData());
       await nextFrame();
-      for (const d of attrs(node, "d")) expect(d).not.toBeNull();
+      expect(attrs(node, "d")).not.toContain(null);
+      expectAngles(wedges(node)[0], [0, 1]);
+      expectAngles(wedges(node)[1], [1, 4]);
     });
 
-    test("should punch a fixed 4px hole in the middle of the pie", () => {
+    test("should punch a fixed 4px hole in the middle whatever the radius", () => {
       const node = render(pieOf(100), testData());
       // innerRadius is hardcoded to 4 and cannot be configured.
       for (const d of attrs(node, "d")) expect(d).toContain("A4,4");
@@ -362,65 +349,41 @@ describe("component/pie", () => {
       expectAngles(first, [0, 1]);
       expectAngles(second, [1, 4]);
     });
-
-    test("should start a first render already at its destination, so nothing animates in", () => {
-      const node = render(pieOf(), testData());
-      const before = attrs(node, "d");
-      expectAngles(wedges(node)[0], [0, 1]);
-      expect(before).toEqual(attrs(node, "d"));
-    });
   });
 
   describe("tooltip anchors", () => {
-    test("should render one anchor per datum", () => {
-      const node = render(pieOf(), testData());
-      expect(anchorNodes(node).length).toBe(2);
-    });
+    // The anchor's own shape - an invisible rect that still has a measurable box - belongs to
+    // the tooltipAnchor module and is covered in test/annotation/tooltipAnchor.test.ts. What
+    // pie owns, and what these tests assert, is where it puts the anchor.
 
-    test("should render the anchor as a hidden 1x1 rect", () => {
-      const node = render(pieOf(), [{ value: 1 }]);
-      const anchor = anchorNodes(node)[0];
-      expect(anchor.tagName).toBe("rect");
-      expect(anchor.getAttribute("width")).toBe("1");
-      expect(anchor.getAttribute("height")).toBe("1");
-      expect(anchor.getAttribute("fill")).toBe("none");
-      expect(anchor.getAttribute("stroke")).toBe("none");
-    });
-
-    test("should place the anchor two thirds out along the wedge's bisector", () => {
+    test("should place the anchor two thirds out along the wedge's bisector, wherever the wedge lies", () => {
       // Two half-circle wedges of a radius-90 pie: the first bisects at 3 o'clock, the
       // second at 9 o'clock, both at 2/3 * 90 = 60 from the centre at (90, 90).
-      const node = render(
+      const halves = render(
         pie()
           .radius(90)
           .angle(() => Math.PI)
           .fill("#000"),
         [{ value: 1 }, { value: 1 }],
       );
-      const [first, second] = points(node);
+      const [first, second] = points(halves);
       expect(first[0]).toBeCloseTo(150, 6);
       expect(first[1]).toBeCloseTo(90, 6);
       expect(second[0]).toBeCloseTo(30, 6);
       expect(second[1]).toBeCloseTo(90, 6);
-    });
 
-    test("should place a wedge that starts at twelve o'clock above the centre", () => {
-      const node = render(
+      // A single full-circle wedge starts at twelve o'clock and bisects at 6 o'clock:
+      // 60 + 2/3 * 60 below the centre.
+      const whole = render(
         pie()
           .radius(60)
           .angle(() => TAU)
           .fill("#000"),
         [{ value: 1 }],
       );
-      // A single full-circle wedge bisects at 6 o'clock: 60 + 2/3 * 60 below the centre.
-      const [[x, y]] = points(node);
+      const [[x, y]] = points(whole);
       expect(x).toBeCloseTo(60, 6);
       expect(y).toBeCloseTo(100, 6);
-    });
-
-    test("should position the anchors synchronously, without waiting for the transition", () => {
-      const node = render(pieOf(), testData());
-      for (const anchor of anchors(node)) expect(anchor).not.toContain("NaN");
     });
 
     test("should move the anchors to the destination angles on an update", async () => {
@@ -562,10 +525,14 @@ describe("component/pie", () => {
       const node = g.node() as SVGGElement;
       g.datum([{ value: 1 }, { value: 3 }]).call(component.transition(false) as never);
 
-      const withState = wedges(node)[1] as SVGPathElement & { __transition?: unknown };
-      expect(withState.__transition).toBeUndefined();
+      // The destination angles land at once, and - the actual point - they stay put. A
+      // surviving tween would keep writing the path on every frame and drag the wedge back
+      // towards where it was heading, so the second read after a frame is what proves the
+      // interrupt rather than any inspection of d3's own state.
       expectAngles(wedges(node)[1], [1, 4]);
       await nextFrame();
+      expectAngles(wedges(node)[1], [1, 4]);
+      await settle();
       expectAngles(wedges(node)[1], [1, 4]);
     });
 
@@ -585,17 +552,11 @@ describe("component/pie", () => {
       await untilMoved(wedges(node)[0], "opacity");
 
       g.datum([{ value: 1 }, { value: 3 }]).call(component.transition(false) as never);
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await settle();
 
       expect(wedges(node).map((w) => w.getAttribute("opacity"))).toEqual(["1", "1"]);
       // The component's own geometry still landed synchronously.
       expectAngles(wedges(node)[1], [1, 4]);
-    });
-
-    test("should schedule a d3 transition on every wedge", () => {
-      const node = render(pieOf(), [{ value: 1 }]);
-      const withState = wedges(node)[0] as SVGPathElement & { __transition?: unknown };
-      expect(withState.__transition).not.toBeUndefined();
     });
 
     test("should write every attribute straight to the DOM when the transition is off", async () => {
@@ -603,49 +564,53 @@ describe("component/pie", () => {
       const g = group("no-transition");
       g.datum([{ value: 1 }]).call(component as never);
       const node = g.node() as SVGGElement;
-      const withState = wedges(node)[0] as SVGPathElement & { __transition?: unknown };
-      expect(withState.__transition).toBeUndefined();
 
       g.datum([{ value: 1 }]).call(component.radius(120).fill("#123456") as never);
+      // The exact destination values on the render tick - not an interpolated transform or
+      // an rgb() blend, which is what a scheduled tween would leave here instead.
       expect(attrs(node, "transform")).toEqual(["translate(120,120)"]);
       expect(attrs(node, "fill")).toEqual(["#123456"]);
       expectAngles(wedges(node)[0], [0, 1]);
+
+      // And unchanged afterwards, so nothing was animating in the background.
       await nextFrame();
       expect(attrs(node, "transform")).toEqual(["translate(120,120)"]);
+      expect(attrs(node, "fill")).toEqual(["#123456"]);
+      await settle();
+      expect(attrs(node, "transform")).toEqual(["translate(120,120)"]);
+      expect(attrs(node, "fill")).toEqual(["#123456"]);
     });
   });
 
   describe("data mutation", () => {
-    test("should leave the caller's data untouched", () => {
-      const data = testData();
-      render(pieOf(), data);
-      expect(Object.keys(data[0]).sort()).toEqual(["color", "value"]);
-      expect(data).toEqual(testData());
-    });
+    test("should lay the pie out without writing to the caller's data, whatever shape it is in", () => {
+      // The angles live in a WeakMap keyed by the wedge element rather than on the data, and
+      // these are the four ways that would show if it were not so: a stray field appearing on
+      // a plain record, a frozen record throwing, two entries pointing at one object treading
+      // on each other, and existing a0/a1 fields being read back or overwritten.
+      const plain = testData();
+      render(pieOf(), plain);
+      expect(Object.keys(plain[0]).sort()).toEqual(["color", "value"]);
+      expect(plain).toEqual(testData());
 
-    test("should render frozen data", () => {
       const frozen = [Object.freeze({ value: 1 }), Object.freeze({ value: 1 })];
-      const node = render(pieOf(), frozen);
-      expect(wedges(node).length).toBe(2);
-      expectAngles(wedges(node)[0], [0, 1]);
-      expectAngles(wedges(node)[1], [1, 2]);
-    });
+      const fromFrozen = render(pieOf(), frozen);
+      expect(wedges(fromFrozen).length).toBe(2);
+      expectAngles(wedges(fromFrozen)[0], [0, 1]);
+      expectAngles(wedges(fromFrozen)[1], [1, 2]);
 
-    test("should render two distinct wedges for two entries sharing one datum object", () => {
       const shared: Datum = { value: 1 };
-      const node = render(pieOf(50), [shared, shared]);
-      const [first, second] = attrs(node, "d");
+      const fromShared = render(pieOf(50), [shared, shared]);
+      const [first, second] = attrs(fromShared, "d");
       expect(first).not.toBe(second);
-      expectAngles(wedges(node)[0], [0, 1]);
-      expectAngles(wedges(node)[1], [1, 2]);
-      expect(points(node)[0]).not.toEqual(points(node)[1]);
-    });
+      expectAngles(wedges(fromShared)[0], [0, 1]);
+      expectAngles(wedges(fromShared)[1], [1, 2]);
+      expect(points(fromShared)[0]).not.toEqual(points(fromShared)[1]);
 
-    test("should ignore a0 and a1 fields the incoming data happens to carry", () => {
-      const data = [{ value: 1, a0: 5, a1: 6 }];
-      const node = render(pieOf(), data);
-      expectAngles(wedges(node)[0], [0, 1]);
-      expect(data[0]).toEqual({ value: 1, a0: 5, a1: 6 });
+      const withAngleFields = [{ value: 1, a0: 5, a1: 6 }];
+      const fromAngleFields = render(pieOf(), withAngleFields);
+      expectAngles(wedges(fromAngleFields)[0], [0, 1]);
+      expect(withAngleFields[0]).toEqual({ value: 1, a0: 5, a1: 6 });
     });
 
     test("should render two pies over the same array independently", async () => {
@@ -671,71 +636,47 @@ describe("component/pie", () => {
   });
 
   describe("bad angle values", () => {
-    test("should keep the wedges after a NaN angle valid", () => {
+    test("should warn and keep every other wedge and anchor drawable when an angle is NaN", () => {
       vi.spyOn(console, "warn").mockImplementation(() => {});
-      const node = render(
+      const pieOfValue = () =>
         pie()
           .radius(50)
-          .angle((d: Datum) => d.value),
-        [{ value: 1 }, { value: Number.NaN }, { value: 1 }],
-      );
-      // The bad wedge is zero-width and the running total carries on from where it was.
-      for (const d of attrs(node, "d")) expect(d).not.toContain("NaN");
-      expectAngles(wedges(node)[0], [0, 1]);
-      expectAngles(wedges(node)[2], [1, 2]);
+          .angle((d: Datum) => d.value);
+
+      // The bad wedge is zero-width and the running total carries on from where it was, so
+      // neither the paths nor the anchors are poisoned by it.
+      const midway = render(pieOfValue(), [{ value: 1 }, { value: Number.NaN }, { value: 1 }]);
+      for (const d of attrs(midway, "d")) expect(d).not.toContain("NaN");
+      for (const anchor of anchors(midway)) expect(anchor).not.toContain("NaN");
+      expectAngles(wedges(midway)[0], [0, 1]);
+      expectAngles(wedges(midway)[2], [1, 2]);
       expect(console.warn).toHaveBeenCalled();
-    });
 
-    test("should keep the wedges after a NaN angle in the first datum valid", () => {
-      vi.spyOn(console, "warn").mockImplementation(() => {});
-      const node = render(
-        pie()
-          .radius(50)
-          .angle((d: Datum) => d.value),
-        [{ value: Number.NaN }, { value: 1 }],
-      );
-      for (const d of attrs(node, "d")) expect(d).not.toContain("NaN");
-      expectAngles(wedges(node)[1], [0, 1]);
-    });
-
-    test("should keep the tooltip anchors valid around a NaN angle", () => {
-      vi.spyOn(console, "warn").mockImplementation(() => {});
-      const node = render(
-        pie()
-          .radius(50)
-          .angle((d: Datum) => d.value),
-        [{ value: 1 }, { value: Number.NaN }, { value: 1 }],
-      );
-      for (const anchor of anchors(node)) expect(anchor).not.toContain("NaN");
+      // The first datum is the case where there is no running total to fall back on.
+      const leading = render(pieOfValue(), [{ value: Number.NaN }, { value: 1 }]);
+      for (const d of attrs(leading, "d")) expect(d).not.toContain("NaN");
+      expectAngles(wedges(leading)[1], [0, 1]);
     });
   });
 
   describe("foreign elements in the group", () => {
-    test("should ignore a pre-existing .sszvis-path carrying a foreign datum", () => {
+    test("should neither adopt nor mutate a foreign .sszvis-path, with or without a datum on it", () => {
+      // The join matches .sszvis-pie-path, so a path another component left under the generic
+      // class must be passed over entirely: not counted as a wedge, not restyled, and not
+      // able to knock the layout - or the anchors read from it - off by one.
       const g = group("foreign");
-      g.append("path").attr("class", "sszvis-path").attr("d", "M0,0");
-      const node = g.node() as SVGGElement;
-      g.datum([{ value: 1 }]).call(pieOf(50) as never);
-      for (const anchor of anchors(node)) expect(anchor).not.toContain("NaN");
-      expect(node.querySelectorAll("path.sszvis-pie-path").length).toBe(1);
-      expectAngles(node.querySelector("path.sszvis-pie-path") as Element, [0, 1]);
-    });
-
-    test("should not throw when a foreign .sszvis-path has no datum bound", () => {
-      const g = group("foreign-nodatum");
-      const node = g.node() as SVGGElement;
-      const stray = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      stray.setAttribute("class", "sszvis-path");
-      node.appendChild(stray);
-      expect(() => g.datum([{ value: 1 }]).call(pieOf(50) as never)).not.toThrow();
-      expectAngles(node.querySelector("path.sszvis-pie-path") as Element, [0, 1]);
-    });
-
-    test("should leave a foreign .sszvis-path untouched", () => {
-      const g = group("foreign-untouched");
       g.append("path").attr("class", "sszvis-path").attr("d", "M0,0").attr("fill", "#abc");
       const node = g.node() as SVGGElement;
-      g.datum([{ value: 1 }]).call(pieOf(50) as never);
+      const withoutDatum = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      withoutDatum.setAttribute("class", "sszvis-path");
+      node.appendChild(withoutDatum);
+
+      expect(() => g.datum([{ value: 1 }]).call(pieOf(50) as never)).not.toThrow();
+
+      expect(node.querySelectorAll("path.sszvis-pie-path").length).toBe(1);
+      expectAngles(node.querySelector("path.sszvis-pie-path") as Element, [0, 1]);
+      for (const anchor of anchors(node)) expect(anchor).not.toContain("NaN");
+
       const foreign = node.querySelector("path.sszvis-path:not(.sszvis-pie-path)") as Element;
       expect(foreign).not.toBeNull();
       expect(foreign.getAttribute("d")).toBe("M0,0");

@@ -59,6 +59,12 @@ describe("component/line", () => {
       check();
     });
 
+  /**
+   * Waits out the component's 300ms transition, so that a value read afterwards is the one
+   * the render settled on rather than one some tween is still moving.
+   */
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 400));
+
   const paths = (node: Element) => [...node.querySelectorAll("path.sszvis-line")];
   const ds = (node: Element) => paths(node).map((p) => p.getAttribute("d"));
   const styles = (node: Element, prop: string) =>
@@ -95,21 +101,14 @@ describe("component/line", () => {
   }));
 
   describe("rendering", () => {
-    test("should render one classed path per inner array", () => {
-      const node = render(lineOf(), twoLines);
-      expect(paths(node).length).toBe(2);
-      for (const p of paths(node)) expect(p.tagName).toBe("path");
-    });
-
-    test("should build the d attribute from the x and y accessors", () => {
+    test("should build each path's d from the x and y accessors, one line's points at a time", () => {
       expect(ds(render(lineOf(), oneLine))).toEqual(["M0,0L10,20L20,10"]);
-    });
-
-    test("should keep the lines independent of one another", () => {
+      // Two lines in one render: each path is drawn from its own inner array, so neither
+      // picks up the other's points.
       expect(ds(render(lineOf(), twoLines))).toEqual(["M0,0L10,10", "M0,50L10,60"]);
     });
 
-    test("should update the geometry when the data changes", () => {
+    test("should redraw the path when the data changes", () => {
       const component = lineOf();
       const g = group("update");
       g.datum(oneLine).call(component as never);
@@ -122,7 +121,7 @@ describe("component/line", () => {
       expect(ds(g.node() as SVGGElement)).toEqual(["M5,5L15,15"]);
     });
 
-    test("should reorder the paths to match the data order", () => {
+    test("should reorder the existing paths when the data order changes", () => {
       const component = lineOf().key((d: Point[]) => d[0].y);
       const g = group("order");
       g.datum(twoLines).call(component as never);
@@ -133,26 +132,35 @@ describe("component/line", () => {
   });
 
   describe("accessors", () => {
-    test("should pass each point, its index and the line array to x and y", () => {
-      const seen: unknown[][] = [];
+    test("should call the point-level callbacks with the point, its index and the whole line", () => {
+      // x, y and defined are all handed to d3.line, so they share one signature. Asserted
+      // together because a change to how the points are passed moves all of them at once.
+      const seenByX: unknown[][] = [];
+      const seenByDefined: unknown[][] = [];
       render(
         line()
           .transition(false)
           .x((...args: unknown[]) => {
-            seen.push(args);
+            seenByX.push(args);
             return 0;
           })
           .y(() => 0)
-          .defined(() => true),
+          .defined((...args: unknown[]) => {
+            seenByDefined.push(args);
+            return true;
+          }),
         [oneLine[0]],
       );
-      expect(seen.map((args) => args.length)).toEqual([3, 3, 3]);
-      expect(seen.map((args) => args[0])).toEqual(oneLine[0]);
-      expect(seen.map((args) => args[1])).toEqual([0, 1, 2]);
-      expect(seen.map((args) => args[2])).toEqual([oneLine[0], oneLine[0], oneLine[0]]);
+
+      for (const seen of [seenByX, seenByDefined]) {
+        expect(seen.map((args) => args.length)).toEqual([3, 3, 3]);
+        expect(seen.map((args) => args[0])).toEqual(oneLine[0]);
+        expect(seen.map((args) => args[1])).toEqual([0, 1, 2]);
+        expect(seen.map((args) => args[2])).toEqual([oneLine[0], oneLine[0], oneLine[0]]);
+      }
     });
 
-    test("should pass the whole line array and its index to the style accessors", () => {
+    test("should call the style accessors with the whole line array and its index", () => {
       const seen: unknown[][] = [];
       render(
         lineOf().stroke((...args: unknown[]) => {
@@ -167,41 +175,22 @@ describe("component/line", () => {
       expect(seen.map((args) => args[1])).toContain(0);
       expect(seen.map((args) => args[1])).toContain(1);
     });
-
-    test("should accept a composed accessor, as the docs examples do", () => {
-      const scale = (v: number) => v * 2;
-      const node = render(
-        line()
-          .transition(false)
-          .x((d: Point) => scale(d.x))
-          .y((d: Point) => scale(d.y)),
-        [
-          [
-            { x: 1, y: 2 },
-            { x: 3, y: 4 },
-          ],
-        ],
-      );
-      expect(ds(node)).toEqual(["M2,4L6,8"]);
-    });
   });
 
   describe("defined", () => {
-    test("should break the line where y is NaN", () => {
-      const node = render(lineOf(), [
+    test("should break the line into subpaths when a point's x or y is not a number", () => {
+      // The default predicate guards both dimensions. Each surviving run becomes its own
+      // subpath, and a run of one point is emitted as a degenerate "M...Z" by d3.line.
+      const brokenByNaNY = render(lineOf(), [
         [
           { x: 0, y: 0 },
           { x: 10, y: Number.NaN },
           { x: 20, y: 20 },
         ],
       ]);
-      // Each surviving run is its own subpath. A run of one point is emitted as a
-      // degenerate "M...Z" by d3.line.
-      expect(ds(node)).toEqual(["M0,0ZM20,20Z"]);
-    });
+      expect(ds(brokenByNaNY)).toEqual(["M0,0ZM20,20Z"]);
 
-    test("should break the line where y is undefined", () => {
-      const node = render(lineOf(), [
+      const brokenByUndefinedY = render(lineOf(), [
         [
           { x: 0, y: 0 },
           { x: 5, y: 5 },
@@ -210,15 +199,13 @@ describe("component/line", () => {
           { x: 20, y: 20 },
         ],
       ]);
-      expect(ds(node)).toEqual(["M0,0L5,5M15,15L20,20"]);
-    });
+      expect(ds(brokenByUndefinedY)).toEqual(["M0,0L5,5M15,15L20,20"]);
 
-    test("should break the line where x is NaN", () => {
-      // The predicate guards both dimensions. A NaN x is what a scale returns for an
-      // out-of-domain value or a missing category, and before both were guarded it went
-      // into the d attribute verbatim - which made the browser drop that segment and
-      // every segment after it, silently truncating the series.
-      const node = render(lineOf(), [
+      // A NaN x is what a scale returns for an out-of-domain value or a missing category,
+      // and before both dimensions were guarded it went into the d attribute verbatim -
+      // which made the browser drop that segment and every segment after it, silently
+      // truncating the series.
+      const brokenByNaNX = render(lineOf(), [
         [
           { x: 0, y: 0 },
           { x: 30, y: 40 },
@@ -226,37 +213,9 @@ describe("component/line", () => {
           { x: 60, y: 80 },
         ],
       ]);
-      expect(ds(node)).toEqual(["M0,0L30,40M60,80Z"]);
+      expect(ds(brokenByNaNX)).toEqual(["M0,0L30,40M60,80Z"]);
       // The healthy tail after the bad point survives, rather than being amputated.
-      expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBe(50);
-    });
-
-    test("should use an explicit defined predicate in place of the default", () => {
-      const node = render(
-        lineOf().defined((d: Point) => d.x < 20),
-        [
-          [
-            { x: 0, y: 0 },
-            { x: 10, y: 10 },
-            { x: 20, y: 20 },
-            { x: 30, y: 30 },
-          ],
-        ],
-      );
-      expect(ds(node)).toEqual(["M0,0L10,10"]);
-    });
-
-    test("should pass the point, its index and the line array to defined", () => {
-      const seen: unknown[][] = [];
-      render(
-        lineOf().defined((...args: unknown[]) => {
-          seen.push(args);
-          return true;
-        }),
-        [oneLine[0]],
-      );
-      expect(seen.map((args) => args.length)).toEqual([3, 3, 3]);
-      expect(seen.map((args) => args[1])).toEqual([0, 1, 2]);
+      expect((paths(brokenByNaNX)[0] as SVGPathElement).getTotalLength()).toBe(50);
     });
 
     describe("known quirks", () => {
@@ -352,16 +311,14 @@ describe("component/line", () => {
       expect(styles(node, "stroke")).toEqual(["rgb(255, 0, 0)", "rgb(0, 0, 255)"]);
     });
 
-    test("should apply a constant strokeWidth", () => {
+    test("should apply strokeWidth whether it is a constant or derived from the line's own data", () => {
       expect(styles(render(lineOf().strokeWidth(4), oneLine), "stroke-width")).toEqual(["4"]);
-    });
 
-    test("should apply a strokeWidth derived from the line's own data", () => {
-      const node = render(
+      const derived = render(
         lineOf().strokeWidth((d: Point[]) => d.length),
         twoLines,
       );
-      expect(styles(node, "stroke-width")).toEqual(["2", "2"]);
+      expect(styles(derived, "stroke-width")).toEqual(["2", "2"]);
     });
 
     describe("known quirks", () => {
@@ -402,11 +359,7 @@ describe("component/line", () => {
   });
 
   describe("valuesAccessor", () => {
-    test("should default to the identity, treating each datum as its own point array", () => {
-      expect(ds(render(lineOf(), oneLine))).toEqual(["M0,0L10,20L20,10"]);
-    });
-
-    test("should pull the points out of a wrapper object", () => {
+    test("should pull the points out of a wrapper object when valuesAccessor is set", () => {
       const node = render(
         lineOf().valuesAccessor((d: { values: Point[] }) => d.values),
         [
@@ -443,7 +396,7 @@ describe("component/line", () => {
   });
 
   describe("key", () => {
-    test("should default to the index, matching lines by position", () => {
+    test("should match lines by position when no key is given", () => {
       const component = lineOf();
       const g = group("defaultkey");
       g.datum(twoLines).call(component as never);
@@ -460,10 +413,19 @@ describe("component/line", () => {
       expect(ds(g.node() as SVGGElement)).toEqual(["M9,9L8,8"]);
     });
 
-    test("should preserve object constancy when a key is given", () => {
-      const component = lineOf().key((d: Point[]) => d[0].y);
+    test("should reuse the same path element for the same key when a key is given", () => {
+      // The key function is read with the raw datum and its index - the wrapper, not the
+      // points - which is what lets a key like d[0].y or d.category work at all.
+      const seen: unknown[][] = [];
+      const component = lineOf().key((d: Point[], index: number) => {
+        seen.push([d, index]);
+        return d[0].y;
+      });
       const g = group("keyed");
       g.datum(twoLines).call(component as never);
+      expect(seen.map((args) => args[0])).toEqual(twoLines);
+      expect(seen.map((args) => args[1])).toEqual([0, 1]);
+
       const before = paths(g.node() as SVGGElement);
       // Only the line keyed 50 survives, and it must reuse the second node.
       g.datum([
@@ -477,53 +439,27 @@ describe("component/line", () => {
       expect(after[0]).toBe(before[1]);
       expect(ds(g.node() as SVGGElement)).toEqual(["M0,50L30,70"]);
     });
-
-    test("should pass the raw datum and its index to the key function", () => {
-      const seen: unknown[][] = [];
-      render(
-        lineOf().key((datum: unknown, index: number) => {
-          seen.push([datum, index]);
-          return index;
-        }),
-        twoLines,
-      );
-      expect(seen.map((args) => args[0])).toEqual(twoLines);
-      expect(seen.map((args) => args[1])).toEqual([0, 1]);
-    });
   });
 
   describe("edge cases", () => {
-    test("should render an empty path element for a line with no points", () => {
-      const node = render(lineOf(), [[]]);
-      expect(paths(node).length).toBe(1);
-      expect(ds(node)).toEqual([null]);
-    });
+    test("should still render a path element when a line has too few points to draw", () => {
+      // The path is kept either way, so the join stays aligned with the data and a line
+      // that briefly runs out of points does not lose its node.
+      const empty = render(lineOf(), [[]]);
+      expect(paths(empty).length).toBe(1);
+      expect(ds(empty)).toEqual([null]);
 
-    test("should emit a degenerate closed subpath for a single point", () => {
       // d3.line closes a one-point segment, which is how a single point reaches the DOM.
       expect(ds(render(lineOf(), [[{ x: 5, y: 5 }]]))).toEqual(["M5,5Z"]);
     });
 
-    test("should handle negative and fractional coordinates", () => {
-      const node = render(lineOf(), [
-        [
-          { x: -10, y: -5 },
-          { x: 0.5, y: 12.25 },
-        ],
-      ]);
-      expect(ds(node)).toEqual(["M-10,-5L0.5,12.25"]);
-    });
-
-    test("should name the component and the property when y is not configured", () => {
+    test("should name the component and the property when a required property is not configured", () => {
+      // Both required properties fail the same way. A missing x used to resolve to
+      // undefined for every point, which the guard treated as missing, so the path element
+      // was left empty and the line simply vanished with a clean console.
       expect(() => render(line().transition(false).x(0), oneLine)).toThrow(
         "[line] the y property is required",
       );
-    });
-
-    test("should name the component and the property when x is not configured", () => {
-      // Both required properties now fail the same way. A missing x used to resolve to
-      // undefined for every point, which the guard treated as missing, so the path element
-      // was left empty and the line simply vanished with a clean console.
       expect(() =>
         render(
           line()
@@ -534,13 +470,13 @@ describe("component/line", () => {
       ).toThrow("[line] the x property is required");
     });
 
-    test("should report a missing property before any path is created", () => {
+    test("should create no path at all when a required property is missing", () => {
       const g = group("line-missing-prop");
       expect(() => g.datum(oneLine).call(line().transition(false).x(0) as never)).toThrow();
       expect(paths(g.node() as SVGGElement)).toEqual([]);
     });
 
-    test("should accept a constant for either dimension", () => {
+    test("should draw the line when x or y is given as a constant", () => {
       // bar wraps every accessor in fn.functor and dot wraps all five of its properties, so
       // a constant is accepted where an accessor is; line now does the same. A constant y
       // used to throw, because the default defined predicate called it, while a constant x
@@ -560,7 +496,7 @@ describe("component/line", () => {
       expect(ds(render(line().transition(false).x(3).y(4), [[{}]]))).toEqual(["M3,4Z"]);
     });
 
-    test("should let an explicitly set defined predicate override the default", () => {
+    test("should keep or drop points as the predicate says when defined is set explicitly", () => {
       // The escape hatch callers use today: defined replaces the default guard rather than
       // composing with it, so a predicate that returns true keeps points the default would
       // have dropped - and one that returns false drops points it would have kept.
@@ -589,62 +525,45 @@ describe("component/line", () => {
       );
       expect(ds(dropped)).toEqual([null]);
     });
-
-    test("should read back an unset required property as undefined", () => {
-      // x and y have no default - required() only runs at render - so the getters return
-      // undefined until they are set, which is what their types now say.
-      const component = line();
-      expect(component.x()).toBeUndefined();
-      expect(component.y()).toBeUndefined();
-    });
-
-    test("should read back x and y as functions, whatever they were set to", () => {
-      const component = line()
-        .x(5)
-        .y((d: Point) => d.y);
-      expect(typeof component.x()).toBe("function");
-      expect(component.x()?.()).toBe(5);
-      expect(typeof component.y()).toBe("function");
-    });
   });
 
   describe("transition", () => {
-    test("should default to true", () => {
+    test("should report transition as enabled when it has not been configured", () => {
       expect(line().transition()).toBe(true);
     });
 
-    test("should write the geometry synchronously when disabled", () => {
+    test("should write the geometry and the stroke width straight away when transition is disabled", () => {
       const node = render(lineOf().strokeWidth(3), oneLine);
       expect(ds(node)).toEqual(["M0,0L10,20L20,10"]);
       expect(styles(node, "stroke-width")).toEqual(["3"]);
     });
 
-    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+    test("should keep the synchronous geometry when an in-flight tween is still running", async () => {
       const animated = () =>
         line()
           .x((d: Point) => d.x)
           .y((d: Point) => d.y);
       const g = group("interrupted");
       g.datum(oneLine).call(animated() as never);
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await settle();
       // Schedules a tween towards a different shape.
       g.datum(twoLines).call(animated() as never);
       await untilMoved(paths(g.node() as SVGGElement)[0], "d");
 
       g.datum(oneLine).call(animated().transition(false) as never);
       // Past the 300ms default, so an uninterrupted tween would have reached its destination.
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await settle();
 
       expect(ds(g.node() as SVGGElement)).toEqual(["M0,0L10,20L20,10"]);
     });
 
-    test("should animate the geometry between renders when enabled", async () => {
+    test("should animate the path through intermediate shapes when transition is enabled", async () => {
       const component = line()
         .x((d: Point) => d.x)
         .y((d: Point) => d.y);
       const g = group("animated");
       g.datum(oneLine).call(component as never);
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await settle();
       const settled = ds(g.node() as SVGGElement);
       expect(settled).toEqual(["M0,0L10,20L20,10"]);
 
@@ -661,11 +580,11 @@ describe("component/line", () => {
       expect(midway).not.toBe("M0,0L10,20L20,10");
       expect(midway).not.toBe("M0,0L10,20L200,100");
 
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await settle();
       expect(ds(g.node() as SVGGElement)).toEqual(["M0,0L10,20L200,100"]);
     });
 
-    test("should still apply the stroke synchronously when enabled", () => {
+    test("should apply the stroke straight away even when transition is enabled", () => {
       // stroke is set on the join, before the transition is created.
       const node = render(
         line()

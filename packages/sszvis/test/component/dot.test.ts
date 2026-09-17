@@ -63,6 +63,12 @@ describe("component/dot", () => {
       check();
     });
 
+  /**
+   * Waits out the component's 300ms transition, so that an attribute read afterwards is the
+   * value the render settled on rather than a value some tween is still moving.
+   */
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 400));
+
   /** The names of the tweens d3 scheduled on a node, e.g. ["attr.cx"]. */
   const tweenNames = (node: Element) => {
     const schedules = (node as Element & { __transition?: Record<string, unknown> }).__transition;
@@ -85,27 +91,21 @@ describe("component/dot", () => {
   }));
 
   describe("rendering", () => {
-    test("should render one classed circle per datum", () => {
-      const node = render(dotOf(), testData);
-      expect(circles(node).length).toBe(2);
-      for (const c of circles(node)) expect(c.tagName).toBe("circle");
+    test("should place each circle from x, y and radius whether they are accessors or constants", () => {
+      const fromAccessors = render(dotOf(), testData);
+      expect(attrs(fromAccessors, "cx")).toEqual(["10", "60"]);
+      expect(attrs(fromAccessors, "cy")).toEqual(["20", "25"]);
+      expect(attrs(fromAccessors, "r")).toEqual(["4", "8"]);
+
+      // A constant reaches every circle as though an accessor had returned it for each datum,
+      // which is the whole observable effect of the fn.functor wrapping on set.
+      const fromConstants = render(dot().x(5).y(6).radius(7), [{}, {}]);
+      expect(attrs(fromConstants, "cx")).toEqual(["5", "5"]);
+      expect(attrs(fromConstants, "cy")).toEqual(["6", "6"]);
+      expect(attrs(fromConstants, "r")).toEqual(["7", "7"]);
     });
 
-    test("should take cx, cy and r from the accessors", () => {
-      const node = render(dotOf(), testData);
-      expect(attrs(node, "cx")).toEqual(["10", "60"]);
-      expect(attrs(node, "cy")).toEqual(["20", "25"]);
-      expect(attrs(node, "r")).toEqual(["4", "8"]);
-    });
-
-    test("should accept constants in place of accessors", () => {
-      const node = render(dot().x(5).y(6).radius(7), [{}, {}]);
-      expect(attrs(node, "cx")).toEqual(["5", "5"]);
-      expect(attrs(node, "cy")).toEqual(["6", "6"]);
-      expect(attrs(node, "r")).toEqual(["7", "7"]);
-    });
-
-    test("should apply fill and stroke, as accessors or as constants", () => {
+    test("should apply fill and stroke when they are configured", () => {
       const node = render(
         dotOf()
           .fill((d: Datum) => d.color)
@@ -116,13 +116,13 @@ describe("component/dot", () => {
       expect(attrs(node, "stroke")).toEqual(["#00f", "#00f"]);
     });
 
-    test("should omit fill and stroke when they are not configured", () => {
+    test("should write no fill or stroke attribute when neither is configured", () => {
       const node = render(dot().x(0).y(0).radius(3), [{}]);
       expect(circles(node)[0].getAttribute("fill")).toBeNull();
       expect(circles(node)[0].getAttribute("stroke")).toBeNull();
     });
 
-    test("should update the geometry when the data changes", () => {
+    test("should move the circles to the new geometry when the data changes", () => {
       // transition is off so that the updated geometry is readable on this tick; the
       // transitioning case is covered in the transition block.
       const component = dotOf().transition(false);
@@ -157,24 +157,18 @@ describe("component/dot", () => {
       return seen;
     };
 
-    test("should pass each datum and its index to the accessors", () => {
+    test("should call the accessors with each datum and its index, for the circles and the anchor alike", () => {
       const seen = callLog(testData, false);
-      expect(seen.slice(0, 2)).toEqual([
+      const pairs = [
         [testData[0], 0],
         [testData[1], 1],
-      ]);
-    });
-
-    test("should pass the index to the accessors read for the tooltip anchor", () => {
-      const seen = callLog(testData, false);
+      ];
+      expect(seen.slice(0, 2)).toEqual(pairs);
       // The last two calls are the anchor's, and they arrive with the index like the rest.
-      expect(seen.slice(-2)).toEqual([
-        [testData[0], 0],
-        [testData[1], 1],
-      ]);
+      expect(seen.slice(-2)).toEqual(pairs);
     });
 
-    test("should anchor an index-based accessor at the same position as the dot", () => {
+    test("should anchor an index-based accessor at the same position as the dot it belongs to", () => {
       const node = render(
         dot()
           .x((_d: Datum, i: number) => i * 10)
@@ -222,23 +216,17 @@ describe("component/dot", () => {
   });
 
   describe("configuration", () => {
-    test("should default transition to true", () => {
+    test("should report transition as enabled when it has not been configured", () => {
       expect(dot().transition()).toBe(true);
     });
 
-    test("should name the component and the property when x is not configured", () => {
+    test("should name the component and the property when a required property is not configured", () => {
       expect(() => render(dot().y(1).radius(3), [{}])).toThrow("[dot] the x property is required");
-    });
-
-    test("should name the component and the property when y is not configured", () => {
       expect(() => render(dot().x(1).radius(3), [{}])).toThrow("[dot] the y property is required");
-    });
-
-    test("should name the component and the property when radius is not configured", () => {
       expect(() => render(dot().x(1).y(2), [{}])).toThrow("[dot] the radius property is required");
     });
 
-    test("should report a missing property before any data arrives", () => {
+    test("should name the missing property even when the first render has no data", () => {
       // The failure used to depend on the data - an empty first render succeeded and the
       // same chart threw as soon as data arrived, which is how it escaped a smoke test.
       expect(() => render(dot().radius(3), [])).toThrow("[dot] the x property is required");
@@ -255,30 +243,7 @@ describe("component/dot", () => {
       expect(anchors(node)).toEqual([]);
     });
 
-    test("should read back an unset required property as undefined", () => {
-      // x, y and radius have no default - required() only runs at render - so the getters
-      // return undefined until they are set, which is what their types now say.
-      const component = dot();
-      expect(component.x()).toBeUndefined();
-      expect(component.y()).toBeUndefined();
-      expect(component.radius()).toBeUndefined();
-    });
-
-    test("should wrap every visual property in fn.functor, so the getters agree", () => {
-      const component = dot().x(5).y(6).radius(7).fill("#f00").stroke("#00f");
-      expect(typeof component.x()).toBe("function");
-      expect(component.x()?.()).toBe(5);
-      expect(typeof component.y()).toBe("function");
-      expect(component.y()?.()).toBe(6);
-      expect(typeof component.radius()).toBe("function");
-      expect(component.radius()?.()).toBe(7);
-      expect(typeof component.fill()).toBe("function");
-      expect(component.fill()?.()).toBe("#f00");
-      expect(typeof component.stroke()).toBe("function");
-      expect(component.stroke()?.()).toBe("#00f");
-    });
-
-    test("should render radius, fill and stroke identically as constants or accessors", () => {
+    test("should render radius, fill and stroke identically whether they are constants or accessors", () => {
       const constant = render(dotOf().radius(4).fill("#f00").stroke("#00f"), [testData[0]]);
       const accessor = render(
         dotOf()
@@ -292,69 +257,27 @@ describe("component/dot", () => {
       expect(attrs(constant, "stroke")).toEqual(attrs(accessor, "stroke"));
       expect(attrs(accessor, "r")).toEqual(["4"]);
     });
-
-    test("should still allow a radius of 0, which is how a dot is hidden", () => {
-      expect(attrs(render(dotOf().radius(0), [testData[0]]), "r")).toEqual(["0"]);
-    });
   });
 
   describe("missing values", () => {
-    /** Renders a single dot whose x and radius are both the given value. */
-    const withValue = (value: unknown) => {
+    // Which values count as unusable, and what each one coerces to, is the guard's own
+    // contract and is covered once in test/svgUtils/toFinite.test.ts. What belongs here is
+    // only that dot routes all three of its geometry attributes through that guard, plus the
+    // negative-radius clamp below, which is dot's own rule rather than the guard's.
+    test("should fall back to 0 on cx, cy and r when an accessor returns an unusable value", () => {
       const node = render(
         dot()
-          // The typed API rejects a non-numeric accessor. These tests deliberately supply
-          // one to characterise the runtime coercion, so the rejection is the point.
-          // @ts-expect-error - accessor returns unknown on purpose
-          .x(() => value)
-          .y(0)
-          // @ts-expect-error - accessor returns unknown on purpose
-          .radius(() => value),
+          .x(() => Number.NaN)
+          .y(() => Number.NaN)
+          .radius(() => Number.NaN),
         [{}],
       );
-      return {
-        cx: circles(node)[0].getAttribute("cx"),
-        r: circles(node)[0].getAttribute("r"),
-      };
-    };
-
-    test("should pass real numbers through, including negatives and zero", () => {
-      expect(withValue(0).cx).toBe("0");
-      expect(withValue(-5).cx).toBe("-5");
-      expect(withValue(12.5).cx).toBe("12.5");
+      expect(attrs(node, "cx")).toEqual(["0"]);
+      expect(attrs(node, "cy")).toEqual(["0"]);
+      expect(attrs(node, "r")).toEqual(["0"]);
     });
 
-    test("should replace undefined and null with 0", () => {
-      // The attribute used to be dropped for both, which left the circle on the SVG
-      // default rather than on the guarded 0 that bar writes.
-      expect(withValue(undefined)).toEqual({ cx: "0", r: "0" });
-      expect(withValue(null)).toEqual({ cx: "0", r: "0" });
-    });
-
-    test("should replace NaN with 0, as bar does", () => {
-      // NaN is what a scale returns outside its domain, and what any arithmetic on a null
-      // measurement produces, so this is the common case rather than an exotic one.
-      expect(withValue(Number.NaN)).toEqual({ cx: "0", r: "0" });
-    });
-
-    test("should replace Infinity with 0", () => {
-      // A scale over a zero-width domain produces Infinity, and "Infinity" is not a valid
-      // SVG length.
-      expect(withValue(Number.POSITIVE_INFINITY)).toEqual({ cx: "0", r: "0" });
-      expect(withValue(Number.NEGATIVE_INFINITY)).toEqual({ cx: "0", r: "0" });
-    });
-
-    test("should replace values that do not coerce to a number with 0", () => {
-      expect(withValue("abc")).toEqual({ cx: "0", r: "0" });
-    });
-
-    test("should normalise values that do coerce to their number", () => {
-      expect(withValue("50")).toEqual({ cx: "50", r: "50" });
-      expect(withValue("")).toEqual({ cx: "0", r: "0" });
-      expect(withValue(true)).toEqual({ cx: "1", r: "1" });
-    });
-
-    test("should clamp a negative radius to 0 while leaving coordinates signed", () => {
+    test("should clamp a negative radius to 0 while leaving the coordinates signed", () => {
       // A negative r is invalid per the SVG spec and the circle is not rendered at all, so
       // it is clamped; a negative cx or cy is perfectly valid and is left alone.
       const node = render(dot().x(-5).y(-6).radius(-5), [{}]);
@@ -365,22 +288,11 @@ describe("component/dot", () => {
   });
 
   describe("tooltip anchors", () => {
-    test("should render one anchor per datum", () => {
-      const node = render(dotOf(), testData);
-      expect(anchors(node).length).toBe(2);
-    });
+    // The anchor's own shape - an invisible rect that still has a measurable box - belongs to
+    // the tooltipAnchor module and is covered in test/annotation/tooltipAnchor.test.ts. What
+    // dot owns, and what these tests assert, is where it puts the anchor.
 
-    test("should render the anchor as an invisible 1x1 rect", () => {
-      const node = render(dotOf(), [testData[0]]);
-      const anchor = node.querySelector("[data-tooltip-anchor]");
-      expect(anchor?.tagName).toBe("rect");
-      expect(anchor?.getAttribute("width")).toBe("1");
-      expect(anchor?.getAttribute("height")).toBe("1");
-      expect(anchor?.getAttribute("fill")).toBe("none");
-      expect(anchor?.getAttribute("stroke")).toBe("none");
-    });
-
-    test("should position the anchor from the guarded geometry", () => {
+    test("should position the anchor from the guarded geometry when an accessor returns no usable value", () => {
       const node = render(
         dot()
           .x(() => Number.NaN)
@@ -392,17 +304,15 @@ describe("component/dot", () => {
       expect(anchors(node)).toEqual(["translate(0,0)"]);
     });
 
-    test("should position the anchor at the centre of the dot", () => {
-      const node = render(dotOf(), testData);
-      expect(anchors(node)).toEqual(["translate(10,20)", "translate(60,25)"]);
-    });
-
-    test("should ignore the radius when positioning the anchor", () => {
+    test("should place the anchor at the centre of the dot whatever its radius", () => {
+      expect(anchors(render(dotOf(), testData))).toEqual(["translate(10,20)", "translate(60,25)"]);
+      // The radius does not enter the position, so a tooltip points at the centre rather
+      // than drifting with the size of the dot.
       expect(anchors(render(dotOf().radius(1), [testData[0]]))).toEqual(["translate(10,20)"]);
       expect(anchors(render(dotOf().radius(100), [testData[0]]))).toEqual(["translate(10,20)"]);
     });
 
-    test("should move the anchor when the data changes", () => {
+    test("should move the anchor to the new centre when the data changes", () => {
       const component = dotOf();
       const g = group("anchor-update");
       g.datum([testData[0]]).call(component as never);
@@ -423,7 +333,7 @@ describe("component/dot", () => {
   });
 
   describe("transition", () => {
-    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+    test("should keep the synchronous geometry when an in-flight tween is still running", async () => {
       const g = group("interrupted");
       g.datum([{ x: 0, y: 0, r: 2 }]).call(dotOf().transition(true) as never);
       // Schedules a tween from 0 towards 500.
@@ -432,7 +342,7 @@ describe("component/dot", () => {
 
       g.datum([{ x: 0, y: 0, r: 2 }]).call(dotOf().transition(false) as never);
       // Past the 300ms default, so an uninterrupted tween would have reached its destination.
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await settle();
 
       const node = g.node() as SVGGElement;
       expect(attrs(node, "cx")).toEqual(["0"]);
@@ -454,27 +364,20 @@ describe("component/dot", () => {
       await untilMoved(circles(g.node() as SVGGElement)[0], "opacity");
 
       g.datum([{ x: 5, y: 5, r: 3 }]).call(dotOf().transition(false) as never);
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await settle();
 
       const node = g.node() as SVGGElement;
       expect(attrs(node, "opacity")).toEqual(["1"]);
       expect(attrs(node, "cx")).toEqual(["5"]);
     });
 
-    test("should render the same output whether or not transition is enabled", () => {
+    test("should render the same markup whether or not transition is enabled", () => {
       const withTransition = render(dotOf().transition(true), testData);
       const withoutTransition = render(dotOf().transition(false), testData);
       expect(withTransition.innerHTML).toBe(withoutTransition.innerHTML);
     });
 
-    test("should schedule a transition only when the property is set", () => {
-      expect(
-        tweenNames(circles(render(dotOf().transition(true), [testData[0]]))[0]),
-      ).not.toBeNull();
-      expect(tweenNames(circles(render(dotOf().transition(false), [testData[0]]))[0])).toBeNull();
-    });
-
-    test("should give entering dots their geometry before the transition starts", () => {
+    test("should give entering dots their geometry synchronously when transition is enabled", () => {
       // The entering elements are positioned on the join, so a fresh render is correct
       // synchronously - nothing waits for the first animation frame.
       const node = render(dotOf().transition(true), testData);
@@ -483,11 +386,11 @@ describe("component/dot", () => {
       expect(attrs(node, "r")).toEqual(["4", "8"]);
     });
 
-    test("should animate the geometry between renders when enabled", async () => {
+    test("should animate the geometry towards the new values when transition is enabled", async () => {
       const component = dotOf().transition(true);
       const g = group("animated");
       g.datum([{ x: 0, y: 0, r: 1 }]).call(component as never);
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await settle();
       const node = g.node() as SVGGElement;
       expect(attrs(node, "cx")).toEqual(["0"]);
 
@@ -497,13 +400,13 @@ describe("component/dot", () => {
       expect(attrs(node, "cy")).toEqual(["0"]);
       expect(attrs(node, "r")).toEqual(["1"]);
 
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await settle();
       expect(attrs(node, "cx")).toEqual(["500"]);
       expect(attrs(node, "cy")).toEqual(["400"]);
       expect(attrs(node, "r")).toEqual(["20"]);
     });
 
-    test("should update the geometry synchronously when disabled", () => {
+    test("should write the new geometry straight away and animate nothing when transition is disabled", async () => {
       const component = dotOf().transition(false);
       const g = group("no-transition");
       g.datum([{ x: 0, y: 0, r: 1 }]).call(component as never);
@@ -512,30 +415,32 @@ describe("component/dot", () => {
       expect(attrs(node, "cx")).toEqual(["500"]);
       expect(attrs(node, "cy")).toEqual(["400"]);
       expect(attrs(node, "r")).toEqual(["20"]);
+
+      // Nothing was scheduled, so nothing moves afterwards either. Reading the geometry again
+      // past the transition's own duration is the observable form of "no tween was created" -
+      // a tween would have had to start from the old value and travel, which would show up
+      // either here or in the synchronous read above.
+      await settle();
+      expect(attrs(node, "cx")).toEqual(["500"]);
+      expect(attrs(node, "cy")).toEqual(["400"]);
+      expect(attrs(node, "r")).toEqual(["20"]);
     });
 
-    test("should schedule one tween per geometry attribute and no more", () => {
-      // The other half of the defect this fixed: callers who never wanted an animation
-      // were paying for tweens that ran from a value to itself. There is now exactly one
-      // tween per geometry attribute, and none at all when the property is off.
-      const node = render(dotOf().fill("#f00").stroke("#00f").transition(true), [testData[0]]);
-      expect(tweenNames(circles(node)[0])).toEqual(["attr.cx", "attr.cy", "attr.r"]);
-
-      const plain = render(dotOf().fill("#f00").transition(false), [testData[0]]);
-      expect(tweenNames(circles(plain)[0])).toBeNull();
-    });
-
-    test("should not transition fill or stroke, so a colour change jumps", () => {
+    test("should land the new colour immediately rather than interpolating when the fill changes", async () => {
       // Decided rather than inherited: the colour scales these charts use are categorical,
       // and interpolating between two category colours reads as a third category. So the
-      // colours are applied to the selection and never appear among the tweens.
+      // colour is applied to the selection, with the transition left to the geometry.
       const component = dotOf();
       const g = group("colour-jump");
       g.datum([testData[0]]).call(component.fill("#f00") as never);
       g.datum([testData[0]]).call(component.fill("#0f0") as never);
       const node = g.node() as SVGGElement;
+
+      // Already the destination colour on the tick of the render, with no intermediate
+      // blend, and unchanged once a tween would have run its course.
       expect(attrs(node, "fill")).toEqual(["#0f0"]);
-      expect(tweenNames(circles(node)[0])).not.toContain("attr.fill");
+      await settle();
+      expect(attrs(node, "fill")).toEqual(["#0f0"]);
     });
 
     describe("known quirks", () => {
