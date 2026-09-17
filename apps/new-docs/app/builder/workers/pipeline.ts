@@ -101,6 +101,7 @@ export const makePipeline: Effect.Effect<Generate> = Effect.gen(function* () {
       ),
       csv: highlight(spec.csv, BUNDLE.data),
       assets,
+      scripts: recipe.scripts ?? [],
     };
   });
 });
