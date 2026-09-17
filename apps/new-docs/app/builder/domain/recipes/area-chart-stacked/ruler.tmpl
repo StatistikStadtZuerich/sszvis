@@ -1,0 +1,190 @@
+// #label Hover ruler
+// #hint Reads off every band at the hovered date, with a running total.
+
+// #scalar ACTIONS_PARAM actions
+// #scalar X_TICK_VALUES rulerTicks(xScale, props.ticks, state)
+// #scalar HIGHLIGHT_TICK (d) => sszvis.stringEqual(d, state.highlightDate)
+
+// #region types
+/** A point on one stacked band, as the range ruler and the range flag read it. */
+type HighlightPoint = {
+  0: number;
+  1: number;
+  data: StackRow;
+  key: string;
+};
+// #endregion
+
+// #region stateTypes
+highlightDate: Date;
+highlightData: HighlightPoint[];
+totalHighlightValue: number;
+/** The pointer's y position, in the y scale's own domain units. */
+mouseYValue: number;
+// #endregion
+
+// #region actionTypes
+changeDate: (state: State, e: Event, xValue: Date | null, yValue: number | null) => void;
+resetDate: (state: State) => void;
+// #endregion
+
+// #region init
+// NOTE: The chart opens on the most recent date.
+selectDate(state, d3.max(state.dates) ?? new Date(), 0);
+// #endregion
+
+// #region actions
+// NOTE: The move behavior inverts the pointer position through both scales, so
+// it hands back a date anywhere in the domain; the data has one stack per
+// date, so the nearest one wins.
+changeDate(state, _e, xValue, yValue) {
+  if (xValue !== null && yValue !== null) {
+    selectDate(state, closestDate(state.dates, xValue), yValue);
+  }
+},
+
+resetDate(state) {
+  selectDate(state, d3.max(state.dates) ?? new Date(), 0);
+},
+// #endregion
+
+// #region layers
+const htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
+// #endregion
+
+// #region components
+const isFlipped = () => xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
+
+const rangeRuler = sszvis
+  .annotationRangeRuler<HighlightPoint>()
+  .top(yScale(state.totalHighlightValue))
+  .bottom(bounds.innerHeight)
+  .x(xScale(state.highlightDate))
+  .y0((d) => yScale(d[0]))
+  .y1((d) => yScale(d[1]))
+  // NOTE: the ruler pipes this through formatNumber, so return the number itself.
+  .label(pointValue)
+  .total(state.totalHighlightValue)
+  .flip(isFlipped);
+
+const tooltipText = __TOOLTIP_TEXT__;
+
+const rangeTooltip = sszvis
+  .tooltip<HighlightPoint>()
+  .header(tooltipText)
+  .orientation(() => (isFlipped() ? "right" : "left"))
+  .renderInto(htmlLayer)
+  .visible(true);
+
+const rangeFlag = sszvis
+  .annotationRangeFlag<HighlightPoint>()
+  .x(xScale(state.highlightDate))
+  .y0((d) => yScale(d[0]))
+  .y1((d) => yScale(d[1]));
+// #endregion
+
+// #region render
+/*
+ * NOTE: Only when there is a band to read off. `annotationRangeRuler` joins its rule and
+ * its total as singletons, so calling it with no points still draws a full-height line
+ * and a "Total 0" against a chart with nothing in it - and every date row failing to
+ * parse is documented behaviour, not an impossible state.
+ */
+const highlightGroup = chartLayer.selectGroup("highlight").datum(state.highlightData);
+if (state.highlightData.length > 0) {
+  highlightGroup.call(rangeRuler);
+} else {
+  highlightGroup.selectAll("*").remove();
+}
+
+// NOTE: Only the band the pointer is inside gets a flag, and with it a tooltip.
+const flagGroup = chartLayer
+  .selectGroup("flag")
+  .datum(state.highlightData.filter((d) => d[0] < state.mouseYValue && d[1] > state.mouseYValue))
+  .call(rangeFlag);
+
+flagGroup.selectAll("[data-tooltip-anchor]").call(rangeTooltip);
+// #endregion
+
+// #region interaction
+// Interaction
+
+const interactionLayer = sszvis
+  .move<Date, number>()
+  .xScale(xScale)
+  .yScale(yScale)
+  .on("move", actions.changeDate)
+  .on("end", actions.resetDate);
+
+chartLayer.selectGroup("interaction").call(interactionLayer);
+// #endregion
+
+// #region helpers
+/**
+ * The dates the x axis labels: the generated ticks, plus the highlighted one.
+ *
+ * NOTE: A generated tick equal to the highlight is dropped rather than drawn twice.
+ * d3-axis does not deduplicate its tick values, so the two would land at the same
+ * position and overpaint each other - and that is the ordinary case rather than an
+ * edge one, because yearly data puts its ticks on exactly the dates it carries.
+ *
+ * NOTE: No ticks at all when there is no data. Both the highlight and the domain are
+ * fabricated from `new Date()` once every date row has been dropped - `resetDate` for the
+ * one, `timeExtent` for the other - so the generated ticks label today just as the
+ * highlight would. An axis with no labels says the chart has no dates; an axis reading
+ * this afternoon says the table did.
+ */
+const rulerTicks = (
+  scale: import("d3").ScaleTime<number, number>,
+  ticks: number,
+  state: State,
+): Date[] =>
+  state.dates.length === 0
+    ? []
+    : [
+        ...scale.ticks(ticks).filter((d) => !sszvis.stringEqual(d, state.highlightDate)),
+        state.highlightDate,
+      ];
+
+/* The ruler's datum is a point on a band, not a CSV row, so it reads its own fields. */
+const pointValue = (d: HighlightPoint) => d.data.values[d.key] ?? Number.NaN;
+const pointDate = (d: HighlightPoint) => d.data.xValue;
+const pointKey = (d: HighlightPoint) => d.key;
+
+/**
+ * Move the ruler to `date`: everything it draws is derived from the date and from
+ * the pointer's height, so `init` and both actions go through here.
+ */
+const selectDate = (state: State, date: Date, mouseYValue: number): void => {
+  state.highlightDate = date;
+  // NOTE: d3 attaches `key` to the Series array itself, and immer's draft proxy for an
+  // array exposes only its index properties - so `layer.key` reads as undefined inside an
+  // action. The keys are kept as plain strings for exactly this reason.
+  state.highlightData = state.stackedData.map((layer, layerIndex) => {
+    const point = layer.find((p) => sszvis.stringEqual(p.data.xValue, date));
+    return {
+      0: point?.[0] ?? 0,
+      1: point?.[1] ?? 0,
+      data: point?.data ?? emptyRow(date),
+      key: state.stackKeys[layerIndex],
+    };
+  });
+  state.totalHighlightValue = d3.sum(
+    state.categories,
+    (c) => state.highlightData[0]?.data.values[c] ?? 0,
+  );
+  state.mouseYValue = mouseYValue;
+};
+
+/** Stand-in for a date the stack has no row for, so the ruler still has something to read. */
+const emptyRow = (date: Date): StackRow => ({ xValue: date, values: {} });
+
+/** The date in `dates` - which is sorted ascending - nearest to `target`. */
+const closestDate = (dates: Date[], target: Date): Date => {
+  if (dates.length === 0) return target;
+  const i = d3.bisectLeft(dates, target, 1);
+  const before = dates[i - 1] ?? target;
+  const after = dates[i] ?? before;
+  return target.valueOf() - before.valueOf() > after.valueOf() - target.valueOf() ? after : before;
+};
+// #endregion

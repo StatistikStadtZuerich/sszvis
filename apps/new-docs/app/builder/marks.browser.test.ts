@@ -49,6 +49,9 @@ const EXPECTED: Readonly<Record<string, { readonly marks: string; readonly count
   "bar-chart-horizontal": { marks: "rect.sszvis-bar", count: 6 },
   /* `zu-und-wegzuege` splits five dates into two series, so two lines. */
   "line-chart": { marks: "path.sszvis-line", count: 2 },
+  /* The same two series, as two stacked bands. The specific class, not the generic
+     `.sszvis-path`, which the pie and the line share. */
+  "area-chart-stacked": { marks: "path.sszvis-stacked-area-path", count: 2 },
 };
 
 /** How long to let a chart finish drawing before reading it. */

@@ -33,29 +33,36 @@ export const resolveTooltip = (
 export const boundRoles = (spec: Spec, keys: readonly RoleKey[]): readonly RoleKey[] =>
   keys.filter((key) => Option.exists(Record.get(spec.fields, key), String.isNonEmpty));
 
-const formatted = (role: TooltipRole): string => {
+const formatted = (role: TooltipRole, datum: string): string => {
   const { accessor, kind, missing } = role;
   if (kind === "category") return accessor;
-  if (kind === "date") return `(d: Datum) => sszvis.formatAxisTimeFormat(${accessor}(d))`;
-  if (missing === undefined) return `(d: Datum) => sszvis.formatNumber(${accessor}(d))`;
+  if (kind === "date") return `(d: ${datum}) => sszvis.formatAxisTimeFormat(${accessor}(d))`;
+  if (missing === undefined) return `(d: ${datum}) => sszvis.formatNumber(${accessor}(d))`;
   return [
-    "(d: Datum) => {",
+    `(d: ${datum}) => {`,
     `  const value = ${accessor}(d);`,
     `  return Number.isNaN(value) ? ${str(missing)} : sszvis.formatNumber(value);`,
     "}",
   ].join("\n");
 };
 
-const words = (style: "bold" | "plain", role: TooltipRole): string[] => [
-  `.${style}(${formatted(role)})`,
+const words = (style: "bold" | "plain", role: TooltipRole, datum: string): string[] => [
+  `.${style}(${formatted(role, datum)})`,
   ...(role.suffix === undefined ? [] : [`.plain(${role.suffix})`]),
 ];
 
+/**
+ * `datum` names the type the accessors take, which is the row type for most charts
+ * and is not always: a stacked area's ruler reads a point on a band, so its
+ * accessors take that instead. It is a type name rather than a type because the
+ * result is source, and the name has to be one the template declares.
+ */
 export const tooltipText = (
   format: TextFormat,
   spec: Spec,
   roles: TooltipRoles,
   fallback: Tooltip,
+  datum = "Datum",
 ): Safe => {
   const { header, body } = resolveTooltip(
     spec.tooltip,
@@ -67,11 +74,11 @@ export const tooltipText = (
 
   const lines = [
     `sszvis.modularText${format}()`,
-    ...(headerRole === undefined ? [] : words("bold", headerRole)),
+    ...(headerRole === undefined ? [] : words("bold", headerRole, datum)),
     ...(format === "HTML" && headerRole !== undefined && bodyRoles.length > 0
       ? [".newline()"]
       : []),
-    ...bodyRoles.flatMap((role) => words("plain", role)),
+    ...bodyRoles.flatMap((role) => words("plain", role, datum)),
   ];
   return code(lines.join("\n"));
 };

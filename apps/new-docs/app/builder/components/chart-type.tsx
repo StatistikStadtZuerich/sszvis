@@ -1,4 +1,5 @@
 import {
+  ChartAreaIcon,
   ChartBarIcon,
   ChartColumnIcon,
   ChartLineIcon,
@@ -16,6 +17,7 @@ const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
   ["bar-chart-vertical", ChartColumnIcon],
   ["bar-chart-horizontal", ChartBarIcon],
   ["line-chart", ChartLineIcon],
+  ["area-chart-stacked", ChartAreaIcon],
 ]);
 
 const KIND_LABEL = { category: "text", number: "number", date: "date" } as const;
