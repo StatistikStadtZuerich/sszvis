@@ -112,6 +112,15 @@ describe("generated code", () => {
         expect(next, `banner "${line}" over nothing`).toBeDefined();
         expect(next, `banner "${line}" over another banner`).not.toMatch(/^\/\/ [A-Z]/);
       }
+      /*
+       * And no banner twice over. The check above only sees two banners in a row,
+       * so a chart.ts that opens its own "// Helper functions" section and then
+       * reaches a features hole that opens another passed it: the two were
+       * separated by the helpers between them, and the exported file carried the
+       * heading twice.
+       */
+      const banners = lines.filter((line) => /^\/\/ [A-Z]/.test(line));
+      expect(banners, "a banner appears more than once").toHaveLength(new Set(banners).size);
       expect(js).not.toMatch(/^(?:type|interface) /m);
       expect(js).not.toContain('import("sszvis")');
       expect(js).not.toMatch(/\(d: Datum\)/);
