@@ -1,0 +1,109 @@
+// #label Tooltip
+// #hint Highlights the hovered slice and shows its value.
+
+/* SLICE_FILL is a scalar, not a block: the template uses it above the components hole. */
+
+// #scalar ACTIONS_PARAM actions
+// #scalar SLICE_FILL (slice) => sliceFill(slice, cScale, isSelected(state))
+
+// #region stateTypes
+selection: Slice[];
+// #endregion
+
+// #region actionTypes
+showTooltip: (state: State, e: Event, slice: Slice) => void;
+hideTooltip: (state: State) => void;
+// #endregion
+
+// #region init
+state.selection = [];
+// #endregion
+
+// #region actions
+showTooltip(state, _e, slice) {
+  state.selection = [slice];
+},
+
+hideTooltip(state) {
+  state.selection = [];
+},
+// #endregion
+
+// #region layers
+const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+// #endregion
+
+// #region components
+const tooltipText = __TOOLTIP_TEXT__;
+
+const tooltip = sszvis
+  .tooltip<Slice>()
+  .renderInto(tooltipLayer)
+  .orientation(sszvis.fitTooltip("bottom", bounds))
+  .header(tooltipText)
+  .visible(isSelected(state));
+// #endregion
+
+// #region render
+bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+// #endregion
+
+// #region interaction
+// Interaction
+
+// NOTE: Panning rather than move: a slice is a shape the pointer is inside,
+// not a position along a scale, so the bar itself is the event target.
+const interactionLayer = sszvis
+  .panning<Slice>()
+  .elementSelector(".sszvis-bar")
+  .on("start", actions.showTooltip)
+  .on("pan", actions.showTooltip)
+  .on("end", actions.hideTooltip);
+
+bars.call(interactionLayer);
+// #endregion
+
+// #region helpers
+/*
+ * The tooltip's datum is a slice, not a row - but every slice carries the row it was
+ * built from, so these read the ordinary fields through it. A slice with no datum is
+ * a gap in the stack, and reads as empty rather than throwing.
+ */
+const sliceCategory = (slice: Slice) => (slice.data === undefined ? "" : yAcc(slice.data));
+const sliceSeries = (slice: Slice) => (slice.data === undefined ? "" : cAcc(slice.data));
+/*
+ * NOTE: Read off the slice's own bounds rather than through `slice.data`. The layout sums
+ * every row that shares a (bar, series) cell into the width it draws, but keeps only the
+ * first of those rows as `data` - so a pasted table with a repeated cell would draw the
+ * total and report one row's share of it. The bounds are what the reader can see.
+ *
+ * NOTE: Except when nothing in the cell parsed. `d3.sum` skips the values it cannot read
+ * and returns 0 for a cell of nothing but those, which is a height the reader cannot tell
+ * from a real zero - so a flat slice whose own row has no number reads as missing, and
+ * the tooltip says so rather than inventing a nought.
+ */
+const sliceValue = (slice: Slice) => {
+  if (slice.data === undefined) return Number.NaN;
+  const drawn = slice[1] - slice[0];
+  return drawn === 0 && !Number.isFinite(xAcc(slice.data)) ? Number.NaN : drawn;
+};
+
+const isSelected = (state: State) => (d: Slice) => sszvis.contains(state.selection, d);
+
+/**
+ * The slice's own colour, darkened while it is the one being read.
+ *
+ * NOTE: The scale and the predicate are passed in because both are locals of
+ * `render`, and a slice with no datum returns undefined, which removes the
+ * attribute rather than painting the default black.
+ */
+const sliceFill = (
+  slice: Slice,
+  scale: import("sszvis").ExtendedOrdinalScale,
+  selected: (slice: Slice) => boolean,
+) => {
+  if (slice.data === undefined) return undefined;
+  const colour = scale(cAcc(slice.data));
+  return selected(slice) ? sszvis.slightlyDarker(colour) : colour;
+};
+// #endregion

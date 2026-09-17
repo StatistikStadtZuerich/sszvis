@@ -49,6 +49,8 @@ const EXPECTED: Readonly<Record<string, { readonly marks: string; readonly count
   "bar-chart-horizontal": { marks: "rect.sszvis-bar", count: 6 },
   /* `berufsfeld-jahr` is four decades by four occupational fields, so sixteen slices. */
   "bar-chart-vertical-stacked": { marks: "rect.sszvis-bar", count: 16 },
+  /* The same sample lying down, so the same sixteen slices. */
+  "bar-chart-horizontal-stacked": { marks: "rect.sszvis-bar", count: 16 },
   /* `zu-und-wegzuege` splits five dates into two series, so two lines. */
   "line-chart": { marks: "path.sszvis-line", count: 2 },
   /* The same two series, as two stacked bands. The specific class, not the generic

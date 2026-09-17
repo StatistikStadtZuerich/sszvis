@@ -1,8 +1,9 @@
 import {
   ChartAreaIcon,
-  ChartColumnStackedIcon,
   ChartBarIcon,
+  ChartBarStackedIcon,
   ChartColumnIcon,
+  ChartColumnStackedIcon,
   ChartLineIcon,
   ChartScatterIcon as UnknownChartIcon,
   type LucideIcon,
@@ -18,6 +19,7 @@ const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
   ["bar-chart-vertical", ChartColumnIcon],
   ["bar-chart-horizontal", ChartBarIcon],
   ["bar-chart-vertical-stacked", ChartColumnStackedIcon],
+  ["bar-chart-horizontal-stacked", ChartBarStackedIcon],
   ["line-chart", ChartLineIcon],
   ["area-chart-stacked", ChartAreaIcon],
 ]);
