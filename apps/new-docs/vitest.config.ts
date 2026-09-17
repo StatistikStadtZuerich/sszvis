@@ -4,6 +4,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["app/**/*.test.ts"],
+    /* `*.browser.test.ts` matches the include too, and belongs to vitest.browser.config.ts. */
+    exclude: ["**/node_modules/**", "app/**/*.browser.test.ts"],
     environment: "node",
   },
 });

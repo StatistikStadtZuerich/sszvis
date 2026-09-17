@@ -1,3 +1,6 @@
 .react-router
 build
 node_modules
+
+# Screenshots and attachments a failing browser test writes; regenerated on every run.
+.vitest
