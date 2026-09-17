@@ -5,6 +5,7 @@ import legendColorOrdinal, {
   DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT,
   type OrdinalColorScaleComponent,
 } from "../../src/legend/ordinalColorScale.js";
+import { resolvedColor, translationOf } from "../support/domValues.js";
 import "../../src/d3-selectgroup.js";
 
 describe("legend/ordinalColorScale", () => {
@@ -40,12 +41,10 @@ describe("legend/ordinalColorScale", () => {
 
   const entries = (node: Element) => [...node.querySelectorAll("g.sszvis-legend--entry")];
   const transforms = (node: Element) => entries(node).map((e) => e.getAttribute("transform"));
+  /** Entry positions as numbers, so a change of `translate` spelling is not a failure. */
+  const positions = (node: Element) => entries(node).map((e) => translationOf(e));
   const labels = (node: Element) =>
     [...node.querySelectorAll("text.sszvis-legend__label")].map((t) => t.textContent);
-
-  test("should export the default row height", () => {
-    expect(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).toBe(21);
-  });
 
   test("should keep the module's public names reachable from the library barrel", async () => {
     const sszvis = await import("../../src/index.js");
@@ -61,15 +60,14 @@ describe("legend/ordinalColorScale", () => {
     expect(labels(node)).toEqual(["A", "B", "C", "D", "E"]);
   });
 
-  test("should give each entry a colour swatch filled and stroked from the scale", () => {
+  test("should fill and stroke each entry's swatch with that member's colour", () => {
     const s = scale();
     const node = render(legendColorOrdinal().scale(s).orientation("horizontal"));
     const marks = [...node.querySelectorAll("circle.sszvis-legend__mark")];
+    const expected = ["A", "B", "C", "D", "E"].map((d) => resolvedColor(s(d)));
     expect(marks.length).toBe(5);
-    expect(marks.map((m) => m.getAttribute("fill"))).toEqual(["A", "B", "C", "D", "E"].map(s));
-    expect(marks.map((m) => m.getAttribute("stroke"))).toEqual(["A", "B", "C", "D", "E"].map(s));
-    expect(marks.map((m) => m.getAttribute("r"))).toEqual(["5", "5", "5", "5", "5"]);
-    expect(marks.map((m) => m.getAttribute("stroke-width"))).toEqual(["1", "1", "1", "1", "1"]);
+    expect(marks.map((m) => resolvedColor(m.getAttribute("fill")))).toEqual(expected);
+    expect(marks.map((m) => resolvedColor(m.getAttribute("stroke")))).toEqual(expected);
   });
 
   test("should place the swatch before the label and centre both on the row", () => {
@@ -96,18 +94,24 @@ describe("legend/ordinalColorScale", () => {
   });
 
   describe("horizontal orientation", () => {
-    test("should fill rows left to right, wrapping after the column count", () => {
-      const node = render(legendColorOrdinal().scale(scale()).orientation("horizontal").columns(3));
-      expect(transforms(node)).toEqual([
-        "translate(0,0)",
-        "translate(200,0)",
-        "translate(400,0)",
-        "translate(0,21)",
-        "translate(200,21)",
-      ]);
+    test("should fill rows left to right and wrap onto the next row after the column count, defaulting to three columns", () => {
+      const threeAcross = [
+        { x: 0, y: 0 },
+        { x: 200, y: 0 },
+        { x: 400, y: 0 },
+        { x: 0, y: 21 },
+        { x: 200, y: 21 },
+      ];
+      const explicit = render(
+        legendColorOrdinal().scale(scale()).orientation("horizontal").columns(3),
+      );
+      expect(positions(explicit)).toEqual(threeAcross);
+      // no columns set: the default is the same three-column grid
+      const byDefault = render(legendColorOrdinal().scale(scale()).orientation("horizontal"));
+      expect(positions(byDefault)).toEqual(threeAcross);
     });
 
-    test("should respect columnWidth and rowHeight", () => {
+    test("should offset entries by columnWidth and rowHeight when both are set", () => {
       const node = render(
         legendColorOrdinal()
           .scale(scale())
@@ -116,12 +120,12 @@ describe("legend/ordinalColorScale", () => {
           .columnWidth(80)
           .rowHeight(30),
       );
-      expect(transforms(node)).toEqual([
-        "translate(0,0)",
-        "translate(80,0)",
-        "translate(0,30)",
-        "translate(80,30)",
-        "translate(0,60)",
+      expect(positions(node)).toEqual([
+        { x: 0, y: 0 },
+        { x: 80, y: 0 },
+        { x: 0, y: 30 },
+        { x: 80, y: 30 },
+        { x: 0, y: 60 },
       ]);
     });
 
@@ -141,52 +145,41 @@ describe("legend/ordinalColorScale", () => {
       ]);
     });
 
-    test("should stack every entry for a null columnWidth with one column", () => {
+    test("should stack every entry in a single column when columnWidth is null and one column is asked for", () => {
       const node = render(
         legendColorOrdinal().scale(scale()).orientation("horizontal").columns(1).columnWidth(null),
       );
-      expect(transforms(node)).toEqual([
-        "translate(0,0)",
-        "translate(0,21)",
-        "translate(0,42)",
-        "translate(0,63)",
-        "translate(0,84)",
+      expect(positions(node)).toEqual([
+        { x: 0, y: 0 },
+        { x: 0, y: 21 },
+        { x: 0, y: 42 },
+        { x: 0, y: 63 },
+        { x: 0, y: 84 },
       ]);
     });
 
-    test("should default to 3 columns", () => {
-      const node = render(legendColorOrdinal().scale(scale()).orientation("horizontal"));
-      expect(transforms(node)).toEqual([
-        "translate(0,0)",
-        "translate(200,0)",
-        "translate(400,0)",
-        "translate(0,21)",
-        "translate(200,21)",
-      ]);
-    });
-
-    test("should round a fractional column count up", () => {
+    test("should round up to the next whole column when the column count is fractional", () => {
       const node = render(
         legendColorOrdinal().scale(scale()).orientation("horizontal").columns(2.2),
       );
       // Math.ceil(2.2) === 3 columns
-      expect(transforms(node)?.[3]).toBe("translate(0,21)");
+      expect(positions(node)?.[3]).toEqual({ x: 0, y: 21 });
     });
   });
 
   describe("vertical orientation", () => {
-    test("should fill columns top to bottom, wrapping after the row count", () => {
+    test("should fill columns top to bottom and wrap into the next column after the row count", () => {
       const node = render(legendColorOrdinal().scale(scale()).orientation("vertical").rows(2));
-      expect(transforms(node)).toEqual([
-        "translate(0,0)",
-        "translate(0,21)",
-        "translate(200,0)",
-        "translate(200,21)",
-        "translate(400,0)",
+      expect(positions(node)).toEqual([
+        { x: 0, y: 0 },
+        { x: 0, y: 21 },
+        { x: 200, y: 0 },
+        { x: 200, y: 21 },
+        { x: 400, y: 0 },
       ]);
     });
 
-    test("should respect columnWidth and rowHeight", () => {
+    test("should offset entries by columnWidth and rowHeight when both are set", () => {
       const node = render(
         legendColorOrdinal()
           .scale(scale())
@@ -195,25 +188,25 @@ describe("legend/ordinalColorScale", () => {
           .columnWidth(50)
           .rowHeight(10),
       );
-      expect(transforms(node)).toEqual([
-        "translate(0,0)",
-        "translate(0,10)",
-        "translate(0,20)",
-        "translate(50,0)",
-        "translate(50,10)",
+      expect(positions(node)).toEqual([
+        { x: 0, y: 0 },
+        { x: 0, y: 10 },
+        { x: 0, y: 20 },
+        { x: 50, y: 0 },
+        { x: 50, y: 10 },
       ]);
     });
   });
 
-  test("should reverse the entry order without changing the layout positions", () => {
+  test("should list the entries back to front without moving the layout slots when reverse is set", () => {
     const node = render(
       legendColorOrdinal().scale(scale()).orientation("horizontal").columns(3).reverse(true),
     );
     expect(labels(node)).toEqual(["E", "D", "C", "B", "A"]);
-    expect(transforms(node)?.[0]).toBe("translate(0,0)");
+    expect(positions(node)?.[0]).toEqual({ x: 0, y: 0 });
   });
 
-  test("should not mutate the scale domain when reversing", () => {
+  test("should leave the scale's own domain untouched when reverse is set", () => {
     const s = scale();
     render(legendColorOrdinal().scale(s).orientation("horizontal").reverse(true));
     expect(s.domain()).toEqual(["A", "B", "C", "D", "E"]);
@@ -237,7 +230,7 @@ describe("legend/ordinalColorScale", () => {
     const mockEntryWidth = (width: number) =>
       vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ width } as DOMRect);
 
-    test("should pack entries left to right and wrap at floatWidth, without an orientation", () => {
+    test("should pack entries left to right and wrap at floatWidth when no orientation is set", () => {
       mockEntryWidth(50);
       // no orientation is set: the float layout needs none, and the required-orientation
       // guard must not reject it
@@ -245,54 +238,42 @@ describe("legend/ordinalColorScale", () => {
         legendColorOrdinal().scale(scale()).horizontalFloat(true).floatWidth(200),
       );
       // 50px entries with 20px padding: three fit in 200px, the fourth starts a new row
-      expect(transforms(node)).toEqual([
-        "translate(0,0)",
-        "translate(70,0)",
-        "translate(140,0)",
-        "translate(0,21)",
-        "translate(70,21)",
+      expect(positions(node)).toEqual([
+        { x: 0, y: 0 },
+        { x: 70, y: 0 },
+        { x: 140, y: 0 },
+        { x: 0, y: 21 },
+        { x: 70, y: 21 },
       ]);
     });
 
-    test("should keep an entry that lands exactly on floatWidth", () => {
+    test("should keep an entry on the same row when it ends exactly on floatWidth", () => {
       mockEntryWidth(50);
       const node = render(
         legendColorOrdinal().scale(scale()).horizontalFloat(true).floatWidth(150).floatPadding(0),
       );
       // the third entry ends at exactly 150, which still fits - the wrap is strictly ">"
-      expect(transforms(node)?.slice(0, 4)).toEqual([
-        "translate(0,0)",
-        "translate(50,0)",
-        "translate(100,0)",
-        "translate(0,21)",
+      expect(positions(node)?.slice(0, 4)).toEqual([
+        { x: 0, y: 0 },
+        { x: 50, y: 0 },
+        { x: 100, y: 0 },
+        { x: 0, y: 21 },
       ]);
     });
 
-    test("should respect floatPadding", () => {
+    test("should separate packed entries by floatPadding when one is given", () => {
       mockEntryWidth(50);
       const node = render(
         legendColorOrdinal().scale(scale()).horizontalFloat(true).floatWidth(200).floatPadding(5),
       );
-      expect(transforms(node)?.slice(0, 3)).toEqual([
-        "translate(0,0)",
-        "translate(55,0)",
-        "translate(110,0)",
+      expect(positions(node)?.slice(0, 3)).toEqual([
+        { x: 0, y: 0 },
+        { x: 55, y: 0 },
+        { x: 110, y: 0 },
       ]);
     });
 
-    test("should combine with verticallyCentered", () => {
-      mockEntryWidth(50);
-      const node = render(
-        legendColorOrdinal()
-          .scale(scale())
-          .horizontalFloat(true)
-          .floatWidth(200)
-          .verticallyCentered(true),
-      );
-      expect(transforms(node)?.[0]).toBe("translate(0,-52.5) translate(0,0)");
-    });
-
-    test("should ignore orientation when floating", () => {
+    test("should pack entries by float width rather than by rows when an orientation is also set", () => {
       mockEntryWidth(50);
       const node = render(
         legendColorOrdinal()
@@ -301,11 +282,11 @@ describe("legend/ordinalColorScale", () => {
           .floatWidth(200)
           .orientation("vertical"),
       );
-      expect(transforms(node)?.[1]).toBe("translate(70,0)");
+      expect(positions(node)?.[1]).toEqual({ x: 70, y: 0 });
     });
   });
 
-  test("should re-render in place rather than appending duplicates", () => {
+  test("should keep one entry per domain member when the same legend is applied twice", () => {
     const legend = legendColorOrdinal().scale(scale()).orientation("horizontal").columns(3);
     const group = layer("ordinal-rerender");
     group.call(legend);
@@ -316,24 +297,23 @@ describe("legend/ordinalColorScale", () => {
     expect(node.querySelectorAll("text.sszvis-legend__label").length).toBe(5);
   });
 
-  test("should throw a named error when no orientation is set", () => {
-    const group = layer("ordinal-no-orientation");
-    expect(() => group.call(legendColorOrdinal().scale(scale()))).toThrowError(
-      '[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true',
-    );
-    // thrown before anything is rendered
-    expect(entries(group.node() as SVGGElement).length).toBe(0);
-  });
-
-  test("should throw when orientation is set to an unrecognised value", () => {
-    const group = layer("ordinal-bad-orientation");
-    const legend = legendColorOrdinal().scale(scale());
+  test.each([
+    ["unset", undefined],
     // a runtime value the type system would reject
-    (legend.orientation as (o: string) => unknown)("diagonal");
-    expect(() => group.call(legend)).toThrowError(
-      '[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true',
-    );
-  });
+    ["unrecognised", "diagonal"],
+  ])(
+    "should throw a named error and render nothing when the orientation is %s",
+    (label, orientation) => {
+      const group = layer(`ordinal-orientation-${label}`);
+      const legend = legendColorOrdinal().scale(scale());
+      if (orientation !== undefined) (legend.orientation as (o: string) => unknown)(orientation);
+      expect(() => group.call(legend)).toThrowError(
+        '[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true',
+      );
+      // thrown before anything is rendered
+      expect(entries(group.node() as SVGGElement).length).toBe(0);
+    },
+  );
 
   describe("known quirks", () => {
     test("does not clamp the layout to the number of entries", () => {

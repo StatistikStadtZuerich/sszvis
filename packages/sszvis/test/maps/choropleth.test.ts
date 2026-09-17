@@ -168,17 +168,17 @@ describe("maps/choropleth", () => {
   };
 
   describe("rendering", () => {
-    test("renders one area per map feature", () => {
+    test("should render one area per map feature", () => {
       const node = render(fullData);
       expect(areas(node)).toHaveLength(3);
     });
 
-    test("renders an area for a feature with no data too", () => {
+    test("should render an area for a feature that matched no datum", () => {
       const node = render([{ geoId: "a", value: 1 }]);
       expect(areas(node)).toHaveLength(3);
     });
 
-    test("renders the border mesh as a single path", () => {
+    test("should render the border mesh as a single path", () => {
       const node = render(fullData);
       expect(borders(node)).toHaveLength(1);
       expect(borders(node)[0].getAttribute("d")).toMatch(/^M/);
@@ -187,14 +187,14 @@ describe("maps/choropleth", () => {
     // The mesh renderer now names the missing property instead of leaving a geometry-less path
     // behind, so a choropleth without borders fails loudly rather than drawing a blank border
     // layer.
-    test("throws when borders are missing, naming the mesh renderer's property", () => {
+    test("should throw naming the mesh renderer's property when borders are missing", () => {
       const collection = geoJson();
       expect(() =>
         layer().call(choropleth().features(collection).width(160).height(160).withLake(false)),
       ).toThrow(/geoJson is required/);
     });
 
-    test("projects the areas with a path fitted to the features at the given size", () => {
+    test("should project the areas with a path fitted to the features at the given size", () => {
       const collection = geoJson();
       const node = render(fullData, (c) => c, { collection, size: 300 });
       // Fitted here under a key of our own, so this is an independent projection rather than a
@@ -203,12 +203,12 @@ describe("maps/choropleth", () => {
       expect(attrs(node, "d")).toEqual(collection.features.map((f) => expected(f)));
     });
 
-    test("marks every area as an event target", () => {
+    test("should mark every area as an event target", () => {
       const node = render(fullData);
       expect(attrs(node, "data-event-target")).toEqual(["", "", ""]);
     });
 
-    test("draws the base areas before the borders, so the borders paint on top", () => {
+    test("should draw the base areas before the borders", () => {
       const node = render(fullData);
       const paths = [...node.querySelectorAll("path")];
       expect(paths.indexOf(areas(node)[0])).toBeLessThan(paths.indexOf(borders(node)[0]));
@@ -216,7 +216,7 @@ describe("maps/choropleth", () => {
   });
 
   describe("the projection", () => {
-    test("projects two different maps rendered at the same size independently", () => {
+    test("should project each map independently when two different maps render at the same size", () => {
       const near: FeatureCollection<Polygon> = {
         type: "FeatureCollection",
         features: [square("a")],
@@ -252,14 +252,14 @@ describe("maps/choropleth", () => {
 
     // The component passes no cache key at all, so swissMapProjection's bounds cache is bypassed
     // and nothing of a choropleth's is retained between renders.
-    test("leaves no entry in the projection bounds cache", () => {
+    test("should leave no entry in the projection bounds cache after rendering", () => {
       render(fullData, (c) => c, { size: 210 });
       expect(swissMapProjection.cache.size).toBe(0);
     });
   });
 
   describe("data matching", () => {
-    test("matches data to features on geoId by default", () => {
+    test("should match data to features on geoId when no keyName is set", () => {
       const seen: unknown[] = [];
       render(fullData, (c) =>
         c.fill((d?: Datum) => {
@@ -270,7 +270,7 @@ describe("maps/choropleth", () => {
       expect(distinct(seen)).toEqual(fullData);
     });
 
-    test("matches on a custom keyName", () => {
+    test("should match data to features on a custom keyName when one is set", () => {
       const collection = geoJson();
       const seen: unknown[] = [];
       const map = choropleth<{ kreis: string }>()
@@ -294,7 +294,7 @@ describe("maps/choropleth", () => {
     // caller's fill instead of texturing everything as missing.
     // docs/map-extended/rastermap-bins.js relies on this: it draws the choropleth as a
     // transparent outline over a raster image, with fill("none") and no data at all.
-    test("keeps the caller's fill for a map that encodes no data", () => {
+    test("should keep the caller's fill for every area when encodesData is false", () => {
       const collection = geoJson();
       const seen: unknown[] = [];
       const node = layer()
@@ -322,7 +322,7 @@ describe("maps/choropleth", () => {
     // A feature that matched no datum is textured as missing rather than painted with the ordinary
     // fill, so the accessor is never handed undefined - a caller whose accessor dereferences its
     // datum no longer crashes.
-    test("textures a feature with no datum instead of calling the fill accessor", () => {
+    test("should texture a feature instead of calling the fill accessor when it matched no datum", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.transitionColor(false).fill((d?: Datum) => {
@@ -338,7 +338,7 @@ describe("maps/choropleth", () => {
     // An interface has no implicit index signature, so it does not satisfy Record<string,
     // unknown>. The component is constrained to `object`, matching prepareMergedGeoData, so an
     // ordinary consumer model can be named as its datum type.
-    test("accepts an interface-shaped datum", () => {
+    test("should paint and highlight the matched area when the datum type is interface-shaped", () => {
       interface Kreis {
         geoId: string;
         value: number;
@@ -371,13 +371,13 @@ describe("maps/choropleth", () => {
   });
 
   describe("the lake overlay", () => {
-    test("renders the lake and its border path by default", () => {
+    test("should render the lake and its border path when lake data is given", () => {
       const node = render(fullData);
       expect(lake(node)).toHaveLength(1);
       expect(lakePaths(node)).toHaveLength(1);
     });
 
-    test("omits the lake entirely when withLake is false", () => {
+    test("should render no lake markup when withLake is false", () => {
       const node = render(fullData, (c) => c.withLake(false));
       expect(lake(node)).toHaveLength(0);
       expect(lakePaths(node)).toHaveLength(0);
@@ -385,7 +385,7 @@ describe("maps/choropleth", () => {
 
     // choropleth passes lakeFadeOut, defaulting to false, over the lake renderer's own default of
     // true - so the fade mask and its gradient are not created unless the caller asks for them.
-    test("does not fade the lake out by default", () => {
+    test("should not mask the lake when lakeFadeOut is not set", () => {
       const node = render(fullData);
       expect(lake(node)[0].getAttribute("mask")).toBeNull();
       const root = node.ownerSVGElement as SVGSVGElement;
@@ -394,7 +394,7 @@ describe("maps/choropleth", () => {
 
     // The lake definitions are scoped per overlay, so the mask id is read back from the scope the
     // renderer recorded on the group rather than hardcoded.
-    test("fades the lake out when lakeFadeOut is set", () => {
+    test("should mask the lake with the fade mask when lakeFadeOut is true", () => {
       const node = render(fullData, (c) => c.lakeFadeOut(true));
       expect(lake(node)[0].getAttribute("mask")).toBe(`url(#lake-fade-mask-${lakeScope(node)})`);
     });
@@ -402,7 +402,7 @@ describe("maps/choropleth", () => {
     // Turning the fade back off removes it: the renderer drops the mask attribute and both of its
     // definitions rather than only skipping the write, so a chart driving lakeFadeOut from a
     // control can unfade.
-    test("removes the fade when lakeFadeOut is turned back off", () => {
+    test("should remove the fade mask and its definitions when lakeFadeOut is turned back off", () => {
       const collection = geoJson();
       const target = layer("fade-toggle");
       const map = choropleth()
@@ -423,7 +423,7 @@ describe("maps/choropleth", () => {
     // The lake sits under the highlight mesh, and has to stay there across a toggle. Its paths are
     // drawn straight into the map group, so the overlay re-appends them at the end when the lake
     // comes back; choropleth moves them back beneath the highlight for exactly this reason.
-    test("keeps the lake beneath the highlight when withLake is toggled off and on", () => {
+    test("should keep the lake beneath the highlight when withLake is toggled off and on", () => {
       const collection = geoJson();
       const target = layer("lake-toggle");
       const map = choropleth<Datum>()
@@ -463,7 +463,7 @@ describe("maps/choropleth", () => {
 
     // The overlay clears itself, so choropleth no longer wraps it in a group of its own: the lake's
     // paths and definitions sit directly in the map group, one level shallower than before.
-    test("draws the lake straight into the map group, with no wrapper", () => {
+    test("should draw the lake straight into the map group, with no wrapper, when rendering", () => {
       const node = render(fullData);
       expect(node.querySelectorAll('[data-d3-selectgroup="lake"]')).toHaveLength(0);
       expect(lake(node)[0].parentElement).toBe(node);
@@ -473,7 +473,7 @@ describe("maps/choropleth", () => {
 
     // withLake defaults to true, but the overlay draws nothing without a lake shape - so a map
     // that simply leaves the lake data out carries no lake markup at all.
-    test("draws no lake markup when withLake is on but no lake data is given", () => {
+    test("should draw no lake markup when withLake is on but no lake data is given", () => {
       const collection = geoJson();
       const node = layer()
         .call(choropleth().features(collection).borders(mesh()).width(170).height(170))
@@ -488,7 +488,7 @@ describe("maps/choropleth", () => {
   // everything it drew - both paths and the definitions it emitted - rather than leaving the
   // texture over the map. docs/map-standard/statistische-zonen.js documents withLake(false) as
   // the way to reveal the lake zones underneath.
-  test("removes a previously rendered lake when withLake is turned off", () => {
+  test("should remove a previously rendered lake when withLake is turned off", () => {
     const collection = geoJson();
     const target = layer("lake-toggle");
     const map = choropleth()
@@ -508,7 +508,7 @@ describe("maps/choropleth", () => {
     expect(root.querySelectorAll(`#lake-pattern-${scope}`)).toHaveLength(0);
   });
 
-  test("draws the lake again when withLake is turned back on", () => {
+  test("should draw the lake again when withLake is turned back on", () => {
     const collection = geoJson();
     const target = layer("lake-retoggle");
     const map = choropleth()
@@ -526,17 +526,17 @@ describe("maps/choropleth", () => {
   });
 
   describe("highlight", () => {
-    test("renders no highlight path by default", () => {
+    test("should render no highlight path when no highlight data is set", () => {
       const node = render(fullData);
       expect(highlights(node)).toHaveLength(0);
     });
 
-    test("renders a highlight path per highlighted datum", () => {
+    test("should render one highlight path per highlighted datum", () => {
       const node = render(fullData, (c) => c.highlight([fullData[1]]));
       expect(highlights(node)).toHaveLength(1);
     });
 
-    test("matches the highlight data with the map's keyName", () => {
+    test("should match the highlight data on the map's keyName when one is set", () => {
       const collection = geoJson();
       const map = choropleth<{ kreis: string }>()
         .features(collection)
@@ -551,7 +551,7 @@ describe("maps/choropleth", () => {
       expect(highlights(node)[0].getAttribute("d")).toMatch(/^M/);
     });
 
-    test("draws the highlight after the lake, so it is not covered by the lake texture", () => {
+    test("should draw the highlight after the lake", () => {
       const node = render(fullData, (c) => c.highlight([fullData[1]]));
       const paths = [...node.querySelectorAll("path")];
       expect(paths.indexOf(highlights(node)[0])).toBeGreaterThan(paths.indexOf(lake(node)[0]));
@@ -622,20 +622,20 @@ describe("maps/choropleth", () => {
       expect(fills[1]).toMatch(missingPattern);
     });
 
-    test("reads a delegated property back from its renderer", () => {
+    test("should read a delegated property back from its renderer", () => {
       const map = choropleth<Datum>().borderColor("#0000ff");
       expect(map.borderColor()).toBe("#0000ff");
       expect(map.strokeWidth()).toBe(1.25);
       expect(map.highlightStroke()(fullData[0])).toBe("white");
     });
 
-    test("returns the component from a delegated setter, so it can be chained", () => {
+    test("should return the component from a delegated setter", () => {
       const map = choropleth();
       expect(map.fill("#ff0000")).toBe(map);
       expect(map.withLake(false)).toBe(map);
     });
 
-    test("defaults keyName to geoId and withLake to true", () => {
+    test("should default keyName to geoId, withLake to true and lakeFadeOut to false", () => {
       const map = choropleth();
       expect(map.keyName()).toBe("geoId");
       expect(map.withLake()).toBe(true);
@@ -662,7 +662,7 @@ describe("maps/choropleth", () => {
       return { shape, calls };
     };
 
-    test("renders the anchored shape and hands it the merged data and the map path", () => {
+    test("should render the anchored shape with the merged data and the map path when one is set", () => {
       const { shape, calls } = recordingShape();
       const node = render(fullData, (c) => c.anchoredShape(shape));
       expect(node.querySelectorAll("circle.anchored-marker")).toHaveLength(1);
@@ -676,7 +676,7 @@ describe("maps/choropleth", () => {
 
     // The shape is drawn into a group of the component's own, so clearing the property removes
     // whatever it drew - which is the only way to clear markup this component knows nothing about.
-    test("removes a previously rendered anchored shape when it is cleared", () => {
+    test("should remove a previously rendered anchored shape when it is cleared", () => {
       const collection = geoJson();
       const target = layer("shape-toggle");
       const shape = component<AnchoredShape<Datum>>();
@@ -702,7 +702,7 @@ describe("maps/choropleth", () => {
     // *first* hover is the one that has to land beneath it. Only a wrapper group claimed on that
     // empty render keeps the slot - without it the paths are appended last and paint over the
     // circles.
-    test("draws a first hover beneath an anchored shape rendered before it", () => {
+    test("should draw a first hover beneath an anchored shape that rendered before it", () => {
       const collection = geoJson();
       const target = layer("highlight-under-shape");
       const shape = component<AnchoredShape<Datum>>();
@@ -739,12 +739,12 @@ describe("maps/choropleth", () => {
       ).toBeTruthy();
     });
 
-    test("renders nothing extra when no anchored shape is set", () => {
+    test("should render no anchored markers when no anchored shape is set", () => {
       const node = render(fullData);
       expect(node.querySelectorAll("circle.anchored-marker")).toHaveLength(0);
     });
 
-    test("hands the anchored shape the same merged data the base layer drew", () => {
+    test("should hand the anchored shape one entry per feature, undefined where no datum matched", () => {
       const { shape, calls } = recordingShape();
       render([{ geoId: "a", value: 1 }], (c) => c.anchoredShape(shape));
       expect((calls[0].mergedData as { datum: Datum | undefined }[]).map((d) => d.datum)).toEqual([
@@ -762,14 +762,14 @@ describe("maps/choropleth", () => {
     // The handlers are what the docs examples drive their tooltips from -
     // docs/map-standard/cml-quartier-years.js, docs/map-extended/quartiere-neubau.js and
     // docs/map-extended/topolayer-statquart-neubau.js all pass this argument to selectHovered.
-    test("delivers the hovered entity's datum to an over handler", () => {
+    test("should deliver the hovered entity's datum to an over handler", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) => c.on("over", (d: unknown) => seen.push(d)));
       dispatchOn(areas(node)[0], "mouseover");
       expect(seen).toEqual([fullData[0]]);
     });
 
-    test("delivers the datum to out and click handlers too", () => {
+    test("should deliver the entity's datum to out and click handlers", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
         c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d)),
@@ -781,7 +781,7 @@ describe("maps/choropleth", () => {
 
     // An entity that matched no datum has none to deliver, so its handler is called with
     // undefined rather than with a stand-in.
-    test("delivers undefined for an entity that matched no datum", () => {
+    test("should deliver undefined to the handler for an entity that matched no datum", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.on("over", (d: unknown) => seen.push(d)),
@@ -790,21 +790,21 @@ describe("maps/choropleth", () => {
       expect(seen).toEqual([undefined]);
     });
 
-    test("fires the handler once per event target hovered", () => {
+    test("should fire the handler once per event target hovered", () => {
       let overs = 0;
       const node = render(fullData, (c) => c.on("over", () => overs++));
       for (const area of areas(node)) dispatchOn(area, "mouseover");
       expect(overs).toBe(3);
     });
 
-    test("returns the component from on() when registering, and the handler when reading", () => {
+    test("should return the component when registering a handler and the handler when reading", () => {
       const map = choropleth();
       const handler = () => undefined;
       expect(map.on("over", handler)).toBe(map);
       expect(map.on("over")).toBe(handler);
     });
 
-    test("throws for an unknown event name, as d3's dispatch does", () => {
+    test("should throw when on() is given an unknown event name", () => {
       expect(() => choropleth().on("hover", () => undefined)).toThrow();
     });
 
@@ -831,7 +831,7 @@ describe("maps/choropleth", () => {
     // A merged entry is recognised by identity, not by shape: an anchored shape is free to bind an
     // ordinary application object, and one that happens to carry a `datum` property must not be
     // unwrapped and handed over as though it were an entity's datum.
-    test("reports undefined for an anchored target bound to a datum-shaped object", () => {
+    test("should deliver undefined when an anchored target is bound to a datum-shaped object", () => {
       const marked = component<AnchoredShape<Datum>>();
       marked.prop("mergedData").prop("mapPath");
       marked.render(function (this: Element) {
@@ -1004,7 +1004,7 @@ describe("maps/choropleth", () => {
     // The tooltip anchors the base renderer adds are, with the events broken, the only working way
     // to attach a tooltip to a choropleth entity - so they are worth pinning here as well as in
     // the base renderer's own tests.
-    test("carries one tooltip anchor per feature", () => {
+    test("should carry one tooltip anchor per feature", () => {
       const node = render(fullData);
       expect(node.querySelectorAll("[data-tooltip-anchor]")).toHaveLength(3);
     });

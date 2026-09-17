@@ -99,7 +99,7 @@ describe("map/renderer/mesh", () => {
   };
 
   describe("rendering", () => {
-    test("renders the whole mesh as a single classed path", () => {
+    test("should render the whole mesh as a single classed path", () => {
       const node = render();
       expect(borders(node)).toHaveLength(1);
       expect(borders(node)[0].tagName).toBe("path");
@@ -115,14 +115,14 @@ describe("map/renderer/mesh", () => {
       return { marks: borders(node), expected: [mapPath(meshFeature)] };
     });
 
-    test("renders one path however many borders the mesh carries", () => {
+    test("should render one path however many borders the mesh carries", () => {
       const node = render();
       // Both of the mesh's lines are in the one path's data.
       const d = borders(node)[0].getAttribute("d") ?? "";
       expect(d.match(/M/g)).toHaveLength(2);
     });
 
-    test("reuses the same path element across renders", () => {
+    test("should reuse the same path element when the layer renders again", () => {
       const mapPath = mapPathOf();
       const layer = group("mesh-reuse");
       const renderWith = () =>
@@ -135,13 +135,13 @@ describe("map/renderer/mesh", () => {
   });
 
   describe("borderColor and strokeWidth", () => {
-    test("defaults to a white border 1.25 wide", () => {
+    test("should stroke the border white and 1.25 wide when no style props are set", () => {
       const node = render();
       expect(borders(node)[0].style.stroke).toBe("white");
       expect(borders(node)[0].style.strokeWidth).toBe("1.25");
     });
 
-    test("takes a constant border colour and stroke width", () => {
+    test("should use the given border colour and stroke width when both are constants", () => {
       const node = render((c) => c.borderColor("#7C7C7C").strokeWidth(2));
       expect(borders(node)[0].style.stroke).toBe("rgb(124, 124, 124)");
       expect(borders(node)[0].style.strokeWidth).toBe("2");
@@ -182,7 +182,7 @@ describe("map/renderer/mesh", () => {
       expect(borders(node)[0].style.stroke).toBe("rgb(0, 255, 0)");
     });
 
-    test("calls a strokeWidth function the same way", () => {
+    test("should call a strokeWidth function with the mesh object and the index when it is a function", () => {
       const meshFeature = mesh();
       const seen: unknown[] = [];
       const node = group()
@@ -238,31 +238,31 @@ describe("map/renderer/mesh", () => {
     // (d) => colorScale(d.value) resolves to undefined. That used to remove the inline stroke,
     // and with no stylesheet stroke for .sszvis-map__border the SVG initial value `none` applied:
     // the borders vanished with no error. The default now stands instead.
-    test("keeps the default border colour when borderColor resolves to nothing", () => {
+    test("should keep the default border colour when borderColor resolves to nothing", () => {
       const node = render((c) => c.borderColor(() => undefined));
       expect(borders(node)[0].style.stroke).toBe("white");
     });
 
-    test("keeps the default border colour when borderColor resolves to null", () => {
+    test("should keep the default border colour when borderColor resolves to null", () => {
       const node = render((c) => c.borderColor(() => null));
       expect(borders(node)[0].style.stroke).toBe("white");
     });
 
-    test("keeps the default stroke width when strokeWidth resolves to nothing", () => {
+    test("should keep the default stroke width when strokeWidth resolves to nothing", () => {
       const node = render((c) => c.strokeWidth(() => undefined));
       expect(borders(node)[0].style.strokeWidth).toBe("1.25");
     });
   });
 
   describe("required properties", () => {
-    test("throws naming geoJson when it is missing", () => {
+    test("should throw naming geoJson when it is missing", () => {
       const layer = group("mesh-no-geojson");
       expect(() => layer.call(mapRendererMesh().mapPath(mapPathOf()))).toThrow(
         /map\/renderer\/mesh: geoJson is required/,
       );
     });
 
-    test("throws naming mapPath when it is missing", () => {
+    test("should throw naming mapPath when it is missing", () => {
       const layer = group("mesh-no-mappath");
       expect(() => layer.call(mapRendererMesh().geoJson(mesh()))).toThrow(
         /map\/renderer\/mesh: mapPath is required/,
@@ -271,7 +271,7 @@ describe("map/renderer/mesh", () => {
 
     // The guard runs before the join, so a missing property leaves no misleading element behind
     // rather than a classed, styled path with no geometry.
-    test("appends no path when a required property is missing", () => {
+    test("should append no path when a required property is missing", () => {
       const layer = group("mesh-no-element");
       expect(() => layer.call(mapRendererMesh().mapPath(mapPathOf()))).toThrow();
       expect(borders(layer.node() as SVGGElement)).toHaveLength(0);
@@ -322,7 +322,7 @@ describe("map/renderer/mesh", () => {
     // The path data is reapplied on every render rather than only on enter, so a geoJson mutated
     // in place still repaints even though the bound datum is identical. The siblings' keyed joins
     // do not give that for free.
-    test("repaints a geoJson that was mutated in place", () => {
+    test("should repaint the border when the geoJson is mutated in place", () => {
       const meshFeature = mesh();
       const mapPath = mapPathOf();
       const layer = group("mesh-mutated");

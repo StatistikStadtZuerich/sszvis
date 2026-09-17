@@ -47,7 +47,7 @@ const collection = (...features: Feature<Polygon>[]): FeatureCollection<Polygon>
 
 describe("map utils", () => {
   describe("map id constants", () => {
-    test("names the six built-in Zurich and Switzerland map ids", () => {
+    test("should name the six built-in Zurich and Switzerland map ids", () => {
       expect(STADT_KREISE_KEY).toBe("zurichStadtKreise");
       expect(STATISTISCHE_QUARTIERE_KEY).toBe("zurichStatistischeQuartiere");
       expect(STATISTISCHE_ZONEN_KEY).toBe("zurichStatistischeZonen");
@@ -58,7 +58,7 @@ describe("map utils", () => {
   });
 
   describe("swissMapProjection", () => {
-    test("returns a projection fitted to the given width and height", () => {
+    test("should fit the collection into the destination box when a width and height are given", () => {
       const projection = swissMapProjection(100, 100, collection(square("a")), "fit-a");
       const [x, y] = projection([0.5, 0.5]) as [number, number];
       // The centre of the fitted feature lands in the centre of the destination box (Mercator's
@@ -67,20 +67,15 @@ describe("map utils", () => {
       expect(y).toBeCloseTo(50, 2);
     });
 
-    test("caches by width, height and cache key, returning the identical projection", () => {
+    test("should return the identical projection when the width, height and cache key all repeat", () => {
       const first = swissMapProjection(200, 150, collection(square("a")), "cache-hit");
       const second = swissMapProjection(200, 150, collection(square("a")), "cache-hit");
       expect(second).toBe(first);
     });
 
-    test("recomputes when the cache key changes", () => {
-      const first = swissMapProjection(200, 150, collection(square("a")), "key-one");
-      const second = swissMapProjection(200, 150, collection(square("a")), "key-two");
-      expect(second).not.toBe(first);
-    });
-
-    test("recomputes when the width or height changes", () => {
+    test("should recompute the projection when any of the width, height or cache key differs", () => {
       const base = swissMapProjection(200, 150, collection(square("a")), "dims");
+      expect(swissMapProjection(200, 150, collection(square("a")), "other-key")).not.toBe(base);
       expect(swissMapProjection(300, 150, collection(square("a")), "dims")).not.toBe(base);
       expect(swissMapProjection(200, 250, collection(square("a")), "dims")).not.toBe(base);
     });
@@ -98,7 +93,8 @@ describe("map utils", () => {
       expect(y).toBeLessThan(0);
     });
 
-    test("bypasses the cache when no cache key is given, fitting each collection", () => {
+    test("should fit each collection separately and leave the cache untouched when no cache key is given", () => {
+      const before = swissMapProjection.cache.size;
       const first = swissMapProjection(400, 400, collection(square("a")));
       const second = swissMapProjection(400, 400, collection(square("b", 50)));
       expect(second).not.toBe(first);
@@ -114,15 +110,11 @@ describe("map utils", () => {
         expect(y).toBeGreaterThan(0);
         expect(y).toBeLessThan(400);
       }
-    });
-
-    test("keeps the cache untouched for an unkeyed call", () => {
-      const before = swissMapProjection.cache.size;
-      swissMapProjection(444, 444, collection(square("a")));
+      // nothing keyless is remembered, so an unkeyed call cannot grow the cache
       expect(swissMapProjection.cache.size).toBe(before);
     });
 
-    test("caches each distinct projection in a publicly reachable cache", () => {
+    test("should add one publicly reachable cache entry per distinct size when a cache key is given", () => {
       const before = swissMapProjection.cache.size;
       swissMapProjection(321, 123, collection(square("a")), "growth");
       swissMapProjection(322, 123, collection(square("a")), "growth");
@@ -130,7 +122,7 @@ describe("map utils", () => {
       expect(swissMapProjection.cache.has("321,123,growth")).toBe(true);
     });
 
-    test("does not grow past the memoize cache limit as a chart is resized", () => {
+    test("should keep the cache within the memoize limit when a chart is resized across many widths", () => {
       swissMapProjection.cache.clear();
       // One distinct width per resize tick, as a drag across a few hundred pixels produces.
       for (let width = 200; width < 500; width++) {
@@ -144,20 +136,20 @@ describe("map utils", () => {
   });
 
   describe("swissMapPath", () => {
-    test("returns a path generator that renders a feature to an svg path string", () => {
+    test("should render a feature to an svg path string", () => {
       const path = swissMapPath(100, 100, collection(square("a")), "path-a");
       const d = path(square("a"));
       expect(d).toMatch(/^M/);
       expect(d).toContain("Z");
     });
 
-    test("shares the memoized projection with swissMapProjection", () => {
+    test("should reuse the memoized projection when swissMapProjection was called with the same key and size", () => {
       const projection = swissMapProjection(120, 90, collection(square("a")), "shared-projection");
       const path = swissMapPath(120, 90, collection(square("a")), "shared-projection");
       expect(path.projection()).toBe(projection);
     });
 
-    test("returns a fresh path generator on each call", () => {
+    test("should return a fresh path generator on every call, even for a repeated cache key", () => {
       const first = swissMapPath(120, 90, collection(square("a")), "fresh");
       const second = swissMapPath(120, 90, collection(square("a")), "fresh");
       expect(second).not.toBe(first);
@@ -166,25 +158,17 @@ describe("map utils", () => {
 
   describe("pixelsFromGeoDistance", () => {
     const identity = (point: [number, number]): [number, number] => point;
-    // Circumference used by the implementation, from its own approximate earth radius.
-    const CIRCUMFERENCE = Math.PI * 2 * 6_367_475;
 
-    test("converts a metre distance to the projected degree span", () => {
-      const result = pixelsFromGeoDistance(identity, [0, 0], 100_000);
-      expect(result).toBeCloseTo((100_000 / CIRCUMFERENCE) * 360, 10);
-    });
-
-    test("returns zero for a zero distance", () => {
+    test("should convert metres to a proportional degree span under a linear projection", () => {
+      // 100 km is about 0.8998 degrees of a roughly 40,008 km circumference - derived from the
+      // earth's size rather than from the implementation's own radius constant.
+      expect(pixelsFromGeoDistance(identity, [0, 0], 100_000)).toBeCloseTo(0.8998, 4);
       expect(pixelsFromGeoDistance(identity, [8.5, 47.4], 0)).toBe(0);
-    });
-
-    test("scales linearly with the metre distance under a linear projection", () => {
       const single = pixelsFromGeoDistance(identity, [8.5, 47.4], 1000);
-      const double = pixelsFromGeoDistance(identity, [8.5, 47.4], 2000);
-      expect(double).toBeCloseTo(single * 2, 10);
+      expect(pixelsFromGeoDistance(identity, [8.5, 47.4], 2000)).toBeCloseTo(single * 2, 10);
     });
 
-    test("averages the x and y spans, so anisotropic projections are smoothed", () => {
+    test("should return the mean of the two spans when the projection stretches one axis", () => {
       // Stretch x by 10 and leave y alone: the result is the mean of the two spans.
       const stretched = ([lon, lat]: [number, number]): [number, number] => [lon * 10, lat];
       const plain = pixelsFromGeoDistance(identity, [0, 0], 100_000);
@@ -210,19 +194,13 @@ describe("map utils", () => {
       expect(() => pixelsFromGeoDistance(clipsUpper, [0, 0], 100_000)).toThrow(TypeError);
     });
 
-    test("takes the absolute span, so a flipped axis still yields a positive size", () => {
+    test("should still return a positive size when the projection flips an axis", () => {
       const flipped = ([lon, lat]: [number, number]): [number, number] => [lon, -lat];
       const plain = pixelsFromGeoDistance(identity, [0, 0], 100_000);
       expect(pixelsFromGeoDistance(flipped, [0, 0], 100_000)).toBeCloseTo(plain, 10);
     });
 
-    test("is unaffected by the centre point under a linear projection", () => {
-      const equator = pixelsFromGeoDistance(identity, [0, 0], 50_000);
-      const pole = pixelsFromGeoDistance(identity, [0, 89], 50_000);
-      expect(pole).toBeCloseTo(equator, 10);
-    });
-
-    test("varies with the centre point under a real map projection", () => {
+    test("should measure a larger size further north when a real map projection is used", () => {
       const projection = swissMapProjection(500, 500, collection(square("a")), "geo-distance");
       const equator = pixelsFromGeoDistance(projection, [0, 0], 50_000);
       const north = pixelsFromGeoDistance(projection, [0, 60], 50_000);
@@ -243,13 +221,13 @@ describe("map utils", () => {
   describe("prepareMergedGeoData", () => {
     const geoJson = collection(square("a"), square("b"), square("c"));
 
-    test("defaults the key name to geoId", () => {
+    test("should match on geoId when no key name is given", () => {
       expect(GEO_KEY_DEFAULT).toBe("geoId");
       const merged = prepareMergedGeoData([{ geoId: "b", value: 7 }], geoJson);
       expect(merged.map((d) => d.datum?.value)).toEqual([undefined, 7, undefined]);
     });
 
-    test("returns one entry per feature, pairing the feature with its datum", () => {
+    test("should return one entry per feature, pairing each feature with the datum that matched it", () => {
       const merged = prepareMergedGeoData(
         [
           { id: "a", value: 1 },
@@ -264,13 +242,16 @@ describe("map utils", () => {
       expect(merged[2].datum).toEqual({ id: "c", value: 3 });
     });
 
-    test("leaves datum undefined for features with no matching data", () => {
-      const merged = prepareMergedGeoData([{ id: "a", value: 1 }], geoJson, "id");
-      expect(merged[1].datum).toBeUndefined();
-      expect(merged[2].datum).toBeUndefined();
+    test("should leave the datum undefined when a feature and a datum do not find each other", () => {
+      const matched = prepareMergedGeoData([{ id: "a", value: 1 }], geoJson, "id");
+      expect(matched[1].datum).toBeUndefined();
+      expect(matched[2].datum).toBeUndefined();
+      // the other direction: a datum whose key names no feature is simply dropped
+      const unmatched = prepareMergedGeoData([{ id: "nope", value: 1 }], geoJson, "id");
+      expect(unmatched.every((d) => d.datum === undefined)).toBe(true);
     });
 
-    test("preserves the feature order of the geojson, not the order of the data", () => {
+    test("should follow the feature order of the geojson rather than the order of the data", () => {
       const merged = prepareMergedGeoData(
         [
           { id: "c", value: 3 },
@@ -293,11 +274,6 @@ describe("map utils", () => {
         "id",
       );
       expect(merged[0].datum).toEqual({ id: "a", value: 2 });
-    });
-
-    test("ignores data whose key matches no feature", () => {
-      const merged = prepareMergedGeoData([{ id: "nope", value: 1 }], geoJson, "id");
-      expect(merged.every((d) => d.datum === undefined)).toBe(true);
     });
 
     // NOTE: grouping goes through a property access, so a symbol data key stays a symbol property.
@@ -327,7 +303,7 @@ describe("map utils", () => {
       expect(merged.every((d) => d.datum === undefined)).toBe(true);
     });
 
-    test("keys a datum named __proto__ like any other, leaving other features unmatched", () => {
+    test("should match a datum keyed __proto__ to the feature of that id and no other", () => {
       const merged = prepareMergedGeoData(
         [{ id: "__proto__", value: 1 }],
         collection(square("__proto__"), square("value")),
@@ -353,11 +329,11 @@ describe("map utils", () => {
       ).toThrow();
     });
 
-    test("returns an empty array for a geojson with no features", () => {
+    test("should return an empty array when the geojson has no features", () => {
       expect(prepareMergedGeoData([{ id: "a" }], collection(), "id")).toEqual([]);
     });
 
-    test("leaves a feature named after a prototype member unmatched", () => {
+    test("should leave a feature named after a prototype member unmatched", () => {
       const merged = prepareMergedGeoData([{ id: "a" }], collection(square("constructor")), "id");
       expect(merged[0].datum).toBeUndefined();
       expect(
@@ -365,21 +341,17 @@ describe("map utils", () => {
       ).toBeUndefined();
     });
 
-    test("never matches data whose key property is missing", () => {
+    test("should never match a datum and a feature when either side has no id at all", () => {
       const keyless = collection(square("a"), square("b"));
       for (const feature of keyless.features) {
         feature.id = undefined;
       }
-      const merged = prepareMergedGeoData([{ value: 1 }, { value: 2 }], keyless, "geoId");
-      expect(merged).toHaveLength(2);
-      expect(merged.every((d) => d.datum === undefined)).toBe(true);
-    });
-
-    test("never matches a feature with no id against a datum keyed 'undefined'", () => {
-      const keyless = collection(square("a"));
-      keyless.features[0].id = undefined;
-      const merged = prepareMergedGeoData([{ id: "undefined", value: 1 }], keyless, "id");
-      expect(merged[0].datum).toBeUndefined();
+      const noDataKey = prepareMergedGeoData([{ value: 1 }, { value: 2 }], keyless, "geoId");
+      expect(noDataKey).toHaveLength(2);
+      expect(noDataKey.every((d) => d.datum === undefined)).toBe(true);
+      // nor does spelling out "undefined" on the data side reach an id-less feature
+      const spelledOut = prepareMergedGeoData([{ id: "undefined", value: 1 }], keyless, "id");
+      expect(spelledOut[0].datum).toBeUndefined();
     });
 
     // NOTE: a falsy key name (including the empty string) falls back to the default rather than
@@ -391,7 +363,7 @@ describe("map utils", () => {
   });
 
   describe("getGeoJsonCenter", () => {
-    test("computes the geographic centroid when no center property is set", () => {
+    test("should return the geographic centroid when no center property is set", () => {
       const feature = square("a");
       const [lon, lat] = getGeoJsonCenter(feature);
       // Spherical, not planar: the centroid of a lat/lon square is only approximately its middle.
@@ -399,13 +371,13 @@ describe("map utils", () => {
       expect(lat).toBeCloseTo(0.5, 3);
     });
 
-    test("parses a center property of the form 'lon,lat'", () => {
+    test("should return the authored coordinates when a center property of the form 'lon,lat' is set", () => {
       const feature = square("a");
       feature.properties = { center: "8.54,47.37" };
       expect(getGeoJsonCenter(feature)).toEqual([8.54, 47.37]);
     });
 
-    test("writes nothing back to the feature it was given", () => {
+    test("should write nothing back onto the feature it was given", () => {
       const feature = square("a");
       feature.properties = { center: "1,2" };
       getGeoJsonCenter(feature);
@@ -413,92 +385,54 @@ describe("map utils", () => {
       expect(Object.keys(feature.properties)).toEqual(["center"]);
     });
 
-    test("follows a center property changed after the first call", () => {
-      const feature = square("a");
-      feature.properties = { center: "1,2" };
-      expect(getGeoJsonCenter(feature)).toEqual([1, 2]);
-      feature.properties.center = "3,4";
-      expect(getGeoJsonCenter(feature)).toEqual([3, 4]);
+    test("should follow the feature when its center property or its geometry changes after the first call", () => {
+      const authored = square("a");
+      authored.properties = { center: "1,2" };
+      expect(getGeoJsonCenter(authored)).toEqual([1, 2]);
+      authored.properties.center = "3,4";
+      expect(getGeoJsonCenter(authored)).toEqual([3, 4]);
+
+      const computed = square("a");
+      expect(getGeoJsonCenter(computed)[0]).toBeCloseTo(0.5, 3);
+      computed.geometry = square("a", 50).geometry;
+      expect(getGeoJsonCenter(computed)[0]).toBeCloseTo(50.5, 3);
     });
 
-    test("follows a geometry moved after the first call", () => {
-      const feature = square("a");
-      expect(getGeoJsonCenter(feature)[0]).toBeCloseTo(0.5, 3);
-      feature.geometry = square("a", 50).geometry;
-      expect(getGeoJsonCenter(feature)[0]).toBeCloseTo(50.5, 3);
-    });
-
-    test("warns and falls back to the centroid for an unparseable center property", () => {
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      const feature = square("a");
-      feature.properties = { center: "not,coordinates" };
-      const [lon, lat] = getGeoJsonCenter(feature);
-      expect(lon).toBeCloseTo(0.5, 3);
-      expect(lat).toBeCloseTo(0.5, 3);
-      expect(warn).toHaveBeenCalled();
-      warn.mockRestore();
-    });
-
-    test("warns and falls back for a center with too few or too many components", () => {
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      for (const center of ["8.54", "1,2,3"]) {
-        const feature = square("a");
-        feature.properties = { center };
-        const [lon, lat] = getGeoJsonCenter(feature);
-        expect(lon).toBeCloseTo(0.5, 3);
-        expect(lat).toBeCloseTo(0.5, 3);
-      }
-      expect(warn).toHaveBeenCalledTimes(2);
-      warn.mockRestore();
-    });
-
-    // parseFloat stops at the first character it cannot read, so a typo would have been accepted
-    // as its numeric prefix and silently moved the anchor.
-    test("warns and falls back for a center whose components have trailing junk", () => {
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      const feature = square("a");
-      feature.properties = { center: "8.54oops,47.37oops" };
-      const [lon, lat] = getGeoJsonCenter(feature);
-      expect(lon).toBeCloseTo(0.5, 3);
-      expect(lat).toBeCloseTo(0.5, 3);
-      expect(warn).toHaveBeenCalled();
-      warn.mockRestore();
-    });
-
-    // An authored empty string is a malformed centre, not an absent property, so it is reported
-    // rather than passed over in silence.
-    test("warns and falls back for an empty or blank center property", () => {
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      for (const center of ["", " , "]) {
-        const feature = square("a");
-        feature.properties = { center };
-        const [lon, lat] = getGeoJsonCenter(feature);
-        expect(lon).toBeCloseTo(0.5, 3);
-        expect(lat).toBeCloseTo(0.5, 3);
-      }
-      expect(warn).toHaveBeenCalledTimes(2);
-      warn.mockRestore();
-    });
-
-    // The declared string type describes what an author should write; the properties of a loaded
-    // map file are unchecked runtime data, and a non-string would otherwise throw from split().
-    test("warns and falls back for a center that is not a string, null included", () => {
-      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      for (const center of [42, {}, true, null]) {
+    test.each([
+      ["unparseable", "not,coordinates"],
+      ["too few components", "8.54"],
+      ["too many components", "1,2,3"],
+      // parseFloat stops at the first character it cannot read, so a typo would otherwise have
+      // been accepted as its numeric prefix and silently moved the anchor.
+      ["trailing junk on each component", "8.54oops,47.37oops"],
+      // An authored empty string is a malformed centre, not an absent property, so it is reported
+      // rather than passed over in silence.
+      ["empty", ""],
+      ["blank", " , "],
+      // The declared string type describes what an author should write; the properties of a loaded
+      // map file are unchecked runtime data, and a non-string would otherwise throw from split().
+      ["a number", 42],
+      ["an object", {}],
+      ["a boolean", true],
+      ["null", null],
+    ])(
+      "should warn and fall back to the centroid when the center property is %s",
+      (_description, center) => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
         const feature = square("a");
         feature.properties = {};
         // Written through the index signature: `center` is declared a string, and the point of the
-        // test is the value an unchecked map file can actually carry.
+        // table is the value an unchecked map file can actually carry.
         (feature.properties as Record<string, unknown>).center = center;
         const [lon, lat] = getGeoJsonCenter(feature);
         expect(lon).toBeCloseTo(0.5, 3);
         expect(lat).toBeCloseTo(0.5, 3);
-      }
-      expect(warn).toHaveBeenCalledTimes(4);
-      warn.mockRestore();
-    });
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
+      },
+    );
 
-    test("names the offending feature in the warning", () => {
+    test("should name the offending feature in the warning", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const feature = square("kreis-7");
       feature.properties = { center: "nope" };
@@ -509,7 +443,7 @@ describe("map utils", () => {
 
     // `properties: null` is spec-legal GeoJSON. It used to throw, because the centre had nowhere
     // to be cached; with nothing being cached there is nothing to store and it simply works.
-    test("computes the centroid for a feature with null properties", () => {
+    test("should return the centroid when the feature's properties are null", () => {
       const feature = square("a");
       feature.properties = null;
       const [lon, lat] = getGeoJsonCenter(feature);
@@ -519,29 +453,26 @@ describe("map utils", () => {
   });
 
   describe("widthAdaptiveMapPathStroke", () => {
-    test("scales the stroke with the container width", () => {
+    test("should scale the stroke with the container width when that width is inside the clamped range", () => {
       expect(widthAdaptiveMapPathStroke(400)).toBe(1);
       expect(widthAdaptiveMapPathStroke(360)).toBeCloseTo(0.9, 10);
     });
 
-    test("clamps to a minimum of 0.8 for narrow containers", () => {
-      expect(widthAdaptiveMapPathStroke(0)).toBe(0.8);
-      expect(widthAdaptiveMapPathStroke(100)).toBe(0.8);
-    });
-
-    test("clamps to a maximum of 1.1 for wide containers", () => {
-      expect(widthAdaptiveMapPathStroke(1000)).toBe(1.1);
-      expect(widthAdaptiveMapPathStroke(10_000)).toBe(1.1);
-    });
-
-    test("clamps a negative width to the minimum", () => {
-      expect(widthAdaptiveMapPathStroke(-500)).toBe(0.8);
-    });
-
-    test("clamps a non-finite width to the minimum", () => {
-      expect(widthAdaptiveMapPathStroke(Number.NaN)).toBe(0.8);
-      expect(widthAdaptiveMapPathStroke(Number.POSITIVE_INFINITY)).toBe(0.8);
-      expect(widthAdaptiveMapPathStroke(Number.NEGATIVE_INFINITY)).toBe(0.8);
-    });
+    test.each([
+      ["a narrow container", 100, 0.8],
+      ["a zero width", 0, 0.8],
+      ["a negative width", -500, 0.8],
+      // Both infinities fall to the minimum, not to opposite ends of the range.
+      ["NaN", Number.NaN, 0.8],
+      ["positive infinity", Number.POSITIVE_INFINITY, 0.8],
+      ["negative infinity", Number.NEGATIVE_INFINITY, 0.8],
+      ["a wide container", 1000, 1.1],
+      ["an absurdly wide container", 10_000, 1.1],
+    ])(
+      "should clamp the stroke into the [0.8, 1.1] range when the width is %s",
+      (_description, width, expected) => {
+        expect(widthAdaptiveMapPathStroke(width)).toBe(expected);
+      },
+    );
   });
 });

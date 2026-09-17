@@ -97,7 +97,7 @@ describe("map/renderer/geojson", () => {
   };
 
   describe("rendering", () => {
-    test("renders one classed path per geojson feature", () => {
+    test("should render one classed path per geojson feature", () => {
       const node = render(fullData);
       expect(elements(node)).toHaveLength(3);
       for (const el of elements(node)) expect(el.tagName).toBe("path");
@@ -114,12 +114,12 @@ describe("map/renderer/geojson", () => {
       return { marks: elements(node), expected: collection.features.map((f) => mapPath(f)) };
     });
 
-    test("marks every element as an event target", () => {
+    test("should mark every element as an event target", () => {
       const node = render(fullData);
       expect(attrs(node, "data-event-target")).toEqual(["", "", ""]);
     });
 
-    test("adds the missing value pattern to the layer's defs", () => {
+    test("should add the missing value pattern to the layer's defs", () => {
       const node = render(fullData);
       const root = node.ownerSVGElement as SVGSVGElement;
       expect(root.querySelectorAll("defs > pattern")).toHaveLength(1);
@@ -128,7 +128,7 @@ describe("map/renderer/geojson", () => {
   });
 
   describe("data matching", () => {
-    test("matches every datum to its feature, and does not mutate the data", () => {
+    test("should fill every element and leave the caller's data untouched when every datum matches a feature", () => {
       const data: Datum[] = [
         { geoId: "a", value: 1 },
         { geoId: "b", value: 2 },
@@ -140,14 +140,14 @@ describe("map/renderer/geojson", () => {
       expect(Object.keys(data[0])).toEqual(["geoId", "value"]);
     });
 
-    test("matches a single datum to its feature", () => {
+    test("should fill only the matching feature when a single datum is given", () => {
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.fill("#ff0000").transitionColor(false),
       );
       expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), missingFill(node)]);
     });
 
-    test("draws an all-missing overlay for an empty dataset", () => {
+    test("should texture every element when the dataset is empty", () => {
       const node = render([], (c) => c.fill("#ff0000").transitionColor(false));
       expect(attrs(node, "fill")).toEqual([
         missingFill(node),
@@ -177,7 +177,7 @@ describe("map/renderer/geojson", () => {
       ]);
     });
 
-    test("leaves a feature with no properties at all unmatched", () => {
+    test("should leave a feature unmatched when it has no properties at all", () => {
       const collection = geoJson();
       collection.features[1].properties = undefined as unknown as null;
       const node = group()
@@ -193,7 +193,7 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), "#ff0000"]);
     });
 
-    test("matches data to features by the configured key names", () => {
+    test("should match data to features when the key names are configured", () => {
       const collection = geoJson();
       for (const [i, feature] of collection.features.entries()) {
         feature.properties = { mapId: `m${i}` };
@@ -216,7 +216,7 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "fill")).toEqual([missingFill(node), "#ff0000", "#ff0000"]);
     });
 
-    test("defaults the key names to geoId and id", () => {
+    test("should default the key names to geoId and id", () => {
       const component = mapRendererGeoJson();
       expect(component.dataKeyName()).toBe("geoId");
       expect(component.geoJsonKeyName()).toBe("id");
@@ -226,7 +226,7 @@ describe("map/renderer/geojson", () => {
   describe("known quirks", () => {
     // `properties: null` is spec-legal GeoJSON (RFC 7946 3.2): the feature is unmatched rather
     // than crashing the overlay.
-    test("leaves a feature with null properties unmatched", () => {
+    test("should leave a feature unmatched when its properties are null", () => {
       const collection = geoJson();
       collection.features[1].properties = null;
       const node = group()
@@ -258,7 +258,7 @@ describe("map/renderer/geojson", () => {
 
     // A datum with no key is skipped rather than filed under the string "undefined", so it does
     // not become the datum for every keyless feature.
-    test("leaves keyless data and keyless features unmatched", () => {
+    test("should leave a feature unmatched when neither the data nor the features carry a key", () => {
       const collection = geoJson();
       collection.features[1].properties = {};
       collection.features[2].properties = {};
@@ -304,7 +304,7 @@ describe("map/renderer/geojson", () => {
 
     // The listeners are bound to this component's own elements, so a base layer's areas in the
     // same group keep whatever was attached to them.
-    test("binds its handlers only to its own elements", () => {
+    test("should bind its handlers only to its own elements", () => {
       const collection = geoJson();
       const layer = group("shared-targets");
       const foreign = layer
@@ -322,7 +322,7 @@ describe("map/renderer/geojson", () => {
       expect(listeners).toEqual([]);
     });
 
-    test("throws for a geojson with no features", () => {
+    test("should throw when the geojson has no features", () => {
       expect(() =>
         group()
           .datum(fullData)
@@ -334,7 +334,7 @@ describe("map/renderer/geojson", () => {
 
     // The unconditional fill application covers an element whose defined-ness changed, so the
     // dead stale-class repaint that used to sit here was removed rather than replaced.
-    test("repaints an element that was undefined on the previous render", () => {
+    test("should repaint an element when it was undefined on the previous render", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("stale-fill");
@@ -356,7 +356,7 @@ describe("map/renderer/geojson", () => {
     // Both renderers go through getGeoJsonCenter, so an overlay and a base layer over the same
     // features place the same entity's tooltip in one place - now by both computing it rather than
     // by sharing a cache written onto the feature.
-    test("anchors the same centre as the base renderer for the same feature", async () => {
+    test("should anchor the same centre as the base renderer for the same feature", async () => {
       const mapRendererBase = (await import("../../../src/map/renderer/base.js")).default;
       const collection = geoJson();
       collection.features[0].properties = { id: "a", center: "0.9,0.9" };
@@ -385,12 +385,12 @@ describe("map/renderer/geojson", () => {
   });
 
   describe("fill and stroke", () => {
-    test("defaults the fill to black", () => {
+    test("should fill every matched element black when no fill is configured", () => {
       const node = render(partialData, (c) => c.transitionColor(false));
       expect(attrs(node, "fill")).toEqual(["black", "black", missingFill(node)]);
     });
 
-    test("uses the missing pattern where the defined predicate fails", () => {
+    test("should texture an element with the missing pattern when the defined predicate fails", () => {
       const node = render(partialData, (c) =>
         c
           .fill("#ff0000")
@@ -402,7 +402,7 @@ describe("map/renderer/geojson", () => {
 
     // Unlike the base renderer, the fill here consults fn.defined as well as props.defined, so a
     // feature with no datum does get the missing-value pattern rather than the ordinary fill.
-    test("uses the missing pattern for a feature with no datum", () => {
+    test("should texture an element with the missing pattern when its feature has no datum", () => {
       const node = render(partialData, (c) => c.fill("#ff0000").transitionColor(false));
       expect(attrs(node, "fill")[2]).toBe(missingFill(node));
     });
@@ -419,7 +419,7 @@ describe("map/renderer/geojson", () => {
       ]);
     });
 
-    test("defaults the stroke to black and the stroke width to 1.25", () => {
+    test("should stroke every matched element black at 1.25 when no stroke is configured", () => {
       const node = render(partialData, (c) => c.transitionColor(false));
       expect(attrs(node, "stroke")).toEqual(["black", "black", ""]);
       // The unmatched entity is not asked for a stroke width at all, so it carries no
@@ -437,14 +437,14 @@ describe("map/renderer/geojson", () => {
       expect(undefinedElement.hasAttribute("stroke")).toBe(true);
     });
 
-    test("takes the stroke from an accessor called with the datum", () => {
+    test("should take the stroke from the accessor when it is called with the datum", () => {
       const node = render(partialData, (c) =>
         c.transitionColor(false).stroke((d: Datum) => `rgb(${d.value},0,0)`),
       );
       expect(attrs(node, "stroke").slice(0, 2)).toEqual(["rgb(1,0,0)", "rgb(2,0,0)"]);
     });
 
-    test("takes the stroke width from an accessor called with the datum", () => {
+    test("should take the stroke width from the accessor when it is called with the datum", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
         c.transitionColor(false).strokeWidth((d: Datum) => {
@@ -456,7 +456,7 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "stroke-width")).toEqual(["1", "2", "3"]);
     });
 
-    test("never asks an unmatched feature for a stroke width", () => {
+    test("should never ask a feature for a stroke width when it is unmatched", () => {
       const seen: unknown[] = [];
       const node = render(partialData, (c) =>
         c.transitionColor(false).strokeWidth((d: Datum) => {
@@ -472,7 +472,7 @@ describe("map/renderer/geojson", () => {
       expect(attrs(node, "stroke-width").slice(0, 2)).toEqual(["1", "2"]);
     });
 
-    test("drops the stroke width of an entity the defined predicate rejects", () => {
+    test("should drop an element's stroke width when the defined predicate rejects it", () => {
       const node = render(fullData, (c) =>
         c
           .transitionColor(false)
@@ -484,13 +484,13 @@ describe("map/renderer/geojson", () => {
   });
 
   describe("events", () => {
-    test("exposes over, out and click through on()", () => {
+    test("should expose over, out and click through on()", () => {
       const component = mapRendererGeoJson();
       expect(component.on).toBeTypeOf("function");
       expect(component.on("over", () => undefined)).toBe(component);
     });
 
-    test("delivers the hovered entity's datum to an over handler", () => {
+    test("should deliver the hovered entity's datum when an over handler is registered", () => {
       const over = vi.fn();
       const node = render(fullData, (c) => c.transitionColor(false).on("over", over));
       elements(node)[1].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
@@ -498,7 +498,7 @@ describe("map/renderer/geojson", () => {
       expect(over).toHaveBeenCalledWith({ geoId: "b", value: 2 });
     });
 
-    test("delivers out and click as well", () => {
+    test("should deliver the datum when out and click handlers are registered", () => {
       const out = vi.fn();
       const click = vi.fn();
       const node = render(fullData, (c) =>
@@ -511,14 +511,14 @@ describe("map/renderer/geojson", () => {
     });
 
     // An unmatched feature has no datum, so the handler is called with undefined.
-    test("delivers undefined for an entity with no datum", () => {
+    test("should deliver undefined when the hovered entity has no datum", () => {
       const over = vi.fn();
       const node = render(partialData, (c) => c.transitionColor(false).on("over", over));
       elements(node)[2].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
       expect(over).toHaveBeenCalledWith(undefined);
     });
 
-    test("reads a listener back through on()", () => {
+    test("should read a listener back through on()", () => {
       const over = () => undefined;
       const component = mapRendererGeoJson().on("over", over);
       expect(component.on("over")).toBe(over);
@@ -526,13 +526,13 @@ describe("map/renderer/geojson", () => {
   });
 
   describe("transitionColor", () => {
-    test("schedules a fill transition by default", () => {
+    test("should schedule a fill transition when nothing is configured", () => {
       const node = render(fullData);
       const schedules = (elements(node)[0] as Element & { __transition?: unknown }).__transition;
       expect(schedules).toBeDefined();
     });
 
-    test("applies the fill without a transition when disabled", () => {
+    test("should apply the fill without a transition when it is disabled", () => {
       const node = render(fullData, (c) => c.transitionColor(false).fill("#ff0000"));
       expect(
         (elements(node)[0] as Element & { __transition?: unknown }).__transition,
@@ -561,7 +561,7 @@ describe("map/renderer/geojson", () => {
     // interpolate the numbers embedded in the two strings and spend its run pointing at patterns
     // that do not exist - "url(#missing-pattern255)" - painting nothing at all. Such a change is
     // applied synchronously instead.
-    test("applies a change to the missing texture synchronously, without a tween", async () => {
+    test("should apply the fill synchronously without a tween when the colour changes to the missing texture", async () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("geojson-defined-to-missing");
@@ -588,7 +588,7 @@ describe("map/renderer/geojson", () => {
     });
 
     // The reverse direction is the same: leaving the texture cannot be interpolated either.
-    test("applies a change away from the missing texture synchronously", () => {
+    test("should apply the fill synchronously when the colour changes away from the missing texture", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("geojson-missing-to-defined");
@@ -614,7 +614,7 @@ describe("map/renderer/geojson", () => {
   describe("missing value pattern", () => {
     // Ids are document-global, so each layer defines its pattern under an id of its own and
     // references that id in the fill rather than a fixed one.
-    test("gives every overlay on the page its own missing-pattern id", () => {
+    test("should give every overlay its own missing-pattern id when several are on the page", () => {
       const one = render(fullData, (c) => c, "geojson-layer-one");
       const two = render(fullData, (c) => c, "geojson-layer-two");
       const ids = [one, two].map(missingId);
@@ -624,7 +624,7 @@ describe("map/renderer/geojson", () => {
       }
     });
 
-    test("keeps a layer's pattern id across re-renders", () => {
+    test("should keep a layer's pattern id when it re-renders", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("geojson-pattern-id-reuse");
@@ -641,7 +641,7 @@ describe("map/renderer/geojson", () => {
 
     // The base renderer names its pattern from the same counter, so an overlay drawn over a base
     // layer references its own definition rather than whichever came first in the document.
-    test("does not collide with a base layer's pattern id", async () => {
+    test("should not collide with a base layer's pattern id", async () => {
       const mapRendererBase = (await import("../../../src/map/renderer/base.js")).default;
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
@@ -656,7 +656,7 @@ describe("map/renderer/geojson", () => {
   });
 
   describe("tooltip anchors", () => {
-    test("renders one anchor per feature, at the projected spherical centroid", () => {
+    test("should render one anchor per feature at the projected spherical centroid", () => {
       const collection = geoJson();
       const projection = swissMapProjection(100, 100, collection, "geojson-anchors");
       const node = group()
@@ -690,7 +690,7 @@ describe("map/renderer/geojson", () => {
       ]);
     });
 
-    test("writes nothing onto the features, and follows a geometry that moves", () => {
+    test("should leave the features untouched and follow a geometry that moves", () => {
       const collection = geoJson();
 
       const mapPath = mapPathOf(collection);
@@ -723,7 +723,7 @@ describe("map/renderer/geojson", () => {
 
     // An authored `center` is the documented way to nudge a tooltip off a concave shape's true
     // centroid; it is honoured here exactly as it is by the base renderer.
-    test("honours an authored center property", () => {
+    test("should honour an authored center property when placing an anchor", () => {
       const collection = geoJson();
       collection.features[0].properties = { id: "a", center: "8.5,47.4" };
       const projection = swissMapProjection(100, 100, collection, "geojson-center");

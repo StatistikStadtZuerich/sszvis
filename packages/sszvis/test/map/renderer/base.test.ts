@@ -106,13 +106,13 @@ describe("map/renderer/base", () => {
   ];
 
   describe("rendering", () => {
-    test("renders one classed path per merged datum", () => {
+    test("should render one classed path per merged datum", () => {
       const node = render(fullData);
       expect(areas(node)).toHaveLength(3);
       for (const area of areas(node)) expect(area.tagName).toBe("path");
     });
 
-    test("renders a path for every feature, including those with no data", () => {
+    test("should render a path for every feature when only some features have data", () => {
       const node = render([{ geoId: "a", value: 1 }]);
       expect(areas(node)).toHaveLength(3);
     });
@@ -132,12 +132,12 @@ describe("map/renderer/base", () => {
       return { marks: areas(node), expected: collection.features.map((f) => mapPath(f)) };
     });
 
-    test("marks every area as an event target", () => {
+    test("should mark every area as an event target", () => {
       const node = render(fullData);
       expect(attrs(node, "data-event-target")).toEqual(["", "", ""]);
     });
 
-    test("adds the missing value pattern to the layer's defs once", () => {
+    test("should add the missing value pattern to the layer's defs exactly once", () => {
       const node = render(fullData);
       const root = node.ownerSVGElement as SVGSVGElement;
       expect(root.querySelectorAll("defs > pattern")).toHaveLength(1);
@@ -156,12 +156,12 @@ describe("map/renderer/base", () => {
   // read the attribute synchronously with the transition disabled. The transition itself is
   // covered by the transitionColor block below.
   describe("fill", () => {
-    test("defaults to black", () => {
+    test("should fill every area black when no fill is configured", () => {
       const node = render(fullData, (c) => c.transitionColor(false));
       expect(attrs(node, "fill")).toEqual(["black", "black", "black"]);
     });
 
-    test("takes the fill from the accessor, called with the datum", () => {
+    test("should fill each area from the fill accessor when it is called with the datum", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
         c.transitionColor(false).fill((d: Datum | undefined) => {
@@ -173,12 +173,12 @@ describe("map/renderer/base", () => {
       expect(seen).toContainEqual({ geoId: "a", value: 1 });
     });
 
-    test("accepts a constant fill", () => {
+    test("should fill every area the same colour when the fill is a constant", () => {
       const node = render(fullData, (c) => c.transitionColor(false).fill("#ff0000"));
       expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
     });
 
-    test("uses the missing value pattern where the defined predicate fails", () => {
+    test("should texture an area with the missing value pattern when the defined predicate fails", () => {
       const node = render(fullData, (c) =>
         c
           .transitionColor(false)
@@ -188,7 +188,7 @@ describe("map/renderer/base", () => {
       expect(attrs(node, "fill")).toEqual(["#ff0000", missingFill(node), "#ff0000"]);
     });
 
-    test("textures a feature with no data instead of calling the fill accessor", () => {
+    test("should texture a feature instead of calling the fill accessor when it has no data", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.transitionColor(false).fill((d?: Datum) => {
@@ -204,7 +204,7 @@ describe("map/renderer/base", () => {
     // with encodesData. docs/map-extended/rastermap-bins.js depends on this, drawing the map as a
     // transparent outline over a raster with fill("none") and no data at all - texturing those
     // entities would paint over the raster the outline exists to frame.
-    test("keeps the caller's fill on a layer that encodes no data", () => {
+    test("should keep the caller's fill when the layer declares that it encodes no data", () => {
       const node = render([], (c) => c.transitionColor(false).encodesData(false).fill("none"));
       expect(attrs(node, "fill")).toEqual(["none", "none", "none"]);
       expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
@@ -213,7 +213,7 @@ describe("map/renderer/base", () => {
     // Undeclared, a layer whose fill is a constant is inferred to be drawing geometry, so an
     // outline over a raster keeps its fill without having to say anything. This is what keeps the
     // change from retexturing every such map already in production.
-    test("infers a geometry layer from a constant fill when nothing is declared", () => {
+    test("should keep the caller's fill when the fill is a constant and nothing is declared", () => {
       const node = render([], (c) => c.transitionColor(false).fill("none"));
       expect(attrs(node, "fill")).toEqual(["none", "none", "none"]);
       expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
@@ -222,7 +222,7 @@ describe("map/renderer/base", () => {
     // The default fill has to be a constant for the same reason. Set as an accessor it would carry
     // needsDatum, and every layer that never touches `fill` would be inferred to encode data and
     // texture its whole map before any data arrived.
-    test("draws geometry on a default layer with no data bound", () => {
+    test("should leave every area untextured when the layer is left at its defaults and no data is bound", () => {
       const node = render([], (c) => c.transitionColor(false));
       expect(attrs(node, "fill")).toEqual(["black", "black", "black"]);
       expect(node.querySelectorAll(".sszvis-map__area--undefined")).toHaveLength(0);
@@ -230,7 +230,7 @@ describe("map/renderer/base", () => {
 
     // A constant fill with an accessor `defined` is still a data layer: the predicate needs a
     // datum, so the inference has to consider both accessors, not only the fill.
-    test("infers a data layer from an accessor defined even with a constant fill", () => {
+    test("should texture every area when a defined accessor is given even though the fill is a constant", () => {
       const node = render([], (c) =>
         c
           .transitionColor(false)
@@ -247,7 +247,7 @@ describe("map/renderer/base", () => {
     // The corollary of the rule above: with nothing textured, every entity goes through the fill
     // accessor, and there is no datum to hand it. An accessor that dereferences its argument has
     // to tolerate undefined on a geometry-only layer - the docs on `fill` say so.
-    test("calls the fill accessor with undefined on a layer that encodes no data", () => {
+    test("should call the fill accessor with undefined when the layer encodes no data", () => {
       const seen: unknown[] = [];
       const node = render([], (c) =>
         c
@@ -265,7 +265,7 @@ describe("map/renderer/base", () => {
     // The discriminating case for the prop: with data present, the inference would call this a
     // data layer and texture the entities it does not cover. Declaring encodesData(false) has to
     // override that, or the prop is only ever agreeing with what would have happened anyway.
-    test("suppresses texturing on a declared geometry layer even when data is present", () => {
+    test("should leave every area untextured when encodesData is false and data is present", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c
@@ -283,7 +283,7 @@ describe("map/renderer/base", () => {
 
     // The other half of the override: a layer built from constants alone is inferred to be drawing
     // geometry, and encodesData(true) says otherwise, texturing it before its data arrives.
-    test("textures a declared data layer built from constants alone", () => {
+    test("should texture every area when encodesData is true and the layer is built from constants alone", () => {
       const node = render([], (c) => c.transitionColor(false).encodesData(true).fill("none"));
       expect(attrs(node, "fill")).toEqual([
         missingFill(node),
@@ -294,7 +294,7 @@ describe("map/renderer/base", () => {
 
     // The inference: an accessor fill is a promise that the entity has a datum to read, so the
     // layer encodes values whether or not its data has arrived. This is the crash #351 closed.
-    test("textures a data layer whose data has not arrived, without calling its accessor", () => {
+    test("should texture every area without calling the fill accessor when an accessor fill has no data yet", () => {
       const seen: unknown[] = [];
       const node = render([], (c) =>
         c.transitionColor(false).fill((d?: Datum) => {
@@ -313,14 +313,14 @@ describe("map/renderer/base", () => {
 
     // One matched datum is enough to make the layer a data layer, and then the entities it does
     // not cover are textured as missing again.
-    test("textures the uncovered entities as soon as one datum matches", () => {
+    test("should texture the uncovered areas when at least one datum matches", () => {
       const node = render([{ geoId: "a", value: 1 }], (c) => c.transitionColor(false).fill("none"));
       expect(attrs(node, "fill")).toEqual(["none", missingFill(node), missingFill(node)]);
     });
   });
 
   describe("the undefined class", () => {
-    test("marks areas whose datum is missing", () => {
+    test("should mark an area undefined when its datum is missing", () => {
       const node = render([{ geoId: "a", value: 1 }]);
       expect(areas(node).map((a) => a.classList.contains("sszvis-map__area--undefined"))).toEqual([
         false,
@@ -329,7 +329,7 @@ describe("map/renderer/base", () => {
       ]);
     });
 
-    test("marks areas that fail the defined predicate", () => {
+    test("should mark an area undefined when it fails the defined predicate", () => {
       const node = render(fullData, (c) => c.defined((d: Datum | undefined) => d?.value !== 2));
       expect(areas(node).map((a) => a.classList.contains("sszvis-map__area--undefined"))).toEqual([
         false,
@@ -338,7 +338,7 @@ describe("map/renderer/base", () => {
       ]);
     });
 
-    test("clears the class when the datum arrives on a later render", () => {
+    test("should clear the undefined class when the datum arrives on a later render", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("undefined-clearing");
@@ -359,18 +359,18 @@ describe("map/renderer/base", () => {
   });
 
   describe("transitionColor", () => {
-    test("schedules a fill transition by default", () => {
+    test("should schedule a fill transition when nothing is configured", () => {
       const node = render(fullData);
       expect(tweenNames(areas(node)[0])).toContain("attr.fill");
     });
 
-    test("applies the fill without a transition when disabled", () => {
+    test("should apply the fill synchronously when the colour transition is disabled", () => {
       const node = render(fullData, (c) => c.transitionColor(false).fill("#ff0000"));
       expect(tweenNames(areas(node)[0])).toBeNull();
       expect(attrs(node, "fill")).toEqual(["#ff0000", "#ff0000", "#ff0000"]);
     });
 
-    test("leaves the final fill out of the DOM, so the tween has somewhere to start", () => {
+    test("should leave the final fill out of the DOM when a fill transition is scheduled", () => {
       const node = render(fullData, (c) => c.fill("#ff0000"));
       expect(attrs(node, "fill")).toEqual([null, null, null]);
       expect(tweenNames(areas(node)[0])).toContain("attr.fill");
@@ -380,13 +380,13 @@ describe("map/renderer/base", () => {
     // an unparseable start as a constant, so the first tick writes the final colour outright
     // rather than fading in from the SVG default. The attribute is only absent for the frame
     // between the render and that first tick.
-    test("puts the final fill on an entering area at the first tick", async () => {
+    test("should paint an entering area its final fill when the transition's first tick runs", async () => {
       const node = render(fullData, (c) => c.fill("#ff0000"));
       await new Promise((resolve) => setTimeout(resolve, 60));
       expect(attrs(node, "fill")).toEqual(["rgb(255, 0, 0)", "rgb(255, 0, 0)", "rgb(255, 0, 0)"]);
     });
 
-    test("animates from the previous colour rather than onto the new one", () => {
+    test("should keep the previous colour in the DOM when a fill transition starts", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("colour-transition");
@@ -414,7 +414,7 @@ describe("map/renderer/base", () => {
     // that do not exist - "url(#missing-pattern255)" - painting nothing at all. Such a change is
     // applied synchronously instead, so the texture is in the DOM at once and no tween is
     // scheduled for it.
-    test("applies a change to the missing texture synchronously, without a tween", async () => {
+    test("should apply the fill synchronously without a tween when the colour changes to the missing texture", async () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("defined-to-missing");
@@ -443,7 +443,7 @@ describe("map/renderer/base", () => {
     });
 
     // The reverse direction is the same: leaving the texture cannot be interpolated either.
-    test("applies a change away from the missing texture synchronously", () => {
+    test("should apply the fill synchronously when the colour changes away from the missing texture", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("missing-to-defined");
@@ -471,7 +471,7 @@ describe("map/renderer/base", () => {
      * themselves belong to src/transition.ts, which has its own tests - reading them back off
      * d3's private `__transition` only restated that module through a private field.
      */
-    test("should move the fill through intermediate colours before settling on the new one", async () => {
+    test("should move the fill through intermediate colours before settling when a colour transition runs", async () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("colour-transition-observable");
@@ -505,7 +505,7 @@ describe("map/renderer/base", () => {
   describe("known quirks", () => {
     // The unconditional fill application covers an area whose defined-ness changed: nothing has to
     // repaint last render's --undefined set separately.
-    test("repaints an area that was undefined on the previous render", () => {
+    test("should repaint an area when it was undefined on the previous render", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("stale-fill");
@@ -527,7 +527,7 @@ describe("map/renderer/base", () => {
     });
 
     // The fill and the class agree: whatever is classed --undefined also carries the texture.
-    test("both classes and textures a no-datum feature", () => {
+    test("should both class and texture a feature when it has no datum", () => {
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.transitionColor(false).fill("#ff0000"),
       );
@@ -584,7 +584,7 @@ describe("map/renderer/base", () => {
 
     // Ids are document-global, so each layer defines its pattern under an id of its own and
     // references that id in the fill rather than a fixed one.
-    test("gives every map layer on the page its own missing-pattern id", () => {
+    test("should give every map layer its own missing-pattern id when several are on the page", () => {
       const one = render(fullData, (c) => c, "layer-one");
       const two = render(fullData, (c) => c, "layer-two");
       const ids = [one, two].map(missingId);
@@ -594,7 +594,7 @@ describe("map/renderer/base", () => {
       }
     });
 
-    test("keeps a layer's pattern id across re-renders", () => {
+    test("should keep a layer's pattern id when it re-renders", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("pattern-id-reuse");
@@ -640,7 +640,7 @@ describe("map/renderer/base", () => {
       expect(areas(reordered)[0].getAttribute("d")).not.toBe(firstD);
     });
 
-    test("requires mergedData: rendering without it throws", () => {
+    test("should throw when mergedData is missing", () => {
       const collection = geoJson();
       expect(() =>
         group()
@@ -649,7 +649,7 @@ describe("map/renderer/base", () => {
       ).toThrow();
     });
 
-    test("requires mapPath: rendering without it throws", () => {
+    test("should throw when mapPath is missing", () => {
       const collection = geoJson();
       expect(() =>
         group()
@@ -665,7 +665,7 @@ describe("map/renderer/base", () => {
     // The anchor position calls props.mapPath.projection(), so a bare path-generating function -
     // which is all the documented `{d3.geo.path}` type requires - renders the areas and then
     // throws on the anchors.
-    test("throws for a mapPath that is a plain function without a projection", () => {
+    test("should throw when mapPath is a plain function without a projection", () => {
       const collection = geoJson();
       expect(() =>
         group()
@@ -682,7 +682,7 @@ describe("map/renderer/base", () => {
 
     // geoJson is declared as a property and documented as the layer's shapes, but the render only
     // ever reads mergedData - the property is dead weight on this component.
-    test("ignores the geoJson property entirely", () => {
+    test("should render every area when the geoJson property is not set", () => {
       const collection = geoJson();
       const node = group()
         .call(
@@ -711,23 +711,26 @@ describe("map/renderer/base", () => {
       ["unparseable", "not,coordinates"],
       ["too short", "8.54"],
       ["too long", "1,2,3"],
-    ])("positions an anchor from the centroid for a %s center property", (_label, center) => {
-      const collection = geoJson();
-      collection.features[1].properties = { center };
-      const node = group()
-        .call(
-          mapRendererBase()
-            .mergedData(prepareMergedGeoData(fullData, collection))
-            .geoJson(collection)
-            .mapPath(mapPathOf(collection)),
-        )
-        .node() as SVGGElement;
-      for (const transform of anchors(node).map((a) => a.getAttribute("transform"))) {
-        expect(transform).not.toContain("NaN");
-      }
-    });
+    ])(
+      "should position an anchor from the computed centroid when the center property is %s",
+      (_label, center) => {
+        const collection = geoJson();
+        collection.features[1].properties = { center };
+        const node = group()
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .geoJson(collection)
+              .mapPath(mapPathOf(collection)),
+          )
+          .node() as SVGGElement;
+        for (const transform of anchors(node).map((a) => a.getAttribute("transform"))) {
+          expect(transform).not.toContain("NaN");
+        }
+      },
+    );
 
-    test("hands the projection a two-component centre", () => {
+    test("should hand the projection a two-component centre when the center property has three", () => {
       const collection = geoJson();
       collection.features[1].properties = { center: "1,2,3" };
       const seen: unknown[] = [];
@@ -743,12 +746,12 @@ describe("map/renderer/base", () => {
       for (const point of seen) expect(point).toHaveLength(2);
     });
 
-    test("renders one anchor per merged datum", () => {
+    test("should render one anchor per merged datum", () => {
       const node = render(fullData);
       expect(anchors(node)).toHaveLength(3);
     });
 
-    test("positions each anchor at the projected centre of its feature", () => {
+    test("should position each anchor at the projected centre of its feature", () => {
       const collection = geoJson();
       const mapPath = geoPath().projection(
         swissMapProjection(100, 100, collection, "anchor-position"),
@@ -772,7 +775,7 @@ describe("map/renderer/base", () => {
 
     // getGeoJsonCenter computes the centre per render and caches nothing, so rendering a map
     // leaves the geojson it was handed untouched.
-    test("writes no bookkeeping onto the features it renders", () => {
+    test("should leave the features untouched when it renders them", () => {
       const collection = geoJson();
       group()
         .call(
