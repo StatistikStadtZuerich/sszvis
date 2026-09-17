@@ -84,6 +84,7 @@ const GEOGRAPHIES = [
 const GEOGRAPHY_OPTION = OptionKey.make("geography");
 const TOOLTIP = FeatureKey.make("tooltip");
 const LEGEND = FeatureKey.make("legend");
+const BUBBLE = FeatureKey.make("bubble");
 const LAKE = FeatureKey.make("lake");
 const LAKE_BOUNDS = FeatureKey.make("lake-bounds");
 
@@ -138,7 +139,8 @@ export const mapChoropleth: RecipeDef = {
       choices: GEOGRAPHIES.map(({ value, label }) => ({ value, label })),
     },
   ],
-  features: [TOOLTIP, LEGEND, LAKE, LAKE_BOUNDS],
+  /* Bubbles after the legend: it overrides which legend the legend feature draws. */
+  features: [TOOLTIP, LEGEND, BUBBLE, LAKE, LAKE_BOUNDS],
   assets: (_spec, option) => [
     {
       key: "topology",
@@ -162,6 +164,12 @@ export const mapChoropleth: RecipeDef = {
         `d[${str(labelField === "" ? (spec.fields[GEO] ?? "") : labelField)}] ?? ""`,
       ),
       COLOR_SCALE: code("sszvis.scaleSeqBlu().domain(state.valueDomain)"),
+      /* The bubble feature takes the colour out of the base map and puts it in the circles. */
+      MAP_FILL: code('(d) => (d === undefined ? "none" : colorScale(d.value))'),
+      LEGEND_X: code("bounds.width / 2 - props.legendWidth / 2"),
+      LEGEND_COMPONENT: code(
+        "sszvis\n  .legendColorLinear()\n  .scale(colorScale)\n  .width(props.legendWidth)\n  .labelFormat(sszvis.formatNumber)",
+      ),
       /* The legend feature overrides this to make room for itself below the map. */
       BOTTOM_PADDING: code("30"),
       TOOLTIP_TEXT: tooltipText(

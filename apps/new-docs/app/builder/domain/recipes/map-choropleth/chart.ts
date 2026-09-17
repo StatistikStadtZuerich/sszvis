@@ -125,6 +125,8 @@ sszvis.app<State, Actions>({
 
     const colorScale = __COLOR_SCALE__;
 
+    // {{block:scales}}
+
     // Layers
 
     const chartLayer = sszvis
@@ -138,6 +140,8 @@ sszvis.app<State, Actions>({
 
     // Components
 
+    // {{block:overlays}}
+
     // NOTE: An area that matched no row, or whose value is not a number, is drawn
     // with the missing-value texture and never reaches the fill accessor.
     const choroplethMap = sszvis
@@ -150,7 +154,7 @@ sszvis.app<State, Actions>({
       .height(bounds.innerHeight)
       .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
       .defined((d) => d !== undefined && !Number.isNaN(d.value))
-      .fill((d) => (d === undefined ? "none" : colorScale(d.value)));
+      .fill(__MAP_FILL__);
 
     // {{block:components}}
 

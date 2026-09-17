@@ -9,7 +9,7 @@ import { compile } from "./domain/compile";
 import { initialSpec } from "./domain/initial-spec";
 import { assetsFor } from "./domain/compile";
 import { recipes } from "./domain/recipes";
-import { summarize, type Recipe, type Spec } from "./domain/spec";
+import { FeatureKey, summarize, type Recipe, type Spec } from "./domain/spec";
 
 /*
  * What a generated chart draws, which is the one thing the node suites cannot see.
@@ -175,4 +175,45 @@ describe("generated charts", () => {
       expect(flat, `${flat.length} of ${marks.length} marks have no extent`).toHaveLength(0);
     });
   }
+});
+
+/*
+ * One feature drawn rather than described. A bubble overlay is the only feature in
+ * the builder that replaces a chart's marks instead of adding to them: the areas
+ * stop carrying the value and the circles start. `compile.test.ts` proves the
+ * combination type-checks, and a map whose circles are all radius zero type-checks
+ * just as well - it is a grey map with 34 invisible dots, which is a chart that
+ * still counts 34 areas.
+ */
+describe("the bubble overlay", () => {
+  test("should draw a circle with a radius for every area that has a value", async () => {
+    const recipe = recipes.find((candidate) => candidate.key === "map-choropleth");
+    expect(recipe, "the map recipe").toBeDefined();
+    if (recipe === undefined) return;
+
+    const base = initialSpec(summarize(recipe));
+    const spec = { ...base, features: [FeatureKey.make("bubble")] };
+    const marks = { marks: "circle.sszvis-anchored-circle", count: 31 };
+    const container = await draw(recipe, spec, marks);
+
+    const circles = [...container.querySelectorAll<SVGCircleElement>(marks.marks)];
+    /*
+     * A circle per area that matched a row. Radius rather than presence, because the
+     * renderer draws one for every feature and gives the ones with nothing to show a
+     * radius of zero - which is how a broken join, or a scale left without a domain,
+     * would look.
+     */
+    const drawn = circles.filter((circle) => circle.r.baseVal.value > 0);
+    expect(drawn, `${drawn.length} of ${circles.length} bubbles have a radius`).toHaveLength(
+      marks.count,
+    );
+
+    /* And the areas underneath are all one grey, because the circles carry the value now. */
+    const fills = new Set(
+      [...container.querySelectorAll(".sszvis-map__area:not(.sszvis-map__area--undefined)")].map(
+        (area) => area.getAttribute("fill"),
+      ),
+    );
+    expect(fills, "the base map is not a single colour").toHaveLength(1);
+  });
 });

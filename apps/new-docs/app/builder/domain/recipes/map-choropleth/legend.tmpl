@@ -1,7 +1,9 @@
-A continuous colour legend, because the fill comes from a sequential scale.
+A key to what the marks mean. A continuous colour bar, because the fill comes from
+a sequential scale - or, when the bubbles are on, the radius legend they need
+instead, which is what the component and offset scalars are for.
 
 // #label Legend
-// #hint A colour bar showing what the shades mean.
+// #hint A key to the shades, or to the circle sizes when bubbles are on.
 
 // #region magicNumbers
 /** Gap in px between the bottom of the map and the legend. */
@@ -11,11 +13,7 @@ const LEGEND_GUTTER = 60;
 // #scalar BOTTOM_PADDING 90
 
 // #region components
-const legend = sszvis
-  .legendColorLinear()
-  .scale(colorScale)
-  .width(props.legendWidth)
-  .labelFormat(sszvis.formatNumber);
+const legend = __LEGEND_COMPONENT__;
 // #endregion
 
 // #region render
@@ -23,10 +21,7 @@ chartLayer
   .selectGroup("legend")
   .attr(
     "transform",
-    sszvis.translateString(
-      bounds.width / 2 - props.legendWidth / 2,
-      bounds.innerHeight + LEGEND_GUTTER,
-    ),
+    sszvis.translateString(__LEGEND_X__, bounds.innerHeight + LEGEND_GUTTER),
   )
   .call(legend);
 // #endregion

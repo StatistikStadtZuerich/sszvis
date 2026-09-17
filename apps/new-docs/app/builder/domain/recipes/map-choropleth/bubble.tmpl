@@ -1,0 +1,47 @@
+A bubble per area, sized by the value, over a map drawn in grey. Zurich calls this
+a Signatur - the circle is the symbol carrying the number, and the areas underneath
+are there to say where.
+
+It reads the same value the choropleth would have coloured, so it takes no column
+of its own. What it does take is the colour: an area's shade and a circle's size
+would otherwise say the same thing twice, and the shades would fight the circles
+for attention. So the base map goes grey, and its colour transition off with it,
+since there is no longer a colour to transition.
+
+The legend changes with it. A colour bar explains nothing about a map whose areas
+are all the same grey, so the radius legend replaces it - the `legend` feature
+draws whichever one this scalar names.
+
+// #label Bubbles
+// #hint A circle per area, sized by the value, over a grey map.
+
+// #region magicNumbers
+/** The radius in px of the largest bubble; the rest are scaled by area against it. */
+const MAX_BUBBLE_RADIUS = 20;
+// #endregion
+
+// #region scales
+// NOTE: A square-root scale, so that a value twice as large covers twice the area
+// rather than twice the width, which is what a reader compares.
+const radiusScale = d3.scaleSqrt().domain(state.valueDomain).range([0, MAX_BUBBLE_RADIUS]);
+// #endregion
+
+// #region overlays
+const bubbleMap = sszvis
+  .mapRendererBubble<Datum>()
+  /* The first qualitative colour. An ordinal scale keyed by a name, as the examples key it. */
+  .fill(sszvis.scaleQual6()("value"))
+  .radius((d) => (sszvis.defined(d) && !Number.isNaN(d.value) ? radiusScale(d.value) : 0))
+  .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
+// #endregion
+
+// #region mapProps
+.transitionColor(false)
+// oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- the name of the sszvis method, not ours to pick.
+.anchoredShape(bubbleMap)
+// #endregion
+
+// #scalar MAP_FILL () => sszvis.scaleGry()(0)
+// #scalar LEGEND_COMPONENT sszvis.legendRadius().scale(radiusScale).tickFormat(sszvis.formatNumber)
+/* The radius legend is about two of its largest circles wide, labels included, so that halves it. */
+// #scalar LEGEND_X bounds.width / 2 - MAX_BUBBLE_RADIUS * 2
