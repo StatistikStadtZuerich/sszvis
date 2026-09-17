@@ -1,0 +1,27 @@
+// #label Colour legend
+// #hint Names each slice below the chart.
+
+// #scalar C_SCALE legendLayout.scale
+// #scalar BOTTOM_PADDING legendLayout.bottomPadding
+
+// #region preBounds
+// NOTE: The legend decides how much room the chart has to leave below it,
+// so it is laid out before the bounds it feeds into.
+const legendLayout = sszvis.colorLegendLayout(
+  {
+    axisLabels: state.xValues,
+    legendLabels: state.categories,
+    slant: props.xSlant,
+  },
+  config.id,
+);
+
+const colorLegend = legendLayout.legend;
+// #endregion
+
+// #region render
+chartLayer
+  .selectGroup("colorLegend")
+  .attr("transform", sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding))
+  .call(colorLegend);
+// #endregion
