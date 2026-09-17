@@ -74,3 +74,66 @@ export function describesMapPathGeometry(
     expect(marks.map((mark) => mark.getAttribute("d"))).toEqual(expected);
   });
 }
+
+/**
+ * That a renderer's `key` decides which elements a second `.call()` on the same group takes over.
+ *
+ * mesh, the lake overlay, highlight and raster all implement the same `:scope > ...` selector plus
+ * `data-<name>-key` filter. Only the element identity is shared here, through two adapters: a
+ * `render` that draws one instance into a fresh group, with `key` left off to mean "the default
+ * key" and `variant` a colour the caller can tell apart afterwards, and a `marks` that returns the
+ * elements whose identity the key governs together with a `variantOf` reading back which render
+ * produced one.
+ *
+ * What the renderers do *not* share stays in their own files, because folding it in would have
+ * meant asserting less than each file asserts today: the lake overlay also owns a pattern,
+ * gradient and mask per scope (issue #258), raster proves isolation by reading back painted
+ * pixels rather than a style, and highlight's same-key case is written around issue #216.
+ */
+export function describesKeyScopedElements<Variant, Drawn>(options: {
+  /** Draws one instance into a group, returning the group's node. */
+  render: (run: { group: string; key?: string; variant: Variant }) => Element;
+  /** The elements whose identity the key governs, in document order. */
+  marks: (node: Element) => Element[];
+  /**
+   * Reads back which render drew a mark, so two instances can be told apart. Its type is the
+   * caller's: mesh reads a stroke colour back as a string, the lake overlay a fill.
+   */
+  variantOf: (mark: Element) => Drawn;
+  /** Two distinguishable values for whichever property `render` applies. */
+  variants: [Variant, Variant];
+}): void {
+  const { render, marks, variantOf, variants } = options;
+  const [one, other] = variants;
+
+  test("should draw a separate element per key when two instances render into one group", () => {
+    const group = "key-scoping-distinct";
+    const first = marks(render({ group, key: "one", variant: one }))[0];
+    const after = marks(render({ group, key: "two", variant: other }));
+    expect(after).toHaveLength(2);
+    expect(after[0]).toBe(first);
+    expect(variantOf(after[0])).not.toEqual(variantOf(after[1]));
+  });
+
+  test("should repaint only its own key's element when one of two keys re-renders", () => {
+    const group = "key-scoping-rerender";
+    render({ group, key: "one", variant: one });
+    const before = marks(render({ group, key: "two", variant: other }));
+    const after = marks(render({ group, key: "one", variant: other }));
+    // The same two elements, still in place: a re-render reuses its key's element rather than
+    // appending a third or rebinding the other key's.
+    expect(after).toEqual(before);
+    expect(variantOf(after[0])).toEqual(variantOf(after[1]));
+  });
+
+  test("should reuse the one element when two instances fall back to the default key", () => {
+    const group = "key-scoping-default";
+    const first = marks(render({ group, variant: one }))[0];
+    const drawnVariant = variantOf(first);
+    const after = marks(render({ group, variant: other }));
+    expect(after).toHaveLength(1);
+    expect(after[0]).toBe(first);
+    // The second instance took the first one's element over, so the later value is what shows.
+    expect(variantOf(after[0])).not.toEqual(drawnVariant);
+  });
+}

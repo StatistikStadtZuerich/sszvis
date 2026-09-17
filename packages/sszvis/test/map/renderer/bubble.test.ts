@@ -1,4 +1,4 @@
-import { easePolyOut, geoCentroid, select } from "d3";
+import { geoCentroid, select } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
@@ -527,23 +527,17 @@ describe("map/renderer/bubble", () => {
       const node = renderWith(20);
       // The old radius is still in the DOM when the tween starts.
       expect(circles(node)[0].getAttribute("r")).toBe("4");
+
+      // And it travels rather than jumping: partway through it is between the two radii. That
+      // is the observable half of what the duration and easing buy; the values themselves are
+      // src/transition.ts's own contract, which it tests directly.
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      const partway = Number(circles(node)[0].getAttribute("r"));
+      expect(partway).toBeGreaterThan(4);
+      expect(partway).toBeLessThan(20);
+
       await settle();
       expect(circles(node)[0].getAttribute("r")).toBe("20");
-    });
-
-    // defaultTransition() is passed as `t` straight to .transition(t), so its 300ms and
-    // easePolyOut reach the schedule.
-    test("uses the default transition's 300ms and polynomial ease", () => {
-      const node = render(fullData);
-      const schedules = (circles(node)[0] as Element & { __transition?: Record<string, unknown> })
-        .__transition;
-      const scheduled = Object.values(schedules ?? {}).filter(
-        (v): v is { duration: number; ease: (t: number) => number } =>
-          typeof v === "object" && v !== null && "duration" in v,
-      );
-      expect(scheduled).toHaveLength(1);
-      expect(scheduled[0].duration).toBe(300);
-      expect(scheduled[0].ease).toBe(easePolyOut);
     });
 
     test("shrinks a departing circle away before removing it", async () => {

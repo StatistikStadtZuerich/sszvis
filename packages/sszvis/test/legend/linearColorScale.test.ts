@@ -1,5 +1,6 @@
 import { scaleLinear } from "d3";
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from "vitest";
+import { translationOf } from "../support/domValues.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import legendColorLinear from "../../src/legend/linearColorScale.js";
 import type { LinearColorScaleComponent } from "../../src/legend/linearColorScale.js";
@@ -36,7 +37,9 @@ describe("legend/linearColorScale", () => {
   const attrs = (node: Element, selector: string, attr: string) =>
     [...node.querySelectorAll(selector)].map((e) => e.getAttribute(attr));
 
-  test("should render one rect per displayed value", () => {
+  // The appended maximum is why the ramp still reaches the end of the domain when the caller's
+  // values stop short of it.
+  test("should render one rect per displayed value, plus one for the appended maximum", () => {
     const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
     // the two supplied values, plus the domain maximum the component appends
     expect(node.querySelectorAll("rect.sszvis-legend__mark").length).toBe(3);
@@ -59,22 +62,25 @@ describe("legend/linearColorScale", () => {
     expect(withDefault.querySelectorAll("rect.sszvis-legend__mark").length).toBe(s.ticks(7).length);
   });
 
-  test("should divide the width evenly between the segments", () => {
+  /**
+   * A segment is one rect, so its four geometry attributes are one contract: the segments tile
+   * the width evenly along a shared baseline, each starting a pixel early and running a pixel
+   * long so no antialiasing seam shows between them.
+   */
+  test("should tile the width with segments that overlap by a pixel on a shared baseline", () => {
     const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]).width(300));
-    // three values across 300px
+    const xs = attrs(node, "rect.sszvis-legend__mark", "x").map(Number);
     const widths = attrs(node, "rect.sszvis-legend__mark", "width").map(Number);
-    for (const w of widths) expect(w).toBeCloseTo(300 / 3 + 1, 10);
-    const xs = attrs(node, "rect.sszvis-legend__mark", "x").map(Number);
-    expect(xs).toEqual([-1, 99, 199]);
-  });
 
-  test("should overlap the segments by a pixel to hide antialiasing seams", () => {
-    const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]).width(300));
-    const xs = attrs(node, "rect.sszvis-legend__mark", "x").map(Number);
-    const ws = attrs(node, "rect.sszvis-legend__mark", "width").map(Number);
-    // each segment starts 1px early and runs 1px long
-    expect(xs[0]).toBe(-1);
-    expect(xs[1] + ws[1]).toBeGreaterThan(xs[2]);
+    // three values across 300px, each a pixel wider than its share
+    for (const w of widths) expect(w).toBeCloseTo(300 / 3 + 1, 10);
+    expect(xs).toEqual([-1, 99, 199]);
+    // the overlap itself: a segment runs past where the next one starts
+    expect(xs[1] + widths[1]).toBeGreaterThan(xs[2]);
+
+    // Every segment shares the ramp's height and baseline, so the row reads as one band.
+    expect(attrs(node, "rect.sszvis-legend__mark", "height")).toEqual(["10", "10", "10"]);
+    expect(attrs(node, "rect.sszvis-legend__mark", "y")).toEqual(["0", "0", "0"]);
   });
 
   test("should default the width to 200", () => {
@@ -87,12 +93,6 @@ describe("legend/linearColorScale", () => {
     const s = scale();
     const node = render(legendColorLinear().scale(s).displayValues([0, 50]));
     expect(attrs(node, "rect.sszvis-legend__mark", "fill")).toEqual([s(0), s(50), s(100)]);
-  });
-
-  test("should give every segment the same height at y=0", () => {
-    const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
-    expect(attrs(node, "rect.sszvis-legend__mark", "height")).toEqual(["10", "10", "10"]);
-    expect(attrs(node, "rect.sszvis-legend__mark", "y")).toEqual(["0", "0", "0"]);
   });
 
   test("should cap both ends with a circle coloured from the domain extent", () => {
@@ -112,14 +112,16 @@ describe("legend/linearColorScale", () => {
     expect(labels.map((l) => l.textContent)).toEqual(["0", "100"]);
   });
 
-  test("should anchor the endpoint labels outwards", () => {
-    const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]).width(200));
+  test("should push each endpoint label outwards past the end of the ramp it labels", () => {
+    const width = 200;
+    const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]).width(width));
     const labels = [...node.querySelectorAll<SVGTextElement>("text.sszvis-legend__label")];
     expect(labels.map((l) => l.style.textAnchor)).toEqual(["end", "start"]);
-    // 16px of padding, outwards from each end of the ramp
-    expect(labels.map((l) => l.getAttribute("transform"))).toEqual([
-      "translate(-16, 5)",
-      "translate(216, 5)",
+    // 16px of padding, outwards from each end: the left label sits before the ramp starts and
+    // the right one after it ends. Read as numbers, so a change of spelling is not a failure.
+    expect(labels.map((l) => translationOf(l))).toEqual([
+      { x: -16, y: 5 },
+      { x: width + 16, y: 5 },
     ]);
     expect(labels.map((l) => l.getAttribute("dy"))).toEqual(["0.35em", "0.35em"]);
   });
@@ -197,11 +199,6 @@ describe("legend/linearColorScale", () => {
     expect(fills.length).toBe(s.ticks(7).length);
     // no two adjacent segments share a fill
     for (let i = 1; i < fills.length; i++) expect(fills[i]).not.toBe(fills[i - 1]);
-  });
-
-  test("should still extend the ramp when the values stop short of the maximum", () => {
-    const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
-    expect(attrs(node, "rect.sszvis-legend__mark", "fill").length).toBe(3);
   });
 
   test("should class the end caps sszvis-legend__mark", () => {

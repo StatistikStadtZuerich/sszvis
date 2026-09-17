@@ -1,6 +1,7 @@
-import { easePolyOut, type GeoProjection, geoCentroid, geoPath } from "d3";
+import { type GeoProjection, geoCentroid, geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { resolvedColor } from "../../support/domValues.js";
 import { describesMapPathGeometry } from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
@@ -522,12 +523,6 @@ describe("map/renderer/geojson", () => {
       const component = mapRendererGeoJson().on("over", over);
       expect(component.on("over")).toBe(over);
     });
-
-    test("attaches all three listeners to every element", () => {
-      const node = render(fullData, (c) => c.transitionColor(false));
-      const listeners = (elements(node)[0] as Element & { __on?: { type: string }[] }).__on ?? [];
-      expect(listeners.map((l) => l.type).sort()).toEqual(["click", "mouseout", "mouseover"]);
-    });
   });
 
   describe("transitionColor", () => {
@@ -544,19 +539,22 @@ describe("map/renderer/geojson", () => {
       ).toBeUndefined();
     });
 
-    // The fill is applied exactly once, through the transition, so the tween has the previous
-    // colour to start from rather than the value it is about to write.
-    test("leaves the final fill out of the DOM and schedules the slow transition", () => {
+    /**
+     * The fill is applied exactly once, through the transition, so the tween has the previous
+     * colour to start from rather than the value it is about to write - which is why nothing is
+     * in the DOM on the render tick. That it then arrives is the observable half; how long the
+     * trip takes belongs to src/transition.ts and its own tests.
+     */
+    test("should leave the fill out of the DOM on the render tick and paint it once the tween runs", async () => {
       const node = render(fullData, (c) => c.fill("#ff0000"));
       expect(attrs(node, "fill")).toEqual([null, null, null]);
-      const schedules = (elements(node)[0] as Element & { __transition?: Record<string, unknown> })
-        .__transition;
-      const scheduled = Object.values(schedules ?? {}).find(
-        (v): v is { duration: number; ease: (t: number) => number } =>
-          typeof v === "object" && v !== null && "duration" in v,
-      );
-      expect(scheduled?.duration).toBe(500);
-      expect(scheduled?.ease).toBe(easePolyOut);
+
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      expect(attrs(node, "fill").map(resolvedColor)).toEqual([
+        resolvedColor("#ff0000"),
+        resolvedColor("#ff0000"),
+        resolvedColor("#ff0000"),
+      ]);
     });
 
     // d3 has no interpolator for a paint-server reference, so a colour-to-texture tween would

@@ -1,6 +1,7 @@
-import { easePolyOut, geoCentroid, geoPath } from "d3";
+import { geoCentroid, geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { resolvedColor } from "../../support/domValues.js";
 import { describesMapPathGeometry } from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
@@ -464,17 +465,40 @@ describe("map/renderer/base", () => {
       expect(attrs(node, "fill")).toEqual(["#00ff00", "#00ff00", "#00ff00"]);
     });
 
-    test("schedules the slow transition's duration and easing", () => {
-      const node = render(fullData);
-      const schedules = (areas(node)[0] as Element & { __transition?: Record<string, unknown> })
-        .__transition;
-      const scheduled = Object.values(schedules ?? {}).filter(
-        (v): v is { duration: number; ease: (t: number) => number } =>
-          typeof v === "object" && v !== null && "duration" in v,
-      );
-      expect(scheduled).toHaveLength(1);
-      expect(scheduled[0].duration).toBe(500);
-      expect(scheduled[0].ease).toBe(easePolyOut);
+    /**
+     * What a consumer can see of the transition is that the colour travels: it is still between
+     * the two colours partway through and has arrived once it is over. The duration and easing
+     * themselves belong to src/transition.ts, which has its own tests - reading them back off
+     * d3's private `__transition` only restated that module through a private field.
+     */
+    test("should move the fill through intermediate colours before settling on the new one", async () => {
+      const collection = geoJson();
+      const mapPath = mapPathOf(collection);
+      const layer = group("colour-transition-observable");
+      const renderWith = (fill: string, transition: boolean) =>
+        layer
+          .call(
+            mapRendererBase()
+              .mergedData(prepareMergedGeoData(fullData, collection))
+              .geoJson(collection)
+              .mapPath(mapPath)
+              .transitionColor(transition)
+              .fill(fill),
+          )
+          .node() as SVGGElement;
+
+      renderWith("#ff0000", false);
+      const node = renderWith("#00ff00", true);
+
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      const partway = attrs(node, "fill")[0];
+      // Neither where it started nor where it is going: a transition that landed immediately, or
+      // one that never ran, would fail here.
+      expect(resolvedColor(partway)).not.toBe(resolvedColor("#ff0000"));
+      expect(resolvedColor(partway)).not.toBe(resolvedColor("#00ff00"));
+
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      expect(resolvedColor(attrs(node, "fill")[0])).toBe(resolvedColor("#00ff00"));
     });
   });
 

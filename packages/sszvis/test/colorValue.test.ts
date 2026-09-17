@@ -168,198 +168,228 @@ describe("the colour props widened in the second pass", () => {
     expect(withAlpha(base, 0.5)).toMatch(/^rgba\(/);
   });
 
-  test("groupedBarsVertical.fill takes an accessor returning a scale's LabColor", () => {
+  /**
+   * Each of these components had its own test that built a scale, rendered once and asserted the
+   * painted colour. The scaffolding genuinely differs - a grouped bar chart and a stacked area
+   * need different scales and different data shapes - but the promise being checked is the same
+   * one every time, so it is stated once here and the scaffolding is all a row supplies.
+   *
+   * `painted` is what actually reached the DOM and `expected` is what the scale returned, so a
+   * component that stringified a LabColor wrongly, or dropped the accessor and painted a default,
+   * fails on the comparison rather than on a loose "looks like a colour" check.
+   */
+  const fillsOf = (group: SVGGElement, selector: string) =>
+    [...group.querySelectorAll(selector)].map((mark) => mark.getAttribute("fill"));
+
+  test.each([
+    {
+      component: "groupedBarsVertical.fill",
+      draw: () => {
+        const colorScale = scaleQual12();
+        const groupScale = scaleBand<string>().domain(["A", "B"]).range([0, 400]);
+        const yScale = scaleLinear().domain([0, 50]).range([300, 0]);
+        const chart = groupedBarsVertical<Row>()
+          .groupScale((d) => groupScale(d.region) ?? 0)
+          .groupSize(2)
+          .groupWidth(groupScale.bandwidth())
+          .groupSpace(0.05)
+          .y((d) => yScale(d.value))
+          .height((d) => 300 - yScale(d.value))
+          .defined(() => true)
+          .fill((d) => colorScale(d.category))
+          .stroke(colorScale("X"))
+          .transition(false);
+        // groupedBars takes an array of groups, each group an array of its bars.
+        const groups: Row[][] = [rows.slice(0, 2), rows.slice(2)];
+        const group = layer()
+          .selectGroup("grouped")
+          .datum(groups)
+          .call(chart)
+          .node() as SVGGElement;
+        return {
+          painted: fillsOf(group, "rect.sszvis-bar-rect"),
+          expected: [colorScale("X"), colorScale("Y")],
+        };
+      },
+    },
+    {
+      component: "stackedBarVertical.fill",
+      draw: () => {
+        const colorScale = scaleQual12();
+        const xScale = scaleBand<string>().domain(["A", "B"]).range([0, 400]).paddingInner(0.2);
+        const yScale = scaleLinear().domain([0, 50]).range([300, 0]);
+        const chart = stackedBarVertical<Row>()
+          .xScale((region: string) => xScale(region))
+          .width(xScale.bandwidth())
+          .yScale(yScale)
+          .fill((slice) => colorScale(slice.series))
+          .stroke(colorScale("X"))
+          .transition(false);
+        const data = stackedBarVerticalData<Row, string>(
+          (d) => d.region,
+          (d) => d.category,
+          (d) => d.value,
+        )(rows);
+        const group = layer().selectGroup("stacked").datum(data).call(chart).node() as SVGGElement;
+        return {
+          painted: fillsOf(group, "rect.sszvis-bar-rect"),
+          expected: [colorScale("X"), colorScale("Y")],
+        };
+      },
+    },
+    {
+      component: "stackedBarHorizontal.fill",
+      draw: () => {
+        const colorScale = scaleQual12();
+        const xScale = scaleLinear().domain([0, 50]).range([0, 400]);
+        const yScale = scaleBand<string>().domain(["A", "B"]).range([0, 300]).paddingInner(0.2);
+        const chart = stackedBarHorizontal<Row>()
+          .xScale(xScale)
+          .yScale((region: string) => yScale(region))
+          .height(yScale.bandwidth())
+          .fill((slice) => colorScale(slice.series))
+          .transition(false);
+        const data = stackedBarHorizontalData<Row, string>(
+          (d) => d.region,
+          (d) => d.category,
+          (d) => d.value,
+        )(rows);
+        const group = layer()
+          .selectGroup("stacked-h")
+          .datum(data)
+          .call(chart)
+          .node() as SVGGElement;
+        return {
+          painted: fillsOf(group, "rect.sszvis-bar-rect"),
+          expected: [colorScale("X"), colorScale("Y")],
+        };
+      },
+    },
+    {
+      component: "line.stroke",
+      draw: () => {
+        const colorScale = scaleQual12();
+        type Series = { key: string; points: { x: number; y: number }[] };
+        const series: Series[] = [
+          {
+            key: "X",
+            points: [
+              { x: 0, y: 0 },
+              { x: 10, y: 10 },
+            ],
+          },
+          {
+            key: "Y",
+            points: [
+              { x: 0, y: 5 },
+              { x: 10, y: 15 },
+            ],
+          },
+        ];
+        const chart = line<{ x: number; y: number }, Series>()
+          .x((p) => p.x)
+          .y((p) => p.y)
+          .valuesAccessor((s: Series) => s.points)
+          .key((s: Series) => s.key)
+          .stroke((s: Series) => colorScale(s.key))
+          .transition(false);
+        const group = layer().selectGroup("lines").datum(series).call(chart).node() as SVGGElement;
+        return {
+          // The line component writes its colour as a style rather than an attribute.
+          painted: [...group.querySelectorAll<SVGPathElement>("path.sszvis-line")].map(
+            (path) => path.style.stroke,
+          ),
+          expected: [colorScale("X"), colorScale("Y")],
+        };
+      },
+    },
+    {
+      component: "dot.fill",
+      draw: () => {
+        const colorScale = scaleQual12();
+        const chart = dot<Row>()
+          .x((d) => d.value)
+          .y((d) => d.value)
+          .radius(4)
+          .fill((d) => colorScale(d.category))
+          .stroke(colorScale("X"))
+          .transition(false);
+        const group = layer().selectGroup("dots").datum(rows).call(chart).node() as SVGGElement;
+        return {
+          painted: fillsOf(group, "circle.sszvis-circle"),
+          expected: [colorScale("X"), colorScale("Y")],
+        };
+      },
+    },
+    {
+      component: "stackedArea.fill and .stroke",
+      draw: () => {
+        const colorScale = scaleQual12();
+        type Point = { x: number; y0: number; y1: number };
+        // The default layer shape: a layer IS its array of points, which the identity
+        // valuesAccessor the component defaults to already yields.
+        const layers: Point[][] = [
+          [
+            { x: 0, y0: 0, y1: 10 },
+            { x: 10, y0: 0, y1: 20 },
+          ],
+        ];
+        const chart = stackedArea<Point, Point[]>()
+          .x((p) => p.x)
+          .y0((p) => p.y0)
+          .y1((p) => p.y1)
+          .key((_l: Point[], i: number) => i)
+          .fill(colorScale("X"))
+          .stroke(colorScale("Y"))
+          .transition(false);
+        const group = layer().selectGroup("areas").datum(layers).call(chart).node() as SVGGElement;
+        const path = group.querySelector("path");
+        return {
+          // This one sets a constant fill and a constant stroke, so both are read back.
+          painted: [path?.getAttribute("fill"), path?.getAttribute("stroke")],
+          expected: [colorScale("X"), colorScale("Y")],
+        };
+      },
+    },
+  ])(
+    "should paint the colours the scale returned when $component is given a LabColor accessor",
+    ({ draw }) => {
+      const { painted, expected } = draw();
+      expect(painted.length).toBeGreaterThan(0);
+      // Every mark got a real rgb colour rather than an empty style or a stringified object.
+      for (const colour of painted) expect(colour).toMatch(/^rgb/);
+      expect(new Set(painted)).toEqual(new Set(expected.map(String)));
+    },
+  );
+
+  /**
+   * Type-level only. Both of these need something the colouring tests above already cover the
+   * drawing of - a prepared hierarchy for sunburst, a prepared nest for the nested bars - so the
+   * constructions below are the whole assertion: a prop narrowed back to `string` stops
+   * compiling here, and `pnpm run type-check` is what runs it. The runtime checks these replaced
+   * read the accessor back out of the setter it had just been handed, which no implementation
+   * can fail.
+   */
+  test("should accept a LabColor accessor on sunburst's fill and stroke", () => {
     const colorScale = scaleQual12();
-    const groupScale = scaleBand<string>().domain(["A", "B"]).range([0, 400]);
-    const yScale = scaleLinear().domain([0, 50]).range([300, 0]);
+    const chart = sunburst()
+      .fill((key: string) => colorScale(key))
+      .stroke(colorScale("X"));
 
-    const chart = groupedBarsVertical<Row>()
-      .groupScale((d) => groupScale(d.region) ?? 0)
-      .groupSize(2)
-      .groupWidth(groupScale.bandwidth())
-      .groupSpace(0.05)
-      .y((d) => yScale(d.value))
-      .height((d) => 300 - yScale(d.value))
-      .defined(() => true)
-      .fill((d) => colorScale(d.category))
-      .stroke(colorScale("X"))
-      .transition(false);
-
-    // groupedBars takes an array of groups, each group an array of its bars.
-    const groups: Row[][] = [rows.slice(0, 2), rows.slice(2)];
-    const group = layer().selectGroup("grouped").datum(groups).call(chart).node() as SVGGElement;
-    const fills = [...group.querySelectorAll("rect.sszvis-bar-rect")].map((r) =>
-      r.getAttribute("fill"),
-    );
-
-    expect(fills.length).toBe(4);
-    expect(fills[0]).toBe(String(colorScale("X")));
-    expect(fills[0]).toMatch(/^rgb/);
+    expectTypeOf(chart.fill()).not.toBeAny();
   });
 
-  test("stackedBarVertical.fill takes an accessor returning a scale's LabColor", () => {
-    const colorScale = scaleQual12();
-    const xScale = scaleBand<string>().domain(["A", "B"]).range([0, 400]).paddingInner(0.2);
-    const yScale = scaleLinear().domain([0, 50]).range([300, 0]);
-
-    const chart = stackedBarVertical<Row>()
-      .xScale((region: string) => xScale(region))
-      .width(xScale.bandwidth())
-      .yScale(yScale)
-      .fill((slice) => colorScale(slice.series))
-      .stroke(colorScale("X"))
-      .transition(false);
-
-    const data = stackedBarVerticalData<Row, string>(
-      (d) => d.region,
-      (d) => d.category,
-      (d) => d.value,
-    )(rows);
-
-    const group = layer().selectGroup("stacked").datum(data).call(chart).node() as SVGGElement;
-    const fills = [...group.querySelectorAll("rect.sszvis-bar-rect")].map((r) =>
-      r.getAttribute("fill"),
-    );
-
-    expect(fills.length).toBe(4);
-    expect(new Set(fills)).toEqual(new Set([String(colorScale("X")), String(colorScale("Y"))]));
-  });
-
-  test("stackedBarHorizontal.fill takes an accessor returning a scale's LabColor", () => {
-    const colorScale = scaleQual12();
-    const xScale = scaleLinear().domain([0, 50]).range([0, 400]);
-    const yScale = scaleBand<string>().domain(["A", "B"]).range([0, 300]).paddingInner(0.2);
-
-    const chart = stackedBarHorizontal<Row>()
-      .xScale(xScale)
-      .yScale((region: string) => yScale(region))
-      .height(yScale.bandwidth())
-      .fill((slice) => colorScale(slice.series))
-      .transition(false);
-
-    const data = stackedBarHorizontalData<Row, string>(
-      (d) => d.region,
-      (d) => d.category,
-      (d) => d.value,
-    )(rows);
-
-    const group = layer().selectGroup("stacked-h").datum(data).call(chart).node() as SVGGElement;
-    const fills = [...group.querySelectorAll("rect.sszvis-bar-rect")].map((r) =>
-      r.getAttribute("fill"),
-    );
-
-    expect(fills.length).toBe(4);
-    expect(fills.every((fill) => fill?.startsWith("rgb"))).toBe(true);
-  });
-
-  test("nestedStackedBarsVertical.fill takes an accessor returning a scale's LabColor", () => {
+  test("should accept a LabColor accessor on nestedStackedBarsVertical's fill and stroke", () => {
     const colorScale = scaleQual12();
     const xScale = scaleBand<string>().domain(["A", "B"]).range([0, 400]);
     const yScale = scaleLinear().domain([0, 50]).range([300, 0]);
-
-    // The setter is the assertion; nothing is rendered, because the nested component needs a
-    // prepared nest that the stackedBar cases above already cover the colouring of.
     const chart = nestedStackedBarsVertical<Row>()
       .xScale(xScale)
       .yScale(yScale)
       .fill((slice) => colorScale(slice.series))
       .stroke(colorScale("X"));
 
-    expect(typeof chart.fill()).toBe("function");
-  });
-
-  test("line.stroke takes an accessor returning a scale's LabColor", () => {
-    const colorScale = scaleQual12();
-    type Series = { key: string; points: { x: number; y: number }[] };
-    const series: Series[] = [
-      {
-        key: "X",
-        points: [
-          { x: 0, y: 0 },
-          { x: 10, y: 10 },
-        ],
-      },
-      {
-        key: "Y",
-        points: [
-          { x: 0, y: 5 },
-          { x: 10, y: 15 },
-        ],
-      },
-    ];
-
-    const chart = line<{ x: number; y: number }, Series>()
-      .x((p) => p.x)
-      .y((p) => p.y)
-      .valuesAccessor((s: Series) => s.points)
-      .key((s: Series) => s.key)
-      .stroke((s: Series) => colorScale(s.key))
-      .transition(false);
-
-    const group = layer().selectGroup("lines").datum(series).call(chart).node() as SVGGElement;
-    const strokes = [...group.querySelectorAll("path.sszvis-line")].map(
-      (p) => (p as SVGPathElement).style.stroke,
-    );
-
-    expect(strokes.length).toBe(2);
-    expect(strokes[0]).toMatch(/^rgb/);
-  });
-
-  test("dot.fill and dot.stroke take a scale's LabColor", () => {
-    const colorScale = scaleQual12();
-    const chart = dot<Row>()
-      .x((d) => d.value)
-      .y((d) => d.value)
-      .radius(4)
-      .fill((d) => colorScale(d.category))
-      .stroke(colorScale("X"))
-      .transition(false);
-
-    const group = layer().selectGroup("dots").datum(rows).call(chart).node() as SVGGElement;
-    const fills = [...group.querySelectorAll("circle.sszvis-circle")].map((c) =>
-      c.getAttribute("fill"),
-    );
-
-    expect(fills.length).toBe(4);
-    expect(fills[0]).toBe(String(colorScale("X")));
-  });
-
-  test("stackedArea.fill and .stroke take a scale's LabColor", () => {
-    const colorScale = scaleQual12();
-    type Point = { x: number; y0: number; y1: number };
-    // The default layer shape: a layer IS its array of points, which the identity
-    // valuesAccessor the component defaults to already yields.
-    const layers: Point[][] = [
-      [
-        { x: 0, y0: 0, y1: 10 },
-        { x: 10, y0: 0, y1: 20 },
-      ],
-    ];
-
-    const chart = stackedArea<Point, Point[]>()
-      .x((p) => p.x)
-      .y0((p) => p.y0)
-      .y1((p) => p.y1)
-      .key((_l: Point[], i: number) => i)
-      .fill(colorScale("X"))
-      .stroke(colorScale("Y"))
-      .transition(false);
-
-    const group = layer().selectGroup("areas").datum(layers).call(chart).node() as SVGGElement;
-    const paths = [...group.querySelectorAll("path")];
-
-    expect(paths.length).toBeGreaterThan(0);
-    expect(paths[0].getAttribute("fill")).toBe(String(colorScale("X")));
-    expect(paths[0].getAttribute("stroke")).toBe(String(colorScale("Y")));
-  });
-
-  test("sunburst.fill and .stroke take a scale's LabColor", () => {
-    const colorScale = scaleQual12();
-    const chart = sunburst()
-      .fill((key: string) => colorScale(key))
-      .stroke(colorScale("X"));
-
-    expect(typeof chart.fill()).toBe("function");
+    expectTypeOf(chart.fill()).not.toBeAny();
   });
 
   test("the binned and linear colour legends take a scale returning LabColor", () => {
@@ -396,11 +426,13 @@ describe("the colour props widened in the second pass", () => {
     ).toBe(true);
   });
 
-  test("the map renderers' colour props take a scale's LabColor", () => {
+  /**
+   * Type-level only, for the same reason as sunburst above: these renderers need real topography
+   * to draw, and the setters are what regressed. A narrowed prop fails to compile here.
+   */
+  test("should accept a LabColor accessor on every colour prop the map renderers expose", () => {
     const colorScale = scaleQual12();
 
-    // Type-level only: these renderers need real topography to draw. The setters are what
-    // regressed, and a narrowed prop would fail to compile here.
     const geoJson = mapRendererGeoJson<Row & Record<string, unknown>>()
       .fill((d) => colorScale(d.category))
       .stroke(colorScale("X"));
@@ -413,12 +445,12 @@ describe("the colour props widened in the second pass", () => {
       .highlightStroke(colorScale("Y"))
       .lakePathColor(colorScale("X"));
 
-    expect(typeof geoJson.fill()).toBe("function");
-    expect(typeof bubble.fill()).toBe("function");
-    expect(typeof map.fill()).toBe("function");
+    expectTypeOf(geoJson.fill()).not.toBeAny();
+    expectTypeOf(bubble.fill()).not.toBeAny();
+    expectTypeOf(map.fill()).not.toBeAny();
   });
 
-  test("the geojson renderer's event handler is generic over its datum", () => {
+  test("should type an over handler's datum from the renderer's own datum type", () => {
     // Before this change the handler was `(datum: unknown) => void`, so a typed handler had
     // to narrow by hand. It now matches ChoroplethEventHandler<T> and BubbleEventHandler<T>.
     const seen: (string | undefined)[] = [];
@@ -427,6 +459,6 @@ describe("the colour props widened in the second pass", () => {
       seen.push(datum?.category);
     });
 
-    expect(typeof component.on("over")).toBe("function");
+    expectTypeOf(component.on("over")).not.toBeAny();
   });
 });
