@@ -326,6 +326,37 @@ describe("sample data", () => {
   });
 });
 
+describe("samples", () => {
+  test("should name each table once", () => {
+    expect(new Set(samples.map((sample) => sample.key)).size).toBe(samples.length);
+  });
+
+  /*
+   * `isPristine` compares the whole CSV, and the table editor rewrites it through
+   * `serialize` on every edit. A sample that does not survive that round-trip is
+   * dirty the instant it is loaded, so the picker would warn before anything was
+   * touched - and a field containing the delimiter is exactly the case that breaks.
+   */
+  test.each(samples.map((sample) => [sample.key, sample] as const))(
+    "should leave %s unchanged through the editor's own round-trip",
+    (_key, sample) => {
+      expect(serialize(parse(sample.csv))).toBe(sample.csv);
+      expect(isPristine(serialize(parse(sample.csv)))).toBe(true);
+    },
+  );
+
+  /* Every sample is offered under every chart type, so each one has to be a real table. */
+  test.each(samples.map((sample) => [sample.key, sample] as const))(
+    "should give %s at least two columns and a row of data",
+    (_key, sample) => {
+      const table = parse(sample.csv);
+      expect(table.columns.length).toBeGreaterThanOrEqual(2);
+      expect(table.rows.length).toBeGreaterThan(0);
+      expect(table.rows.every((row) => row.length === table.columns.length)).toBe(true);
+    },
+  );
+});
+
 const LINE: RecipeSummary = {
   ...RECIPE,
   key: RecipeKey.make("line"),
