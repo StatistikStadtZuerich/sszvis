@@ -7,6 +7,7 @@ import {
   MIN_SUNBURST_RING_WIDTH,
   prepareData,
 } from "../../src/layout/sunburst.js";
+import { describesTheLayoutContract } from "../support/layoutConformance.js";
 
 type Row = { continent: string; country: string; value: number };
 
@@ -18,7 +19,7 @@ const DATA: Row[] = [
 
 describe("layout/sunburst", () => {
   describe("computeLayout", () => {
-    test("should give the centre circle a third of the radius", () => {
+    test("should give the centre circle a third of the radius when the rings fit", () => {
       const layout = computeLayout(3, 600);
       expect(layout.centerRadius).toBe(100);
       expect(layout.centerRadius).toBe(600 / 6);
@@ -42,7 +43,7 @@ describe("layout/sunburst", () => {
       expect(layout.ringWidth).toBe(MIN_SUNBURST_RING_WIDTH);
     });
 
-    test("should scale with the chart width between the two limits", () => {
+    test("should scale the ring width with the chart width when it sits between the two limits", () => {
       const small = computeLayout(4, 300);
       const large = computeLayout(4, 600);
       expect(small.centerRadius).toBe(large.centerRadius / 2);
@@ -141,24 +142,28 @@ describe("layout/sunburst", () => {
     });
   });
 
+  describesTheLayoutContract({
+    layoutName: "sunburstLayout",
+    slots: [
+      { name: "numLayers", kind: "count", callWith: (bad) => computeLayout(bad, 600) },
+      { name: "chartWidth", kind: "size", callWith: (bad) => computeLayout(4, bad) },
+    ],
+    zeroed: [
+      {
+        when: "the hierarchy has no layers",
+        call: () => computeLayout(0, 600),
+        expected: { centerRadius: 0, numLayers: 0, ringWidth: 0 },
+      },
+      {
+        // the layer count is echoed back even though nothing can be drawn
+        when: "the chart has no width",
+        call: () => computeLayout(3, 0),
+        expected: { centerRadius: 0, numLayers: 3, ringWidth: 0 },
+      },
+    ],
+  });
+
   describe("degenerate inputs", () => {
-    test("should report no rings when the hierarchy has no layers", () => {
-      expect(computeLayout(0, 600)).toEqual({ centerRadius: 0, numLayers: 0, ringWidth: 0 });
-    });
-
-    test("should report no rings when the chart has no width", () => {
-      expect(computeLayout(3, 0)).toEqual({ centerRadius: 0, numLayers: 3, ringWidth: 0 });
-    });
-
-    test("should throw when the layer count is not a whole number of layers", () => {
-      expect(() => computeLayout(-3, 600)).toThrow(/numLayers/);
-      expect(() => computeLayout(2.5, 600)).toThrow(/numLayers/);
-    });
-
-    test("should throw when the width is negative", () => {
-      expect(() => computeLayout(4, -300)).toThrow(/chartWidth/);
-    });
-
     test("should report an empty radius extent when the data array is empty", () => {
       expect(getRadiusExtent([])).toEqual([0, 0]);
     });

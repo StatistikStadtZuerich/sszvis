@@ -63,7 +63,7 @@ describe("layout/smallMultiples", () => {
       expect(datum.gh).toBe(100);
     });
 
-    test("should place the groups left to right, then top to bottom", () => {
+    test("should place the groups left to right then top to bottom when the grid has several rows", () => {
       const node = render(grid(), groups(6));
       expect(multiples(node).map(transformOf)).toEqual([
         "translate(0,0)",
