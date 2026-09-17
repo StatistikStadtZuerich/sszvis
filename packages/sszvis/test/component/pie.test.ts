@@ -195,7 +195,7 @@ describe("component/pie", () => {
       expect(bound).toEqual([data[0], data[1]]);
     });
 
-    test("should rebind the group's datum to the rendered data", () => {
+    test("should leave the rendered data bound to the group when the render finishes", () => {
       // The tooltip anchors are rendered by calling the anchor component on the group
       // itself, which requires the data to be bound there. It stays bound afterwards, so
       // anything appended to the group later inherits the pie's data array.

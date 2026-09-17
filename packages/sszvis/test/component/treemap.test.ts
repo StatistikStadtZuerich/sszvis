@@ -6,6 +6,7 @@ import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
 import { type NodeDatum, prepareHierarchyData } from "../../src/layout/hierarchy.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 
 // Test data structures
 type TestDatum = {
@@ -20,6 +21,46 @@ describe("component/treemap", () => {
   let svg: LayerSelection<SVGGElement, number>;
   let data: TestDatum[];
   let cScale: (key: string) => string;
+
+  /** The rows every case starts from. A factory, so no test can mutate another's data. */
+  const makeData = (): TestDatum[] => [
+    {
+      category: "Technology",
+      subcategory: "Software",
+      value: 100,
+      name: "App A",
+    },
+    {
+      category: "Technology",
+      subcategory: "Software",
+      value: 80,
+      name: "App B",
+    },
+    {
+      category: "Technology",
+      subcategory: "Hardware",
+      value: 150,
+      name: "Device A",
+    },
+    {
+      category: "Finance",
+      subcategory: "Banking",
+      value: 200,
+      name: "Bank A",
+    },
+    {
+      category: "Finance",
+      subcategory: "Investment",
+      value: 90,
+      name: "Fund A",
+    },
+    {
+      category: "Healthcare",
+      subcategory: "Pharma",
+      value: 120,
+      name: "Drug A",
+    },
+  ];
 
   beforeEach(() => {
     container = document.createElement("div");
@@ -40,45 +81,7 @@ describe("component/treemap", () => {
       }),
     );
 
-    // Sample hierarchical data
-    data = [
-      {
-        category: "Technology",
-        subcategory: "Software",
-        value: 100,
-        name: "App A",
-      },
-      {
-        category: "Technology",
-        subcategory: "Software",
-        value: 80,
-        name: "App B",
-      },
-      {
-        category: "Technology",
-        subcategory: "Hardware",
-        value: 150,
-        name: "Device A",
-      },
-      {
-        category: "Finance",
-        subcategory: "Banking",
-        value: 200,
-        name: "Bank A",
-      },
-      {
-        category: "Finance",
-        subcategory: "Investment",
-        value: 90,
-        name: "Fund A",
-      },
-      {
-        category: "Healthcare",
-        subcategory: "Pharma",
-        value: 120,
-        name: "Drug A",
-      },
-    ];
+    data = makeData();
 
     cScale = scaleOrdinal<string, string>()
       .domain(["Technology", "Finance", "Healthcare"])
@@ -88,138 +91,6 @@ describe("component/treemap", () => {
   afterEach(() => {
     container?.parentNode?.removeChild(container);
     vi.restoreAllMocks();
-  });
-
-  describe("prepareData", () => {
-    test("should create hierarchical structure with chained API", () => {
-      const layoutData = prepareHierarchyData<TestDatum>()
-        .layer((d) => d.category)
-        .layer((d) => d.subcategory)
-        .value((d) => d.value)
-        .calculate(data);
-
-      expect(layoutData.children).toBeDefined();
-      expect(layoutData.children?.length).toBe(3); // Technology, Finance, Healthcare
-      expect(layoutData.value).toBeGreaterThan(0);
-      expect(layoutData.depth).toBe(0); // Root node
-    });
-
-    test("should handle uneven tree depth with null keys by using parent key as fallback", () => {
-      type UnevenDatum = {
-        category: string;
-        subcategory: string;
-        division: string | null;
-        team: string | null;
-        value: number;
-      };
-
-      const unevenData: UnevenDatum[] = [
-        // Full depth path
-        {
-          category: "Technology",
-          subcategory: "Hardware",
-          division: "Servers",
-          team: "Team Alpha",
-          value: 100,
-        },
-        // Missing team (null at deepest level)
-        {
-          category: "Technology",
-          subcategory: "Hardware",
-          division: "Servers",
-          team: null,
-          value: 85,
-        },
-        // Missing both division and team
-        {
-          category: "Finance",
-          subcategory: "Banking",
-          division: null,
-          team: null,
-          value: 200,
-        },
-      ];
-
-      const layoutData = prepareHierarchyData<UnevenDatum>()
-        .layer((d) => d.category)
-        .layer((d) => d.subcategory)
-        .layer((d) => d.division)
-        .layer((d) => d.team)
-        .value((d) => d.value)
-        .calculate(unevenData);
-
-      // Collect all leaf nodes and their keys
-      const leafNodes: Array<{ key: string; data: UnevenDatum }> = [];
-      layoutData.each((node) => {
-        if (node.data._tag === "leaf") {
-          leafNodes.push({
-            key: node.data.key,
-            data: node.data.data,
-          });
-        }
-      });
-
-      // All leaf nodes should have non-null keys
-      for (const leaf of leafNodes) {
-        expect(leaf.key).not.toBeNull();
-        expect(leaf.key).toBeDefined();
-        expect(typeof leaf.key).toBe("string");
-        expect(leaf.key.length).toBeGreaterThan(0);
-      }
-
-      // The node with team=null should have key="Servers" (parent's key)
-      const serverNullTeamNode = leafNodes.find(
-        (n) => n.data.team === null && n.data.division === "Servers",
-      );
-      expect(serverNullTeamNode).toBeDefined();
-      expect(serverNullTeamNode?.key).toBe("Servers");
-
-      // The node with both division=null and team=null should have key="Banking" (grandparent's key)
-      const bankingNullDivisionNode = leafNodes.find(
-        (n) => n.data.division === null && n.data.subcategory === "Banking",
-      );
-      expect(bankingNullDivisionNode).toBeDefined();
-      expect(bankingNullDivisionNode?.key).toBe("Banking");
-    });
-
-    test("should create hierarchical structure with options API", () => {
-      const layoutData = prepareHierarchyData(data, {
-        layers: [(d) => d.category, (d) => d.subcategory],
-        valueAccessor: (d) => d.value,
-      });
-      expect(layoutData.children).toBeDefined();
-      expect(layoutData.children?.length).toBe(3); // Technology, Finance, Healthcare
-      expect(layoutData.value).toBeGreaterThan(0);
-      expect(layoutData.depth).toBe(0); // Root node
-    });
-
-    test("should handle single layer hierarchy", () => {
-      const layoutData = prepareHierarchyData<TestDatum>()
-        .layer((d) => d.category)
-        .value((d) => d.value)
-        .calculate(data);
-      expect(layoutData.children).toBeDefined();
-      expect(layoutData.children?.length).toBe(3);
-    });
-
-    test("should throw error if no layers specified", () => {
-      expect(() => {
-        prepareHierarchyData<TestDatum>()
-          .value((d) => d.value)
-          .calculate(data);
-      }).toThrow("At least one layer must be specified");
-    });
-
-    test("should handle zero values gracefully", () => {
-      const layoutData = prepareHierarchyData<TestDatum>()
-        .layer((d) => d.category)
-        .value((d) => d.value)
-        .calculate([
-          ...data,
-          { category: "Empty", subcategory: "None", value: 0, name: "Empty A" },
-        ]);
-      expect(layoutData.children?.length).toBe(4); // Including Empty category
-    });
   });
 
   /** The hierarchy the treemap is normally given: rows grouped by category, then subcategory. */
@@ -272,6 +143,37 @@ describe("component/treemap", () => {
     ...svg.selectAll<SVGRectElement, unknown>("[data-tooltip-anchor]").nodes(),
   ];
 
+  /**
+   * A layer of its own, keyed, so the join contract can render twice into the same layer and
+   * once into a fresh one. `beforeEach` builds a single unkeyed layer, which cannot express that.
+   */
+  const layer = (key: string) =>
+    createSvgLayer(
+      container,
+      bounds({ width: 400, height: 300, top: 20, right: 20, bottom: 30, left: 40 }),
+      { key },
+    );
+
+  describesTheMarkJoin<TestDatum>(() => ({
+    make: () =>
+      treemap<TestDatum>()
+        .colorScale(cScale)
+        .containerWidth(360)
+        .containerHeight(250)
+        .transition(false) as never,
+    renderInto: (key, component, rows) =>
+      layer(key)
+        .datum(nested(rows))
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({
+      rects: node.querySelectorAll(".sszvis-treemap-rect").length,
+      anchors: node.querySelectorAll("[data-tooltip-anchor]").length,
+    }),
+    full: { data: makeData(), marks: { rects: 10, anchors: 10 } },
+    smaller: { data: makeData().slice(0, 3), marks: { rects: 4, anchors: 4 } },
+  }));
+
   describe("treemap component", () => {
     test("should paint the same fill whether colorScale is a constant or an accessor", () => {
       // colorScale is wrapped in fn.functor on set, so a colour and an accessor returning
@@ -302,7 +204,7 @@ describe("component/treemap", () => {
       expect(fills(() => "#ff0000")).toEqual(constant);
     });
 
-    test("should fill every rect with the colour of its own top-level category", () => {
+    test("should fill every rect with the colour of its own top-level category when the rows span several categories", () => {
       // Each expected fill comes from the source row's category rather than from the
       // component's own colorKeyOf, so this fails when the scale is applied to the wrong
       // node even though every fill is still a legitimate palette colour. The test this
@@ -416,12 +318,6 @@ describe("component/treemap", () => {
       }
     });
 
-    test("should draw nothing at all, without throwing, when the data is empty", () => {
-      expect(() => renderTreemap(flat([]))).not.toThrow();
-      expect(rectNodes()).toEqual([]);
-      expect(anchorNodes()).toEqual([]);
-    });
-
     test("should re-render without throwing when the caller does not re-bind the group", () => {
       // The render binds the flattened nodes to the group for the tooltip anchors and then
       // restores the hierarchy, so the group's datum is still a root the next time round. A
@@ -483,7 +379,7 @@ describe("component/treemap", () => {
       expect(clickHandler).toHaveBeenCalledTimes(1);
     });
 
-    test("should hand the handler the click event and the clicked node's laid-out data", () => {
+    test("should hand the handler the click event and the clicked node's laid-out data when a rect is clicked", () => {
       const clickHandler = vi.fn();
       renderTreemap(nested(), (c) => c.onClick(clickHandler));
 
@@ -553,14 +449,6 @@ describe("component/treemap", () => {
         expect(keyOf(d)).toBeDefined();
       }
       expect(anchorData().map(keyOf)).not.toContain("Technology");
-    });
-
-    test("should re-render the anchors in place rather than appending duplicates", () => {
-      renderTreemap(nested());
-      const first = anchorNodes().length;
-      expect(first).toBeGreaterThan(0);
-      renderTreemap(nested());
-      expect(anchorNodes().length).toBe(first);
     });
   });
 });

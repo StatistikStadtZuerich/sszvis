@@ -4,6 +4,7 @@ import sunburst from "../../src/component/sunburst.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
 import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 
 /** The flat input rows every fixture below is built from. */
 type Row = { cat: string; sub: string; value: number };
@@ -153,13 +154,19 @@ describe("component/sunburst", () => {
   /** The radii d3's arc wrote into a path, in the order they appear. */
   const radii = (path: string) => [...path.matchAll(/A([\d.]+),/g)].map((m) => Number(m[1]));
 
-  describe("rendering", () => {
-    test("should render one classed path per node when a hierarchy is bound to it", () => {
-      const node = render(sunburstOf(), hierarchyOf());
-      expect(arcs(node).length).toBe(5);
-      for (const a of arcs(node)) expect(a.tagName).toBe("path");
-    });
+  describesTheMarkJoin<Row>(() => ({
+    make: () => sunburstOf() as never,
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum(hierarchyOf(data))
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({ arcs: arcs(node).length, anchors: anchorNodes(node).length }),
+    full: { data: rows, marks: { arcs: 5, anchors: 5 } },
+    smaller: { data: [rows[0]], marks: { arcs: 2, anchors: 2 } },
+  }));
 
+  describe("rendering", () => {
     test("should flatten the hierarchy depth first, parent before children", () => {
       const node = render(sunburstOf(), hierarchyOf());
       expect(keys(node)).toEqual(["A", "A1", "A2", "B", "B1"]);
@@ -176,31 +183,6 @@ describe("component/sunburst", () => {
       ]);
     });
 
-    test("should render nothing for an empty data array", () => {
-      const node = render(sunburstOf(), []);
-      expect(arcs(node).length).toBe(0);
-      expect(anchorNodes(node).length).toBe(0);
-    });
-
-    test("should re-render in place rather than appending duplicates", () => {
-      const component = sunburstOf();
-      const g = group("rerender");
-      g.datum(hierarchyOf()).call(component as never);
-      g.datum(hierarchyOf()).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(arcs(node).length).toBe(5);
-      expect(anchorNodes(node).length).toBe(5);
-    });
-
-    test("should remove arcs when the data shrinks", () => {
-      const component = sunburstOf();
-      const g = group("shrink");
-      g.datum(hierarchyOf()).call(component as never);
-      g.datum(hierarchyOf([{ cat: "A", sub: "A1", value: 1 }])).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(keys(node)).toEqual(["A", "A1"]);
-    });
-
     test("should add arcs when the data grows", () => {
       const component = sunburstOf();
       const g = group("grow");
@@ -212,7 +194,7 @@ describe("component/sunburst", () => {
   });
 
   describe("input data", () => {
-    test("should partition a hierarchy handed to it", () => {
+    test("should compute the positions itself when it is handed a hierarchy", () => {
       // The caller only has to sum the hierarchy - prepareHierarchyData does that - and the
       // component computes the positions itself.
       const node = render(sunburstOf(), hierarchyOf());
@@ -265,7 +247,7 @@ describe("component/sunburst", () => {
       expect(warn).toHaveBeenCalledTimes(1);
     });
 
-    test("should not re-partition a pre-flattened array", () => {
+    test("should keep the positions it was given when the data is a pre-flattened array", () => {
       // Positions come from whatever is on the nodes, so an array can be positioned by hand.
       // Two half-turn arcs, each spanning the full radius.
       const flat: Arc[] = [
@@ -316,7 +298,7 @@ describe("component/sunburst", () => {
       expect(y).toBeCloseTo(0, 6);
     });
 
-    test("should accept a custom angle scale", () => {
+    test("should read the angles through the given scale when angleScale is set", () => {
       // Half a turn for the whole chart, so the first category's arc bisects at 45 degrees.
       const node = render(
         sunburstOf().angleScale(scaleLinear().range([0, Math.PI])),
@@ -502,12 +484,12 @@ describe("component/sunburst", () => {
       expect(attrs(node, "stroke")).toEqual(["white", "white", "white", "white", "white"]);
     });
 
-    test("should apply a configured stroke", () => {
+    test("should stroke every arc with the configured colour when stroke is a constant", () => {
       const node = render(sunburstOf().stroke("#00f"), hierarchyOf());
       expect(new Set(attrs(node, "stroke"))).toEqual(new Set(["#00f"]));
     });
 
-    test("should accept a stroke accessor, which receives the node", () => {
+    test("should stroke each arc from the accessor when stroke is an accessor", () => {
       const node = render(
         sunburstOf().stroke((d: Arc) => (d.depth === 1 ? "#f00" : "#00f")),
         hierarchyOf(),
@@ -553,16 +535,7 @@ describe("component/sunburst", () => {
       for (const anchor of anchors(node)) expect(anchor).not.toContain("NaN");
     });
 
-    test("should remove anchors when the data shrinks", () => {
-      const component = sunburstOf();
-      const g = group("anchor-shrink");
-      g.datum(hierarchyOf()).call(component as never);
-      g.datum(hierarchyOf([{ cat: "A", sub: "A1", value: 1 }])).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(anchorNodes(node).length).toBe(2);
-    });
-
-    test("should match the arcs one to one for a pre-flattened array", () => {
+    test("should give one anchor per arc when the data is a pre-flattened array", () => {
       const flattened = [...hierarchyOf()].filter((d) => d.data._tag !== "root");
       const node = render(sunburstOf(), flattened);
       expect(anchorKeys(node)).toEqual(keys(node));
