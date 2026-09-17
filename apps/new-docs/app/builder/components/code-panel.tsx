@@ -10,14 +10,17 @@ import { BUNDLE } from "../domain/host";
 import { utf8, zip } from "../domain/zip";
 import type { Generated } from "../workers/domain";
 
-const ORDER = ["ts", "js", "html", "csv"] satisfies ReadonlyArray<keyof Generated>;
+/* The generated files the panel can show. `assets` is bytes the bundle carries, not source. */
+type SourceKey = Exclude<keyof Generated, "assets">;
+
+const ORDER = ["ts", "js", "html", "csv"] satisfies ReadonlyArray<SourceKey>;
 
 const FILENAME = {
   ts: VIEWS.ts.filename,
   js: BUNDLE.chart,
   html: BUNDLE.html,
   csv: BUNDLE.data,
-} satisfies Record<keyof Generated, string>;
+} satisfies Record<SourceKey, string>;
 
 export const CodePanel = ({
   generated,
@@ -39,6 +42,18 @@ export const CodePanel = ({
          good response carrying an error page - which would ship as the image. */
       .then(async (response) => (response.ok ? new Uint8Array(await response.arrayBuffer()) : null))
       .catch(() => null);
+    /* Whatever else the chart loads - a map's geometry, say - travels with it for the same reason. */
+    const extras = await Promise.all(
+      generated.assets.map(async (asset) =>
+        fetch(asset.source)
+          .then(async (response) =>
+            response.ok
+              ? { name: asset.path, content: new Uint8Array(await response.arrayBuffer()) }
+              : null,
+          )
+          .catch(() => null),
+      ),
+    );
     save(
       "chart-bundle.zip",
       new Blob(
@@ -48,6 +63,7 @@ export const CodePanel = ({
             { name: BUNDLE.chart, content: utf8(generated.js.raw) },
             { name: BUNDLE.data, content: utf8(generated.csv.raw) },
             ...(fallback === null ? [] : [{ name: BUNDLE.fallback, content: fallback }]),
+            ...extras.filter((entry) => entry !== null),
           ]),
         ],
         { type: "application/zip" },
