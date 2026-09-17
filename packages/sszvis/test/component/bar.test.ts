@@ -369,7 +369,7 @@ describe("component/bar", () => {
       expect(attrs(node, "height")).toEqual(["30"]);
     });
 
-    test("should not let an in-flight tween overwrite a later synchronous render", async () => {
+    test("should keep the geometry a synchronous render wrote when a stale tween is still in flight", async () => {
       const g = group("interrupted");
       g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(barOf().transition(true) as never);
       // Schedules a tween from 0 towards 500.
@@ -391,7 +391,7 @@ describe("component/bar", () => {
       expect(attrs(node, "height")).toEqual(["10"]);
     });
 
-    test("should not interrupt a transition the consumer scheduled on the same bars", async () => {
+    test("should leave the consumer's own transition running when it re-renders the same bars", async () => {
       const g = group("consumer-tween");
       g.datum([{ x: 0, y: 0, w: 10, h: 10 }]).call(barOf().transition(false) as never);
       const node = g.node() as SVGGElement;

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import pyramid from "../../src/component/pyramid.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 type Datum = { age: number; value: number; color?: string };
@@ -79,16 +80,31 @@ describe("component/pyramid", () => {
       return d;
     });
 
-  describe("groups", () => {
-    test("should render a group per side and a group per reference line when it renders", () => {
-      const node = render(pyramidOf(), testData);
-      expect(side(node, "left")).not.toBeNull();
-      expect(side(node, "right")).not.toBeNull();
-      expect(side(node, "leftReference")).not.toBeNull();
-      expect(side(node, "rightReference")).not.toBeNull();
-    });
+  // Both sides are fed the same series: binding an empty population object is not an option,
+  // because a side accessor returning undefined throws from d3's join - the behaviour pinned
+  // under "required props" below.
+  describesTheMarkJoin<Datum>(() => ({
+    make: pyramidOf,
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum({ left: data, right: data })
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({
+      leftBars: bars(node, "left").length,
+      rightBars: bars(node, "right").length,
+      leftAnchors: anchors(node, "left").length,
+      rightAnchors: anchors(node, "right").length,
+    }),
+    full: { data: left, marks: { leftBars: 2, rightBars: 2, leftAnchors: 2, rightAnchors: 2 } },
+    smaller: {
+      data: [left[0]],
+      marks: { leftBars: 1, rightBars: 1, leftAnchors: 1, rightAnchors: 1 },
+    },
+  }));
 
-    test("should order the reference groups after the bars so the lines draw on top", () => {
+  describe("groups", () => {
+    test("should order the reference groups after the bar groups when it renders", () => {
       const node = render(pyramidOf(), testData);
       const keys = [...node.querySelectorAll("[data-d3-selectgroup]")].map((g) =>
         g.getAttribute("data-d3-selectgroup"),
@@ -105,12 +121,6 @@ describe("component/pyramid", () => {
   });
 
   describe("bars", () => {
-    test("should render one bar per datum on each side when both sides have data", () => {
-      const node = render(pyramidOf(), testData);
-      expect(bars(node, "left").length).toBe(2);
-      expect(bars(node, "right").length).toBe(2);
-    });
-
     test("should mirror the two sides around a one-pixel spine when it renders", () => {
       const node = render(pyramidOf(), testData);
       // On the left x = -SPINE_PADDING - barWidth, so the bar grows leftwards from the
@@ -166,39 +176,21 @@ describe("component/pyramid", () => {
       expect(attrs(node, "right", "fill")).toEqual(["#000", "#000"]);
     });
 
-    test("should render no bars and no anchors when both sides are empty", () => {
-      const node = render(pyramidOf(), { left: [], right: [] });
-      expect(bars(node, "left").length).toBe(0);
-      expect(bars(node, "right").length).toBe(0);
-      expect(anchors(node, "left")).toEqual([]);
-    });
-
     test("should draw each side independently when the two sides differ in length", () => {
       const node = render(pyramidOf(), { left, right: [right[0]] });
       expect(bars(node, "left").length).toBe(2);
       expect(bars(node, "right").length).toBe(1);
     });
 
-    test("should update the bars in place when the same data is rendered twice", () => {
+    test("should reuse a side's group rather than add a second one when it renders twice", () => {
+      // The marks themselves are covered by the shared join contract above; what is left here
+      // is the layer the marks live in, which the join never counts.
       const component = pyramidOf();
       const g = group("rerender");
       g.datum(testData).call(component as never);
       g.datum(testData).call(component as never);
       const node = g.node() as SVGGElement;
       expect(node.querySelectorAll('[data-d3-selectgroup="left"]').length).toBe(1);
-      expect(bars(node, "left").length).toBe(2);
-      expect(bars(node, "right").length).toBe(2);
-      expect(anchors(node, "left").length).toBe(2);
-    });
-
-    test("should remove the surplus bars when a side shrinks", () => {
-      const component = pyramidOf();
-      const g = group("shrink");
-      g.datum(testData).call(component as never);
-      g.datum({ left: [left[0]], right }).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(bars(node, "left").length).toBe(1);
-      expect(bars(node, "right").length).toBe(2);
     });
 
     test("should hand barWidth d3's index on both sides when the accessor takes one", () => {
@@ -230,7 +222,7 @@ describe("component/pyramid", () => {
   });
 
   describe("tooltip anchors", () => {
-    test("should render one anchor per bar inside its own side's group", () => {
+    test("should render one anchor per bar inside its own side's group when both sides have data", () => {
       const node = render(pyramidOf(), testData);
       expect(anchors(node, "left").length).toBe(2);
       expect(anchors(node, "right").length).toBe(2);

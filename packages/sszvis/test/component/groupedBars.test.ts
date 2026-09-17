@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { groupedBarsHorizontal, groupedBarsVertical } from "../../src/component/groupedBars.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 type TestDatum = {
@@ -125,13 +126,23 @@ describe("component/groupedBars", () => {
   const rects = () => svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar").nodes();
 
   describe.each(orientations)("$name grouped bars", (o) => {
-    test("should render a group, a unit per bar and a rect per bar when every value is defined", () => {
-      svg.selectGroup("bars").datum(testData).call(o.component(2));
-
-      expect(svg.selectAll("g.sszvis-bargroup").size()).toBe(3);
-      expect(svg.selectAll("g.sszvis-barunit").size()).toBe(6);
-      expect(svg.selectAll("rect.sszvis-bar").size()).toBe(6);
-    });
+    describesTheMarkJoin<TestDatum[]>(() => ({
+      make: () => o.component(2),
+      renderInto: (key, component, data) =>
+        svg
+          .selectGroup(key)
+          .datum(data)
+          .call(component as never)
+          .node() as SVGGElement,
+      count: (node) => ({
+        groups: node.querySelectorAll("g.sszvis-bargroup").length,
+        units: node.querySelectorAll("g.sszvis-barunit").length,
+        rects: node.querySelectorAll("rect.sszvis-bar").length,
+        anchors: node.querySelectorAll("[data-tooltip-anchor]").length,
+      }),
+      full: { data: testData, marks: { groups: 3, units: 6, rects: 6, anchors: 3 } },
+      smaller: { data: testData.slice(0, 1), marks: { groups: 1, units: 2, rects: 2, anchors: 1 } },
+    }));
 
     test("should draw a two-line cross in place of the rect when a bar's value is not defined", () => {
       const dataWithMissing: TestDatum[][] = [
@@ -181,7 +192,7 @@ describe("component/groupedBars", () => {
       );
     });
 
-    test("should paint each bar with the colours its fill and stroke accessors return", () => {
+    test("should paint each bar with the colours its accessors return when fill and stroke are accessors", () => {
       svg
         .selectGroup("bars")
         .datum(testData)
@@ -197,18 +208,6 @@ describe("component/groupedBars", () => {
       expect(bars.map((r) => [r.getAttribute("fill"), r.getAttribute("stroke")])).toEqual(
         testData.flat().map((d) => (d.category === "A" ? ["red", "black"] : ["blue", "white"])),
       );
-    });
-
-    test("should leave nothing behind when the data empties after a render", () => {
-      const bars = svg.selectGroup("bars");
-      const component = o.component(2);
-
-      bars.datum(testData).call(component);
-      expect(svg.selectAll("g.sszvis-bargroup").size()).toBe(3);
-
-      bars.datum([]).call(component);
-      expect(svg.selectAll("g.sszvis-bargroup").size()).toBe(0);
-      expect(svg.selectAll("rect.sszvis-bar").size()).toBe(0);
     });
 
     test("should follow the data when groups are added and removed", () => {
@@ -264,7 +263,7 @@ describe("component/groupedBars", () => {
       return (centreOf(0) + centreOf(1)) / 2;
     };
 
-    test("should put a vertical group's anchor above its tallest bar, centred on the group's bars", () => {
+    test("should put a vertical group's anchor above its tallest bar when the group holds fewer bars than groupSize", () => {
       const valueScale = scaleLinear().domain([0, 30]).range([200, 0]);
 
       svg
@@ -285,7 +284,7 @@ describe("component/groupedBars", () => {
       expect(anchorTransforms()).toEqual([`translate(${meanSlotCentre()},${valueScale(25)})`]);
     });
 
-    test("should put a horizontal group's anchor at its furthest bar end, centred on the group's bars", () => {
+    test("should put a horizontal group's anchor at its furthest bar end when the group holds fewer bars than groupSize", () => {
       const valueScale = scaleLinear().domain([0, 30]).range([0, 300]);
 
       svg
@@ -307,16 +306,6 @@ describe("component/groupedBars", () => {
       expect(anchorTransforms()).toEqual([`translate(${valueScale(25)},${meanSlotCentre()})`]);
     });
 
-    test("should keep one anchor per group and drop them all when the data empties", () => {
-      const bars = svg.selectGroup("bars");
-      const component = orientations[0].component(2);
-
-      bars.datum(testData).call(component);
-      expect(anchorTransforms()).toHaveLength(3);
-
-      bars.datum([]).call(component);
-      expect(anchorTransforms()).toHaveLength(0);
-    });
   });
 
   describe("missing value rendering", () => {
@@ -784,7 +773,7 @@ describe("component/groupedBars", () => {
       valueScale = scaleLinear().domain([0, 30]).range([200, 0]);
     });
 
-    test("should give a vertical group's geometry and colour accessors the bar's in-group index", () => {
+    test("should give a vertical group's geometry and colour accessors the bar's in-group index when every value is defined", () => {
       const seen: Record<"height" | "fill", [string, number][]> = { height: [], fill: [] };
       svg
         .selectGroup("bars")

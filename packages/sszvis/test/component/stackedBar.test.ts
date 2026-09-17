@@ -106,17 +106,17 @@ describe("component/stackedBar", () => {
   const anchors = (node: Element) => [...node.querySelectorAll("[data-tooltip-anchor]")];
 
   describe("stackedBarVerticalData", () => {
-    test("should return one series per series key", () => {
+    test("should return one series per series key when every stack carries every key", () => {
       const layout = verticalData();
       expect(layout.length).toBe(2);
       expect(layout.map((series) => series.length)).toEqual([2, 2]);
     });
 
-    test("should collect the series keys in the order the layout stacked them", () => {
+    test("should collect the series keys in stacking order when the layout is vertical", () => {
       expect(verticalLayout().keys).toEqual(["X", "Y"]);
     });
 
-    test("should stack the last series key on the baseline", () => {
+    test("should stack the last series key on the baseline when the layout is vertical", () => {
       // The vertical layout uses stackOrderReverse, so the series are laid down back to
       // front: the last key ("Y") sits on the baseline and the first key ("X") on top of it.
       expect(pairs(verticalData())).toEqual([
@@ -131,7 +131,7 @@ describe("component/stackedBar", () => {
       ]);
     });
 
-    test("should tag every slice with its series, stack and source datum", () => {
+    test("should tag every slice with its series, stack and source datum when the layout is vertical", () => {
       const layout = verticalData();
       expect(layout.map((series) => series.map((d) => d.series))).toEqual([
         ["X", "X"],
@@ -145,7 +145,7 @@ describe("component/stackedBar", () => {
       expect(layout[1][1].data).toBe(rows[3]);
     });
 
-    test("should report the highest stacked total as maxValue", () => {
+    test("should report the highest stacked total as maxValue when the stacks differ in total", () => {
       expect(verticalLayout().maxValue).toBe(40);
     });
 
@@ -170,7 +170,7 @@ describe("component/stackedBar", () => {
       expect(JSON.parse(JSON.stringify(layout)).maxValue).toBe(40);
     });
 
-    test("should return an ordinary array from stackedBarVerticalData", () => {
+    test("should return an ordinary array when stackedBarVerticalData is called", () => {
       // The array form is what `.datum(...)` binds, so it has to stay a real array: d3's
       // .data() takes the length of a non-array as 0 and silently draws nothing.
       const data = verticalData();
@@ -179,7 +179,7 @@ describe("component/stackedBar", () => {
       expect(data.length).toBe(2);
     });
 
-    test("should assign the deprecated extent onto the array form", () => {
+    test("should assign the deprecated extent onto the array form when stackedBarVerticalData is called", () => {
       // Kept for the charts that read state.stackedData.maxValue. `keys` is deliberately
       // not assigned - it shadowed Array.prototype.keys - so it lives only on the object
       // form, and every array operation still drops these two.
@@ -195,7 +195,7 @@ describe("component/stackedBar", () => {
       ).toBeUndefined();
     });
 
-    test("should return an empty layout for empty data", () => {
+    test("should report a maxValue of 0 when the data is empty", () => {
       const layout = verticalLayout([]);
       expect(layout.series.length).toBe(0);
       expect(layout.keys).toEqual([]);
@@ -221,7 +221,7 @@ describe("component/stackedBar", () => {
       expect(pairs(layout.series)).toEqual([[[2, 3]], [[0, 2]]]);
     });
 
-    test("should stack a series a stack has no row for as zero", () => {
+    test("should stack a series as zero when a stack has no row for it", () => {
       const sparse = rows.filter((d) => !(d.region === "B" && d.category === "Y"));
       // "Y" is on the baseline of the vertical layout, so stack "B" is only the "X" slice
       // sitting on a zero-height "Y".
@@ -252,7 +252,7 @@ describe("component/stackedBar", () => {
       expect(zero.stack).toBe("B");
     });
 
-    test("should collect the union of the series keys across sparse stacks", () => {
+    test("should collect the union of the series keys when no stack carries every key", () => {
       // No stack carries every key here, so the key set can only come from the union.
       const sparse: Row[] = [
         { region: "A", category: "X", value: 10 },
@@ -274,7 +274,7 @@ describe("component/stackedBar", () => {
       ]);
     });
 
-    test("should sum every row of a stack/series cell", () => {
+    test("should sum every row of a cell when a cell holds more than one row", () => {
       // Data that is not pre-aggregated to one row per (stack, series) pair is stacked to
       // its true total rather than truncated to its first row.
       const withDuplicate: Row[] = [...rows, { region: "A", category: "X", value: 90 }];
@@ -293,7 +293,7 @@ describe("component/stackedBar", () => {
       expect(layout.maxValue).toBe(120);
     });
 
-    test("should sum a cell on the horizontal layout too", () => {
+    test("should sum every row of a cell when the layout is horizontal", () => {
       const withDuplicate: Row[] = [...rows, { region: "A", category: "X", value: 90 }];
       const layout = horizontalLayout(withDuplicate);
       expect(pairs(layout.series)[0][0]).toEqual([0, 100]);
@@ -312,7 +312,7 @@ describe("component/stackedBar", () => {
   });
 
   describe("stackedBarHorizontalData", () => {
-    test("should stack the first series key on the baseline", () => {
+    test("should stack the first series key on the baseline when the layout is horizontal", () => {
       // The horizontal layout uses stackOrderNone, so the keys stack front to back: the
       // first key ("X") sits on the baseline. This is the only difference between the two
       // layouts; everything else about them is identical.
@@ -328,12 +328,12 @@ describe("component/stackedBar", () => {
       ]);
     });
 
-    test("should report the same keys and maxValue as the vertical layout", () => {
+    test("should report the same keys and maxValue as the vertical layout when the same data is stacked", () => {
       expect(horizontalLayout().keys).toEqual(verticalLayout().keys);
       expect(horizontalLayout().maxValue).toBe(verticalLayout().maxValue);
     });
 
-    test("should tag every slice with its series, stack and source datum", () => {
+    test("should tag every slice with its series, stack and source datum when the layout is horizontal", () => {
       const layout = horizontalData();
       expect(layout.map((series) => series.map((d) => d.series))).toEqual([
         ["X", "X"],
@@ -347,21 +347,18 @@ describe("component/stackedBar", () => {
   });
 
   describe("props", () => {
-    test("props should be chainable", () => {
-      const component = stackedBarVertical();
-      expect(
-        component.xScale(xBand).width(10).yScale(yLinear).height(10).fill("#000").stroke("#000"),
-      ).toBe(component);
-    });
-
-    test("should read back a function-valued prop unchanged", () => {
+    test("should read a geometry prop back unchanged when it was set to a function", () => {
       // xScale, width, yScale and height are wrapped in fn.functor, which passes functions
       // through untouched but boxes plain values, so only functions survive a round-trip.
       const component = stackedBarVertical();
       expect(component.xScale(xBand).xScale()).toBe(xBand);
       expect(component.width(10).width()).not.toBe(10);
       expect(component.width(10).width()()).toBe(10);
-      // fill and stroke are stored raw, so both a constant and an accessor read back as set.
+    });
+
+    test("should read fill and stroke back as set when they are constants", () => {
+      // Unlike the geometry props, fill and stroke are stored raw rather than boxed.
+      const component = stackedBarVertical();
       expect(component.fill("#f00").fill()).toBe("#f00");
       expect(component.stroke("#0f0").stroke()).toBe("#0f0");
     });
@@ -381,19 +378,13 @@ describe("component/stackedBar", () => {
   }));
 
   describe("stackedBarVertical rendering", () => {
-    test("should render one classed group per series", () => {
-      const node = render(verticalOf());
-      expect(stacks(node).length).toBe(2);
-      for (const g of stacks(node)) expect(g.tagName).toBe("g");
-    });
-
-    test("should render one rect per slice", () => {
+    test("should render one rect per slice inside its own series group when a layout is bound", () => {
       const node = render(verticalOf());
       expect(rects(node).length).toBe(4);
       for (const g of stacks(node)) expect(rects(g).length).toBe(2);
     });
 
-    test("should position the rects with the stack accessor and the upper bound", () => {
+    test("should position the rects from the stack accessor and the upper bound when the layout is vertical", () => {
       const node = render(verticalOf());
       // Series "X" spans [20, 30] over stack "A" and [25, 40] over stack "B".
       expect(attrs(rects(stacks(node)[0]), "x")).toEqual([String(xBand("A")), String(xBand("B"))]);
@@ -403,7 +394,7 @@ describe("component/stackedBar", () => {
       ]);
     });
 
-    test("should size the rects from the scaled bounds and the width prop", () => {
+    test("should size the rects from the scaled bounds and the width prop when the layout is vertical", () => {
       const node = render(verticalOf());
       expect(attrs(rects(stacks(node)[0]), "height")).toEqual([
         String(yLinear(20) - yLinear(30)),
@@ -414,12 +405,12 @@ describe("component/stackedBar", () => {
       }
     });
 
-    test("should accept a width accessor as well as a constant", () => {
+    test("should size each rect from the accessor when width is set to an accessor", () => {
       const node = render(verticalOf().width((d: Slice) => (d.series === "X" ? 5 : 15)));
       expect(attrs(rects(node), "width")).toEqual(["5", "5", "15", "15"]);
     });
 
-    test("should render a tooltip anchor per rect", () => {
+    test("should render a tooltip anchor per rect when the layout is vertical", () => {
       const node = render(verticalOf());
       expect(anchors(node).length).toBe(4);
     });
@@ -432,13 +423,7 @@ describe("component/stackedBar", () => {
       expect(anchors(node)[0].getAttribute("transform")).toBe(`translate(${x},${yLinear(30)})`);
     });
 
-    test("should render nothing for an empty layout", () => {
-      const node = render(verticalOf(), verticalData([]));
-      expect(stacks(node).length).toBe(0);
-      expect(rects(node).length).toBe(0);
-    });
-
-    test("should ignore the height prop", () => {
+    test("should size the rects from the y-scale when height is set on a vertical chart", () => {
       // The vertical orientation computes its height from the y-scale and never reads
       // `props.height`, although the JSDoc claims the prop determines the bar height.
       const withHeight = render(verticalOf().height(999));
@@ -449,13 +434,13 @@ describe("component/stackedBar", () => {
   });
 
   describe("stackedBarHorizontal rendering", () => {
-    test("should render one classed group per series, one rect per slice", () => {
+    test("should render one classed group per series and one rect per slice when the layout is horizontal", () => {
       const node = render(horizontalOf(), horizontalData());
       expect(stacks(node).length).toBe(2);
       expect(rects(node).length).toBe(4);
     });
 
-    test("should position the rects with the lower bound and the stack accessor", () => {
+    test("should position the rects from the lower bound and the stack accessor when the layout is horizontal", () => {
       const node = render(horizontalOf(), horizontalData());
       // Series "Y" spans [10, 30] over stack "A" and [15, 40] over stack "B".
       expect(attrs(rects(stacks(node)[1]), "x")).toEqual([
@@ -465,7 +450,7 @@ describe("component/stackedBar", () => {
       expect(attrs(rects(stacks(node)[1]), "y")).toEqual([String(yBand("A")), String(yBand("B"))]);
     });
 
-    test("should size the rects from the scaled bounds and the height prop", () => {
+    test("should size the rects from the scaled bounds and the height prop when the layout is horizontal", () => {
       const node = render(horizontalOf(), horizontalData());
       expect(attrs(rects(stacks(node)[1]), "width")).toEqual([
         String(xLinear(30) - xLinear(10)),
@@ -476,27 +461,27 @@ describe("component/stackedBar", () => {
       }
     });
 
-    test("should accept a height accessor as well as a constant", () => {
+    test("should size each rect from the accessor when height is set to an accessor", () => {
       const component = horizontalOf().height((d: Slice) => (d.series === "X" ? 5 : 15));
       const node = render(component, horizontalData());
       expect(attrs(rects(node), "height")).toEqual(["5", "5", "15", "15"]);
     });
 
-    test("should ignore the width prop", () => {
+    test("should size the rects from the x-scale when width is set on a horizontal chart", () => {
       // The horizontal orientation computes its width from the x-scale and never reads
       // `props.width`. This one the JSDoc gets right.
       const node = render(horizontalOf().width(999), horizontalData());
       expect(attrs(rects(node), "width")).not.toContain("999");
     });
 
-    test("should render a tooltip anchor per rect", () => {
+    test("should render a tooltip anchor per rect when the layout is horizontal", () => {
       const node = render(horizontalOf(), horizontalData());
       expect(anchors(node).length).toBe(4);
     });
   });
 
   describe("fill and stroke", () => {
-    test("should fill the rects from an accessor over the slice", () => {
+    test("should fill each rect from the accessor when fill is an accessor", () => {
       const node = render(verticalOf().fill((d: Slice) => (d.series === "X" ? "#f00" : "#0f0")));
       expect(attrs(rects(node), "fill")).toEqual(["#f00", "#f00", "#0f0", "#0f0"]);
     });
@@ -519,7 +504,7 @@ describe("component/stackedBar", () => {
       expect(attrs(rects(node), "fill")).toEqual(["#f00", "#f00", "#0f0", null]);
     });
 
-    test("should accept a constant fill", () => {
+    test("should paint every rect the same colour when fill is a constant", () => {
       const node = render(verticalOf().fill("#123456"));
       expect(new Set(attrs(rects(node), "fill"))).toEqual(new Set(["#123456"]));
     });
@@ -531,17 +516,17 @@ describe("component/stackedBar", () => {
       expect(attrs(rects(node), "fill")).toEqual([null, null, null, null]);
     });
 
-    test("should default the stroke to white, so the segments read as separated", () => {
+    test("should default the stroke to white when it is unset, so the segments read as separated", () => {
       const node = render(verticalOf());
       expect(new Set(attrs(rects(node), "stroke"))).toEqual(new Set(["#FFFFFF"]));
     });
 
-    test("should let a stroke value replace the white default", () => {
+    test("should replace the white default when a stroke value is set", () => {
       const node = render(verticalOf().stroke("none"));
       expect(new Set(attrs(rects(node), "stroke"))).toEqual(new Set(["none"]));
     });
 
-    test("should accept a stroke accessor over the slice", () => {
+    test("should stroke each rect from the accessor when stroke is an accessor", () => {
       const node = render(verticalOf().stroke((d: Slice) => (d.series === "X" ? "#f00" : "#0f0")));
       expect(attrs(rects(node), "stroke")).toEqual(["#f00", "#f00", "#0f0", "#0f0"]);
     });
@@ -568,7 +553,7 @@ describe("component/stackedBar", () => {
       expect(rects(node).length).toBe(2);
     });
 
-    test("should pick up a changed scale", () => {
+    test("should reposition the rects when the scale changes between renders", () => {
       // The animation is turned off, so the rescaled geometry is on the DOM synchronously.
       const component = verticalOf().transition(false);
       const g = group("rescale");
@@ -607,7 +592,7 @@ describe("component/stackedBar", () => {
       });
     });
 
-    test("should not keep a stale tooltip anchor per rect", () => {
+    test("should not keep a stale tooltip anchor when the same data is rendered twice", () => {
       const component = verticalOf();
       const g = group("rerender-anchors");
       g.datum(verticalData()).call(component as never);
@@ -654,7 +639,7 @@ describe("component/stackedBar", () => {
       ]);
     });
 
-    test("should be forwarded by the horizontal orientation too", () => {
+    test("should write the destination geometry synchronously when transition is off on a horizontal chart", () => {
       const component = horizontalOf().transition(false);
       const g = group("no-transition-horizontal");
       g.datum(horizontalData()).call(component as never);
@@ -725,7 +710,7 @@ describe("component/stackedBar", () => {
       expect(negativeRect.getAttribute("height")).toBe(String(yLinear(10) - yLinear(20)));
     });
 
-    test("should report an extent that covers a negative value", () => {
+    test("should report an extent that covers the baseline when a value is negative", () => {
       const layout = horizontalLayout(negative);
       // d3.stack accumulates in key order: "X" spans [0, -10] and "Y" [-10, 10].
       expect(layout.minValue).toBe(-10);
@@ -734,7 +719,7 @@ describe("component/stackedBar", () => {
       expect(horizontalLayout().minValue).toBe(0);
     });
 
-    test("should size the bars from a y-scale whose range ascends", () => {
+    test("should give every bar a positive height when the y-range ascends", () => {
       // The vertical height is the absolute difference of the two scaled bounds, so a scale
       // built with an ascending range - unusual in sszvis, where the y-range is inverted -
       // still produces a valid, positive height.
@@ -747,20 +732,7 @@ describe("component/stackedBar", () => {
   });
 
   describe("binding a layout return value", () => {
-    test("should draw bars when the whole return value of stackedBarVerticalData is bound", () => {
-      // The guard against the regression that broke every stacked chart: the charts bind
-      // whatever the layout function returned straight to the layer, so if that value stops
-      // being an array, d3's .data() reads its length as 0, joins nothing, and draws no bars
-      // without raising a single error.
-      const node = render(
-        verticalOf(),
-        stackedBarVerticalData(regionAcc, categoryAcc, valueAcc)(rows),
-      );
-      expect(stacks(node).length).toBe(2);
-      expect(rects(node).length).toBe(4);
-    });
-
-    test("should draw bars when the whole return value of stackedBarHorizontalData is bound", () => {
+    test("should draw bars when the whole return value of stackedBarHorizontalData is bound to the layer", () => {
       const node = render(
         horizontalOf(),
         stackedBarHorizontalData(regionAcc, categoryAcc, valueAcc)(rows),
