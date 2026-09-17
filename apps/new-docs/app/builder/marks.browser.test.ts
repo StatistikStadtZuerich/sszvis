@@ -9,7 +9,7 @@ import { compile } from "./domain/compile";
 import { initialSpec } from "./domain/initial-spec";
 import { assetsFor } from "./domain/compile";
 import { recipes } from "./domain/recipes";
-import { FeatureKey, summarize, type Recipe, type Spec } from "./domain/spec";
+import { ColumnName, FeatureKey, SERIES, summarize, type Recipe, type Spec } from "./domain/spec";
 
 /*
  * What a generated chart draws, which is the one thing the node suites cannot see.
@@ -138,14 +138,39 @@ const draw = async (
    * The emitted file is a script, not a module: it reads `d3`, `sszvis` and `config` as
    * globals, exactly as the generated index.html supplies them. Running it through
    * `new Function` rather than an import is what keeps this the real artefact.
+   *
+   * The `sszvis` it is handed is the real module with `app` wrapped, so the handle the
+   * chart throws away is kept for `afterEach`. A chart holds its container through a
+   * resize listener on the window, which removing the DOM does not release: without this
+   * every chart the file has ever drawn re-renders into a detached node on the next
+   * resize, and they accumulate for the length of the run.
    */
-  new Function("d3", "sszvis", "topojson", "config", js)(d3, sszvis, topojson, config);
+  new Function("d3", "sszvis", "topojson", "config", js)(
+    d3,
+    withTrackedApp(sszvis),
+    topojson,
+    config,
+  );
 
   await painted(container, expected.marks, expected.count);
   return container;
 };
 
+/** The apps drawn by the current test, so that `afterEach` can release them. */
+const apps: sszvis.AppHandle[] = [];
+
+/* Annotated rather than parameterised, so `props` picks up `app`'s own generics. */
+const trackedApp: typeof sszvis.app = (props) => {
+  const handle = sszvis.app(props);
+  apps.push(handle);
+  return handle;
+};
+
+const withTrackedApp = (module: typeof sszvis): typeof sszvis => ({ ...module, app: trackedApp });
+
 afterEach(() => {
+  /* The listener first, then the node it would have rendered into. */
+  for (const app of apps.splice(0)) app.destroy();
   document.body.innerHTML = "";
 });
 
@@ -215,5 +240,41 @@ describe("the bubble overlay", () => {
       ),
     );
     expect(fills, "the base map is not a single colour").toHaveLength(1);
+  });
+});
+
+/*
+ * The other shape the stacked area draws. Leaving the optional series role unmapped
+ * emits `""` as the category expression, which stacks every row into a single band -
+ * a different path through the recipe from the two-series sample above, and one that
+ * also has to suppress a legend whose single entry would have no name. Neither is
+ * visible to `compile.test.ts`: both spellings type-check.
+ */
+describe("a stacked area with no series column", () => {
+  test("should draw one band and no legend", async () => {
+    const recipe = recipes.find((candidate) => candidate.key === "area-chart-stacked");
+    expect(recipe, "the stacked area recipe").toBeDefined();
+    if (recipe === undefined) return;
+
+    const base = initialSpec(summarize(recipe));
+    const spec: Spec = {
+      ...base,
+      fields: { ...base.fields, [SERIES]: ColumnName.make("") },
+    };
+    const marks = { marks: "path.sszvis-stacked-area-path", count: 1 };
+    const container = await draw(recipe, spec, marks);
+
+    /*
+     * One band rather than two: the five dates of `zu-und-wegzuege` carry two rows each,
+     * and with no series to split them they belong to the same band. A count of two here
+     * would mean the empty category expression had not collapsed them.
+     */
+    expect(container.querySelectorAll(marks.marks)).toHaveLength(1);
+
+    /*
+     * And no legend, because its one entry would be blank. The mark rather than the
+     * group: an empty `<g>` left behind is not what a reader sees.
+     */
+    expect(container.querySelectorAll(".sszvis-legend__mark")).toHaveLength(0);
   });
 });
