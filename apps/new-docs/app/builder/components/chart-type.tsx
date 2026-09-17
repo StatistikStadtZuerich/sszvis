@@ -2,6 +2,7 @@ import {
   ChartAreaIcon,
   ChartBarIcon,
   ChartBarStackedIcon,
+  ChartColumnBigIcon,
   ChartColumnIcon,
   ChartColumnStackedIcon,
   ChartLineIcon,
@@ -20,6 +21,7 @@ const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
   ["bar-chart-horizontal", ChartBarIcon],
   ["bar-chart-vertical-stacked", ChartColumnStackedIcon],
   ["bar-chart-horizontal-stacked", ChartBarStackedIcon],
+  ["bar-chart-vertical-grouped", ChartColumnBigIcon],
   ["line-chart", ChartLineIcon],
   ["area-chart-stacked", ChartAreaIcon],
 ]);
