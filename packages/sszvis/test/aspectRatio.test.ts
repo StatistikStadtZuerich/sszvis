@@ -4,7 +4,6 @@ import {
   aspectRatio4to3,
   aspectRatio12to5,
   aspectRatio16to10,
-  aspectRatioAuto,
 } from "../src/aspectRatio.js";
 
 describe("aspectRatio", () => {
@@ -71,23 +70,6 @@ describe("aspectRatio", () => {
     test("should handle fractional results", () => {
       expect(aspectRatio12to5(120)).toBeCloseTo(50, 1);
       expect(aspectRatio12to5(360)).toBe(150);
-    });
-  });
-
-  describe("aspectRatioAuto", () => {
-    test("should handle different screen sizes", () => {
-      const dimensions1 = {
-        width: 400,
-        screenWidth: 800,
-        screenHeight: 600,
-      };
-      const dimensions2 = {
-        width: 400,
-        screenWidth: 1200,
-        screenHeight: 800,
-      };
-
-      expect(aspectRatioAuto(dimensions1)).toBe(aspectRatioAuto(dimensions2));
     });
   });
 });

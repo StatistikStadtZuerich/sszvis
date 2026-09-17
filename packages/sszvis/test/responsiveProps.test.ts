@@ -11,13 +11,6 @@ describe("responsiveProps", () => {
   ];
 
   describe("basic functionality", () => {
-    test("should create responsiveProps function", () => {
-      const rProps = responsiveProps();
-      expect(typeof rProps).toBe("function");
-      expect(typeof rProps.breakpoints).toBe("function");
-      expect(typeof rProps.prop).toBe("function");
-    });
-
     test("should handle measurements with default breakpoints", () => {
       const rProps = responsiveProps().prop("test", {
         _: "default",

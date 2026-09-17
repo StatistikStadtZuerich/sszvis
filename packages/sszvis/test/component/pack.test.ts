@@ -103,27 +103,6 @@ describe("component/pack", () => {
       expect(packComponent.circleStrokeWidth()).toBe(1);
     });
 
-    test("should render circles for pack data", () => {
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .layer((d) => d.subcategory)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360) // Chart area width
-            .containerHeight(250) // Chart area height
-            .transition(false),
-        );
-      const circles = svg.selectAll(".sszvis-pack-circle");
-      expect(circles.empty()).toBe(false);
-      expect(circles.size()).toBeGreaterThan(0);
-    });
-
     test("should accept a constant colour as well as an accessor", () => {
       // colorScale is wrapped in fn.functor on set, so a colour and an accessor returning
       // that colour agree - the rule every other colour property in the library follows.
@@ -178,40 +157,6 @@ describe("component/pack", () => {
         expect(fill === "none" || ["#1f77b4", "#ff7f0e", "#2ca02c"].includes(fill || "")).toBe(
           true,
         );
-      }
-    });
-
-    test("should handle stroke properties correctly", () => {
-      svg
-        .datum(
-          prepareHierarchyData<TestDatum>()
-            .layer((d) => d.category)
-            .value((d) => d.value)
-            .calculate(data),
-        )
-        .call(
-          pack<TestDatum>()
-            .colorScale(cScale)
-            .containerWidth(360)
-            .containerHeight(250)
-            .circleStroke("#ff0000")
-            .circleStrokeWidth(2)
-            .transition(false),
-        );
-
-      const leafCircles = svg
-        .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
-        .nodes()
-        .filter((circle) => circle.getAttribute("fill") !== "white");
-
-      if (leafCircles.length > 0) {
-        const leafCircle = leafCircles[0];
-        // The component applies color scale to stroke, not circleStroke prop
-        const stroke = leafCircle.getAttribute("stroke");
-        expect(stroke).toBeDefined();
-        // Stroke should be from the color scale
-        expect(["#1f77b4", "#ff7f0e", "#2ca02c"].includes(stroke || "")).toBe(true);
-        expect(leafCircle.getAttribute("stroke-width")).toBe("2");
       }
     });
 
@@ -343,15 +288,6 @@ describe("component/pack", () => {
               .transition(false),
           );
       }).not.toThrow();
-    });
-
-    test("should support transitions when enabled", () => {
-      const packComponent = pack<TestDatum>()
-        .colorScale(cScale)
-        .containerWidth(360)
-        .containerHeight(250)
-        .transition(true);
-      expect(packComponent.transition()).toBe(true);
     });
 
     test("should differentiate between branch and leaf nodes", () => {

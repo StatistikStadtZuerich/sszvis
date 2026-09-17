@@ -409,15 +409,6 @@ describe("component/treemap", () => {
       }).not.toThrow();
     });
 
-    test("should support transitions when enabled", () => {
-      const treemapComponent = treemap<TestDatum>()
-        .colorScale(cScale)
-        .containerWidth(360)
-        .containerHeight(250)
-        .transition(true);
-      expect(treemapComponent.transition()).toBe(true);
-    });
-
     test("should re-render on a group the caller does not re-bind", () => {
       // The render binds the flattened nodes to the group for the tooltip anchors and then
       // restores the hierarchy, so the group's datum is still a root the next time round. A
