@@ -149,7 +149,7 @@ export const mapChoropleth: RecipeDef = {
     },
   ],
   scripts: ["topojson"],
-  scalars: (spec, option) => {
+  scalars: (spec, option, _kind) => {
     const geography = geographyFor(option(GEOGRAPHY_OPTION));
     const labelField = spec.fields[GEO_LABEL] ?? "";
     return {

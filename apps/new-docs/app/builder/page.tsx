@@ -32,10 +32,32 @@ import { Preview, type PreviewStatus, roleList } from "./components/preview";
 import { Step } from "./components/step";
 import { TableEditor } from "./components/table-editor";
 import { TooltipFields } from "./components/tooltip-fields";
-import { columnKinds, parse, serialize } from "./domain/csv";
+import { columnKinds, fitRank, parse, serialize } from "./domain/csv";
 import { applySample, switchRecipe, unmappedRoles } from "./domain/initial-spec";
 import { isPristine, type Sample, samples } from "./domain/samples";
-import { optionValue, type RecipeSummary, TITLE } from "./domain/spec";
+import {
+  optionValue,
+  type ColumnKind,
+  type RecipeSummary,
+  type RoleKind,
+  TITLE,
+} from "./domain/spec";
+
+/*
+ * The kinds in the words the person building the chart uses. Not the `ColumnKind`
+ * names: those are measurement levels, which earn their place in the types by
+ * leaving room for finer ones, and are jargon to a chart author. The chart-type
+ * picker names a column it needs with the same three words.
+ */
+const KIND_LABEL = {
+  nominal: "text",
+  continuous: "number",
+  temporal: "date",
+} satisfies Record<ColumnKind, string>;
+
+/** Whether a column fills a role outright, which is when its kind needs no remark. */
+const fits = (column: ColumnKind | undefined, role: RoleKind) =>
+  fitRank(column ?? "nominal", role) === 0;
 
 export const clientLoader = () => null;
 clientLoader.hydrate = true as const;
@@ -103,7 +125,7 @@ const Builder = ({
   const recipe = recipeOf(recipes, spec) ?? first;
 
   const table = useMemo(() => parse(spec.csv), [spec.csv]);
-  const kinds = useMemo(() => columnKinds(table), [table]);
+  const kinds = useMemo(() => columnKinds(table, spec.kinds), [table, spec.kinds]);
   const missing = new Set(unmappedRoles(recipe, spec));
   const missingRoles = recipe.roles.filter((role) => missing.has(role.key));
 
@@ -153,7 +175,9 @@ const Builder = ({
           <Step n={1} title="Data">
             <TableEditor
               table={table}
+              kinds={spec.kinds}
               onChange={(next) => form.setFieldValue("csv", serialize(next))}
+              onKindsChange={(next) => form.setFieldValue("kinds", next)}
               actions={
                 pendingSample !== null ? (
                   <ConfirmSample
@@ -199,6 +223,7 @@ const Builder = ({
             <ChartType
               recipes={recipes}
               table={table}
+              kinds={spec.kinds}
               value={recipe.key}
               onChange={(key) => {
                 const next = recipes.find((entry) => entry.key === key);
@@ -256,10 +281,9 @@ const Builder = ({
                 },
                 ...table.columns.map((column) => ({
                   value: column,
-                  label:
-                    kinds.get(column) === role.kind
-                      ? column
-                      : `${column} (looks ${kinds.get(column)})`,
+                  label: fits(kinds.get(column), role.kind)
+                    ? column
+                    : `${column} (looks ${KIND_LABEL[kinds.get(column) ?? "nominal"]})`,
                 })),
               ];
               const id = `mapping-${role.key}`;

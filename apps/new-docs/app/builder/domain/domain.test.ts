@@ -4,7 +4,10 @@ import { describe, expect, test } from "vitest";
 import { isValidPosition, parseSwissDate, positionCode, referenceLinesCode } from "./annotations";
 import { compile } from "./compile";
 import {
+  addedName,
   columnKinds,
+  renameKind,
+  settleColumn,
   detectDelimiter,
   parse,
   parseBlock,
@@ -25,7 +28,7 @@ import {
   unmappedRoles,
   unmetRoles,
 } from "./initial-spec";
-import { recipes } from "./recipes";
+import { findRecipe, recipes } from "./recipes";
 import { isPristine, sampleFor, samples } from "./samples";
 import {
   ColumnName,
@@ -123,36 +126,40 @@ describe("csv", () => {
     [
       "values that agree",
       "n,d,c\n1,01.02.2020,x\n2,03.04.2021,y",
-      { n: "number", d: "date", c: "category" },
+      { n: "continuous", d: "temporal", c: "nominal" },
     ],
-    ["values that disagree", "a,mixed\nx,1\ny,z", { mixed: "category" }],
-    ["an infinity", "a,b\nx,Infinity\ny,Infinity", { b: "category" }],
-    ["a negative infinity", "a,b\nx,-Infinity\ny,-Infinity", { b: "category" }],
-    ["a literal that overflows", "a,b\nx,1e400\ny,1e400", { b: "category" }],
-    ["one infinity among numbers", "a,b\nx,1\ny,Infinity", { b: "category" }],
-    ["nothing but blanks", "a,b\nx,\ny,", { b: "category" }],
-    ["ordinary decimals and signs", "a,b,c\nx,-1.5,2e3\ny,0,+4", { b: "number", c: "number" }],
+    ["values that disagree", "a,mixed\nx,1\ny,z", { mixed: "nominal" }],
+    ["an infinity", "a,b\nx,Infinity\ny,Infinity", { b: "nominal" }],
+    ["a negative infinity", "a,b\nx,-Infinity\ny,-Infinity", { b: "nominal" }],
+    ["a literal that overflows", "a,b\nx,1e400\ny,1e400", { b: "nominal" }],
+    ["one infinity among numbers", "a,b\nx,1\ny,Infinity", { b: "nominal" }],
+    ["nothing but blanks", "a,b\nx,\ny,", { b: "nominal" }],
+    [
+      "ordinary decimals and signs",
+      "a,b,c\nx,-1.5,2e3\ny,0,+4",
+      { b: "continuous", c: "continuous" },
+    ],
   ] as const)("should classify the column when it holds %s", ([, csv, expected]) => {
-    const kinds = columnKinds(parse(csv));
+    const kinds = columnKinds(parse(csv), {});
     for (const [column, kind] of Object.entries(expected))
       expect(kinds.get(column), column).toBe(kind);
   });
 
   test("should sort numbers numerically and text alphabetically, blanks last", () => {
     const table = parse("c,n\nb,10\n,2\na,9\nÄ,");
-    expect(sortRows(table, 1, "asc").rows.map((row) => row[1])).toEqual(["2", "9", "10", ""]);
-    expect(sortRows(table, 1, "desc").rows.map((row) => row[1])).toEqual(["10", "9", "2", ""]);
-    expect(sortRows(table, 0, "asc").rows.map((row) => row[0])).toEqual(["a", "Ä", "b", ""]);
+    expect(sortRows(table, 1, "asc", {}).rows.map((row) => row[1])).toEqual(["2", "9", "10", ""]);
+    expect(sortRows(table, 1, "desc", {}).rows.map((row) => row[1])).toEqual(["10", "9", "2", ""]);
+    expect(sortRows(table, 0, "asc", {}).rows.map((row) => row[0])).toEqual(["a", "Ä", "b", ""]);
   });
 
   test("should sort Swiss dates chronologically and keep ties in their original order", () => {
     const table = parse("d,x\n01.02.2021,first\n31.12.2020,second\n01.02.2021,third");
-    expect(sortRows(table, 0, "asc").rows.map((row) => row[1])).toEqual([
+    expect(sortRows(table, 0, "asc", {}).rows.map((row) => row[1])).toEqual([
       "second",
       "first",
       "third",
     ]);
-    expect(sortRows(table, 0, "desc").rows.map((row) => row[1])).toEqual([
+    expect(sortRows(table, 0, "desc", {}).rows.map((row) => row[1])).toEqual([
       "first",
       "third",
       "second",
@@ -204,6 +211,7 @@ describe("optionValue", () => {
     features: [],
     tooltip: tip(""),
     annotations: [],
+    kinds: {},
   });
 
   test("should return the typed value when set, the fallback when blank and nothing when unknown", () => {
@@ -270,7 +278,7 @@ describe("sample data", () => {
   test("should open each recipe on a sample its required roles can bind", () => {
     for (const recipe of recipes) {
       expect(
-        unmetRoles(summarize(recipe), parse(sampleFor(recipe.sample).csv)),
+        unmetRoles(summarize(recipe), parse(sampleFor(recipe.sample).csv), {}),
         recipe.key,
       ).toEqual([]);
     }
@@ -387,13 +395,121 @@ const LINE: RecipeSummary = {
   ],
 };
 
+describe("pinned column kinds", () => {
+  /* A year reads as a number, which is what the pin is there to overrule. */
+  const YEARS = "Jahr,Anzahl\n1999,10\n2000,20";
+  const pin = (column: string, kind: "nominal" | "continuous" | "temporal") => ({
+    [ColumnName.make(column)]: kind,
+  });
+
+  test("should bind a pinned column to the role its pin fits rather than the one its values suggest", () => {
+    const table = parse(YEARS);
+    /* Both columns read as numbers, so the label role takes the first of them. */
+    expect(bindRoles(RECIPE, table, {})).toMatchObject({ cat: "Jahr", num: "Anzahl" });
+    /* Pinning the measure as text leaves only the year to be measured. */
+    expect(bindRoles(RECIPE, table, pin("Anzahl", "nominal"))).toMatchObject({
+      cat: "Anzahl",
+      num: "Jahr",
+    });
+  });
+
+  test("should ignore a pin naming a column the table does not have", () => {
+    const table = parse(YEARS);
+    expect(columnKinds(table, pin("Fehlt", "temporal")).get("Fehlt")).toBeUndefined();
+    expect(bindRoles(RECIPE, table, pin("Fehlt", "nominal"))).toEqual(bindRoles(RECIPE, table, {}));
+  });
+
+  test("should change which roles a recipe cannot fill when a pin takes its last fitting column", () => {
+    const table = parse(YEARS);
+    expect(unmetRoles(RECIPE, table, {})).toEqual([]);
+    const both = { ...pin("Jahr", "nominal"), ...pin("Anzahl", "nominal") };
+    expect(unmetRoles(RECIPE, table, both).map((role) => role.key)).toEqual(["num"]);
+  });
+
+  /*
+   * NOTE: dates rather than numbers, because the collator is numeric-aware - it
+   * already orders "9" before "10" - so a column of plain digits sorts the same
+   * whether it is read as a measure or as labels. Dates are where the two
+   * comparators genuinely part: by date, or by the day each one happens to start
+   * with.
+   */
+  test("should sort a column pinned as text by its text, not by the dates it holds", () => {
+    const table = parse("d\n01.02.2020\n10.01.2019\n05.03.2018");
+    expect(sortOrder(table, 0, "asc", {})).toEqual([2, 1, 0]);
+    expect(sortOrder(table, 0, "asc", pin("d", "nominal"))).toEqual([0, 2, 1]);
+  });
+
+  /*
+   * Renaming one column onto another's name. The names are not unique until the
+   * new one settles, so a pin moved by the name a header shows mid-edit would be
+   * taken off whichever column already answered to it.
+   */
+  test("should move only the edited column's pin when its typed name collides with another", () => {
+    const table = parse("Jahr,Wert\n1,2");
+    const typed = { ...table, columns: [ColumnName.make("Wert"), ColumnName.make("Wert")] };
+    const kinds = { ...pin("Jahr", "temporal"), ...pin("Wert", "nominal") };
+    const next = settleColumn(typed, 0, ColumnName.make("Jahr"), kinds);
+    expect(next.table.columns).toEqual(["Wert 2", "Wert"]);
+    /* The column the user never touched keeps what it was given. */
+    expect(next.kinds).toEqual({ "Wert 2": "temporal", Wert: "nominal" });
+  });
+
+  test("should name an added column distinctly from one the user has already typed", () => {
+    /* Two columns of one name are one column to everything that reads them by name. */
+    const columns = [ColumnName.make("Spalte 2")];
+    expect(addedName(columns)).toBe("Spalte 2 2");
+    expect(addedName([...columns, addedName(columns)])).toBe("Spalte 3");
+  });
+
+  test("should keep a pin under the column's new name when it is renamed", () => {
+    const kinds = pin("Jahr", "nominal");
+    expect(renameKind(kinds, ColumnName.make("Jahr"), ColumnName.make("Year"))).toEqual({
+      Year: "nominal",
+    });
+    /* A pin for another column is left where it is. */
+    expect(renameKind(kinds, ColumnName.make("Anzahl"), ColumnName.make("Count"))).toEqual(kinds);
+  });
+
+  test("should drop the pins when the table is replaced by a sample", () => {
+    const spec: Spec = { ...initialSpec(RECIPE, YEARS), kinds: pin("Jahr", "nominal") };
+    expect(applySample(spec, RECIPE, DEMO_CSV).kinds).toEqual({});
+  });
+
+  test("should emit the same code for a pinned spec as for an unpinned one", async () => {
+    const recipe = Effect.runSync(findRecipe("bar-chart-vertical"));
+    const spec = initialSpec(summarize(recipe), YEARS);
+    const pinned: Spec = { ...spec, kinds: pin("Jahr", "nominal") };
+    /* A pin steers which column fills which role; it must not reach the code. The
+       fields are held equal so the two specs differ in nothing but the pin. */
+    expect(Effect.runSync(compile(recipe, { ...pinned, fields: spec.fields }))).toBe(
+      Effect.runSync(compile(recipe, spec)),
+    );
+  });
+
+  test("should hand every recipe a callable kind accessor", () => {
+    /* No recipe reads it, so nothing else would notice if it stopped arriving. */
+    for (const recipe of recipes) {
+      let seen: unknown;
+      const probe: typeof recipe = {
+        ...recipe,
+        scalars: (spec, option, kind) => {
+          seen = kind;
+          return recipe.scalars(spec, option, kind);
+        },
+      };
+      Effect.runSync(compile(probe, initialSpec(summarize(recipe))));
+      expect(typeof seen, recipe.key).toBe("function");
+    }
+  });
+});
+
 describe("bindRoles", () => {
   test("should let a required category role take a date or number column, preferring text", () => {
-    expect(bindRoles(RECIPE, parse("Jahr,Anzahl\n2020,1\n2021,2"))).toMatchObject({
+    expect(bindRoles(RECIPE, parse("Jahr,Anzahl\n2020,1\n2021,2"), {})).toMatchObject({
       cat: "Jahr",
       num: "Anzahl",
     });
-    expect(bindRoles(RECIPE, parse("Datum,Anzahl\n01.01.2020,1"))).toMatchObject({
+    expect(bindRoles(RECIPE, parse("Datum,Anzahl\n01.01.2020,1"), {})).toMatchObject({
       cat: "Datum",
       num: "Anzahl",
     });
@@ -401,32 +517,38 @@ describe("bindRoles", () => {
 
   test("should bind an optional role only to a column of exactly its kind", () => {
     /* A spare date or number column must not become a series on its own. */
-    const fields = bindRoles(RECIPE, parse("Datum,Name,Anzahl\n01.01.2020,x,1"));
+    const fields = bindRoles(RECIPE, parse("Datum,Name,Anzahl\n01.01.2020,x,1"), {});
     expect(fields).toEqual({ cat: "Name", num: "Anzahl", series: "" });
   });
 
   test("should bind the date role before a category role competes for the only date column", () => {
-    const fields = bindRoles(LINE, parse("Datum,Anzahl\n01.01.2020,1"));
+    const fields = bindRoles(LINE, parse("Datum,Anzahl\n01.01.2020,1"), {});
     expect(fields).toEqual({ date: "Datum", num: "Anzahl", series: "" });
   });
 
   test("should keep a prior binding when its column still fits, and drop it when it does not", () => {
     const table = parse("Name,Anzahl,Menge\nx,1,2");
-    expect(bindRoles(RECIPE, table, mapping({ num: "Menge" }))[RoleKey.make("num")]).toBe("Menge");
-    expect(bindRoles(RECIPE, table, mapping({ num: "Name" }))[RoleKey.make("num")]).toBe("Anzahl");
+    expect(bindRoles(RECIPE, table, {}, mapping({ num: "Menge" }))[RoleKey.make("num")]).toBe(
+      "Menge",
+    );
+    expect(bindRoles(RECIPE, table, {}, mapping({ num: "Name" }))[RoleKey.make("num")]).toBe(
+      "Anzahl",
+    );
   });
 });
 
 describe("unmetRoles", () => {
   test("should name the required roles the table cannot fill", () => {
-    expect(unmetRoles(LINE, parse("Name,Anzahl\nx,1")).map((role) => role.key)).toEqual(["date"]);
-    expect(unmetRoles(RECIPE, parse("Name,Anzahl\nx,1"))).toEqual([]);
-    expect(unmetRoles(RECIPE, parse("Name\nx"))).toHaveLength(1);
+    expect(unmetRoles(LINE, parse("Name,Anzahl\nx,1"), {}).map((role) => role.key)).toEqual([
+      "date",
+    ]);
+    expect(unmetRoles(RECIPE, parse("Name,Anzahl\nx,1"), {})).toEqual([]);
+    expect(unmetRoles(RECIPE, parse("Name\nx"), {})).toHaveLength(1);
   });
 });
 
 describe("switchRecipe", () => {
-  test("should keep the data, shared bindings, shared options and same-role annotations, and reset the rest", () => {
+  test("should keep the data, shared bindings, shared options, pinned kinds and same-role annotations, and reset the rest", () => {
     const yLine = {
       kind: "reference-line",
       role: RoleKey.make("num"),
@@ -441,6 +563,9 @@ describe("switchRecipe", () => {
       features: [],
       tooltip: tip("cat", ["num"]),
       annotations: [yLine],
+      /* Pinned to the kind it already reads as, so it proves the pin travels
+         without also moving a binding and confusing what this test shows. */
+      kinds: { [ColumnName.make("Anzahl")]: "continuous" },
     };
     expect(switchRecipe(spec, RECIPE, LINE)).toEqual({
       recipe: "line",
@@ -451,6 +576,7 @@ describe("switchRecipe", () => {
       features: ["two"],
       tooltip: LINE.defaultTooltip,
       annotations: [yLine],
+      kinds: { Anzahl: "continuous" },
     });
   });
 
@@ -833,6 +959,7 @@ describe("compile", () => {
     features: keys.map((key) => FeatureKey.make(key)),
     tooltip: tip(""),
     annotations: [],
+    kinds: {},
   });
 
   const feature = (key: string, fragments: Record<string, string[]>) => ({
@@ -1008,6 +1135,7 @@ describe("tooltipText", () => {
     features: [],
     tooltip,
     annotations: [],
+    kinds: {},
   });
 
   const bound = mapping({ category: "Sektor", value: "Anzahl", date: "Datum" });
@@ -1104,18 +1232,20 @@ describe("sortOrder", () => {
   const table = parse("Sektor,Anzahl\nGastgewerbe,20892\nBaugewerbe,17567\nHandel,42196");
 
   test("should return row indices rather than rows, so the table is untouched", () => {
-    expect(sortOrder(table, 0, "asc")).toEqual([1, 0, 2]);
+    expect(sortOrder(table, 0, "asc", {})).toEqual([1, 0, 2]);
     expect(table.rows[0]?.[0]).toBe("Gastgewerbe");
   });
 
   test("should order an all-non-finite column deterministically, as text", () => {
     /* Sorted as numbers these went through `Infinity - Infinity`, i.e. a NaN comparator. */
-    expect(sortOrder(parse("v\nInfinity\n-Infinity\nInfinity"), 0, "asc")).toEqual([1, 0, 2]);
+    expect(sortOrder(parse("v\nInfinity\n-Infinity\nInfinity"), 0, "asc", {})).toEqual([1, 0, 2]);
   });
 
   test("should agree with sorting the rows outright", () => {
     for (const direction of ["asc", "desc"] as const) {
-      expect(reorder(table, sortOrder(table, 1, direction))).toEqual(sortRows(table, 1, direction));
+      expect(reorder(table, sortOrder(table, 1, direction, {}))).toEqual(
+        sortRows(table, 1, direction, {}),
+      );
     }
   });
 

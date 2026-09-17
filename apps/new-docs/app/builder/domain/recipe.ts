@@ -111,6 +111,7 @@ const probeSpec = (def: RecipeDef, over: Partial<Spec>): Spec => ({
   features: [],
   tooltip: def.defaultTooltip,
   annotations: [],
+  kinds: {},
   ...over,
 });
 

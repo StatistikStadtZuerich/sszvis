@@ -70,6 +70,50 @@ Replacing a table the user has edited discards that work, so the picker asks
 first; a table still exactly as a sample left it (`isPristine`) is swapped
 without a prompt.
 
+## Kinds
+
+Two vocabularies, because a column's data and a chart's appetite are different
+questions. A `ColumnKind` - `nominal`, `continuous`, `temporal` - says what a
+column holds. A `RoleKind` - `category`, `number`, `date` - says what a recipe
+wants of one, and what kind of value positions a reference line. `fitRank` maps
+between them: an exact fit is 0, and a category role will take anything since
+any value can be a label, preferring dates over numbers because dates read as
+labels still read in order. Keeping them apart is what lets a finer measurement
+level - `ordinal` beside `nominal`, `discrete` beside `continuous` - be added
+without every recipe acquiring an opinion about it. The names are measurement
+levels for the same reason; `continuous` covers whole numbers until `discrete`
+earns its place by changing something observable.
+
+`detectedKinds` reads a column from its values. `spec.kinds` is what the user
+said instead, and it is **sparse**: a column appears only where they overruled
+the detector, so everything else keeps re-reading as it is edited. `columnKinds`
+lays one over the other and is what every consumer asks. It takes the overrides
+with no default, so a call site that has not been told about pins fails to
+compile rather than quietly ignoring them.
+
+A pin steers `bindRoles`, and through it which chart types report an unmet role;
+it picks the sort comparator; and it names the kind the mapping step reports. It
+reaches no emitted code. Pins carry through a chart-type switch and through a
+column rename, and are dropped whenever the whole table is replaced - loading a
+sample, or saving from the paste panel - because a pin that survived would land
+on whichever new column happened to share its name.
+
+A rename re-keys the pin at exactly one moment: when the typed name settles
+(`settleColumn`), from the name the column carried before the caret entered it.
+Mid-edit a header may read exactly what another column is called, and a pin moved
+by the name showing then would be taken off whichever column already answered to
+it. For the same reason `addedName` names a new column distinctly rather than by
+the count alone - two columns of one name are one column to everything that reads
+them by name, pins included.
+
+`RecipeDef.scalars` receives a `kind` accessor that no recipe reads. It is there
+because a sparse `spec.kinds` cannot be resolved by a recipe on its own, so the
+first recipe that needs to emit differently per kind would otherwise have to
+change the type and all eight call sites to reach one.
+
+The three kinds are named for the reader in `page.tsx` - text, number, date -
+not by their measurement levels, which are jargon outside the type system.
+
 ## Keys
 
 Five kinds of name run through the spec, and every one of them is a string: a

@@ -51,7 +51,7 @@ export const barChartHorizontal: RecipeDef = {
   ],
   /* No sort feature: the bars follow the row order of the data, which the table editor sorts. */
   features: [TOOLTIP, REFERENCE_LINES_FEATURE],
-  scalars: (spec, option) => ({
+  scalars: (spec, option, _kind) => ({
     SERIES_KEY: str(option(SERIES_KEY)),
     X_LABEL: str(option(X_LABEL_OPTION)),
     CATEGORY_FIELD: str(spec.fields[CATEGORY] ?? ""),

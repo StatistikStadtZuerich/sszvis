@@ -159,6 +159,7 @@ describe("spec text in the generated code", () => {
       features: [],
       tooltip: tip("value"),
       annotations: [],
+      kinds: {},
       ...over,
     });
     return ts.raw;
