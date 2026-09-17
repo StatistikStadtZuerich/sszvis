@@ -5,9 +5,8 @@ import * as topojson from "topojson-client";
 import tsBlankSpace from "ts-blank-space";
 import { afterEach, describe, expect, test } from "vitest";
 
-import { compile } from "./domain/compile";
+import { assetsFor, compile } from "./domain/compile";
 import { initialSpec } from "./domain/initial-spec";
-import { assetsFor } from "./domain/compile";
 import { recipes } from "./domain/recipes";
 import { ColumnName, FeatureKey, SERIES, summarize, type Recipe, type Spec } from "./domain/spec";
 
