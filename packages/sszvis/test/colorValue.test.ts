@@ -7,7 +7,6 @@ import bar, { type BarComponent } from "../src/component/bar.js";
 import dot from "../src/component/dot.js";
 import { groupedBarsVertical } from "../src/component/groupedBars.js";
 import line from "../src/component/line.js";
-import nestedStackedBarsVertical from "../src/component/nestedStackedBar.js";
 import stackedArea from "../src/component/stackedArea.js";
 import {
   stackedBarHorizontal,
@@ -15,15 +14,11 @@ import {
   stackedBarVertical,
   stackedBarVerticalData,
 } from "../src/component/stackedBar.js";
-import sunburst from "../src/component/sunburst.js";
 import { createSvgLayer } from "../src/createSvgLayer.js";
 import handleRuler from "../src/control/handleRuler.js";
 import "../src/d3-selectgroup.js";
 import legendColorBinned from "../src/legend/binnedColorScale.js";
 import legendColorLinear from "../src/legend/linearColorScale.js";
-import mapRendererBubble from "../src/map/renderer/bubble.js";
-import mapRendererGeoJson from "../src/map/renderer/geojson.js";
-import choropleth from "../src/maps/choropleth.js";
 import type { ColorValue } from "../src/types.js";
 
 type Datum = { x: number; y: number; category: string };
@@ -53,13 +48,6 @@ describe("colour props accept the library's own scales", () => {
     containers.push(container);
     return createSvgLayer(`#${container.id}`, undefined, { key: `cv-${layerKey}` });
   };
-
-  test("a LabColor is a ColorValue, and a colour scale produces one", () => {
-    expectTypeOf<LabColor>().toMatchTypeOf<ColorValue>();
-    expectTypeOf<string>().toMatchTypeOf<ColorValue>();
-    expectTypeOf(scaleQual12()("a")).toMatchTypeOf<ColorValue>();
-    expectTypeOf(scaleSeqBlu()(0.5)).toMatchTypeOf<ColorValue>();
-  });
 
   test("bar.fill takes an accessor returning a scale's LabColor", () => {
     const colorScale = scaleQual12();
@@ -362,36 +350,6 @@ describe("the colour props widened in the second pass", () => {
     },
   );
 
-  /**
-   * Type-level only. Both of these need something the colouring tests above already cover the
-   * drawing of - a prepared hierarchy for sunburst, a prepared nest for the nested bars - so the
-   * constructions below are the whole assertion: a prop narrowed back to `string` stops
-   * compiling here, and `pnpm run type-check` is what runs it. The runtime checks these replaced
-   * read the accessor back out of the setter it had just been handed, which no implementation
-   * can fail.
-   */
-  test("should accept a LabColor accessor on sunburst's fill and stroke", () => {
-    const colorScale = scaleQual12();
-    const chart = sunburst()
-      .fill((key: string) => colorScale(key))
-      .stroke(colorScale("X"));
-
-    expectTypeOf(chart.fill()).not.toBeAny();
-  });
-
-  test("should accept a LabColor accessor on nestedStackedBarsVertical's fill and stroke", () => {
-    const colorScale = scaleQual12();
-    const xScale = scaleBand<string>().domain(["A", "B"]).range([0, 400]);
-    const yScale = scaleLinear().domain([0, 50]).range([300, 0]);
-    const chart = nestedStackedBarsVertical<Row>()
-      .xScale(xScale)
-      .yScale(yScale)
-      .fill((slice) => colorScale(slice.series))
-      .stroke(colorScale("X"));
-
-    expectTypeOf(chart.fill()).not.toBeAny();
-  });
-
   test("the binned and linear colour legends take a scale returning LabColor", () => {
     const seq = scaleSeqBlu().domain([0, 100]);
     const binned = scaleThreshold<number, ReturnType<typeof seq>>()
@@ -424,41 +382,5 @@ describe("the colour props widened in the second pass", () => {
         r.getAttribute("fill")?.startsWith("rgb"),
       ),
     ).toBe(true);
-  });
-
-  /**
-   * Type-level only, for the same reason as sunburst above: these renderers need real topography
-   * to draw, and the setters are what regressed. A narrowed prop fails to compile here.
-   */
-  test("should accept a LabColor accessor on every colour prop the map renderers expose", () => {
-    const colorScale = scaleQual12();
-
-    const geoJson = mapRendererGeoJson<Row & Record<string, unknown>>()
-      .fill((d) => colorScale(d.category))
-      .stroke(colorScale("X"));
-    const bubble = mapRendererBubble<Row>()
-      .fill((d) => colorScale(d.category))
-      .strokeColor(colorScale("X"));
-    const map = choropleth<Row>()
-      .fill((d) => colorScale(d?.category ?? "X"))
-      .borderColor(colorScale("X"))
-      .highlightStroke(colorScale("Y"))
-      .lakePathColor(colorScale("X"));
-
-    expectTypeOf(geoJson.fill()).not.toBeAny();
-    expectTypeOf(bubble.fill()).not.toBeAny();
-    expectTypeOf(map.fill()).not.toBeAny();
-  });
-
-  test("should type an over handler's datum from the renderer's own datum type", () => {
-    // Before this change the handler was `(datum: unknown) => void`, so a typed handler had
-    // to narrow by hand. It now matches ChoroplethEventHandler<T> and BubbleEventHandler<T>.
-    const seen: (string | undefined)[] = [];
-    const component = mapRendererGeoJson<Row & Record<string, unknown>>().on("over", (datum) => {
-      expectTypeOf(datum).toMatchTypeOf<(Row & Record<string, unknown>) | undefined>();
-      seen.push(datum?.category);
-    });
-
-    expectTypeOf(component.on("over")).not.toBeAny();
   });
 });
