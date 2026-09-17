@@ -55,18 +55,9 @@ export const OptionKey = Schema.String.pipe(Schema.brand("OptionKey"));
 
 export type OptionKey = typeof OptionKey.Type;
 
-/* The two option keys the builder itself reads; every recipe declares both. */
 export const TITLE = OptionKey.make("title");
 export const DESCRIPTION = OptionKey.make("description");
 
-/*
- * The role keys recipes share. A role means the same thing wherever it appears -
- * `VALUE` is the number a mark is sized by, whichever axis that lands on - so
- * switching chart type can carry what the user set over by role rather than by
- * position. Minting these locally would leave that agreement to spelling, and a
- * recipe that said `val` would silently keep nothing. A role peculiar to one
- * recipe still belongs in that recipe.
- */
 export const CATEGORY = RoleKey.make("category");
 export const VALUE = RoleKey.make("value");
 export const DATE = RoleKey.make("date");
@@ -78,7 +69,6 @@ export const Fields = Schema.Record(RoleKey, ColumnName);
 
 export type Fields = typeof Fields.Type;
 
-/** The columns whose kind the user has pinned, by name. Absent means "as detected". */
 export const ColumnKinds = Schema.Record(ColumnName, ColumnKind);
 
 export type ColumnKinds = typeof ColumnKinds.Type;
@@ -90,7 +80,6 @@ export const Tooltip = Schema.Struct({
 
 export type Tooltip = typeof Tooltip.Type;
 
-/** Where a mark sits on screen. Recipes emit it; an annotation is not stated in these terms. */
 export const Axis = Schema.Literals(["x", "y"]);
 
 export type Axis = typeof Axis.Type;
@@ -102,14 +91,6 @@ export const Position = Schema.Union([
 
 export type Position = typeof Position.Type;
 
-/*
- * A reference line names the role it marks, not the screen axis it lands on. The
- * two differ per recipe - a vertical bar chart puts its value on y, a horizontal
- * one puts the same value on x - so a line stated as "y" would mean something
- * different under each chart type, and switching between them would either move
- * the line or lose it. Stated as a role it means the same thing everywhere, and
- * the recipe's `annotationAxes` says which axis to draw it on.
- */
 export const ReferenceLine = Schema.Struct({
   kind: Schema.Literal("reference-line"),
   role: RoleKey,
@@ -131,16 +112,6 @@ export const Spec = Schema.Struct({
   features: Schema.Array(FeatureKey),
   tooltip: Tooltip,
   annotations: Schema.Array(Annotation),
-  /*
-   * Where the user overruled the detector, and nowhere else. Sparse on purpose:
-   * detection stays live for every column not named here, so a column whose
-   * values change is re-read unless someone pinned it. Materialising every
-   * column instead would make each of the table editor's mutation paths a place
-   * the spec could come to describe columns that no longer exist.
-   *
-   * The spec's identity covers this field, so pinning forces a recompile - one
-   * that is byte-identical, since a pin reaches no emitted code.
-   */
   kinds: ColumnKinds,
 });
 
@@ -154,7 +125,6 @@ const Role = Schema.Struct({
   optional: Schema.optional(Schema.Boolean),
 });
 
-/** One value a choice option offers: what the chart is given, and what the reader is shown. */
 const Choice = Schema.Struct({
   value: Schema.String,
   label: Schema.String,
@@ -166,12 +136,6 @@ const Option = Schema.Struct({
   key: OptionKey,
   label: Schema.String,
   fallback: Schema.String,
-  /*
-   * The values this option accepts, when it is a fixed set rather than free text.
-   * A map's geography is the case that needs it: it decides which topology the
-   * chart loads and which layer it reads, so a typed value would mean a blank map
-   * rather than a wrong label. Absent means any text, which is every other option.
-   */
   choices: Schema.optional(Schema.Array(Choice)),
 });
 
@@ -186,10 +150,6 @@ const FeatureSummary = Schema.Struct({
 
 export type FeatureSummary = typeof FeatureSummary.Type;
 
-/**
- * One axis a recipe accepts annotations on: the role it carries, the screen axis
- * it draws on, the kind of value that positions a line there, and its label.
- */
 const AnnotationAxis = Schema.Struct({
   role: RoleKey,
   axis: Axis,
@@ -199,17 +159,9 @@ const AnnotationAxis = Schema.Struct({
 
 export type AnnotationAxis = typeof AnnotationAxis.Type;
 
-/**
- * A file the chart loads besides its data. A map needs one: its geometry lives in
- * a TopoJSON file, which is far too large to inline into the code the reader is
- * meant to read, and is published nowhere they could link to.
- */
 export const Asset = Schema.Struct({
-  /** The `config` key the chart reads the URL from, beside `data` and `id`. */
   key: Schema.String,
-  /** The file's name in the exported bundle, which is what `config[key]` holds there. */
   path: Schema.String,
-  /** Where the builder itself reads the bytes from. An app URL; the exported chart never sees it. */
   source: Schema.String,
 });
 
@@ -223,20 +175,9 @@ export const RecipeSummary = Schema.Struct({
   features: Schema.Array(FeatureSummary),
   sample: Schema.String,
   tooltipFeature: FeatureKey,
-  /*
-   * The roles this recipe's tooltip can show, when that is fewer than all of them.
-   * A grouped bar's tooltip describes a whole group, so it can name the group but
-   * not one member's series or value - and the picker must not offer what the
-   * emitted chain would silently drop. Absent means every role.
-   */
   tooltipRoles: Schema.optional(Schema.Array(RoleKey)),
   defaultTooltip: Tooltip,
   annotationAxes: Schema.Array(AnnotationAxis),
-  /*
-   * Libraries the page must load for this recipe beyond d3 and sszvis. A map reads
-   * `topojson.feature`, which sszvis does not bundle. Every other recipe declares
-   * none, and the page is unchanged for them.
-   */
   scripts: Schema.optional(Schema.Array(Schema.String)),
 });
 
@@ -249,19 +190,7 @@ export type Feature = FeatureSummary & {
 
 export type RecipeDef = Omit<RecipeSummary, "features"> & {
   readonly features: readonly FeatureKey[];
-  /*
-   * The extra files this spec's chart loads. A function because the answer depends
-   * on the spec: a map's geography decides which topology it needs.
-   */
   readonly assets?: (spec: Spec, option: (key: OptionKey) => string) => readonly Asset[];
-  /*
-   * `kind` answers what a column holds, the user's pin included. No recipe reads
-   * it yet. It is in the signature because `spec.kinds` is sparse - a recipe
-   * cannot resolve a column's kind from the spec alone without re-deriving
-   * detection - so the first recipe that needs to emit differently per kind would
-   * otherwise have to change this type and all eight call sites to get at one.
-   * Date-format selection is the case that will want it.
-   */
   readonly scalars: (
     spec: Spec,
     option: (key: OptionKey) => string,

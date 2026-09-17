@@ -31,7 +31,7 @@ const REFERENCE_LINES_FEATURE = FeatureKey.make("reference-lines");
 
 export const barChartHorizontal: RecipeDef = {
   key: RecipeKey.make("bar-chart-horizontal"),
-  label: "Horizontal bar chart",
+  label: "Horizontal bar",
   roles: [
     {
       key: CATEGORY,

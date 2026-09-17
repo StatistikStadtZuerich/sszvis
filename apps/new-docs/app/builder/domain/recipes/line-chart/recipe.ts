@@ -29,7 +29,7 @@ const REFERENCE_LINES_FEATURE = FeatureKey.make("reference-lines");
 
 export const lineChart: RecipeDef = {
   key: RecipeKey.make("line-chart"),
-  label: "Line chart",
+  label: "Line",
   roles: [
     {
       key: DATE,

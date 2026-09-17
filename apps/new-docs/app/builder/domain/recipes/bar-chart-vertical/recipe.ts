@@ -25,7 +25,7 @@ const REFERENCE_LINES_FEATURE = FeatureKey.make("reference-lines");
 
 export const barChartVertical: RecipeDef = {
   key: RecipeKey.make("bar-chart-vertical"),
-  label: "Vertical bar chart",
+  label: "Vertical bar",
   roles: [
     {
       key: CATEGORY,

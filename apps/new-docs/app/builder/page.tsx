@@ -125,14 +125,6 @@ const Builder = ({
 
   const compiling = useHeldFor(freshness === "compiling", 350);
 
-  /*
-   * The recipe the settled build was made from, which mid-rebuild is not the one the
-   * form now names. Every value the frame is given has to come from that one build:
-   * the generated document is the iframe's key, so a title taken from the live
-   * recipe reloads the frame with the old chart's code under the new chart's name,
-   * and the reader watches the chart they are leaving redraw itself before the one
-   * they asked for arrives.
-   */
   const settledRecipe = settled === undefined ? undefined : recipeOf(recipes, settled.spec);
 
   const status: PreviewStatus =
@@ -145,8 +137,6 @@ const Builder = ({
           : { kind: "ready" };
 
   const note =
-    /* An error stops the compile, so the sources below stay visibly stale rather
-       than reading as a rebuild that will never land. */
     error !== null
       ? "Showing the last chart that compiled."
       : missingRoles.length > 0
@@ -234,8 +224,6 @@ const Builder = ({
           </Step>
 
           <Step n={3} title="Mapping" columns>
-            {/* A choice comes first: it decides what the columns below it have to contain.
-                A map's geography is the case - it says which areas the code column names. */}
             {recipe.options
               .filter((option) => option.choices !== undefined)
               .map((option) => {
@@ -317,9 +305,6 @@ const Builder = ({
                     </SelectContent>
                   </Select>
                   {unreadable ? (
-                    /* The column fits the role - that is why no "(looks …)" remark
-                       appears above - but the chart parses every value and keeps
-                       none, so the warning has to come from the values themselves. */
                     <FieldError>
                       {hasValues(table, column)
                         ? `The values in ${column} are not all ${KIND_LABEL[REQUIRED[role.kind]]}s, so the chart will drop the rows it cannot read.`
@@ -414,8 +399,6 @@ const Builder = ({
             <Preview
               js={settled?.generated.js.raw ?? ""}
               csv={settled?.generated.csv.raw ?? ""}
-              /* The exported page titles itself from the resolved option (workers/pipeline.ts),
-                 so an empty Title field has to fall back to the recipe's German default here too. */
               title={
                 settled === undefined || settledRecipe === undefined
                   ? ""
@@ -424,8 +407,6 @@ const Builder = ({
               status={status}
               pending={compiling}
               assets={settled?.generated.assets}
-              /* From the settled build, not the live recipe: mid-rebuild the two are
-                 different charts, and the source decides which globals it needs. */
               scripts={settled?.generated.scripts}
             />
           </div>
