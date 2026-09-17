@@ -25,7 +25,8 @@ export const TooltipFields = ({
   readonly spec: Spec;
   readonly onChange: (tooltip: Tooltip) => void;
 }) => {
-  const keys = recipe.roles.map((role) => role.key);
+  /* Only what this recipe's tooltip can actually show; absent means every role. */
+  const keys = recipe.tooltipRoles ?? recipe.roles.map((role) => role.key);
   const bound = boundRoles(spec, keys);
   const shown = resolveTooltip(spec.tooltip, recipe.defaultTooltip, bound);
   const roles = recipe.roles.filter((role) => bound.includes(role.key));
@@ -33,6 +34,8 @@ export const TooltipFields = ({
     { value: null, label: "Choose a role…" },
     ...roles.map((role) => ({ value: role.key, label: role.label })),
   ];
+  /* A recipe may offer one role only - a grouped bar names its group and lists the rest. */
+  const listable = roles.filter((role) => role.key !== shown.header);
   const id = `tooltip-header-${recipe.key}`;
 
   return (
@@ -55,28 +58,30 @@ export const TooltipFields = ({
             ))}
           </SelectContent>
         </Select>
-        <FieldDescription>Shown bold, first. Tick the roles to list under it.</FieldDescription>
+        <FieldDescription>
+          {listable.length > 0
+            ? "Shown bold, first. Tick the roles to list under it."
+            : "Shown bold, above the rows."}
+        </FieldDescription>
       </Field>
-      {roles
-        .filter((role) => role.key !== shown.header)
-        .map((role) => (
-          <FieldLabel key={role.key}>
-            <Field orientation="horizontal">
-              <Checkbox
-                checked={shown.body.includes(role.key)}
-                onCheckedChange={(checked) => {
-                  const next = new Set(shown.body);
-                  if (checked) next.add(role.key);
-                  else next.delete(role.key);
-                  onChange({ ...spec.tooltip, body: keys.filter((key) => next.has(key)) });
-                }}
-              />
-              <FieldContent>
-                <FieldTitle>{role.label}</FieldTitle>
-              </FieldContent>
-            </Field>
-          </FieldLabel>
-        ))}
+      {listable.map((role) => (
+        <FieldLabel key={role.key}>
+          <Field orientation="horizontal">
+            <Checkbox
+              checked={shown.body.includes(role.key)}
+              onCheckedChange={(checked) => {
+                const next = new Set(shown.body);
+                if (checked) next.add(role.key);
+                else next.delete(role.key);
+                onChange({ ...spec.tooltip, body: keys.filter((key) => next.has(key)) });
+              }}
+            />
+            <FieldContent>
+              <FieldTitle>{role.label}</FieldTitle>
+            </FieldContent>
+          </Field>
+        </FieldLabel>
+      ))}
     </div>
   );
 };

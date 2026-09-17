@@ -145,6 +145,13 @@ export const RecipeSummary = Schema.Struct({
   features: Schema.Array(FeatureSummary),
   sample: Schema.String,
   tooltipFeature: FeatureKey,
+  /*
+   * The roles this recipe's tooltip can show, when that is fewer than all of them.
+   * A grouped bar's tooltip describes a whole group, so it can name the group but
+   * not one member's series or value - and the picker must not offer what the
+   * emitted chain would silently drop. Absent means every role.
+   */
+  tooltipRoles: Schema.optional(Schema.Array(RoleKey)),
   defaultTooltip: Tooltip,
   annotationAxes: Schema.Array(AnnotationAxis),
 });

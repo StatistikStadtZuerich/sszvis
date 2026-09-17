@@ -1,0 +1,80 @@
+// #label Tooltip
+// #hint Reads off every bar in the hovered group.
+
+// #scalar ACTIONS_PARAM actions
+// #scalar HIGHLIGHT_TICK (d) => state.selection.some((group) => group[0] !== undefined && xAcc(group[0]) === d)
+
+// #region types
+/** The tooltip's datum: one group, which is every bar drawn over one category. */
+type Group = Datum[];
+// #endregion
+
+// #region stateTypes
+selection: Group[];
+// #endregion
+
+// #region actionTypes
+showTooltip: (state: State, e: Event, xValue: string | null, yValue: number | null) => void;
+hideTooltip: (state: State) => void;
+// #endregion
+
+// #region init
+state.selection = [];
+// #endregion
+
+// #region actions
+showTooltip(state, _e, xValue) {
+  state.selection = state.groupedData.filter((group) => group.some((d) => xAcc(d) === xValue));
+},
+
+hideTooltip(state) {
+  state.selection = [];
+},
+// #endregion
+
+// #region layers
+const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+// #endregion
+
+// #region components
+const tooltipText = __TOOLTIP_TEXT__;
+
+const tooltip = sszvis
+  .tooltip<Group>()
+  .renderInto(tooltipLayer)
+  .orientation(sszvis.fitTooltip("bottom", bounds))
+  .header(tooltipText)
+  // NOTE: One row per member of the group. This is the whole point of a grouped
+  // bar's tooltip, so it is not something the roles choose: every bar is listed.
+  .body((group) =>
+    group.map((d) => {
+      const value = yAcc(d);
+      return [cAcc(d), Number.isNaN(value) ? "keine" : sszvis.formatNumber(value)];
+    }),
+  )
+  .visible((group) => sszvis.contains(state.selection, group));
+// #endregion
+
+// #region render
+bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+// #endregion
+
+// #region interaction
+// Interaction
+
+// NOTE: The anchors sit one per group, so the pointer selects a band rather than
+// a bar, and `move` reads that band straight off the x scale.
+const interactionLayer = sszvis
+  .move<string, number>()
+  .xScale(xScale)
+  .yScale(yScale)
+  .on("move", actions.showTooltip)
+  .on("end", actions.hideTooltip);
+
+chartLayer.selectGroup("interaction").call(interactionLayer);
+// #endregion
+
+// #region helpers
+/* The tooltip names the group, which every member shares, so it reads the first. */
+const groupCategory = (group: Group) => (group[0] === undefined ? "" : xAcc(group[0]));
+// #endregion
