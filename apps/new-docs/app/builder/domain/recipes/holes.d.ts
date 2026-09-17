@@ -62,4 +62,7 @@ declare const __LAYER__: string;
 declare const __LAKE_LAYER__: string;
 declare const __LAKE_BOUNDS_LAYER__: string;
 declare const __GEO_FIELD__: string;
+declare const __MAP_FILL__: (d: { value: number } | undefined) => string;
+declare const __LEGEND_COMPONENT__: ReturnType<typeof sszvis.legendColorLinear>;
+declare const __LEGEND_X__: number;
 declare const __LABEL_EXPR__: string;
