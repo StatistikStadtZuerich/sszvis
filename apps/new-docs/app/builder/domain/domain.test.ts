@@ -5,6 +5,7 @@ import { isValidPosition, parseSwissDate, positionCode, referenceLinesCode } fro
 import { compile } from "./compile";
 import {
   addedName,
+  bearsRole,
   columnKinds,
   nextKind,
   renameKind,
@@ -461,6 +462,18 @@ describe("pinned column kinds", () => {
     const columns = [ColumnName.make("Spalte 2")];
     expect(addedName(columns)).toBe("Spalte 2 2");
     expect(addedName([...columns, addedName(columns)])).toBe("Spalte 3");
+  });
+
+  test("should report values a role will not be able to read, however the column is pinned", () => {
+    const table = parse("Jahr,Datum\n1999,01.02.2020");
+    /* The case pinning is most likely to produce: a year held to be a date fits the
+       role exactly, and the chart reading it parses every value and keeps none. */
+    expect(bearsRole(table, ColumnName.make("Jahr"), "date")).toBe(false);
+    expect(bearsRole(table, ColumnName.make("Jahr"), "number")).toBe(true);
+    expect(bearsRole(table, ColumnName.make("Datum"), "date")).toBe(true);
+    /* Any value can be a label, and an unbound role has nothing to say. */
+    expect(bearsRole(table, ColumnName.make("Jahr"), "category")).toBe(true);
+    expect(bearsRole(table, ColumnName.make(""), "date")).toBe(true);
   });
 
   test("should move on by one and come back round when a column's kind is clicked", () => {

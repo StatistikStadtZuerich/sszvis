@@ -282,6 +282,29 @@ export const unsupportedPins = (table: Table, kinds: ColumnKinds): ReadonlySet<s
   return unsupported;
 };
 
+/** The column kind a role reads outright - the inverse of `NATURAL`. */
+const REQUIRED = {
+  category: "nominal",
+  number: "continuous",
+  date: "temporal",
+} satisfies Record<RoleKind, ColumnKind>;
+
+/**
+ * Whether a column's values can be read the way a role reads them.
+ *
+ * Distinct from whether the column *fits* the role, which is a question about its
+ * kind: a column held to be dates fits a date role exactly, and the emitted chart
+ * still calls `sszvis.parseDate` on every value and drops the rows that do not
+ * parse. A year column held to be dates is the case - it fits, and it draws
+ * nothing - so this asks the values themselves.
+ */
+export const bearsRole = (table: Table, column: ColumnName, role: RoleKind): boolean => {
+  const index = table.columns.indexOf(column);
+  /* Nothing is bound, so there is nothing to warn about. */
+  if (index === -1) return true;
+  return admits(valuesOf(table, index), REQUIRED[role]);
+};
+
 /* The three in a fixed round, so the control is one button: a click moves on by one. */
 const CYCLE = ["nominal", "continuous", "temporal"] as const;
 
