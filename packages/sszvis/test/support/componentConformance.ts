@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { Component } from "../../src/d3-component.js";
 
 /** A data set and the marks it is expected to produce, counted by kind. */
-export type JoinCase<T> = {
+type JoinCase<T> = {
   data: T[];
   /**
    * How many of each kind of mark, keyed by a name of the test file's choosing. Nested components

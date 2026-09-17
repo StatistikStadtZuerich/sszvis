@@ -2,6 +2,7 @@ import { geoPath } from "d3";
 import type { Feature, FeatureCollection, MultiLineString, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
+  describesMapPathGeometry,
   describesNoDecorations,
   describesNoScheduledTransition,
 } from "../../support/mapRendererConformance.js";
@@ -102,13 +103,14 @@ describe("map/renderer/mesh", () => {
       expect(borders(node)[0].tagName).toBe("path");
     });
 
-    test("takes the path data from the mapPath generator", () => {
+    describesMapPathGeometry(() => {
       const meshFeature = mesh();
       const mapPath = mapPathOf();
       const node = group()
         .call(mapRendererMesh().geoJson(meshFeature).mapPath(mapPath))
         .node() as SVGGElement;
-      expect(borders(node)[0].getAttribute("d")).toBe(mapPath(meshFeature));
+      // One combined border, so one expected path.
+      return { marks: borders(node), expected: [mapPath(meshFeature)] };
     });
 
     test("renders one path however many borders the mesh carries", () => {

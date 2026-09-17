@@ -1,6 +1,7 @@
 import { easePolyOut, type GeoProjection, geoCentroid, geoPath } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { describesMapPathGeometry } from "../../support/mapRendererConformance.js";
 import { createSvgLayer } from "../../../src/createSvgLayer.js";
 import "../../../src/d3-selectgroup.js";
 import { swissMapProjection } from "../../../src/map/mapUtils.js";
@@ -101,14 +102,15 @@ describe("map/renderer/geojson", () => {
       for (const el of elements(node)) expect(el.tagName).toBe("path");
     });
 
-    test("takes the path data from the mapPath generator", () => {
+    describesMapPathGeometry(() => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const node = group()
         .datum(fullData)
         .call(mapRendererGeoJson().geoJson(collection).mapPath(mapPath))
         .node() as SVGGElement;
-      expect(attrs(node, "d")).toEqual(collection.features.map((f) => mapPath(f)));
+      // Every feature is drawn, so every feature is checked.
+      return { marks: elements(node), expected: collection.features.map((f) => mapPath(f)) };
     });
 
     test("marks every element as an event target", () => {
