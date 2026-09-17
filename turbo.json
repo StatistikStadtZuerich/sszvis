@@ -34,7 +34,7 @@
       "outputLogs": "new-only"
     },
     "@sszvis/new-docs#test": {
-      "dependsOn": ["sszvis#build"],
+      "dependsOn": ["sszvis#build", "@sszvis/geodata#build"],
       "outputLogs": "new-only"
     },
     "test:snapshot": {
