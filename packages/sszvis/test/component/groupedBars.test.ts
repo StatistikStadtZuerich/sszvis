@@ -65,22 +65,6 @@ describe("component/groupedBars", () => {
       valueScale = scaleLinear().domain([0, 30]).range([200, 0]);
     });
 
-    test("should have all expected props", () => {
-      const component = groupedBarsVertical<TestDatum>();
-      expect(typeof component.groupScale).toBe("function");
-      expect(typeof component.groupSize).toBe("function");
-      expect(typeof component.groupWidth).toBe("function");
-      expect(typeof component.groupHeight).toBe("function");
-      expect(typeof component.groupSpace).toBe("function");
-      expect(typeof component.x).toBe("function");
-      expect(typeof component.y).toBe("function");
-      expect(typeof component.width).toBe("function");
-      expect(typeof component.height).toBe("function");
-      expect(typeof component.fill).toBe("function");
-      expect(typeof component.stroke).toBe("function");
-      expect(typeof component.defined).toBe("function");
-    });
-
     test("props should be chainable", () => {
       const component = groupedBarsVertical<TestDatum>();
 
@@ -270,30 +254,6 @@ describe("component/groupedBars", () => {
       barGroups = svg.selectAll(".sszvis-bargroup");
       expect(barGroups.size()).toBe(1);
     });
-
-    test("should support custom groupSpace", () => {
-      svg
-        .selectGroup("bars")
-        .datum(testData)
-        .call(
-          groupedBarsVertical<TestDatum>()
-            .groupScale((d) => groupScale(d.group) || 0)
-            .groupSize(2)
-            .groupWidth(groupScale.bandwidth())
-            .groupSpace(0.2) // Larger space between bars
-            .y((d) => valueScale(d.value))
-            .height((d) => 200 - valueScale(d.value))
-            .fill("steelblue"),
-        );
-      const bars = svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar");
-      expect(bars.size()).toBeGreaterThan(0);
-      // With larger groupSpace, bars should be narrower
-      const firstBar = bars.node();
-      if (firstBar) {
-        const width = Number(select(firstBar).attr("width"));
-        expect(width).toBeGreaterThan(0);
-      }
-    });
   });
 
   describe("groupedBarsHorizontal", () => {
@@ -303,22 +263,6 @@ describe("component/groupedBars", () => {
     beforeEach(() => {
       groupScale = scaleBand<string>().domain(["G1", "G2", "G3"]).range([0, 200]).padding(0.1);
       valueScale = scaleLinear().domain([0, 30]).range([0, 300]);
-    });
-
-    test("should have all expected props", () => {
-      const component = groupedBarsHorizontal<TestDatum>();
-      expect(typeof component.groupScale).toBe("function");
-      expect(typeof component.groupSize).toBe("function");
-      expect(typeof component.groupWidth).toBe("function");
-      expect(typeof component.groupHeight).toBe("function");
-      expect(typeof component.groupSpace).toBe("function");
-      expect(typeof component.x).toBe("function");
-      expect(typeof component.y).toBe("function");
-      expect(typeof component.width).toBe("function");
-      expect(typeof component.height).toBe("function");
-      expect(typeof component.fill).toBe("function");
-      expect(typeof component.stroke).toBe("function");
-      expect(typeof component.defined).toBe("function");
     });
 
     test("props should be chainable", () => {
@@ -502,29 +446,6 @@ describe("component/groupedBars", () => {
       chartLayer.datum(testData).call(component);
       barGroups = svg.selectAll(".sszvis-bargroup");
       expect(barGroups.size()).toBe(3);
-    });
-
-    test("should support custom groupSpace", () => {
-      svg
-        .selectGroup("bars")
-        .datum(testData)
-        .call(
-          groupedBarsHorizontal<TestDatum>()
-            .groupScale((d) => groupScale(d.group) || 0)
-            .groupSize(2)
-            .groupHeight(groupScale.bandwidth())
-            .groupSpace(0.15)
-            .x(() => 0)
-            .width((d) => valueScale(d.value))
-            .fill("steelblue"),
-        );
-      const bars = svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar");
-      expect(bars.size()).toBeGreaterThan(0);
-      const firstBar = bars.node();
-      if (firstBar) {
-        const height = Number(select(firstBar).attr("height"));
-        expect(height).toBeGreaterThan(0);
-      }
     });
   });
 

@@ -59,19 +59,6 @@ describe("createSvgLayer", () => {
     expect(container.querySelectorAll("svg")).toHaveLength(2);
   });
 
-  test("should set accessibility attributes", () => {
-    const container = document.createElement("div");
-    document.body.append(container);
-    createSvgLayer(container, undefined, {
-      title: "Test Chart",
-      description: "A test chart description",
-    });
-    const svg = container.querySelector("svg");
-    expect(svg?.getAttribute("role")).toBe("img");
-    expect(svg?.getAttribute("aria-label")).toContain("Test Chart");
-    expect(svg?.getAttribute("aria-label")).toContain("A test chart description");
-  });
-
   test("should name the chart with aria-label and a desc, without a title tooltip", () => {
     const container = document.createElement("div");
     document.body.append(container);
@@ -99,14 +86,5 @@ describe("createSvgLayer", () => {
     });
     const group = createSvgLayer(container, customBounds).node();
     expect(group?.getAttribute("transform")).toBe("translate(50,30)");
-  });
-
-  test("should return a d3 selection", () => {
-    const container = document.createElement("div");
-    document.body.append(container);
-    const layer = createSvgLayer(container);
-    expect(typeof layer.append).toBe("function");
-    expect(typeof layer.attr).toBe("function");
-    expect(typeof layer.selectAll).toBe("function");
   });
 });

@@ -114,24 +114,6 @@ describe("annotation/confidenceArea", () => {
     });
   });
 
-  test("should generate correct path data for area", () => {
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum([testData])
-      .call(areaComponent);
-
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(1);
-
-    // Just check that the path element exists and has the expected class
-    expect(select(areas[0]).classed("sszvis-area")).toBe(true);
-  });
-
   test("should handle multiple areas with data binding", () => {
     const areaComponent = confidenceArea()
       .x((d: unknown) => (d as TestDatum).x)

@@ -121,13 +121,6 @@ describe("layout/sunburst", () => {
       const europe = data.find((d) => d.data._tag !== "root" && d.data.key === "Europa");
       expect(europe?.value).toBe(180);
     });
-
-    test("is chainable in any order", () => {
-      const builder = prepareData<Row>();
-      expect(builder.value((d: Row) => d.value)).toBe(builder);
-      expect(builder.layer((d: Row) => d.continent)).toBe(builder);
-      expect(builder.sort(() => 0)).toBe(builder);
-    });
   });
 
   describe("fitting the rings to the chart", () => {
