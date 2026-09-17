@@ -13,7 +13,7 @@ import {
 } from "~/components/ui/select";
 import { typefaceCaption } from "~/components/tokens/typeface";
 import { isValidPosition } from "../domain/annotations";
-import type { Annotation, AnnotationAxis, Axis, RecipeSummary } from "../domain/spec";
+import { RoleKey, type Annotation, type AnnotationAxis, type RecipeSummary } from "../domain/spec";
 
 const PLACEHOLDER = { number: "0", date: "01.01.2020", category: "" } as const;
 
@@ -56,9 +56,10 @@ export const Annotations = ({
   const numberAxis = axes.find((axis) => axis.kind === "number");
   if (first === undefined) return null;
 
-  const axisOf = (axis: Axis): AnnotationAxis =>
-    axes.find((candidate) => candidate.axis === axis) ?? first;
-  const items = axes.map((axis) => ({ value: axis.axis, label: axis.label }));
+  /* Keyed by role, as the spec is; `axis.label` still names it in the chart's own terms. */
+  const axisOf = (role: RoleKey): AnnotationAxis =>
+    axes.find((candidate) => candidate.role === role) ?? first;
+  const items = axes.map((axis) => ({ value: axis.role, label: axis.label }));
 
   const add = (annotation: Annotation) => onChange([...value, annotation]);
   const replace = (index: number, annotation: Annotation) =>
@@ -75,7 +76,7 @@ export const Annotations = ({
       </div>
 
       {value.map((annotation, index) => {
-        const axis = axisOf(annotation.axis);
+        const axis = axisOf(annotation.role);
         const rowId = `${id}-${index}`;
         const typed = annotation.at.kind === "value" ? annotation.at.value : null;
         const wrong = typed !== null && typed !== "" && !isValidPosition(axis.kind, annotation.at);
@@ -101,15 +102,15 @@ export const Annotations = ({
             <Field orientation="horizontal" className="flex-wrap items-end gap-x-2">
               <Labelled htmlFor={`${rowId}-axis`} label="Axis" className="shrink-0">
                 <Select
-                  value={annotation.axis}
+                  value={annotation.role}
                   onValueChange={(next) => {
                     if (next === null) return;
-                    const target = axisOf(next);
+                    const target = axisOf(RoleKey.make(next));
                     const at =
                       annotation.at.kind === "mean" && target.kind !== "number"
                         ? { kind: "value" as const, value: "" }
                         : annotation.at;
-                    replace(index, { ...annotation, axis: target.axis, at });
+                    replace(index, { ...annotation, role: target.role, at });
                   }}
                   items={items}
                 >
@@ -196,7 +197,7 @@ export const Annotations = ({
           onClick={() =>
             add({
               kind: "reference-line",
-              axis: first.axis,
+              role: first.role,
               at: { kind: "value", value: "" },
               label: "",
             })
@@ -211,7 +212,7 @@ export const Annotations = ({
             onClick={() =>
               add({
                 kind: "reference-line",
-                axis: numberAxis.axis,
+                role: numberAxis.role,
                 at: { kind: "mean" },
                 label: "",
               })

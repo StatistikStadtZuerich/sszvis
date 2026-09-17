@@ -14,7 +14,7 @@ import {
 import { tooltipText } from "../../tooltip";
 
 const ANNOTATION_AXES: readonly AnnotationAxis[] = [
-  { axis: "y", kind: "number", label: "Value axis" },
+  { role: VALUE, axis: "y", kind: "number", label: "Value axis" },
 ];
 
 /* The option and feature keys, named once: they key `options`, `features` and every lookup. */

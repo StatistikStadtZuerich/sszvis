@@ -13,12 +13,12 @@ const sampleAnnotations = (axes: readonly AnnotationAxis[]): readonly Annotation
   axes.flatMap((axis) => [
     {
       kind: "reference-line",
-      axis: axis.axis,
+      role: axis.role,
       at: { kind: "value", value: SAMPLE_VALUE[axis.kind] },
       label: "Sample",
     },
     ...(axis.kind === "number"
-      ? [{ kind: "reference-line", axis: axis.axis, at: { kind: "mean" }, label: "" } as const]
+      ? [{ kind: "reference-line", role: axis.role, at: { kind: "mean" }, label: "" } as const]
       : []),
   ]);
 

@@ -49,11 +49,14 @@ export const referenceLinesCode = (
 ): Safe => {
   const entries = Array.getSomes(
     annotations.map((annotation) =>
-      Array.findFirst(axes, (candidate) => candidate.axis === annotation.axis).pipe(
-        Option.flatMap((axis) => positionCode(axis.kind, annotation.at)),
-        Option.map((at) => {
+      /* The spec names a role; the template draws on an axis. The recipe joins the two. */
+      Array.findFirst(axes, (candidate) => candidate.role === annotation.role).pipe(
+        Option.flatMap((axis) =>
+          Option.map(positionCode(axis.kind, annotation.at), (at) => ({ axis, at })),
+        ),
+        Option.map(({ axis, at }) => {
           const fields = [
-            ...(axes.length > 1 ? [`axis: ${str(annotation.axis)}`] : []),
+            ...(axes.length > 1 ? [`axis: ${str(axis.axis)}`] : []),
             `at: ${at}`,
             `label: ${str(annotation.label)}`,
           ];
