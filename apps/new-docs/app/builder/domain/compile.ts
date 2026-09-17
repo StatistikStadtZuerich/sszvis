@@ -91,9 +91,8 @@ export const compile = (recipe: Recipe, spec: Spec): Effect.Effect<string, Build
 
   const option = (key: OptionKey) => optionValue(recipe.options, spec, key);
   /* Answering this parses the table, so it is done on the first question and not
-     at all until one is asked - which today is never, since no recipe reads it.
-     Resolved once for the whole file: a recipe asking about several columns should
-     not re-read the CSV for each. */
+     at all until one is asked. Resolved once for the whole file: a recipe asking
+     about several columns should not re-read the CSV for each. */
   let resolved: ReadonlyMap<string, ColumnKind> | undefined;
   const kind = (column: ColumnName) => {
     resolved ??= columnKinds(parse(spec.csv), spec.kinds);

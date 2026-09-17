@@ -2,7 +2,7 @@ import { Schema } from "effect";
 
 import type { Fragments, Scalars } from "./emit";
 
-/** What a recipe needs of a column, and what kind of value positions an annotation. */
+/** What a recipe needs of a column; also what kind of value positions an annotation. */
 export const RoleKind = Schema.Literals(["category", "number", "date"]);
 
 export type RoleKind = typeof RoleKind.Type;
@@ -10,9 +10,9 @@ export type RoleKind = typeof RoleKind.Type;
 /*
  * What the data in a column is, which is a different question from what a chart
  * wants of it - and the one the user may overrule. The two vocabularies are
- * deliberately separate: a recipe asks for something it can put on a discrete
- * scale, never for "nominal" specifically, so a finer measurement level added
- * here later costs no recipe an opinion. `fitRank` maps one to the other.
+ * deliberately separate: a recipe asks for a `category`, never for `nominal`
+ * specifically, so a finer measurement level added here later costs no recipe an
+ * opinion. `fitRank` maps one to the other.
  *
  * The names are measurement levels rather than the shapes they happen to take
  * today, which leaves `ordinal` beside `nominal` and `discrete` beside
@@ -22,6 +22,18 @@ export type RoleKind = typeof RoleKind.Type;
 export const ColumnKind = Schema.Literals(["nominal", "continuous", "temporal"]);
 
 export type ColumnKind = typeof ColumnKind.Type;
+
+/*
+ * The kinds in the words the person building the chart uses, named once so the
+ * table editor and the chart-type picker cannot come to say them differently. The
+ * `ColumnKind` names are measurement levels, which belong in the types rather than
+ * on a button or in a sentence about what a chart needs.
+ */
+export const KIND_LABEL = {
+  nominal: "text",
+  continuous: "number",
+  temporal: "date",
+} satisfies Record<ColumnKind, string>;
 
 export const RoleKey = Schema.String.pipe(Schema.brand("RoleKey"));
 
@@ -126,9 +138,8 @@ export const Spec = Schema.Struct({
    * column instead would make each of the table editor's mutation paths a place
    * the spec could come to describe columns that no longer exist.
    *
-   * `identity.ts` hashes the whole spec, so pinning a column does invalidate the
-   * compile - but a pin cannot reach emitted code, so the rebuild is
-   * byte-identical. That costs one recompile and changes nothing the reader sees.
+   * The spec's identity covers this field, so pinning forces a recompile - one
+   * that is byte-identical, since a pin reaches no emitted code.
    */
   kinds: ColumnKinds,
 });

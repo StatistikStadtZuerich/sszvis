@@ -11,14 +11,20 @@ import {
   ChartScatterIcon as UnknownChartIcon,
 } from "lucide-react";
 import { useId } from "react";
-import { Fragment } from "react";
 import { Field, FieldError } from "~/components/ui/field";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { cn } from "~/lib/utils";
 import { ToggleButton, ToggleButtonGroup } from "~/components/ui/toggle-button-group";
 import type { Table } from "../domain/csv";
 import { unmetRoles } from "../domain/initial-spec";
-import type { ColumnKinds, RecipeKey, RecipeSummary } from "../domain/spec";
+import { REQUIRED } from "../domain/csv";
+import {
+  KIND_LABEL,
+  type ColumnKinds,
+  type RecipeKey,
+  type RecipeSummary,
+  type RoleKind,
+} from "../domain/spec";
 
 const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
   ["bar-chart-vertical", ChartColumnIcon],
@@ -31,26 +37,22 @@ const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
   ["map-choropleth", MapIcon],
 ]);
 
-const KIND_LABEL = { category: "text", number: "number", date: "date" } as const;
-
 const sentence = new Intl.ListFormat("en", { style: "long", type: "conjunction" });
 
-/* Small counts read as words. A chart wanting more than four columns of one kind
-   does not exist, but a number is a better answer than nothing if one ever does. */
-const COUNT = ["", "a", "two", "three", "four"] as const;
+/* Small counts read as words; past four a number is better than nothing. Index 1 is
+   unused - `n === 1` is worded separately - and index 0 is unreachable. */
+const COUNT = ["", "", "two", "three", "four"] as const;
 
-/*
- * Counted by kind rather than listed one role at a time: a map wants two number
- * columns, and naming its roles separately said it needed "a number column and a
- * number column".
- */
+/* Counted by kind, not listed per role: a map wants two number columns, and one
+   line per role reads "a number column and a number column". */
 const needs = (roles: ReturnType<typeof unmetRoles>) => {
-  const counted = new Map<keyof typeof KIND_LABEL, number>();
+  const counted = new Map<RoleKind, number>();
   for (const role of roles) counted.set(role.kind, (counted.get(role.kind) ?? 0) + 1);
   return sentence.format(
-    [...counted].map(([kind, n]) =>
-      n === 1 ? `a ${KIND_LABEL[kind]} column` : `${COUNT[n] ?? n} ${KIND_LABEL[kind]} columns`,
-    ),
+    [...counted].map(([kind, n]) => {
+      const word = KIND_LABEL[REQUIRED[kind]];
+      return n === 1 ? `a ${word} column` : `${COUNT[n] ?? n} ${word} columns`;
+    }),
   );
 };
 
@@ -95,9 +97,8 @@ export const ChartType = ({
             <ToggleButton
               value={recipe.key}
               size="lg"
-              /* `aria-disabled` rather than `disabled`: a disabled button leaves the
-                 tab order and takes the explanation with it, leaving a keyboard user
-                 with a control they cannot reach and no reason for it. */
+              /* `aria-disabled` rather than `disabled`: the button keeps its place in
+                 the tab order, so focus reaches the reason it cannot be chosen. */
               aria-disabled={unavailable || undefined}
               aria-invalid={missing.length > 0 || undefined}
               aria-describedby={unavailable ? reasonId(recipe.key) : undefined}
@@ -110,17 +111,29 @@ export const ChartType = ({
               {recipe.label}
             </ToggleButton>
           );
-          if (!unavailable) return <Fragment key={recipe.key}>{button}</Fragment>;
+          /* Every button is wrapped the same way, available or not: swapping the
+             element around a button that has focus would remount it and drop the
+             group's roving focus to the body. */
           return (
             <Tooltip key={recipe.key}>
               <TooltipTrigger render={button} />
-              <TooltipContent id={reasonId(recipe.key)} side="top">
-                Needs {needs(missing)}
-              </TooltipContent>
+              {unavailable && <TooltipContent side="top">Needs {needs(missing)}</TooltipContent>}
             </Tooltip>
           );
         })}
       </ToggleButtonGroup>
+      {/* The reasons, for a screen reader rather than the eye. `aria-describedby`
+          cannot point at the tooltip: it is portalled and unmounted while closed, so
+          the description would resolve to nothing exactly when it is needed. */}
+      <div className="sr-only">
+        {recipes
+          .filter((recipe) => recipe.key !== value && (unmet.get(recipe.key)?.length ?? 0) > 0)
+          .map((recipe) => (
+            <p key={recipe.key} id={reasonId(recipe.key)}>
+              {recipe.label} needs {needs(unmet.get(recipe.key) ?? [])}.
+            </p>
+          ))}
+      </div>
       {selected.length > 0 && (
         <FieldError id={reasonId(value)}>
           This chart needs {needs(selected)}.{" "}

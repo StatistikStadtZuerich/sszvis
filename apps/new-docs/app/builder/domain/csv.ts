@@ -160,6 +160,13 @@ const NATURAL = {
   temporal: "date",
 } satisfies Record<ColumnKind, RoleKind>;
 
+/** The column kind a role reads outright - the inverse of `NATURAL`. */
+export const REQUIRED = {
+  category: "nominal",
+  number: "continuous",
+  date: "temporal",
+} satisfies Record<RoleKind, ColumnKind>;
+
 /**
  * How well a column of one kind fills a role that wants another: 0 is exact, a
  * higher number is a worse fit, and `null` is no fit at all. The one direction
@@ -210,19 +217,38 @@ export const settleColumn = (
 
 /**
  * A name for a column being added, distinct from the ones the table already has.
- *
- * NOTE: the count alone used to name it, which repeats a name whenever the user
- * has typed that name themselves - and two columns of one name are one column to
- * everything downstream, which addresses them by name.
+ * The count alone would repeat a name the user has typed themselves, and two
+ * columns of one name are one column to everything that addresses them by name.
  */
 export const addedName = (columns: readonly ColumnName[]): ColumnName =>
   distinctName("", new Set(columns), columns.length);
 
 /** `dd.mm.yyyy`, which is what `sszvis.parseDate` reads. */
-const SWISS_DATE = /^\d{1,2}\.\d{1,2}\.\d{4}$/;
+const SWISS_DATE = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
 
-/* `Number(...)` would admit "Infinity", whose comparator then returns NaN. */
-const decodeFinite = Schema.decodeUnknownOption(Schema.FiniteFromString);
+/**
+ * The date a `dd.mm.yyyy` string names, or `None` when it names no calendar day.
+ *
+ * The shape alone is not enough: `31.02.2020` matches the pattern and is not a
+ * date, and a chart handed one parses it to nothing and drops the row. Asking the
+ * calendar here is what lets a column of such values be reported rather than
+ * quietly read as dates.
+ */
+export const parseSwissDate = (value: string): Option.Option<Date> => {
+  const match = SWISS_DATE.exec(value.trim());
+  if (match === null) return Option.none();
+  const [, day = "", month = "", year = ""] = match;
+  const date = new Date(Number(year), Number(month) - 1, Number(day));
+  const isCalendarDay =
+    date.getFullYear() === Number(year) &&
+    date.getMonth() === Number(month) - 1 &&
+    date.getDate() === Number(day);
+  return isCalendarDay ? Option.some(date) : Option.none();
+};
+
+/* The value is already a string, so there is no unknown boundary to cross.
+   `Number(...)` would admit "Infinity", whose comparator then returns NaN. */
+const decodeFinite = Schema.decodeOption(Schema.FiniteFromString);
 
 /** A column's values, blanks dropped - a blank says nothing about what a column holds. */
 const valuesOf = (table: Table, index: number) =>
@@ -234,32 +260,32 @@ const valuesOf = (table: Table, index: number) =>
  * user chose - so they answer it in the same place and cannot drift apart.
  */
 const admits = (values: readonly string[], kind: ColumnKind): boolean => {
-  switch (kind) {
-    /* Any value can serve as a label, so nothing ever fails to be nominal. */
-    case "nominal":
-      return true;
-    case "temporal":
-      return values.every((value) => SWISS_DATE.test(value));
-    case "continuous":
-      return values.every((value) => Option.isSome(decodeFinite(value)));
-  }
+  /* Any value can serve as a label, so nothing ever fails to be nominal - and a
+     column with nothing in it bears only that. `every` on no values is true, which
+     would otherwise call an empty column a date and let a chart be built on it. */
+  if (kind === "nominal") return true;
+  if (values.length === 0) return false;
+  return kind === "temporal"
+    ? values.every((value) => Option.isSome(parseSwissDate(value)))
+    : values.every((value) => Option.isSome(decodeFinite(value)));
 };
+
+/** Whether a column has anything in it to be read at all. */
+export const hasValues = (table: Table, column: ColumnName): boolean =>
+  valuesOf(table, table.columns.indexOf(column)).length > 0;
 
 /** What each column looks like from its values alone, before anyone overrules it. */
 export const detectedKinds = (table: Table): ReadonlyMap<string, ColumnKind> => {
   const kinds = new Map<string, ColumnKind>();
   for (const [index, column] of table.columns.entries()) {
     const values = valuesOf(table, index);
-    /* The most particular reading the values bear. An empty column bears all three,
-       and is read as labels rather than being called a date on no evidence. */
-    const kind: ColumnKind =
-      values.length === 0
-        ? "nominal"
-        : admits(values, "temporal")
-          ? "temporal"
-          : admits(values, "continuous")
-            ? "continuous"
-            : "nominal";
+    /* The most particular reading the values bear; an empty column bears only the
+       loosest, rather than being called a date on no evidence. */
+    const kind: ColumnKind = admits(values, "temporal")
+      ? "temporal"
+      : admits(values, "continuous")
+        ? "continuous"
+        : "nominal";
     kinds.set(column, kind);
   }
   return kinds;
@@ -282,13 +308,6 @@ export const unsupportedPins = (table: Table, kinds: ColumnKinds): ReadonlySet<s
   return unsupported;
 };
 
-/** The column kind a role reads outright - the inverse of `NATURAL`. */
-const REQUIRED = {
-  category: "nominal",
-  number: "continuous",
-  date: "temporal",
-} satisfies Record<RoleKind, ColumnKind>;
-
 /**
  * Whether a column's values can be read the way a role reads them.
  *
@@ -305,12 +324,16 @@ export const bearsRole = (table: Table, column: ColumnName, role: RoleKind): boo
   return admits(valuesOf(table, index), REQUIRED[role]);
 };
 
-/* The three in a fixed round, so the control is one button: a click moves on by one. */
-const CYCLE = ["nominal", "continuous", "temporal"] as const;
+/* A fixed round, so the control can be one button: a click moves on by one. Adding
+   a kind fails to compile here, which is the right place to decide where it sits. */
+const NEXT = {
+  nominal: "continuous",
+  continuous: "temporal",
+  temporal: "nominal",
+} satisfies Record<ColumnKind, ColumnKind>;
 
 /** The kind a click moves a column to. */
-export const nextKind = (kind: ColumnKind): ColumnKind =>
-  CYCLE[(CYCLE.indexOf(kind) + 1) % CYCLE.length] ?? "nominal";
+export const nextKind = (kind: ColumnKind): ColumnKind => NEXT[kind];
 
 /**
  * What each column holds, the user's pins laid over what the values say. A pin

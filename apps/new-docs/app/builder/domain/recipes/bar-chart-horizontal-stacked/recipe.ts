@@ -52,7 +52,7 @@ export const barChartHorizontalStacked: RecipeDef = {
     { key: UNIT, label: "Tooltip unit", fallback: "" },
   ],
   features: [TOOLTIP, LEGEND],
-  scalars: (spec, option, _kind) => ({
+  scalars: (spec, option) => ({
     X_LABEL: str(option(X_LABEL_OPTION)),
     CATEGORY_FIELD: str(spec.fields[CATEGORY] ?? ""),
     SERIES_FIELD: str(spec.fields[SERIES] ?? ""),

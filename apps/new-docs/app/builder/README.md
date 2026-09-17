@@ -93,10 +93,13 @@ compile rather than quietly ignoring them.
 
 A pin steers `bindRoles`, and through it which chart types report an unmet role;
 it picks the sort comparator; and it names the kind the mapping step reports. It
-reaches no emitted code. Pins carry through a chart-type switch and through a
-column rename, and are dropped whenever the whole table is replaced - loading a
-sample, or saving from the paste panel - because a pin that survived would land
-on whichever new column happened to share its name.
+is also what `unsupportedPins` and `bearsRole` measure a column's values against
+
+- the warning on the column's own button, and the one under its mapping. It
+  reaches no emitted code. Pins carry through a chart-type switch and through a
+  column rename, and are dropped whenever the whole table is replaced - loading a
+  sample, or saving from the paste panel - because a pin that survived would land
+  on whichever new column happened to share its name.
 
 A rename re-keys the pin at exactly one moment: when the typed name settles
 (`settleColumn`), from the name the column carried before the caret entered it.
@@ -111,8 +114,18 @@ because a sparse `spec.kinds` cannot be resolved by a recipe on its own, so the
 first recipe that needs to emit differently per kind would otherwise have to
 change the type and all eight call sites to reach one.
 
-The three kinds are named for the reader in `page.tsx` - text, number, date -
-not by their measurement levels, which are jargon outside the type system.
+`KIND_LABEL` in `spec.ts` names the three for the reader - text, number, date -
+and every surface that speaks of a kind reads from it, so the table editor and
+the chart-type picker cannot come to word them differently. The measurement
+levels stay in the types, where the room for a finer one is worth their jargon.
+
+Whether a column's values can be _read_ as a kind is a second question, and
+`admits` is the one place it is asked: by the detector of every kind, and by the
+two warnings of the kind the user chose. A column with nothing in it bears only
+`nominal` - `every` over no values is true, and without that an empty column
+would pass as dates and satisfy a chart that then draws nothing. `parseSwissDate`
+asks the calendar rather than the pattern, so `31.02.2020` is not a date here
+either, for the same reason: `sszvis.parseDate` would drop the row.
 
 ## Keys
 
