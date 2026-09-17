@@ -160,26 +160,43 @@ describe("patterns", () => {
   });
 
   describe("scoped ids", () => {
-    test("mapLakeFadeGradient writes a supplied id", () => {
-      mapLakeFadeGradient(select(gradient), "lake-fade-gradient-7");
-      expect(gradient.getAttribute("id")).toBe("lake-fade-gradient-7");
-    });
-
-    test("mapLakeFadeGradient accepts the id through selection.call", () => {
-      select(gradient).call(mapLakeFadeGradient, "lake-fade-gradient-8");
-      expect(gradient.getAttribute("id")).toBe("lake-fade-gradient-8");
-    });
-
-    test("mapLakeGradientMask references a supplied gradient id", () => {
-      mapLakeGradientMask(select(mask), "lake-fade-gradient-7");
-      expect(mask.querySelector("rect")?.getAttribute("fill")).toBe("url(#lake-fade-gradient-7)");
-    });
-
-    test("a later call repoints an existing mask rect at the new id", () => {
-      mapLakeGradientMask(select(mask));
-      mapLakeGradientMask(select(mask), "lake-fade-gradient-9");
-      expect(mask.querySelectorAll("rect")).toHaveLength(1);
-      expect(mask.querySelector("rect")?.getAttribute("fill")).toBe("url(#lake-fade-gradient-9)");
+    // Four one-assertion tests over the same id plumbing. One row per branch: the first two
+    // cover the gradient's own id, the last two the mask's reference to it.
+    test.each([
+      {
+        case: "a supplied id is written onto the gradient",
+        act: () => mapLakeFadeGradient(select(gradient), "lake-fade-gradient-7"),
+        assert: () => expect(gradient.getAttribute("id")).toBe("lake-fade-gradient-7"),
+      },
+      {
+        case: "the id arrives through selection.call",
+        act: () => select(gradient).call(mapLakeFadeGradient, "lake-fade-gradient-8"),
+        assert: () => expect(gradient.getAttribute("id")).toBe("lake-fade-gradient-8"),
+      },
+      {
+        case: "the mask is pointed at a supplied gradient id",
+        act: () => mapLakeGradientMask(select(mask), "lake-fade-gradient-7"),
+        assert: () =>
+          expect(mask.querySelector("rect")?.getAttribute("fill")).toBe(
+            "url(#lake-fade-gradient-7)",
+          ),
+      },
+      {
+        case: "a second call repoints the existing mask rect rather than adding one",
+        act: () => {
+          mapLakeGradientMask(select(mask));
+          mapLakeGradientMask(select(mask), "lake-fade-gradient-9");
+        },
+        assert: () => {
+          expect(mask.querySelectorAll("rect")).toHaveLength(1);
+          expect(mask.querySelector("rect")?.getAttribute("fill")).toBe(
+            "url(#lake-fade-gradient-9)",
+          );
+        },
+      },
+    ])("should use the id it was given when $case", ({ act, assert }) => {
+      act();
+      assert();
     });
   });
 

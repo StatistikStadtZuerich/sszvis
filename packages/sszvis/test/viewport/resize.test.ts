@@ -44,7 +44,7 @@ describe("viewport/resize", () => {
     expect(cb).toHaveBeenCalledTimes(1);
   });
 
-  test("should call listeners in registration order", () => {
+  test("should call listeners in registration order when several are registered for one event", () => {
     const calls: string[] = [];
     listen("resize", () => calls.push("first"));
     listen("resize", () => calls.push("second"));
@@ -98,7 +98,7 @@ describe("viewport/resize", () => {
       expect(cb).toHaveBeenCalledTimes(1);
     });
 
-    test("should call resize listeners with no arguments", () => {
+    test("should call resize listeners with no arguments when the window fires a resize event", () => {
       const cb = vi.fn();
       listen("resize", cb);
       globalThis.dispatchEvent(new Event("resize"));

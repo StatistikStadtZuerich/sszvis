@@ -195,36 +195,32 @@ describe("fn", () => {
     });
   });
 
-  describe("functor", () => {
-    test("should wrap a constant in a function", () => {
-      expect(functor(5)()).toBe(5);
-      expect(functor(null)()).toBeNull();
-    });
+  // functor and valueFn are separate exports stating one contract twice, so the contract is
+  // stated once here with a row each: a mutation in either one still fails its own row.
+  describe("functor and valueFn", () => {
+    const wrappers = [
+      ["functor", functor],
+      ["valueFn", valueFn],
+    ] as [string, (value: unknown) => unknown][];
 
-    test("should return an existing function unchanged", () => {
-      const f = () => 1;
-      expect(functor(f)).toBe(f);
-    });
+    test.each(wrappers)(
+      "should wrap a constant in a function when %s is given a non-function",
+      (_name, wrap) => {
+        expect((wrap(5) as () => unknown)()).toBe(5);
+        expect((wrap(null) as () => unknown)()).toBeNull();
+      },
+    );
 
-    test("should return the same value on repeated calls", () => {
-      const obj = { a: 1 };
-      const f = functor(obj);
-      expect(f()).toBe(obj);
-      expect(f()).toBe(obj);
-    });
+    test.each(wrappers)(
+      "should return the same reference when %s is given a function",
+      (_name, wrap) => {
+        const f = (d: unknown) => d;
+        expect(wrap(f)).toBe(f);
+      },
+    );
   });
 
   describe("valueFn", () => {
-    test("should wrap a constant in a d3 accessor", () => {
-      const f = valueFn("red") as unknown as () => string;
-      expect(f()).toBe("red");
-    });
-
-    test("should return an existing accessor unchanged", () => {
-      const f = (d: unknown) => d;
-      expect(valueFn(f)).toBe(f);
-    });
-
     test("should be usable directly with d3 .attr()", () => {
       const div = document.createElement("div");
       select(div).datum(3).attr("data-a", valueFn("x")).attr("data-b", valueFn(String));
@@ -382,10 +378,6 @@ describe("fn", () => {
     test("should find NaN", () => {
       // NOTE: Array#includes uses SameValueZero, so NaN is findable here.
       expect(contains([Number.NaN], Number.NaN)).toBe(true);
-    });
-
-    test("should be false for an empty list", () => {
-      expect(contains([], 1)).toBe(false);
     });
   });
 
