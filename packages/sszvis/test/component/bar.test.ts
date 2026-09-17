@@ -80,9 +80,9 @@ describe("component/bar", () => {
         .datum(data)
         .call(component as never)
         .node() as SVGGElement,
-    data: testData,
-    marks: bars,
-    anchorCount: (node) => anchors(node).length,
+    count: (node) => ({ bars: bars(node).length, anchors: anchors(node).length }),
+    full: { data: testData, marks: { bars: 2, anchors: 2 } },
+    smaller: { data: [testData[0]], marks: { bars: 1, anchors: 1 } },
   }));
 
   describe("rendering", () => {
