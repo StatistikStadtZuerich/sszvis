@@ -8,6 +8,7 @@ import {
   stackedBarVerticalData,
 } from "../../src/component/stackedBar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 type Row = { year: string; category: string; nested: string; value: number };
@@ -111,22 +112,6 @@ describe("component/nestedStackedBar", () => {
     [...(node?.querySelectorAll(".tick text") ?? [])].map((t) => t.textContent);
 
   describe("props", () => {
-    test("should return the component from every setter so the props chain", () => {
-      const component = nestedStackedBarsVertical();
-      expect(
-        component
-          .offset(() => 0)
-          .xScale(xScale)
-          .yScale(yScale)
-          .fill("#000")
-          .stroke("#000")
-          .tooltip(() => undefined)
-          .xAcc((d: Row) => d.year)
-          .xLabel("Jahr")
-          .slant("vertical"),
-      ).toBe(component);
-    });
-
     test("should read a prop back unchanged when it was set to a function", () => {
       // Every prop except `slant` is wrapped in fn.functor, which passes functions through
       // untouched but boxes plain values, so only functions survive a get/set round-trip.
@@ -136,10 +121,30 @@ describe("component/nestedStackedBar", () => {
     });
   });
 
+  describesTheMarkJoin<NestedStack>(() => ({
+    make: nestedOf,
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({
+      groups: groups(node).length,
+      rects: rects(node).length,
+      anchors: node.querySelectorAll("[data-tooltip-anchor]").length,
+    }),
+    full: { data: nestedData(), marks: { groups: 2, rects: 8, anchors: 8 } },
+    smaller: {
+      data: nestedData(rows.filter((d) => d.nested === "F")),
+      marks: { groups: 1, rects: 4, anchors: 4 },
+    },
+  }));
+
   describe("rendering", () => {
-    test("should render one group per nested group when the layout is bound to it", () => {
+    test("should render each nested group as a g element when the layout is bound to it", () => {
+      // How many groups there are is covered by the shared join contract above; what is left
+      // here is that the group-key attribute the count selects on sits on a <g>.
       const node = render(nestedOf());
-      expect(groups(node).length).toBe(2);
       for (const g of groups(node)) expect(g.tagName).toBe("g");
     });
 
@@ -165,9 +170,10 @@ describe("component/nestedStackedBar", () => {
       expect(tickLabels(axisOf(groups(node)[0]))).toEqual(["2020", "2021"]);
     });
 
-    test("should render a bar group holding one rect per data point when it renders", () => {
+    test("should give every nested group its own bar group when the layout is bound to it", () => {
+      // The flat rect count is covered by the shared join contract above; the per-group split
+      // and the barchart group the rects live in are not expressible as a flat count.
       const node = render(nestedOf());
-      expect(rects(node).length).toBe(rows.length);
       for (const g of groups(node)) {
         expect(barsOf(g)).not.toBeNull();
         expect(rects(g).length).toBe(4);
@@ -203,7 +209,7 @@ describe("component/nestedStackedBar", () => {
       expect(node.querySelectorAll("[data-tooltip-anchor]").length).toBe(rows.length);
     });
 
-    test("should pass the tooltip anchors to the tooltip component", () => {
+    test("should call the tooltip once with every nested group's anchors rather than once per group", () => {
       const calls: number[] = [];
       const tooltip = (selection: { size(): number }) => {
         calls.push(selection.size());
@@ -214,24 +220,9 @@ describe("component/nestedStackedBar", () => {
       expect(calls).toEqual([rows.length]);
     });
 
-    test("should render no groups when the data array is empty", () => {
-      const node = render(nestedOf(), []);
-      expect(groups(node).length).toBe(0);
-      expect(rects(node).length).toBe(0);
-    });
   });
 
   describe("re-rendering", () => {
-    test("should update the groups in place when the same data is rendered twice", () => {
-      const component = nestedOf();
-      const g = group("rerender");
-      g.datum(nestedData()).call(component as never);
-      g.datum(nestedData()).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(groups(node).length).toBe(2);
-      expect(rects(node).length).toBe(rows.length);
-    });
-
     test("should reuse the axis groups rather than stack them up when it renders twice", () => {
       const component = nestedOf();
       const g = group("rerender-axis");
@@ -240,16 +231,6 @@ describe("component/nestedStackedBar", () => {
       const node = g.node() as SVGGElement;
       expect(node.querySelectorAll('[data-d3-selectgroup="nested-x-axis"]').length).toBe(2);
       expect(tickLabels(axisOf(groups(node)[0]))).toEqual(["2020", "2021"]);
-    });
-
-    test("should remove the surplus groups when the data shrinks", () => {
-      const component = nestedOf();
-      const g = group("shrink");
-      g.datum(nestedData()).call(component as never);
-      g.datum(nestedData(rows.filter((d) => d.nested === "F"))).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(groups(node).length).toBe(1);
-      expect(rects(node).length).toBe(4);
     });
 
     test("should move the groups when the offset scale changes", () => {
@@ -413,7 +394,7 @@ describe("component/nestedStackedBar", () => {
       expect(rects(node).length).toBe(rows.length);
     });
 
-    test("should warn and label by index for a layout with no group key", () => {
+    test("should warn and label by index when a layout has no group key", () => {
       // Neither name is required. The label falls back to the group index and the chart still
       // renders: `offset` is the caller's own functor and need not read the key at all, so a
       // missing key is a diagnostic rather than a reason to draw nothing. This offset ignores

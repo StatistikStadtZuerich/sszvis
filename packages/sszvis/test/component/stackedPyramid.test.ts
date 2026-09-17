@@ -9,6 +9,7 @@ import {
   stackedPyramidLayout,
 } from "../../src/component/stackedPyramid.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 /** One row of the flat input the layout function expects. */
@@ -145,12 +146,6 @@ describe("component/stackedPyramid", () => {
       expect(bars(node, "rightStack").length).toBe(4);
     });
 
-    test("should render bars when the layout's sides are bound to the layer", () => {
-      const node = render(pyramidOf(), layoutOf().sides);
-      expect(bars(node, "leftStack").length).toBe(4);
-      expect(bars(node, "rightStack").length).toBe(4);
-    });
-
     test("should give the same answer as a fresh generator when one generator is reused across datasets", () => {
       // stackedPyramidData builds its layout generator once and closes over it, so the
       // accessors are bound a single time rather than per call. Nothing mutable may be
@@ -178,14 +173,14 @@ describe("component/stackedPyramid", () => {
   });
 
   describe("stackedPyramidData", () => {
-    test("should return one entry per side", () => {
+    test("should return one entry per side when the data covers two sides", () => {
       const sides = layout();
       expect(sides.length).toBe(2);
       expect(sides[0][0][0].side).toBe("f");
       expect(sides[1][0][0].side).toBe("m");
     });
 
-    test("should stack each side independently, one series per series key", () => {
+    test("should stack each side independently when both sides carry the same series keys", () => {
       const sides = layout();
       // The default stack order is stackOrderNone, so the keys stack front to back: "a"
       // sits on the baseline and "b" on top of it.
@@ -244,11 +239,11 @@ describe("component/stackedPyramid", () => {
       expect(sides[0].map((series) => series.index)).toEqual([0, 1]);
     });
 
-    test("should report the highest stacked total across both sides as maxValue", () => {
+    test("should report the highest stacked total as maxValue when the two sides stack to different totals", () => {
       expect(layoutOf().maxValue).toBe(70);
     });
 
-    test("should return the sides array with maxValue assigned, from stackedPyramidData", () => {
+    test("should return the sides array with maxValue assigned when stackedPyramidData is called", () => {
       // The array-returning form is what the shipped charts bind straight to the chart layer,
       // so it stays an ordinary array that the side accessors can index into positionally.
       const sides = sidesDataOf();
@@ -322,7 +317,7 @@ describe("component/stackedPyramid", () => {
       expect(maxValue).toBe(5);
     });
 
-    test("should contribute zero for a row that carries no value for a series", () => {
+    test("should pad with a zero-width slice when a row carries no value for a series", () => {
       const sides = layout([
         { side: "f", row: 0, series: "a", value: 1 },
         { side: "f", row: 0, series: "b", value: 2 },
@@ -508,14 +503,37 @@ describe("component/stackedPyramid", () => {
   });
 
   describe("props", () => {
-    test("should default barFill to black and tooltipAnchor to the centre", () => {
-      const component = stackedPyramid();
+    test("should default barFill to black when it is left unset", () => {
       // The datum is required now that barFill is only called for a slice that has one; a
       // constant default ignores it.
-      expect(component.barFill()({})).toBe("#000");
-      expect(component.tooltipAnchor()).toEqual([0.5, 0.5]);
+      expect(stackedPyramid().barFill()({})).toBe("#000");
+    });
+
+    test("should default tooltipAnchor to the centre of a bar when it is left unset", () => {
+      expect(stackedPyramid().tooltipAnchor()).toEqual([0.5, 0.5]);
     });
   });
+
+  // Both sides are fed the same side, because binding an empty sides array is not an option:
+  // a side accessor that finds nothing throws from d3's join, which is pinned under "required
+  // props" below. The empty case therefore binds two empty sides rather than no sides.
+  describesTheMarkJoin<Side[number]>(() => ({
+    make: pyramidOf,
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum([data, data])
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({
+      leftStacks: ownStacks(node, "leftStack").length,
+      rightStacks: ownStacks(node, "rightStack").length,
+      leftBars: bars(node, "leftStack").length,
+      rightBars: bars(node, "rightStack").length,
+    }),
+    full: { data: layout()[0], marks: { leftStacks: 2, rightStacks: 2, leftBars: 4, rightBars: 4 } },
+    // No shrink case: losing a series and losing a row empty different halves of this nested
+    // join, and both keep tests of their own under "bars" below.
+  }));
 
   describe("groups", () => {
     test("should create all four groups, references last, even when no reference data is configured", () => {
@@ -564,12 +582,6 @@ describe("component/stackedPyramid", () => {
   });
 
   describe("bars", () => {
-    test("should render one bar per row per series on each side when both sides have data", () => {
-      const node = render(pyramidOf());
-      expect(bars(node, "leftStack").length).toBe(4);
-      expect(bars(node, "rightStack").length).toBe(4);
-    });
-
     test("should mirror the two sides around a one-pixel spine when it renders", () => {
       const node = render(pyramidOf());
       // On the left x = -SPINE_PADDING - barWidth(d[1]), the bar's outer edge, since it
@@ -634,30 +646,15 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "leftStack", "stroke")).toEqual([null, null, null, null]);
     });
 
-    test("should render no bars when the layout is empty", () => {
-      const empty = layout([]);
-      const node = render(
-        stackedPyramid()
-          .barHeight(10)
-          .barWidth((v: number) => v)
-          .barPosition((row: number) => row * 12)
-          .leftAccessor(() => [])
-          .rightAccessor(() => []),
-        empty,
-      );
-      expect(stacks(node, "leftStack").length).toBe(0);
-      expect(bars(node, "leftStack").length).toBe(0);
-    });
-
-    test("should update the bars in place when the same data is rendered twice", () => {
+    test("should reuse a side's group and its anchors rather than add a second set when it renders twice", () => {
+      // The stacks and the bars themselves are covered by the shared join contract above;
+      // what is left here is the layer they live in and the anchors, which it does not count.
       const component = pyramidOf();
       const g = group("rerender");
       g.datum(layout()).call(component as never);
       g.datum(layout()).call(component as never);
       const node = g.node() as SVGGElement;
       expect(node.querySelectorAll('[data-d3-selectgroup="leftStack"]').length).toBe(1);
-      expect(stacks(node, "leftStack").length).toBe(2);
-      expect(bars(node, "leftStack").length).toBe(4);
       expect(anchors(node, "leftStack").length).toBe(4);
     });
 
@@ -709,7 +706,7 @@ describe("component/stackedPyramid", () => {
   });
 
   describe("tooltip anchors", () => {
-    test("should render one anchor per bar inside that bar's own stack group", () => {
+    test("should render one anchor per bar inside that bar's own stack group when both sides have data", () => {
       const node = render(pyramidOf());
       expect(anchors(node, "leftStack").length).toBe(4);
       expect(
@@ -798,7 +795,7 @@ describe("component/stackedPyramid", () => {
       expect(lines(node, "rightReference")[0].getAttribute("transform")).toBe("");
     });
 
-    test("should read a reference point's x from its value and its y from its row", async () => {
+    test("should read a reference point's x from its value and its y from its row when a reference series is set", async () => {
       const node = render(withRefs());
       // x = barWidth(d.value), y = barPosition(d.row)
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
