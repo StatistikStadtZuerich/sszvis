@@ -6,7 +6,16 @@ import {
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  CalendarIcon,
+  HashIcon,
+  TriangleAlertIcon,
+  TypeIcon,
+  X,
+} from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { typefaceCaption } from "~/components/tokens/typeface";
 import { Button } from "~/components/ui/button";
@@ -22,6 +31,8 @@ import {
 
 import {
   addedName,
+  columnKinds,
+  nextKind,
   parseBlock,
   reorder,
   serialize,
@@ -29,8 +40,10 @@ import {
   type SortDirection,
   sortOrder,
   type Table,
+  unsupportedPins,
 } from "../domain/csv";
-import { ColumnName, type ColumnKinds } from "../domain/spec";
+import { ColumnName, type ColumnKind, type ColumnKinds } from "../domain/spec";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { PastePanel } from "./paste-panel";
 
 type Row = Table["rows"][number];
@@ -41,6 +54,10 @@ const OVERSCAN = 6;
 const WINDOW_FROM = 40;
 
 type EditorMeta = {
+  readonly kindOf: (column: number) => ColumnKind;
+  readonly isPinned: (column: number) => boolean;
+  readonly isUnsupported: (column: number) => boolean;
+  readonly cycleKind: (column: number) => void;
   readonly beginRename: (column: number) => void;
   readonly setColumn: (column: number, value: string) => void;
   readonly settleColumn: (column: number) => void;
@@ -76,6 +93,77 @@ const plural = new Intl.PluralRules("en");
 const count = (n: number, one: string, other: string) =>
   `${n} ${plural.select(n) === "one" ? one : other}`;
 
+/*
+ * The kinds as the person building the chart says them, matching the words the
+ * chart-type picker uses. The `ColumnKind` names are measurement levels, which
+ * belong in the types and not on a button.
+ */
+const KIND = {
+  nominal: { label: "text", Icon: TypeIcon },
+  continuous: { label: "number", Icon: HashIcon },
+  temporal: { label: "date", Icon: CalendarIcon },
+} satisfies Record<ColumnKind, { label: string; Icon: typeof TypeIcon }>;
+
+/**
+ * What a column holds, and a click to say otherwise. One button rather than a menu:
+ * it shows the kind in force, and each click moves on by one.
+ *
+ * Until it is clicked the column reads as the table detects it and re-reads as the
+ * data is edited. The first click settles on the next kind round, and from then on
+ * the column keeps whatever it was last set to - including when that agrees with
+ * what would have been detected anyway, which is how a column is held to a kind
+ * against data pasted in later.
+ */
+const KindCell = ({
+  index,
+  name,
+  kind,
+  pinned,
+  unsupported,
+  onCycle,
+}: {
+  readonly index: number;
+  readonly name: string;
+  readonly kind: ColumnKind;
+  readonly pinned: boolean;
+  readonly unsupported: boolean;
+  readonly onCycle: (index: number) => void;
+}) => {
+  const { label, Icon } = KIND[kind];
+  const next = KIND[nextKind(kind)].label;
+  const warning = `The values in ${name} are not all ${label}. The chart will drop the rows it cannot read.`;
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            /* Both halves: a control that cycles is unusable if it only says where it is. */
+            aria-label={`${name} holds ${label}${pinned ? "" : ", as detected"}. Change to ${next}.`}
+            onClick={() => onCycle(index)}
+            className="relative ml-0.5 shrink-0"
+          >
+            {unsupported ? <TriangleAlertIcon className="text-destructive" /> : <Icon />}
+            {/* Set by hand rather than read off the data, which the icon alone cannot say. */}
+            {pinned && (
+              <span
+                aria-hidden
+                className="absolute right-0.5 bottom-0.5 size-1 rounded-full bg-foreground"
+              />
+            )}
+          </Button>
+        }
+      />
+      <TooltipContent side="top">
+        {unsupported
+          ? warning
+          : `Holds ${label}${pinned ? "" : ", as detected"} - click for ${next}`}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
 const HeaderCell = ({ column, table: grid }: HeaderContext<typeof features, Row, string>) => {
   const index = column.columnDef.meta?.index ?? 0;
   const name = column.columnDef.meta?.name ?? "";
@@ -88,8 +176,19 @@ const HeaderCell = ({ column, table: grid }: HeaderContext<typeof features, Row,
       : direction === "desc"
         ? `Stop sorting by ${name}`
         : `Sort ${name} ascending`;
+  const meta = grid.options.meta;
   return (
     <div className="flex items-center">
+      {meta !== undefined && (
+        <KindCell
+          index={index}
+          name={name}
+          kind={meta.kindOf(index)}
+          pinned={meta.isPinned(index)}
+          unsupported={meta.isUnsupported(index)}
+          onCycle={meta.cycleKind}
+        />
+      )}
       <Input
         value={name}
         onChange={(event) => grid.options.meta?.setColumn(index, event.target.value)}
@@ -136,10 +235,13 @@ const ValueCell = ({
   );
 };
 
+/* Drawn as a button rather than left bare: at the end of a row of plain cells an
+   unadorned glyph reads as one more value, and the row it belongs to is the one
+   thing it must not be mistaken for. */
 const RemoveCell = ({ row, table: grid }: CellContext<typeof features, Row, unknown>) => (
   <Button
     size="icon-xs"
-    variant="ghost"
+    variant="outline"
     aria-label={`Remove row ${row.index + 1}`}
     disabled={!grid.options.meta?.canRemoveRow}
     onClick={() => grid.options.meta?.removeRow(row.index)}
@@ -185,6 +287,11 @@ export const TableEditor = ({
      the only name its pin can safely be moved from. See `settleColumn`. */
   const renaming = useRef<{ readonly column: number; readonly from: ColumnName } | null>(null);
 
+  const resolved = useMemo(() => columnKinds(table, kinds), [table, kinds]);
+  const unsupported = useMemo(() => unsupportedPins(table, kinds), [table, kinds]);
+  const kindOf = (column: number): ColumnKind =>
+    resolved.get(table.columns[column] ?? "") ?? "nominal";
+
   const replace = (next: Table) => {
     setHeld(null);
     setNotice(null);
@@ -194,6 +301,17 @@ export const TableEditor = ({
   };
 
   const meta: EditorMeta = {
+    kindOf,
+    isPinned: (column) => kinds[table.columns[column] ?? ColumnName.make("")] !== undefined,
+    isUnsupported: (column) => unsupported.has(table.columns[column] ?? ""),
+    /* The first click settles on the kind after whatever was detected, so a control
+       whose first use appeared to do nothing cannot happen. */
+    cycleKind: (column) => {
+      const name = table.columns[column];
+      if (name === undefined) return;
+      setNotice(null);
+      onKindsChange({ ...kinds, [name]: nextKind(kindOf(column)) });
+    },
     beginRename: (column) => {
       const from = table.columns[column];
       if (from !== undefined) renaming.current = { column, from };
@@ -313,7 +431,11 @@ export const TableEditor = ({
             meta: { index, name },
           }),
         ),
-        helper.display({ id: "remove", cell: RemoveCell }),
+        helper.display({
+          id: "remove",
+          header: () => <span className="sr-only">Remove row</span>,
+          cell: RemoveCell,
+        }),
       ]),
     [table.columns],
   );
