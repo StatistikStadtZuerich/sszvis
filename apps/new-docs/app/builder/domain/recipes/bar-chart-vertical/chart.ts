@@ -82,8 +82,11 @@ sszvis.app<State, Actions>({
       },
       config.id,
     );
+    // NOTE: While the container is transiently narrower than the left padding the y
+    // labels need, innerWidth goes negative, which the layout rejects. Clamping at zero
+    // lays out an empty chart until the container has room again.
     const chartDimensions = sszvis.dimensionsVerticalBarChart(
-      Math.min(MAX_WIDTH, bounds.innerWidth),
+      Math.max(0, Math.min(MAX_WIDTH, bounds.innerWidth)),
       state.categories.length,
     );
 
