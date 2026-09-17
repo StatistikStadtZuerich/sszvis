@@ -105,13 +105,13 @@ describe("map/renderer/patternedlakeoverlay", () => {
   };
 
   describe("rendering", () => {
-    test("renders the lake shape and the border path, each once", () => {
+    test("should render one lake shape and one border path when lake data is given", () => {
       const node = render();
       expect(defs(node, "path.sszvis-map__lakezurich")).toHaveLength(1);
       expect(defs(node, "path.sszvis-map__lakepath")).toHaveLength(1);
     });
 
-    test("takes both path data strings from the mapPath generator", () => {
+    test("should take both path data strings from the mapPath generator when rendering", () => {
       const lakeFeature = lake();
       const lakeBounds = bounds();
       const mapPath = mapPathOf();
@@ -127,12 +127,12 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(lakeBorder(node)?.getAttribute("d")).toBe(mapPath(lakeBounds));
     });
 
-    test("fills the lake shape with the lake pattern", () => {
+    test("should fill the lake shape with the generated lake pattern when rendering", () => {
       const node = render();
       expect(lakeShape(node)?.getAttribute("fill")).toBe(`url(#${idOf(node, "defs > pattern")})`);
     });
 
-    test("defines the lake pattern in a defs element inside the layer", () => {
+    test("should define the lake pattern in a defs element inside the layer when rendering", () => {
       const node = render();
       expect(defs(node, "defs > pattern")).toHaveLength(1);
       // The pattern helper fills it in; the tile is a white rect plus hatch lines.
@@ -150,7 +150,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(node.ownerSVGElement?.querySelectorAll(":scope > defs")).toHaveLength(0);
     });
 
-    test("reuses the same paths and defs elements across renders", () => {
+    test("should reuse the same paths and defs elements when re-rendered into the same group", () => {
       const layer = group("lake-reuse");
       const renderWith = () =>
         layer
@@ -169,7 +169,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "defs > pattern")[0]).toBe(firstPattern);
     });
 
-    test("adds no tooltip anchors and no event targets", () => {
+    test("should add no tooltip anchors and no event targets when rendering", () => {
       const node = render();
       expect(node.querySelectorAll("[data-tooltip-anchor]")).toHaveLength(0);
       expect(node.querySelectorAll("[data-event-target]")).toHaveLength(0);
@@ -177,7 +177,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
   });
 
   describe("fadeOut", () => {
-    test("defaults to true, masking the lake with the fade gradient", () => {
+    test("should default fadeOut to true and mask the lake with the fade gradient", () => {
       expect(mapRendererPatternedLakeOverlay().fadeOut()).toBe(true);
       const node = render();
       expect(defs(node, "defs > linearGradient")).toHaveLength(1);
@@ -185,14 +185,14 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(lakeShape(node)?.getAttribute("mask")).toBe(`url(#${idOf(node, "defs > mask")})`);
     });
 
-    test("emits neither the gradient nor the mask when disabled", () => {
+    test("should emit neither the gradient nor the mask when fadeOut is false", () => {
       const node = render((c) => c.fadeOut(false));
       expect(defs(node, "defs > linearGradient")).toHaveLength(0);
       expect(defs(node, "defs > mask")).toHaveLength(0);
       expect(lakeShape(node)?.hasAttribute("mask")).toBe(false);
     });
 
-    test("removes the fade when fadeOut is turned off after being on", () => {
+    test("should remove the fade when fadeOut is turned off after being on", () => {
       const layer = group("lake-toggle-fade");
       const renderWith = (fadeOut: boolean) =>
         layer
@@ -211,7 +211,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(defs(node, "defs > linearGradient")).toHaveLength(0);
     });
 
-    test("re-applies the fade when it is turned back on", () => {
+    test("should re-apply the fade when fadeOut is turned back on", () => {
       const layer = group("lake-retoggle-fade");
       const renderWith = (fadeOut: boolean) =>
         layer
@@ -233,7 +233,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // The mask fills itself with the fade gradient, and both helpers hard-code the old fixed
     // gradient id - so the component must point the mask at whatever id the gradient was given.
-    test("wires the mask to the gradient by the id the gradient was given", () => {
+    test("should point the mask at the gradient's own generated id when the fade is drawn", () => {
       const node = render();
       const gradientId = idOf(node, "defs > linearGradient");
       expect(gradientId).toBeTruthy();
@@ -242,18 +242,18 @@ describe("map/renderer/patternedlakeoverlay", () => {
   });
 
   describe("lakePathColor", () => {
-    test("leaves the border stroke to the stylesheet by default", () => {
+    test("should leave the border stroke to the stylesheet when no lakePathColor is set", () => {
       const node = render();
       expect(lakeBorder(node)?.hasAttribute("style")).toBe(false);
       expect(lakeBorder(node)?.style.stroke).toBe("");
     });
 
-    test("takes a constant colour as an inline style", () => {
+    test("should set the border stroke inline when lakePathColor is a constant colour", () => {
       const node = render((c) => c.lakePathColor("#7C7C7C"));
       expect(lakeBorder(node)?.style.stroke).toBe("rgb(124, 124, 124)");
     });
 
-    test("clears a colour already set when handed a falsy colour", () => {
+    test("should clear the border stroke when lakePathColor is set to a falsy colour", () => {
       const layer = group("lake-falsy-colour");
       const renderWith = (lakePathColor: string) =>
         layer
@@ -270,7 +270,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(lakeBorder(node)?.style.stroke).toBe("");
     });
 
-    test("clears the stroke when an accessor returns undefined", () => {
+    test("should clear the border stroke when a lakePathColor accessor returns undefined", () => {
       const layer = group("lake-undefined-colour");
       const renderWith = (colour: string | undefined) =>
         layer
@@ -314,7 +314,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
   });
 
   describe("scoping", () => {
-    test("gives every layer on the page its own definition ids", () => {
+    test("should give each layer its own definition ids when two overlays render on one page", () => {
       const one = render(undefined, "lake-page-one");
       const two = render(undefined, "lake-page-two");
       const ids = (node: Element) => [
@@ -327,7 +327,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(new Set([...ids(one), ...ids(two)]).size).toBe(6);
     });
 
-    test("points each layer's lake at its own pattern and mask", () => {
+    test("should point each layer's lake at its own pattern and mask when two overlays render on one page", () => {
       const one = render(undefined, "lake-refs-one");
       const two = render(undefined, "lake-refs-two");
       for (const node of [one, two]) {
@@ -336,7 +336,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       }
     });
 
-    test("reuses one scope per group, so a re-render does not add definitions", () => {
+    test("should keep one scope per group, adding no definitions when re-rendered", () => {
       const layer = group("lake-scope-stable");
       const renderWith = () =>
         layer
@@ -398,7 +398,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
     // The path selectors are scoped to the rendering group's own children, so an overlay drawn
     // into a nested group is left alone even when it happens to carry the same key: two groups
     // are two overlays, whatever they are called.
-    test("leaves an overlay in a nested group alone", () => {
+    test("should leave an overlay in a nested group alone when an outer overlay shares its key", () => {
       const outer = group("nested-parent");
       const inner = outer.append("g");
       const renderWith = (target: typeof outer) =>
@@ -422,7 +422,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // The pattern helpers data-join their contents, so a map re-rendering on resize updates its
     // definitions in place rather than growing its defs subtree without bound.
-    test("leaves the pattern, gradient and mask contents untouched on re-render", () => {
+    test("should leave the pattern, gradient and mask contents unchanged when re-rendered", () => {
       const layer = group("lake-defs-growth");
       const renderWith = () =>
         layer
@@ -444,7 +444,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
   });
 
   describe("no lake to draw", () => {
-    test("draws nothing at all when there is no lake feature", () => {
+    test("should draw nothing when no lake feature is given", () => {
       const node = group()
         .call(mapRendererPatternedLakeOverlay().mapPath(mapPathOf()))
         .node() as SVGGElement;
@@ -457,7 +457,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // The renderer clears its own output, the way the highlight renderer does for an empty
     // highlight, so a caller can ask it for "no lake" instead of wrapping it in a group to empty.
-    test("removes a lake it drew earlier when the feature goes away", () => {
+    test("should remove the lake it drew earlier when the lake feature goes away", () => {
       const layer = group("lake-cleared");
       const renderWith = (lakeFeature: ReturnType<typeof lake> | null) =>
         layer
@@ -477,7 +477,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(node.querySelectorAll(`#${patternId}`)).toHaveLength(0);
     });
 
-    test("removes the fade definitions along with the lake", () => {
+    test("should remove the fade definitions along with the lake when the feature goes away", () => {
       const layer = group("lake-cleared-fade");
       const renderWith = (lakeFeature: ReturnType<typeof lake> | null) =>
         layer
@@ -497,7 +497,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // Definitions are owned exactly like paths: an inner overlay keeps the pattern and mask its
     // own paths reference even when an outer overlay renders with the same key and then clears.
-    test("leaves a nested overlay's definitions alone when clearing", () => {
+    test("should leave a nested overlay's definitions in place when an outer overlay clears", () => {
       const outer = group("nested-clear");
       const inner = outer.append("g");
       const renderWith = (target: typeof outer, lakeFeature: ReturnType<typeof lake> | null) =>
@@ -530,7 +530,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
     // on either side the outer overlay's definitions would be written into - or left behind in -
     // the inner group's defs. Distinct keys are what makes that visible; with one shared key the
     // ids collide and the leak reads as the inner overlay's own definitions.
-    test("removes its own definitions when an inner overlay rendered first", () => {
+    test("should remove its own definitions when clearing after an inner overlay rendered first", () => {
       const outer = group("nested-distinct-clear");
       const inner = outer.append("g");
       const renderWith = (
@@ -563,7 +563,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
       ).toEqual(["lake-pattern-inner", "lake-fade-gradient-inner", "lake-fade-mask-inner"]);
     });
 
-    test("draws the lake again when the feature comes back", () => {
+    test("should draw the lake again when the feature comes back", () => {
       const layer = group("lake-restored");
       const renderWith = (lakeFeature: ReturnType<typeof lake> | null) =>
         layer
@@ -584,7 +584,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // The removal is scoped by key like the paths: clearing one overlay must not take a sibling
     // overlay's paths or its definitions with it.
-    test("leaves a sibling overlay's paths and definitions in place", () => {
+    test("should leave a sibling overlay's paths and definitions in place when another overlay clears", () => {
       const layer = group("lake-cleared-sibling");
       const renderWith = (key: string, lakeFeature: ReturnType<typeof lake> | null) =>
         layer.call(
@@ -621,7 +621,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // The same root defect by a different d3 mechanism: an attribute set to undefined is removed
     // without anything being called.
-    test("renders styled but empty paths when mapPath is missing", () => {
+    test("should render styled but empty paths when mapPath is missing", () => {
       const node = group()
         .call(mapRendererPatternedLakeOverlay().lakeFeature(lake()).lakeBounds(bounds()))
         .node() as SVGGElement;
@@ -675,7 +675,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // A quote cannot be spelled in a url(#...) fragment, so the definitions would be written but
     // never referenced - silent at render time. This names the property and the cause instead.
-    test("rejects a key that cannot be spelled in an id, naming the property", () => {
+    test("should throw naming the key property when the key cannot be spelled in an id", () => {
       expect(renderKeyed("quoted-key", 'a"b')).toThrow(
         /\[mapRendererPatternedLakeOverlay\] the key property/,
       );
@@ -683,7 +683,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // A space was the worse case: "#lake-pattern-a b" is a valid selector that simply matches
     // nothing, so every render appended another definition and the url(#...) reference was inert.
-    test("rejects a key containing a space, which used to fail silently", () => {
+    test("should throw naming the key property when the key contains a space", () => {
       expect(renderKeyed("spaced-key", "a b")).toThrow(
         /\[mapRendererPatternedLakeOverlay\] the key property/,
       );
@@ -691,7 +691,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // Generated scopes are bare decimals, so requiring a leading letter is what keeps an explicit
     // key from ever landing on the scope an unkeyed overlay would generate.
-    test("rejects a key that would collide with a generated scope", () => {
+    test("should throw naming the key property when the key would collide with a generated scope", () => {
       expect(renderKeyed("numeric-key", "1")).toThrow(
         /\[mapRendererPatternedLakeOverlay\] the key property/,
       );
@@ -699,7 +699,7 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
     // The path data is reapplied on every render rather than only on enter, so a lakeFeature
     // mutated in place still repaints even though the bound datum is identical.
-    test("repaints a lakeFeature that was mutated in place", () => {
+    test("should repaint the lake when the lakeFeature was mutated in place", () => {
       const lakeFeature = lake();
       const mapPath = mapPathOf();
       const layer = group("lake-mutated");

@@ -122,20 +122,20 @@ describe("map/renderer/bubble", () => {
   ];
 
   describe("rendering", () => {
-    test("renders one classed circle per merged datum", () => {
+    test("should render one classed circle per merged datum", () => {
       const node = render(fullData);
       expect(circles(node)).toHaveLength(3);
       expect(circles(node)[0].tagName).toBe("circle");
     });
 
-    test("draws the circles into an anchoredCircles group", () => {
+    test("should draw the circles into an anchoredCircles group", () => {
       const node = render(fullData);
       const inner = node.querySelector("[data-d3-selectgroup='anchoredCircles']");
       expect(inner).not.toBeNull();
       expect(circles(node)[0].parentElement).toBe(inner);
     });
 
-    test("takes the radius from the radius accessor, called with the datum", () => {
+    test("should size each circle from the radius accessor when it is called with the datum", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
         c
@@ -155,12 +155,12 @@ describe("map/renderer/bubble", () => {
       ).toEqual(["2", "4", "6"]);
     });
 
-    test("takes a constant radius", () => {
+    test("should size every circle the same when the radius is a constant", () => {
       const node = render(fullData, (c) => c.radius(7).transition(false));
       expect(circles(node).map((circle) => circle.getAttribute("r"))).toEqual(["7", "7", "7"]);
     });
 
-    test("anchors each circle at its feature's projected centre", () => {
+    test("should anchor each circle at its feature's projected centre", () => {
       const collection = geoJson();
       // The same cache key gives back the same projection the path generator uses.
       const key = `bubble-anchor-${++pathKey}`;
@@ -182,7 +182,7 @@ describe("map/renderer/bubble", () => {
       expect(circles(node).map((circle) => circle.getAttribute("transform"))).toEqual(expected);
     });
 
-    test("fills and strokes from the accessors, called with the datum", () => {
+    test("should fill and stroke each circle from the accessors when they are called with the datum", () => {
       const node = render(fullData, (c) =>
         c
           .fill((d: Datum) => (d.value === 1 ? "#ff0000" : "#00ff00"))
@@ -199,18 +199,18 @@ describe("map/renderer/bubble", () => {
       expect(byRadius.map((circle) => circle.style.strokeWidth).sort()).toEqual(["1", "2", "3"]);
     });
 
-    test("defaults to a white stroke one pixel wide", () => {
+    test("should stroke a circle white and one pixel wide when no stroke is configured", () => {
       const node = render(fullData);
       expect(circles(node)[0].style.stroke).toBe("rgb(255, 255, 255)");
       expect(circles(node)[0].style.strokeWidth).toBe("1");
     });
 
-    test("orders the circles largest first, so smaller ones draw on top", () => {
+    test("should order the circles largest first so smaller ones draw on top", () => {
       const node = render(fullData, (c) => c.radius((d: Datum) => d.value).transition(false));
       expect(circles(node).map((circle) => circle.getAttribute("r"))).toEqual(["3", "2", "1"]);
     });
 
-    test("keys the join on the feature id, so a circle survives a data change", () => {
+    test("should keep a circle's element when the data change but its feature remains", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("bubble-keyed");
@@ -236,7 +236,7 @@ describe("map/renderer/bubble", () => {
     // The circles paint over the base layer's areas, which carry the map's event targets, so they
     // let the pointer through to the area beneath rather than becoming a dead zone in the middle of
     // every bubble.
-    test("lets the pointer through to the base layer's event targets", async () => {
+    test("should let the pointer through to the base layer's event targets when no listener is registered", async () => {
       const { default: mapRendererBase } = await import("../../../src/map/renderer/base.js");
       const collection = geoJson();
       const key = `bubble-over-base-${++pathKey}`;
@@ -277,7 +277,7 @@ describe("map/renderer/bubble", () => {
     // The join falls back to an identity held against the feature when it has no id, so keyless
     // features keep their own elements across renders instead of all colliding on the key
     // "undefined".
-    test("keeps every circle across renders when the features have no ids", () => {
+    test("should keep every circle across renders when the features have no ids", () => {
       const collection: FeatureCollection<Polygon> = {
         type: "FeatureCollection",
         features: [
@@ -314,7 +314,7 @@ describe("map/renderer/bubble", () => {
     // fallback describes a different feature on the next render: the elements survive, but the two
     // keyless features swap which one each stands for. Radii differ here, and are swapped between
     // renders, so a positional key would produce exactly that exchange.
-    test("keeps each keyless circle bound to its own feature when the sort order changes", () => {
+    test("should keep each keyless circle bound to its own feature when the sort order changes", () => {
       const first = { ...square("a"), id: undefined };
       const second = { ...square("b", 2), id: undefined };
       const collection: FeatureCollection<Polygon> = {
@@ -369,7 +369,7 @@ describe("map/renderer/bubble", () => {
     // The circles stay out of the pointer's way only while nothing is listening to them. A consumer
     // who registered the component's own handlers is asking for the circles to be a hit area, and
     // the public on() API keeps working for them.
-    test("restores hit testing on the circles when a listener is registered", () => {
+    test("should restore hit testing on the circles when a listener is registered", () => {
       const collection = geoJson();
       const layer = group("bubble-listener-hit");
       const node = layer
@@ -387,7 +387,7 @@ describe("map/renderer/bubble", () => {
 
     // A namespaced registration is a registration: d3's dispatch cannot be asked what it holds, so
     // the component tallies them itself rather than probing the bare event names.
-    test("restores hit testing for a namespaced listener, and withdraws it again on removal", () => {
+    test("should restore hit testing when a namespaced listener is registered, and withdraw it when it is removed", () => {
       const collection = geoJson();
       const layer = group("bubble-listener-namespaced");
       const component = mapRendererBubble<Datum>()
@@ -408,7 +408,7 @@ describe("map/renderer/bubble", () => {
     // d3 reads a typename with no type as "this name, on every event type", so on(".tooltip", null)
     // removes over.tooltip along with the rest. The tally has to follow that, or the circles would
     // go on intercepting the pointer for a listener that is no longer registered.
-    test("withdraws hit testing when a namespace is removed across every event type", () => {
+    test("should withdraw hit testing when a namespace is removed across every event type", () => {
       const collection = geoJson();
       const layer = group("bubble-listener-namespace-wide");
       const component = mapRendererBubble<Datum>()
@@ -432,27 +432,32 @@ describe("map/renderer/bubble", () => {
       ["a dotted form of the same typename", "over.", "none", "dotted"],
       ["an empty typename list", "", "", "empty"],
       ["a whitespace-only typename list", "   ", "", "blank"],
-    ])("follows d3 when a handler is removed with %s", (_label, removeWith, expected, key) => {
-      const collection = geoJson();
-      const layer = group(`bubble-typename-${key}`);
-      const component = mapRendererBubble<Datum>()
-        .mergedData(prepareMergedGeoData(fullData, collection))
-        .mapPath(mapPathOf(collection))
-        .radius(5)
-        .fill("#ff0000");
+    ])(
+      "should follow d3's own typename rules when a handler is removed with %s",
+      (_label, removeWith, expected, key) => {
+        const collection = geoJson();
+        const layer = group(`bubble-typename-${key}`);
+        const component = mapRendererBubble<Datum>()
+          .mergedData(prepareMergedGeoData(fullData, collection))
+          .mapPath(mapPathOf(collection))
+          .radius(5)
+          .fill("#ff0000");
 
-      component.on("over", () => undefined);
-      expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe("");
+        component.on("over", () => undefined);
+        expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe(
+          "",
+        );
 
-      component.on(removeWith, null);
-      expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe(
-        expected,
-      );
-    });
+        component.on(removeWith, null);
+        expect(circles(layer.call(component).node() as SVGGElement)[0].style.pointerEvents).toBe(
+          expected,
+        );
+      },
+    );
 
     // The classes are written with classed rather than attr, and only when the circle enters, so
     // the component never touches a class a consumer added to it.
-    test("keeps a class a consumer put on a circle", () => {
+    test("should keep a class a consumer added when the circle re-renders", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("bubble-class-clobber");
@@ -487,20 +492,20 @@ describe("map/renderer/bubble", () => {
       for (const c of circles(node)) expect(c.getAttribute("r")).toBe("5");
     });
 
-    test("defaults to transitioning the radius", () => {
+    test("should transition the radius when nothing is configured", () => {
       expect(mapRendererBubble().transition()).toBe(true);
       const node = render(fullData);
       expect(tweenNames(circles(node)[0])).toContain("attr.r");
     });
 
-    test("schedules no transition when disabled", () => {
+    test("should schedule no transition when the transition is disabled", () => {
       const node = render(fullData, (c) => c.transition(false));
       expect(tweenNames(circles(node)[0])).toBeNull();
     });
 
     // The radius is written exactly once, through the transition, so the tween has the previous
     // radius - zero for an entering circle - to interpolate from rather than the final value.
-    test("grows an entering circle from zero to its radius", async () => {
+    test("should grow an entering circle from zero to its radius", async () => {
       const node = render(fullData, (c) => c.radius(9));
       expect(circles(node)[0].getAttribute("r")).toBe("0");
       expect(tweenNames(circles(node)[0])).toContain("attr.r");
@@ -508,7 +513,7 @@ describe("map/renderer/bubble", () => {
       expect(circles(node)[0].getAttribute("r")).toBe("9");
     });
 
-    test("interpolates an updating circle from its previous radius", async () => {
+    test("should interpolate from the previous radius when an existing circle's radius changes", async () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("bubble-update-tween");
@@ -540,7 +545,7 @@ describe("map/renderer/bubble", () => {
       expect(circles(node)[0].getAttribute("r")).toBe("20");
     });
 
-    test("shrinks a departing circle away before removing it", async () => {
+    test("should shrink a departing circle away before removing it when a transition is scheduled", async () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("bubble-exit");
@@ -574,7 +579,7 @@ describe("map/renderer/bubble", () => {
       expect(circles(node)).toHaveLength(1);
     });
 
-    test("removes a departing circle at once when the transition is disabled", () => {
+    test("should remove a departing circle at once when the transition is disabled", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("bubble-exit-instant");
@@ -603,7 +608,7 @@ describe("map/renderer/bubble", () => {
     // makes the circle a hit area - without one it carries pointer-events: none and the pointer
     // falls through to the base layer, which is pinned in "lets the pointer through to the base
     // layer's event targets" above.
-    test("puts the circle under the pointer once a handler is registered", async () => {
+    test("should put the circle under the pointer when a handler is registered", async () => {
       const { default: mapRendererBase } = await import("../../../src/map/renderer/base.js");
       const collection = geoJson();
       const key = `bubble-reachable-${++pathKey}`;
@@ -634,14 +639,14 @@ describe("map/renderer/bubble", () => {
 
     // The events below are dispatched on a circle directly, which keeps them independent of the
     // pointer policy; the test above is what pins that a real pointer can reach them at all.
-    test("delivers the hovered entity's datum to an over handler", () => {
+    test("should deliver the hovered entity's datum when an over handler is registered", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) => c.on("over", (datum: unknown) => seen.push(datum)));
       circles(node)[0].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
       expect(seen).toEqual([{ geoId: "a", value: 1 }]);
     });
 
-    test("delivers the datum to out and click handlers too", () => {
+    test("should deliver the datum when out and click handlers are registered", () => {
       const seen: unknown[] = [];
       const node = render(fullData, (c) =>
         c.on("out", (d: unknown) => seen.push(d)).on("click", (d: unknown) => seen.push(d)),
@@ -656,7 +661,7 @@ describe("map/renderer/bubble", () => {
 
     // prepareMergedGeoData pairs every feature with undefined where nothing matched, so a circle
     // for a feature with no data hands its handler undefined.
-    test("delivers undefined for a circle whose feature matched no datum", () => {
+    test("should deliver undefined when the hovered circle's feature matched no datum", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.on("over", (d: unknown) => seen.push(d)),
@@ -667,7 +672,7 @@ describe("map/renderer/bubble", () => {
   });
 
   describe("known quirks", () => {
-    test("returns the component from on() so it can be chained", () => {
+    test("should return the component from on() when a handler is registered", () => {
       const component = mapRendererBubble();
       expect(component.on("over", () => undefined)).toBe(component);
       expect(typeof component.on("over")).toBe("function");
@@ -738,7 +743,7 @@ describe("map/renderer/bubble", () => {
       expect(circles(layer.node() as SVGGElement)).toHaveLength(3);
     });
 
-    test("throws when mapPath is missing entirely", () => {
+    test("should throw when mapPath is missing entirely", () => {
       const collection = geoJson();
       expect(() =>
         group().call(
@@ -766,7 +771,7 @@ describe("map/renderer/bubble", () => {
       ).toThrow(TypeError);
     });
 
-    test("throws when fill is missing", () => {
+    test("should throw when fill is missing", () => {
       const collection = geoJson();
       expect(() =>
         group().call(
@@ -799,7 +804,7 @@ describe("map/renderer/bubble", () => {
       expect(seen).toEqual(expect.arrayContaining(circles(node)));
     });
 
-    test("draws a circle for a feature with no datum, calling the accessors with undefined", () => {
+    test("should draw a circle and call the accessors with undefined when a feature has no datum", () => {
       const seen: unknown[] = [];
       const node = render([{ geoId: "a", value: 1 }], (c) =>
         c.radius((d: Datum | undefined) => {
@@ -811,7 +816,7 @@ describe("map/renderer/bubble", () => {
       expect(seen).toContain(undefined);
     });
 
-    test("moves a bubble when the feature's geometry moves", () => {
+    test("should move a bubble when the feature's geometry moves", () => {
       const collection = geoJson();
       const mapPath = mapPathOf(collection);
       const layer = group("bubble-cached-centre");
@@ -845,7 +850,7 @@ describe("map/renderer/bubble", () => {
 
     // The other half of the "no datum" note above: an accessor that reads through the datum
     // without guarding throws, taking the whole render with it - one unmatched feature is enough.
-    test("throws when an unguarded radius accessor meets a feature with no datum", () => {
+    test("should throw when an unguarded radius accessor meets a feature with no datum", () => {
       expect(() =>
         render([{ geoId: "a", value: 1 }], (c) => c.radius((d: Datum) => d.value)),
       ).toThrow(TypeError);

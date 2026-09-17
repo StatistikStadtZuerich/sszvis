@@ -86,14 +86,14 @@ describe("map/renderer/raster", () => {
   };
 
   describe("rendering", () => {
-    test("renders one classed canvas at the given width and height", () => {
+    test("should render one classed canvas at the given width and height", () => {
       const node = render([cell(10, 10)]);
       expect(node.querySelectorAll("canvas.sszvis-map__rasterimage")).toHaveLength(1);
       expect(canvasOf(node)?.style.width).toBe("20px");
       expect(canvasOf(node)?.style.height).toBe("20px");
     });
 
-    test("sizes the bitmap in device pixels and pins the CSS size to the layer", () => {
+    test("should size the bitmap in device pixels and pin the CSS size to the layer when rendering", () => {
       const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
       expect(canvas.width).toBe(Math.round(20 * dpr()));
       expect(canvas.height).toBe(Math.round(20 * dpr()));
@@ -101,7 +101,7 @@ describe("map/renderer/raster", () => {
       expect(canvas.style.height).toBe("20px");
     });
 
-    test("scales the drawing context so positions stay in CSS pixels", () => {
+    test("should scale the drawing context by the device pixel ratio so positions stay in CSS pixels", () => {
       const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
       const transform = canvas.getContext("2d")?.getTransform();
       expect(transform?.a).toBe(dpr());
@@ -110,14 +110,14 @@ describe("map/renderer/raster", () => {
       expect(canvas.width / Number.parseFloat(canvas.style.width)).toBeCloseTo(dpr(), 5);
     });
 
-    test("fills one cell per datum, in the fill colour", () => {
+    test("should fill one cell per datum in the fill colour when data is bound", () => {
       const node = render([cell(4, 4), cell(12, 12)], (c) => c.cellSide(4));
       expect(pixelAt(node, 4, 4)).toEqual([255, 0, 0, 255]);
       expect(pixelAt(node, 12, 12)).toEqual([255, 0, 0, 255]);
       expect(pixelAt(node, 18, 18)).toEqual([0, 0, 0, 0]);
     });
 
-    test("centres each cell on its position", () => {
+    test("should centre each cell on its position when rendering", () => {
       // A 4px cell at (10, 10) covers 8..11 on both axes.
       const node = render([cell(10, 10)], (c) => c.cellSide(4));
       expect(pixelAt(node, 8, 8)).toEqual([255, 0, 0, 255]);
@@ -126,14 +126,14 @@ describe("map/renderer/raster", () => {
       expect(pixelAt(node, 12, 10)).toEqual([0, 0, 0, 0]);
     });
 
-    test("defaults to a two pixel cell", () => {
+    test("should draw a two pixel cell when no cellSide is set", () => {
       expect(mapRendererRaster().cellSide()).toBe(2);
       const node = render([cell(10, 10)]);
       expect(pixelAt(node, 9, 9)).toEqual([255, 0, 0, 255]);
       expect(pixelAt(node, 8, 8)).toEqual([0, 0, 0, 0]);
     });
 
-    test("calls position and fill once per datum, with the datum", () => {
+    test("should call position and fill once per datum, with the datum", () => {
       const positions: Cell[] = [];
       const fills: Cell[] = [];
       const data = [cell(4, 4), cell(12, 12)];
@@ -156,12 +156,12 @@ describe("map/renderer/raster", () => {
       expect(fills).toEqual(data);
     });
 
-    test("takes a constant fill colour", () => {
+    test("should paint every cell in one colour when fill is a constant", () => {
       const node = render([cell(10, 10)], (c) => c.fill("#0000ff").cellSide(4));
       expect(pixelAt(node, 10, 10)).toEqual([0, 0, 255, 255]);
     });
 
-    test("leaves a cell unpainted when its fill does not parse", () => {
+    test("should leave a cell unpainted when its fill does not parse", () => {
       const node = render([cell(4, 4), cell(12, 12)], (c) =>
         c.cellSide(4).fill((d: Cell) => (d.x === 4 ? "#00ff00" : "not-a-colour")),
       );
@@ -169,7 +169,7 @@ describe("map/renderer/raster", () => {
       expect(pixelAt(node, 12, 12)).toEqual([0, 0, 0, 0]);
     });
 
-    test("leaves a cell unpainted when its fill is undefined", () => {
+    test("should leave a cell unpainted when its fill is undefined", () => {
       const node = render([cell(4, 4), cell(12, 12)], (c) =>
         c.cellSide(4).fill(
           // @ts-expect-error - an accessor returning undefined is a caller error; pinned because
@@ -181,7 +181,7 @@ describe("map/renderer/raster", () => {
       expect(pixelAt(node, 12, 12)).toEqual([0, 0, 0, 0]);
     });
 
-    test("keeps debug mode additive when a fill does not parse", () => {
+    test("should draw only the debug rectangle when a fill does not parse in debug mode", () => {
       const node = render([cell(10, 10)], (c) =>
         c
           .debug(true)
@@ -193,7 +193,7 @@ describe("map/renderer/raster", () => {
       expect(pixelAt(node, 0, 0)).toEqual([255, 0, 0, 51]);
     });
 
-    test("clears the canvas before redrawing", () => {
+    test("should clear the previous cells when redrawing with new data", () => {
       const target = layer("raster-clear");
       const renderWith = (data: Cell[]) =>
         target
@@ -216,18 +216,21 @@ describe("map/renderer/raster", () => {
     test.each([
       ["width", () => mapRendererRaster().height(20)],
       ["height", () => mapRendererRaster().width(20)],
-    ])("reports a missing %s rather than sizing the canvas by default", (name, raster) => {
-      const target = layer();
-      expect(() =>
-        target.datum([cell(10, 10)]).call(
-          raster()
-            .position((d: Cell) => [d.x, d.y])
-            .fill("#ff0000"),
-        ),
-      ).toThrow(new RegExp(`the ${name} property is required`));
-      // Nothing is drawn, so no stale canvas is left behind either.
-      expect(canvasOf(target.node() as HTMLElement)).toBeNull();
-    });
+    ])(
+      "should throw naming the missing %s, and draw no canvas, when a dimension is left unset",
+      (name, raster) => {
+        const target = layer();
+        expect(() =>
+          target.datum([cell(10, 10)]).call(
+            raster()
+              .position((d: Cell) => [d.x, d.y])
+              .fill("#ff0000"),
+          ),
+        ).toThrow(new RegExp(`the ${name} property is required`));
+        // Nothing is drawn, so no stale canvas is left behind either.
+        expect(canvasOf(target.node() as HTMLElement)).toBeNull();
+      },
+    );
 
     // Both accessors are validated alongside the dimensions, so a misconfigured raster is named
     // before the canvas is created - and reported for an empty dataset too, which is the state
@@ -242,36 +245,42 @@ describe("map/renderer/raster", () => {
             .height(20)
             .position((d: Cell) => [d.x, d.y]),
       ],
-    ])("reports a missing %s, naming the component and the property", (name, raster) => {
-      const target = layer();
-      expect(() => target.datum([cell(1, 1)]).call(raster())).toThrow(
-        new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`),
-      );
-      // The same report for an empty dataset, which used to hide the misconfiguration entirely,
-      // and no canvas left behind either way.
-      expect(() => layer().datum([]).call(raster())).toThrow(
-        new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`),
-      );
-      expect(canvasOf(target.node() as HTMLElement)).toBeNull();
-    });
+    ])(
+      "should throw naming the component and the missing %s when an accessor is left unset",
+      (name, raster) => {
+        const target = layer();
+        expect(() => target.datum([cell(1, 1)]).call(raster())).toThrow(
+          new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`),
+        );
+        // The same report for an empty dataset, which used to hide the misconfiguration entirely,
+        // and no canvas left behind either way.
+        expect(() => layer().datum([]).call(raster())).toThrow(
+          new RegExp(`\\[mapRendererRaster\\] the ${name} property is required`),
+        );
+        expect(canvasOf(target.node() as HTMLElement)).toBeNull();
+      },
+    );
 
-    test.each([Number.NaN, -1])("reports a nonsensical dimension (%s)", (width) => {
-      expect(() =>
-        layer()
-          .datum([cell(10, 10)])
-          .call(
-            mapRendererRaster()
-              .width(width)
-              .height(20)
-              .position((d: Cell) => [d.x, d.y])
-              .fill("#ff0000"),
-          ),
-      ).toThrow(/the width property is required/);
-    });
+    test.each([Number.NaN, -1])(
+      "should throw naming the width property when a dimension is nonsensical (%s)",
+      (width) => {
+        expect(() =>
+          layer()
+            .datum([cell(10, 10)])
+            .call(
+              mapRendererRaster()
+                .width(width)
+                .height(20)
+                .position((d: Cell) => [d.x, d.y])
+                .fill("#ff0000"),
+            ),
+        ).toThrow(/the width property is required/);
+      },
+    );
 
     // A fractional dimension is rounded up, so the raster covers the layers it aligns with rather
     // than falling a hairline short of them. Every docs caller passes a fractional bounds value.
-    test("rounds a fractional width and height up to whole pixels", () => {
+    test("should round a fractional width and height up to whole pixels", () => {
       const node = layer()
         .datum([cell(10, 10)])
         .call(
@@ -289,7 +298,7 @@ describe("map/renderer/raster", () => {
       expect(canvas.height).toBe(Math.round(21 * dpr()));
     });
 
-    test("reuses the same canvas element across renders", () => {
+    test("should reuse the same canvas element when re-rendered into the same layer", () => {
       const target = layer("raster-reuse");
       const renderWith = () =>
         target
@@ -306,7 +315,7 @@ describe("map/renderer/raster", () => {
       expect(canvasOf(renderWith())).toBe(first);
     });
 
-    test("gives each keyed raster in one layer its own canvas", () => {
+    test("should give each raster its own canvas when two keyed rasters share a layer", () => {
       const target = layer("two-rasters");
       const raster = (key: string, fill: string) =>
         mapRendererRaster()
@@ -335,7 +344,7 @@ describe("map/renderer/raster", () => {
       expect(canvases[1].getAttribute("data-raster-key")).toBe("above");
     });
 
-    test("defaults to one raster per layer, so two unkeyed rasters share a canvas", () => {
+    test("should share one canvas when two unkeyed rasters render into the same layer", () => {
       expect(mapRendererRaster().key()).toBe("raster");
       const target = layer("one-raster");
       const raster = (fill: string) =>
@@ -354,7 +363,7 @@ describe("map/renderer/raster", () => {
       expect(pixelAt(node, 12, 12)).toEqual([0, 0, 255, 255]);
     });
 
-    test("renders an empty canvas for empty data", () => {
+    test("should render an empty canvas when the data is empty", () => {
       const node = render([]);
       expect(canvasOf(node)).not.toBeNull();
       expect(pixelAt(node, 10, 10)).toEqual([0, 0, 0, 0]);
@@ -375,7 +384,7 @@ describe("map/renderer/raster", () => {
       if (own) Object.defineProperty(window, "devicePixelRatio", own);
     });
 
-    test("doubles the bitmap while keeping the CSS size at the layer size", () => {
+    test("should double the bitmap while keeping the CSS size at the layer size", () => {
       const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
       expect(canvas.width).toBe(40);
       expect(canvas.height).toBe(40);
@@ -383,7 +392,7 @@ describe("map/renderer/raster", () => {
       expect(canvas.getContext("2d")?.getTransform().a).toBe(2);
     });
 
-    test("draws a cell at twice its CSS position, at twice the size", () => {
+    test("should draw a cell at twice its CSS position and twice its size", () => {
       const node = render([cell(10, 10)], (c) => c.cellSide(4));
       // The 4 CSS pixel cell at (10, 10) covers 16..23 device pixels on both axes.
       expect(devicePixelAt(node, 16, 16)).toEqual([255, 0, 0, 255]);
@@ -392,7 +401,7 @@ describe("map/renderer/raster", () => {
       expect(devicePixelAt(node, 24, 24)).toEqual([0, 0, 0, 0]);
     });
 
-    test("covers the whole doubled bitmap in debug mode", () => {
+    test("should cover the whole doubled bitmap when debug is on", () => {
       const node = render([], (c) => c.debug(true));
       expect(devicePixelAt(node, 0, 0)).toEqual([255, 0, 0, 51]);
       expect(devicePixelAt(node, 39, 39)).toEqual([255, 0, 0, 51]);
@@ -400,7 +409,7 @@ describe("map/renderer/raster", () => {
   });
 
   describe("accessibility", () => {
-    test("marks the canvas decorative when no description is given, which is the default", () => {
+    test("should mark the canvas decorative when no alt is given", () => {
       expect(mapRendererRaster().alt()).toBe("");
       const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
       expect(canvas.getAttribute("aria-hidden")).toBe("true");
@@ -408,7 +417,7 @@ describe("map/renderer/raster", () => {
       expect(canvas.hasAttribute("aria-label")).toBe(false);
     });
 
-    test("carries a caller-supplied accessible name and fallback content", () => {
+    test("should carry an accessible name and fallback content when alt is set", () => {
       const canvas = canvasOf(
         render([cell(10, 10)], (c) => c.alt("Population density per hectare")),
       ) as HTMLCanvasElement;
@@ -418,7 +427,7 @@ describe("map/renderer/raster", () => {
       expect(canvas.hasAttribute("aria-hidden")).toBe(false);
     });
 
-    test("drops the name again when a later render has none", () => {
+    test("should drop the accessible name when a later render has no alt", () => {
       const target = layer("raster-alt");
       const renderWith = (alt: string) =>
         target
@@ -439,26 +448,26 @@ describe("map/renderer/raster", () => {
       expect(canvas.textContent).toBe("");
     });
 
-    test("still draws its cells when it is described", () => {
+    test("should still draw its cells when the canvas is described", () => {
       const node = render([cell(10, 10)], (c) => c.alt("A raster").cellSide(4));
       expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
     });
   });
 
   describe("opacity and debug", () => {
-    test("defaults to fully opaque", () => {
+    test("should render a fully opaque canvas when no opacity is set", () => {
       expect(mapRendererRaster().opacity()).toBe(1);
       expect(canvasOf(render([cell(10, 10)]))?.style.opacity).toBe("1");
     });
 
-    test("takes an opacity as a style on the canvas, not in the pixels", () => {
+    test("should set the opacity as a canvas style, leaving the pixels opaque", () => {
       const node = render([cell(10, 10)], (c) => c.opacity(0.4).cellSide(4));
       expect(canvasOf(node)?.style.opacity).toBe("0.4");
       // The cell itself is still drawn fully opaque; the layer is what fades.
       expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
     });
 
-    test("draws nothing extra when debug is off, which is the default", () => {
+    test("should draw nothing extra when debug is off", () => {
       expect(mapRendererRaster().debug()).toBe(false);
       expect(pixelAt(render([]), 1, 1)).toEqual([0, 0, 0, 0]);
     });
@@ -479,14 +488,14 @@ describe("map/renderer/raster", () => {
   // render warns once, naming how many cells it could not place. Skipping a stray point silently
   // is defensible; skipping a whole dataset silently is not.
   describe("cells the projection could not place", () => {
-    test("skips a cell at a non-finite position and still draws the rest", () => {
+    test("should skip a cell at a non-finite position and still draw the rest", () => {
       captureWarnings();
       const node = render([cell(Number.NaN, Number.NaN), cell(10, 10)], (c) => c.cellSide(4));
       expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
       expect(pixelAt(node, 0, 0)).toEqual([0, 0, 0, 0]);
     });
 
-    test("skips a null position rather than taking the whole render down with it", () => {
+    test("should skip a cell and still draw the rest when its position accessor returns null", () => {
       const warnings = captureWarnings();
       const node = render([cell(1, 1), cell(10, 10)], (c) =>
         c.cellSide(4).position((d: Cell) => (d.x === 1 ? null : [d.x, d.y])),
@@ -497,7 +506,7 @@ describe("map/renderer/raster", () => {
       ]);
     });
 
-    test("skips an undefined position the same way, so the two failures agree", () => {
+    test("should skip a cell and still draw the rest when its position accessor returns undefined", () => {
       const warnings = captureWarnings();
       const node = render([cell(1, 1), cell(10, 10)], (c) =>
         c
@@ -512,7 +521,7 @@ describe("map/renderer/raster", () => {
       ]);
     });
 
-    test("warns once per render, naming how many cells could not be placed", () => {
+    test("should warn once naming how many cells could not be placed when several fail", () => {
       const warnings = captureWarnings();
       render(
         [cell(Number.NaN, Number.NaN), cell(1, 1), cell(Number.POSITIVE_INFINITY, 2), cell(10, 10)],
@@ -523,7 +532,7 @@ describe("map/renderer/raster", () => {
       ]);
     });
 
-    test("stays silent when every cell is placed", () => {
+    test("should emit no warning when every cell is placed", () => {
       const warnings = captureWarnings();
       render([cell(4, 4), cell(10, 10)], (c) => c.cellSide(4));
       expect(warnings).toEqual([]);
@@ -535,29 +544,29 @@ describe("map/renderer/raster", () => {
   // rectangle - so it is a misconfiguration rather than a datum that went stale, reported by name
   // like the other required properties instead of leaving a blank or misleading canvas.
   describe("cellSide validation", () => {
-    test("defaults to 2", () => {
+    test("should report a cellSide of 2 when none is set", () => {
       expect(mapRendererRaster().cellSide()).toBe(2);
     });
 
-    test("reports a zero cellSide", () => {
+    test("should throw naming cellSide when it is zero", () => {
       expect(() => render([cell(10, 10)], (c) => c.cellSide(0))).toThrow(
         /\[mapRendererRaster\].*cellSide/,
       );
     });
 
-    test("reports a negative cellSide, which used to draw its positive counterpart", () => {
+    test("should throw naming cellSide when it is negative", () => {
       expect(() => render([cell(10, 10)], (c) => c.cellSide(-4))).toThrow(
         /\[mapRendererRaster\].*cellSide/,
       );
     });
 
-    test("reports a non-finite cellSide", () => {
+    test("should throw naming cellSide when it is non-finite", () => {
       expect(() => render([cell(10, 10)], (c) => c.cellSide(Number.NaN))).toThrow(
         /\[mapRendererRaster\].*cellSide/,
       );
     });
 
-    test("reports the cellSide before any canvas is created", () => {
+    test("should create no canvas when it throws for an invalid cellSide", () => {
       const target = layer("raster-bad-cellside");
       expect(() =>
         target.datum([cell(10, 10)]).call(
@@ -572,7 +581,7 @@ describe("map/renderer/raster", () => {
       expect(canvasOf(target.node() as HTMLElement)).toBeNull();
     });
 
-    test("accepts a fractional cellSide, which is what pixelsFromGeoDistance returns", () => {
+    test("should draw a cell when cellSide is fractional", () => {
       const node = render([cell(10, 10)], (c) => c.cellSide(3.5));
       expect(pixelAt(node, 10, 10)).toEqual([255, 0, 0, 255]);
     });

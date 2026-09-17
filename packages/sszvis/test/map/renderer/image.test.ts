@@ -49,18 +49,18 @@ describe("map/renderer/image", () => {
   };
 
   describe("rendering", () => {
-    test("renders one classed img element", () => {
+    test("should render one classed img element", () => {
       const node = render();
       expect(node.querySelectorAll("img.sszvis-map__image")).toHaveLength(1);
       expect(image(node)?.tagName).toBe("IMG");
     });
 
-    test("takes the src as given", () => {
+    test("should set src to the given value", () => {
       const node = render();
       expect(image(node)?.getAttribute("src")).toBe(SRC);
     });
 
-    test("positions the image from the projected north-west corner", () => {
+    test("should position the image at the projected north-west corner", () => {
       const projection = projectionOf();
       const node = layer()
         .call(mapRendererImage().projection(projection).src(SRC).geoBounds(GEO_BOUNDS))
@@ -70,7 +70,7 @@ describe("map/renderer/image", () => {
       expect(image(node)?.style.top).toBe(`${Math.round(topLeft[1])}px`);
     });
 
-    test("sizes the image from the distance between the rounded corners", () => {
+    test("should size the image from the distance between the rounded corners", () => {
       const projection = projectionOf();
       const node = layer()
         .call(mapRendererImage().projection(projection).src(SRC).geoBounds(GEO_BOUNDS))
@@ -85,7 +85,7 @@ describe("map/renderer/image", () => {
       );
     });
 
-    test("lands the right and bottom edges on the projected south-east corner", () => {
+    test("should land the right and bottom edges on the projected south-east corner when the corners round in different directions", () => {
       // Corners chosen so that rounding each one goes a different way: x from 10.6 to 20.4.
       const projection = (point: [number, number]) =>
         point[0] === 0 ? ([10.6, 10.6] as [number, number]) : ([20.4, 20.4] as [number, number]);
@@ -106,7 +106,7 @@ describe("map/renderer/image", () => {
       expect(image(node)?.style.height).toBe("9px");
     });
 
-    test("positions the image itself, without relying on the stylesheet", () => {
+    test("should position the image with inline styles, without relying on the stylesheet", () => {
       const node = render();
       expect(image(node)?.style.position).toBe("absolute");
       expect(image(node)?.style.left).not.toBe("");
@@ -115,13 +115,13 @@ describe("map/renderer/image", () => {
     // The rest of what sszvis.css supplied for the class, so the renderer works standalone: block
     // keeps the image out of inline layout, and none lets the map layers underneath be hovered
     // through it. user-select is deliberately left to the stylesheet.
-    test("takes itself out of the flow and out of the way of pointer events", () => {
+    test("should take the image out of the flow and out of the way of pointer events", () => {
       const node = render();
       expect(image(node)?.style.display).toBe("block");
       expect(image(node)?.style.pointerEvents).toBe("none");
     });
 
-    test("layers a second image renderer alongside the first", () => {
+    test("should keep both images when a second image renderer draws into the same layer", () => {
       const target = layer("two-images");
       target.call(mapRendererImage().projection(projectionOf()).src(SRC).geoBounds(GEO_BOUNDS));
       const first = image(target.node() as HTMLElement);
@@ -142,7 +142,7 @@ describe("map/renderer/image", () => {
       expect(images[1].style.opacity).toBe("0.5");
     });
 
-    test("reuses the same img element across renders", () => {
+    test("should reuse the same img element when the layer renders again", () => {
       const target = layer("image-reuse");
       const renderWith = () =>
         target
@@ -154,48 +154,48 @@ describe("map/renderer/image", () => {
   });
 
   describe("opacity", () => {
-    test("defaults to fully opaque", () => {
+    test("should render the image fully opaque when no opacity is set", () => {
       expect(mapRendererImage().opacity()).toBe(1);
       expect(image(render())?.style.opacity).toBe("1");
     });
 
-    test("takes a number", () => {
+    test("should use the given opacity when it is a number", () => {
       expect(image(render((c) => c.opacity(0.4)))?.style.opacity).toBe("0.4");
     });
   });
 
   describe("alt", () => {
-    test("marks the image decorative by default", () => {
+    test("should mark the image decorative when no alt is set", () => {
       expect(mapRendererImage().alt()).toBe("");
       expect(image(render())?.getAttribute("alt")).toBe("");
     });
 
-    test("writes a caller-supplied description to alt", () => {
+    test("should write the given description to alt", () => {
       const node = render((c) => c.alt("Topographic layer of the city of Zurich"));
       expect(image(node)?.getAttribute("alt")).toBe("Topographic layer of the city of Zurich");
     });
   });
 
   describe("validation", () => {
-    test("reports a missing projection", () => {
+    test("should throw naming projection when it is missing", () => {
       expect(() => layer().call(mapRendererImage().src(SRC).geoBounds(GEO_BOUNDS))).toThrow(
         /projection/,
       );
     });
 
-    test("reports a missing src", () => {
+    test("should throw naming src when it is missing", () => {
       expect(() =>
         layer().call(mapRendererImage().projection(projectionOf()).geoBounds(GEO_BOUNDS)),
       ).toThrow(/src/);
     });
 
-    test("reports a missing geoBounds", () => {
+    test("should throw naming geoBounds when it is missing", () => {
       expect(() => layer().call(mapRendererImage().projection(projectionOf()).src(SRC))).toThrow(
         /geoBounds/,
       );
     });
 
-    test("reports inverted geoBounds instead of silently unsizing the image", () => {
+    test("should throw naming geoBounds when the corners are inverted", () => {
       expect(() =>
         layer().call(
           mapRendererImage()
@@ -206,7 +206,7 @@ describe("map/renderer/image", () => {
       ).toThrow(/geoBounds/);
     });
 
-    test("reports a corner the projection cannot place, naming it", () => {
+    test("should throw naming the north-west corner when the projection cannot place it", () => {
       expect(() =>
         layer().call(
           mapRendererImage()
@@ -217,7 +217,7 @@ describe("map/renderer/image", () => {
       ).toThrow(/north-west corner/);
     });
 
-    test("builds nothing when a property is missing", () => {
+    test("should append no img when a required property is missing", () => {
       const target = layer("image-unvalidated");
       expect(() => target.call(mapRendererImage().projection(projectionOf()).src(SRC))).toThrow();
       expect(image(target.node() as HTMLElement)).toBeNull();

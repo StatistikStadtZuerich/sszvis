@@ -120,7 +120,7 @@ describe("map/renderer/highlight", () => {
   };
 
   describe("rendering", () => {
-    test("renders one classed path per highlighted datum", () => {
+    test("should render one classed path per highlighted datum", () => {
       const node = render((c) => c.highlight([{ geoId: "a" }, { geoId: "b" }]));
       expect(highlights(node)).toHaveLength(2);
       expect(highlights(node)[0].tagName).toBe("path");
@@ -142,7 +142,7 @@ describe("map/renderer/highlight", () => {
       return { marks: highlights(node), expected: [mapPath(features.features[1])] };
     });
 
-    test("matches a datum to a feature by the feature's id", () => {
+    test("should draw the matched feature's geometry when a datum's id equals a feature's id", () => {
       const features = collection();
       const mapPath = mapPathOf();
       const node = group()
@@ -156,17 +156,17 @@ describe("map/renderer/highlight", () => {
       expect(highlights(node)[0].getAttribute("d")).toBe(mapPath(features.features[0]));
     });
 
-    test("reads the entity id under a custom keyName", () => {
+    test("should match a datum when keyName names a custom id property", () => {
       const node = render((c) => c.keyName("id").highlight([{ id: "a" }]));
       expect(highlights(node)).toHaveLength(1);
       expect(highlights(node)[0].hasAttribute("d")).toBe(true);
     });
 
-    test("defaults keyName to geoId", () => {
+    test("should default keyName to geoId", () => {
       expect(mapRendererHighlight<Datum>().keyName()).toBe("geoId");
     });
 
-    test("reuses the same path elements across renders", () => {
+    test("should reuse the same path elements when the layer renders again", () => {
       const layer = group("highlight-reuse");
       const renderWith = () =>
         layer
@@ -185,12 +185,12 @@ describe("map/renderer/highlight", () => {
   });
 
   describe("empty highlight", () => {
-    test("renders nothing when highlight is left at its empty default", () => {
+    test("should render nothing when highlight is left at its empty default", () => {
       const node = render();
       expect(highlights(node)).toHaveLength(0);
     });
 
-    test("removes previously rendered highlights when the highlight array empties", () => {
+    test("should remove the rendered highlights when the highlight array empties", () => {
       const layer = group("highlight-clear");
       layer.call(
         mapRendererHighlight<Datum>()
@@ -211,13 +211,13 @@ describe("map/renderer/highlight", () => {
   });
 
   describe("highlightStroke and highlightStrokeWidth", () => {
-    test("defaults to a white stroke 2 wide", () => {
+    test("should stroke the highlight white and 2 wide when no stroke props are set", () => {
       const node = render((c) => c.highlight([{ geoId: "a" }]));
       expect(highlights(node)[0].style.stroke).toBe("white");
       expect(highlights(node)[0].style.strokeWidth).toBe("2");
     });
 
-    test("takes a constant stroke colour and width", () => {
+    test("should use the given stroke colour and width when both are constants", () => {
       const node = render((c) =>
         c
           .highlight([{ geoId: "a" }])
@@ -228,7 +228,7 @@ describe("map/renderer/highlight", () => {
       expect(highlights(node)[0].style.strokeWidth).toBe("4");
     });
 
-    test("calls a highlightStroke accessor with the datum, not the feature", () => {
+    test("should call a highlightStroke accessor with the datum, not the feature, when it is a function", () => {
       const datum: Datum = { geoId: "a", value: 1 };
       const seen: unknown[] = [];
       const node = render((c) =>
@@ -241,7 +241,7 @@ describe("map/renderer/highlight", () => {
       expect(highlights(node)[0].style.stroke).toBe("rgb(0, 255, 0)");
     });
 
-    test("calls a highlightStrokeWidth accessor with the datum too", () => {
+    test("should call a highlightStrokeWidth accessor with the datum when it is a function", () => {
       const datum: Datum = { geoId: "a", value: 3 };
       const seen: unknown[] = [];
       const node = render((c) =>
@@ -254,7 +254,7 @@ describe("map/renderer/highlight", () => {
       expect(highlights(node)[0].style.strokeWidth).toBe("5");
     });
 
-    test("styles each highlighted entity independently", () => {
+    test("should style each highlighted entity from its own datum when the accessor varies", () => {
       const node = render((c) =>
         c
           .highlight([
@@ -295,7 +295,7 @@ describe("map/renderer/highlight", () => {
     });
 
     // The same for the width: a null removes the style, leaving SVG's initial width of 1.
-    test("silently removes the stroke width when highlightStrokeWidth returns null", () => {
+    test("should remove the stroke width when highlightStrokeWidth returns null", () => {
       const node = render((c) => c.highlight([{ geoId: "a" }]).highlightStrokeWidth(() => null));
       expect(highlights(node)[0].style.strokeWidth).toBe("");
     });
@@ -316,13 +316,13 @@ describe("map/renderer/highlight", () => {
     // An id no feature answers to is dropped rather than drawn: it used to leave a classed, fully
     // styled path with no "d" behind, which is invisible and indistinguishable from a legitimately
     // off-screen entity.
-    test("appends nothing for an id that matches no feature", () => {
+    test("should append no path when an id matches no feature", () => {
       captureWarnings();
       const node = render((c) => c.highlight([{ geoId: "nope" }]));
       expect(highlights(node)).toHaveLength(0);
     });
 
-    test("reports an unmatched id, naming the id and the keyName", () => {
+    test("should warn naming the id and the keyName when an id matches no feature", () => {
       const warnings = captureWarnings();
       render((c) => c.highlight([{ geoId: "nope" }]));
       expect(warnings).toHaveLength(1);
@@ -332,7 +332,7 @@ describe("map/renderer/highlight", () => {
 
     // Reported once per render with every unmatched id, not once per entry, so a chart re-rendering
     // on every mouse move does not flood the console per datum.
-    test("reports every unmatched id in a single warning per render", () => {
+    test("should emit a single warning naming every unmatched id when several ids are unmatched", () => {
       const warnings = captureWarnings();
       render((c) => c.highlight([{ geoId: "nope" }, { geoId: "a" }, { geoId: "also-nope" }]));
       expect(warnings).toHaveLength(1);
@@ -340,14 +340,14 @@ describe("map/renderer/highlight", () => {
       expect(warnings[0]).toContain("also-nope");
     });
 
-    test("stays silent when every id matches", () => {
+    test("should warn nothing when every id matches a feature", () => {
       const warnings = captureWarnings();
       render((c) => c.highlight([{ geoId: "a" }, { geoId: "b" }]));
       expect(warnings).toEqual([]);
     });
 
     // The matched entities still render; an unmatched neighbour does not take them down with it.
-    test("still highlights the matched entities alongside an unmatched id", () => {
+    test("should still highlight the matched entities when one id is unmatched", () => {
       captureWarnings();
       const features = collection();
       const mapPath = mapPathOf();
@@ -367,7 +367,7 @@ describe("map/renderer/highlight", () => {
     // feature without an id is not addressable and a datum naming no entity matches nothing.
     // Previously every keyless feature collapsed onto the single key "undefined" and the last of
     // them was handed to a keyless datum.
-    test("matches a keyless datum to no feature at all", () => {
+    test("should match no feature when the datum carries no id", () => {
       const features: FeatureCollection<Polygon> = {
         type: "FeatureCollection",
         features: [square(undefined), square(undefined, 2)],
@@ -384,7 +384,7 @@ describe("map/renderer/highlight", () => {
     // A Map holds no inherited keys, so an id naming an Object.prototype member is absent like any
     // other id the geoJson does not supply. A plain object literal handed the inherited function
     // to the path generator instead, which is observable in what mapPath is called with.
-    test("treats an id naming an Object.prototype member as unmatched", () => {
+    test("should treat an id naming an Object.prototype member as unmatched", () => {
       captureWarnings();
       const seen = seenFeatures();
       const node = render((c) => c.mapPath(seen.mapPath).highlight([{ geoId: "valueOf" }]));
@@ -394,7 +394,7 @@ describe("map/renderer/highlight", () => {
 
     // "__proto__" is the sharper case: assigning it on a plain object literal replaces that
     // object's prototype instead of creating an entry, which corrupts every later lookup.
-    test("treats an id of __proto__ as unmatched without disturbing other lookups", () => {
+    test("should leave later lookups working when an id is __proto__", () => {
       captureWarnings();
       const features = collection();
       const seen = seenFeatures();
@@ -430,7 +430,7 @@ describe("map/renderer/highlight", () => {
   describe("element identity", () => {
     // The join is keyed by map entity, so shrinking the highlight array leaves the surviving
     // entity on its own element instead of re-purposing the first slot by position.
-    test("keeps the surviving entity on its own element when the array shrinks", () => {
+    test("should keep the surviving entity on its own element when the highlight array shrinks", () => {
       const layer = group("highlight-keyed-join");
       const renderWith = (highlight: Datum[]) =>
         layer
@@ -450,7 +450,7 @@ describe("map/renderer/highlight", () => {
 
     // Reordering moves the existing elements rather than repainting them in place, which is what
     // makes per-entity transitions and enter/exit styling possible.
-    test("moves the elements when the highlight array is reordered", () => {
+    test("should move the existing elements when the highlight array is reordered", () => {
       const layer = group("highlight-reorder");
       const renderWith = (highlight: Datum[]) =>
         layer
@@ -468,7 +468,7 @@ describe("map/renderer/highlight", () => {
 
     // The join key carries an occurrence counter, so highlighting one entity twice still draws two
     // stacked paths rather than collapsing them onto one element.
-    test("keeps one element per entry when an entity is highlighted twice", () => {
+    test("should keep one element per entry when an entity is highlighted twice", () => {
       const layer = group("highlight-duplicate-keyed");
       const renderWith = (highlight: Datum[]) =>
         layer
@@ -485,7 +485,7 @@ describe("map/renderer/highlight", () => {
 
     // Each layer selects only the paths carrying its own key, so two highlight layers in one
     // group no longer fight over a single set of elements.
-    test("lets two layers with different keys share one group", () => {
+    test("should keep both layers' paths when two layers with different keys share one group", () => {
       const layer = group("two-highlights");
       layer.call(
         mapRendererHighlight<Datum>()
@@ -512,7 +512,7 @@ describe("map/renderer/highlight", () => {
     });
 
     // An empty highlight clears only this layer's paths, leaving the other layer's alone.
-    test("clears only its own layer when its highlight empties", () => {
+    test("should clear only its own paths when one layer's highlight empties", () => {
       const layer = group("two-highlights-clear");
       const renderWith = (key: string, highlight: Datum[]) =>
         layer.call(
@@ -552,7 +552,7 @@ describe("map/renderer/highlight", () => {
       expect(after[0]).not.toBe(first);
     });
 
-    test("defaults key to highlight", () => {
+    test("should default key to highlight", () => {
       expect(mapRendererHighlight<Datum>().key()).toBe("highlight");
     });
   });
@@ -590,7 +590,7 @@ describe("map/renderer/highlight", () => {
     // nothing, the anchored shape group is created next, and the *first* hover is the one that has
     // to land beneath it. Nothing was ever drawn, so there is no earlier position to recover from -
     // only a wrapper group claimed on the empty render keeps the slot.
-    test("keeps the first hover's paths beneath a sibling drawn before them", () => {
+    test("should keep the first hover's paths beneath a sibling drawn while the layer was empty", () => {
       const layer = group("highlight-empty-first");
       const node = renderInto(layer, []);
       const sibling = appendSibling(node, "shape");
@@ -602,7 +602,7 @@ describe("map/renderer/highlight", () => {
 
     // The reported bug: clearing the highlight and re-hovering used to re-append the paths at the
     // end of the map group, over the anchored shape drawn while they were gone.
-    test("keeps refilled paths beneath a sibling appended while they were gone", () => {
+    test("should keep refilled paths beneath a sibling appended while they were gone", () => {
       const layer = group("highlight-refill-order");
       const node = renderInto(layer, [{ geoId: "a" }]);
       const sibling = appendSibling(node, "shape");
@@ -615,7 +615,7 @@ describe("map/renderer/highlight", () => {
 
     // The same shape without an empty render in between: a newly highlighted entity enters while
     // paths already exist, and must join them rather than land past the later siblings.
-    test("keeps a newly highlighted entity beneath a later sibling", () => {
+    test("should keep a newly highlighted entity beneath a later sibling", () => {
       const layer = group("highlight-grow-order");
       const node = renderInto(layer, [{ geoId: "a" }]);
       const sibling = appendSibling(node, "shape");
@@ -627,7 +627,7 @@ describe("map/renderer/highlight", () => {
 
     // Each layer holds its own place, so a second keyed layer's paths are not dragged in front of
     // the first's when it refills.
-    test("keeps two layers in the order they were first drawn", () => {
+    test("should keep two layers in the order they were first drawn when one refills", () => {
       const layer = group("highlight-two-layer-order");
       const node = renderInto(layer, [{ geoId: "a" }], "first");
       renderInto(layer, [{ geoId: "b" }], "second");
@@ -645,26 +645,29 @@ describe("map/renderer/highlight", () => {
     test.each([
       ["first", "second"],
       ["second", "first"],
-    ])("keeps two layers ordered when %s is cleared before %s", (cleared, other) => {
-      const layer = group(`highlight-two-layer-${cleared}-first`);
-      const node = renderInto(layer, [{ geoId: "a" }], "first");
-      renderInto(layer, [{ geoId: "b" }], "second");
-      const sibling = appendSibling(node, "shape");
-      renderInto(layer, [], cleared);
-      renderInto(layer, [], other);
-      renderInto(layer, [{ geoId: "a" }], "first");
-      renderInto(layer, [{ geoId: "b" }], "second");
-      const after = highlights(node);
-      expect(after.map((p) => p.getAttribute("data-highlight-key"))).toEqual(["first", "second"]);
-      for (const path of after) expect(precedes(path, sibling)).toBe(true);
-    });
+    ])(
+      "should redraw both layers in their original order when %s is cleared before %s",
+      (cleared, other) => {
+        const layer = group(`highlight-two-layer-${cleared}-first`);
+        const node = renderInto(layer, [{ geoId: "a" }], "first");
+        renderInto(layer, [{ geoId: "b" }], "second");
+        const sibling = appendSibling(node, "shape");
+        renderInto(layer, [], cleared);
+        renderInto(layer, [], other);
+        renderInto(layer, [{ geoId: "a" }], "first");
+        renderInto(layer, [{ geoId: "b" }], "second");
+        const after = highlights(node);
+        expect(after.map((p) => p.getAttribute("data-highlight-key"))).toEqual(["first", "second"]);
+        for (const path of after) expect(precedes(path, sibling)).toBe(true);
+      },
+    );
 
     // The wrapper holds a place, not a reference to a neighbour, so moving the sibling that used
     // to follow it cannot invert the order. The moved sibling alone would prove nothing - it is
     // unconditionally first once it is inserted there - so the assertion that carries the test is
     // the second sibling, appended while the layer was empty and never touched: the refilled
     // paths have to come back in front of it.
-    test("is unaffected by a sibling moved in front of it", () => {
+    test("should keep its paths behind the untouched sibling when another sibling is moved in front of it", () => {
       const layer = group("highlight-moved-sibling");
       const node = renderInto(layer, [{ geoId: "a" }]);
       const moved = appendSibling(node, "moved");
@@ -680,7 +683,7 @@ describe("map/renderer/highlight", () => {
 
     // A sibling removed and drawn again is a new node, so nothing about it can be remembered. The
     // highlight keeps its own slot, which is ahead of anything appended afterwards.
-    test("keeps its place when a sibling is removed and re-created", () => {
+    test("should keep its place when a sibling is removed and re-created", () => {
       const layer = group("highlight-recreated-sibling");
       const node = renderInto(layer, [{ geoId: "a" }]);
       const sibling = appendSibling(node, "shape");
@@ -697,7 +700,7 @@ describe("map/renderer/highlight", () => {
     // caller markup and may contain a group of its own carrying this class and key. Matched as a
     // descendant, it would come second in document order behind the real wrapper, land in the
     // one-datum join's exit selection, and be removed with everything inside it.
-    test("leaves a nested group of the same key untouched", () => {
+    test("should leave a nested group of the same key untouched when the layer renders again", () => {
       const layer = group("highlight-nested-decoy");
       const node = renderInto(layer, [{ geoId: "a" }]);
       const outer = appendSibling(node, "shape");
@@ -734,7 +737,7 @@ describe("map/renderer/highlight", () => {
     // and the exit selection removes the paths. Unlike the empty-array early return, this path
     // still reads geoJson - it builds the lookup table before merging - but not mapPath, since the
     // join has no elements for the "d" callback to run on.
-    test("clears previously rendered highlights when every entry is falsy", () => {
+    test("should clear the rendered highlights when every entry is falsy", () => {
       const layer = group("highlight-all-falsy");
       const renderWith = (highlight: (Datum | null | undefined)[]) =>
         layer
@@ -752,7 +755,7 @@ describe("map/renderer/highlight", () => {
     // The boundary the test above cannot reach, because it always supplies mapPath: an all-falsy
     // array needs geoJson but never touches mapPath. Pinned so the documented contract does not
     // drift back to "needs both".
-    test("clears an all-falsy highlight without a mapPath at all", () => {
+    test("should clear an all-falsy highlight when no mapPath is configured", () => {
       const layer = group("highlight-all-falsy-no-mappath");
       layer.call(
         mapRendererHighlight<Datum>()
@@ -771,7 +774,7 @@ describe("map/renderer/highlight", () => {
 
     // A string has a length, so it reaches the early return when empty and the reduce when not -
     // "" is the one non-array value that does not throw, and it clears the layer.
-    test("treats an empty string highlight as nothing to highlight", () => {
+    test("should clear the layer when highlight is an empty string", () => {
       const layer = group("highlight-empty-string");
       layer.call(
         mapRendererHighlight<Datum>()
@@ -832,7 +835,7 @@ describe("map/renderer/highlight", () => {
 
     // A missing geoJson throws while building the lookup table, before the join runs, so nothing
     // is appended.
-    test("appends nothing when geoJson is missing", () => {
+    test("should append no path when geoJson is missing", () => {
       const layer = group("highlight-no-geojson");
       expect(() =>
         layer.call(
@@ -848,7 +851,7 @@ describe("map/renderer/highlight", () => {
     // appended the element - so the throw leaves a classed path with no geometry behind. The two
     // .style() calls come after .attr("d") in the chain and are never reached, so the debris has
     // no inline stroke either.
-    test("leaves a half-built path behind when mapPath is missing", () => {
+    test("should leave a half-built path behind when mapPath is missing", () => {
       const layer = group("highlight-no-mappath");
       expect(() =>
         layer.call(
