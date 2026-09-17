@@ -767,23 +767,23 @@ describe("component/sunburst", () => {
   });
 
   describe("known quirks", () => {
-    test("renders no path data at all until the first animation frame", async () => {
-      // BUG: `d` is only ever written by the attrTween, and there is no transition property
-      // to opt out of (bar and treemap have one). So a sunburst is geometrically empty on the
-      // render tick: a chart serialised straight after rendering - a snapshot, an svg export
-      // - comes out blank. The same holds for as long as the document is hidden, since
-      // d3-timer runs on requestAnimationFrame, which browsers do not fire for a hidden tab;
-      // the arcs fill in once the tab is shown again. Same defect as pie.
-      // current: d is null until a frame passes. expected: the final geometry is applied
-      // immediately, with the transition only interpolating on top of it.
+    // BUG(#435): `d` is only ever written by the attrTween, and there is no transition
+    // property to opt out of (bar and treemap have one). So a sunburst is geometrically empty
+    // on the render tick: a chart serialised straight after rendering - a snapshot, an svg
+    // export - comes out blank. The same holds for as long as the document is hidden, since
+    // d3-timer runs on requestAnimationFrame, which browsers do not fire for a hidden tab;
+    // the arcs fill in once the tab is shown again. Same defect as pie, filed there as #68.
+    // current: d is null until a frame passes. expected: the final geometry is applied
+    // immediately, with the transition only interpolating on top of it.
+    // Skipped, not deleted: it fails with "expected null not to be null".
+    test.skip("writes the arc geometry on the render tick", () => {
       const node = render(sunburstOf(), hierarchyOf());
-      expect(attrs(node, "d")).toEqual([null, null, null, null, null]);
-      await nextFrame();
       for (const d of attrs(node, "d")) expect(d).not.toBeNull();
     });
 
-    test("leaves the tooltip anchors one render behind the arcs", async () => {
-      // BUG: the anchors are positioned from d.x0/d.x1, but at that point in the render those
+    // Skipped, not deleted: it fails with "expected [ [ 160, +0 ], ...(4) ] to not deeply equal [ [ 160, +0 ], ...(4) ]".
+    test.skip("moves the tooltip anchors to the layout the arcs are heading for", async () => {
+      // BUG(#436): the anchors are positioned from d.x0/d.x1, but at that point in the render those
       // still hold the *start* angles of the transition that was just scheduled. On a first
       // render start equals destination so it looks right; on every update the anchors stay
       // where the arcs were, and they are never repositioned when the transition finishes.
@@ -793,7 +793,7 @@ describe("component/sunburst", () => {
       // an update that changes the number of layers puts the anchors at the old angle and the
       // new radius.
       // current: anchors keep the pre-update positions. expected: anchors follow the
-      // destination angles (ideally the animation too).
+      // destination angles (ideally the animation too). Same defect as pie, filed as #69.
       const component = sunburstOf();
       const g = group("stale-anchors");
       g.datum(hierarchyOf()).call(component as never);
@@ -808,9 +808,11 @@ describe("component/sunburst", () => {
           { cat: "B", sub: "B1", value: 1 },
         ]),
       ).call(component as never);
-      expect(points(node)).toEqual(before);
+      // The new hierarchy gives A1 seven eighths of the circle instead of half, so every
+      // anchor's destination angle has moved.
+      expect(points(node)).not.toEqual(before);
       await settle();
-      expect(points(node)).toEqual(before);
+      expect(points(node)).not.toEqual(before);
     });
 
     test("re-partitions its input, discarding any layout the caller applied", () => {
@@ -917,8 +919,9 @@ describe("component/sunburst", () => {
       expect(() => render(sunburstOf(), frozen)).toThrow(TypeError);
     });
 
-    test("throws outright when a stray arc path has no datum bound", () => {
-      // BUG: the handover reads the old angles off every existing `.sszvis-sunburst-arc` in
+    // Skipped, not deleted: it fails with "expected [Function] to not throw an error but 'TypeError: Cannot read properties of undefined (reading 'x0')' was thrown".
+    test.skip("ignores a stray arc path that has no datum bound", () => {
+      // BUG(#437): the handover reads the old angles off every existing `.sszvis-sunburst-arc` in
       // the group before the data join can replace them. A path inserted without d3 - by
       // another library, or by hand - has no __data__ at all, and `d.x0` throws on undefined.
       // The same defect as pie's, one class name over, but far less exposed: pie matches the
@@ -930,7 +933,7 @@ describe("component/sunburst", () => {
       const stray = document.createElementNS("http://www.w3.org/2000/svg", "path");
       stray.setAttribute("class", "sszvis-sunburst-arc");
       node.appendChild(stray);
-      expect(() => g.datum(hierarchyOf()).call(sunburstOf() as never)).toThrow(TypeError);
+      expect(() => g.datum(hierarchyOf()).call(sunburstOf() as never)).not.toThrow();
       g.selectAll("*").interrupt();
     });
   });

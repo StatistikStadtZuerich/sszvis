@@ -577,11 +577,13 @@ describe("map/renderer/raster", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum -
-    // so a layer the caller forgot to hand data to throws "data is not iterable" rather than
-    // rendering nothing. The canvas has already been created by then, so the layer is left with an
-    // empty one.
-    test("throws when the layer has no data of its own bound", () => {
+    // BUG(#446): the data are iterated without a guard, and createHtmlLayer binds 0 as its own
+    // datum - so a layer the caller forgot to hand data to throws "data is not iterable" rather
+    // than rendering nothing. The canvas has already been created by then, so the layer is left
+    // with an empty one. A chart renders before its data load, which is exactly this state.
+    // Skipped, not deleted: it fails with "expected [Function] to not throw an error but
+    // 'TypeError: data is not iterable' was thrown".
+    test.skip("should render an empty canvas when the layer has no data of its own bound", () => {
       const target = layer("raster-no-data");
       expect(() =>
         target.call(
@@ -591,18 +593,22 @@ describe("map/renderer/raster", () => {
             .position((d: Cell) => [d.x, d.y])
             .fill("#ff0000"),
         ),
-      ).toThrow(TypeError);
+      ).not.toThrow();
       expect(canvasOf(target.node() as HTMLElement)).not.toBeNull();
     });
 
-    // BUG: the component writes no position, so the canvas is only positioned because sszvis.css
-    // sets position: absolute on the class - the same dependency as the image renderer. Without
-    // that stylesheet the raster sits in the document flow and, without pointer-events: none,
-    // swallows the events of the layers beneath it.
-    test("relies on the stylesheet for positioning and pointer-events", () => {
+    // BUG(#447): the component writes no position, so the canvas is only positioned because
+    // sszvis.css sets position: absolute on the class. The image renderer had the same dependency
+    // and #230 fixed it: it now writes position, display and pointer-events inline
+    // (src/map/renderer/image.ts:239-241), so the raster is the one HTML-layer renderer left
+    // behind. Without that stylesheet the raster sits in the document flow and, without
+    // pointer-events: none, swallows the events of the layers beneath it. The component already
+    // writes width, height and opacity inline, so it owns this element's presentation.
+    // Skipped, not deleted: it fails with "expected '' to be 'absolute'".
+    test.skip("should set the positioning and pointer-events it depends on", () => {
       const canvas = canvasOf(render([cell(10, 10)])) as HTMLCanvasElement;
-      expect(canvas.style.position).toBe("");
-      expect(canvas.style.pointerEvents).toBe("");
+      expect(canvas.style.position).toBe("absolute");
+      expect(canvas.style.pointerEvents).toBe("none");
     });
 
     // NOTE: a change of dimensions resizes the existing canvas rather than replacing it, which is

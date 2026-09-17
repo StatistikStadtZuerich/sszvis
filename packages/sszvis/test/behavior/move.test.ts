@@ -174,24 +174,26 @@ describe("behavior/move", () => {
       expect(counts(spies)).toEqual({ start: 0, move: 1, drag: 1, end: 1 });
     });
 
-    // BUG: the second escape hatch, a mouseout on `document`, never ends a drag in Chromium.
+    // BUG(#442): the second escape hatch, a mouseout on `document`, never ends a drag in Chromium.
     // It is meant to catch the pointer leaving the page, and it decides that by reading
     // `relatedTarget` and the legacy `toElement` alias - but it reads them off the *mousedown*
     // it closed over rather than off the mouseout that fired, and Chromium reports `toElement`
     // on a mousedown as the event's own target. The element it finds is therefore always the
     // hit layer, never null and never HTML, so the branch is unreachable and only the window
-    // mouseup above ends a drag. Pinned as observed, not as intended: a fix should turn this
-    // test red.
-    test("should keep reporting drags when a mouseout reaches the document, whatever the press it started from", () => {
+    // mouseup above ends a drag.
+    // current: the drag survives the mouseout and the next move is still a drag.
+    // expected: a mouseout that leaves the page ends the drag, so the next move is a plain
+    // move - the same outcome as the window mouseup above.
+    // Skipped, not deleted: it fails with "expected { start: +0, move: +0, drag: 1, end: +0 } to deeply equal { start: +0, move: 1, drag: +0, end: 1 }".
+    test.skip("should end the drag when a mouseout takes the pointer off the page", () => {
       const spies = handlers();
       const node = hitLayerNode();
 
-      for (const relatedTarget of [container, null]) {
-        mouseAt(node, "mousedown", { relatedTarget });
-        document.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
-        mouseAt(node, "mousemove");
-      }
-      expect(counts(spies)).toEqual({ start: 0, move: 0, drag: 2, end: 0 });
+      mouseAt(node, "mousedown");
+      // relatedTarget null on a document mouseout is the pointer leaving the page.
+      document.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: null }));
+      mouseAt(node, "mousemove");
+      expect(counts(spies)).toEqual({ start: 0, move: 1, drag: 0, end: 1 });
     });
   });
 

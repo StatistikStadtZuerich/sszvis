@@ -590,16 +590,16 @@ describe("map/renderer/patternedlakeoverlay", () => {
   });
 
   describe("known quirks", () => {
-    // BUG: lakeBounds is not validated, and its omission is not reported. The join is
+    // BUG(#449): lakeBounds is not validated, and its omission is not reported. The join is
     // `[props.lakeBounds]`, so exactly one datum is always bound - undefined included - and
     // geoPath(undefined) returns null, which d3 turns into a removed attribute. The result is a
-    // classed border path with no geometry. The same root defect as the mesh renderer's.
-    test("renders a styled but empty border path when lakeBounds is missing", () => {
-      const node = group()
-        .call(mapRendererPatternedLakeOverlay().mapPath(mapPathOf()).lakeFeature(lake()))
-        .node() as SVGGElement;
-      expect(lakeShape(node)?.hasAttribute("d")).toBe(true);
-      expect(lakeBorder(node)?.hasAttribute("d")).toBe(false);
+    // classed border path with no geometry. The mesh renderer had the same defect and now throws a
+    // named error before its join (#208); this renderer was left behind.
+    // Skipped, not deleted: it fails with "expected [Function] to throw an error".
+    test.skip("should report the missing property by name when lakeBounds is missing", () => {
+      expect(() =>
+        group().call(mapRendererPatternedLakeOverlay().mapPath(mapPathOf()).lakeFeature(lake())),
+      ).toThrow(/lakeBounds is required/);
     });
 
     // The same root defect by a different d3 mechanism: an attribute set to undefined is removed

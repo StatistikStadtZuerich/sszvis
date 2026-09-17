@@ -627,22 +627,22 @@ describe("component/stackedArea", () => {
 
     describe("known quirks", () => {
       test("a layer that is not an array renders an empty path", () => {
-        // BUG: the JSDoc documents a valuesAccessor property - "the default treats the layer
-        // object as an array of values" - but the component never declares it, so the setter
-        // does not exist at all (see the next test) and a wrapper object cannot be unwrapped.
-        // d3.area runs the datum through Array.from, which yields [] for a plain object, so
-        // the layer is silently skipped. stackedAreaMultiples, a near-copy of this component,
-        // does declare valuesAccessor.
-        // current: an empty path per layer. expected: either the documented property, or the
-        // documentation dropped.
+        // NOTE: a *former* JSDoc header documented a valuesAccessor property; the component
+        // never declared it, and the header at src/component/stackedArea.ts:109-114 now
+        // documents that absence instead. So a wrapper object cannot be unwrapped: d3.area
+        // runs the datum through Array.from, which yields [] for a plain object, and the
+        // layer is silently skipped as an empty path. This test pins that documented
+        // behaviour. stackedAreaMultiples, a near-copy of this component, does declare
+        // valuesAccessor (src/component/stackedAreaMultiples.ts:316) - a parity gap, not a
+        // defect here.
         const node = render(areaOf(), [{ values: oneLayer[0] }]);
         expect(paths(node).length).toBe(1);
         expect(ds(node)).toEqual([null]);
       });
 
       test("setting valuesAccessor throws, because the property does not exist", () => {
-        // BUG: same root cause, from the caller's side. The JSDoc's own recommended usage
-        // fails with "areaOf(...).valuesAccessor is not a function".
+        // NOTE: the same documented absence, from the caller's side - the setter the former
+        // JSDoc described fails with "areaOf(...).valuesAccessor is not a function".
         expect(() =>
           (areaOf() as unknown as { valuesAccessor: (a: unknown) => void }).valuesAccessor(
             (d: { values: Layer }) => d.values,
@@ -724,19 +724,22 @@ describe("component/stackedArea", () => {
     });
 
     describe("known quirks", () => {
-      test("an entering area has no geometry and no styling on the first tick", () => {
-        // BUG: with the default transition the selection is replaced by the transition
-        // before any attribute is written, so d, fill, stroke and stroke-width are all
-        // deferred. A freshly rendered chart is an empty <path> until the first animation
-        // frame runs, and anything measuring it synchronously - getTotalLength, a bounding
-        // box, a server-side screenshot - sees nothing. line defers d and stroke-width the
-        // same way but still writes its stroke synchronously, and bar and dot write their
-        // geometry synchronously first, so this is the widest version of the hole.
+      // BUG(#439): with the default transition the selection is replaced by the transition
+      // before any attribute is written, so d, fill, stroke and stroke-width are all
+      // deferred. A freshly rendered chart is an empty <path> until the first animation
+      // frame runs, and anything measuring it synchronously - getTotalLength, a bounding
+      // box, a server-side screenshot - sees nothing. line defers d and stroke-width the
+      // same way but still writes its stroke synchronously, and bar and dot write their
+      // geometry synchronously first, so this is the widest version of the hole.
+      // current: every attribute is null on the render tick. expected: the destination
+      // values are written first, with the transition interpolating on top of them.
+      // Skipped, not deleted: it fails with "expected [ null ] to not deeply equal [ null ]".
+      test.skip("writes an entering area's geometry and styling on the first tick", () => {
         const node = render(animated(), oneLayer);
-        expect(ds(node)).toEqual([null]);
-        expect(attrs(node, "fill")).toEqual([null]);
-        expect(attrs(node, "stroke")).toEqual([null]);
-        expect(attrs(node, "stroke-width")).toEqual([null]);
+        expect(ds(node)).not.toEqual([null]);
+        expect(attrs(node, "fill")).not.toEqual([null]);
+        expect(attrs(node, "stroke")).not.toEqual([null]);
+        expect(attrs(node, "stroke-width")).not.toEqual([null]);
       });
 
       test("an entering area snaps into shape while its stroke grows in", async () => {

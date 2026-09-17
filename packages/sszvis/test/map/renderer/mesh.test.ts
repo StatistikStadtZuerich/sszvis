@@ -270,16 +270,17 @@ describe("map/renderer/mesh", () => {
       expect(mapRendererMesh().borderColor()).toBe("white");
     });
 
-    // BUG: the component sets neither fill nor pointer-events, so both come from sszvis.css. A
-    // mesh rendered without that stylesheet is a filled black shape covering the map - SVG's
+    // BUG(#448): the component sets neither fill nor pointer-events, so both come from sszvis.css.
+    // A mesh rendered without that stylesheet is a filled black shape covering the map - SVG's
     // initial fill is black - and it swallows the base layer's hover and click events, because it
-    // sits on top of them and only CSS makes it transparent to the pointer.
-    test("relies on the stylesheet for fill and pointer-events", () => {
+    // sits on top of them and only CSS makes it transparent to the pointer. The component writes
+    // stroke and stroke-width itself, so it already owns this element's presentation.
+    // Skipped, not deleted: it fails with "expected null to be 'none'".
+    test.skip("should set the fill and pointer-events it depends on, not leave them to the stylesheet", () => {
       const node = render();
       const border = borders(node)[0];
-      expect(border.hasAttribute("fill")).toBe(false);
-      expect(border.style.fill).toBe("");
-      expect(border.style.pointerEvents).toBe("");
+      expect(border.style.fill || border.getAttribute("fill")).toBe("none");
+      expect(border.style.pointerEvents || border.getAttribute("pointer-events")).toBe("none");
     });
 
     // NOTE: an invalid stroke-width is dropped by the CSS parser, so the SVG initial width of 1

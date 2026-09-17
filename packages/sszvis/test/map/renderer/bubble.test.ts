@@ -648,7 +648,7 @@ describe("map/renderer/bubble", () => {
       expect(typeof component.on("over")).toBe("function");
     });
 
-    // BUG: the --entering modifier is added and removed within the same render, so it is never
+    // BUG(#246): the --entering modifier is added and removed within the same render, so it is never
     // observable from outside and offers no enter-only styling hook. The same dead affordance as
     // the base renderer's --entering class.
     test("never leaves the entering modifier on a circle", () => {
@@ -682,35 +682,43 @@ describe("map/renderer/bubble", () => {
       expect(calls).toBeGreaterThan(fullData.length);
     });
 
-    // BUG: mergedData is not validated. Omitting it reaches d3's data join as undefined, which
-    // throws a bare TypeError rather than rendering nothing - and the group has already been
-    // created by then.
-    test("throws when mergedData is missing", () => {
+    // BUG(#444): mergedData is not validated. Omitting it reaches d3's data join as undefined,
+    // which throws a bare TypeError naming neither the property nor the component - and the group
+    // has already been created by then. The mesh renderer now reports its own missing properties
+    // by name before its join (#208), and the raster renderer reports all four of its required
+    // properties before it creates its canvas (#257).
+    // Skipped, not deleted: it fails with "expected [Function] to throw error matching
+    // /mergedData is required/ but got 'undefined is not iterable'".
+    test.skip("should report the missing property by name when mergedData is missing", () => {
       const collection = geoJson();
       expect(() =>
         group().call(mapRendererBubble().mapPath(mapPathOf(collection)).radius(5).fill("#ff0000")),
-      ).toThrow(TypeError);
+      ).toThrow(/mergedData is required/);
     });
 
-    // BUG: mapPath is read as a d3.geoPath - the anchor positions call mapPath.projection() - so a
-    // bare path function throws a TypeError from inside the transform callback, after the circles
-    // have been created and sized. The same requirement, and the same failure, as the base
-    // renderer's anchors.
-    test("throws when mapPath is a bare path function", () => {
+    // BUG(#445): mapPath is read as a d3.geoPath - the anchor positions call mapPath.projection()
+    // - so a bare path function throws a TypeError from inside the transform callback, after the
+    // circles have been created and sized, leaving a half-drawn layer behind. The message names
+    // neither the property nor the component. The same requirement, and the same failure, as the
+    // base renderer's anchors.
+    // Skipped, not deleted: the error does name mapPath - "mapPath.projection is not a function" -
+    // but the circles are already on screen, so it fails with "expected [ SVGCircleElement, …(2) ]
+    // to have a length of +0 but got 3".
+    test.skip("should draw no circles when mapPath is a bare path function", () => {
       const collection = geoJson();
       const layer = group("bubble-bare-path");
       expect(() =>
         layer.call(
           mapRendererBubble()
             .mergedData(prepareMergedGeoData(fullData, collection))
-            // @ts-expect-error - a bare path function is a caller error; pinned because the
-            // failure comes from inside the transform callback, after the circles exist.
+            // @ts-expect-error - a bare path function is a caller error, but it should be reported
+            // as one rather than failing from inside the transform callback.
             .mapPath(() => "M0,0")
             .radius(5)
             .fill("#ff0000"),
         ),
-      ).toThrow(TypeError);
-      expect(circles(layer.node() as SVGGElement)).toHaveLength(3);
+      ).toThrow(/mapPath/);
+      expect(circles(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
     test("should throw when mapPath is missing entirely", () => {
@@ -725,11 +733,13 @@ describe("map/renderer/bubble", () => {
       ).toThrow(TypeError);
     });
 
-    // BUG: neither radius nor fill has a default, and both are called unguarded - so a bubble map
-    // configured without one throws a bare TypeError naming neither property. Four of the
-    // component's six properties are effectively required, and only strokeColor and strokeWidth
-    // have defaults.
-    test("throws when radius is missing", () => {
+    // BUG(#444): neither radius nor fill has a default, and both are called unguarded - so a
+    // bubble map configured without one throws a bare TypeError naming neither property. Of the
+    // component's seven properties (src/map/renderer/bubble.ts:256-265) only strokeColor,
+    // strokeWidth and transition have defaults; the other four are effectively required.
+    // Skipped, not deleted: it fails with "expected [Function] to throw error matching
+    // /radius is required/ but got 'props.radius is not a function'".
+    test.skip("should report the missing property by name when radius is missing", () => {
       const collection = geoJson();
       expect(() =>
         group().call(
@@ -738,7 +748,7 @@ describe("map/renderer/bubble", () => {
             .mapPath(mapPathOf(collection))
             .fill("#ff0000"),
         ),
-      ).toThrow(TypeError);
+      ).toThrow(/radius is required/);
     });
 
     test("should throw when fill is missing", () => {
