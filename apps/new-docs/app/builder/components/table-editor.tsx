@@ -101,12 +101,6 @@ const KIND_ICON = {
   temporal: CalendarIcon,
 } satisfies Record<ColumnKind, typeof TypeIcon>;
 
-/**
- * What a column holds, and a click to say otherwise. One button rather than a menu:
- * it shows the kind in force, and each click moves on by one. An unpinned column
- * re-reads as the data is edited; once clicked it keeps what it was set to, which
- * is how a column is held to a kind against data pasted in later.
- */
 const KindCell = ({
   index,
   name,
@@ -191,8 +185,6 @@ const HeaderCell = ({ column, table: grid }: HeaderContext<typeof features, Row,
         value={name}
         onChange={(event) => grid.options.meta?.setColumn(index, event.target.value)}
         onFocus={() => grid.options.meta?.beginRename(index)}
-        /* Typing stays free; the name is settled on the way out, so a header is never
-           left blank or repeated - either would address the wrong column downstream. */
         onBlur={() => grid.options.meta?.settleColumn(index)}
         variant="cell-heading"
         aria-label={`Name of column ${index + 1}`}
@@ -233,8 +225,6 @@ const ValueCell = ({
   );
 };
 
-/* `outline` rather than `ghost`: at the end of a row of input cells a borderless
-   glyph reads as one more editable value, and this one deletes the row. */
 const RemoveCell = ({ row, table: grid }: CellContext<typeof features, Row, unknown>) => (
   <Button
     size="icon-xs"
@@ -255,8 +245,6 @@ export const TableEditor = ({
   actions,
 }: {
   readonly table: Table;
-  /* The pins belong to the spec, so the editor reports a change to them rather
-     than holding them - the shape `table`/`onChange` already has. */
   readonly kinds: ColumnKinds;
   readonly onChange: (table: Table) => void;
   readonly onKindsChange: (kinds: ColumnKinds) => void;
@@ -267,7 +255,6 @@ export const TableEditor = ({
   const [held, setHeld] = useState<View | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
-  /** What the last block paste did, until the next edit. */
   const [notice, setNotice] = useState<string | null>(null);
 
   const view = held !== null && held.order.length === table.rows.length ? held : null;
@@ -279,7 +266,6 @@ export const TableEditor = ({
     [table, view],
   );
 
-  /* The name the column carried before the caret entered it. See `settleColumn`. */
   const renaming = useRef<{ readonly column: number; readonly from: ColumnName } | null>(null);
 
   const resolved = useMemo(() => columnKinds(table, kinds), [table, kinds]);
@@ -306,8 +292,6 @@ export const TableEditor = ({
       const name = table.columns[column];
       return name !== undefined && !hasValues(table, name);
     },
-    /* The first click settles on the kind after whatever was detected, so a control
-       whose first use appeared to do nothing cannot happen. */
     cycleKind: (column) => {
       const name = table.columns[column];
       if (name === undefined) return;
@@ -318,9 +302,6 @@ export const TableEditor = ({
       const from = table.columns[column];
       if (from !== undefined) renaming.current = { column, from };
     },
-    /* Typing only renames the column. The pin stays under the name it had until the
-       name settles, because mid-edit a header may read exactly what another column
-       is called and there would be no telling the two apart. */
     setColumn: (column, value) => {
       setNotice(null);
       onChange({
@@ -435,8 +416,6 @@ export const TableEditor = ({
         ),
         helper.display({
           id: "remove",
-          /* The column has no visible heading, but a table column with no header at
-             all is announced as a blank cell. */
           header: () => <span className="sr-only">Remove row</span>,
           cell: RemoveCell,
         }),
@@ -466,8 +445,6 @@ export const TableEditor = ({
     return (
       <PastePanel
         initial={serialize(table)}
-        /* A wholly new table, so the pins go with the old one, as loading a sample
-           drops them. Not in `replace`, whose other callers keep their columns. */
         onSave={(next) => {
           onKindsChange({});
           replace(next);

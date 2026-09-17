@@ -29,7 +29,7 @@ const LEGEND = FeatureKey.make("legend");
 
 export const barChartVerticalStacked: RecipeDef = {
   key: RecipeKey.make("bar-chart-vertical-stacked"),
-  label: "Stacked bar chart",
+  label: "Stacked bar",
   roles: [
     {
       key: CATEGORY,

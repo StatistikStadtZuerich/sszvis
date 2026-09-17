@@ -39,12 +39,8 @@ const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
 
 const sentence = new Intl.ListFormat("en", { style: "long", type: "conjunction" });
 
-/* Small counts read as words; past four a number is better than nothing. Index 1 is
-   unused - `n === 1` is worded separately - and index 0 is unreachable. */
 const COUNT = ["", "", "two", "three", "four"] as const;
 
-/* Counted by kind, not listed per role: a map wants two number columns, and one
-   line per role reads "a number column and a number column". */
 const needs = (roles: ReturnType<typeof unmetRoles>) => {
   const counted = new Map<RoleKind, number>();
   for (const role of roles) counted.set(role.kind, (counted.get(role.kind) ?? 0) + 1);
@@ -65,7 +61,6 @@ export const ChartType = ({
 }: {
   readonly recipes: readonly RecipeSummary[];
   readonly table: Table;
-  /** The user's pinned kinds, so a pin can make a chart type fit or stop fitting. */
   readonly kinds: ColumnKinds;
   readonly value: RecipeKey;
   readonly onChange: (key: RecipeKey) => void;
@@ -81,8 +76,6 @@ export const ChartType = ({
         aria-label="Chart type"
         className="grid w-full grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))]"
         value={value}
-        /* The guard is here rather than on each button so a click and a keyboard
-           activation are refused by the same rule. */
         onValueChange={(key) => {
           if ((unmet.get(key)?.length ?? 0) === 0) onChange(key);
         }}
@@ -90,15 +83,11 @@ export const ChartType = ({
         {recipes.map((recipe) => {
           const Icon = ICONS.get(recipe.key) ?? UnknownChartIcon;
           const missing = unmet.get(recipe.key) ?? [];
-          /* The chart in front of the user is never made unavailable: it is already
-             chosen, and saying so is the selected-chart error below. */
           const unavailable = missing.length > 0 && recipe.key !== value;
           const button = (
             <ToggleButton
               value={recipe.key}
               size="lg"
-              /* `aria-disabled` rather than `disabled`: the button keeps its place in
-                 the tab order, so focus reaches the reason it cannot be chosen. */
               aria-disabled={unavailable || undefined}
               aria-invalid={missing.length > 0 || undefined}
               aria-describedby={unavailable ? reasonId(recipe.key) : undefined}
@@ -111,9 +100,6 @@ export const ChartType = ({
               {recipe.label}
             </ToggleButton>
           );
-          /* Every button is wrapped the same way, available or not: swapping the
-             element around a button that has focus would remount it and drop the
-             group's roving focus to the body. */
           return (
             <Tooltip key={recipe.key}>
               <TooltipTrigger render={button} />
@@ -122,9 +108,6 @@ export const ChartType = ({
           );
         })}
       </ToggleButtonGroup>
-      {/* The reasons, for a screen reader rather than the eye. `aria-describedby`
-          cannot point at the tooltip: it is portalled and unmounted while closed, so
-          the description would resolve to nothing exactly when it is needed. */}
       <div className="sr-only">
         {recipes
           .filter((recipe) => recipe.key !== value && (unmet.get(recipe.key)?.length ?? 0) > 0)

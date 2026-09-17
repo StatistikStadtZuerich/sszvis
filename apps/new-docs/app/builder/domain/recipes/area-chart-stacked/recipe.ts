@@ -29,7 +29,7 @@ const LEGEND = FeatureKey.make("legend");
 
 export const areaChartStacked: RecipeDef = {
   key: RecipeKey.make("area-chart-stacked"),
-  label: "Stacked area chart",
+  label: "Stacked area",
   roles: [
     {
       key: DATE,

@@ -14,8 +14,6 @@ import {
 /** A role the search left unbound. `Spec["fields"]` spells that as an empty column name. */
 const UNMAPPED = ColumnName.make("");
 
-/* Resolving through the pins is the point of them: a column the user pinned
-   competes for the roles that kind fits, not the ones its values suggested. */
 export const bindRoles = (
   recipe: RecipeSummary,
   table: Table,
@@ -87,7 +85,6 @@ export function unmetRoles(
   return recipe.roles.filter((role) => role.optional !== true && fields[role.key] === UNMAPPED);
 }
 
-/** Every checkbox feature on; hidden ones are implied by the spec's content, not listed. */
 const allFeatures = (recipe: RecipeSummary) =>
   recipe.features.filter((feature) => feature.hidden !== true).map((feature) => feature.key);
 
@@ -107,11 +104,6 @@ export function initialSpec(
   };
 }
 
-/*
- * A wholly new table, so the pins go with the old one: a surviving pin would land
- * on whichever sample column happened to share its name. Rebinding therefore reads
- * the new table as the detector finds it.
- */
 export function applySample(spec: Spec, recipe: RecipeSummary, csv: string): Spec {
   return { ...spec, csv, kinds: {}, fields: bindRoles(recipe, parse(csv), {}, spec.fields) };
 }
@@ -122,19 +114,11 @@ const carryAnnotations = (
   to: RecipeSummary,
 ) =>
   annotations.filter((annotation) => {
-    /*
-     * Matched by role, so a line survives a switch that moves its axis: the value
-     * axis of a vertical bar chart is the same axis as a horizontal one's, drawn
-     * sideways. The kinds still have to agree - a role reused at another kind
-     * cannot hold the position the user typed.
-     */
     const before = from.annotationAxes.find((axis) => axis.role === annotation.role);
     const after = to.annotationAxes.find((axis) => axis.role === annotation.role);
     return before !== undefined && after !== undefined && before.kind === after.kind;
   });
 
-/* The pins come across untouched: the data has not changed, and pinning a column
-   and then shopping for a chart type that fits it is the point of pinning. */
 export function switchRecipe(spec: Spec, from: RecipeSummary, next: RecipeSummary): Spec {
   return {
     recipe: next.key,
