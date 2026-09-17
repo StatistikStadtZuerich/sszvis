@@ -9,6 +9,7 @@ import {
   Field,
   FieldContent,
   FieldDescription,
+  FieldError,
   FieldLabel,
   FieldSeparator,
   FieldTitle,
@@ -32,7 +33,7 @@ import { Preview, type PreviewStatus, roleList } from "./components/preview";
 import { Step } from "./components/step";
 import { TableEditor } from "./components/table-editor";
 import { TooltipFields } from "./components/tooltip-fields";
-import { columnKinds, fitRank, parse, serialize } from "./domain/csv";
+import { bearsRole, columnKinds, fitRank, parse, serialize } from "./domain/csv";
 import { applySample, switchRecipe, unmappedRoles } from "./domain/initial-spec";
 import { isPristine, type Sample, samples } from "./domain/samples";
 import {
@@ -54,6 +55,13 @@ const KIND_LABEL = {
   continuous: "number",
   temporal: "date",
 } satisfies Record<ColumnKind, string>;
+
+/** The kind of value a role reads, for naming what a column failed to hold. */
+const REQUIRED = {
+  category: "nominal",
+  number: "continuous",
+  date: "temporal",
+} satisfies Record<RoleKind, ColumnKind>;
 
 /** Whether a column fills a role outright, which is when its kind needs no remark. */
 const fits = (column: ColumnKind | undefined, role: RoleKind) =>
@@ -162,7 +170,7 @@ const Builder = ({
 
   return (
     <div className="mx-auto w-full max-w-[1600px]">
-      <div className="grid grid-cols-1 items-start gap-8 @4xl/page:grid-cols-[minmax(340px,24rem)_minmax(0,1fr)] @6xl/page:gap-12">
+      <div className="grid grid-cols-1 items-start gap-8 @4xl/page:grid-cols-[minmax(340px,32rem)_minmax(0,1fr)]">
         <div className="min-w-0 space-y-8">
           <header className="max-w-[60ch] space-y-1">
             <h1 className={typefaceHeadingSmall()}>Chart builder</h1>
@@ -287,6 +295,9 @@ const Builder = ({
                 })),
               ];
               const id = `mapping-${role.key}`;
+              const column = spec.fields[role.key];
+              const unreadable =
+                column !== undefined && column !== "" && !bearsRole(table, column, role.kind);
               return (
                 <Field key={role.key}>
                   <FieldLabel htmlFor={id}>{role.label}</FieldLabel>
@@ -300,7 +311,10 @@ const Builder = ({
                     }
                     items={items}
                   >
-                    <SelectTrigger id={id} aria-invalid={missing.has(role.key) || undefined}>
+                    <SelectTrigger
+                      id={id}
+                      aria-invalid={missing.has(role.key) || unreadable || undefined}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent align="start">
@@ -311,7 +325,17 @@ const Builder = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  {role.hint !== undefined && <FieldDescription>{role.hint}</FieldDescription>}
+                  {unreadable ? (
+                    /* The column fits the role - that is why no "(looks …)" remark
+                       appears above - but the chart parses every value and keeps
+                       none, so the warning has to come from the values themselves. */
+                    <FieldError>
+                      The values in {column} are not all {KIND_LABEL[REQUIRED[role.kind]]}s, so the
+                      chart will drop the rows it cannot read.
+                    </FieldError>
+                  ) : (
+                    role.hint !== undefined && <FieldDescription>{role.hint}</FieldDescription>
+                  )}
                 </Field>
               );
             })}

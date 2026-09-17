@@ -11,7 +11,10 @@ import {
   ChartScatterIcon as UnknownChartIcon,
 } from "lucide-react";
 import { useId } from "react";
-import { Field, FieldDescription, FieldError } from "~/components/ui/field";
+import { Fragment } from "react";
+import { Field, FieldError } from "~/components/ui/field";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
+import { cn } from "~/lib/utils";
 import { ToggleButton, ToggleButtonGroup } from "~/components/ui/toggle-button-group";
 import type { Table } from "../domain/csv";
 import { unmetRoles } from "../domain/initial-spec";
@@ -32,8 +35,24 @@ const KIND_LABEL = { category: "text", number: "number", date: "date" } as const
 
 const sentence = new Intl.ListFormat("en", { style: "long", type: "conjunction" });
 
-const needs = (roles: ReturnType<typeof unmetRoles>) =>
-  sentence.format(roles.map((role) => `a ${KIND_LABEL[role.kind]} column`));
+/* Small counts read as words. A chart wanting more than four columns of one kind
+   does not exist, but a number is a better answer than nothing if one ever does. */
+const COUNT = ["", "a", "two", "three", "four"] as const;
+
+/*
+ * Counted by kind rather than listed one role at a time: a map wants two number
+ * columns, and naming its roles separately said it needed "a number column and a
+ * number column".
+ */
+const needs = (roles: ReturnType<typeof unmetRoles>) => {
+  const counted = new Map<keyof typeof KIND_LABEL, number>();
+  for (const role of roles) counted.set(role.kind, (counted.get(role.kind) ?? 0) + 1);
+  return sentence.format(
+    [...counted].map(([kind, n]) =>
+      n === 1 ? `a ${KIND_LABEL[kind]} column` : `${COUNT[n] ?? n} ${KIND_LABEL[kind]} columns`,
+    ),
+  );
+};
 
 export const ChartType = ({
   recipes,
@@ -52,9 +71,6 @@ export const ChartType = ({
   const id = useId();
   const unmet = new Map(recipes.map((recipe) => [recipe.key, unmetRoles(recipe, table, kinds)]));
   const selected = unmet.get(value) ?? [];
-  const others = recipes.filter(
-    (recipe) => recipe.key !== value && (unmet.get(recipe.key)?.length ?? 0) > 0,
-  );
   const reasonId = (key: RecipeKey) => `${id}-${key}`;
 
   return (
@@ -63,23 +79,45 @@ export const ChartType = ({
         aria-label="Chart type"
         className="grid w-full grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))]"
         value={value}
-        onValueChange={onChange}
+        /* The guard is here rather than on each button so a click and a keyboard
+           activation are refused by the same rule. */
+        onValueChange={(key) => {
+          if ((unmet.get(key)?.length ?? 0) === 0) onChange(key);
+        }}
       >
         {recipes.map((recipe) => {
           const Icon = ICONS.get(recipe.key) ?? UnknownChartIcon;
           const missing = unmet.get(recipe.key) ?? [];
-          return (
+          /* The chart in front of the user is never made unavailable: it is already
+             chosen, and saying so is the selected-chart error below. */
+          const unavailable = missing.length > 0 && recipe.key !== value;
+          const button = (
             <ToggleButton
-              key={recipe.key}
               value={recipe.key}
               size="lg"
+              /* `aria-disabled` rather than `disabled`: a disabled button leaves the
+                 tab order and takes the explanation with it, leaving a keyboard user
+                 with a control they cannot reach and no reason for it. */
+              aria-disabled={unavailable || undefined}
               aria-invalid={missing.length > 0 || undefined}
-              aria-describedby={missing.length > 0 ? reasonId(recipe.key) : undefined}
-              className="flex w-full flex-col items-center gap-1.5 rounded-md border border-transparent bg-muted/40 py-3 hover:bg-muted/70 data-pressed:border-primary/40 data-pressed:bg-muted"
+              aria-describedby={unavailable ? reasonId(recipe.key) : undefined}
+              className={cn(
+                "flex w-full flex-col items-center gap-1.5 rounded-md border border-transparent bg-muted/40 py-3 data-pressed:border-primary/40 data-pressed:bg-muted",
+                unavailable ? "cursor-not-allowed opacity-45" : "hover:bg-muted/70",
+              )}
             >
               <Icon />
               {recipe.label}
             </ToggleButton>
+          );
+          if (!unavailable) return <Fragment key={recipe.key}>{button}</Fragment>;
+          return (
+            <Tooltip key={recipe.key}>
+              <TooltipTrigger render={button} />
+              <TooltipContent id={reasonId(recipe.key)} side="top">
+                Needs {needs(missing)}
+              </TooltipContent>
+            </Tooltip>
           );
         })}
       </ToggleButtonGroup>
@@ -90,11 +128,6 @@ export const ChartType = ({
           chart type that fits your data.
         </FieldError>
       )}
-      {others.map((recipe) => (
-        <FieldDescription key={recipe.key} id={reasonId(recipe.key)}>
-          {recipe.label} needs {needs(unmet.get(recipe.key) ?? [])}.
-        </FieldDescription>
-      ))}
     </Field>
   );
 };
