@@ -1,19 +1,16 @@
-import { easePolyOut, select } from "d3";
+import { type Selection, easePolyOut, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import confidenceArea from "../../src/annotation/confidenceArea.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
 
+/** Any group layer these tests render into, whatever datum is currently bound. */
+type Layer<D> = Selection<SVGGElement, D, SVGGElement, number>;
+
 type TestDatum = {
   x: number;
   y0: number;
   y1: number;
-};
-
-type ComplexTestDatum = {
-  position: { x: number };
-  bounds: { lower: number; upper: number };
-  id: string;
 };
 
 type KeyedTestDatum = TestDatum & {
@@ -69,264 +66,110 @@ describe("annotation/confidenceArea", () => {
     ],
   ];
 
-  test("should render confidenceArea with proper DOM structure", () => {
-    const areaComponent = confidenceArea()
+  const bounded = () =>
+    confidenceArea()
       .x((d: unknown) => (d as TestDatum).x)
       .y0((d: unknown) => (d as TestDatum).y0)
       .y1((d: unknown) => (d as TestDatum).y1);
 
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
+  const layer = (key = "test-layer") =>
+    createSvgLayer("#chart-container", undefined, { key }).selectGroup("areas");
+
+  const paths = <D>(chartLayer: Layer<D>) =>
+    chartLayer
+      .selectAll("path.sszvis-area")
+      .nodes()
+      .map((node) => select(node));
+
+  test("should trace one patterned path per series along its upper then lower bound", () => {
+    const chartLayer = layer().datum(multiAreaData).call(bounded().transition(false));
+
+    const rendered = paths(chartLayer);
+    expect(rendered).toHaveLength(multiAreaData.length);
+    expect(rendered.map((p) => p.attr("fill"))).toEqual([
+      "url(#data-area-pattern)",
+      "url(#data-area-pattern)",
+    ]);
+    // The emitted outline IS the contract here: along y1 left-to-right, back along y0, closed.
+    expect(rendered.map((p) => p.attr("d"))).toEqual([
+      "M0,80L50,90L50,60L0,50Z",
+      "M0,40L50,45L50,35L0,30Z",
+    ]);
+    // The pattern the fill points at has to exist in the layer's defs, or the fill resolves to nothing.
+    expect(chartLayer.select("defs pattern#data-area-pattern").node()).not.toBeNull();
+  });
+
+  test("should paint the outline when a stroke and a stroke width are given", () => {
+    const chartLayer = layer()
       .datum([testData])
-      .call(areaComponent);
+      .call(bounded().stroke("#ff0000").strokeWidth(2).transition(false));
 
-    // Check that areas are rendered
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(1);
-
-    // Check that each area has the correct class
-    areas.forEach((area) => {
-      expect(select(area).classed("sszvis-area")).toBe(true);
-    });
-
-    // Check that pattern defs are created
-    const defs = chartLayer.select("defs").node();
-    expect(defs).not.toBeNull();
-    const pattern = chartLayer.select("pattern#data-area-pattern").node();
-    expect(pattern).not.toBeNull();
+    const [path] = paths(chartLayer);
+    expect(path.style("stroke")).toBe("rgb(255, 0, 0)");
+    expect(path.style("stroke-width")).toBe("2");
   });
 
-  test("should apply data area pattern fill to areas", () => {
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1);
+  test("should trace the unwrapped values when a valuesAccessor is given", () => {
+    const wrapped: WrappedTestData[] = [{ values: multiAreaData[0] }];
 
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum([testData])
-      .call(areaComponent);
+    const withAccessor = layer("wrapped")
+      .datum(wrapped)
+      .call(
+        bounded()
+          .valuesAccessor((d: unknown) => (d as WrappedTestData).values)
+          .transition(false),
+      );
+    const plain = layer("plain").datum([multiAreaData[0]]).call(bounded().transition(false));
 
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-
-    areas.forEach((area) => {
-      expect(select(area).attr("fill")).toBe("url(#data-area-pattern)");
-    });
+    // Unwrapping has to produce the same outline as passing the series directly; asserting
+    // only that a path exists would pass with `valuesAccessor` ignored.
+    expect(paths(withAccessor).map((p) => p.attr("d"))).toEqual(
+      paths(plain).map((p) => p.attr("d")),
+    );
   });
 
-  test("should handle multiple areas with data binding", () => {
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum(multiAreaData)
-      .call(areaComponent);
-
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(2);
-
-    // Each area should have the correct class and fill
-    areas.forEach((area) => {
-      expect(select(area).classed("sszvis-area")).toBe(true);
-      expect(select(area).attr("fill")).toBe("url(#data-area-pattern)");
-    });
-  });
-
-  test("should apply custom stroke styling", () => {
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1)
-      .stroke("#ff0000")
-      .strokeWidth(2);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum([testData])
-      .call(areaComponent);
-
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-
-    // Just verify that stroke properties can be set without error
-    // The actual styling verification depends on how the browser interprets CSS
-    expect(areas.length).toBe(1);
-    expect(select(areas[0]).classed("sszvis-area")).toBe(true);
-  });
-
-  test("should work with custom key function for data binding", () => {
-    const keyedData: KeyedTestDatum[][] = [
+  test("should reuse each series' path element across a re-render when a key is given", () => {
+    const keyed = (x: number): KeyedTestDatum[][] => [
       [
-        { x: 0, y0: 50, y1: 80, id: "area1" },
-        { x: 50, y0: 60, y1: 90, id: "area1" },
+        { x, y0: 50, y1: 80, id: "area1" },
+        { x: x + 50, y0: 60, y1: 90, id: "area1" },
       ],
       [
-        { x: 0, y0: 30, y1: 40, id: "area2" },
-        { x: 50, y0: 35, y1: 45, id: "area2" },
+        { x, y0: 30, y1: 40, id: "area2" },
+        { x: x + 50, y0: 35, y1: 45, id: "area2" },
       ],
     ];
+    const areaComponent = bounded()
+      .key((d: unknown) => (d as KeyedTestDatum[])[0].id)
+      .transition(false);
+    const chartLayer = layer();
 
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as KeyedTestDatum).x)
-      .y0((d: unknown) => (d as KeyedTestDatum).y0)
-      .y1((d: unknown) => (d as KeyedTestDatum).y1)
-      .key((d: unknown, i: unknown) => (d as KeyedTestDatum[])[0]?.id || (i as number));
+    chartLayer.datum(keyed(0)).call(areaComponent);
+    const before = paths(chartLayer).map((p) => p.node());
 
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum(keyedData)
-      .call(areaComponent);
+    chartLayer.datum(keyed(10)).call(areaComponent);
+    const after = paths(chartLayer).map((p) => p.node());
 
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(2);
-
-    // Test data update with same keys
-    const updatedData: KeyedTestDatum[][] = [
-      [
-        { x: 10, y0: 55, y1: 85, id: "area1" },
-        { x: 60, y0: 65, y1: 95, id: "area1" },
-      ],
-      [
-        { x: 10, y0: 35, y1: 45, id: "area2" },
-        { x: 60, y0: 40, y1: 50, id: "area2" },
-      ],
-    ];
-
-    chartLayer.datum(updatedData).call(areaComponent);
-    const updatedAreas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(updatedAreas.length).toBe(2);
+    // Element identity, not just the count: an unkeyed join also keeps two paths, so only
+    // identity shows the key matched the series across the update.
+    expect(after).toEqual(before);
+    expect(paths(chartLayer)[0].attr("d")).toBe("M10,80L60,90L60,60L10,50Z");
   });
 
-  test("should work with custom valuesAccessor", () => {
-    const wrappedData: WrappedTestData[] = [
-      {
-        values: [
-          { x: 0, y0: 50, y1: 80 },
-          { x: 50, y0: 60, y1: 90 },
-        ],
-      },
-    ];
+  test("should render no paths when the data is empty", () => {
+    const chartLayer = layer().datum([]).call(bounded());
 
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1)
-      .valuesAccessor((d: unknown) => (d as WrappedTestData).values);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum(wrappedData)
-      .call(areaComponent);
-
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(1);
-
-    // Just check that the path element exists and has the expected class
-    expect(select(areas[0]).classed("sszvis-area")).toBe(true);
+    expect(paths(chartLayer)).toHaveLength(0);
   });
 
-  test("should work with complex data structures and custom accessor functions", () => {
-    const complexTestData: ComplexTestDatum[][] = [
-      [
-        {
-          position: { x: 20 },
-          bounds: { lower: 30, upper: 60 },
-          id: "complex-area-1",
-        },
-        {
-          position: { x: 80 },
-          bounds: { lower: 40, upper: 70 },
-          id: "complex-area-1",
-        },
-      ],
-    ];
+  test("should match the rendered path count to the data when the data changes", () => {
+    const areaComponent = bounded().transition(false);
+    const chartLayer = layer();
 
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as ComplexTestDatum).position.x)
-      .y0((d: unknown) => (d as ComplexTestDatum).bounds.lower)
-      .y1((d: unknown) => (d as ComplexTestDatum).bounds.upper);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum(complexTestData)
-      .call(areaComponent);
-
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(1);
-
-    // Just check that the path element exists and has the expected class
-    expect(select(areas[0]).classed("sszvis-area")).toBe(true);
-  });
-
-  test("should handle empty data array", () => {
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum([])
-      .call(areaComponent);
-
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(0);
-  });
-
-  test("should handle data updates correctly", () => {
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, {
-      key: "test-layer",
-    }).selectGroup("areas");
-
-    // Initial render with 1 area
-    chartLayer.datum([testData.slice(0, 2)]).call(areaComponent);
-    let areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(1);
-
-    // Update with 2 areas
-    chartLayer.datum(multiAreaData).call(areaComponent);
-    areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(2);
-
-    // Update with 0 areas
-    chartLayer.datum([]).call(areaComponent);
-    areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(0);
-  });
-
-  test("should handle transition property", () => {
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1)
-      .transition(false); // Disable transitions for testing
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum([testData])
-      .call(areaComponent);
-
-    const areas = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areas.length).toBe(1);
-    expect(select(areas[0]).classed("sszvis-area")).toBe(true);
-
-    // Test with transitions enabled
-    const areaComponentWithTransition = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1)
-      .transition(true);
-
-    chartLayer.call(areaComponentWithTransition);
-    const areasWithTransition = chartLayer.selectAll("path.sszvis-area").nodes();
-    expect(areasWithTransition.length).toBe(1);
+    for (const series of [[testData.slice(0, 2)], multiAreaData, []]) {
+      chartLayer.datum(series).call(areaComponent);
+      expect(paths(chartLayer)).toHaveLength(series.length);
+    }
   });
 
   test("should not let an in-flight tween overwrite a later synchronous render", async () => {
@@ -360,18 +203,12 @@ describe("annotation/confidenceArea", () => {
     );
   });
 
-  test("schedules the default transition's duration and easing", () => {
-    const areaComponent = confidenceArea()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y0((d: unknown) => (d as TestDatum).y0)
-      .y1((d: unknown) => (d as TestDatum).y1)
-      .transition(true);
+  test("should schedule exactly one 300ms easePolyOut tween when transitions are enabled", () => {
+    const chartLayer = layer().datum([testData]).call(bounded().transition(true));
 
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("areas")
-      .datum([testData])
-      .call(areaComponent);
-
+    // Deliberately coupled to d3's private `__transition`: duration and easing are only
+    // observable from the outside through wall-clock sampling, which is flaky. Kept narrow
+    // so the coupling is one lookup rather than a shape assertion.
     const path = chartLayer.select("path.sszvis-area").node() as Element & {
       __transition?: Record<string, unknown>;
     };

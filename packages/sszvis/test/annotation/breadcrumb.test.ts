@@ -36,162 +36,85 @@ describe("annotation/breadcrumb", () => {
   }
 
   describe("createBreadcrumbItems helper", () => {
-    test("should return empty array for null node", () => {
-      const items = createBreadcrumbItems(null);
-      expect(items).toEqual([]);
+    test("should return an empty trail when there is no node", () => {
+      expect(createBreadcrumbItems(null)).toEqual([]);
     });
 
-    test("should create breadcrumb items from hierarchy node", () => {
+    test("should list a node's ancestors root-first without the synthetic root", () => {
       const root = createMockHierarchy();
       const categoryA = root.children?.[0];
       const subA1 = categoryA?.children?.[0];
-      assert(subA1);
-      const items = createBreadcrumbItems(subA1);
-      expect(items.length).toBe(2);
-      expect(items[0].label).toBe("Category A");
-      expect(items[0].node).toBe(categoryA);
-      expect(items[1].label).toBe("Sub A1");
-      expect(items[1].node).toBe(subA1);
-    });
-
-    test("should handle single-level depth", () => {
-      const categoryA = createMockHierarchy().children?.[0];
       assert(categoryA);
-      const items = createBreadcrumbItems(categoryA);
-      expect(items.length).toBe(1);
-      expect(items[0].label).toBe("Category A");
-      expect(items[0].node).toBe(categoryA);
+      assert(subA1);
+
+      expect(createBreadcrumbItems(subA1)).toEqual([
+        { label: "Category A", node: categoryA },
+        { label: "Sub A1", node: subA1 },
+      ]);
+      // One level down, the same rule leaves a single crumb rather than the hierarchy's root.
+      expect(createBreadcrumbItems(categoryA)).toEqual([{ label: "Category A", node: categoryA }]);
     });
   });
 
   describe("breadcrumb component", () => {
-    test("should render breadcrumb container with proper structure", () => {
+    const render = (configure: (b: ReturnType<typeof breadcrumb>) => typeof b) => {
       const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([
-            { label: "Category", node: null },
-            { label: "Subcategory", node: null },
-          ])
-          .width(600),
-      );
-      const breadcrumbContainer = container.querySelector('[data-d3-selectdiv="breadcrumbs"]');
-      expect(breadcrumbContainer).not.toBeNull();
-      expect(breadcrumbContainer?.getAttribute("style")).toContain("display: flex");
+      const component = configure(breadcrumb().renderInto(htmlLayer));
+      htmlLayer.call(component);
+      return { htmlLayer, component };
+    };
+
+    const links = () => [
+      ...container.querySelectorAll<HTMLAnchorElement>(".sszvis-breadcrumb-item a"),
+    ];
+    const separators = () => [
+      ...container.querySelectorAll<HTMLSpanElement>(".sszvis-breadcrumb-separator"),
+    ];
+
+    const twoItems = [
+      { label: "Category", node: null },
+      { label: "Current", node: null },
+    ];
+
+    test("should render its crumbs into a dedicated container", () => {
+      render((b) => b.items(twoItems).width(600));
+
+      expect(container.querySelector('[data-d3-selectdiv="breadcrumbs"]')).not.toBeNull();
     });
 
-    test("should always render root label as first item", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([{ label: "Category", node: null }])
-          .rootLabel("Home"),
-      );
-      const breadcrumbItems = container.querySelectorAll(".sszvis-breadcrumb-item");
-      expect(breadcrumbItems.length).toBe(2); // Root + Category
-      const firstLink = breadcrumbItems[0].querySelector("a");
-      expect(firstLink?.textContent).toBe("Home");
+    test("should prepend the root label to the trail", () => {
+      render((b) => b.items([{ label: "Category", node: null }]).rootLabel("Home"));
+
+      expect(links().map((a) => a.textContent)).toEqual(["Home", "Category"]);
     });
 
-    test("should render correct number of breadcrumb items", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([
-            { label: "Level 1", node: null },
-            { label: "Level 2", node: null },
-            { label: "Level 3", node: null },
-          ]),
-      );
-      const breadcrumbItems = container.querySelectorAll(".sszvis-breadcrumb-item");
-      expect(breadcrumbItems.length).toBe(4); // Root + 3 items
+    test("should mark the last crumb as current and the rest as clickable links", () => {
+      render((b) => b.items(twoItems));
+
+      const rendered = links();
+      const last = rendered.at(-1);
+      assert(last);
+      // The colours are inline styles the component writes itself, so no stylesheet can
+      // override them - which is why pinning them here is the contract and not presentation.
+      expect(last.style.fontWeight).toBe("bold");
+      expect(last.style.color).toBe("rgb(51, 51, 51)"); // #333
+      for (const link of rendered.slice(0, -1)) {
+        expect(link.style.fontWeight).toBe("normal");
+        expect(link.style.color).toBe("rgb(0, 115, 179)"); // #0073B3
+        expect(link.style.cursor).toBe("pointer");
+      }
+      // The trailing separator would dangle after the current crumb, so it is hidden.
+      expect(separators().map((s) => s.style.display === "none")).toEqual([
+        ...Array.from({ length: rendered.length - 1 }, () => false),
+        true,
+      ]);
     });
 
-    test("should apply bold styling to last item", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([
-            { label: "Category", node: null },
-            { label: "Current", node: null },
-          ]),
-      );
-      const links = container.querySelectorAll<HTMLAnchorElement>(".sszvis-breadcrumb-item a");
-      const lastLink = links[links.length - 1];
-      expect(lastLink.style.fontWeight).toBe("bold");
-      expect(lastLink.style.color).toBe("rgb(51, 51, 51)"); // #333
-    });
-
-    test("should apply link styling to non-last items", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([
-            { label: "Category", node: null },
-            { label: "Current", node: null },
-          ]),
-      );
-      const links = container.querySelectorAll<HTMLAnchorElement>(".sszvis-breadcrumb-item a");
-      const firstLink = links[0];
-      expect(firstLink.style.fontWeight).toBe("normal");
-      expect(firstLink.style.color).toBe("rgb(0, 115, 179)"); // #0073B3
-      expect(firstLink.style.cursor).toBe("pointer");
-    });
-
-    test("should hide separator on last item", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([
-            { label: "Category", node: null },
-            { label: "Current", node: null },
-          ]),
-      );
-      const separators = container.querySelectorAll<HTMLSpanElement>(
-        ".sszvis-breadcrumb-separator",
-      );
-      const lastSeparator = separators[separators.length - 1];
-      expect(lastSeparator.style.display).toBe("none");
-    });
-
-    test("should show separators on non-last items", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([
-            { label: "Category", node: null },
-            { label: "Current", node: null },
-          ]),
-      );
-      const separators = container.querySelectorAll<HTMLSpanElement>(
-        ".sszvis-breadcrumb-separator",
-      );
-      expect(separators[0].style.display).not.toBe("none");
-    });
-
-    test("should call onClick handler when clicking non-last item", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
+    test("should call the onClick handler with the crumb and its index when a non-last crumb is clicked", () => {
       const onClickMock = vi.fn();
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([
-            { label: "Category", node: null },
-            { label: "Current", node: null },
-          ])
-          .onClick(onClickMock),
-      );
+      render((b) => b.items(twoItems).onClick(onClickMock));
 
-      const links = container.querySelectorAll<HTMLAnchorElement>(".sszvis-breadcrumb-item a");
-
-      links[0].click();
+      links()[0].click();
 
       expect(onClickMock).toHaveBeenCalledTimes(1);
       expect(onClickMock).toHaveBeenCalledWith(
@@ -200,64 +123,51 @@ describe("annotation/breadcrumb", () => {
       );
     });
 
-    test("should not call onClick handler when clicking last item", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
+    test("should leave the trail inert when the last crumb is clicked", () => {
       const onClickMock = vi.fn();
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([
-            { label: "Category", node: null },
-            { label: "Current", node: null },
-          ])
-          .onClick(onClickMock),
-      );
-      const links = container.querySelectorAll<HTMLAnchorElement>(".sszvis-breadcrumb-item a");
-      links[links.length - 1].click();
+      render((b) => b.items(twoItems).onClick(onClickMock));
+
+      links().at(-1)?.click();
+
       expect(onClickMock).not.toHaveBeenCalled();
     });
 
-    test("should use custom separator", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([{ label: "Category", node: null }])
-          .separator(" / "),
-      );
-      expect(container.querySelectorAll(".sszvis-breadcrumb-separator")[0].textContent).toBe(" / ");
+    test("should print the given separator between crumbs when one is set", () => {
+      render((b) => b.items([{ label: "Category", node: null }]).separator(" / "));
+
+      expect(separators()[0].textContent).toBe(" / ");
     });
 
-    test("should use custom label accessor", () => {
-      const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      htmlLayer.call(
-        breadcrumb()
-          .renderInto(htmlLayer)
-          .items([{ label: "category", node: null }])
-          .label((d) => d.label.toUpperCase()),
+    test("should take a crumb's text from the label accessor when one is set", () => {
+      render((b) =>
+        b.items([{ label: "category", node: null }]).label((d) => d.label.toUpperCase()),
       );
-      expect(container.querySelectorAll(".sszvis-breadcrumb-item a")[1].textContent).toBe(
-        "CATEGORY",
-      );
+
+      expect(links()[1].textContent).toBe("CATEGORY");
     });
 
-    test("should update correctly when items change", () => {
+    test("should grow and shrink the trail when the items change", () => {
       const htmlLayer = createHtmlLayer("#chart-container", undefined);
-      // First render
       const breadcrumbNav = breadcrumb()
         .renderInto(htmlLayer)
         .items([{ label: "Level 1", node: null }]);
+
+      const labelsAfter = (items: { label: string; node: null }[]) => {
+        breadcrumbNav.items(items);
+        htmlLayer.call(breadcrumbNav);
+        return links().map((a) => a.textContent);
+      };
+
       htmlLayer.call(breadcrumbNav);
-      let breadcrumbItems = container.querySelectorAll(".sszvis-breadcrumb-item");
-      expect(breadcrumbItems.length).toBe(2); // Root + Level 1
-      // Update with more items
-      breadcrumbNav.items([
-        { label: "Level 1", node: null },
-        { label: "Level 2", node: null },
-      ]);
-      htmlLayer.call(breadcrumbNav);
-      breadcrumbItems = container.querySelectorAll(".sszvis-breadcrumb-item");
-      expect(breadcrumbItems.length).toBe(3); // Root + Level 1 + Level 2
+      expect(links().map((a) => a.textContent)).toEqual(["Root", "Level 1"]);
+      expect(
+        labelsAfter([
+          { label: "Level 1", node: null },
+          { label: "Level 2", node: null },
+        ]),
+      ).toEqual(["Root", "Level 1", "Level 2"]);
+      // Shrinking has to remove the exited crumb, not just stop updating it.
+      expect(labelsAfter([{ label: "Level 1", node: null }])).toEqual(["Root", "Level 1"]);
     });
   });
 });

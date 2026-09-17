@@ -27,7 +27,7 @@ describe("annotation/tooltipAnchor", () => {
     return [...svg.querySelectorAll("[data-tooltip-anchor]")];
   };
 
-  test("should render one rect per datum", () => {
+  test("should render one rect per datum translated to the position it reports", () => {
     const anchors = renderAnchors([
       [10, 20],
       [30, 40],
@@ -37,7 +37,7 @@ describe("annotation/tooltipAnchor", () => {
     expect(anchors[0].getAttribute("transform")).toBe("translate(10,20)");
   });
 
-  test("should pass the element index to the position accessor", () => {
+  test("should pass the element index to the position accessor when several data are bound", () => {
     const group = select(svg).append("g");
     const seen: number[] = [];
     const layout: [number, number][] = [
