@@ -4,6 +4,7 @@
 import { select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import tooltipAnchor from "../../src/annotation/tooltipAnchor.js";
+import { describesTheAnnotation } from "../support/annotationConformance.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -27,7 +28,38 @@ describe("annotation/tooltipAnchor", () => {
     return [...svg.querySelectorAll("[data-tooltip-anchor]")];
   };
 
-  test("should render one rect per datum translated to the position it reports", () => {
+  /** One group per key, so a second render with the same key updates rather than adds. */
+  const groups = new Map<string, SVGGElement>();
+
+  const groupFor = (key: string) => {
+    const existing = groups.get(key);
+    if (existing?.isConnected) return existing;
+    const node = select(svg).append("g").node() as SVGGElement;
+    groups.set(key, node);
+    return node;
+  };
+
+  describesTheAnnotation<[number, number], never>(() => ({
+    make: () => tooltipAnchor<[number, number]>().position((d) => d),
+    renderInto: (key, component, data) => {
+      const node = groupFor(key);
+      select(node)
+        .datum(data)
+        .call(component as never);
+      return node;
+    },
+    count: (node) => ({ anchors: node.querySelectorAll("[data-tooltip-anchor]").length }),
+    full: {
+      data: [
+        [10, 20],
+        [30, 40],
+      ],
+      marks: { anchors: 2 },
+    },
+    smaller: { data: [[10, 20]], marks: { anchors: 1 } },
+  }));
+
+  test("should render one rect per datum translated to the position it reports when a position accessor is set", () => {
     const anchors = renderAnchors([
       [10, 20],
       [30, 40],
@@ -65,7 +97,7 @@ describe("annotation/tooltipAnchor", () => {
     expect(anchor.hasAttribute("visibility")).toBe(false);
   });
 
-  test("should keep the anchor invisible but measurable", () => {
+  test("should keep the anchor invisible but measurable when it is rendered into an svg", () => {
     const [anchor] = renderAnchors([[10, 20]]);
     expect(anchor.getAttribute("fill")).toBe("none");
     expect(anchor.getAttribute("stroke")).toBe("none");

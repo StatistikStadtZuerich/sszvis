@@ -40,7 +40,7 @@ describe("annotation/breadcrumb", () => {
       expect(createBreadcrumbItems(null)).toEqual([]);
     });
 
-    test("should list a node's ancestors root-first without the synthetic root", () => {
+    test("should list a node's ancestors root-first, without the synthetic root, when the node is nested", () => {
       const root = createMockHierarchy();
       const categoryA = root.children?.[0];
       const subA1 = categoryA?.children?.[0];
@@ -76,19 +76,19 @@ describe("annotation/breadcrumb", () => {
       { label: "Current", node: null },
     ];
 
-    test("should render its crumbs into a dedicated container", () => {
+    test("should render its crumbs into a dedicated container when it is called on an html layer", () => {
       render((b) => b.items(twoItems).width(600));
 
       expect(container.querySelector('[data-d3-selectdiv="breadcrumbs"]')).not.toBeNull();
     });
 
-    test("should prepend the root label to the trail", () => {
+    test("should prepend the root label to the trail when a rootLabel is configured", () => {
       render((b) => b.items([{ label: "Category", node: null }]).rootLabel("Home"));
 
       expect(links().map((a) => a.textContent)).toEqual(["Home", "Category"]);
     });
 
-    test("should mark the last crumb as current and the rest as clickable links", () => {
+    test("should mark the last crumb as current and the rest as clickable links when several crumbs are given", () => {
       render((b) => b.items(twoItems));
 
       const rendered = links();

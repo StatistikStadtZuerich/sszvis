@@ -2,6 +2,7 @@ import { type Selection, type ScaleLinear, scaleLinear, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import line from "../../src/annotation/line.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheAnnotation } from "../support/annotationConformance.js";
 import "../../src/d3-selectgroup.js";
 
 /** Any group layer these tests render into, whatever datum is currently bound. */
@@ -23,8 +24,9 @@ const placementOf = (transform: string | null) => {
 
 describe("annotation/line", () => {
   let container: HTMLDivElement;
-  let xScale: ScaleLinear<number, number>;
-  let yScale: ScaleLinear<number, number>;
+  const xScale: ScaleLinear<number, number> = scaleLinear().domain([0, 100]).range([0, 400]);
+  // Inverted, as in a typical chart's vertical axis.
+  const yScale: ScaleLinear<number, number> = scaleLinear().domain([0, 100]).range([300, 0]);
 
   beforeEach(() => {
     container = document.createElement("div");
@@ -32,9 +34,6 @@ describe("annotation/line", () => {
     container.style.width = "400px";
     container.style.height = "300px";
     document.body.appendChild(container);
-
-    xScale = scaleLinear().domain([0, 100]).range([0, 400]);
-    yScale = scaleLinear().domain([0, 100]).range([300, 0]); // Inverted for typical chart coordinates
   });
 
   afterEach(() => {
@@ -43,8 +42,8 @@ describe("annotation/line", () => {
 
   const singleDatum = [{}];
 
-  const layer = () =>
-    createSvgLayer("#chart-container", undefined, { key: "test-layer" }).selectGroup("lines");
+  const layer = (key = "test-layer") =>
+    createSvgLayer("#chart-container", undefined, { key }).selectGroup("lines");
 
   const lines = <D>(chartLayer: Layer<D>) =>
     chartLayer
@@ -57,6 +56,55 @@ describe("annotation/line", () => {
       .selectAll("text.sszvis-referenceline__caption")
       .nodes()
       .map((node) => select(node));
+
+  /** Three data bound at once, so the shared-caption cardinality shows up in the join. */
+  const threeLines = [{ id: "line1" }, { id: "line2" }, { id: "line3" }];
+
+  const lineNodes = (node: Element) => [...node.querySelectorAll("line.sszvis-referenceline")];
+  const captionNodes = (node: Element) => [
+    ...node.querySelectorAll("text.sszvis-referenceline__caption"),
+  ];
+
+  const placed = () => line().x1(10).y1(20).x2(50).y2(40).xScale(xScale).yScale(yScale);
+
+  describesTheAnnotation<{ id: string }, { at: [number, number]; angle: number; text: string }>(
+    () => ({
+      make: placed,
+      renderInto: (key, component, data) =>
+        layer(key)
+          .datum(data)
+          .call(component as never)
+          .node() as SVGGElement,
+      count: (node) => ({ lines: lineNodes(node).length, captions: captionNodes(node).length }),
+      full: { data: threeLines, marks: { lines: 3, captions: 0 } },
+      smaller: { data: threeLines.slice(0, 1), marks: { lines: 1, captions: 0 } },
+      captions: {
+        withCaptions: () => placed().caption("Shared"),
+        withOffsets: () =>
+          placed()
+            .caption("Shared")
+            .dx(() => 15)
+            .dy(() => -10),
+        withoutCaptions: placed,
+        data: threeLines,
+        marks: captionNodes,
+        placementOf: (mark) => ({
+          ...placementOf(mark.getAttribute("transform")),
+          text: mark.textContent ?? "",
+        }),
+        // One caption for three lines: the component binds it to `[0]`, not to the data.
+        expectedPlacements: [
+          {
+            at: [(xScale(10) + xScale(50)) / 2, (yScale(20) + yScale(40)) / 2],
+            // The on-screen slope between the two scaled endpoints, in degrees.
+            angle: (Math.atan2(yScale(40) - yScale(20), xScale(50) - xScale(10)) * 180) / Math.PI,
+            text: "Shared",
+          },
+        ],
+        expectedOffsets: [[15, -10]],
+      },
+    }),
+  );
 
   test("should scale both endpoints through the chart scales when coordinates are given in data units", () => {
     const chartLayer = layer()
@@ -98,14 +146,6 @@ describe("annotation/line", () => {
       expect(renderedAngle).toBeCloseTo(angle, 4);
     },
   );
-
-  test("should render no caption when no caption is set", () => {
-    const chartLayer = layer()
-      .datum(singleDatum)
-      .call(line().x1(20).y1(30).x2(80).y2(70).xScale(xScale).yScale(yScale));
-
-    expect(captions(chartLayer)).toHaveLength(0);
-  });
 
   test.for([
     { form: "scalars", dx: 15 as number | (() => number), dy: -10 as number | (() => number) },
@@ -151,26 +191,5 @@ describe("annotation/line", () => {
     ).toEqual(Array.from({ length: 3 }, () => [xScale(25), yScale(25), xScale(75), yScale(75)]));
     // … and the caption is bound to `[0]`, not to the data, so there is exactly one.
     expect(captions(chartLayer).map((c) => c.text())).toEqual(["Multiple Lines"]);
-  });
-
-  test("should match the rendered line count to the data when the data changes", () => {
-    const lineComponent = line().x1(10).y1(20).x2(90).y2(80).xScale(xScale).yScale(yScale);
-    const chartLayer = layer();
-
-    for (const count of [1, 2, 0]) {
-      chartLayer
-        .datum(Array.from({ length: count }, (_, i) => ({ id: `line${i}` })))
-        .call(lineComponent);
-      expect(lines(chartLayer)).toHaveLength(count);
-    }
-  });
-
-  test("should render neither line nor caption when the data is empty", () => {
-    const chartLayer = layer()
-      .datum([])
-      .call(line().x1(10).y1(20).x2(90).y2(80).xScale(xScale).yScale(yScale));
-
-    expect(lines(chartLayer)).toHaveLength(0);
-    expect(captions(chartLayer)).toHaveLength(0);
   });
 });

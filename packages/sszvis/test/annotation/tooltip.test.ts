@@ -214,7 +214,7 @@ describe("annotation/tooltip", () => {
     expect(topFor(0) - topFor(30)).toBeCloseTo(30, 5);
   });
 
-  test("should apply the configured opacity to the tooltip element", () => {
+  test("should apply the configured opacity to the tooltip element when an opacity is configured", () => {
     const { tooltipLayer, svgLayer } = anchored([testData[0]]);
 
     svgLayer.selectAll("[data-tooltip-anchor]").call(

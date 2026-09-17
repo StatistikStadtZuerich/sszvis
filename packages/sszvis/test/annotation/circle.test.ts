@@ -2,6 +2,7 @@ import { type Selection, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import circle from "../../src/annotation/circle.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheAnnotation } from "../support/annotationConformance.js";
 import "../../src/d3-selectgroup.js";
 
 /** Any group layer these tests render into, whatever datum is currently bound. */
@@ -42,8 +43,54 @@ describe("annotation/circle", () => {
     { x: 200, y: 100, r: 25, caption: "Area B", dx: -20, dy: 8 },
   ];
 
-  const layer = () =>
-    createSvgLayer("#chart-container", undefined, { key: "test-layer" }).selectGroup("circles");
+  const layer = (key = "test-layer") =>
+    createSvgLayer("#chart-container", undefined, { key }).selectGroup("circles");
+
+  const positioned = () =>
+    circle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .r((d) => d.r);
+
+  const circleNodes = (node: Element) => [...node.querySelectorAll("circle.sszvis-dataareacircle")];
+  const captionNodes = (node: Element) => [
+    ...node.querySelectorAll("text.sszvis-dataareacircle__caption"),
+  ];
+
+  describesTheAnnotation<TestDatum, { x: number; y: number; text: string }>(() => ({
+    make: positioned,
+    renderInto: (key, component, data) =>
+      layer(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({ circles: circleNodes(node).length, captions: captionNodes(node).length }),
+    full: { data: testData, marks: { circles: 3, captions: 0 } },
+    smaller: { data: testData.slice(0, 1), marks: { circles: 1, captions: 0 } },
+    patternFill: { marks: circleNodes, patternId: "data-area-pattern" },
+    captions: {
+      withCaptions: () => positioned().caption((d) => d.caption ?? ""),
+      withOffsets: () =>
+        positioned()
+          .caption((d) => d.caption ?? "")
+          .dx((d) => d.dx ?? 0)
+          .dy((d) => d.dy ?? 0),
+      withoutCaptions: positioned,
+      data: testDataWithCaptions,
+      marks: captionNodes,
+      placementOf: (mark) => ({
+        x: Number(mark.getAttribute("x")),
+        y: Number(mark.getAttribute("y")),
+        text: mark.textContent ?? "",
+      }),
+      expectedPlacements: testDataWithCaptions.map((d) => ({
+        x: d.x,
+        y: d.y,
+        text: d.caption ?? "",
+      })),
+      expectedOffsets: testDataWithCaptions.map((d) => [d.dx ?? 0, d.dy ?? 0]),
+    },
+  }));
 
   const circles = <D>(chartLayer: Layer<D>) =>
     chartLayer
@@ -77,59 +124,6 @@ describe("annotation/circle", () => {
         fill: c.attr("fill"),
       })),
     ).toEqual(testData.map((d) => ({ cx: d.x, cy: d.y, r: d.r, fill: "url(#data-area-pattern)" })));
-    // The pattern the fill points at has to exist in the layer's defs, or the fill resolves to nothing.
-    expect(chartLayer.select("defs pattern#data-area-pattern").node()).not.toBeNull();
-  });
-
-  test("should render a caption at each circle's centre when a caption accessor is set", () => {
-    const chartLayer = layer()
-      .datum(testDataWithCaptions)
-      .call(
-        circle<TestDatum>()
-          .x((d) => d.x)
-          .y((d) => d.y)
-          .r((d) => d.r)
-          .caption((d) => d.caption || ""),
-      );
-
-    expect(
-      captions(chartLayer).map((c) => ({
-        x: Number(c.attr("x")),
-        y: Number(c.attr("y")),
-        text: c.text(),
-      })),
-    ).toEqual(testDataWithCaptions.map((d) => ({ x: d.x, y: d.y, text: d.caption })));
-  });
-
-  test("should render no captions when no caption accessor is set", () => {
-    const chartLayer = layer()
-      .datum(testDataWithCaptions)
-      .call(
-        circle<TestDatum>()
-          .x((d) => d.x)
-          .y((d) => d.y)
-          .r((d) => d.r),
-      );
-
-    expect(captions(chartLayer)).toHaveLength(0);
-  });
-
-  test("should shift each caption off the centre by its own dx and dy when offsets are set", () => {
-    const chartLayer = layer()
-      .datum(testDataWithCaptions)
-      .call(
-        circle<TestDatum>()
-          .x((d) => d.x)
-          .y((d) => d.y)
-          .r((d) => d.r)
-          .caption((d) => d.caption || "")
-          .dx((d) => d.dx ?? 0)
-          .dy((d) => d.dy ?? 0),
-      );
-
-    expect(captions(chartLayer).map((c) => [Number(c.attr("dx")), Number(c.attr("dy"))])).toEqual(
-      testDataWithCaptions.map((d) => [d.dx, d.dy]),
-    );
   });
 
   test("should read fixed values when scalars are passed instead of accessors", () => {
@@ -144,33 +138,5 @@ describe("annotation/circle", () => {
       Number(rendered.attr("r")),
     ]).toEqual([150, 125, 35]);
     expect(captions(chartLayer).map((c) => c.text())).toEqual(["Fixed Circle"]);
-  });
-
-  test("should render neither circles nor captions when the data is empty", () => {
-    const chartLayer = layer()
-      .datum([])
-      .call(
-        circle<TestDatum>()
-          .x((d) => d.x)
-          .y((d) => d.y)
-          .r((d) => d.r)
-          .caption((d) => d.caption || ""),
-      );
-
-    expect(circles(chartLayer)).toHaveLength(0);
-    expect(captions(chartLayer)).toHaveLength(0);
-  });
-
-  test("should match the rendered circle count to the data when the data changes", () => {
-    const circleComponent = circle<TestDatum>()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .r((d) => d.r);
-    const chartLayer = layer();
-
-    for (const count of [2, 3, 1, 0]) {
-      chartLayer.datum(testData.slice(0, count)).call(circleComponent);
-      expect(circles(chartLayer)).toHaveLength(count);
-    }
   });
 });
