@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { describesNoScheduledTransition } from "../../support/mapRendererConformance.js";
 import { createHtmlLayer } from "../../../src/createHtmlLayer.js";
 import mapRendererRaster from "../../../src/map/renderer/raster.js";
 
@@ -783,10 +784,6 @@ describe("map/renderer/raster", () => {
 
     // NOTE: no transition is scheduled - a canvas cannot be transitioned by d3 anyway - so the
     // raster repaints instantly on every render. Pinned so the port cannot introduce one.
-    test("schedules no transition at all", () => {
-      const node = render([cell(10, 10)]);
-      const canvas = canvasOf(node) as Element & { __transition?: unknown };
-      expect(canvas.__transition).toBeUndefined();
-    });
+    describesNoScheduledTransition(() => canvasOf(render([cell(10, 10)])) as Element);
   });
 });

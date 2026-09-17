@@ -1,5 +1,6 @@
 import { geoMercator, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { describesNoScheduledTransition } from "../../support/mapRendererConformance.js";
 import { bounds as boundsOf } from "../../../src/bounds.js";
 import { createHtmlLayer } from "../../../src/createHtmlLayer.js";
 import mapRendererImage from "../../../src/map/renderer/image.js";
@@ -343,10 +344,6 @@ describe("map/renderer/image", () => {
 
     // NOTE: no transition is scheduled, so the image jumps to its new position on a resize rather
     // than animating. Pinned so the port cannot introduce one.
-    test("schedules no transition at all", () => {
-      const node = render();
-      const img = image(node) as Element & { __transition?: unknown };
-      expect(img.__transition).toBeUndefined();
-    });
+    describesNoScheduledTransition(() => image(render()) as Element);
   });
 });
