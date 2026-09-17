@@ -150,7 +150,7 @@ describe("control/slider", () => {
       expect(handleLabel(node)?.textContent).toBe("5");
     });
 
-    test("should keep exactly one handle and one label, showing the latest value, across re-renders", () => {
+    test("should keep exactly one handle and one label, showing the latest value, when the slider is rendered again", () => {
       const group = d3Select(svg).append("g");
       const control = basic();
       group.call(control);
@@ -230,7 +230,7 @@ describe("control/slider", () => {
     ).not.toThrow();
   });
 
-  test("should put the interaction layer above the handle, so the pointer reaches it", () => {
+  test("should put the interaction layer above the handle when the slider is rendered, so the pointer reaches it", () => {
     const node = render(basic());
     const classes = [...node.children].map((c) => c.getAttribute("class"));
     expect(classes.indexOf("sszvis-control-slider--interactionLayer")).toBeGreaterThan(
@@ -313,7 +313,7 @@ describe("control/slider", () => {
       return onchange.mock.calls.at(-1)?.[1];
     };
 
-    test("should let the pointer reach both ends of the range, not just the inset track", () => {
+    test("should let the pointer reach both ends of the range when it is dragged past the inset track", () => {
       const node = render(basic());
       const layer = node.querySelector(
         "g.sszvis-control-slider--interactionLayer rect",
@@ -383,21 +383,60 @@ describe("control/slider", () => {
       ]);
     });
 
-    test("should tuck the handle label into the track at whichever end the handle is drawn at", () => {
-      // The anchor comes from the pixel the handle is drawn at. With a descending range the
-      // domain minimum is drawn at the right-hand end, so it has to be anchored "end" and
-      // nudged left; keying off the domain index anchored it "start" and pushed a long
-      // label off the track.
-      const reversed = () => scaleLinear().domain([0, 10]).range([300, 0]);
-      expect(labelAnchor(render(slider().scale(reversed()).value(0)))).toEqual(["end", "5"]);
-      expect(labelAnchor(render(slider().scale(reversed()).value(10)))).toEqual(["start", "-5"]);
-      // and the ascending case is the mirror image of it
-      const ascending = () => scaleLinear().domain([0, 10]).range([0, 300]);
-      expect(labelAnchor(render(slider().scale(ascending()).value(0)))).toEqual(["start", "-5"]);
-      expect(labelAnchor(render(slider().scale(ascending()).value(10)))).toEqual(["end", "5"]);
-      // anything in between stays centred over its handle
-      expect(labelAnchor(render(slider().scale(ascending()).value(5)))).toEqual(["middle", "0"]);
-    });
+    // The anchor comes from the pixel the handle is drawn at, not from where the value sits in
+    // the domain. With a descending range the domain minimum is drawn at the right-hand end, so
+    // it has to be anchored "end" and nudged left; keying off the domain index anchored it
+    // "start" and pushed a long label off the track.
+    test.each([
+      {
+        direction: "descending",
+        range: [300, 0] as [number, number],
+        value: 0,
+        at: "the domain minimum",
+        expected: ["end", "5"],
+      },
+      {
+        direction: "descending",
+        range: [300, 0] as [number, number],
+        value: 10,
+        at: "the domain maximum",
+        expected: ["start", "-5"],
+      },
+      {
+        direction: "ascending",
+        range: [0, 300] as [number, number],
+        value: 0,
+        at: "the domain minimum",
+        expected: ["start", "-5"],
+      },
+      {
+        direction: "ascending",
+        range: [0, 300] as [number, number],
+        value: 10,
+        at: "the domain maximum",
+        expected: ["end", "5"],
+      },
+      {
+        direction: "ascending",
+        range: [0, 300] as [number, number],
+        value: 5,
+        at: "the middle of the domain",
+        expected: ["middle", "0"],
+      },
+    ])(
+      "should tuck the handle label into the track when a $direction range puts the handle at $at",
+      ({ range, value, expected }) => {
+        expect(
+          labelAnchor(
+            render(
+              slider()
+                .scale(scaleLinear().domain([0, 10]).range(range))
+                .value(value),
+            ),
+          ),
+        ).toEqual(expected);
+      },
+    );
 
     test("should tuck the handle label in at the end it was clamped to when the value is out of domain", () => {
       // The clamp pins the handle to an end, but the value equals neither bound, so a

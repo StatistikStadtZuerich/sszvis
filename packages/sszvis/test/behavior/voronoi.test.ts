@@ -207,7 +207,7 @@ describe("behavior/voronoi", () => {
     });
   });
 
-  test("should report the datum while the pointer is within 15 units of it and nothing beyond that", () => {
+  test("should report the datum when the pointer is within 15 units of it, and nothing beyond that", () => {
     const overHandler = vi.fn();
     const testData = [{ id: 1, name: "Single Point", x: 200, y: 150, value: 10 }]; // Single point for clear testing
     svg
@@ -395,7 +395,7 @@ describe("behavior/voronoi", () => {
     // position: the pan handler reads the incoming `touchmove`, not the `touchstart` it was
     // registered from, and resolves the datum from the panned position rather than from the
     // `{data}` container the cells - joined to `voronoi.cellPolygons()` - never carried.
-    test("should follow the datum under the finger while panning", () => {
+    test("should follow the datum under the finger when the finger pans across cells", () => {
       const overHandler = vi.fn();
       const outHandler = vi.fn();
       const layer = svg
@@ -517,7 +517,7 @@ describe("behavior/voronoi", () => {
     // The throw has to be observed through `window.onerror`, not `expect().toThrow()`:
     // `dispatchEvent` reports a listener's exception as an uncaught error and returns
     // normally, so a `toThrow` assertion here passes whether or not the guard is present.
-    test("should ignore a touch that carries no coordinates", () => {
+    test("should report nothing and throw nothing when a touch carries no coordinates", () => {
       const overHandler = vi.fn();
       const outHandler = vi.fn();
       const layer = svg
@@ -601,7 +601,7 @@ describe("behavior/voronoi", () => {
     // Both `out` emitters hand over the event that actually fired. The `touchend` path used to
     // apply the `touchstart` event its closure had captured, which is a plausible-looking
     // object of the wrong type for any consumer that reads it.
-    test("should end a drag with the touchend event, not the touchstart it captured", () => {
+    test("should end a drag with the touchend event, not the touchstart it captured, when the finger lifts", () => {
       const outHandler = vi.fn();
       const layer = svg
         .selectAll("g.voronoi-inset-end")
@@ -709,7 +709,7 @@ describe("behavior/voronoi", () => {
         return overHandler;
       }
 
-      test("should select the datum under the pointer", () => {
+      test("should select the datum under the pointer when the layer is scaled", () => {
         const overHandler = overAt(200, 150);
         expect(overHandler).toHaveBeenCalledTimes(1);
         expect(overHandler.mock.calls[0][1]).toEqual(insetData[0]);
@@ -717,13 +717,13 @@ describe("behavior/voronoi", () => {
 
       // 14 user units is 28 CSS pixels away, so a radius applied to the client delta would
       // reject it.
-      test("should hit just inside the 15-unit radius", () => {
+      test("should report the datum when the pointer is just inside the 15-unit radius of a scaled layer", () => {
         const overHandler = overAt(214, 150);
         expect(overHandler).toHaveBeenCalledTimes(1);
         expect(overHandler.mock.calls[0][1]).toEqual(insetData[0]);
       });
 
-      test("should miss just outside the 15-unit radius", () => {
+      test("should report nothing when the pointer is just outside the 15-unit radius of a scaled layer", () => {
         expect(overAt(216, 150)).not.toHaveBeenCalled();
       });
     });

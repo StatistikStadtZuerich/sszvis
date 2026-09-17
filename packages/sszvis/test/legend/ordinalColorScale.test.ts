@@ -54,13 +54,13 @@ describe("legend/ordinalColorScale", () => {
     );
   });
 
-  test("should render one entry per domain member, in domain order", () => {
+  test("should render one entry per domain member, in domain order, when a scale is configured", () => {
     const node = render(legendColorOrdinal().scale(scale()).orientation("horizontal"));
     expect(entries(node).length).toBe(5);
     expect(labels(node)).toEqual(["A", "B", "C", "D", "E"]);
   });
 
-  test("should fill and stroke each entry's swatch with that member's colour", () => {
+  test("should fill and stroke each entry's swatch with that member's colour when a scale is configured", () => {
     const s = scale();
     const node = render(legendColorOrdinal().scale(s).orientation("horizontal"));
     const marks = [...node.querySelectorAll("circle.sszvis-legend__mark")];
@@ -70,7 +70,7 @@ describe("legend/ordinalColorScale", () => {
     expect(marks.map((m) => resolvedColor(m.getAttribute("stroke")))).toEqual(expected);
   });
 
-  test("should place the swatch before the label and centre both on the row", () => {
+  test("should place the swatch before the label and centre both on the row when rightAlign is unset", () => {
     const node = render(legendColorOrdinal().scale(scale()).orientation("horizontal"));
     const mark = node.querySelector("circle.sszvis-legend__mark");
     const label = node.querySelector<SVGTextElement>("text.sszvis-legend__label");

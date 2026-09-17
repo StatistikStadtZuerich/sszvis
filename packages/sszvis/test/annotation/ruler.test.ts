@@ -2,6 +2,7 @@ import { type Selection, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { annotationRuler } from "../../src/annotation/ruler.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheAnnotation } from "../support/annotationConformance.js";
 import "../../src/d3-selectgroup.js";
 
 /** Any group layer these tests render into, whatever datum is currently bound. */
@@ -59,7 +60,29 @@ describe("annotation/ruler", () => {
       .nodes()
       .map((node) => select(node));
 
-  test("should pair every datum's rule and dot with a label and its outline", () => {
+  const countOf = (node: Element, selector: string) => node.querySelectorAll(selector).length;
+
+  describesTheAnnotation<TestDatum, never>(() => ({
+    make: () => ruler().color("black"),
+    renderInto: (key, component, data) =>
+      layer(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({
+      rules: countOf(node, "line.sszvis-ruler__rule"),
+      dots: countOf(node, "circle.sszvis-ruler__dot"),
+      labels: countOf(node, "text.sszvis-ruler__label"),
+      outlines: countOf(node, "text.sszvis-ruler__label-outline"),
+    }),
+    full: { data: testData, marks: { rules: 3, dots: 3, labels: 3, outlines: 3 } },
+    smaller: {
+      data: testData.slice(0, 1),
+      marks: { rules: 1, dots: 1, labels: 1, outlines: 1 },
+    },
+  }));
+
+  test("should pair every datum's rule and dot with a label and its outline when data are bound", () => {
     const chartLayer = layer()
       .datum(testData)
       .call(ruler().color((d: unknown) => (d as TestDatum).color || "black"));
@@ -71,7 +94,7 @@ describe("annotation/ruler", () => {
     expect(all(chartLayer, "text.sszvis-ruler__label-outline")).toHaveLength(3);
   });
 
-  test("should run each rule from its own datum down to the shared bottom", () => {
+  test("should run each rule from its own datum down to the shared bottom when a bottom is configured", () => {
     const chartLayer = layer().datum(testData).call(ruler().color("black"));
 
     expect(
@@ -84,7 +107,7 @@ describe("annotation/ruler", () => {
     ).toEqual(testData.map((d) => [d.x + 0.5, d.y, d.x + 0.5, 150]));
   });
 
-  test("should clamp the rule to top for a datum above it", () => {
+  test("should clamp the rule to top when a datum sits above it", () => {
     const chartLayer = layer()
       .datum([{ x: 40, y: 10, label: "Above", color: "red" }])
       .call(
@@ -107,7 +130,7 @@ describe("annotation/ruler", () => {
     expect(translateOf(label.attr("transform"))).toEqual([50.5, 15.5]);
   });
 
-  test("should treat a top of 0 as a real boundary", () => {
+  test("should clamp the rule to zero when top is set to 0", () => {
     const chartLayer = layer()
       .datum([{ x: 40, y: -20, label: "Overflow" }])
       .call(
@@ -151,7 +174,7 @@ describe("annotation/ruler", () => {
     ).toEqual(testData.map((d) => [d.x + 0.5, d.y + 0.5, 3.5, d.color]));
   });
 
-  test("should pass the index to the color accessor", () => {
+  test("should colour each dot by its position when the color accessor reads the index", () => {
     const chartLayer = layer("color-index-layer")
       .datum(testData)
       .call(ruler().color((_d: unknown, i: number) => ["red", "blue", "green"][i]));
@@ -277,24 +300,5 @@ describe("annotation/ruler", () => {
     // identity shows the labelId matched the data across the update.
     expect(after).toEqual(before);
     expect(translateOf(after.map((n) => select(n).attr("transform"))[0])[0]).toBe(130.5);
-  });
-
-  test("should render no rules, dots or labels when the data is empty", () => {
-    const chartLayer = layer().datum([]).call(ruler().color("black"));
-
-    expect(all(chartLayer, "line.sszvis-ruler__rule")).toHaveLength(0);
-    expect(all(chartLayer, "circle.sszvis-ruler__dot")).toHaveLength(0);
-    expect(all(chartLayer, "text.sszvis-ruler__label")).toHaveLength(0);
-  });
-
-  test("should match the rendered rule and dot count to the data when the data changes", () => {
-    const rulerComponent = ruler().color("black");
-    const chartLayer = layer();
-
-    for (const count of [1, 3, 0]) {
-      chartLayer.datum(testData.slice(0, count)).call(rulerComponent);
-      expect(all(chartLayer, "line.sszvis-ruler__rule")).toHaveLength(count);
-      expect(all(chartLayer, "circle.sszvis-ruler__dot")).toHaveLength(count);
-    }
   });
 });

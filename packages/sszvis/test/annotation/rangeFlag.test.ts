@@ -2,6 +2,7 @@ import { type Selection, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import rangeFlag from "../../src/annotation/rangeFlag.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheAnnotation } from "../support/annotationConformance.js";
 import "../../src/d3-selectgroup.js";
 
 /** Any group layer these tests render into, whatever datum is currently bound. */
@@ -40,8 +41,24 @@ describe("annotation/rangeFlag", () => {
       .y0((d: unknown) => (d as TestDatum).y0)
       .y1((d: unknown) => (d as TestDatum).y1);
 
-  const layer = () =>
-    createSvgLayer("#chart-container", undefined, { key: "test-layer" }).selectGroup("rangeFlags");
+  const layer = (key = "test-layer") =>
+    createSvgLayer("#chart-container", undefined, { key }).selectGroup("rangeFlags");
+
+  describesTheAnnotation<TestDatum, never>(() => ({
+    make: flag,
+    renderInto: (key, component, data) =>
+      layer(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({
+      top: node.querySelectorAll("circle.sszvis-rangeFlag__mark.top").length,
+      bottom: node.querySelectorAll("circle.sszvis-rangeFlag__mark.bottom").length,
+      anchors: node.querySelectorAll("[data-tooltip-anchor]").length,
+    }),
+    full: { data: testData, marks: { top: 2, bottom: 2, anchors: 2 } },
+    smaller: { data: testData.slice(0, 1), marks: { top: 1, bottom: 1, anchors: 1 } },
+  }));
 
   const marksOf = <D>(chartLayer: Layer<D>, edge: "top" | "bottom") =>
     chartLayer
@@ -72,24 +89,5 @@ describe("annotation/rangeFlag", () => {
         .nodes()
         .map((node) => select(node).attr("transform")),
     ).toEqual(testData.map((d) => `translate(${d.x + 0.5},${(d.y0 + d.y1) / 2 + 0.5})`));
-  });
-
-  test("should render neither marks nor anchors when the data is empty", () => {
-    const chartLayer = layer().datum([]).call(flag());
-
-    expect(marksOf(chartLayer, "bottom")).toHaveLength(0);
-    expect(marksOf(chartLayer, "top")).toHaveLength(0);
-    expect(chartLayer.selectAll("[data-tooltip-anchor]").nodes()).toHaveLength(0);
-  });
-
-  test("should match the rendered flag count to the data when the data changes", () => {
-    const flagComponent = flag();
-    const chartLayer = layer();
-
-    for (const count of [1, 2, 0]) {
-      chartLayer.datum(testData.slice(0, count)).call(flagComponent);
-      expect(marksOf(chartLayer, "bottom")).toHaveLength(count);
-      expect(marksOf(chartLayer, "top")).toHaveLength(count);
-    }
   });
 });

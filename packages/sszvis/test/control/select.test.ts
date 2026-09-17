@@ -38,11 +38,13 @@ describe("control/select", () => {
     container.querySelector<HTMLSelectElement>(".sszvis-control-select__element");
   const options = () => [...(selectEl()?.options ?? [])];
 
-  test("should size the wrapper at the configured width, or 300px, and the select 30px wider", () => {
+  test("should size the wrapper at 300px and the select 30px wider when no width is configured", () => {
     render(selectMenu().values(["A", "B"]).current("A"));
     expect(wrapper()?.style.width).toBe("300px");
     expect(selectEl()?.style.width).toBe("330px");
-    container.textContent = "";
+  });
+
+  test("should size the wrapper at the configured width and the select 30px wider when a width is configured", () => {
     render(selectMenu().values(["A", "B"]).current("A").width(200));
     expect(wrapper()?.style.width).toBe("200px");
     expect(selectEl()?.style.width).toBe("230px");
@@ -113,7 +115,7 @@ describe("control/select", () => {
     expect(change).toHaveBeenCalledWith(expect.any(Event), "1");
   });
 
-  test("should render a metrics element used for measuring label widths", () => {
+  test("should render a metrics element for measuring label widths when the control is rendered", () => {
     render(selectMenu().values(["A"]).current("A"));
     const metrics = container.querySelector<HTMLDivElement>(".sszvis-control-select__metrics");
     expect(metrics).toBeTruthy();
@@ -196,7 +198,7 @@ describe("control/select", () => {
       expect(wide).toBeGreaterThan(narrow);
     });
 
-    test("should truncate a one-character label that still overflows", () => {
+    test("should truncate a one-character label when it still overflows the width", () => {
       // "A" and the "…" it shortens to are both one character long, so a length-based
       // fixed-point test never took the first step and returned the overflowing original.
       render(selectMenu().values(["A"]).current("A").width(20));

@@ -40,14 +40,14 @@ describe("legend/binnedColorScale", () => {
   const attrs = (node: Element, selector: string, attr: string) =>
     [...node.querySelectorAll(selector)].map((e) => e.getAttribute(attr));
 
-  test("should render one rect per bin, including the bin after the last display value", () => {
+  test("should render one rect per bin, plus one past the last edge, when displayValues are configured", () => {
     const node = render(standard());
     // three display values produce three rects, plus a final rect running to the endpoint
     expect(node.querySelectorAll("rect.sszvis-legend__crispmark").length).toBe(4);
   });
 
   // One bin is one rect, so its four geometry attributes are one contract rather than four.
-  test("should lay the bins out along a single baseline across the inset width", () => {
+  test("should lay the bins out along a single baseline across the inset width when a width is configured", () => {
     const node = render(standard());
     // innerRange is [0, width - 2 * circleRad] = [0, 190], offset by circleRad = 5
     expect(attrs(node, "rect.sszvis-legend__crispmark", "x")).toEqual(["5", "52", "100", "147"]);
@@ -67,13 +67,13 @@ describe("legend/binnedColorScale", () => {
     expect(attrs(node, "rect.sszvis-legend__crispmark", "y")).toEqual(["0", "0", "0", "0"]);
   });
 
-  test("should colour each bin with the scale value below its upper edge", () => {
+  test("should colour each bin with the scale value below its upper edge when a scale is configured", () => {
     const node = render(standard());
     // the first rect covers [0, 25) so it takes scale(0), and so on
     expect(attrs(node, "rect.sszvis-legend__crispmark", "fill")).toEqual(["#a", "#b", "#c", "#d"]);
   });
 
-  test("should cap each end with a circle coloured from the endpoints", () => {
+  test("should cap each end with a circle coloured from the endpoints when a scale is configured", () => {
     const node = render(standard());
     const circles = [...node.querySelectorAll("circle.sszvis-legend__circle")];
     expect(circles.length).toBe(2);
@@ -112,7 +112,7 @@ describe("legend/binnedColorScale", () => {
     ]);
   });
 
-  test("should format labels with labelFormat", () => {
+  test("should print what labelFormat returns when a formatter is configured", () => {
     const node = render(
       legendColorBinned()
         .scale(scale())
@@ -141,7 +141,7 @@ describe("legend/binnedColorScale", () => {
     expect(capsAt(byDefault)).toEqual(["5", "195"]);
   });
 
-  test("should re-render in place rather than appending duplicates", () => {
+  test("should keep one rect per bin when the same legend is applied twice", () => {
     const legend = standard();
     const group = createSvgLayer("#chart-container", undefined, {
       key: "binned-rerender",

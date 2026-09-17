@@ -62,7 +62,7 @@ describe("behavior/panning", () => {
     return event;
   }
 
-  test("should make only the elements matching the selector interactive, leaving their siblings alone", () => {
+  test("should make only the elements matching the selector interactive when siblings share the group", () => {
     const { circles } = createTestElements();
     const rects = svg
       .selectAll("rect.non-target")
@@ -193,7 +193,7 @@ describe("behavior/panning", () => {
 
   // Touch is the reason this behaviour exists: it cancels the browser's scroll for the whole
   // gesture so that a finger can be dragged across the chart the way a mouse is hovered.
-  test("should report the touch gesture and suppress scrolling from the first touch to the last", () => {
+  test("should report the gesture and suppress scrolling when a finger touches, drags and lifts", () => {
     const handlers = {
       start: vi.fn(),
       pan: vi.fn(),
@@ -231,7 +231,7 @@ describe("behavior/panning", () => {
   // The one real decision in the module: a touchmove reports a pan only while the finger is
   // still over a pannable element, and reports `end` as soon as it is not. Without this the
   // tooltip would follow a finger that has already left the chart.
-  test("should report a pan while the finger stays on pannable elements and end as soon as it leaves them", () => {
+  test("should report a pan while the finger stays on pannable elements and end when it leaves them", () => {
     const handlers = { start: vi.fn(), pan: vi.fn(), end: vi.fn() };
     const { circles } = createTestElements();
     svg.call(
@@ -274,7 +274,7 @@ describe("behavior/panning", () => {
     expect(handlers.end).toHaveBeenCalledTimes(1);
   });
 
-  test("accepts handlers for every declared event, including namespaced typenames", () => {
+  test("should call every handler when they are registered for each declared event, namespaced typenames included", () => {
     const startHandler = vi.fn((_event: Event) => {});
     const panHandler = vi.fn((_event: Event) => {});
     const endHandler = vi.fn((_event: Event) => {});

@@ -200,7 +200,7 @@ describe("behavior/move", () => {
     // positions arrive as drags, and the session is torn down on touchend. Teardown is asserted
     // the way a user would notice it - a stray touchmove afterwards reports nothing - rather
     // than by reading d3's listener registry.
-    test("should open a pan session on touchstart, report each position, and fall silent once the finger lifts", () => {
+    test("should report each position between touchstart and touchend, and nothing after it, when a finger drags", () => {
       const spies = { start: vi.fn(), move: vi.fn(), drag: vi.fn(), end: vi.fn() };
       svg.call(
         move<number, number>()
@@ -453,7 +453,7 @@ describe("behavior/move", () => {
         node.dispatchEvent(touchEvent("touchend", []));
       });
 
-      test("should pass the inverted position, not the pixel position, to the cancelScrolling predicate", () => {
+      test("should pass the inverted position, not the pixel position, to the cancelScrolling predicate when a finger moves", () => {
         const seen: Array<[number | null, number | null]> = [];
         const handlers = makeSpies();
         svg.call(
@@ -640,7 +640,7 @@ describe("behavior/move", () => {
 
     // `padding` widens the hit area without moving the coordinate space, so a pointer in the
     // padded margin reads as a value just outside the domain rather than as the domain's end.
-    test("should keep padding a hit-area widening rather than an origin shift", () => {
+    test("should keep padding a hit-area widening rather than an origin shift when the pointer is in the padded margin", () => {
       const scale = scaleLinear().domain([0, 10]).range([100, 400]);
       const seen = valueAt(
         move<number, number>().xScale(scale).yScale(yScale).padding({ left: 20, right: 20 }),
@@ -657,7 +657,7 @@ describe("behavior/move", () => {
     // mouse path uses. Measuring client deltas against `getBoundingClientRect()` mixes CSS
     // pixels into user-space values, and at scale(2) the visual midpoint of an inset range
     // read as the domain's end.
-    test("should agree with the mouse path under a scaled ancestor", () => {
+    test("should agree with the mouse path when the container has a scaled ancestor", () => {
       container.style.transform = "scale(2)";
       container.style.transformOrigin = "top left";
       const scale = () => scaleLinear().domain([0, 100]).range([100, 400]);
@@ -681,7 +681,7 @@ describe("behavior/move", () => {
   });
 
   describe("typed event handlers", () => {
-    test("accepts a handler shaped like the configured domains", () => {
+    test("should accept a handler shaped like the configured domains when the scales are typed", () => {
       const seen: [number | null, string | null][] = [];
       // The point of this test is the handler's declared parameter types: before `MoveEventHandler`
       // became generic, a handler narrowed to the component's own domains was a compile error.
@@ -710,7 +710,7 @@ describe("behavior/move", () => {
       expect(seen[0][1]).toBe("a");
     });
 
-    test("an end handler is passed only the event", () => {
+    test("should pass the end handler only the event when the pointer leaves", () => {
       const endHandler = vi.fn((_event: Event) => {});
       svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("end", endHandler));
 
@@ -726,7 +726,7 @@ describe("behavior/move", () => {
       expect(rest).toEqual([0]);
     });
 
-    test("keeps accepting d3's namespaced typenames", () => {
+    test("should call every listener when handlers are registered under d3's namespaced typenames", () => {
       const first = vi.fn();
       const second = vi.fn();
       const component = move<number, number>()

@@ -2,6 +2,7 @@ import { range, scaleBand, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import confidenceBar from "../../src/annotation/confidenceBar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheAnnotation } from "../support/annotationConformance.js";
 import "../../src/d3-selectgroup.js";
 
 type TestDatum = {
@@ -33,7 +34,30 @@ describe("annotation/confidenceBar", () => {
     ],
   ];
 
-  test("should draw a capped vertical span between the bounds for every bar in every group", () => {
+  describesTheAnnotation<TestDatum[], never>(() => ({
+    make: () =>
+      confidenceBar<TestDatum>()
+        .confidenceLow((d) => d.low)
+        .confidenceHigh((d) => d.high)
+        .width(20)
+        .groupSize(2)
+        .groupWidth(60)
+        .groupScale(() => 150),
+    renderInto: (key, component, data) =>
+      createSvgLayer("#chart-container", undefined, { key })
+        .selectGroup("confidenceBars")
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({
+      groups: node.querySelectorAll("g.sszvis-confidence-bargroup").length,
+      units: node.querySelectorAll("g.sszvis-confidence-barunit").length,
+    }),
+    full: { data: testData, marks: { groups: 1, units: 2 } },
+    smaller: { data: [testData[0].slice(0, 1)], marks: { groups: 1, units: 1 } },
+  }));
+
+  test("should draw a capped vertical span between the bounds for every bar when groups are bound", () => {
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("confidenceBars")
       .datum(testData)
@@ -183,7 +207,7 @@ describe("annotation/confidenceBar", () => {
       expect(last).toBeCloseTo((b("1") ?? 0) + halfBand, 5);
     });
 
-    test("should not mutate the caller's datum objects", () => {
+    test("should leave the caller's datum objects untouched when the same object appears in two groups", () => {
       const { shared, data } = sharedData();
       const before = data.flat().map((d) => Object.keys(d).sort());
 

@@ -47,15 +47,17 @@ describe("control/buttonGroup", () => {
     return event;
   };
 
-  test("should size the group at 300px by default and at the configured width when one is given", () => {
+  test("should size the group at 300px when no width is configured", () => {
     render(buttonGroup().values(["A", "B"]).current("A"));
     expect(wrapper()?.style.width).toBe("300px");
-    container.textContent = "";
+  });
+
+  test("should size the group at the configured width when one is given", () => {
     render(buttonGroup().values(["A", "B"]).current("A").width(240));
     expect(wrapper()?.style.width).toBe("240px");
   });
 
-  test("should render one button per value, in order, labelled with the value", () => {
+  test("should render one button per value, in order, labelled with the value, when values are configured", () => {
     render(buttonGroup().values(["A", "B", "C"]).current("A"));
     expect(buttons().map((b) => b.textContent)).toEqual(["A", "B", "C"]);
   });

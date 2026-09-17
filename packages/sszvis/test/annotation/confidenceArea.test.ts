@@ -2,6 +2,7 @@ import { type Selection, easePolyOut, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import confidenceArea from "../../src/annotation/confidenceArea.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheAnnotation } from "../support/annotationConformance.js";
 import "../../src/d3-selectgroup.js";
 
 /** Any group layer these tests render into, whatever datum is currently bound. */
@@ -81,22 +82,33 @@ describe("annotation/confidenceArea", () => {
       .nodes()
       .map((node) => select(node));
 
-  test("should trace one patterned path per series along its upper then lower bound", () => {
+  const pathNodes = (node: Element) => [...node.querySelectorAll("path.sszvis-area")];
+
+  describesTheAnnotation<TestDatum[], never>(() => ({
+    // Transitions off: every visual property is written through the tween when they are on, so
+    // nothing the join counts would be in place on the synchronous tick.
+    make: () => bounded().transition(false),
+    renderInto: (key, component, data) =>
+      layer(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({ paths: pathNodes(node).length }),
+    full: { data: multiAreaData, marks: { paths: 2 } },
+    smaller: { data: multiAreaData.slice(0, 1), marks: { paths: 1 } },
+    patternFill: { marks: pathNodes, patternId: "data-area-pattern" },
+  }));
+
+  test("should trace one path per series along its upper then lower bound", () => {
     const chartLayer = layer().datum(multiAreaData).call(bounded().transition(false));
 
     const rendered = paths(chartLayer);
     expect(rendered).toHaveLength(multiAreaData.length);
-    expect(rendered.map((p) => p.attr("fill"))).toEqual([
-      "url(#data-area-pattern)",
-      "url(#data-area-pattern)",
-    ]);
     // The emitted outline IS the contract here: along y1 left-to-right, back along y0, closed.
     expect(rendered.map((p) => p.attr("d"))).toEqual([
       "M0,80L50,90L50,60L0,50Z",
       "M0,40L50,45L50,35L0,30Z",
     ]);
-    // The pattern the fill points at has to exist in the layer's defs, or the fill resolves to nothing.
-    expect(chartLayer.select("defs pattern#data-area-pattern").node()).not.toBeNull();
   });
 
   test("should paint the outline when a stroke and a stroke width are given", () => {
@@ -154,22 +166,6 @@ describe("annotation/confidenceArea", () => {
     // identity shows the key matched the series across the update.
     expect(after).toEqual(before);
     expect(paths(chartLayer)[0].attr("d")).toBe("M10,80L60,90L60,60L10,50Z");
-  });
-
-  test("should render no paths when the data is empty", () => {
-    const chartLayer = layer().datum([]).call(bounded());
-
-    expect(paths(chartLayer)).toHaveLength(0);
-  });
-
-  test("should match the rendered path count to the data when the data changes", () => {
-    const areaComponent = bounded().transition(false);
-    const chartLayer = layer();
-
-    for (const series of [[testData.slice(0, 2)], multiAreaData, []]) {
-      chartLayer.datum(series).call(areaComponent);
-      expect(paths(chartLayer)).toHaveLength(series.length);
-    }
   });
 
   test("should not let an in-flight tween overwrite a later synchronous render", async () => {

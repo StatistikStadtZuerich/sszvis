@@ -64,7 +64,7 @@ describe("control/handleRuler", () => {
     expect(handleMark(node)).toBeTruthy();
   });
 
-  test("should draw the same single ruler, with the handle behind the dots, however often it is rendered", () => {
+  test("should draw the same single ruler, with the handle behind the dots, when it is rendered repeatedly", () => {
     const control = ruler();
     const group = d3Select(svg).append("g").datum(data);
     group.call(control);
@@ -193,7 +193,7 @@ describe("control/handleRuler", () => {
     expect(dots(node).map((d) => d.getAttribute("r"))).toEqual(["3.5", "3.5"]);
   });
 
-  test("should forward d3's index and node group, and its element `this`, to the y accessor", () => {
+  test("should forward d3's index and node group, and its element `this`, to the y accessor when it positions each dot", () => {
     // `crispY` is composed with fn.compose, which forwards the whole (d, i, nodes) argument
     // list and the element-bound `this` that d3 supplies. An arrow function that takes only
     // the datum computes the same coordinates for every accessor in this repo, so nothing
@@ -220,15 +220,20 @@ describe("control/handleRuler", () => {
     expect(fromDots.map((call) => call.datum.y)).toEqual([60, 120]);
   });
 
-  test("should fill the dots from color, whether it is a constant or reads the datum or its index", () => {
-    expect(dots(render(ruler().color("#0f0"))).map((d) => d.getAttribute("fill"))).toEqual([
-      "#0f0",
-      "#0f0",
-    ]);
-    const byDatum = render(ruler().color((d: Datum) => (d.y > 100 ? "#00f" : "#f00")));
-    expect(dots(byDatum).map((d) => d.getAttribute("fill"))).toEqual(["#f00", "#00f"]);
-    const byIndex = render(ruler().color((_d: Datum, i: number) => ["red", "blue"][i]));
-    expect(dots(byIndex).map((d) => d.getAttribute("fill"))).toEqual(["red", "blue"]);
+  test.each([
+    { source: "a constant", make: () => ruler().color("#0f0"), expected: ["#0f0", "#0f0"] },
+    {
+      source: "an accessor reading the datum",
+      make: () => ruler().color((d: Datum) => (d.y > 100 ? "#00f" : "#f00")),
+      expected: ["#f00", "#00f"],
+    },
+    {
+      source: "an accessor reading the index",
+      make: () => ruler().color((_d: Datum, i: number) => ["red", "blue"][i]),
+      expected: ["red", "blue"],
+    },
+  ])("should fill the dots from color when it is $source", ({ make, expected }) => {
+    expect(dots(render(make())).map((d) => d.getAttribute("fill"))).toEqual(expected);
   });
 
   test("should place the rule and dots from plain numbers when x and y are constants", () => {
@@ -248,26 +253,35 @@ describe("control/handleRuler", () => {
     expect(outlines(node).map((l) => l.innerHTML)).toEqual(["first", "second"]);
   });
 
-  test("should put the labels on the side flip asks for, whether it is unset, set or a predicate", () => {
-    // x + 10, y + 5 for a label between top and bottom; flipped, x - 10 and anchored the
-    // other way, so the label always reads away from the rule.
-    const right = render(ruler());
-    expect(labels(right).map((l) => l.getAttribute("transform"))).toEqual([
-      "translate(50.5,65.5)",
-      "translate(50.5,125.5)",
-    ]);
-    expect(labels(right).map((l) => l.style.textAnchor)).toEqual(["start", "start"]);
-
-    const left = render(ruler().flip(true));
-    expect(labels(left).map((l) => l.getAttribute("transform"))).toEqual([
-      "translate(30.5,65.5)",
-      "translate(30.5,125.5)",
-    ]);
-    expect(labels(left).map((l) => l.style.textAnchor)).toEqual(["end", "end"]);
-
-    const perDatum = render(ruler().flip((d: Datum) => d.y > 100));
-    expect(labels(perDatum).map((l) => l.style.textAnchor)).toEqual(["start", "end"]);
-  });
+  // x + 10, y + 5 for a label between top and bottom; flipped, x - 10 and anchored the other
+  // way, so the label always reads away from the rule.
+  test.each([
+    {
+      flip: "left unset",
+      make: () => ruler(),
+      transforms: ["translate(50.5,65.5)", "translate(50.5,125.5)"],
+      anchors: ["start", "start"],
+    },
+    {
+      flip: "set",
+      make: () => ruler().flip(true),
+      transforms: ["translate(30.5,65.5)", "translate(30.5,125.5)"],
+      anchors: ["end", "end"],
+    },
+    {
+      flip: "a predicate on the datum",
+      make: () => ruler().flip((d: Datum) => d.y > 100),
+      transforms: ["translate(50.5,65.5)", "translate(30.5,125.5)"],
+      anchors: ["start", "end"],
+    },
+  ])(
+    "should put the labels on the side flip asks for when flip is $flip",
+    ({ make, transforms, anchors }) => {
+      const node = render(make());
+      expect(labels(node).map((l) => l.getAttribute("transform"))).toEqual(transforms);
+      expect(labels(node).map((l) => l.style.textAnchor)).toEqual(anchors);
+    },
+  );
 
   test("should pull a label back onto the ruler when its datum sits below the bottom", () => {
     // dy is 0 rather than 5 once y is past props.bottom

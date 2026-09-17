@@ -1,5 +1,6 @@
 import { scaleLinear, scaleOrdinal, scaleSqrt } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { translationOf } from "../support/domValues.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import legendRadius from "../../src/legend/radius.js";
 import "../../src/d3-selectgroup.js";
@@ -33,15 +34,16 @@ describe("legend/radius", () => {
   const attrs = (node: Element, selector: string, attr: string) =>
     [...node.querySelectorAll(selector)].map((e) => e.getAttribute(attr));
 
-  test("should render a group offset onto the half-pixel grid by the largest radius", () => {
+  test("should offset the group onto the half-pixel grid when the scale's largest radius is 20", () => {
     const node = render(legendRadius().scale(linear()));
     const group = node.querySelector("g.sszvis-legend__elementgroup");
     expect(group).not.toBeNull();
-    // maxRadius is 20, so the group is nudged to 20.5 to keep strokes crisp.
-    expect(group?.getAttribute("transform")).toBe("translate(20.5,20.5)");
+    // maxRadius is 20, so the group is nudged to 20.5 to keep strokes crisp. Read as numbers,
+    // so a change in how d3 spells the transform is not a failure.
+    expect(group === null ? null : translationOf(group)).toEqual({ x: 20.5, y: 20.5 });
   });
 
-  test("should default to three ticks: domain max, midpoint of the range, domain min", () => {
+  test("should label the domain max, the range midpoint and the domain min when no tickValues are given", () => {
     const node = render(legendRadius().scale(linear()));
     // scale.invert(mean([0, 20])) === invert(10) === 50 for a linear scale. Where the three
     // ticks are drawn is the geometry test's subject, not this one's.
@@ -52,7 +54,7 @@ describe("legend/radius", () => {
     ]);
   });
 
-  test("should derive the middle tick through the scale, not the domain", () => {
+  test("should derive the middle tick through the scale rather than the domain when the scale is non-linear", () => {
     // A sqrt scale inverts the range midpoint to 25 rather than 50.
     const node = render(legendRadius().scale(scaleSqrt().domain([0, 100]).range([0, 20])));
     expect([...node.querySelectorAll("text")].map((t) => t.textContent)).toEqual([
@@ -108,7 +110,7 @@ describe("legend/radius", () => {
     expect(four.querySelectorAll("text").length).toBe(4);
   });
 
-  test("should format labels with tickFormat", () => {
+  test("should print what tickFormat returns when a formatter is configured", () => {
     const node = render(
       legendRadius()
         .scale(linear())
@@ -161,7 +163,7 @@ describe("legend/radius", () => {
     expect(seen.map((s) => s.self)).toEqual(labels);
   });
 
-  test("should render exactly what tickFormat returns, including non-string returns", () => {
+  test("should render the value verbatim when tickFormat returns something other than a string", () => {
     const node = render(
       legendRadius()
         .scale(linear())
@@ -172,7 +174,7 @@ describe("legend/radius", () => {
     expect([...node.querySelectorAll("text")].map((t) => t.textContent)).toEqual(["50", "26"]);
   });
 
-  test("should re-render in place rather than appending duplicates", () => {
+  test("should keep one circle, leader and label per tick when the same legend is applied twice", () => {
     const legend = legendRadius().scale(linear()).tickValues([100, 50]);
     const group = createSvgLayer("#chart-container", undefined, {
       key: `radius-rerender`,

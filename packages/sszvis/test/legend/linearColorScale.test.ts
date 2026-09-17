@@ -39,7 +39,7 @@ describe("legend/linearColorScale", () => {
 
   // The appended maximum is why the ramp still reaches the end of the domain when the caller's
   // values stop short of it.
-  test("should render one rect per displayed value, plus one for the appended maximum", () => {
+  test("should render one rect per displayed value, plus one for the appended maximum, when displayValues are configured", () => {
     const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
     // the two supplied values, plus the domain maximum the component appends
     expect(node.querySelectorAll("rect.sszvis-legend__mark").length).toBe(3);
@@ -52,7 +52,7 @@ describe("legend/linearColorScale", () => {
     expect(node.querySelectorAll("rect.sszvis-legend__mark").length).toBe(s.ticks(7).length);
   });
 
-  test("should default segments to 8", () => {
+  test("should render the same segments as an explicit 8 when no segments are configured", () => {
     const s = scale();
     const withDefault = render(legendColorLinear().scale(s));
     const withExplicit = render(legendColorLinear().scale(s).segments(8));
@@ -67,7 +67,7 @@ describe("legend/linearColorScale", () => {
    * the width evenly along a shared baseline, each starting a pixel early and running a pixel
    * long so no antialiasing seam shows between them.
    */
-  test("should tile the width with segments that overlap by a pixel on a shared baseline", () => {
+  test("should tile the width with segments that overlap by a pixel on a shared baseline when a width is configured", () => {
     const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]).width(300));
     const xs = attrs(node, "rect.sszvis-legend__mark", "x").map(Number);
     const widths = attrs(node, "rect.sszvis-legend__mark", "width").map(Number);
@@ -83,7 +83,7 @@ describe("legend/linearColorScale", () => {
     expect(attrs(node, "rect.sszvis-legend__mark", "y")).toEqual(["0", "0", "0"]);
   });
 
-  test("should default the width to 200", () => {
+  test("should span 200px when no width is configured", () => {
     const node = render(legendColorLinear().scale(scale()).displayValues([0]));
     // one supplied value plus the appended maximum, so two segments of 100
     expect(attrs(node, "rect.sszvis-legend__mark", "x").map(Number)).toEqual([-1, 99]);
@@ -95,7 +95,7 @@ describe("legend/linearColorScale", () => {
     expect(attrs(node, "rect.sszvis-legend__mark", "fill")).toEqual([s(0), s(50), s(100)]);
   });
 
-  test("should cap both ends with a circle coloured from the domain extent", () => {
+  test("should cap both ends with a circle coloured from the domain extent when a scale is configured", () => {
     const s = scale();
     const node = render(legendColorLinear().scale(s).displayValues([0, 50]).width(200));
     const caps = [...node.querySelectorAll("circle.sszvis-legend__mark")];
@@ -106,7 +106,7 @@ describe("legend/linearColorScale", () => {
     expect(caps.map((c) => c.getAttribute("fill"))).toEqual([s(0), s(100)]);
   });
 
-  test("should label the endpoints with the domain extent by default", () => {
+  test("should label the endpoints with the domain extent when no labelText is configured", () => {
     const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
     const labels = [...node.querySelectorAll<SVGTextElement>("text.sszvis-legend__label")];
     expect(labels.map((l) => l.textContent)).toEqual(["0", "100"]);
@@ -126,7 +126,7 @@ describe("legend/linearColorScale", () => {
     expect(labels.map((l) => l.getAttribute("dy"))).toEqual(["0.35em", "0.35em"]);
   });
 
-  test("should use labelText when supplied", () => {
+  test("should print the labelText entries when labelText is supplied", () => {
     const node = render(
       // A legend whose labels are words, not numbers, names that type.
       legendColorLinear<string>()
@@ -141,7 +141,7 @@ describe("legend/linearColorScale", () => {
     ).toEqual(["wenig", "viel"]);
   });
 
-  test("should format labels with labelFormat, passing value and index", () => {
+  test("should print what labelFormat returns, and pass it the value and its index, when a formatter is configured", () => {
     const seen: [unknown, number][] = [];
     const node = render(
       legendColorLinear()
@@ -172,14 +172,14 @@ describe("legend/linearColorScale", () => {
     >().toEqualTypeOf<string | number>();
   });
 
-  test("should log an error and render nothing without a scale", () => {
+  test("should report the problem and draw nothing when it is built without a scale", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const node = render(legendColorLinear().displayValues([0, 50]));
     expect(spy).toHaveBeenCalled();
     expect(node.querySelectorAll("rect").length).toBe(0);
   });
 
-  test("should not mutate the caller's displayValues, nor drift across renders", () => {
+  test("should leave the caller's displayValues untouched and the mark count steady when it renders twice", () => {
     const shared = [0, 50];
     const legend = legendColorLinear().scale(scale()).displayValues(shared);
     const group = layer("linear-mutation");
@@ -199,11 +199,5 @@ describe("legend/linearColorScale", () => {
     expect(fills.length).toBe(s.ticks(7).length);
     // no two adjacent segments share a fill
     for (let i = 1; i < fills.length; i++) expect(fills[i]).not.toBe(fills[i - 1]);
-  });
-
-  test("should class the end caps sszvis-legend__mark", () => {
-    const node = render(legendColorLinear().scale(scale()).displayValues([0, 50]));
-    expect(node.querySelectorAll("circle.sszvis-legend__mark").length).toBe(2);
-    expect(node.querySelectorAll("circle.ssvis-legend--mark").length).toBe(0);
   });
 });

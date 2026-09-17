@@ -46,7 +46,7 @@ describe("annotation/rangeRuler", () => {
   const layer = () =>
     createSvgLayer("#chart-container", undefined, { key: "test-layer" }).selectGroup("rangeRuler");
 
-  test("should pair every mark's dots with a label and its contour clone", () => {
+  test("should pair every mark's dots with a label and its contour clone when data are bound", () => {
     const chartLayer = layer().datum(testData).call(ruler().total(200));
 
     expect(chartLayer.selectAll("line.sszvis-rangeRuler__rule").nodes()).toHaveLength(1);
@@ -61,7 +61,7 @@ describe("annotation/rangeRuler", () => {
     expect(chartLayer.selectAll("text.sszvis-rangeRuler__total").nodes()).toHaveLength(1);
   });
 
-  test("should draw a single vertical rule spanning top to bottom", () => {
+  test("should draw a single vertical rule spanning top to bottom, however many data are bound", () => {
     const chartLayer = layer().datum(testData).call(ruler());
 
     const rule = select(chartLayer.selectAll("line.sszvis-rangeRuler__rule").nodes()[0]);
@@ -166,7 +166,9 @@ describe("annotation/rangeRuler", () => {
     const rulerComponent = ruler();
     const chartLayer = layer();
 
-    for (const count of [1, 2]) {
+    // Grows then shrinks: without the shrink this loop never exercises the exit path. It stops
+    // at one rather than at zero because an empty array throws - see the skipped test above.
+    for (const count of [1, 2, 1]) {
       chartLayer.datum(testData.slice(0, count)).call(rulerComponent);
       expect(chartLayer.selectAll("g.sszvis-rangeRuler--mark").nodes()).toHaveLength(count);
     }
