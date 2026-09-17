@@ -10,7 +10,9 @@
     "build": "react-router build",
     "dev": "react-router dev --port ${PORT:-3000}",
     "type-check": "react-router typegen && tsc --noEmit && tsc --noEmit -p examples/tsconfig.json && tsc --noEmit -p app/builder/domain/recipes/tsconfig.json",
-    "test": "vitest run",
+    "test": "vitest run && vitest run --config vitest.browser.config.ts",
+    "test:node": "vitest run",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -44,8 +46,8 @@
     "@mdx-js/rollup": "^3.1.1",
     "@react-router/dev": "8.3.1",
     "@repo/config-typescript": "workspace:*",
-    "@sszvis/geodata": "workspace:*",
     "@shikijs/transformers": "^4.4.3",
+    "@sszvis/geodata": "workspace:*",
     "@tailwindcss/vite": "^4.1.13",
     "@types/d3": "^7.4.3",
     "@types/d3-dsv": "^3.0.7",
@@ -53,7 +55,11 @@
     "@types/node": "^26.5.1",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "@vitest/browser": "^5.0.0",
+    "@vitest/browser-playwright": "^5.0.1",
+    "d3": "^7.9.0",
     "mdx-mermaid": "^2.0.3",
+    "playwright": "^1.55.0",
     "prettier": "^3.9.6",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-pretty-code": "^0.14.1",
@@ -65,6 +71,6 @@
     "ts-blank-space": "^0.9.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   }
 }

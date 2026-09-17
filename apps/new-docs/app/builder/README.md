@@ -147,9 +147,24 @@ the field in English and titles the chart in German.
 
 From `apps/new-docs`:
 
-- `pnpm test` - the domain and pipeline tests. `compile.test.ts` emits every
+- `pnpm test` - both suites below, node first.
+- `pnpm test:node` - the domain and pipeline tests. `compile.test.ts` emits every
   feature combination into `examples/_builder-check/` and runs
   `tsc -p examples/tsconfig.json` over it, so the generated code is checked
   against the library's real types, then removes the directory.
+- `pnpm test:browser` - `marks.browser.test.ts`, in headless chromium
+  (`vitest.browser.config.ts`). It runs each recipe's emitted chart the way the
+  generated `index.html` does - `d3`, `sszvis` and `config` as globals, the CSV
+  as a `data:` URL - and checks what it drew.
 - `pnpm type-check` - three projects: the app, `examples/`, and
   `domain/recipes/tsconfig.json` for the templates.
+
+The browser suite exists because everything else passes for a chart that draws
+nothing. Its `EXPECTED` table names, per recipe, the selector for the data marks
+alone and how many of them the recipe's sample should produce, and every mark has
+to measure non-empty. Both halves are needed and each catches what the other
+misses: emitting a value column that does not exist still renders one rect per
+row, at `height="0"`, so the count stays right while the chart is blank; reading
+every row as one series draws a line of full size, so the extents stay right
+while a series is missing. A recipe absent from `EXPECTED` fails rather than
+passing quietly, so a new one has to say what it draws.
