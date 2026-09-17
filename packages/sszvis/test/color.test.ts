@@ -56,32 +56,32 @@ describe("Color scales", () => {
   });
 
   describe("Diverging color scales", () => {
-    test("reads back the domain expanded across the range's stops", () => {
+    test("should expand the domain across every range stop when a two-value domain is set", () => {
       const scale = scaleDivValGry().domain([-60, 60]);
       expect(scale.domain()).toEqual([-60, -45, -30, -15, 0, 15, 30, 45, 60]);
     });
 
-    test("keeps mapping values after the domain has been read", () => {
+    test("should map a value to the same colour as before when the domain has been read back", () => {
       const scale = scaleDivValGry().domain([-60, 60]);
       const before = String(scale(30));
       scale.domain();
       expect(String(scale(30))).toBe(before);
     });
 
-    test("stays a diverging scale after reverse, expanding across every stop", () => {
+    test("should still expand the domain across every stop when the scale is reversed", () => {
       const scale = scaleDivValGry().reverse().domain([-60, 60]);
       expect(scale.domain()).toHaveLength(scale.range().length);
       expect(scale.domain()).toEqual([-60, -45, -30, -15, 0, 15, 30, 45, 60]);
     });
 
-    test("reverses the range rather than only the first three stops", () => {
+    test("should map each end to the other's colour when the scale is reversed", () => {
       const forward = scaleDivValGry().domain([-60, 60]);
       const reversed = scaleDivValGry().reverse().domain([-60, 60]);
       expect(String(reversed(-60))).toBe(String(forward(60)));
       expect(String(reversed(60))).toBe(String(forward(-60)));
     });
 
-    test("expands a two-value domain but takes any other domain verbatim", () => {
+    test("should take the domain verbatim when it holds more than two values", () => {
       const scale = scaleDivValGry().domain([-1, 0, 1]);
       expect(scale.domain()).toEqual([-1, 0, 1]);
     });

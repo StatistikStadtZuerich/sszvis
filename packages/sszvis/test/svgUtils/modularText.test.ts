@@ -65,7 +65,7 @@ describe("svgUtils/modularText", () => {
       expect(received).toEqual([datum]);
     });
 
-    test("should be reusable across data", () => {
+    test("should render each datum's own values when the same builder is applied twice", () => {
       const fmt = modularTextHTML()
         .plain("Artist:")
         .plain((d: Artist) => d.name);
@@ -73,7 +73,7 @@ describe("svgUtils/modularText", () => {
       expect(fmt({ name: "Nina", age: 76 })).toBe("Artist: Nina");
     });
 
-    test("should keep separate builders independent", () => {
+    test("should render only its own words when two builders exist side by side", () => {
       const a = modularTextHTML().plain("A");
       const b = modularTextHTML().plain("B");
       expect(a({})).toBe("A");
@@ -147,7 +147,7 @@ describe("svgUtils/modularText", () => {
       expect(fmt({ value: 21 })).toBe('<tspan x="0" dy="0"><tspan>42</tspan></tspan>');
     });
 
-    test("should be reusable across data", () => {
+    test("should render each datum's own values when the same builder is applied twice", () => {
       const fmt = modularTextSVG().bold((d: { items: number }) => d.items);
       expect(fmt({ items: 1 })).toContain(">1<");
       expect(fmt({ items: 2 })).toContain(">2<");

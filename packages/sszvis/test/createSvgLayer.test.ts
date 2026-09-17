@@ -1,8 +1,14 @@
-import { select } from "d3";
 import { afterEach, describe, expect, test } from "vitest";
 import { bounds } from "../src/bounds.js";
 import { createSvgLayer } from "../src/createSvgLayer.js";
+import { describesLayerContainer } from "./support/layerConformance.js";
 
+/**
+ * The three container forms and the two key tests are shared with createHtmlLayer through
+ * support/layerConformance.ts - each file registers its own copy against its own factory, so a
+ * regression in one module still fails only that module's file. What stays here is what only the
+ * svg layer does: sizing, the aria naming and the padding transform.
+ */
 describe("createSvgLayer", () => {
   // Containers are removed between tests: the selector case below looks an id up in the
   // whole document, so a leftover container from an earlier test would shadow the new one.
@@ -19,23 +25,16 @@ describe("createSvgLayer", () => {
     return div;
   };
 
-  // The same three container forms are accepted by createHtmlLayer, which tests them in the
-  // same shape.
-  test.each([
-    ["a DOM element", (parent: HTMLDivElement) => parent],
-    ["a d3 selection", (parent: HTMLDivElement) => select(parent)],
-    ["a CSS selector", () => "#chart-container"],
-  ])(
-    "should create an svg.sszvis-svg-layer in the container when given %s",
-    (_label, toArgument) => {
-      const parent = container("chart-container");
-      createSvgLayer(toArgument(parent) as never);
-
-      const svgs = parent.querySelectorAll("svg");
-      expect(svgs).toHaveLength(1);
-      expect(svgs[0].classList.contains("sszvis-svg-layer")).toBe(true);
+  describesLayerContainer({
+    containerId: "chart-container",
+    makeContainer: container,
+    create: (target, key) => {
+      // SAFETY: the conformance suite hands back the same three container forms createSvgLayer
+      // declares; the union it uses is not the factory's own overload set.
+      createSvgLayer(target as never, undefined, key === undefined ? undefined : { key });
     },
-  );
+    layers: (parent) => parent.querySelectorAll("svg.sszvis-svg-layer"),
+  });
 
   test("should size the svg from the bounds it is given", () => {
     const parent = container();
@@ -44,20 +43,6 @@ describe("createSvgLayer", () => {
     const svg = parent.querySelector("svg");
     expect(svg?.getAttribute("width")).toBe("800");
     expect(svg?.getAttribute("height")).toBe("600");
-  });
-
-  test("should reuse the existing layer rather than add a second when the key repeats", () => {
-    const parent = container();
-    createSvgLayer(parent, undefined, { key: "same" });
-    createSvgLayer(parent, undefined, { key: "same" });
-    expect(parent.querySelectorAll("svg")).toHaveLength(1);
-  });
-
-  test("should create a separate layer for each distinct key", () => {
-    const parent = container();
-    createSvgLayer(parent, undefined, { key: "layer1" });
-    createSvgLayer(parent, undefined, { key: "layer2" });
-    expect(parent.querySelectorAll("svg")).toHaveLength(2);
   });
 
   test("should name the chart with aria-label and a desc, without a title tooltip", () => {

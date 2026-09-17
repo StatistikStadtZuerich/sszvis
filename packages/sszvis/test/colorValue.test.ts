@@ -1,4 +1,3 @@
-import type { LabColor } from "d3";
 import { scaleBand, scaleLinear, scaleThreshold } from "d3";
 import { afterEach, describe, expect, expectTypeOf, test } from "vitest";
 import { annotationRuler } from "../src/annotation/ruler.js";

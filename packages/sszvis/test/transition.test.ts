@@ -22,14 +22,15 @@ describe("transition", () => {
     { name: "slowTransition", make: slowTransition, duration: 500 },
   ];
 
-  for (const { name, make, duration } of factories) {
-    test(`should give ${name} a ${duration}ms duration and the shared polynomial ease-out`, () => {
+  test.each(factories)(
+    "should give $name a $durationms duration and the shared polynomial ease-out",
+    ({ make, duration }) => {
       expect(make().duration()).toBe(duration);
       // The previous version of this assertion only checked `typeof ease === "function"`,
       // which holds for d3's default easeCubicInOut as well and so never pinned the easing.
       expect(make().ease()).toBe(easePolyOut);
-    });
-  }
+    },
+  );
 
   test("should order the three durations fast, default, slow", () => {
     // The relative order is the reason three factories exist rather than one: a component

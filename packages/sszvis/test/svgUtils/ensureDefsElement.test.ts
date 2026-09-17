@@ -13,13 +13,13 @@ describe("ensureDefsElement", () => {
     document.body.append(svg);
   });
 
-  test("creates the defs container and the element within it", () => {
+  test("should create the defs container and the element inside it when no defs exists yet", () => {
     const pattern = ensureDefsElement(select(svg), "pattern", "stripes");
 
     expect(svg.querySelector("defs > pattern#stripes")).toBe(pattern.node());
   });
 
-  test("reuses the element instead of appending a second one", () => {
+  test("should return the existing element rather than append a second when the same id is requested again", () => {
     const first = ensureDefsElement(select(svg), "pattern", "stripes").node();
     const second = ensureDefsElement(select(svg), "pattern", "stripes").node();
 
@@ -27,14 +27,14 @@ describe("ensureDefsElement", () => {
     expect(svg.querySelectorAll("pattern")).toHaveLength(1);
   });
 
-  test("distinguishes two elements of the same type by id", () => {
+  test("should keep the two elements separate when the same type is requested under two ids", () => {
     ensureDefsElement(select(svg), "pattern", "stripes");
     ensureDefsElement(select(svg), "pattern", "dots");
 
     expect(svg.querySelectorAll("pattern")).toHaveLength(2);
   });
 
-  test("looks up an id holding a CSS-significant character", () => {
+  test("should find the existing element when the id holds a CSS-significant character", () => {
     // Unescaped, `pattern#a"b` is not a valid selector and selectAll throws.
     const first = ensureDefsElement(select(svg), "pattern", 'a"b').node();
     const second = ensureDefsElement(select(svg), "pattern", 'a"b').node();
@@ -43,7 +43,7 @@ describe("ensureDefsElement", () => {
     expect(svg.querySelectorAll("pattern")).toHaveLength(1);
   });
 
-  test("looks up an empty id", () => {
+  test("should find the existing element when the id is empty", () => {
     // `pattern#` is not a valid selector, so an id selector threw before the element
     // could be created.
     const first = ensureDefsElement(select(svg), "pattern", "").node();
@@ -53,7 +53,7 @@ describe("ensureDefsElement", () => {
     expect(svg.querySelectorAll("pattern")).toHaveLength(1);
   });
 
-  test("keeps a nested group's defs separate from its ancestor's", () => {
+  test("should give each group its own element when a nested group shares its ancestor's id", () => {
     // A descendant lookup let an outer selection reuse a nested group's defs, so the two
     // shared one definition and either could clear the other's.
     const outer = svg.appendChild(document.createElementNS(SVG_NS, "g"));
@@ -67,7 +67,7 @@ describe("ensureDefsElement", () => {
     expect(outerPattern?.parentElement?.parentElement).toBe(outer);
   });
 
-  test("looks up an id holding a space", () => {
+  test("should find the existing element rather than append a second when the id holds a space", () => {
     // This is the case that failed silently: `pattern#a b` is a *valid* descendant
     // selector - a <pattern id="a"> containing a <b> - so it matched nothing and a
     // second definition was appended on every render.

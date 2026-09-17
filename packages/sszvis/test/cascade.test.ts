@@ -16,7 +16,7 @@ describe("cascade", () => {
   const testData: DataItem[] = [zurichA, baselA, zurichB, baselB, genevaA];
 
   describe("objectBy", () => {
-    test("should group data into object with key-value pairs", () => {
+    test("should key each group by its accessor value when grouping with objectBy", () => {
       const result = cascade<DataItem>()
         .objectBy((d) => d.city)
         .apply<Record<string, DataItem[]>>(testData);
@@ -98,7 +98,7 @@ describe("cascade", () => {
   });
 
   describe("sort", () => {
-    test("should sort final data arrays when sort is specified", () => {
+    test("should order each group's rows ascending when the sorter compares ascending", () => {
       const result = cascade<DataItem>()
         .objectBy((d) => d.city)
         .sort((a, b) => a.value - b.value)
@@ -109,7 +109,7 @@ describe("cascade", () => {
       expect(result.Basel[1].value).toBe(25);
     });
 
-    test("should sort with reverse order", () => {
+    test("should order each group's rows descending when the sorter compares in reverse", () => {
       const result = cascade<DataItem>()
         .objectBy((d) => d.city)
         .sort((a, b) => b.value - a.value)
