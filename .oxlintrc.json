@@ -52,6 +52,18 @@
         "typescript/no-explicit-any": "off",
         "typescript/no-this-alias": "off"
       }
+    },
+    /* A recipe's chart.ts is a template, not a finished file: `barFill` is read through
+       `__BAR_FILL__` and `bars` by a feature's .tmpl, so a binding whose only use arrives at
+       emit time reads as unused here. Prefixing those with `_` would satisfy the rule and put
+       the underscore in every generated chart, where the binding plainly is used. The emitted
+       code is checked properly instead - app/builder/domain/recipes/tsconfig.json type-checks
+       each template, and compile.test.ts compiles every feature combination. */
+    {
+      "files": ["apps/new-docs/app/builder/domain/recipes/*/chart.ts"],
+      "rules": {
+        "no-unused-vars": "off"
+      }
     }
   ]
 }

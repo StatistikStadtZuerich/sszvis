@@ -56,10 +56,8 @@ export const barChartHorizontal: RecipeDef = {
     X_LABEL: str(option(X_LABEL_OPTION)),
     CATEGORY_FIELD: str(spec.fields[CATEGORY] ?? ""),
     VALUE_FIELD: str(spec.fields[VALUE] ?? ""),
-    // NOTE: Underscored in chart.ts because the template is linted as ordinary source,
-    // where a binding only read through a hole looks unused. Keep the two names in step.
     /* The tooltip feature overrides this. */
-    BAR_FILL: code("_barFill"),
+    BAR_FILL: code("barFill"),
     TOOLTIP_TEXT: tooltipText(
       "HTML",
       spec,
