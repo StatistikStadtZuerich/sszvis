@@ -34,7 +34,8 @@ const SURROUNDS = {
    * exported file sees.
    */
   helpers: { before: ["// Helper functions", ""], after: [], indent: false, once: true },
-  actions: { before: ["actions: {"], after: ["},", ""], indent: true },
+  /* Not `once`: no chart.ts opens its own `actions`, and two would not be valid anyway. */
+  actions: { before: ["actions: {"], after: ["},", ""], indent: true, once: false },
 } satisfies Readonly<Record<string, Surround>>;
 
 /** Whether the template already carries `line` as a line of its own. */
