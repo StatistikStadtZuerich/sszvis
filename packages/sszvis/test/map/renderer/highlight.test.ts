@@ -1,6 +1,10 @@
 import { geoPath } from "d3";
-import type { Feature, FeatureCollection, Polygon } from "geojson";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import type { FeatureCollection, Polygon } from "geojson";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import {
+  captureWarnings as captureWarningsInto,
+  square as squareFeature,
+} from "../../support/mapReaders.js";
 import {
   describesMapPathGeometry,
   describesNoDecorations,
@@ -13,27 +17,8 @@ import mapRendererHighlight, {
   type MapRendererHighlightComponent,
 } from "../../../src/map/renderer/highlight.js";
 
-/**
- * A unit square. The ring is wound clockwise because d3-geo interprets rings on the sphere:
- * counter-clockwise would describe the whole globe minus the square.
- */
-const square = (id: string | undefined, offset = 0): Feature<Polygon> => ({
-  type: "Feature",
-  id,
-  properties: { id },
-  geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [offset, offset],
-        [offset, offset + 1],
-        [offset + 1, offset + 1],
-        [offset + 1, offset],
-        [offset, offset],
-      ],
-    ],
-  },
-});
+/** A unit square whose properties repeat its id, which is what this renderer matches on. */
+const square = (id: string | undefined, offset = 0) => squareFeature(id, offset, { id });
 
 interface Datum {
   geoId?: unknown;
@@ -76,19 +61,7 @@ describe("map/renderer/highlight", () => {
     ...node.querySelectorAll<SVGPathElement>("path.sszvis-map__highlight"),
   ];
 
-  /**
-   * Captures the warnings a render emits, restoring console.warn afterwards. The renderer warns
-   * through sszvis.logger, which delegates to console.warn - spying on the console rather than on
-   * the logger keeps this pinned to what a consumer actually sees.
-   */
-  const captureWarnings = () => {
-    const warnings: string[] = [];
-    const spy = vi.spyOn(console, "warn").mockImplementation((...args: unknown[]) => {
-      warnings.push(args.map(String).join(" "));
-    });
-    warnedSpies.push(spy);
-    return warnings;
-  };
+  const captureWarnings = () => captureWarningsInto(warnedSpies);
 
   /**
    * A mapPath that records what it is called with, so a test can tell "matched nothing" from
