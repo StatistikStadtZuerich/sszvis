@@ -1,5 +1,6 @@
 import {
   ChartAreaIcon,
+  ChartColumnStackedIcon,
   ChartBarIcon,
   ChartColumnIcon,
   ChartLineIcon,
@@ -16,6 +17,7 @@ import type { RecipeKey, RecipeSummary } from "../domain/spec";
 const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
   ["bar-chart-vertical", ChartColumnIcon],
   ["bar-chart-horizontal", ChartBarIcon],
+  ["bar-chart-vertical-stacked", ChartColumnStackedIcon],
   ["line-chart", ChartLineIcon],
   ["area-chart-stacked", ChartAreaIcon],
 ]);

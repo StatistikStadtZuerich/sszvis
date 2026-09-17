@@ -46,3 +46,10 @@ declare const __RULER_LABEL__: ReturnType<typeof sszvis.modularTextSVG>;
 declare const __X_TICK_VALUES__: Date[];
 /** Which x tick to single out, if any. */
 declare const __HIGHLIGHT_TICK__: (d: import("d3").AxisDomain) => boolean;
+
+// Stacked bar chart
+
+/** CSV column the stack's slices are keyed by. */
+declare const __SERIES_FIELD__: string;
+/** One slice's fill: its series colour, darkened once tooltips are on. */
+declare const __SLICE_FILL__: string | undefined;
