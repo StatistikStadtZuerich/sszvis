@@ -4,7 +4,8 @@ import { typefaceCaption, typefaceMeta } from "~/components/tokens/typeface";
 import { Button } from "~/components/ui/button";
 import template from "../../../examples/_template.html?raw";
 import { harmlessValues } from "../domain/csv";
-import { escapeHtml } from "../domain/host";
+import { escapeHtml, libraryTags } from "../domain/host";
+import type { Asset } from "../domain/spec";
 import { Notice } from "./notice";
 
 const ASSETS = "/preview/_assets";
@@ -99,11 +100,15 @@ export const Preview = ({
   csv,
   title,
   status,
+  assets = [],
+  scripts = [],
 }: {
   readonly js: string;
   readonly csv: string;
   readonly title: string;
   readonly status: PreviewStatus;
+  readonly assets?: readonly Asset[];
+  readonly scripts?: readonly string[];
 }) => {
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const [height, setHeight] = useState(RESERVED_HEIGHT);
@@ -113,6 +118,13 @@ export const Preview = ({
     data: `data:text/csv;charset=utf-8,${encodeURIComponent(harmlessValues(csv))}`,
     id: "#sszvis-chart",
     fallback: FALLBACK,
+    /*
+     * The bundle puts these beside the chart; here the app already serves them, and
+     * the frame has no base URL of its own to resolve a relative path against.
+     */
+    ...Object.fromEntries(
+      assets.map((asset) => [asset.key, new URL(asset.source, window.location.origin).href]),
+    ),
   };
 
   // Replacer functions throughout: a string replacement expands `$&`-style patterns.
@@ -122,7 +134,7 @@ export const Preview = ({
           .replaceAll("{{title}}", () => escapeHtml(title))
           .replaceAll("{{assets}}", () => ASSETS)
           .replaceAll("{{config}}", () => JSON.stringify(config, null, 2))
-          .replaceAll("{{scripts}}", () => REPORTER)
+          .replaceAll("{{scripts}}", () => libraryTags(scripts) + REPORTER)
           .replaceAll("// {{chart}}", () => indent(js, 6).trimStart())
       : "";
 

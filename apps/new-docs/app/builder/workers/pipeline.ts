@@ -3,7 +3,7 @@ import type { Options } from "prettier";
 import { HIGHLIGHT_THEMES, highlightOptions } from "../../lib/highlight";
 import type { Source } from "../../lib/source";
 
-import { compile } from "../domain/compile";
+import { assetsFor, compile } from "../domain/compile";
 import { BuilderCompileError } from "../domain/emit";
 import { BUNDLE, host } from "../domain/host";
 import { optionValue, TITLE, type Recipe, type Spec } from "../domain/spec";
@@ -87,6 +87,7 @@ export const makePipeline: Effect.Effect<Generate> = Effect.gen(function* () {
   });
 
   return Effect.fnUntraced(function* (recipe: Recipe, spec: Spec) {
+    const assets = assetsFor(recipe, spec);
     const ts = yield* format(yield* compile(recipe, spec));
     const strip = yield* stripper;
     const js = yield* format(dropEmptySections(strip(ts)));
@@ -94,8 +95,12 @@ export const makePipeline: Effect.Effect<Generate> = Effect.gen(function* () {
     return {
       ts: highlight(ts, "chart.ts"),
       js: highlight(js, BUNDLE.chart),
-      html: highlight(host(optionValue(recipe.options, spec, TITLE)), BUNDLE.html),
+      html: highlight(
+        host(optionValue(recipe.options, spec, TITLE), assets, recipe.scripts ?? []),
+        BUNDLE.html,
+      ),
       csv: highlight(spec.csv, BUNDLE.data),
+      assets,
     };
   });
 });

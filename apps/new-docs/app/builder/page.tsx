@@ -212,6 +212,42 @@ const Builder = ({
           </Step>
 
           <Step n={3} title="Mapping" columns>
+            {/* A choice comes first: it decides what the columns below it have to contain.
+                A map's geography is the case - it says which areas the code column names. */}
+            {recipe.options
+              .filter((option) => option.choices !== undefined)
+              .map((option) => {
+                const id = `option-${option.key}`;
+                return (
+                  <Field key={option.key}>
+                    <FieldLabel htmlFor={id}>{option.label}</FieldLabel>
+                    <Select
+                      value={optionValue(recipe.options, spec, option.key)}
+                      onValueChange={(next) =>
+                        form.setFieldValue("options", {
+                          ...spec.options,
+                          [option.key]: next ?? "",
+                        })
+                      }
+                      items={(option.choices ?? []).map((choice) => ({
+                        value: choice.value,
+                        label: choice.label,
+                      }))}
+                    >
+                      <SelectTrigger id={id}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent align="start">
+                        {(option.choices ?? []).map((choice) => (
+                          <SelectItem key={choice.value} value={choice.value}>
+                            {choice.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                );
+              })}
             {recipe.roles.map((role) => {
               const items = [
                 {
@@ -310,25 +346,27 @@ const Builder = ({
             columns
             description="Text shown with the chart. Each falls back to the greyed-out default when left empty."
           >
-            {recipe.options.map((option) => {
-              const id = `option-${option.key}`;
-              return (
-                <Field key={option.key}>
-                  <FieldLabel htmlFor={id}>{option.label}</FieldLabel>
-                  <Input
-                    id={id}
-                    value={spec.options[option.key] ?? ""}
-                    placeholder={option.fallback}
-                    onChange={(event) =>
-                      form.setFieldValue("options", {
-                        ...spec.options,
-                        [option.key]: event.target.value,
-                      })
-                    }
-                  />
-                </Field>
-              );
-            })}
+            {recipe.options
+              .filter((option) => option.choices === undefined)
+              .map((option) => {
+                const id = `option-${option.key}`;
+                return (
+                  <Field key={option.key}>
+                    <FieldLabel htmlFor={id}>{option.label}</FieldLabel>
+                    <Input
+                      id={id}
+                      value={spec.options[option.key] ?? ""}
+                      placeholder={option.fallback}
+                      onChange={(event) =>
+                        form.setFieldValue("options", {
+                          ...spec.options,
+                          [option.key]: event.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                );
+              })}
           </Step>
         </div>
         <div className="flex min-w-0 flex-col gap-4 @4xl/page:sticky @4xl/page:top-[calc(var(--header-height)+1rem)] @4xl/page:max-h-[calc(100vh-var(--header-height)-4rem)] @4xl/page:min-h-0 @4xl/page:overflow-y-auto">
@@ -340,6 +378,8 @@ const Builder = ({
                  so an empty Title field has to fall back to the recipe's German default here too. */
               title={settled === undefined ? "" : optionValue(recipe.options, settled.spec, TITLE)}
               status={status}
+              assets={settled?.generated.assets}
+              scripts={recipe.scripts}
             />
           </div>
           <CodePanel generated={settled?.generated} note={note} />

@@ -10,7 +10,15 @@ import {
   type Safe,
   type Scalars,
 } from "./emit";
-import { DESCRIPTION, optionValue, TITLE, type OptionKey, type Recipe, type Spec } from "./spec";
+import {
+  DESCRIPTION,
+  optionValue,
+  TITLE,
+  type Asset,
+  type OptionKey,
+  type Recipe,
+  type Spec,
+} from "./spec";
 
 const EMPTY_ACTIONS = "Record<string, never>";
 
@@ -41,6 +49,14 @@ const SURROUNDS = {
 /** Whether the template already carries `line` as a line of its own. */
 const opensWith = (template: string, line: string | undefined) =>
   line !== undefined && template.split("\n").includes(line);
+
+/**
+ * The extra files this spec's chart loads. Separate from `compile` because the
+ * bundle, the preview and the page each need the list without the code: the same
+ * file reaches the chart under a different URL in each of them.
+ */
+export const assetsFor = (recipe: Recipe, spec: Spec): readonly Asset[] =>
+  recipe.assets?.(spec, (key) => optionValue(recipe.options, spec, key)) ?? [];
 
 export const compile = (recipe: Recipe, spec: Spec): Effect.Effect<string, BuilderCompileError> => {
   const implied = recipe.implied(spec);

@@ -15,7 +15,7 @@ import {
   sortRows,
 } from "./csv";
 import { BuilderCompileError, code, comment, fill, str } from "./emit";
-import { escapeHtml, host, BUNDLE } from "./host";
+import { escapeHtml, host, BUNDLE, LIBRARIES } from "./host";
 import { buildRecipe, parseFeature } from "./recipe";
 import {
   applySample,
@@ -562,8 +562,35 @@ describe("host", () => {
   });
 
   test("should define the config with data and id when rendering the page", () => {
-    /* The chart's only route to its data is `config.data`; its only target is `config.id`. */
+    /* A chart's route to its rows is `config.data`; its only target is `config.id`. */
     expect(host("Title")).toMatch(/var config = \{[\s\S]*data:[\s\S]*id:[\s\S]*\}/);
+  });
+
+  test("should leave the page untouched when a recipe asks for no assets and no libraries", () => {
+    /* Six of the seven recipes load nothing besides their data, and their page must not change. */
+    expect(host("Title", [], [])).toBe(host("Title"));
+  });
+
+  test("should name an asset in the config when a recipe loads a second file", () => {
+    /*
+     * The chart reaches its geometry the same way it reaches its rows: a key on
+     * `config`, holding the name the file has in the bundle beside it.
+     */
+    const page = host("Title", [{ key: "topology", path: "topo.json", source: "/anywhere.json" }]);
+    expect(page).toContain('topology: "topo.json"');
+    /* The source is where the builder read the bytes. Shipping it would point the export at the app. */
+    expect(page).not.toContain("/anywhere.json");
+  });
+
+  test("should add a library to the page when a recipe asks for one", () => {
+    const page = host("Title", [], ["topojson"]);
+    expect(page).toContain(`<script src="${LIBRARIES.topojson}"></script>`);
+    /* Above the chart, or the chart would call it before it exists. */
+    expect(page.indexOf("topojson-client")).toBeLessThan(page.indexOf(BUNDLE.chart));
+  });
+
+  test("should ignore a library it does not know rather than emit a broken tag", () => {
+    expect(host("Title", [], ["not-a-library"])).toBe(host("Title"));
   });
 
   test("should keep markup inert when the title contains a closing tag and a script", () => {

@@ -42,6 +42,8 @@ export const CATEGORY = RoleKey.make("category");
 export const VALUE = RoleKey.make("value");
 export const DATE = RoleKey.make("date");
 export const SERIES = RoleKey.make("series");
+export const GEO = RoleKey.make("geo");
+export const GEO_LABEL = RoleKey.make("geoLabel");
 
 export const Fields = Schema.Record(RoleKey, ColumnName);
 
@@ -107,10 +109,25 @@ const Role = Schema.Struct({
   optional: Schema.optional(Schema.Boolean),
 });
 
+/** One value a choice option offers: what the chart is given, and what the reader is shown. */
+const Choice = Schema.Struct({
+  value: Schema.String,
+  label: Schema.String,
+});
+
+export type Choice = typeof Choice.Type;
+
 const Option = Schema.Struct({
   key: OptionKey,
   label: Schema.String,
   fallback: Schema.String,
+  /*
+   * The values this option accepts, when it is a fixed set rather than free text.
+   * A map's geography is the case that needs it: it decides which topology the
+   * chart loads and which layer it reads, so a typed value would mean a blank map
+   * rather than a wrong label. Absent means any text, which is every other option.
+   */
+  choices: Schema.optional(Schema.Array(Choice)),
 });
 
 export type Option = typeof Option.Type;
@@ -137,6 +154,22 @@ const AnnotationAxis = Schema.Struct({
 
 export type AnnotationAxis = typeof AnnotationAxis.Type;
 
+/**
+ * A file the chart loads besides its data. A map needs one: its geometry lives in
+ * a TopoJSON file, which is far too large to inline into the code the reader is
+ * meant to read, and is published nowhere they could link to.
+ */
+export const Asset = Schema.Struct({
+  /** The `config` key the chart reads the URL from, beside `data` and `id`. */
+  key: Schema.String,
+  /** The file's name in the exported bundle, which is what `config[key]` holds there. */
+  path: Schema.String,
+  /** Where the builder itself reads the bytes from. An app URL; the exported chart never sees it. */
+  source: Schema.String,
+});
+
+export type Asset = typeof Asset.Type;
+
 export const RecipeSummary = Schema.Struct({
   key: RecipeKey,
   label: Schema.String,
@@ -154,6 +187,12 @@ export const RecipeSummary = Schema.Struct({
   tooltipRoles: Schema.optional(Schema.Array(RoleKey)),
   defaultTooltip: Tooltip,
   annotationAxes: Schema.Array(AnnotationAxis),
+  /*
+   * Libraries the page must load for this recipe beyond d3 and sszvis. A map reads
+   * `topojson.feature`, which sszvis does not bundle. Every other recipe declares
+   * none, and the page is unchanged for them.
+   */
+  scripts: Schema.optional(Schema.Array(Schema.String)),
 });
 
 export type RecipeSummary = typeof RecipeSummary.Type;
@@ -165,6 +204,11 @@ export type Feature = FeatureSummary & {
 
 export type RecipeDef = Omit<RecipeSummary, "features"> & {
   readonly features: readonly FeatureKey[];
+  /*
+   * The extra files this spec's chart loads. A function because the answer depends
+   * on the spec: a map's geography decides which topology it needs.
+   */
+  readonly assets?: (spec: Spec, option: (key: OptionKey) => string) => readonly Asset[];
   readonly scalars: (spec: Spec, option: (key: OptionKey) => string) => Scalars;
   readonly implied: (spec: Spec) => readonly FeatureKey[];
 };
