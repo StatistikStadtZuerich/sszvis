@@ -106,7 +106,16 @@ sszvis.app<State, Actions>({
 
     const xScale = d3.scaleTime().domain(state.xValues).range([0, bounds.innerWidth]);
 
-    const yScale = d3.scaleLinear().domain([0, state.maxY]).range([bounds.innerHeight, 0]);
+    /*
+     * NOTE: A nonzero upper bound when there is nothing to scale. d3 maps a degenerate
+     * `[0, 0]` domain to the MIDPOINT of its range, so a pasted table whose value column
+     * is all zeros - or one whose value role was mapped to a column that does not parse -
+     * would draw every line point at half height rather than at none, which reads as data.
+     */
+    const yScale = d3
+      .scaleLinear()
+      .domain([0, state.maxY || 1])
+      .range([bounds.innerHeight, 0]);
 
     // Layers
 

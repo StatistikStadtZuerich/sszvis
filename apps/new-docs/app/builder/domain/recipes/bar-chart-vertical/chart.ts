@@ -99,7 +99,16 @@ sszvis.app<State, Actions>({
       .paddingOuter(props.barPadding)
       .range([0, chartDimensions.totalWidth]);
 
-    const heightScale = d3.scaleLinear().domain([0, yMax]).range([0, bounds.innerHeight]);
+    /*
+     * NOTE: A nonzero upper bound when there is nothing to scale. d3 maps a degenerate
+     * `[0, 0]` domain to the MIDPOINT of its range, so a pasted table whose value column
+     * is all zeros - or one whose value role was mapped to a column that does not parse -
+     * would draw every mark at half height rather than at none, which reads as data.
+     */
+    const heightScale = d3
+      .scaleLinear()
+      .domain([0, yMax || 1])
+      .range([0, bounds.innerHeight]);
 
     const yPosScale = heightScale.copy().range([...heightScale.range()].reverse());
 
