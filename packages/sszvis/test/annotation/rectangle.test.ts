@@ -1,8 +1,11 @@
-import { select } from "d3";
+import { type Selection, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import rectangle from "../../src/annotation/rectangle.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
+
+/** Any group layer these tests render into, whatever datum is currently bound. */
+type Layer<D> = Selection<SVGGElement, D, SVGGElement, number>;
 
 type TestDatum = {
   x: number;
@@ -10,13 +13,8 @@ type TestDatum = {
   width: number;
   height: number;
   caption?: string;
-};
-
-type ComplexTestDatum = {
-  position: { x: number; y: number };
-  dimensions: { width: number; height: number };
-  label: string;
-  offset: { dx: number; dy: number };
+  dx?: number;
+  dy?: number;
 };
 
 describe("annotation/rectangle", () => {
@@ -41,336 +39,146 @@ describe("annotation/rectangle", () => {
   ];
 
   const testDataWithCaptions: TestDatum[] = [
-    { x: 50, y: 60, width: 100, height: 80, caption: "Area A" },
-    { x: 200, y: 100, width: 120, height: 60, caption: "Area B" },
+    { x: 50, y: 60, width: 100, height: 80, caption: "Area A", dx: 15, dy: -10 },
+    { x: 200, y: 100, width: 120, height: 60, caption: "Area B", dx: -20, dy: 8 },
   ];
 
-  test("should render rectangle annotation with proper DOM structure", () => {
-    const rectangleComponent = rectangle<TestDatum>()
+  const layer = () =>
+    createSvgLayer("#chart-container", undefined, { key: "test-layer" }).selectGroup("rectangles");
+
+  const rects = <D>(chartLayer: Layer<D>) =>
+    chartLayer
+      .selectAll("rect.sszvis-dataarearectangle")
+      .nodes()
+      .map((node) => select(node));
+
+  const captions = <D>(chartLayer: Layer<D>) =>
+    chartLayer
+      .selectAll("text.sszvis-dataarearectangle__caption")
+      .nodes()
+      .map((node) => select(node));
+
+  const positioned = () =>
+    rectangle<TestDatum>()
       .x((d) => d.x)
       .y((d) => d.y)
       .width((d) => d.width)
       .height((d) => d.height);
 
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
-      .datum(testData)
-      .call(rectangleComponent);
+  test("should render one patterned rect per datum at the box its accessors report", () => {
+    const chartLayer = layer().datum(testData).call(positioned());
 
-    // Check that rectangles are rendered
-    const rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-    expect(rectangles.length).toBe(3);
-
-    // Check that each rectangle has the correct class
-    rectangles.forEach((rect) => {
-      expect(select(rect).classed("sszvis-dataarearectangle")).toBe(true);
-    });
-
-    // Check that pattern defs are created
-    const defs = chartLayer.select("defs").node();
-    expect(defs).not.toBeNull();
-    const pattern = chartLayer.select("pattern#data-area-pattern").node();
-    expect(pattern).not.toBeNull();
+    const rendered = rects(chartLayer);
+    expect(rendered).toHaveLength(testData.length);
+    expect(
+      rendered.map((r) => ({
+        x: Number(r.attr("x")),
+        y: Number(r.attr("y")),
+        width: Number(r.attr("width")),
+        height: Number(r.attr("height")),
+        fill: r.attr("fill"),
+      })),
+    ).toEqual(
+      testData.map((d) => ({
+        x: d.x,
+        y: d.y,
+        width: d.width,
+        height: d.height,
+        fill: "url(#data-area-pattern)",
+      })),
+    );
+    // The pattern the fill points at has to exist in the layer's defs, or the fill resolves to nothing.
+    expect(chartLayer.select("defs pattern#data-area-pattern").node()).not.toBeNull();
   });
 
-  test("should position rectangles correctly using accessor functions", () => {
-    const rectangleComponent = rectangle<TestDatum>()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .width((d) => d.width)
-      .height((d) => d.height);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
-      .datum(testData)
-      .call(rectangleComponent);
-
-    const rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-
-    // Check first rectangle position and dimensions
-    const firstRect = select(rectangles[0]);
-    expect(Number(firstRect.attr("x"))).toBe(50);
-    expect(Number(firstRect.attr("y"))).toBe(60);
-    expect(Number(firstRect.attr("width"))).toBe(100);
-    expect(Number(firstRect.attr("height"))).toBe(80);
-
-    // Check second rectangle position and dimensions
-    const secondRect = select(rectangles[1]);
-    expect(Number(secondRect.attr("x"))).toBe(200);
-    expect(Number(secondRect.attr("y"))).toBe(100);
-    expect(Number(secondRect.attr("width"))).toBe(120);
-    expect(Number(secondRect.attr("height"))).toBe(60);
-
-    // Check third rectangle position and dimensions
-    const thirdRect = select(rectangles[2]);
-    expect(Number(thirdRect.attr("x"))).toBe(10);
-    expect(Number(thirdRect.attr("y"))).toBe(200);
-    expect(Number(thirdRect.attr("width"))).toBe(80);
-    expect(Number(thirdRect.attr("height"))).toBe(40);
-  });
-
-  test("should apply data area pattern fill to rectangles", () => {
-    const rectangleComponent = rectangle<TestDatum>()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .width((d) => d.width)
-      .height((d) => d.height);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
-      .datum(testData)
-      .call(rectangleComponent);
-
-    const rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-
-    rectangles.forEach((rect) => {
-      expect(select(rect).attr("fill")).toBe("url(#data-area-pattern)");
-    });
-  });
-
-  test("should render captions when caption accessor is provided", () => {
-    const rectangleComponent = rectangle<TestDatum>()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .width((d) => d.width)
-      .height((d) => d.height)
-      .caption((d) => d.caption || "");
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
+  test("should centre each caption inside its rect when a caption accessor is set", () => {
+    const chartLayer = layer()
       .datum(testDataWithCaptions)
-      .call(rectangleComponent);
+      .call(positioned().caption((d) => d.caption || ""));
 
-    // Check that captions are rendered
-    const captions = chartLayer.selectAll("text.sszvis-dataarearectangle__caption").nodes();
-    expect(captions.length).toBe(2);
-
-    // Check caption positioning (should be at rectangle centers by default)
-    const firstCaption = select(captions[0]);
-    const firstRectCenterX = 50 + 100 / 2; // x + width/2
-    const firstRectCenterY = 60 + 80 / 2; // y + height/2
-    expect(Number(firstCaption.attr("x"))).toBe(firstRectCenterX);
-    expect(Number(firstCaption.attr("y"))).toBe(firstRectCenterY);
-    expect(firstCaption.text()).toBe("Area A");
-
-    const secondCaption = select(captions[1]);
-    const secondRectCenterX = 200 + 120 / 2; // x + width/2
-    const secondRectCenterY = 100 + 60 / 2; // y + height/2
-    expect(Number(secondCaption.attr("x"))).toBe(secondRectCenterX);
-    expect(Number(secondCaption.attr("y"))).toBe(secondRectCenterY);
-    expect(secondCaption.text()).toBe("Area B");
-
-    // Check that each caption has the correct class
-    captions.forEach((caption) => {
-      expect(select(caption).classed("sszvis-dataarearectangle__caption")).toBe(true);
-    });
+    expect(
+      captions(chartLayer).map((c) => ({
+        x: Number(c.attr("x")),
+        y: Number(c.attr("y")),
+        text: c.text(),
+      })),
+    ).toEqual(
+      testDataWithCaptions.map((d) => ({
+        x: d.x + d.width / 2,
+        y: d.y + d.height / 2,
+        text: d.caption,
+      })),
+    );
   });
 
-  test("should not render captions when caption accessor is not provided", () => {
-    const rectangleComponent = rectangle<TestDatum>()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .width((d) => d.width)
-      .height((d) => d.height);
+  test("should render no captions when no caption accessor is set", () => {
+    const chartLayer = layer().datum(testDataWithCaptions).call(positioned());
 
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
+    expect(captions(chartLayer)).toHaveLength(0);
+  });
+
+  test("should shift each caption off the centre by its own dx and dy when offsets are set", () => {
+    const chartLayer = layer()
       .datum(testDataWithCaptions)
-      .call(rectangleComponent);
+      .call(
+        positioned()
+          .caption((d) => d.caption || "")
+          .dx((d) => d.dx ?? 0)
+          .dy((d) => d.dy ?? 0),
+      );
 
-    // Check that no captions are rendered
-    const captions = chartLayer.selectAll("text.sszvis-dataarearectangle__caption").nodes();
-    expect(captions.length).toBe(0);
+    expect(captions(chartLayer).map((c) => [Number(c.attr("dx")), Number(c.attr("dy"))])).toEqual(
+      testDataWithCaptions.map((d) => [d.dx, d.dy]),
+    );
   });
 
-  test("should offset captions using dx and dy properties", () => {
-    const rectangleComponent = rectangle<TestDatum>()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .width((d) => d.width)
-      .height((d) => d.height)
-      .caption((d) => d.caption || "")
-      .dx(() => 15)
-      .dy(() => -10);
+  test("should read fixed values when scalars are passed instead of accessors", () => {
+    const chartLayer = layer()
+      .datum([{}])
+      .call(rectangle().x(150).y(125).width(100).height(50).caption("Fixed Rectangle"));
 
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
-      .datum(testDataWithCaptions)
-      .call(rectangleComponent);
-
-    const captions = chartLayer.selectAll("text.sszvis-dataarearectangle__caption").nodes();
-
-    captions.forEach((caption) => {
-      const captionSelection = select(caption);
-      expect(Number(captionSelection.attr("dx"))).toBe(15);
-      expect(Number(captionSelection.attr("dy"))).toBe(-10);
-    });
+    const [rendered] = rects(chartLayer);
+    expect([
+      Number(rendered.attr("x")),
+      Number(rendered.attr("y")),
+      Number(rendered.attr("width")),
+      Number(rendered.attr("height")),
+    ]).toEqual([150, 125, 100, 50]);
+    expect(captions(chartLayer).map((c) => c.text())).toEqual(["Fixed Rectangle"]);
   });
 
-  test("should work with constant values instead of accessor functions", () => {
-    const rectangleComponent = rectangle<TestDatum>()
-      .x(150)
-      .y(125)
-      .width(100)
-      .height(50)
-      .caption("Fixed Rectangle");
-
-    const singleDataPoint = [{}]; // Single empty object since we're using constants
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
-      .datum(singleDataPoint)
-      .call(rectangleComponent);
-
-    const rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-    expect(rectangles.length).toBe(1);
-
-    const rectangleElement = select(rectangles[0]);
-    expect(Number(rectangleElement.attr("x"))).toBe(150);
-    expect(Number(rectangleElement.attr("y"))).toBe(125);
-    expect(Number(rectangleElement.attr("width"))).toBe(100);
-    expect(Number(rectangleElement.attr("height"))).toBe(50);
-
-    const captions = chartLayer.selectAll("text.sszvis-dataarearectangle__caption").nodes();
-    expect(captions.length).toBe(1);
-
-    const captionElement = select(captions[0]);
-    expect(captionElement.text()).toBe("Fixed Rectangle");
-    // Caption should be positioned at center of rectangle
-    expect(Number(captionElement.attr("x"))).toBe(150 + 100 / 2); // x + width/2
-    expect(Number(captionElement.attr("y"))).toBe(125 + 50 / 2); // y + height/2
-  });
-
-  test("should work with complex data structures and custom accessor functions", () => {
-    const complexTestData: ComplexTestDatum[] = [
-      {
-        position: { x: 80, y: 120 },
-        dimensions: { width: 60, height: 40 },
-        label: "Complex Area 1",
-        offset: { dx: 10, dy: 5 },
-      },
-      {
-        position: { x: 180, y: 80 },
-        dimensions: { width: 90, height: 70 },
-        label: "Complex Area 2",
-        offset: { dx: -15, dy: 8 },
-      },
-    ];
-
-    const rectangleComponent = rectangle<ComplexTestDatum>()
-      .x((d) => d.position.x)
-      .y((d) => d.position.y)
-      .width((d) => d.dimensions.width)
-      .height((d) => d.dimensions.height)
-      .caption((d) => d.label)
-      .dx((d) => d.offset.dx)
-      .dy((d) => d.offset.dy);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
-      .datum(complexTestData)
-      .call(rectangleComponent);
-
-    // Check rectangles
-    const rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-    expect(rectangles.length).toBe(2);
-
-    const firstRectangle = select(rectangles[0]);
-    expect(Number(firstRectangle.attr("x"))).toBe(80);
-    expect(Number(firstRectangle.attr("y"))).toBe(120);
-    expect(Number(firstRectangle.attr("width"))).toBe(60);
-    expect(Number(firstRectangle.attr("height"))).toBe(40);
-
-    // Check captions with offsets
-    const captions = chartLayer.selectAll("text.sszvis-dataarearectangle__caption").nodes();
-    expect(captions.length).toBe(2);
-
-    const firstCaption = select(captions[0]);
-    expect(Number(firstCaption.attr("x"))).toBe(80 + 60 / 2); // Center x
-    expect(Number(firstCaption.attr("y"))).toBe(120 + 40 / 2); // Center y
-    expect(Number(firstCaption.attr("dx"))).toBe(10);
-    expect(Number(firstCaption.attr("dy"))).toBe(5);
-    expect(firstCaption.text()).toBe("Complex Area 1");
-
-    const secondCaption = select(captions[1]);
-    expect(Number(secondCaption.attr("dx"))).toBe(-15);
-    expect(Number(secondCaption.attr("dy"))).toBe(8);
-    expect(secondCaption.text()).toBe("Complex Area 2");
-  });
-
-  test("should handle empty data array", () => {
-    const rectangleComponent = rectangle<TestDatum>()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .width((d) => d.width)
-      .height((d) => d.height);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
+  test("should render neither rects nor captions when the data is empty", () => {
+    const chartLayer = layer()
       .datum([])
-      .call(rectangleComponent);
+      .call(positioned().caption((d) => d.caption || ""));
 
-    const rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-    expect(rectangles.length).toBe(0);
-
-    const captions = chartLayer.selectAll("text.sszvis-dataarearectangle__caption").nodes();
-    expect(captions.length).toBe(0);
+    expect(rects(chartLayer)).toHaveLength(0);
+    expect(captions(chartLayer)).toHaveLength(0);
   });
 
-  test("should handle data updates correctly", () => {
-    const rectangleComponent = rectangle<TestDatum>()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .width((d) => d.width)
-      .height((d) => d.height);
+  test("should match the rendered rect count to the data when the data changes", () => {
+    const rectangleComponent = positioned();
+    const chartLayer = layer();
 
-    const chartLayer = createSvgLayer("#chart-container", undefined, {
-      key: "test-layer",
-    }).selectGroup("rectangles");
-
-    // Initial render with 2 rectangles
-    chartLayer.datum(testData.slice(0, 2)).call(rectangleComponent);
-    let rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-    expect(rectangles.length).toBe(2);
-
-    // Update with 3 rectangles
-    chartLayer.datum(testData).call(rectangleComponent);
-    rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-    expect(rectangles.length).toBe(3);
-
-    // Update with 1 rectangle
-    chartLayer.datum(testData.slice(0, 1)).call(rectangleComponent);
-    rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-    expect(rectangles.length).toBe(1);
+    for (const count of [2, 3, 1, 0]) {
+      chartLayer.datum(testData.slice(0, count)).call(rectangleComponent);
+      expect(rects(chartLayer)).toHaveLength(count);
+    }
   });
 
-  test("should handle zero and negative dimensions gracefully", () => {
-    const edgeCaseData: TestDatum[] = [
-      { x: 50, y: 60, width: 0, height: 80 }, // Zero width
-      { x: 200, y: 100, width: 120, height: 0 }, // Zero height
-    ];
+  test("should still emit a rect when a datum collapses to a zero width or height", () => {
+    const chartLayer = layer()
+      .datum([
+        { x: 50, y: 60, width: 0, height: 80 },
+        { x: 200, y: 100, width: 120, height: 0 },
+      ])
+      .call(positioned());
 
-    const rectangleComponent = rectangle<TestDatum>()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .width((d) => d.width)
-      .height((d) => d.height);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("rectangles")
-      .datum(edgeCaseData)
-      .call(rectangleComponent);
-
-    const rectangles = chartLayer.selectAll("rect.sszvis-dataarearectangle").nodes();
-    expect(rectangles.length).toBe(2);
-
-    // Check that rectangles are still created with zero dimensions
-    const firstRect = select(rectangles[0]);
-    expect(Number(firstRect.attr("width"))).toBe(0);
-    expect(Number(firstRect.attr("height"))).toBe(80);
-
-    const secondRect = select(rectangles[1]);
-    expect(Number(secondRect.attr("width"))).toBe(120);
-    expect(Number(secondRect.attr("height"))).toBe(0);
+    expect(
+      rects(chartLayer).map((r) => [Number(r.attr("width")), Number(r.attr("height"))]),
+    ).toEqual([
+      [0, 80],
+      [120, 0],
+    ]);
   });
 });

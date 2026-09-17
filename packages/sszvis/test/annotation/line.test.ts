@@ -1,8 +1,25 @@
-import { type ScaleLinear, scaleLinear, select } from "d3";
+import { type Selection, type ScaleLinear, scaleLinear, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import line from "../../src/annotation/line.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
+
+/** Any group layer these tests render into, whatever datum is currently bound. */
+type Layer<D> = Selection<SVGGElement, D, SVGGElement, number>;
+
+/**
+ * Reads the caption's placement out of its transform without depending on how d3
+ * serialises it, so a whitespace or separator change cannot fail a correct render.
+ */
+const placementOf = (transform: string | null) => {
+  const translate = /translate\(\s*(-?[\d.]+)[\s,]+(-?[\d.]+)\s*\)/.exec(transform ?? "");
+  const rotate = /rotate\(\s*(-?[\d.]+)\s*\)/.exec(transform ?? "");
+  if (!translate || !rotate) throw new Error(`no translate+rotate in ${transform}`);
+  return {
+    at: [Number(translate[1]), Number(translate[2])] as [number, number],
+    angle: Number(rotate[1]),
+  };
+};
 
 describe("annotation/line", () => {
   let container: HTMLDivElement;
@@ -16,7 +33,6 @@ describe("annotation/line", () => {
     container.style.height = "300px";
     document.body.appendChild(container);
 
-    // Create test scales
     xScale = scaleLinear().domain([0, 100]).range([0, 400]);
     yScale = scaleLinear().domain([0, 100]).range([300, 0]); // Inverted for typical chart coordinates
   });
@@ -25,303 +41,136 @@ describe("annotation/line", () => {
     container?.parentNode?.removeChild(container);
   });
 
-  const testData = [{}]; // Line annotation typically uses a single data point for the line
+  const singleDatum = [{}];
 
-  test("should render line annotation with proper DOM structure", () => {
+  const layer = () =>
+    createSvgLayer("#chart-container", undefined, { key: "test-layer" }).selectGroup("lines");
+
+  const lines = <D>(chartLayer: Layer<D>) =>
+    chartLayer
+      .selectAll("line.sszvis-referenceline")
+      .nodes()
+      .map((node) => select(node));
+
+  const captions = <D>(chartLayer: Layer<D>) =>
+    chartLayer
+      .selectAll("text.sszvis-referenceline__caption")
+      .nodes()
+      .map((node) => select(node));
+
+  test("should scale both endpoints through the chart scales when coordinates are given in data units", () => {
+    const chartLayer = layer()
+      .datum(singleDatum)
+      .call(line().x1(10).y1(20).x2(90).y2(80).xScale(xScale).yScale(yScale));
+
+    const rendered = lines(chartLayer);
+    expect(rendered).toHaveLength(1);
+    expect([
+      Number(rendered[0].attr("x1")),
+      Number(rendered[0].attr("y1")),
+      Number(rendered[0].attr("x2")),
+      Number(rendered[0].attr("y2")),
+    ]).toEqual([xScale(10), yScale(20), xScale(90), yScale(80)]);
+  });
+
+  test.for([
+    // The angle is the slope on screen, so it follows the (non-square) scale ranges,
+    // and it is negative because the y scale is inverted.
+    { shape: "diagonal", x1: 0, y1: 0, x2: 60, y2: 60, angle: -36.8699 },
+    { shape: "horizontal", x1: 10, y1: 50, x2: 90, y2: 50, angle: 0 },
+    { shape: "vertical", x1: 50, y1: 10, x2: 50, y2: 90, angle: -90 },
+  ])(
+    "should place the caption at the line's midpoint rotated to its slope when the line is $shape",
+    ({ x1, y1, x2, y2, angle }) => {
+      const chartLayer = layer()
+        .datum(singleDatum)
+        .call(
+          line().x1(x1).y1(y1).x2(x2).y2(y2).xScale(xScale).yScale(yScale).caption("Test Line"),
+        );
+
+      const rendered = captions(chartLayer);
+      expect(rendered).toHaveLength(1);
+      expect(rendered[0].text()).toBe("Test Line");
+
+      const { at, angle: renderedAngle } = placementOf(rendered[0].attr("transform"));
+      expect(at[0]).toBeCloseTo((xScale(x1) + xScale(x2)) / 2, 6);
+      expect(at[1]).toBeCloseTo((yScale(y1) + yScale(y2)) / 2, 6);
+      expect(renderedAngle).toBeCloseTo(angle, 4);
+    },
+  );
+
+  test("should render no caption when no caption is set", () => {
+    const chartLayer = layer()
+      .datum(singleDatum)
+      .call(line().x1(20).y1(30).x2(80).y2(70).xScale(xScale).yScale(yScale));
+
+    expect(captions(chartLayer)).toHaveLength(0);
+  });
+
+  test.for([
+    { form: "scalars", dx: 15 as number | (() => number), dy: -10 as number | (() => number) },
+    { form: "accessors", dx: () => 15, dy: () => -10 },
+  ])(
+    "should offset the caption from the midpoint when dx and dy are given as $form",
+    ({ dx, dy }) => {
+      const chartLayer = layer()
+        .datum(singleDatum)
+        .call(
+          line()
+            .x1(10)
+            .y1(20)
+            .x2(50)
+            .y2(40)
+            .xScale(xScale)
+            .yScale(yScale)
+            .caption("Offset Line")
+            .dx(dx)
+            .dy(dy),
+        );
+
+      const [caption] = captions(chartLayer);
+      expect([Number(caption.attr("dx")), Number(caption.attr("dy"))]).toEqual([15, -10]);
+    },
+  );
+
+  test("should render one shared caption over identically placed lines when several data are bound", () => {
+    const chartLayer = layer()
+      .datum([{ id: "line1" }, { id: "line2" }, { id: "line3" }])
+      .call(
+        line().x1(25).y1(25).x2(75).y2(75).xScale(xScale).yScale(yScale).caption("Multiple Lines"),
+      );
+
+    // The coordinates are scalar props, so every datum yields the same line …
+    expect(
+      lines(chartLayer).map((l) => [
+        Number(l.attr("x1")),
+        Number(l.attr("y1")),
+        Number(l.attr("x2")),
+        Number(l.attr("y2")),
+      ]),
+    ).toEqual(Array.from({ length: 3 }, () => [xScale(25), yScale(25), xScale(75), yScale(75)]));
+    // … and the caption is bound to `[0]`, not to the data, so there is exactly one.
+    expect(captions(chartLayer).map((c) => c.text())).toEqual(["Multiple Lines"]);
+  });
+
+  test("should match the rendered line count to the data when the data changes", () => {
     const lineComponent = line().x1(10).y1(20).x2(90).y2(80).xScale(xScale).yScale(yScale);
+    const chartLayer = layer();
 
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(testData)
-      .call(lineComponent);
-
-    // Check that line is rendered
-    const lines = chartLayer.selectAll("line.sszvis-referenceline").nodes();
-    expect(lines.length).toBe(1);
-
-    // Check that the line has the correct class
-    expect(select(lines[0]).classed("sszvis-referenceline")).toBe(true);
+    for (const count of [1, 2, 0]) {
+      chartLayer
+        .datum(Array.from({ length: count }, (_, i) => ({ id: `line${i}` })))
+        .call(lineComponent);
+      expect(lines(chartLayer)).toHaveLength(count);
+    }
   });
 
-  test("should position line correctly using scales and coordinates", () => {
-    const lineComponent = line().x1(10).y1(20).x2(90).y2(80).xScale(xScale).yScale(yScale);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(testData)
-      .call(lineComponent);
-
-    const lineElement = chartLayer.select("line.sszvis-referenceline");
-
-    // Check that coordinates are properly scaled
-    expect(Number(lineElement.attr("x1"))).toBe(xScale(10)); // 40
-    expect(Number(lineElement.attr("y1"))).toBe(yScale(20)); // 240
-    expect(Number(lineElement.attr("x2"))).toBe(xScale(90)); // 360
-    expect(Number(lineElement.attr("y2"))).toBe(yScale(80)); // 60
-  });
-
-  test("should render caption when caption property is provided", () => {
-    const lineComponent = line()
-      .x1(20)
-      .y1(30)
-      .x2(80)
-      .y2(70)
-      .xScale(xScale)
-      .yScale(yScale)
-      .caption("Test Line");
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(testData)
-      .call(lineComponent);
-
-    // Check that caption is rendered
-    const captions = chartLayer.selectAll("text.sszvis-referenceline__caption").nodes();
-    expect(captions.length).toBe(1);
-
-    const captionElement = select(captions[0]);
-    expect(captionElement.classed("sszvis-referenceline__caption")).toBe(true);
-    expect(captionElement.text()).toBe("Test Line");
-  });
-
-  test("should not render caption when caption property is not provided", () => {
-    const lineComponent = line().x1(20).y1(30).x2(80).y2(70).xScale(xScale).yScale(yScale);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(testData)
-      .call(lineComponent);
-
-    // Check that no caption is rendered
-    const captions = chartLayer.selectAll("text.sszvis-referenceline__caption").nodes();
-    expect(captions.length).toBe(0);
-  });
-
-  test("should position caption at midpoint of line with correct rotation", () => {
-    const lineComponent = line()
-      .x1(0)
-      .y1(0)
-      .x2(60)
-      .y2(60)
-      .xScale(xScale)
-      .yScale(yScale)
-      .caption("Diagonal Line");
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(testData)
-      .call(lineComponent);
-
-    const captionElement = chartLayer.select("text.sszvis-referenceline__caption");
-    const transform = captionElement.attr("transform");
-
-    expect(transform).toBeTruthy();
-    expect(transform).toContain("translate");
-    expect(transform).toContain("rotate");
-
-    // For a diagonal line from (0,0) to (60,60), the midpoint should be at (30,30) in data coordinates
-    const x1Scaled = xScale(0);
-    const y1Scaled = yScale(0);
-    const x2Scaled = xScale(60);
-    const y2Scaled = yScale(60);
-    const expectedMidX = (x1Scaled + x2Scaled) / 2;
-    const expectedMidY = (y1Scaled + y2Scaled) / 2;
-
-    expect(transform).toContain(`translate(${expectedMidX},${expectedMidY})`);
-  });
-
-  test("should apply dx and dy offsets to caption", () => {
-    const lineComponent = line()
-      .x1(10)
-      .y1(20)
-      .x2(50)
-      .y2(40)
-      .xScale(xScale)
-      .yScale(yScale)
-      .caption("Offset Line")
-      .dx(15)
-      .dy(-10);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(testData)
-      .call(lineComponent);
-
-    const captionElement = chartLayer.select("text.sszvis-referenceline__caption");
-
-    expect(Number(captionElement.attr("dx"))).toBe(15);
-    expect(Number(captionElement.attr("dy"))).toBe(-10);
-  });
-
-  test("should work with constant coordinate values", () => {
-    // Note: The line component appears to work with constant values rather than data-driven accessors
-    // for the coordinate properties. Each line uses the same coordinate values.
-    const dataWithCoordinates = [{ id: "line1" }, { id: "line2" }];
-
-    const lineComponent = line()
-      .x1(25) // Using constant values instead of accessor functions
-      .y1(25)
-      .x2(75)
-      .y2(75)
-      .xScale(xScale)
-      .yScale(yScale)
-      .caption("Multiple Lines");
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(dataWithCoordinates)
-      .call(lineComponent);
-
-    const lines = chartLayer.selectAll("line.sszvis-referenceline").nodes();
-    expect(lines.length).toBe(2);
-
-    // Check coordinates for all lines (they should be the same since we used constants)
-    lines.forEach((lineEl) => {
-      const lineElement = select(lineEl);
-      expect(Number(lineElement.attr("x1"))).toBe(xScale(25)); // Should be 100
-      expect(Number(lineElement.attr("y1"))).toBe(yScale(25)); // Should be 225
-      expect(Number(lineElement.attr("x2"))).toBe(xScale(75)); // Should be 300
-      expect(Number(lineElement.attr("y2"))).toBe(yScale(75)); // Should be 75
-    });
-
-    // Check caption (should be one caption element regardless of number of data points)
-    const captions = chartLayer.selectAll("text.sszvis-referenceline__caption").nodes();
-    expect(captions.length).toBe(1);
-    expect(select(captions[0]).text()).toBe("Multiple Lines");
-  });
-
-  test("should work with function accessors for dx and dy", () => {
-    const lineComponent = line()
-      .x1(10)
-      .y1(20)
-      .x2(50)
-      .y2(40)
-      .xScale(xScale)
-      .yScale(yScale)
-      .caption("Function Offset Line")
-      .dx(() => 20)
-      .dy(() => -15);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(testData)
-      .call(lineComponent);
-
-    const captionElement = chartLayer.select("text.sszvis-referenceline__caption");
-
-    expect(Number(captionElement.attr("dx"))).toBe(20);
-    expect(Number(captionElement.attr("dy"))).toBe(-15);
-  });
-
-  test("should handle horizontal lines correctly", () => {
-    const lineComponent = line()
-      .x1(10)
-      .y1(50)
-      .x2(90)
-      .y2(50) // Same y-coordinate for horizontal line
-      .xScale(xScale)
-      .yScale(yScale)
-      .caption("Horizontal Line");
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(testData)
-      .call(lineComponent);
-
-    const lineElement = chartLayer.select("line.sszvis-referenceline");
-    const captionElement = chartLayer.select("text.sszvis-referenceline__caption");
-
-    // Check that y-coordinates are the same
-    expect(Number(lineElement.attr("y1"))).toBe(Number(lineElement.attr("y2")));
-
-    // Check that caption rotation is 0 degrees for horizontal line
-    const transform = captionElement.attr("transform");
-    expect(transform).toContain("rotate(0)");
-  });
-
-  test("should handle vertical lines correctly", () => {
-    const lineComponent = line()
-      .x1(50)
-      .y1(10)
-      .x2(50) // Same x-coordinate for vertical line
-      .y2(90)
-      .xScale(xScale)
-      .yScale(yScale)
-      .caption("Vertical Line");
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(testData)
-      .call(lineComponent);
-
-    const lineElement = chartLayer.select("line.sszvis-referenceline");
-    const captionElement = chartLayer.select("text.sszvis-referenceline__caption");
-
-    // Check that x-coordinates are the same
-    expect(Number(lineElement.attr("x1"))).toBe(Number(lineElement.attr("x2")));
-
-    // Check that caption rotation is 90 or -90 degrees for vertical line
-    const transform = captionElement.attr("transform");
-    expect(transform).toMatch(/rotate\((90|-90)\)/);
-  });
-
-  test("should handle multiple data points for multiple lines", () => {
-    const multipleLineData = [{ id: "line1" }, { id: "line2" }, { id: "line3" }];
-
-    const lineComponent = line().x1(10).y1(20).x2(90).y2(80).xScale(xScale).yScale(yScale);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
-      .datum(multipleLineData)
-      .call(lineComponent);
-
-    const lines = chartLayer.selectAll("line.sszvis-referenceline").nodes();
-    expect(lines.length).toBe(3);
-
-    // All lines should have the same coordinates since we used constant values
-    lines.forEach((lineEl) => {
-      const lineSelection = select(lineEl);
-      expect(lineSelection.classed("sszvis-referenceline")).toBe(true);
-      expect(Number(lineSelection.attr("x1"))).toBe(xScale(10));
-      expect(Number(lineSelection.attr("y1"))).toBe(yScale(20));
-    });
-  });
-
-  test("should handle data updates correctly", () => {
-    const lineComponent = line().x1(10).y1(20).x2(90).y2(80).xScale(xScale).yScale(yScale);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, {
-      key: "test-layer",
-    }).selectGroup("lines");
-
-    // Initial render with 1 line
-    chartLayer.datum([{ id: "line1" }]).call(lineComponent);
-    let lines = chartLayer.selectAll("line.sszvis-referenceline").nodes();
-    expect(lines.length).toBe(1);
-
-    // Update with 2 lines
-    chartLayer.datum([{ id: "line1" }, { id: "line2" }]).call(lineComponent);
-    lines = chartLayer.selectAll("line.sszvis-referenceline").nodes();
-    expect(lines.length).toBe(2);
-
-    // Update with 0 lines
-    chartLayer.datum([]).call(lineComponent);
-    lines = chartLayer.selectAll("line.sszvis-referenceline").nodes();
-    expect(lines.length).toBe(0);
-  });
-
-  test("should handle empty data array", () => {
-    const lineComponent = line().x1(10).y1(20).x2(90).y2(80).xScale(xScale).yScale(yScale);
-
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("lines")
+  test("should render neither line nor caption when the data is empty", () => {
+    const chartLayer = layer()
       .datum([])
-      .call(lineComponent);
+      .call(line().x1(10).y1(20).x2(90).y2(80).xScale(xScale).yScale(yScale));
 
-    const lines = chartLayer.selectAll("line.sszvis-referenceline").nodes();
-    expect(lines.length).toBe(0);
-
-    const captions = chartLayer.selectAll("text.sszvis-referenceline__caption").nodes();
-    expect(captions.length).toBe(0);
+    expect(lines(chartLayer)).toHaveLength(0);
+    expect(captions(chartLayer)).toHaveLength(0);
   });
 });

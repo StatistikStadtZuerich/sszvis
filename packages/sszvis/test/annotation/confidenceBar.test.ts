@@ -8,12 +8,7 @@ type TestDatum = {
   value: number;
   low: number;
   high: number;
-};
-
-type ComplexTestDatum = {
-  measurement: number;
-  errorRange: { min: number; max: number };
-  position: { x: number; y: number };
+  group?: number;
 };
 
 describe("annotation/confidenceBar", () => {
@@ -38,114 +33,96 @@ describe("annotation/confidenceBar", () => {
     ],
   ];
 
-  test("should render confidenceBar with proper DOM structure", () => {
-    const confidenceBarComponent = confidenceBar<TestDatum>()
-      .confidenceLow((d) => d.low)
-      .confidenceHigh((d) => d.high)
-      .width(10)
-      .groupSize(2)
-      .groupWidth(60)
-      .groupScale(() => 0);
+  test("should draw a capped vertical span between the bounds for every bar in every group", () => {
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("confidenceBars")
       .datum(testData)
-      .call(confidenceBarComponent);
-    const groups = chartLayer.selectAll("g.sszvis-confidence-bargroup").nodes();
-    expect(groups.length).toBe(1);
-    expect(select(groups[0]).classed("sszvis-confidence-bargroup")).toBe(true);
+      .call(
+        confidenceBar<TestDatum>()
+          .confidenceLow((d) => d.low)
+          .confidenceHigh((d) => d.high)
+          .width(20)
+          .groupSize(2)
+          .groupWidth(60)
+          .groupScale(() => 150),
+      );
+
+    expect(chartLayer.selectAll("g.sszvis-confidence-bargroup").nodes()).toHaveLength(1);
     const barUnits = chartLayer.selectAll("g.sszvis-confidence-barunit").nodes();
-    expect(barUnits.length).toBe(2);
-    barUnits.forEach((unit) => {
-      expect(select(unit).classed("sszvis-confidence-barunit")).toBe(true);
-      expect(select(unit).selectAll("line.sszvis-confidence-bar").nodes().length).toBe(3);
-    });
+    expect(barUnits).toHaveLength(2);
+
+    const geometryOf = (unit: Element) =>
+      select(unit)
+        .selectAll("line.sszvis-confidence-bar")
+        .nodes()
+        .map((l) => {
+          const line = select(l);
+          return [
+            Number(line.attr("x1")),
+            Number(line.attr("y1")),
+            Number(line.attr("x2")),
+            Number(line.attr("y2")),
+          ];
+        });
+
+    // Each bar is a vertical span from its high bound down to its low bound, with a 20-wide
+    // cap centred on the span at each end. Where the span sits along x is the slot test's job.
+    for (const [unit, { low, high }] of [
+      [barUnits[0] as Element, testData[0][0]],
+      [barUnits[1] as Element, testData[0][1]],
+    ] as const) {
+      const [span, highCap, lowCap] = geometryOf(unit);
+      const centre = span[0];
+      expect(span).toEqual([centre, high, centre, low]);
+      expect(highCap).toEqual([centre - 10, high, centre + 10, high]);
+      expect(lowCap).toEqual([centre - 10, low, centre + 10, low]);
+    }
   });
 
-  test("should position confidence bounds correctly", () => {
-    const confidenceBarComponent = confidenceBar()
-      .confidenceLow((d) => (d as unknown as TestDatum).low)
-      .confidenceHigh((d) => (d as unknown as TestDatum).high)
-      .width(10)
-      .groupSize(1)
-      .groupWidth(60)
-      .groupScale(() => 150);
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("confidenceBars")
-      .datum(testData)
-      .call(confidenceBarComponent);
-    const lines = chartLayer.selectAll("line.sszvis-confidence-bar").nodes();
-    expect(lines.length).toBe(6);
-    const verticalLine = select(lines[0]);
-    expect(Number(verticalLine.attr("y1"))).toBe(60);
-    expect(Number(verticalLine.attr("y2"))).toBe(40);
-    expect(verticalLine.attr("x1")).toBe(verticalLine.attr("x2"));
-    const topCap = select(lines[1]);
-    expect(Number(topCap.attr("y1"))).toBe(60);
-    expect(Number(topCap.attr("y2"))).toBe(60);
-    const bottomCap = select(lines[2]);
-    expect(Number(bottomCap.attr("y1"))).toBe(40);
-    expect(Number(bottomCap.attr("y2"))).toBe(40);
-  });
+  test("should place each bar at its own slot within its group when groups are spaced apart", () => {
+    const GROUP_SIZE = 2;
+    const GROUP_WIDTH = 100;
+    const GROUP_SPACE = 0.1;
+    const groupedData: TestDatum[][] = [
+      [
+        { value: 50, low: 40, high: 60, group: 0 },
+        { value: 75, low: 65, high: 85, group: 0 },
+      ],
+      [
+        { value: 20, low: 15, high: 25, group: 1 },
+        { value: 30, low: 25, high: 35, group: 1 },
+      ],
+    ];
 
-  test("should position groups correctly with groupScale", () => {
-    let groupIndex = 0;
-    const confidenceBarComponent = confidenceBar()
-      .confidenceLow((d) => (d as unknown as TestDatum).low)
-      .confidenceHigh((d) => (d as unknown as TestDatum).high)
-      .width(10)
-      .groupSize(1)
-      .groupWidth(60)
-      .groupScale(() => groupIndex++ * 100);
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("confidenceBars")
-      .datum(testData)
-      .call(confidenceBarComponent);
-    const barUnits = chartLayer.selectAll("g.sszvis-confidence-barunit").nodes();
-    expect(barUnits.length).toBe(2);
-    const firstX = Number(select(barUnits[0]).select("line.sszvis-confidence-bar").attr("x1"));
-    const secondX = Number(select(barUnits[1]).select("line.sszvis-confidence-bar").attr("x1"));
-    expect(firstX).not.toBe(secondX);
-    expect(secondX).toBeGreaterThan(firstX);
-  });
+      .datum(groupedData)
+      .call(
+        confidenceBar<TestDatum>()
+          .confidenceLow((d) => d.low)
+          .confidenceHigh((d) => d.high)
+          .width(10)
+          .groupSize(GROUP_SIZE)
+          .groupWidth(GROUP_WIDTH)
+          .groupSpace(GROUP_SPACE)
+          .groupScale((d) => (d.group ?? 0) * 200),
+      );
 
-  test("should render caps with correct width", () => {
-    const confidenceBarComponent = confidenceBar()
-      .confidenceLow((d) => (d as unknown as TestDatum).low)
-      .confidenceHigh((d) => (d as unknown as TestDatum).high)
-      .width(20) // Wide caps
-      .groupSize(1)
-      .groupWidth(60)
-      .groupScale(() => 150);
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("confidenceBars")
-      .datum(testData)
-      .call(confidenceBarComponent);
-    const lines = chartLayer.selectAll("line.sszvis-confidence-bar").nodes();
-    const topCap = select(lines[1]);
-    const bottomCap = select(lines[2]);
-    expect(Number(topCap.attr("x2")) - Number(topCap.attr("x1"))).toBe(20);
-    expect(Number(bottomCap.attr("x2")) - Number(bottomCap.attr("x1"))).toBe(20);
-  });
+    const band = scaleBand()
+      .domain(range(GROUP_SIZE).map(String))
+      .rangeRound([0, GROUP_WIDTH])
+      .paddingInner(GROUP_SPACE)
+      .paddingOuter(0);
+    const slot = (i: number) => (band(String(i)) ?? 0) + band.bandwidth() / 2;
 
-  test("should handle multiple items within a group with groupSpace", () => {
-    const confidenceBarComponent = confidenceBar()
-      .confidenceLow((d) => (d as unknown as TestDatum).low)
-      .confidenceHigh((d) => (d as unknown as TestDatum).high)
-      .width(10)
-      .groupSize(2)
-      .groupWidth(100)
-      .groupSpace(0.1) // 10% spacing
-      .groupScale(() => 150);
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("confidenceBars")
-      .datum(testData)
-      .call(confidenceBarComponent);
-    const barUnits = chartLayer.selectAll("g.sszvis-confidence-barunit").nodes();
-    expect(barUnits.length).toBe(2);
-    const firstX = Number(select(barUnits[0]).select("line.sszvis-confidence-bar").attr("x1"));
-    const secondX = Number(select(barUnits[1]).select("line.sszvis-confidence-bar").attr("x1"));
-    expect(firstX).not.toBe(secondX);
-    expect(secondX).toBeGreaterThan(firstX);
+    // Absolute positions, so a groupScale or a groupSpace that is silently ignored fails here
+    // rather than passing a "the second bar is further right" comparison.
+    expect(
+      chartLayer
+        .selectAll("g.sszvis-confidence-barunit")
+        .nodes()
+        .map((u) => Number(select(u).select("line.sszvis-confidence-bar").attr("x1"))),
+    ).toEqual([slot(0), slot(1), 200 + slot(0), 200 + slot(1)]);
   });
 
   describe("shared datum objects", () => {
@@ -221,35 +198,5 @@ describe("annotation/confidenceBar", () => {
       expect(data.flat().map((d) => Object.keys(d).sort())).toEqual(before);
       expect(Object.keys(shared).sort()).toEqual(["high", "low", "value"]);
     });
-  });
-
-  test("should work with custom accessor functions", () => {
-    const complexTestData: ComplexTestDatum[][] = [
-      [
-        {
-          measurement: 50,
-          errorRange: { min: 40, max: 60 },
-          position: { x: 100, y: 200 },
-        },
-      ],
-    ];
-
-    const confidenceBarComponent = confidenceBar<ComplexTestDatum>()
-      .x((d) => d.position.x)
-      .y((d) => d.position.y)
-      .confidenceLow((d) => d.errorRange.min)
-      .confidenceHigh((d) => d.errorRange.max)
-      .width(15)
-      .groupSize(1)
-      .groupWidth(60)
-      .groupScale(() => 150);
-    const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-      .selectGroup("confidenceBars")
-      .datum(complexTestData)
-      .call(confidenceBarComponent);
-    const lines = chartLayer.selectAll("line.sszvis-confidence-bar").nodes();
-    expect(lines.length).toBe(3);
-    expect(Number(select(lines[0]).attr("y1"))).toBe(60);
-    expect(Number(select(lines[0]).attr("y2"))).toBe(40);
   });
 });
