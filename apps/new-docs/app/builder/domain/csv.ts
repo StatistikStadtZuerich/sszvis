@@ -2,7 +2,7 @@ import { csvFormatRows, dsvFormat } from "d3-dsv";
 import { Option, Schema } from "effect";
 
 import { escapeHtml } from "./host";
-import { ColumnName, RoleKind } from "./spec";
+import { ColumnName, type ColumnKind, type ColumnKinds, type RoleKind } from "./spec";
 
 export type Table = {
   readonly columns: readonly ColumnName[];
@@ -153,13 +153,70 @@ export const serialize = (table: Table): string => {
     .join("\n");
 };
 
-export type ColumnKind = typeof RoleKind.Type;
+/** The role a column of each kind satisfies outright, before any second choice. */
+const NATURAL = {
+  nominal: "category",
+  continuous: "number",
+  temporal: "date",
+} satisfies Record<ColumnKind, RoleKind>;
 
-export const fitRank = (column: ColumnKind, role: ColumnKind): number | null => {
-  if (column === role) return 0;
+/**
+ * How well a column of one kind fills a role that wants another: 0 is exact, a
+ * higher number is a worse fit, and `null` is no fit at all. The one direction
+ * that bends is a category role, which will take anything since any value can be
+ * a label - preferring dates over numbers, because a column of dates read as
+ * labels still reads in order while a column of numbers does not.
+ */
+export const fitRank = (column: ColumnKind, role: RoleKind): number | null => {
+  if (NATURAL[column] === role) return 0;
   if (role !== "category") return null;
-  return column === "date" ? 1 : 2;
+  return column === "temporal" ? 1 : 2;
 };
+
+/** The pins after a column is renamed, carrying the pin to the name it now has. */
+export const renameKind = (kinds: ColumnKinds, from: ColumnName, to: ColumnName): ColumnKinds => {
+  const pinned = kinds[from];
+  if (pinned === undefined || from === to) return kinds;
+  const { [from]: _moved, ...rest } = kinds;
+  return { ...rest, [to]: pinned };
+};
+
+/**
+ * A column given the name that was typed into its header, made distinct from the
+ * other columns', with its pin following it.
+ *
+ * `from` is the name the column carried when the editing began, not the one it
+ * carries now: mid-edit a header may read exactly what another column is called,
+ * and a pin moved by the name showing at that moment would be moved off the wrong
+ * column. Settling is the one point where the names are unique again, so it is the
+ * only point at which a pin may be re-keyed.
+ */
+export const settleColumn = (
+  table: Table,
+  column: number,
+  from: ColumnName,
+  kinds: ColumnKinds,
+) => {
+  const taken = new Set(table.columns.filter((_, index) => index !== column));
+  const settled = distinctName(table.columns[column] ?? "", taken, column);
+  return {
+    table: {
+      ...table,
+      columns: table.columns.map((name, index) => (index === column ? settled : name)),
+    },
+    kinds: renameKind(kinds, from, settled),
+  };
+};
+
+/**
+ * A name for a column being added, distinct from the ones the table already has.
+ *
+ * NOTE: the count alone used to name it, which repeats a name whenever the user
+ * has typed that name themselves - and two columns of one name are one column to
+ * everything downstream, which addresses them by name.
+ */
+export const addedName = (columns: readonly ColumnName[]): ColumnName =>
+  distinctName("", new Set(columns), columns.length);
 
 /** `dd.mm.yyyy`, which is what `sszvis.parseDate` reads. */
 const SWISS_DATE = /^\d{1,2}\.\d{1,2}\.\d{4}$/;
@@ -167,31 +224,56 @@ const SWISS_DATE = /^\d{1,2}\.\d{1,2}\.\d{4}$/;
 /* `Number(...)` would admit "Infinity", whose comparator then returns NaN. */
 const decodeFinite = Schema.decodeUnknownOption(Schema.FiniteFromString);
 
-export const columnKinds = (table: Table): ReadonlyMap<string, ColumnKind> => {
+/** What each column looks like from its values alone, before anyone overrules it. */
+export const detectedKinds = (table: Table): ReadonlyMap<string, ColumnKind> => {
   const kinds = new Map<string, ColumnKind>();
   for (const [index, column] of table.columns.entries()) {
     const values = table.rows.map((row) => row[index] ?? "").filter((value) => value !== "");
     if (values.length === 0) {
-      kinds.set(column, "category");
+      kinds.set(column, "nominal");
     } else if (values.every((value) => SWISS_DATE.test(value))) {
-      kinds.set(column, "date");
+      kinds.set(column, "temporal");
     } else if (values.every((value) => Option.isSome(decodeFinite(value)))) {
-      kinds.set(column, "number");
+      kinds.set(column, "continuous");
     } else {
-      kinds.set(column, "category");
+      kinds.set(column, "nominal");
     }
+  }
+  return kinds;
+};
+
+/**
+ * What each column holds, the user's pins laid over what the values say. A pin
+ * naming a column the table no longer has says nothing and is ignored.
+ *
+ * `overrides` has no default. Every caller states what it knows about the user's
+ * pins, including that it knows of none, because a default here would let a call
+ * site that has simply not been told about pins keep compiling while silently
+ * ignoring them.
+ */
+export const columnKinds = (
+  table: Table,
+  overrides: ColumnKinds,
+): ReadonlyMap<string, ColumnKind> => {
+  const kinds = new Map(detectedKinds(table));
+  for (const column of table.columns) {
+    const pinned = overrides[column];
+    if (pinned !== undefined) kinds.set(column, pinned);
   }
   return kinds;
 };
 
 export type SortDirection = "asc" | "desc";
 
+/* Sorting reads the pinned kind, so a column pinned as text sorts as text however
+   its cells parse - which is the whole of what pinning it means. */
 export const sortOrder = (
   table: Table,
   column: number,
   direction: SortDirection,
+  overrides: ColumnKinds,
 ): readonly number[] => {
-  const kind = columnKinds(table).get(table.columns[column] ?? "") ?? "category";
+  const kind = columnKinds(table, overrides).get(table.columns[column] ?? "") ?? "nominal";
   const sign = direction === "asc" ? 1 : -1;
   const compare = (a: string, b: string) => {
     if (a === "") return b === "" ? 0 : 1;
@@ -211,8 +293,12 @@ export const reorder = (table: Table, order: readonly number[]): Table => ({
     .filter((cells): cells is readonly string[] => cells !== undefined),
 });
 
-export const sortRows = (table: Table, column: number, direction: SortDirection): Table =>
-  reorder(table, sortOrder(table, column, direction));
+export const sortRows = (
+  table: Table,
+  column: number,
+  direction: SortDirection,
+  overrides: ColumnKinds,
+): Table => reorder(table, sortOrder(table, column, direction, overrides));
 
 const collator = new Intl.Collator("de-CH", { numeric: true, sensitivity: "base" });
 
@@ -224,11 +310,11 @@ const dateKey = (value: string) => {
 
 const compareByKind = (kind: ColumnKind, a: string, b: string): number => {
   switch (kind) {
-    case "number":
+    case "continuous":
       return Number(a) - Number(b);
-    case "date":
+    case "temporal":
       return dateKey(a) - dateKey(b);
-    case "category":
+    case "nominal":
       return collator.compare(a, b);
   }
 };

@@ -2,13 +2,27 @@ import { Array, Option, Order, Record } from "effect";
 
 import { columnKinds, fitRank, parse, type Table } from "./csv";
 import { sampleFor } from "./samples";
-import { ColumnName, type RoleKey, type Fields, type RecipeSummary, type Spec } from "./spec";
+import {
+  ColumnName,
+  type ColumnKinds,
+  type Fields,
+  type RecipeSummary,
+  type RoleKey,
+  type Spec,
+} from "./spec";
 
 /** A role the search left unbound. `Spec["fields"]` spells that as an empty column name. */
 const UNMAPPED = ColumnName.make("");
 
-export const bindRoles = (recipe: RecipeSummary, table: Table, prior: Fields = {}): Fields => {
-  const kinds = columnKinds(table);
+/* Resolving through the pins is the point of them: a column the user pinned
+   competes for the roles that kind fits, not the ones its values suggested. */
+export const bindRoles = (
+  recipe: RecipeSummary,
+  table: Table,
+  overrides: ColumnKinds,
+  prior: Fields = {},
+): Fields => {
+  const kinds = columnKinds(table, overrides);
   const roles = recipe.roles;
   /* Lexicographic: unfilled required, their rank sum, unfilled optional, their rank sum. */
   type Cost = readonly [number, number, number, number];
@@ -28,7 +42,7 @@ export const bindRoles = (recipe: RecipeSummary, table: Table, prior: Fields = {
   };
 
   const rank = (role: (typeof roles)[number], column: ColumnName): number | null => {
-    const fit = fitRank(kinds.get(column) ?? "category", role.kind);
+    const fit = fitRank(kinds.get(column) ?? "nominal", role.kind);
     if (fit === null) return null;
     if (prior[role.key] === column) return -1;
     if (role.optional === true && fit !== 0) return null;
@@ -67,8 +81,9 @@ export const bindRoles = (recipe: RecipeSummary, table: Table, prior: Fields = {
 export function unmetRoles(
   recipe: RecipeSummary,
   table: Table,
+  overrides: ColumnKinds,
 ): readonly RecipeSummary["roles"][number][] {
-  const fields = bindRoles(recipe, table);
+  const fields = bindRoles(recipe, table, overrides);
   return recipe.roles.filter((role) => role.optional !== true && fields[role.key] === UNMAPPED);
 }
 
@@ -83,16 +98,24 @@ export function initialSpec(
   return {
     recipe: recipe.key,
     csv,
-    fields: bindRoles(recipe, parse(csv)),
+    fields: bindRoles(recipe, parse(csv), {}),
     options: {},
     features: allFeatures(recipe),
     tooltip: recipe.defaultTooltip,
     annotations: [],
+    /* A fresh spec disagrees with the detector nowhere. */
+    kinds: {},
   };
 }
 
+/*
+ * A wholly new table, so the pins go with the old one: a pin that survived would
+ * land on whichever column of the sample happened to share its name, and that is
+ * coincidence rather than anything the user meant. Rebinding therefore reads the
+ * new table as the detector finds it.
+ */
 export function applySample(spec: Spec, recipe: RecipeSummary, csv: string): Spec {
-  return { ...spec, csv, fields: bindRoles(recipe, parse(csv), spec.fields) };
+  return { ...spec, csv, kinds: {}, fields: bindRoles(recipe, parse(csv), {}, spec.fields) };
 }
 
 const carryAnnotations = (
@@ -112,11 +135,14 @@ const carryAnnotations = (
     return before !== undefined && after !== undefined && before.kind === after.kind;
   });
 
+/* The pins come across untouched: the data has not changed, and pinning a column
+   and then shopping for a chart type that fits it is the point of pinning. */
 export function switchRecipe(spec: Spec, from: RecipeSummary, next: RecipeSummary): Spec {
   return {
     recipe: next.key,
     csv: spec.csv,
-    fields: bindRoles(next, parse(spec.csv), spec.fields),
+    kinds: spec.kinds,
+    fields: bindRoles(next, parse(spec.csv), spec.kinds, spec.fields),
     options: Object.fromEntries(
       Array.getSomes(
         next.options.map((option) =>

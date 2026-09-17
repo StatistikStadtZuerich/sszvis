@@ -21,15 +21,16 @@ import {
 } from "~/components/ui/table";
 
 import {
-  distinctName,
+  addedName,
   parseBlock,
   reorder,
   serialize,
+  settleColumn,
   type SortDirection,
   sortOrder,
   type Table,
 } from "../domain/csv";
-import { ColumnName } from "../domain/spec";
+import { ColumnName, type ColumnKinds } from "../domain/spec";
 import { PastePanel } from "./paste-panel";
 
 type Row = Table["rows"][number];
@@ -40,6 +41,7 @@ const OVERSCAN = 6;
 const WINDOW_FROM = 40;
 
 type EditorMeta = {
+  readonly beginRename: (column: number) => void;
   readonly setColumn: (column: number, value: string) => void;
   readonly settleColumn: (column: number) => void;
   readonly sortBy: (column: number) => void;
@@ -91,6 +93,7 @@ const HeaderCell = ({ column, table: grid }: HeaderContext<typeof features, Row,
       <Input
         value={name}
         onChange={(event) => grid.options.meta?.setColumn(index, event.target.value)}
+        onFocus={() => grid.options.meta?.beginRename(index)}
         /* Typing stays free; the name is settled on the way out, so a header is never
            left blank or repeated - either would address the wrong column downstream. */
         onBlur={() => grid.options.meta?.settleColumn(index)}
@@ -147,11 +150,18 @@ const RemoveCell = ({ row, table: grid }: CellContext<typeof features, Row, unkn
 
 export const TableEditor = ({
   table,
+  kinds,
   onChange,
+  onKindsChange,
   actions,
 }: {
   readonly table: Table;
+  /* The pins belong to the spec, so the editor reports a change to them rather
+     than holding them - the shape `table`/`onChange` already has. Nothing renders
+     them yet; they move here because renaming a column has to carry one. */
+  readonly kinds: ColumnKinds;
   readonly onChange: (table: Table) => void;
+  readonly onKindsChange: (kinds: ColumnKinds) => void;
   readonly actions?: React.ReactNode;
 }) => {
   const past = `${useId()}-past-table`;
@@ -171,6 +181,10 @@ export const TableEditor = ({
     [table, view],
   );
 
+  /* The name the column being edited carried before the caret entered it, which is
+     the only name its pin can safely be moved from. See `settleColumn`. */
+  const renaming = useRef<{ readonly column: number; readonly from: ColumnName } | null>(null);
+
   const replace = (next: Table) => {
     setHeld(null);
     setNotice(null);
@@ -180,6 +194,13 @@ export const TableEditor = ({
   };
 
   const meta: EditorMeta = {
+    beginRename: (column) => {
+      const from = table.columns[column];
+      if (from !== undefined) renaming.current = { column, from };
+    },
+    /* Typing only renames the column. The pin stays under the name it had until the
+       name settles, because mid-edit a header may read exactly what another column
+       is called and there would be no telling the two apart. */
     setColumn: (column, value) => {
       setNotice(null);
       onChange({
@@ -191,13 +212,13 @@ export const TableEditor = ({
       });
     },
     settleColumn: (column) => {
-      const taken = new Set(table.columns.filter((_, index) => index !== column));
-      const settled = distinctName(table.columns[column] ?? "", taken, column);
-      if (settled === table.columns[column]) return;
-      onChange({
-        ...table,
-        columns: table.columns.map((name, index) => (index === column ? settled : name)),
-      });
+      const started = renaming.current;
+      renaming.current = null;
+      const from = started?.column === column ? started.from : table.columns[column];
+      if (from === undefined) return;
+      const next = settleColumn(table, column, from, kinds);
+      if (next.table.columns[column] !== table.columns[column]) onChange(next.table);
+      if (next.kinds !== kinds) onKindsChange(next.kinds);
     },
     sortBy: (column) => {
       const direction: SortDirection | null =
@@ -205,7 +226,7 @@ export const TableEditor = ({
       setHeld(
         direction === null
           ? null
-          : { column, direction, order: sortOrder(table, column, direction) },
+          : { column, direction, order: sortOrder(table, column, direction, kinds) },
       );
     },
     sorted: view,
@@ -231,8 +252,7 @@ export const TableEditor = ({
       const pasted = new Map(targets.map((source, index) => [source, block[index]]));
 
       const columns = [...table.columns];
-      while (columns.length < column + width)
-        columns.push(ColumnName.make(`Spalte ${columns.length + 1}`));
+      while (columns.length < column + width) columns.push(addedName(columns));
       const grown = table.rows.map((cells) => [
         ...cells,
         ...Array.from({ length: columns.length - cells.length }, () => ""),
@@ -320,7 +340,12 @@ export const TableEditor = ({
     return (
       <PastePanel
         initial={serialize(table)}
+        /* A wholly new table, so the pins go with the old one, exactly as loading a
+           sample drops them. Not done in `replace`, which also serves adding a row,
+           adding a column, applying a sort order and pasting a block - all of which
+           keep the columns they started with, and their pins with them. */
         onSave={(next) => {
+          onKindsChange({});
           replace(next);
           setPasting(false);
         }}
@@ -405,7 +430,7 @@ export const TableEditor = ({
           variant="outline"
           onClick={() =>
             replace({
-              columns: [...table.columns, ColumnName.make(`Spalte ${table.columns.length + 1}`)],
+              columns: [...table.columns, addedName(table.columns)],
               rows: table.rows.map((cells) => [...cells, ""]),
             })
           }

@@ -2,9 +2,26 @@ import { Schema } from "effect";
 
 import type { Fragments, Scalars } from "./emit";
 
+/** What a recipe needs of a column, and what kind of value positions an annotation. */
 export const RoleKind = Schema.Literals(["category", "number", "date"]);
 
 export type RoleKind = typeof RoleKind.Type;
+
+/*
+ * What the data in a column is, which is a different question from what a chart
+ * wants of it - and the one the user may overrule. The two vocabularies are
+ * deliberately separate: a recipe asks for something it can put on a discrete
+ * scale, never for "nominal" specifically, so a finer measurement level added
+ * here later costs no recipe an opinion. `fitRank` maps one to the other.
+ *
+ * The names are measurement levels rather than the shapes they happen to take
+ * today, which leaves `ordinal` beside `nominal` and `discrete` beside
+ * `continuous` as additions rather than migrations. `continuous` covers whole
+ * numbers too until `discrete` earns its place by changing something.
+ */
+export const ColumnKind = Schema.Literals(["nominal", "continuous", "temporal"]);
+
+export type ColumnKind = typeof ColumnKind.Type;
 
 export const RoleKey = Schema.String.pipe(Schema.brand("RoleKey"));
 
@@ -48,6 +65,11 @@ export const GEO_LABEL = RoleKey.make("geoLabel");
 export const Fields = Schema.Record(RoleKey, ColumnName);
 
 export type Fields = typeof Fields.Type;
+
+/** The columns whose kind the user has pinned, by name. Absent means "as detected". */
+export const ColumnKinds = Schema.Record(ColumnName, ColumnKind);
+
+export type ColumnKinds = typeof ColumnKinds.Type;
 
 export const Tooltip = Schema.Struct({
   header: RoleKey,
@@ -97,6 +119,18 @@ export const Spec = Schema.Struct({
   features: Schema.Array(FeatureKey),
   tooltip: Tooltip,
   annotations: Schema.Array(Annotation),
+  /*
+   * Where the user overruled the detector, and nowhere else. Sparse on purpose:
+   * detection stays live for every column not named here, so a column whose
+   * values change is re-read unless someone pinned it. Materialising every
+   * column instead would make each of the table editor's mutation paths a place
+   * the spec could come to describe columns that no longer exist.
+   *
+   * `identity.ts` hashes the whole spec, so pinning a column does invalidate the
+   * compile - but a pin cannot reach emitted code, so the rebuild is
+   * byte-identical. That costs one recompile and changes nothing the reader sees.
+   */
+  kinds: ColumnKinds,
 });
 
 export type Spec = typeof Spec.Type;
@@ -209,7 +243,19 @@ export type RecipeDef = Omit<RecipeSummary, "features"> & {
    * on the spec: a map's geography decides which topology it needs.
    */
   readonly assets?: (spec: Spec, option: (key: OptionKey) => string) => readonly Asset[];
-  readonly scalars: (spec: Spec, option: (key: OptionKey) => string) => Scalars;
+  /*
+   * `kind` answers what a column holds, the user's pin included. No recipe reads
+   * it yet. It is in the signature because `spec.kinds` is sparse - a recipe
+   * cannot resolve a column's kind from the spec alone without re-deriving
+   * detection - so the first recipe that needs to emit differently per kind would
+   * otherwise have to change this type and all eight call sites to get at one.
+   * Date-format selection is the case that will want it.
+   */
+  readonly scalars: (
+    spec: Spec,
+    option: (key: OptionKey) => string,
+    kind: (column: ColumnName) => ColumnKind,
+  ) => Scalars;
   readonly implied: (spec: Spec) => readonly FeatureKey[];
 };
 

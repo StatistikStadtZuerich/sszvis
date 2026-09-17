@@ -15,7 +15,7 @@ import { Field, FieldDescription, FieldError } from "~/components/ui/field";
 import { ToggleButton, ToggleButtonGroup } from "~/components/ui/toggle-button-group";
 import type { Table } from "../domain/csv";
 import { unmetRoles } from "../domain/initial-spec";
-import type { RecipeKey, RecipeSummary } from "../domain/spec";
+import type { ColumnKinds, RecipeKey, RecipeSummary } from "../domain/spec";
 
 const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
   ["bar-chart-vertical", ChartColumnIcon],
@@ -38,16 +38,19 @@ const needs = (roles: ReturnType<typeof unmetRoles>) =>
 export const ChartType = ({
   recipes,
   table,
+  kinds,
   value,
   onChange,
 }: {
   readonly recipes: readonly RecipeSummary[];
   readonly table: Table;
+  /** The user's pinned kinds, so a pin can make a chart type fit or stop fitting. */
+  readonly kinds: ColumnKinds;
   readonly value: RecipeKey;
   readonly onChange: (key: RecipeKey) => void;
 }) => {
   const id = useId();
-  const unmet = new Map(recipes.map((recipe) => [recipe.key, unmetRoles(recipe, table)]));
+  const unmet = new Map(recipes.map((recipe) => [recipe.key, unmetRoles(recipe, table, kinds)]));
   const selected = unmet.get(value) ?? [];
   const others = recipes.filter(
     (recipe) => recipe.key !== value && (unmet.get(recipe.key)?.length ?? 0) > 0,
