@@ -139,16 +139,27 @@ describe("annotation/rangeRuler", () => {
     },
   );
 
-  test("should work with custom accessor functions", () => {
-    // BUG: Skip this test for now due to issues with total label positioning in the rangeRuler implementation
-    // The total label is always created even when not explicitly set, causing errors
-    expect(true).toBe(true);
+  // BUG: the total label is drawn unconditionally. src/annotation/rangeRuler.ts:186 joins
+  // `.data([fn.last(data)])` with no check on props.total, then sets its text to
+  // `Total ${formatNumber(props.total)}`. With no total configured that formats `undefined`
+  // as a dash, so every rangeRuler carries a "Total -" label it was never asked for.
+  // Skipped, not deleted: it fails with "expected [ Array(1) ] to have a length of +0".
+  test.skip("should draw no total label when no total was configured", () => {
+    const chartLayer = layer().datum(testData).call(ruler());
+
+    expect(chartLayer.selectAll("text.sszvis-rangeRuler__total").nodes()).toHaveLength(0);
   });
 
-  test("should handle empty data array", () => {
-    // BUG: Skip this test for now as it has issues with total label positioning
-    // when there's no data. This is an edge case that may require fixes in the source.
-    expect(true).toBe(true);
+  // BUG: an empty data array throws. The same join at src/annotation/rangeRuler.ts:186 binds
+  // `[fn.last([])]`, which is `[undefined]` rather than `[]`, so one total element is still
+  // created and its `x` accessor runs against `undefined`.
+  // Skipped, not deleted: it fails with
+  // "TypeError: Cannot read properties of undefined (reading 'x')".
+  test.skip("should render without throwing when the data array is empty", () => {
+    const chartLayer = layer();
+
+    expect(() => chartLayer.datum([]).call(ruler().total(200))).not.toThrow();
+    expect(chartLayer.selectAll("g.sszvis-rangeRuler--mark").nodes()).toHaveLength(0);
   });
 
   test("should match the rendered mark count to the data when the data changes", () => {
