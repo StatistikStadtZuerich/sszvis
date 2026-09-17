@@ -5,7 +5,7 @@ import treemap, { type TreemapLayout } from "../../src/component/treemap.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
 import "../../src/d3-selectgroup.js";
-import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
+import { type NodeDatum, prepareHierarchyData } from "../../src/layout/hierarchy.js";
 
 // Test data structures
 type TestDatum = {
@@ -285,7 +285,13 @@ describe("component/treemap", () => {
       expect(fills(() => "#ff0000")).toEqual(constant);
     });
 
-    test("should apply color scale correctly", () => {
+    test("should fill every rect with the colour of its own top-level category", () => {
+      // Each expected fill comes from the source row's category rather than from the
+      // component's own colorKeyOf, so this fails when the scale is applied to the wrong
+      // node even though every fill is still a legitimate palette colour. The test this
+      // replaces asserted only that the first rect's fill was not "#steelblue" - a string
+      // no code path produces - so any fill at all satisfied it, and the whole file passed
+      // with the scale misapplied.
       svg
         .datum(
           prepareHierarchyData<TestDatum>()
@@ -300,14 +306,26 @@ describe("component/treemap", () => {
             .containerHeight(250)
             .transition(false),
         );
-      const rectangles = svg.selectAll(".sszvis-treemap-rect");
-      expect(rectangles.size()).toBeGreaterThan(0);
-      const firstRect = rectangles.node() as SVGRectElement;
-      if (firstRect) {
-        const fill = firstRect.getAttribute("fill");
-        expect(fill).toBeDefined();
-        expect(fill).not.toBe("#steelblue"); // Should use colorScale, not default
+
+      // The renderer filters to leaves, so every rect on screen carries a source row.
+      const painted = svg
+        .selectAll<SVGRectElement, { data: NodeDatum<TestDatum> }>(".sszvis-treemap-rect")
+        .nodes()
+        .map((rect) => ({
+          datum: select<SVGRectElement, { data: NodeDatum<TestDatum> }>(rect).datum().data,
+          fill: rect.getAttribute("fill"),
+        }));
+
+      expect(painted.length).toBeGreaterThan(1);
+      for (const { datum, fill } of painted) {
+        expect(datum._tag).toBe("leaf");
+        const row = (datum as Extract<NodeDatum<TestDatum>, { _tag: "leaf" }>).data;
+        expect(fill).toBe(cScale(row.category));
       }
+
+      // More than one category is on screen, so a scale collapsed onto a single key fails
+      // here as well as in the per-rect assertion above.
+      expect(new Set(painted.map(({ fill }) => fill)).size).toBeGreaterThan(1);
     });
 
     test("should handle labels when showLabels is enabled", () => {
