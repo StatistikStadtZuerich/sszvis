@@ -2,7 +2,13 @@ import { csvFormatRows, dsvFormat } from "d3-dsv";
 import { Option, Schema } from "effect";
 
 import { escapeHtml } from "./host";
-import { ColumnName, type ColumnKind, type ColumnKinds, type RoleKind } from "./spec";
+import {
+  ColumnName,
+  type ColumnKind,
+  type ColumnKinds,
+  type DateFormat,
+  type RoleKind,
+} from "./spec";
 
 export type Table = {
   readonly columns: readonly ColumnName[];
@@ -161,74 +167,84 @@ export const settleColumn = (
 export const addedName = (columns: readonly ColumnName[]): ColumnName =>
   distinctName("", new Set(columns), columns.length);
 
-/** `dd.mm.yyyy`, which is what `sszvis.parseDate` reads. */
-const SWISS_DATE = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
+const SWISS_DATE = /^(\d{1,2})\.(\d{1,2})\.(\d{1,4})$/;
+const YEAR = /^\d{1,4}$/;
 
-export const parseSwissDate = (value: string): Option.Option<Date> => {
-  const match = SWISS_DATE.exec(value.trim());
-  if (match === null) return Option.none();
-  const [, day = "", month = "", year = ""] = match;
-  const date = new Date(Number(year), Number(month) - 1, Number(day));
-  const isCalendarDay =
-    date.getFullYear() === Number(year) &&
-    date.getMonth() === Number(month) - 1 &&
-    date.getDate() === Number(day);
-  return isCalendarDay ? Option.some(date) : Option.none();
+/* A year under 100 is that year, not the 1900s the `Date` constructor assumes. */
+const at = (year: number, month: number, day: number): Date => {
+  const date = new Date(year, month, day);
+  date.setFullYear(year);
+  return date;
 };
 
-/* The value is already a string, so there is no unknown boundary to cross.
-   `Number(...)` would admit "Infinity", whose comparator then returns NaN. */
+export const parseAs = (format: DateFormat, value: string): Option.Option<Date> => {
+  if (format === "year") {
+    return YEAR.test(value) ? Option.some(at(Number(value), 0, 1)) : Option.none();
+  }
+  const match = SWISS_DATE.exec(value);
+  if (match === null) return Option.none();
+  const [, day = "", month = "", year = ""] = match;
+  return Option.some(at(Number(year), Number(month) - 1, Number(day)));
+};
+
+/** The notation a set of values shares, if they share one. */
+export const dateFormatOf = (values: readonly string[]): DateFormat | undefined => {
+  if (values.length === 0) return undefined;
+  if (values.every((value) => Option.isSome(parseAs("swiss", value)))) return "swiss";
+  if (values.every((value) => Option.isSome(parseAs("year", value)))) return "year";
+  return undefined;
+};
+
+export const rolledOver = (
+  table: Table,
+  column: ColumnName,
+): readonly { readonly value: string; readonly on: Date }[] => {
+  const index = table.columns.indexOf(column);
+  if (index === -1) return [];
+  return valuesOf(table, index).flatMap((value) => {
+    const match = SWISS_DATE.exec(value);
+    const on = Option.getOrNull(parseAs("swiss", value));
+    if (match === null || on === null) return [];
+    const [, day = "", month = ""] = match;
+    const moved = on.getDate() !== Number(day) || on.getMonth() !== Number(month) - 1;
+    return moved ? [{ value, on }] : [];
+  });
+};
+
 const decodeFinite = Schema.decodeOption(Schema.FiniteFromString);
 
-/** A column's values, blanks dropped - a blank says nothing about what a column holds. */
 const valuesOf = (table: Table, index: number) =>
   table.rows.map((row) => row[index] ?? "").filter((value) => value !== "");
 
-/**
- * Whether values could be read as a kind at all. Detection and the warning on a
- * pin are both this question - one asked of every kind, one asked of the kind the
- * user chose - so they answer it in the same place and cannot drift apart.
- */
 const admits = (values: readonly string[], kind: ColumnKind): boolean => {
-  /* Any value can serve as a label, so nothing ever fails to be nominal - and a
-     column with nothing in it bears only that. `every` on no values is true, which
-     would otherwise call an empty column a date and let a chart be built on it. */
   if (kind === "nominal") return true;
   if (values.length === 0) return false;
   return kind === "temporal"
-    ? values.every((value) => Option.isSome(parseSwissDate(value)))
+    ? dateFormatOf(values) !== undefined
     : values.every((value) => Option.isSome(decodeFinite(value)));
 };
 
-/** Whether a column has anything in it to be read at all. */
-export const hasValues = (table: Table, column: ColumnName): boolean =>
-  valuesOf(table, table.columns.indexOf(column)).length > 0;
+export const valuesIn = (table: Table, column: ColumnName): readonly string[] =>
+  valuesOf(table, table.columns.indexOf(column));
 
-/** What each column looks like from its values alone, before anyone overrules it. */
+export const hasValues = (table: Table, column: ColumnName): boolean =>
+  valuesIn(table, column).length > 0;
+
 export const detectedKinds = (table: Table): ReadonlyMap<string, ColumnKind> => {
   const kinds = new Map<string, ColumnKind>();
   for (const [index, column] of table.columns.entries()) {
     const values = valuesOf(table, index);
-    /* The most particular reading the values bear; an empty column bears only the
-       loosest, rather than being called a date on no evidence. */
-    const kind: ColumnKind = admits(values, "temporal")
-      ? "temporal"
-      : admits(values, "continuous")
-        ? "continuous"
-        : "nominal";
+    const kind: ColumnKind =
+      dateFormatOf(values) === "swiss"
+        ? "temporal"
+        : admits(values, "continuous")
+          ? "continuous"
+          : "nominal";
     kinds.set(column, kind);
   }
   return kinds;
 };
 
-/**
- * The pinned columns whose values will not bear the pin - a column called a number
- * that holds words, or called a date that holds anything but `dd.mm.yyyy`.
- *
- * The pin stands: it is what the user said, and overruling it silently would fight
- * the editing. But a chart reading that column drops the rows it cannot parse, and
- * a chart that draws nothing is worth a word of warning first.
- */
 export const unsupportedPins = (table: Table, kinds: ColumnKinds): ReadonlySet<string> => {
   const unsupported = new Set<string>();
   for (const [index, column] of table.columns.entries()) {

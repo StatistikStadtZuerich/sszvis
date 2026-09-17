@@ -1,6 +1,6 @@
 import type { Effect } from "effect";
 
-import { columnKinds, parse } from "./csv";
+import { columnKinds, dateFormatOf, parse, valuesIn, type Table } from "./csv";
 import { version as SSZVIS_VERSION } from "sszvis/package.json";
 
 import {
@@ -17,6 +17,7 @@ import {
   optionValue,
   TITLE,
   type Asset,
+  type ColumnFacts,
   type ColumnKind,
   type ColumnName,
   type OptionKey,
@@ -93,10 +94,16 @@ export const compile = (recipe: Recipe, spec: Spec): Effect.Effect<string, Build
   /* Answering this parses the table, so it is done on the first question and not
      at all until one is asked. Resolved once for the whole file: a recipe asking
      about several columns should not re-read the CSV for each. */
+  let table: Table | undefined;
   let resolved: ReadonlyMap<string, ColumnKind> | undefined;
-  const kind = (column: ColumnName) => {
-    resolved ??= columnKinds(parse(spec.csv), spec.kinds);
-    return resolved.get(column) ?? "nominal";
+  const column = (name: ColumnName): ColumnFacts => {
+    table ??= parse(spec.csv);
+    resolved ??= columnKinds(table, spec.kinds);
+    const kind = resolved.get(name) ?? "nominal";
+    return {
+      kind,
+      dateFormat: kind === "temporal" ? dateFormatOf(valuesIn(table, name)) : undefined,
+    };
   };
   const scalars: Scalars = {
     TITLE: comment(option(TITLE)),
@@ -113,7 +120,7 @@ export const compile = (recipe: Recipe, spec: Spec): Effect.Effect<string, Build
         .join(", ") || NO_FEATURES,
     ),
     DATE: code(new Date().toISOString().slice(0, "yyyy-mm-dd".length)),
-    ...recipe.scalars(spec, option, kind),
+    ...recipe.scalars(spec, option, column),
     ...Object.fromEntries(active.flatMap((feature) => Object.entries(feature.scalars ?? {}))),
     ACTIONS_TYPE: actionsType(fragments.actionTypes ?? []),
   };

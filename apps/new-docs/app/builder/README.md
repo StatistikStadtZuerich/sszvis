@@ -123,9 +123,30 @@ Whether a column's values can be _read_ as a kind is a second question, and
 `admits` is the one place it is asked: by the detector of every kind, and by the
 two warnings of the kind the user chose. A column with nothing in it bears only
 `nominal` - `every` over no values is true, and without that an empty column
-would pass as dates and satisfy a chart that then draws nothing. `parseSwissDate`
-asks the calendar rather than the pattern, so `31.02.2020` is not a date here
-either, for the same reason: `sszvis.parseDate` would drop the row.
+would pass as dates and satisfy a chart that then draws nothing.
+
+## Dates
+
+Two notations reach a chart, and they need different parsers: `17.08.2014` through
+`sszvis.parseDate`, `1999` through `sszvis.parseYear`. Which one a column is
+written in is `DateFormat`, and it sits beside `ColumnKind` rather than inside it -
+a role wants a date, never a date in a particular notation, so role-fitting and the
+kind cycle stay out of it. `compile` hands each recipe the facts about a column and
+the two date recipes emit the parser that fits, which is what the accessor on
+`RecipeDef.scalars` was put there for.
+
+Years are never guessed at. `%Y` reads one to four digits, so a column of counts
+under 10000 reads as years perfectly well, and a count is far the likelier thing
+for a bare number to be - so a bare number column is a number until someone pins it
+to dates, which is exactly what pinning is for.
+
+`parseAs` reads both notations exactly as d3 does, rolling `31.02.2020` over to the
+second of March rather than refusing it, because that is the day the chart plots it
+on. Refusing it would be the builder disagreeing with the code it writes, and would
+cost a column its whole reading over one typo. `rolledOver` reports such a day
+instead, and the column stays dates. The readers are written out rather than
+imported - sszvis touches `document` as it loads, and this runs in a worker - so
+`parse-conformance.test.ts` puts every case to both and fails if they part.
 
 ## Keys
 

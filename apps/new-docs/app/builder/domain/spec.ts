@@ -7,28 +7,21 @@ export const RoleKind = Schema.Literals(["category", "number", "date"]);
 
 export type RoleKind = typeof RoleKind.Type;
 
-/*
- * What the data in a column is, which is a different question from what a chart
- * wants of it - and the one the user may overrule. The two vocabularies are
- * deliberately separate: a recipe asks for a `category`, never for `nominal`
- * specifically, so a finer measurement level added here later costs no recipe an
- * opinion. `fitRank` maps one to the other.
- *
- * The names are measurement levels rather than the shapes they happen to take
- * today, which leaves `ordinal` beside `nominal` and `discrete` beside
- * `continuous` as additions rather than migrations. `continuous` covers whole
- * numbers too until `discrete` earns its place by changing something.
- */
 export const ColumnKind = Schema.Literals(["nominal", "continuous", "temporal"]);
 
 export type ColumnKind = typeof ColumnKind.Type;
 
-/*
- * The kinds in the words the person building the chart uses, named once so the
- * table editor and the chart-type picker cannot come to say them differently. The
- * `ColumnKind` names are measurement levels, which belong in the types rather than
- * on a button or in a sentence about what a chart needs.
- */
+export const DateFormat = Schema.Literals(["swiss", "year"]);
+
+export type DateFormat = typeof DateFormat.Type;
+
+/** What a recipe may ask about one of its columns as it emits. */
+export type ColumnFacts = {
+  readonly kind: ColumnKind;
+  /** Absent unless the column is read as dates. */
+  readonly dateFormat: DateFormat | undefined;
+};
+
 export const KIND_LABEL = {
   nominal: "text",
   continuous: "number",
@@ -194,7 +187,7 @@ export type RecipeDef = Omit<RecipeSummary, "features"> & {
   readonly scalars: (
     spec: Spec,
     option: (key: OptionKey) => string,
-    kind: (column: ColumnName) => ColumnKind,
+    column: (name: ColumnName) => ColumnFacts,
   ) => Scalars;
   readonly implied: (spec: Spec) => readonly FeatureKey[];
 };

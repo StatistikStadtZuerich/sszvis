@@ -1,6 +1,6 @@
 import { Array, Option } from "effect";
 
-import { parseSwissDate } from "./csv";
+import { dateFormatOf } from "./csv";
 import { code, str, type Safe } from "./emit";
 import type { Annotation, AnnotationAxis, Position, RoleKind } from "./spec";
 
@@ -16,10 +16,15 @@ export const positionCode = (kind: RoleKind, at: Position): Option.Option<Safe> 
   switch (kind) {
     case "number":
       return Option.map(parseFiniteNumber(at.value), (number) => code(String(number)));
-    case "date":
-      return Option.map(parseSwissDate(at.value), () =>
-        code(`sszvis.parseDate(${str(at.value.trim())})`),
-      );
+    case "date": {
+      const value = at.value.trim();
+      const format = dateFormatOf([value]);
+      return format === undefined
+        ? Option.none()
+        : Option.some(
+            code(`${format === "year" ? "sszvis.parseYear" : "sszvis.parseDate"}(${str(value)})`),
+          );
+    }
     case "category":
       return Option.none();
   }
@@ -34,7 +39,6 @@ export const referenceLinesCode = (
 ): Safe => {
   const entries = Array.getSomes(
     annotations.map((annotation) =>
-      /* The spec names a role; the template draws on an axis. The recipe joins the two. */
       Array.findFirst(axes, (candidate) => candidate.role === annotation.role).pipe(
         Option.flatMap((axis) =>
           Option.map(positionCode(axis.kind, annotation.at), (at) => ({ axis, at })),
