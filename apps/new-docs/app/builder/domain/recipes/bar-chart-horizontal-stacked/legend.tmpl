@@ -1,0 +1,23 @@
+// #label Colour legend
+// #hint Names each slice below the chart.
+
+// #scalar C_SCALE legendLayout.scale
+// #scalar BOTTOM_PADDING legendLayout.bottomPadding
+
+// #region preBounds
+// NOTE: The labels run horizontally, so the legend reserves a fixed padding for
+// the axis and never measures `axisLabels`.
+const legendLayout = sszvis.colorLegendLayout({ legendLabels: state.categories }, config.id);
+
+const colorLegend = legendLayout.legend;
+// #endregion
+
+// #region render
+chartLayer
+  .selectGroup("colorLegend")
+  .attr(
+    "transform",
+    sszvis.translateString(0, chartDimensions.totalHeight + legendLayout.axisLabelPadding),
+  )
+  .call(colorLegend);
+// #endregion
