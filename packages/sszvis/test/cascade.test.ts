@@ -1,19 +1,19 @@
 import { describe, expect, test } from "vitest";
-import { cascade } from "../src/cascade.js";
+import { type CascadeInstance, cascade } from "../src/cascade.js";
 
 type DataItem = {
   city: string;
   category: string;
   value: number;
 };
+
 describe("cascade", () => {
-  const testData: DataItem[] = [
-    { city: "Zurich", category: "A", value: 10 },
-    { city: "Basel", category: "A", value: 20 },
-    { city: "Zurich", category: "B", value: 15 },
-    { city: "Basel", category: "B", value: 25 },
-    { city: "Geneva", category: "A", value: 30 },
-  ];
+  const zurichA: DataItem = { city: "Zurich", category: "A", value: 10 };
+  const baselA: DataItem = { city: "Basel", category: "A", value: 20 };
+  const zurichB: DataItem = { city: "Zurich", category: "B", value: 15 };
+  const baselB: DataItem = { city: "Basel", category: "B", value: 25 };
+  const genevaA: DataItem = { city: "Geneva", category: "A", value: 30 };
+  const testData: DataItem[] = [zurichA, baselA, zurichB, baselB, genevaA];
 
   describe("objectBy", () => {
     test("should group data into object with key-value pairs", () => {
@@ -47,72 +47,53 @@ describe("cascade", () => {
   });
 
   describe("arrayBy", () => {
-    test("should group data into array of groups", () => {
+    test("should place each city's rows in their own group when grouping by city", () => {
       const result = cascade<DataItem>()
         .arrayBy((d) => d.city)
         .apply<DataItem[][]>(testData);
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(3); // Zurich, Basel, Geneva
-      for (const group of result) {
-        expect(Array.isArray(group)).toBe(true);
-      }
+      expect(result).toEqual([[zurichA, zurichB], [baselA, baselB], [genevaA]]);
     });
 
-    test("should sort groups when sorter is provided", () => {
+    test("should order the groups by the sorter when one is provided", () => {
       const result = cascade<DataItem>()
         .arrayBy(
           (d) => d.city,
           (a, b) => a.localeCompare(b),
         )
         .apply<DataItem[][]>(testData);
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(3);
-      expect(result[0].some((d: DataItem) => d.city === "Basel")).toBe(true);
-      expect(result[1].some((d: DataItem) => d.city === "Geneva")).toBe(true);
-      expect(result[2].some((d: DataItem) => d.city === "Zurich")).toBe(true);
+      expect(result).toEqual([[baselA, baselB], [genevaA], [zurichA, zurichB]]);
     });
 
-    test("should handle nested arrayBy grouping", () => {
+    test("should split every city group by category when arrayBy is nested", () => {
       const result = cascade<DataItem>()
         .arrayBy((d) => d.city)
         .arrayBy((d) => d.category)
         .apply<DataItem[][][]>(testData);
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(3); // Cities
-      for (const cityGroup of result) {
-        expect(Array.isArray(cityGroup)).toBe(true);
-        for (const categoryGroup of cityGroup) {
-          expect(Array.isArray(categoryGroup)).toBe(true);
-        }
-      }
+      expect(result).toEqual([[[zurichA], [zurichB]], [[baselA], [baselB]], [[genevaA]]]);
     });
   });
 
   describe("mixed grouping", () => {
-    test("should handle objectBy followed by arrayBy", () => {
-      const result = cascade<DataItem>()
+    test("should build each level in the form its own step asked for when objectBy and arrayBy are mixed", () => {
+      const objectThenArray = cascade<DataItem>()
         .objectBy((d) => d.city)
         .arrayBy((d) => d.category)
         .apply<Record<string, DataItem[][]>>(testData);
-      expect(result).toHaveProperty("Zurich");
-      expect(result).toHaveProperty("Basel");
-      expect(result).toHaveProperty("Geneva");
-      expect(Array.isArray(result.Zurich)).toBe(true);
-      expect(Array.isArray(result.Basel)).toBe(true);
-      expect(Array.isArray(result.Geneva)).toBe(true);
-    });
+      expect(objectThenArray).toEqual({
+        Zurich: [[zurichA], [zurichB]],
+        Basel: [[baselA], [baselB]],
+        Geneva: [[genevaA]],
+      });
 
-    test("should handle arrayBy followed by objectBy", () => {
-      const result = cascade<DataItem>()
+      const arrayThenObject = cascade<DataItem>()
         .arrayBy((d) => d.city)
         .objectBy((d) => d.category)
         .apply<Record<string, DataItem[]>[]>(testData);
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(3);
-      for (const cityGroup of result) {
-        expect(cityGroup).toHaveProperty("A");
-        expect(Array.isArray(cityGroup.A)).toBe(true);
-      }
+      expect(arrayThenObject).toEqual([
+        { A: [zurichA], B: [zurichB] },
+        { A: [baselA], B: [baselB] },
+        { A: [genevaA] },
+      ]);
     });
   });
 
@@ -141,18 +122,11 @@ describe("cascade", () => {
   });
 
   describe("empty data", () => {
-    test("should handle empty input array", () => {
-      const result = cascade<DataItem>()
-        .objectBy((d) => d.city)
-        .apply<Record<string, DataItem[]>>([]);
-      expect(result).toEqual({});
-    });
-
-    test("should handle empty input with arrayBy", () => {
-      const result = cascade<DataItem>()
-        .arrayBy((d) => d.city)
-        .apply<DataItem[][]>([]);
-      expect(result).toEqual([]);
+    test.each<[string, CascadeInstance<DataItem>, unknown]>([
+      ["objectBy", cascade<DataItem>().objectBy((d) => d.city), {}],
+      ["arrayBy", cascade<DataItem>().arrayBy((d) => d.city), []],
+    ])("should return an empty %s level when there is no data", (_form, chain, expected) => {
+      expect(chain.apply([])).toEqual(expected);
     });
   });
 });

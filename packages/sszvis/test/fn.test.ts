@@ -103,7 +103,9 @@ describe("fn", () => {
       expect(arity(2, (a: number, b: number) => a + b)(3, 4, 5)).toBe(7);
     });
 
-    test("should work as a d3 accessor guard", () => {
+    // The motivating case: d3 calls an accessor with (datum, index, group), and arity(1, ...)
+    // exists so an accessor that must not see index or group never does.
+    test("should hide index and group from an accessor when it is used with d3 .attr()", () => {
       const accessor = vi.fn((d: unknown) => String(d));
       const div = document.createElement("div");
       select(div).datum({ v: 1 }).attr("data-x", arity(1, accessor));
@@ -149,17 +151,16 @@ describe("fn", () => {
   });
 
   describe("prop", () => {
-    test("should read the named property", () => {
-      expect(prop("a")({ a: 1 })).toBe(1);
-    });
-
-    test("should return undefined for a missing property", () => {
-      expect(prop("b")({ a: 1 } as Record<string, number>)).toBeUndefined();
-    });
-
-    test("should read numeric keys and array indices", () => {
-      expect(prop(1)({ 1: "b" })).toBe("b");
-    });
+    test.each([
+      ["a", { a: 1 }, 1],
+      ["b", { a: 1 }, undefined],
+      [1, { 1: "b" }, "b"],
+    ] as [string | number, Record<string | number, unknown>, unknown][])(
+      "should return the object's own value when reading key %s of %j, namely %s",
+      (key, object, expected) => {
+        expect(prop(key)(object)).toBe(expected);
+      },
+    );
 
     test("should throw when applied to undefined", () => {
       // NOTE: prop does no guarding — use propOr when the object may be missing.
@@ -168,31 +169,24 @@ describe("fn", () => {
   });
 
   describe("propOr", () => {
-    test("should read the named property when present", () => {
-      expect(propOr("a", 99)({ a: 1 })).toBe(1);
-    });
-
-    test("should return the default when the property is missing", () => {
-      expect(propOr("b", 99)({ a: 1 } as Record<string, number>)).toBe(99);
-    });
-
-    test("should return the default when the object is undefined", () => {
-      expect(propOr("a", 99)(undefined)).toBe(99);
-    });
-
-    test("should return undefined when no default is given", () => {
-      expect(propOr("b")({ a: 1 } as Record<string, number>)).toBeUndefined();
-    });
+    test.each([
+      ["the property value", "a", 99, { a: 1 }, 1],
+      ["the default, because the property is missing", "b", 99, { a: 1 }, 99],
+      ["the default, because the object is undefined", "a", 99, undefined, 99],
+      ["undefined, because no default was given", "b", undefined, { a: 1 }, undefined],
+      ["null unchanged, because only undefined triggers the default", "a", 99, { a: null }, null],
+      ["0 unchanged, because only undefined triggers the default", "a", 99, { a: 0 }, 0],
+      ['"" unchanged, because only undefined triggers the default', "a", 99, { a: "" }, ""],
+    ] as [string, string, unknown, Record<string, unknown> | undefined, unknown][])(
+      "should return %s",
+      (_label, key, defaultVal, object, expected) => {
+        expect(propOr(key, defaultVal)(object)).toBe(expected);
+      },
+    );
 
     test("should return the default for an explicitly undefined property value", () => {
       // NOTE: propOr cannot distinguish "absent" from "present but undefined".
       expect(propOr("a", 99)({ a: undefined })).toBe(99);
-    });
-
-    test("should not substitute the default for other falsy values", () => {
-      expect(propOr("a", 99)({ a: null })).toBeNull();
-      expect(propOr("a", 99)({ a: 0 })).toBe(0);
-      expect(propOr("a", 99)({ a: "" })).toBe("");
     });
 
     test("should throw when applied to null", () => {
@@ -249,12 +243,49 @@ describe("fn", () => {
     });
   });
 
-  describe("set", () => {
-    test("should return unique values in order of first appearance", () => {
-      expect(set([2, 1, 1, 6, 8, 6, 5, 3])).toEqual([2, 1, 6, 8, 5, 3]);
-      expect(set(["b", "a", "b", "b"])).toEqual(["b", "a"]);
-    });
+  // set, derivedSet and hashableSet dedupe by three different rules, but they agree on how a
+  // list of primitives comes out, on the accessor contract, and on empty input. Those are
+  // stated once here; the rules they disagree about stay in the per-function blocks below.
+  describe("set, derivedSet and hashableSet", () => {
+    const setLikes = [
+      ["set", set],
+      ["derivedSet", derivedSet],
+      ["hashableSet", hashableSet],
+    ] as [
+      string,
+      <T extends string | number>(
+        arr: T[],
+        acc?: (value: T, index: number, array: T[]) => T,
+      ) => T[],
+    ][];
 
+    test.each(setLikes)(
+      "should return unique primitives in order of first appearance from %s",
+      (_name, setLike) => {
+        expect(setLike([2, 1, 1, 6, 8, 6, 5, 3])).toEqual([2, 1, 6, 8, 5, 3]);
+        expect(setLike(["b", "a", "b", "b"])).toEqual(["b", "a"]);
+      },
+    );
+
+    test.each(setLikes)(
+      "should pass value, index and array to the accessor given to %s",
+      (_name, setLike) => {
+        const acc = vi.fn((d: string) => d);
+        const arr = ["a", "b"];
+        setLike(arr, acc);
+        expect(acc.mock.calls[0]).toEqual(["a", 0, arr]);
+      },
+    );
+
+    test.each(setLikes)(
+      "should return an empty array from %s for empty input",
+      (_name, setLike) => {
+        expect(setLike([])).toEqual([]);
+      },
+    );
+  });
+
+  describe("set", () => {
     test("should compare objects by reference", () => {
       const o1 = { a: 1 };
       const o2 = { a: 1 };
@@ -265,21 +296,10 @@ describe("fn", () => {
       expect(set([{ v: 1 }, { v: 2 }, { v: 1 }], (d) => d.v)).toEqual([1, 2]);
     });
 
-    test("should pass value, index and array to the accessor", () => {
-      const acc = vi.fn((d: string) => d);
-      const arr = ["a", "b"];
-      set(arr, acc);
-      expect(acc.mock.calls[0]).toEqual(["a", 0, arr]);
-    });
-
     test("should collapse repeated NaN into one entry", () => {
       // NOTE: Array#includes uses SameValueZero, so NaN is treated as equal to NaN
       // here even though `===` would not.
       expect(set([Number.NaN, Number.NaN])).toEqual([Number.NaN]);
-    });
-
-    test("should return an empty array for empty input", () => {
-      expect(set([])).toEqual([]);
     });
   });
 
@@ -300,22 +320,10 @@ describe("fn", () => {
     test("should fall back to identity when no accessor is given", () => {
       expect(derivedSet([1, 2, 1, 3])).toEqual([1, 2, 3]);
     });
-
-    test("should pass value, index and array to the accessor", () => {
-      const acc = vi.fn((d: string) => d);
-      const arr = ["a", "b"];
-      derivedSet(arr, acc);
-      expect(acc.mock.calls[0]).toEqual(["a", 0, arr]);
-    });
-
-    test("should return an empty array for empty input", () => {
-      expect(derivedSet([])).toEqual([]);
-    });
   });
 
   describe("hashableSet", () => {
-    test("should return unique accessor values in order of first appearance", () => {
-      expect(hashableSet(["b", "a", "b"])).toEqual(["b", "a"]);
+    test("should return the accessor's values, not the input elements", () => {
       expect(hashableSet([{ v: "x" }, { v: "y" }, { v: "x" }], (d) => d.v)).toEqual(["x", "y"]);
     });
 
@@ -333,43 +341,37 @@ describe("fn", () => {
       expect(hashableSet(["constructor", "a"])).toEqual(["constructor", "a"]);
       expect(hashableSet(["toString", "valueOf", "toString"])).toEqual(["toString", "valueOf"]);
     });
-
-    test("should pass value, index and array to the accessor", () => {
-      const acc = vi.fn((d: string) => d);
-      const arr = ["a", "b"];
-      hashableSet(arr, acc);
-      expect(acc.mock.calls[0]).toEqual(["a", 0, arr]);
-    });
-
-    test("should return an empty array for empty input", () => {
-      expect(hashableSet([])).toEqual([]);
-    });
   });
 
   describe("defined", () => {
-    test("should be false for undefined, null and NaN", () => {
-      expect(defined(undefined)).toBe(false);
-      expect(defined(null)).toBe(false);
-      expect(defined(Number.NaN)).toBe(false);
-    });
-
-    test("should be true for other falsy values", () => {
-      expect(defined(0)).toBe(true);
-      expect(defined("")).toBe(true);
-      expect(defined(false)).toBe(true);
-    });
-
-    test("should be true for objects and dates", () => {
-      expect(defined({})).toBe(true);
-      expect(defined(new Date(Number.NaN))).toBe(true);
-    });
+    test.each([
+      [false, "undefined", undefined],
+      [false, "null", null],
+      [false, "NaN", Number.NaN],
+      [true, "0", 0],
+      [true, "the empty string", ""],
+      [true, "false", false],
+      [true, "an empty object", {}],
+      [true, "an invalid Date", new Date(Number.NaN)],
+    ] as [boolean, string, unknown][])(
+      "should return %s when the value is %s",
+      (expected, _label, value) => {
+        expect(defined(value)).toBe(expected);
+      },
+    );
   });
 
   describe("contains", () => {
-    test("should detect membership by strict equality", () => {
-      expect(contains([1, 2, 3], 2)).toBe(true);
-      expect(contains([1, 2, 3], 4)).toBe(false);
-    });
+    test.each([
+      [true, [1, 2, 3], 2],
+      [false, [1, 2, 3], 4],
+      [false, [], 1],
+    ] as [boolean, number[], number][])(
+      "should return %s when searching %j for %s",
+      (expected, list, needle) => {
+        expect(contains(list, needle)).toBe(expected);
+      },
+    );
 
     test("should compare objects by reference", () => {
       const o = { a: 1 };
@@ -388,14 +390,16 @@ describe("fn", () => {
   });
 
   describe("find", () => {
-    test("should return the first matching element", () => {
-      expect(find((d: number) => d > 1, [1, 2, 3])).toBe(2);
-    });
-
-    test("should return undefined when nothing matches", () => {
-      expect(find((d: number) => d > 5, [1, 2, 3])).toBeUndefined();
-      expect(find(() => true, [])).toBeUndefined();
-    });
+    test.each([
+      [2, [1, 2, 3], 1],
+      [undefined, [1, 2, 3], 5],
+      [undefined, [], 0],
+    ] as [number | undefined, number[], number][])(
+      "should return %s when searching %j for the first element greater than %s",
+      (expected, arr, threshold) => {
+        expect(find((d: number) => d > threshold, arr)).toBe(expected);
+      },
+    );
 
     test("should stop iterating at the first match", () => {
       const predicate = vi.fn((d: number) => d === 1);
@@ -412,23 +416,26 @@ describe("fn", () => {
   });
 
   describe("flatten", () => {
-    test("should flatten one level", () => {
-      expect(
-        flatten([
+    test.each([
+      [
+        [
           [1, 2],
           [3, 4],
-        ]),
-      ).toEqual([1, 2, 3, 4]);
-    });
-
-    test("should flatten only one level", () => {
-      expect(flatten([[[1]], [[2]]])).toEqual([[1], [2]]);
-    });
-
-    test("should handle empty and nested-empty input", () => {
-      expect(flatten([])).toEqual([]);
-      expect(flatten([[], []])).toEqual([]);
-    });
+        ],
+        [1, 2, 3, 4],
+      ],
+      [
+        [[[1]], [[2]]],
+        [[1], [2]],
+      ],
+      [[], []],
+      [[[], []], []],
+    ] as [unknown[][], unknown[]][])(
+      "should flatten %j into %j, removing exactly one level of nesting",
+      (input, expected) => {
+        expect(flatten(input)).toEqual(expected);
+      },
+    );
 
     test("should return a new array", () => {
       const inner = [1];
@@ -587,60 +594,47 @@ describe("fn", () => {
   });
 
   describe("is* predicates", () => {
+    // One row per value, one column per predicate, so a value's full classification is visible
+    // at a glance and a predicate that starts agreeing with another shows up as a changed column.
+    test.each([
+      // label, value, isString, isNumber, isNull, isFunction, isObject
+      ['the string "a"', "a", true, false, false, false, false],
+      ['the numeric string "1"', "1", true, false, false, false, false],
+      ["the number 1", 1, false, true, false, false, false],
+      ["the number 0", 0, false, true, false, false, false],
+      ["Infinity", Number.POSITIVE_INFINITY, false, true, false, false, false],
+      ["NaN", Number.NaN, false, false, false, false, false],
+      ["null", null, false, false, true, false, false],
+      ["undefined", undefined, false, false, false, false, false],
+      ["an array of strings", ["a"], false, false, false, false, true],
+      ["an empty object", {}, false, false, false, false, true],
+      ["an empty array", [], false, false, false, false, true],
+      ["an arrow function", () => undefined, false, false, false, true, true],
+      ["a class", class {}, false, false, false, true, true],
+      ["a built-in function", Math.max, false, false, false, true, true],
+    ] as [string, unknown, boolean, boolean, boolean, boolean, boolean][])(
+      "should classify %s as isString=%s isNumber=%s isNull=%s isFunction=%s isObject=%s",
+      (_label, value, expectString, expectNumber, expectNull, expectFunction, expectObject) => {
+        expect(isString(value)).toBe(expectString);
+        expect(isNumber(value)).toBe(expectNumber);
+        expect(isNull(value)).toBe(expectNull);
+        expect(isFunction(value)).toBe(expectFunction);
+        expect(isObject(value)).toBe(expectObject);
+      },
+    );
+
     describe("isString", () => {
       test("should be true for primitive and boxed strings", () => {
         expect(isString("a")).toBe(true);
         // NOTE: the Object.prototype.toString check also accepts boxed String objects.
         expect(isString(new String("a"))).toBe(true);
       });
-
-      test("should be false for non-strings", () => {
-        expect(isString(1)).toBe(false);
-        expect(isString(null)).toBe(false);
-        expect(isString(undefined)).toBe(false);
-        expect(isString(["a"])).toBe(false);
-      });
     });
 
     describe("isNumber", () => {
-      test("should be true for numbers, including Infinity", () => {
-        expect(isNumber(1)).toBe(true);
-        expect(isNumber(0)).toBe(true);
-        expect(isNumber(Number.POSITIVE_INFINITY)).toBe(true);
-      });
-
-      test("should be false for NaN", () => {
-        expect(isNumber(Number.NaN)).toBe(false);
-      });
-
       test("should be true for boxed numbers", () => {
         // NOTE: same boxing quirk as isString.
         expect(isNumber(new Number(1))).toBe(true);
-      });
-
-      test("should be false for numeric strings", () => {
-        expect(isNumber("1")).toBe(false);
-      });
-    });
-
-    describe("isNull", () => {
-      test("should be true only for null", () => {
-        expect(isNull(null)).toBe(true);
-        expect(isNull(undefined)).toBe(false);
-        expect(isNull(0)).toBe(false);
-      });
-    });
-
-    describe("isFunction", () => {
-      test("should be true for functions and classes", () => {
-        expect(isFunction(() => undefined)).toBe(true);
-        expect(isFunction(class {})).toBe(true);
-        expect(isFunction(Math.max)).toBe(true);
-      });
-
-      test("should be false for non-functions", () => {
-        expect(isFunction({})).toBe(false);
-        expect(isFunction(null)).toBe(false);
       });
     });
 
@@ -650,13 +644,6 @@ describe("fn", () => {
         expect(isObject([])).toBe(true);
         // NOTE: functions are objects by this test, unlike a typeof === "object" check.
         expect(isObject(() => undefined)).toBe(true);
-      });
-
-      test("should be false for primitives, null and undefined", () => {
-        expect(isObject(1)).toBe(false);
-        expect(isObject("a")).toBe(false);
-        expect(isObject(null)).toBe(false);
-        expect(isObject(undefined)).toBe(false);
       });
     });
 
@@ -674,36 +661,46 @@ describe("fn", () => {
   });
 
   describe("array helpers", () => {
-    describe("every", () => {
-      test("should test all elements and short-circuit on failure", () => {
-        expect(every((d: number) => d > 0, [1, 2])).toBe(true);
-        const predicate = vi.fn((d: number) => d > 1);
-        expect(every(predicate, [1, 2])).toBe(false);
-        expect(predicate).toHaveBeenCalledTimes(1);
+    describe("every and some", () => {
+      const isPositive = (d: number) => d > 0;
+
+      test.each([
+        [true, [1, 2]],
+        [false, [1, -1]],
+        [true, []],
+      ] as [boolean, number[]][])("should return %s from every for %j", (expected, arr) => {
+        expect(every(isPositive, arr)).toBe(expected);
       });
 
-      test("should be true for an empty array", () => {
-        expect(every(() => false, [])).toBe(true);
-      });
-    });
-
-    describe("some", () => {
-      test("should short-circuit on the first pass", () => {
-        const predicate = vi.fn((d: number) => d === 1);
-        expect(some(predicate, [1, 2])).toBe(true);
-        expect(predicate).toHaveBeenCalledTimes(1);
+      test.each([
+        [true, [1, 2]],
+        [false, [-1, -2]],
+        [false, []],
+      ] as [boolean, number[]][])("should return %s from some for %j", (expected, arr) => {
+        expect(some(isPositive, arr)).toBe(expected);
       });
 
-      test("should be false for an empty array", () => {
-        expect(some(() => true, [])).toBe(false);
+      test("should stop calling the predicate once the answer is decided", () => {
+        const everyPredicate = vi.fn((d: number) => d > 1);
+        expect(every(everyPredicate, [1, 2])).toBe(false);
+        expect(everyPredicate).toHaveBeenCalledTimes(1);
+
+        const somePredicate = vi.fn((d: number) => d === 1);
+        expect(some(somePredicate, [1, 2])).toBe(true);
+        expect(somePredicate).toHaveBeenCalledTimes(1);
       });
     });
 
     describe("filledArray", () => {
-      test("should build an array of the given length", () => {
-        expect(filledArray(3, 0)).toEqual([0, 0, 0]);
-        expect(filledArray(0, 0)).toEqual([]);
-      });
+      test.each([
+        [3, 0, [0, 0, 0]],
+        [0, 0, []],
+      ] as [number, number, number[]][])(
+        "should build %s slots of %s, namely %j",
+        (len, val, expected) => {
+          expect(filledArray(len, val)).toEqual(expected);
+        },
+      );
 
       test("should share the same reference for object fill values", () => {
         // NOTE: the fill value is not cloned — every slot is the same object.
@@ -713,15 +710,16 @@ describe("fn", () => {
     });
 
     describe("first and last", () => {
-      test("should return the boundary elements", () => {
-        expect(first([1, 2, 3])).toBe(1);
-        expect(last([1, 2, 3])).toBe(3);
-      });
-
-      test("should return undefined for an empty array", () => {
-        expect(first([])).toBeUndefined();
-        expect(last([])).toBeUndefined();
-      });
+      test.each([
+        [[1, 2, 3], 1, 3],
+        [[], undefined, undefined],
+      ] as [number[], number | undefined, number | undefined][])(
+        "should return the boundary elements of %j, namely %s first and %s last",
+        (arr, expectedFirst, expectedLast) => {
+          expect(first(arr)).toBe(expectedFirst);
+          expect(last(arr)).toBe(expectedLast);
+        },
+      );
     });
   });
 

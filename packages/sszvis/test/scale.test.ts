@@ -3,12 +3,20 @@ import { describe, expect, test } from "vitest";
 import { range, rangeExtent } from "../src/scale.js";
 
 describe("scale/rangeExtent", () => {
-  test("should measure an ascending range", () => {
-    expect(rangeExtent(scaleLinear().domain([0, 1]).range([0, 400]))).toEqual([0, 400]);
-  });
-
-  test("should measure an ascending range that does not start at 0", () => {
-    expect(rangeExtent(scaleLinear().domain([0, 1]).range([100, 400]))).toEqual([100, 400]);
+  test.each<[string, Parameters<typeof rangeExtent>[0], [number, number]]>([
+    ["ascending from 0", scaleLinear().domain([0, 1]).range([0, 400]), [0, 400]],
+    ["ascending from an offset", scaleLinear().domain([0, 1]).range([100, 400]), [100, 400]],
+    ["entirely negative", scaleLinear().domain([0, 1]).range([-50, -10]), [-50, -10]],
+    ["zero-width", scaleLinear().domain([0, 1]).range([20, 20]), [20, 20]],
+    [
+      "a time scale's",
+      scaleTime()
+        .domain([new Date(2020, 0, 1), new Date(2020, 0, 31)])
+        .range([0, 300]),
+      [0, 300],
+    ],
+  ])("should report the ends of a range that is %s", (_shape, scale, expected) => {
+    expect(rangeExtent(scale)).toEqual(expected);
   });
 
   // The behaviour that gave the old `range` name away: what comes back is a measurement, so
@@ -18,21 +26,6 @@ describe("scale/rangeExtent", () => {
     const y = scaleLinear().domain([0, 1]).range([400, 0]);
     expect(rangeExtent(y)).toEqual([0, 400]);
     expect(y.range()).toEqual([400, 0]);
-  });
-
-  test("should measure a negative range", () => {
-    expect(rangeExtent(scaleLinear().domain([0, 1]).range([-50, -10]))).toEqual([-50, -10]);
-  });
-
-  test("should measure a zero-width range", () => {
-    expect(rangeExtent(scaleLinear().domain([0, 1]).range([20, 20]))).toEqual([20, 20]);
-  });
-
-  test("should measure a time scale's range", () => {
-    const t = scaleTime()
-      .domain([new Date(2020, 0, 1), new Date(2020, 0, 31)])
-      .range([0, 300]);
-    expect(rangeExtent(t)).toEqual([0, 300]);
   });
 
   // A scale carrying its own `rangeExtent` method is asked for it directly rather than having

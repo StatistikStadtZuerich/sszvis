@@ -1,7 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { modularTextHTML, modularTextSVG } from "../../src/svgUtils/modularText.js";
+import {
+  type ModularTextBuilder,
+  modularTextHTML,
+  modularTextSVG,
+} from "../../src/svgUtils/modularText.js";
 
 type Artist = { name: string; age: number };
+
+/** Each row is [what the builder renders and when, the builder, the expected markup]. */
+type MarkupCase = [string, ModularTextBuilder, string];
 
 describe("svgUtils/modularText", () => {
   describe("modularTextHTML", () => {
@@ -17,19 +24,34 @@ describe("svgUtils/modularText", () => {
       );
     });
 
-    test("should join words on a line with a single space", () => {
-      expect(modularTextHTML().plain("a").plain("b").plain("c")({})).toBe("a b c");
-    });
+    const htmlMarkup: MarkupCase[] = [
+      [
+        '"a b c" when plain words share a line',
+        modularTextHTML().plain("a").plain("b").plain("c"),
+        "a b c",
+      ],
+      [
+        '"<strong>b</strong>" when a word is bold',
+        modularTextHTML().bold("b"),
+        "<strong>b</strong>",
+      ],
+      ['"<em>i</em>" when a word is italic', modularTextHTML().italic("i"), "<em>i</em>"],
+      ['"p" when a word is plain', modularTextHTML().plain("p"), "p"],
+      [
+        '"a<br/>b" when a newline separates two lines',
+        modularTextHTML().plain("a").newline().plain("b"),
+        "a<br/>b",
+      ],
+      [
+        '"a<br/><br/>b" when two newlines separate two lines',
+        modularTextHTML().plain("a").newline().newline().plain("b"),
+        "a<br/><br/>b",
+      ],
+      ['"<br/>" when the only line is empty', modularTextHTML().newline(), "<br/>"],
+    ];
 
-    test("should wrap bold words in strong and italic words in em", () => {
-      expect(modularTextHTML().bold("b")({})).toBe("<strong>b</strong>");
-      expect(modularTextHTML().italic("i")({})).toBe("<em>i</em>");
-      expect(modularTextHTML().plain("p")({})).toBe("p");
-    });
-
-    test("should separate lines with a br tag", () => {
-      expect(modularTextHTML().plain("a").newline().plain("b")({})).toBe("a<br/>b");
-      expect(modularTextHTML().plain("a").newline().newline().plain("b")({})).toBe("a<br/><br/>b");
+    test.each(htmlMarkup)("should render %s", (_label, builder, expected) => {
+      expect(builder({})).toBe(expected);
     });
 
     test("should accept accessor functions and pass them the datum", () => {
@@ -65,10 +87,6 @@ describe("svgUtils/modularText", () => {
       expect(modularTextHTML()({})).toBe("");
     });
 
-    test("should render an empty line as a lone br tag", () => {
-      expect(modularTextHTML().newline()({})).toBe("<br/>");
-    });
-
     test("should coerce non-string values to strings", () => {
       expect(modularTextHTML().plain(42)({})).toBe("42");
       expect(modularTextHTML().bold(0)({})).toBe("<strong>0</strong>");
@@ -85,32 +103,43 @@ describe("svgUtils/modularText", () => {
       );
     });
 
-    test("should wrap each word in a styled tspan", () => {
-      expect(modularTextSVG().plain("p")({})).toBe('<tspan x="0" dy="0"><tspan>p</tspan></tspan>');
-      expect(modularTextSVG().bold("b")({})).toBe(
+    const svgMarkup: MarkupCase[] = [
+      [
+        "a plain word wrapped in a bare tspan when the word has no style",
+        modularTextSVG().plain("p"),
+        '<tspan x="0" dy="0"><tspan>p</tspan></tspan>',
+      ],
+      [
+        "a bold style on the word tspan when the word is bold",
+        modularTextSVG().bold("b"),
         '<tspan x="0" dy="0"><tspan style="font-weight:bold">b</tspan></tspan>',
-      );
-      expect(modularTextSVG().italic("i")({})).toBe(
+      ],
+      [
+        "an italic style on the word tspan when the word is italic",
+        modularTextSVG().italic("i"),
         '<tspan x="0" dy="0"><tspan style="font-style:italic">i</tspan></tspan>',
-      );
-    });
-
-    test("should give the first line dy 0 and subsequent lines dy 1.2em", () => {
-      expect(modularTextSVG().plain("a").newline().plain("b")({})).toBe(
-        '<tspan x="0" dy="0"><tspan>a</tspan></tspan><tspan x="0" dy="1.2em"><tspan>b</tspan></tspan>',
-      );
-    });
-
-    test("should reset x to 0 on every line", () => {
-      const result = modularTextSVG().plain("a").newline().plain("b").newline().plain("c")({});
-      expect(result.match(/x="0"/g)).toHaveLength(3);
-      expect(result.match(/dy="1.2em"/g)).toHaveLength(2);
-    });
-
-    test("should join words on a line with a single space", () => {
-      expect(modularTextSVG().plain("a").plain("b")({})).toBe(
+      ],
+      [
+        "a single space between the word tspans when plain words share a line",
+        modularTextSVG().plain("a").plain("b"),
         '<tspan x="0" dy="0"><tspan>a</tspan> <tspan>b</tspan></tspan>',
-      );
+      ],
+      [
+        "dy 0 on the first line and dy 1.2em on the second when a newline separates them",
+        modularTextSVG().plain("a").newline().plain("b"),
+        '<tspan x="0" dy="0"><tspan>a</tspan></tspan><tspan x="0" dy="1.2em"><tspan>b</tspan></tspan>',
+      ],
+      [
+        "x reset to 0 on every line when the text spans three lines",
+        modularTextSVG().plain("a").newline().plain("b").newline().plain("c"),
+        '<tspan x="0" dy="0"><tspan>a</tspan></tspan>' +
+          '<tspan x="0" dy="1.2em"><tspan>b</tspan></tspan>' +
+          '<tspan x="0" dy="1.2em"><tspan>c</tspan></tspan>',
+      ],
+    ];
+
+    test.each(svgMarkup)("should render %s", (_label, builder, expected) => {
+      expect(builder({})).toBe(expected);
     });
 
     test("should accept accessor functions and pass them the datum", () => {

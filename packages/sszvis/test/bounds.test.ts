@@ -1,107 +1,103 @@
+import { type BaseType, select } from "d3";
 import { describe, expect, test } from "vitest";
-import { bounds } from "../src/bounds.js";
+import { type BoundsConfig, type BoundsResult, bounds } from "../src/bounds.js";
 
 describe("bounds", () => {
-  describe("default", () => {
-    test("should create bounds with default values", () => {
-      const result = bounds();
-      expect(result).toHaveProperty("width");
-      expect(result).toHaveProperty("height");
-      expect(result).toHaveProperty("innerWidth");
-      expect(result).toHaveProperty("innerHeight");
-      expect(result).toHaveProperty("padding");
-      expect(result.width).toBe(516); // DEFAULT_WIDTH
-      expect(result.padding.top).toBe(0);
-      expect(result.padding.bottom).toBe(0);
-      expect(result.padding.left).toBe(1);
-      expect(result.padding.right).toBe(1);
-    });
-  });
+  test.each<[string, BoundsConfig | undefined, Partial<BoundsResult>]>([
+    [
+      "nothing is configured",
+      undefined,
+      { width: 516, padding: { top: 0, right: 1, bottom: 0, left: 1 } },
+    ],
+    [
+      "a width and height are given",
+      { width: 800, height: 600 },
+      { width: 800, height: 600, innerWidth: 798, innerHeight: 600 },
+    ],
+    [
+      "all four padding sides are given",
+      { width: 400, height: 300, top: 20, right: 30, bottom: 40, left: 50 },
+      {
+        innerWidth: 320,
+        innerHeight: 240,
+        padding: { top: 20, right: 30, bottom: 40, left: 50 },
+      },
+    ],
+    [
+      "only some padding sides are given",
+      { top: 10, left: 20 },
+      { padding: { top: 10, right: 1, bottom: 0, left: 20 } },
+    ],
+  ])(
+    "should report the width, height and padding it derives when %s",
+    (_when, config, expected) => {
+      expect(config === undefined ? bounds() : bounds(config)).toMatchObject(expected);
+    },
+  );
 
-  describe("custom", () => {
-    test("should accept custom width and height", () => {
-      const result = bounds({
-        width: 800,
-        height: 600,
-      });
-      expect(result.width).toBe(800);
-      expect(result.height).toBe(600);
-      expect(result.innerWidth).toBe(798); // 800 - 1 - 1
-    });
-
-    test("should accept custom padding", () => {
-      const result = bounds({
-        width: 400,
-        height: 300,
-        top: 20,
-        right: 30,
-        bottom: 40,
-        left: 50,
-      });
-      expect(result.padding.top).toBe(20);
-      expect(result.padding.right).toBe(30);
-      expect(result.padding.bottom).toBe(40);
-      expect(result.padding.left).toBe(50);
-      expect(result.innerWidth).toBe(320); // 400 - 50 - 30
-      expect(result.innerHeight).toBe(240); // 300 - 20 - 40
-    });
-
-    test("should handle partial padding specification", () => {
-      const result = bounds({
-        top: 10,
-        left: 20,
-      });
-      expect(result.padding.top).toBe(10);
-      expect(result.padding.left).toBe(20);
-      expect(result.padding.bottom).toBe(0); // default
-      expect(result.padding.right).toBe(1); // default
-    });
-  });
-
-  describe("DOM element measurement", () => {
-    test("should measure DOM element for width", () => {
+  // Every DOM case below stubs getBoundingClientRect, so none of them exercises the real
+  // measurement path - measure.test.ts owns that.
+  describe("measuring a container", () => {
+    const withMeasuredDiv = (width: number, prepare: (div: HTMLDivElement) => void = () => {}) => {
       const div = document.createElement("div");
-      div.getBoundingClientRect = () => ({ width: 500 }) as DOMRect;
+      div.getBoundingClientRect = () => ({ width }) as DOMRect;
+      prepare(div);
       document.body.append(div);
-      const result = bounds({}, div);
-      expect(result.width).toBe(500);
+      return div;
+    };
+
+    test.each<[string, () => BoundsResult, number]>([
+      ["an element passed alongside a config", () => bounds({}, withMeasuredDiv(500)), 500],
+      [
+        "an id selector passed alongside a config",
+        () => {
+          withMeasuredDiv(300, (div) => {
+            div.id = "config-id-element";
+          });
+          return bounds({}, "#config-id-element");
+        },
+        300,
+      ],
+      [
+        "an id selector on its own",
+        () => {
+          withMeasuredDiv(400, (div) => {
+            div.id = "lone-id-element";
+          });
+          return bounds("#lone-id-element");
+        },
+        400,
+      ],
+      [
+        "a class selector on its own",
+        () => {
+          withMeasuredDiv(350, (div) => {
+            div.className = "lone-class-element";
+          });
+          return bounds(".lone-class-element");
+        },
+        350,
+      ],
+      [
+        "a d3 selection passed alongside a config",
+        () => {
+          withMeasuredDiv(250, (div) => {
+            div.id = "d3-selection-element";
+          });
+          // Selected by string so the selection carries d3's general BaseType generics.
+          // select(element) narrows them to the concrete element and its null parent, which
+          // d3's invariant `merge` signature then makes unassignable to sszvis's AnySelection.
+          return bounds({}, select<BaseType, unknown>("#d3-selection-element"));
+        },
+        250,
+      ],
+    ])("should take its width from %s", (_form, makeBounds, expectedWidth) => {
+      expect(makeBounds().width).toBe(expectedWidth);
     });
 
-    test("should use CSS selector to find element", () => {
-      const div = document.createElement("div");
-      div.id = "test-element";
-      div.getBoundingClientRect = () => ({ width: 300 }) as DOMRect;
-      document.body.append(div);
-      const result = bounds({}, "#test-element");
-      expect(result.width).toBe(300);
-    });
-
-    test("should prefer custom width over measured width", () => {
-      const div = document.createElement("div");
-      div.getBoundingClientRect = () => ({ width: 500 }) as DOMRect;
-      document.body.append(div);
-      const result = bounds({ width: 800 }, div);
-      expect(result.width).toBe(800); // Custom width takes priority
-    });
-  });
-
-  describe("selector handling", () => {
-    test("should handle ID selector", () => {
-      const div = document.createElement("div");
-      div.getBoundingClientRect = () => ({ width: 400 }) as DOMRect;
-      div.id = "test-div";
-      document.body.append(div);
-      const result = bounds("#test-div");
-      expect(result.width).toBe(400);
-    });
-
-    test("should handle CSS selector", () => {
-      const div = document.createElement("div");
-      div.className = "test-class";
-      div.getBoundingClientRect = () => ({ width: 350 }) as DOMRect;
-      document.body.append(div);
-      const result = bounds(".test-class");
-      expect(result.width).toBe(350);
+    test("should keep the configured width when a container is measured as well", () => {
+      const div = withMeasuredDiv(500);
+      expect(bounds({ width: 800 }, div).width).toBe(800);
     });
   });
 });

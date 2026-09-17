@@ -135,25 +135,24 @@ describe("svgUtils/textWrap", () => {
     });
 
     describe("horizontal placement", () => {
-      test("should place untranslated text at the left padding for text-anchor start", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("5");
-      });
+      // Each row is [expected x, text-anchor, whether the label sits in a tick group].
+      const anchorPlacements: [string, string, boolean][] = [
+        ["5", "start", false],
+        ["50", "middle", false],
+        ["95", "end", false],
+        ["0", "middle", true],
+        ["45", "end", true],
+      ];
 
-      test("should center untranslated text on the full width for text-anchor middle", () => {
-        const text = appendText("aa");
-        text.style.textAnchor = "middle";
-        textWrap(select(text), 100);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("50");
-      });
-
-      test("should place untranslated text at the right inset for text-anchor end", () => {
-        const text = appendText("aa");
-        text.style.textAnchor = "end";
-        textWrap(select(text), 100);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("95");
-      });
+      test.each(anchorPlacements)(
+        "should place the wrapped line at x=%s when the text-anchor is %s and the tick-group membership is %s",
+        (expectedX, anchor, inTick) => {
+          const text = appendText("aa", { inTick });
+          text.style.textAnchor = anchor;
+          textWrap(select(text), 100);
+          expect(tspansOf(text)[0].getAttribute("x")).toBe(expectedX);
+        },
+      );
 
       test("should offset tick labels relative to their own origin for text-anchor start", () => {
         // NOTE: tick labels are already translated, so x is measured from the tick's centre.
@@ -162,55 +161,29 @@ describe("svgUtils/textWrap", () => {
         expect(tspansOf(text)[0].getAttribute("x")).toBe("-45");
       });
 
-      test("should keep tick labels centered for text-anchor middle", () => {
-        const text = appendText("aa", { inTick: true });
-        text.style.textAnchor = "middle";
-        textWrap(select(text), 100);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("0");
-      });
-
-      test("should offset tick labels to the right for text-anchor end", () => {
-        const text = appendText("aa", { inTick: true });
-        text.style.textAnchor = "end";
-        textWrap(select(text), 100);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("45");
-      });
-
       test("should apply the same x to every wrapped line", () => {
         const text = appendText("aaaaa bbbbb ccccc");
         textWrap(select(text), 100);
         expect(tspansOf(text).map((t) => t.getAttribute("x"))).toEqual(["5", "5", "5"]);
       });
 
-      test("should honor a zero horizontal padding", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100, 0);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("0");
-      });
+      // Each row is [expected x, the supplied horizontal padding]; 5 is the default padding.
+      const horizontalPaddings: [string, number][] = [
+        ["0", 0],
+        ["20", 20],
+        ["-10", -10],
+        ["5", Number.NaN],
+        ["5", Number.POSITIVE_INFINITY],
+      ];
 
-      test("should honor a custom horizontal padding", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100, 20);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("20");
-      });
-
-      test("should honor a negative horizontal padding", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100, -10);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("-10");
-      });
-
-      test("should fall back to the default for a horizontal padding that is not a number", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100, Number.NaN);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("5");
-      });
-
-      test("should fall back to the default for an infinite horizontal padding", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100, Number.POSITIVE_INFINITY);
-        expect(tspansOf(text)[0].getAttribute("x")).toBe("5");
-      });
+      test.each(horizontalPaddings)(
+        "should place the wrapped line at x=%s when the horizontal padding is %s",
+        (expectedX, padding) => {
+          const text = appendText("aa");
+          textWrap(select(text), 100, padding);
+          expect(tspansOf(text)[0].getAttribute("x")).toBe(expectedX);
+        },
+      );
 
       test("should warn when a supplied horizontal padding is unusable", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
@@ -264,11 +237,21 @@ describe("svgUtils/textWrap", () => {
         expect(tspansOf(text)[0].getAttribute("y")).toBe("3");
       });
 
-      test("should honor a custom vertical padding", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100, 5, 10);
-        expect(tspansOf(text)[0].getAttribute("y")).toBe("8");
-      });
+      // Each row is [expected y, the supplied vertical padding]; 5 is the default padding.
+      const verticalPaddings: [string, number][] = [
+        ["8", 10],
+        ["3", Number.NaN],
+        ["3", Number.POSITIVE_INFINITY],
+      ];
+
+      test.each(verticalPaddings)(
+        "should place the wrapped line at y=%s when the vertical padding is %s",
+        (expectedY, padding) => {
+          const text = appendText("aa");
+          textWrap(select(text), 100, 5, padding);
+          expect(tspansOf(text)[0].getAttribute("y")).toBe(expectedY);
+        },
+      );
 
       test("should honor a zero vertical padding", () => {
         // NOTE: the border adjustment of 2 still applies, so an explicit 0 yields -2.
@@ -282,18 +265,6 @@ describe("svgUtils/textWrap", () => {
         const text = appendText("aa");
         textWrap(select(text), 100, 5, -10);
         expect(tspansOf(text)[0].getAttribute("y")).toBe("-12");
-      });
-
-      test("should fall back to the default for a vertical padding that is not a number", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100, 5, Number.NaN);
-        expect(tspansOf(text)[0].getAttribute("y")).toBe("3");
-      });
-
-      test("should fall back to the default for an infinite vertical padding", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100, 5, Number.POSITIVE_INFINITY);
-        expect(tspansOf(text)[0].getAttribute("y")).toBe("3");
       });
 
       test("should keep x and y numeric when both paddings are not finite", () => {
@@ -319,31 +290,23 @@ describe("svgUtils/textWrap", () => {
         expect(tspansOf(text).map((t) => t.getAttribute("y"))).toEqual(["20", "20", "20"]);
       });
 
-      test("should start at dy 0em when the text has no dy attribute", () => {
-        const text = appendText("aa");
-        textWrap(select(text), 100);
-        expect(tspansOf(text)[0].getAttribute("dy")).toBe("0em");
-      });
+      // Each row is [expected dy per line, the dy attribute of the text element, the content].
+      const dyProgressions: [string[], string | undefined, string][] = [
+        [["0em"], undefined, "aa"],
+        [["0em", "1.1em", "2.2em"], undefined, "aaaaa bbbbb ccccc"],
+        [["0.5em", "1.6em"], "0.5", "aaaaa bbbbb"],
+        [["0em"], "inherit", "aa"],
+      ];
 
-      test("should advance each wrapped line by one line height", () => {
-        const text = appendText("aaaaa bbbbb ccccc");
-        textWrap(select(text), 100);
-        expect(tspansOf(text).map((t) => t.getAttribute("dy"))).toEqual(["0em", "1.1em", "2.2em"]);
-      });
-
-      test("should offset all lines by the dy of the text element", () => {
-        const text = appendText("aaaaa bbbbb");
-        text.setAttribute("dy", "0.5");
-        textWrap(select(text), 100);
-        expect(tspansOf(text).map((t) => t.getAttribute("dy"))).toEqual(["0.5em", "1.6em"]);
-      });
-
-      test("should treat an unparseable dy as zero", () => {
-        const text = appendText("aa");
-        text.setAttribute("dy", "inherit");
-        textWrap(select(text), 100);
-        expect(tspansOf(text)[0].getAttribute("dy")).toBe("0em");
-      });
+      test.each(dyProgressions)(
+        "should stack the wrapped lines at dy %s when the dy attribute of the text is %s",
+        (expectedDys, dyAttribute, content) => {
+          const text = appendText(content);
+          if (dyAttribute !== undefined) text.setAttribute("dy", dyAttribute);
+          textWrap(select(text), 100);
+          expect(tspansOf(text).map((t) => t.getAttribute("dy"))).toEqual(expectedDys);
+        },
+      );
     });
 
     // Characterization test: pins down a defect so a behaviour-preserving port stays

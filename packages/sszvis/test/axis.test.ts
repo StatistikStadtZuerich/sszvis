@@ -20,348 +20,340 @@ describe("axis", () => {
     container?.parentNode?.removeChild(container);
   });
 
-  describe("axisX", () => {
-    test("should render axisX with proper DOM structure", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom");
-      const axisGroup = createSvgLayer("#chart-container")
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.node()).not.toBeNull();
-      expect(axisGroup.classed("sszvis-axis")).toBe(true);
-      expect(axisGroup.classed("sszvis-axis--bottom")).toBe(true);
-      const ticks = axisGroup.selectAll("g.tick").nodes();
-      expect(ticks.length).toBeGreaterThan(0);
-      ticks.forEach((tick) => {
-        const tickGroup = select(tick);
-        expect(tickGroup.select("line").node()).not.toBeNull();
-        expect(tickGroup.select("text").node()).not.toBeNull();
-      });
-    });
+  /** Renders an axis into a fresh layer and returns the `.sszvis-axis` group it produced. */
+  const render = (group: string, axis: unknown) =>
+    createSvgLayer("#chart-container", undefined, { key: "test-layer" })
+      .selectGroup(group)
+      .call(axis as never)
+      .select(".sszvis-axis");
 
-    test("should render axisX.time() variant", () => {
-      const xAxis = axisX
-        .time()
-        .scale(
-          scaleTime()
-            .domain([new Date(2020, 0, 1), new Date(2020, 11, 31)])
-            .range([0, 300]),
-        )
-        .orient("bottom");
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.node()).not.toBeNull();
-      expect(axisGroup.selectAll("g.tick").nodes().length).toBeGreaterThan(0);
-    });
+  const linear = () => scaleLinear().domain([0, 100]).range([0, 300]);
+  const vertical = () => scaleLinear().domain([0, 100]).range([200, 0]);
+  const times = () =>
+    scaleTime()
+      .domain([new Date(2020, 0, 1), new Date(2020, 11, 31)])
+      .range([0, 300]);
 
-    test("should render axisX with custom ticks", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .tickValues([0, 25, 50, 75, 100])
-        .orient("bottom");
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.selectAll("g.tick").nodes().length).toBe([0, 25, 50, 75, 100].length);
-    });
+  const labelsOf = (axisGroup: ReturnType<typeof render>) =>
+    axisGroup
+      .selectAll("g.tick text")
+      .nodes()
+      .map((node) => select(node).text());
 
-    test("should render axisX with top orientation", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("top");
+  describe("axis variants", () => {
+    // One table in place of seven near-identical "renders with proper DOM structure" tests.
+    // Each of those asserted only that a node existed and that some tick was drawn, which a
+    // gutted axis emitting one arbitrary tick would have satisfied. The shared assertions
+    // below add the orientation modifier and require the labels to be distinct, so an axis
+    // that stopped labelling its ticks, or labelled them all alike, now fails here.
+    test.each([
+      {
+        variant: "axisX",
+        group: "xAxis",
+        makeAxis: () => axisX().scale(linear()).orient("bottom"),
+        modifier: "sszvis-axis--bottom",
+        mirrored: false,
+      },
+      {
+        variant: "axisX oriented top",
+        group: "xAxis",
+        makeAxis: () => axisX().scale(linear()).orient("top"),
+        modifier: "sszvis-axis--top",
+        mirrored: false,
+      },
+      {
+        variant: "axisX.time",
+        group: "xAxis",
+        makeAxis: () => axisX.time().scale(times()).orient("bottom"),
+        modifier: "sszvis-axis--bottom",
+        mirrored: false,
+      },
+      {
+        variant: "axisX.ordinal",
+        group: "xAxis",
+        makeAxis: () => axisX.ordinal().scale(scaleBand().domain(["a", "b", "c"]).range([0, 300])),
+        modifier: "sszvis-axis--bottom",
+        mirrored: false,
+      },
+      {
+        variant: "axisX.pyramid",
+        group: "xAxis",
+        makeAxis: () => axisX.pyramid().scale(linear()).orient("bottom"),
+        modifier: "sszvis-axis--bottom",
+        // A pyramid axis labels both halves with absolute values, so repeated labels are
+        // the point of the variant rather than a defect.
+        mirrored: true,
+      },
+      {
+        variant: "axisY",
+        group: "yAxis",
+        makeAxis: () => axisY().scale(vertical()).orient("left"),
+        modifier: "sszvis-axis--vertical",
+        mirrored: false,
+      },
+      {
+        variant: "axisY oriented right",
+        group: "yAxis",
+        makeAxis: () => axisY().scale(vertical()).orient("right"),
+        modifier: "sszvis-axis--vertical",
+        mirrored: false,
+      },
+      {
+        variant: "axisY.time",
+        group: "yAxis",
+        makeAxis: () =>
+          axisY
+            .time()
+            .scale(
+              scaleTime()
+                .domain([new Date(2020, 0, 1), new Date(2020, 11, 31)])
+                .range([200, 0]),
+            )
+            .orient("left"),
+        modifier: "sszvis-axis--vertical",
+        mirrored: false,
+      },
+      {
+        variant: "axisY.ordinal",
+        group: "yAxis",
+        makeAxis: () =>
+          axisY
+            .ordinal()
+            .scale(scaleBand().domain(["a", "b", "c"]).range([200, 0]))
+            .orient("left"),
+        modifier: "sszvis-axis--vertical",
+        mirrored: false,
+      },
+    ])(
+      "should draw labelled ticks carrying the $modifier class when rendering $variant",
+      ({ group, makeAxis, modifier, mirrored }) => {
+        const axisGroup = render(group, makeAxis());
 
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
+        expect(axisGroup.classed("sszvis-axis")).toBe(true);
+        expect(axisGroup.classed(modifier)).toBe(true);
+
+        const ticks = axisGroup.selectAll("g.tick").nodes();
+        expect(ticks.length).toBeGreaterThan(0);
+        for (const tick of ticks) {
+          expect(select(tick).select("line").node()).not.toBeNull();
+        }
+
+        // Blanks are allowed because a y axis suppresses its zero label unless showZeroY
+        // is set, which the showZeroY tests below cover directly.
+        const labels = labelsOf(axisGroup).filter((text) => text !== "");
+        expect(labels.length).toBeGreaterThan(1);
+        if (!mirrored) expect(new Set(labels).size).toBe(labels.length);
+      },
+    );
+
+    test("should mark a top-oriented axis as top and not as bottom", () => {
+      // The modifiers are mutually exclusive, which the table above cannot state because it
+      // only ever checks the modifier a variant is expected to carry.
+      const axisGroup = render("xAxis", axisX().scale(linear()).orient("top"));
       expect(axisGroup.classed("sszvis-axis--top")).toBe(true);
       expect(axisGroup.classed("sszvis-axis--bottom")).toBe(false);
     });
+
+    test("should label a pyramid axis with absolute values, so the mirrored half reads positive", () => {
+      const axisGroup = render("xAxis", axisX.pyramid().scale(linear()).orient("bottom"));
+      expect(labelsOf(axisGroup).some((text) => !text.includes("-"))).toBe(true);
+    });
   });
 
-  describe("axisY", () => {
-    test("should render axisY with proper DOM structure", () => {
-      const yAxis = axisY()
-        .scale(scaleLinear().domain([0, 100]).range([200, 0]))
-        .orient("left");
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("yAxis")
-        .call(yAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.node()).not.toBeNull();
-      expect(axisGroup.classed("sszvis-axis")).toBe(true);
-      expect(axisGroup.classed("sszvis-axis--vertical")).toBe(true);
-      expect(axisGroup.selectAll("g.tick").nodes().length).toBeGreaterThan(0);
+  describe("ticks", () => {
+    test("should render exactly the given tick values when tickValues is set", () => {
+      const values = [0, 25, 50, 75, 100];
+      const axisGroup = render(
+        "xAxis",
+        axisX().scale(linear()).tickValues(values).orient("bottom"),
+      );
+      expect(axisGroup.selectAll("g.tick").nodes()).toHaveLength(values.length);
     });
 
-    test("should render axisY with right orientation", () => {
-      const yAxis = axisY()
-        .scale(scaleLinear().domain([0, 100]).range([200, 0]))
-        .orient("right");
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("yAxis")
-        .call(yAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.classed("sszvis-axis--vertical")).toBe(true);
-      expect(axisGroup.selectAll("g.tick").nodes().length).toBeGreaterThan(0);
+    test("should suppress the zero label when showZeroY is false", () => {
+      const axisGroup = render(
+        "yAxis",
+        axisY()
+          .scale(scaleLinear().domain([-50, 50]).range([200, 0]))
+          .orient("left")
+          .showZeroY(false),
+      );
+      expect(labelsOf(axisGroup).filter((text) => text === "0")).toHaveLength(0);
     });
 
-    test("should hide zero label when showZeroY is false", () => {
-      const yAxis = axisY()
-        .scale(scaleLinear().domain([-50, 50]).range([200, 0]))
-        .orient("left")
-        .showZeroY(false);
-      const zeroLabels = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("yAxis")
-        .call(yAxis)
-        .select(".sszvis-axis")
-        .selectAll("g.tick text")
-        .nodes()
-        .filter((node) => select(node).text() === "0");
-      expect(zeroLabels.length).toBe(0);
-    });
-
-    test("should show zero label when showZeroY is true", () => {
-      const yAxis = axisY()
-        .scale(scaleLinear().domain([-50, 50]).range([200, 0]))
-        .orient("left")
-        .showZeroY(true);
-      const zeroLabels = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("yAxis")
-        .call(yAxis)
-        .select(".sszvis-axis")
-        .selectAll("g.tick text")
-        .nodes()
-        .filter((node) => select(node).text() === "0");
-      expect(zeroLabels.length).toBeGreaterThan(0);
+    test("should keep the zero label when showZeroY is true", () => {
+      const axisGroup = render(
+        "yAxis",
+        axisY()
+          .scale(scaleLinear().domain([-50, 50]).range([200, 0]))
+          .orient("left")
+          .showZeroY(true),
+      );
+      expect(labelsOf(axisGroup).filter((text) => text === "0").length).toBeGreaterThan(0);
     });
   });
 
   describe("customization", () => {
-    test("should apply custom tickLength", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .tickLength(20);
-      const longTicks = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis")
-        .selectAll("line.sszvis-axis__longtick")
-        .nodes();
-      expect(longTicks.length).toBeGreaterThan(0);
-    });
-
-    test("should apply vertical slant to labels", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .slant("vertical");
-      const rotatedTexts = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis")
-        .selectAll("g.tick text")
+    test("should draw a long tick rule on the interior ticks but not at the domain ends when tickLength is set", () => {
+      const axisGroup = render("xAxis", axisX().scale(linear()).orient("bottom").tickLength(20));
+      // Tightened from "at least one long tick exists", which said nothing about which ticks
+      // get a rule. The two ticks at the ends of the domain are deliberately skipped, so the
+      // axis line itself is not doubled up.
+      const withRule = axisGroup
+        .selectAll("g.tick")
         .nodes()
-        .filter((node) => select(node).attr("transform")?.includes("rotate(-90)"));
-      expect(rotatedTexts.length).toBeGreaterThan(0);
+        .filter((tick) => select(tick).select("line.sszvis-axis__longtick").node() !== null)
+        .map((tick) => select(tick).select("text").text());
+
+      expect(withRule).toEqual(labelsOf(axisGroup).slice(1, -1));
+      expect(withRule.length).toBeGreaterThan(0);
     });
 
-    test("should apply custom tick format", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .tickFormat((d) => `${d}%`);
-      const formattedLabels = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis")
-        .selectAll("g.tick text")
-        .nodes()
-        .filter((node) => select(node).text().includes("%"));
-      expect(formattedLabels.length).toBeGreaterThan(0);
+    test("should rotate every label when slant is vertical", () => {
+      const axisGroup = render("xAxis", axisX().scale(linear()).orient("bottom").slant("vertical"));
+      const texts = axisGroup.selectAll("g.tick text").nodes();
+      const rotated = texts.filter((node) =>
+        select(node).attr("transform")?.includes("rotate(-90)"),
+      );
+      expect(rotated).toHaveLength(texts.length);
     });
 
-    test("should reject a non-function tickFormat by name", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        // A caller reaching this passed a string where a formatter was wanted; the point of the
-        // test is the message, so the argument is cast rather than declared.
-        .tickFormat("" as unknown as (d: AxisDomain) => string);
+    test("should format every label when a custom tickFormat is given", () => {
+      const axisGroup = render(
+        "xAxis",
+        axisX()
+          .scale(linear())
+          .orient("bottom")
+          .tickFormat((d) => `${d}%`),
+      );
+      const labels = labelsOf(axisGroup);
+      expect(labels.length).toBeGreaterThan(0);
+      expect(labels.every((text) => text.endsWith("%"))).toBe(true);
+    });
+
+    test.each([
+      [
+        "a string",
+        "" as unknown as (d: AxisDomain) => string,
+        /axis: tickFormat must be a function .*, got string/,
+      ],
+      // null is d3's reset idiom, so the message names it rather than reporting "object".
+      ["null", null as unknown as (d: AxisDomain) => string, /got null/],
+    ])("should name the offending type when tickFormat is given %s", (_label, format, message) => {
+      const xAxis = axisX().scale(linear()).orient("bottom").tickFormat(format);
       expect(() =>
         createSvgLayer("#chart-container", undefined, { key: "test-layer" })
           .selectGroup("xAxis")
           .call(xAxis),
-      ).toThrow(/axis: tickFormat must be a function .*, got string/);
-    });
-
-    test("should name null rather than its typeof, since it is d3's reset idiom", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .tickFormat(null as unknown as (d: AxisDomain) => string);
-      expect(() =>
-        createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-          .selectGroup("xAxis")
-          .call(xAxis),
-      ).toThrow(/got null/);
+      ).toThrow(message);
     });
 
     test("should write an empty label where tickFormat returns nothing", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .tickFormat(() => null);
-      const labels = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis")
-        .selectAll("g.tick text")
-        .nodes();
+      const axisGroup = render(
+        "xAxis",
+        axisX()
+          .scale(linear())
+          .orient("bottom")
+          .tickFormat(() => null),
+      );
+      const labels = labelsOf(axisGroup);
       expect(labels.length).toBeGreaterThan(0);
-      expect(labels.every((node) => select(node).text() === "")).toBe(true);
+      expect(labels.every((text) => text === "")).toBe(true);
     });
 
-    test("should highlight ticks based on predicate function", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .highlightTick((d) => d === 50);
-      const activeTickTexts = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis")
-        .selectAll("g.tick text.active")
-        .nodes();
-      expect(activeTickTexts.length).toBeGreaterThan(0);
+    test("should mark only the matching tick active when highlightTick selects one value", () => {
+      const axisGroup = render(
+        "xAxis",
+        axisX()
+          .scale(linear())
+          .orient("bottom")
+          .highlightTick((d) => d === 50),
+      );
+      // Tightened from "at least one active": the predicate matches a single value, so more
+      // than one active label would be wrong and the old assertion could not tell.
+      const active = axisGroup.selectAll("g.tick text.active").nodes();
+      expect(active).toHaveLength(1);
+      expect(select(active[0]).text()).toBe("50");
     });
 
-    test("should not hide labels when hideLabelThreshold is 0", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .highlightTick((d) => d === 50)
-        .hideLabelThreshold(0); // Disable label hiding
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
-      const hiddenTickTexts = axisGroup.selectAll("g.tick text.hidden").nodes();
-      const activeTickTexts = axisGroup.selectAll("g.tick text.active").nodes();
-      expect(activeTickTexts.length).toBeGreaterThan(0);
-      expect(hiddenTickTexts.length).toBe(0); // No labels should be hidden
+    test("should hide no labels when hideLabelThreshold is 0", () => {
+      const axisGroup = render(
+        "xAxis",
+        axisX()
+          .scale(linear())
+          .orient("bottom")
+          .highlightTick((d) => d === 50)
+          .hideLabelThreshold(0),
+      );
+      expect(axisGroup.selectAll("g.tick text.active").nodes().length).toBeGreaterThan(0);
+      expect(axisGroup.selectAll("g.tick text.hidden").nodes()).toHaveLength(0);
     });
 
-    test("should render axis title", () => {
-      const titleText = "X Axis Title";
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .title(titleText);
-      const titleElement = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis")
-        .select(".sszvis-axis__title");
-      expect(titleElement.node()).not.toBeNull();
-      expect(titleElement.text()).toBe(titleText);
+    test("should offset the axis group vertically when yOffset is set", () => {
+      const axisGroup = render("xAxis", axisX().scale(linear()).orient("bottom").yOffset(10));
+      expect(axisGroup.attr("transform")).toContain("translate(0,10)");
+    });
+  });
+
+  describe("axis title", () => {
+    test.each([
+      ["a string", "X Axis Title", "X Axis Title"],
+      ["a function, which is called rather than stringified", () => "Jahr", "Jahr"],
+    ])("should render the title when it is given as %s", (_label, title, expected) => {
+      const axisGroup = render(
+        "xAxis",
+        axisX()
+          .scale(linear())
+          .orient("bottom")
+          .title(title as string),
+      );
+      expect(axisGroup.select(".sszvis-axis__title").text()).toBe(expected);
     });
 
-    test("should call a function-valued axis title instead of stringifying it", () => {
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .title(() => "Jahr");
-      const titleElement = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis")
-        .select(".sszvis-axis__title");
-      expect(titleElement.text()).toBe("Jahr");
+    test("should rotate the title when titleVertical is set", () => {
+      const axisGroup = render(
+        "yAxis",
+        axisY().scale(vertical()).orient("left").title("Vertical Title").titleVertical(true),
+      );
+      expect(axisGroup.select(".sszvis-axis__title").attr("transform")).toContain("rotate(-90)");
     });
+  });
 
-    test("should apply vertical title rotation", () => {
-      const yAxis = axisY()
-        .scale(scaleLinear().domain([0, 100]).range([200, 0]))
-        .orient("left")
-        .title("Vertical Title")
-        .titleVertical(true);
-      const titleElement = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("yAxis")
-        .call(yAxis)
-        .select(".sszvis-axis")
-        .select(".sszvis-axis__title");
-      expect(titleElement.node()).not.toBeNull();
-      expect(titleElement.attr("transform")).toContain("rotate(-90)");
-    });
-
-    test("should render axisX.ordinal() variant", () => {
-      const xAxis = axisX
-        .ordinal()
-        .scale(
-          scaleLinear()
-            .domain([0, ["Category A", "Category B", "Category C", "Category D"].length - 1])
-            .range([0, 300]),
-        )
-        .orient("bottom");
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.node()).not.toBeNull();
-      expect(axisGroup.selectAll("g.tick").nodes().length).toBeGreaterThan(0);
-    });
-
-    test("should produce one tick value for a single-element ordinal domain", () => {
-      const xAxis = axisX
-        .ordinal()
-        .scale(scaleBand().domain(["2020"]).range([0, 100]))
-        .ticks(1);
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
+  describe("ordinal tick selection", () => {
+    test("should render the single value when a one-element domain is asked for one tick", () => {
+      const axisGroup = render(
+        "xAxis",
+        axisX
+          .ordinal()
+          .scale(scaleBand().domain(["2020"]).range([0, 100]))
+          .ticks(1),
+      );
       expect(axisGroup.selectAll("g.tick").nodes()).toHaveLength(1);
     });
 
-    test("should keep both the first and last value of a multi-element ordinal domain", () => {
-      const xAxis = axisX
-        .ordinal()
-        .scale(scaleBand().domain(["2020", "2021", "2022", "2023"]).range([0, 400]))
-        .ticks(2);
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
-      const labels = axisGroup
-        .selectAll("g.tick text")
-        .nodes()
-        .map((n) => (n as SVGTextElement).textContent);
+    test("should keep the first and last value when a multi-element domain is thinned", () => {
+      const axisGroup = render(
+        "xAxis",
+        axisX
+          .ordinal()
+          .scale(scaleBand().domain(["2020", "2021", "2022", "2023"]).range([0, 400]))
+          .ticks(2),
+      );
+      const labels = labelsOf(axisGroup);
       expect(labels[0]).toBe("2020");
       expect(labels.at(-1)).toBe("2023");
     });
 
     test("should render one tick per category when more ticks are requested than the domain holds", () => {
-      const xAxis = axisX
-        .ordinal()
-        .scale(scaleBand().domain(["2020", "2021", "2022"]).range([0, 300]))
-        .ticks(10);
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
-      const labels = axisGroup
-        .selectAll("g.tick text")
-        .nodes()
-        .map((n) => (n as SVGTextElement).textContent);
-      expect(labels).toEqual(["2020", "2021", "2022"]);
-    }, 1000);
+      const axisGroup = render(
+        "xAxis",
+        axisX
+          .ordinal()
+          .scale(scaleBand().domain(["2020", "2021", "2022"]).range([0, 300]))
+          .ticks(10),
+      );
+      expect(labelsOf(axisGroup)).toEqual(["2020", "2021", "2022"]);
+    });
 
     test("should skip a last domain value that is genuinely undefined", () => {
       // NOTE: a domain hole is not expressible through scaleBand's own types, but it is
@@ -380,75 +372,6 @@ describe("axis", () => {
         .nodes()
         .map((n) => (n as SVGTextElement).textContent);
       expect(labels).not.toContain("undefined");
-    });
-
-    test("should render axisX.pyramid() variant", () => {
-      const xAxis = axisX
-        .pyramid()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom");
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.node()).not.toBeNull();
-      expect(axisGroup.selectAll("g.tick").nodes().length).toBeGreaterThan(0);
-      const hasAbsoluteValues = axisGroup
-        .selectAll("g.tick text")
-        .nodes()
-        .some((node) => !select(node).text().includes("-"));
-      expect(hasAbsoluteValues).toBe(true);
-    });
-
-    test("should render axisY.time() variant", () => {
-      const yAxis = axisY
-        .time()
-        .scale(
-          scaleTime()
-            .domain([new Date(2020, 0, 1), new Date(2020, 11, 31)])
-            .range([200, 0]),
-        )
-        .orient("left");
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("yAxis")
-        .call(yAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.node()).not.toBeNull();
-      expect(axisGroup.classed("sszvis-axis--vertical")).toBe(true);
-      expect(axisGroup.selectAll("g.tick").nodes().length).toBeGreaterThan(0);
-    });
-
-    test("should render axisY.ordinal() variant", () => {
-      const yAxis = axisY
-        .ordinal()
-        .scale(
-          scaleLinear()
-            .domain([0, ["Item 1", "Item 2", "Item 3"].length - 1])
-            .range([200, 0]),
-        )
-        .orient("left");
-
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("yAxis")
-        .call(yAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.node()).not.toBeNull();
-      expect(axisGroup.classed("sszvis-axis--vertical")).toBe(true);
-      expect(axisGroup.selectAll("g.tick").nodes().length).toBeGreaterThan(0);
-    });
-
-    test("should handle yOffset property", () => {
-      const customOffset = 10;
-      const xAxis = axisX()
-        .scale(scaleLinear().domain([0, 100]).range([0, 300]))
-        .orient("bottom")
-        .yOffset(customOffset);
-      const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
-        .selectGroup("xAxis")
-        .call(xAxis)
-        .select(".sszvis-axis");
-      expect(axisGroup.node()).not.toBeNull();
-      expect(axisGroup.attr("transform")).toContain(`translate(0,${customOffset})`);
     });
   });
 });

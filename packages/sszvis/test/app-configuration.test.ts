@@ -6,19 +6,19 @@ describe("app configuration", () => {
   installResizeListenerIsolation();
 
   describe("configuration", () => {
-    test("throws when no init function is provided", () => {
+    test("should throw when no init function is provided", () => {
       expect(() => app({ render: () => {} } as never)).toThrow(
         '[sszvis.app] An "init" function must be provided.',
       );
     });
 
-    test("throws when no render function is provided", () => {
+    test("should throw when no render function is provided", () => {
       expect(() => app({ init: async () => {} } as never)).toThrow(
         '[sszvis.app] A "render" function must be provided.',
       );
     });
 
-    test("works without any actions", async () => {
+    test("should render once when no actions are configured", async () => {
       const render = vi.fn();
       app({
         init: async (state) => {

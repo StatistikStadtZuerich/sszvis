@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { app } from "../src/app.js";
+import { app, type Effect } from "../src/app.js";
 import { viewport } from "../src/viewport/resize.js";
 import { installResizeListenerIsolation, nextFrame } from "./support/appHarness.js";
 
@@ -7,7 +7,7 @@ describe("app lifecycle", () => {
   const resize = installResizeListenerIsolation();
 
   describe("init", () => {
-    test("renders the state produced by init", async () => {
+    test("should render the state init produced when init resolves", async () => {
       const render = vi.fn();
       app({
         init: async (state) => {
@@ -19,7 +19,7 @@ describe("app lifecycle", () => {
       expect(render.mock.calls[0][0]).toEqual({ greeting: "hello" });
     });
 
-    test("does not render before init resolves", async () => {
+    test("should hold the first render back until init resolves", async () => {
       const render = vi.fn();
       let resolveInit: () => void = () => {};
       app({
@@ -36,7 +36,7 @@ describe("app lifecycle", () => {
       expect(render).toHaveBeenCalledTimes(1);
     });
 
-    test("renders the state produced by a synchronous init", async () => {
+    test("should render the state init produced when init is synchronous", async () => {
       const render = vi.fn();
       app({
         init: (state) => {
@@ -48,15 +48,29 @@ describe("app lifecycle", () => {
       expect(render.mock.calls[0][0]).toEqual({ greeting: "hello" });
     });
 
-    test("runs an effect returned from a synchronous init", async () => {
-      const render = vi.fn();
-      app({
+    test.for<{ kind: string; init: (state: { count: number }) => Effect | Promise<Effect> }>([
+      {
+        kind: "synchronous",
         init: (state) => {
           state.count = 0;
           return (dispatch) => {
             dispatch("increment", []);
           };
         },
+      },
+      {
+        kind: "asynchronous",
+        init: async (state) => {
+          state.count = 0;
+          return (dispatch) => {
+            dispatch("increment", []);
+          };
+        },
+      },
+    ])("should apply the effect's dispatch when a $kind init returns one", async ({ init }) => {
+      const render = vi.fn();
+      app<{ count: number }>({
+        init,
         render,
         actions: {
           increment: (state) => {
@@ -68,7 +82,7 @@ describe("app lifecycle", () => {
       expect(render.mock.lastCall?.[0]).toEqual({ count: 1 });
     });
 
-    test("reports an init that throws synchronously as an init failure", async () => {
+    test("should report an init failure when init throws synchronously", async () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
       const render = vi.fn();
       const cause = new Error("no data");
@@ -85,30 +99,10 @@ describe("app lifecycle", () => {
       expect(reported.cause).toBe(cause);
       expect(render).not.toHaveBeenCalled();
     });
-
-    test("runs an effect returned from init", async () => {
-      const render = vi.fn();
-      app({
-        init: async (state) => {
-          state.count = 0;
-          return (dispatch) => {
-            dispatch("increment", []);
-          };
-        },
-        render,
-        actions: {
-          increment: (state) => {
-            state.count += 1;
-          },
-        },
-      });
-      await nextFrame();
-      expect(render.mock.lastCall?.[0]).toEqual({ count: 1 });
-    });
   });
 
   describe("resize", () => {
-    test("re-renders when the viewport reports a resize", async () => {
+    test("should re-render when the viewport reports a resize", async () => {
       const render = vi.fn();
       app({ init: async () => {}, render });
       await nextFrame();
@@ -119,7 +113,7 @@ describe("app lifecycle", () => {
   });
 
   describe("teardown", () => {
-    test("stops rendering on resize once the app is destroyed", async () => {
+    test("should stop re-rendering on resize when the app has been destroyed", async () => {
       const renderA = vi.fn();
       const renderB = vi.fn();
       const a = app({ init: async () => {}, render: renderA });
@@ -132,7 +126,7 @@ describe("app lifecycle", () => {
       expect(renderB).toHaveBeenCalledTimes(2);
     });
 
-    test("stops a frame that was already queued", async () => {
+    test("should never render when destroyed before its queued frame runs", async () => {
       const render = vi.fn();
       const handle = app({ init: async () => {}, render });
       handle.destroy();
@@ -140,7 +134,7 @@ describe("app lifecycle", () => {
       expect(render).not.toHaveBeenCalled();
     });
 
-    test("registers no resize listener when destroyed before init resolves", async () => {
+    test("should register no resize listener when destroyed before init resolves", async () => {
       const render = vi.fn();
       let resolveInit: () => void = () => {};
       const handle = app({
@@ -159,7 +153,7 @@ describe("app lifecycle", () => {
       expect(resize.registered()).toEqual([]);
     });
 
-    test("renders no fallback when destroyed before a failing init settles", async () => {
+    test("should render no fallback but still report the failure when destroyed before a failing init settles", async () => {
       // A destroyed app renders nothing afterwards, the fallback included: by the time init
       // rejects the container may already belong to a replacement app. The failure is still
       // reported, since it happened regardless of who is holding the container now.
@@ -209,7 +203,7 @@ describe("app lifecycle", () => {
       );
     });
 
-    test("can be destroyed more than once", async () => {
+    test("should not throw when destroy is called a second time", async () => {
       const handle = app({ init: async () => {}, render: () => {} });
       await nextFrame();
       handle.destroy();

@@ -1,97 +1,125 @@
 import { select } from "d3";
 import { describe, expect, test, vi } from "vitest";
-import { measureDimensions, measureText } from "../src/measure.js";
+import {
+  measureAxisLabel,
+  measureDimensions,
+  measureLegendLabel,
+  measureText,
+} from "../src/measure.js";
 
-describe("measure", () => {
-  describe("measureDimensions", () => {
-    test("should measure dimensions from DOM element", () => {
-      const div = document.createElement("div");
-      div.getBoundingClientRect = vi.fn().mockReturnValue({ width: 500 });
-      document.body.append(div);
-      expect(measureDimensions(div)).toEqual({
-        width: 500,
-        screenWidth: window.innerWidth || 1024,
-        screenHeight: window.innerHeight || 768,
-      });
-    });
+/**
+ * A detached div whose width is stubbed, so the container-form tests measure the
+ * argument handling rather than the layout engine. The one test that exercises real
+ * layout is named for it.
+ */
+function stubbedDiv(width: number) {
+  const div = document.createElement("div");
+  div.getBoundingClientRect = vi.fn().mockReturnValue({ width });
+  document.body.append(div);
+  return div;
+}
 
-    test("should measure dimensions from CSS selector", () => {
-      const div = document.createElement("div");
-      div.id = "test-element";
-      div.getBoundingClientRect = vi.fn().mockReturnValue({ width: 300 });
-      document.body.append(div);
-      expect(measureDimensions("#test-element")).toEqual({
-        width: 300,
-        screenWidth: window.innerWidth || 1024,
-        screenHeight: window.innerHeight || 768,
-      });
-    });
+const screen = () => ({ screenWidth: window.innerWidth, screenHeight: window.innerHeight });
 
-    test("should measure dimensions from d3 selection", () => {
-      const div = document.createElement("div");
-      div.getBoundingClientRect = vi.fn().mockReturnValue({ width: 400 });
-      document.body.append(div);
-      expect(measureDimensions(select(div))).toEqual({
-        width: 400,
-        screenWidth: window.innerWidth || 1024,
-        screenHeight: window.innerHeight || 768,
-      });
-    });
+describe("measureDimensions", () => {
+  test.each([
+    ["a DOM element", (div: HTMLDivElement) => div],
+    ["a d3 selection", (div: HTMLDivElement) => select(div)],
+    [
+      "a CSS selector",
+      (div: HTMLDivElement) => {
+        div.id = "measure-target";
+        return "#measure-target";
+      },
+    ],
+  ])("should report the element's width when given %s", (_label, toArgument) => {
+    const div = stubbedDiv(500);
+    expect(measureDimensions(toArgument(div))).toEqual({ width: 500, ...screen() });
+  });
 
-    test("should return undefined width when element does not exist", () => {
-      expect(measureDimensions("#non-existent")).toEqual({
-        width: undefined,
-        screenWidth: window.innerWidth || 1024,
-        screenHeight: window.innerHeight || 768,
-      });
-    });
-
-    test("should return undefined width when node is null", () => {
-      expect(measureDimensions(null as unknown as string)).toEqual({
-        width: undefined,
-        screenWidth: window.innerWidth || 1024,
-        screenHeight: window.innerHeight || 768,
-      });
-    });
-
-    test("should measure actual DOM element dimensions in browser mode", () => {
-      const div = document.createElement("div");
-      div.style.width = "200px";
-      div.style.height = "100px";
-      div.style.position = "absolute";
-      div.style.top = "-9999px"; // Hide offscreen
-      document.body.append(div);
-      const result = measureDimensions(div);
-      expect(result.width).toBeCloseTo(200, 0); // Allow for subpixel differences
-      expect(result.screenWidth).toBe(window.innerWidth || 1024);
-      expect(result.screenHeight).toBe(window.innerHeight || 768);
+  test.each([
+    ["a selector matches no element", "#non-existent"],
+    ["there is nothing to measure", null],
+  ])("should report an undefined width but still report the screen when %s", (_label, argument) => {
+    expect(measureDimensions(argument as unknown as string)).toEqual({
+      width: undefined,
+      ...screen(),
     });
   });
 
-  describe("measureText", () => {
-    test.each<[[number, string, string], number]>([
-      [[9, "Arial, sans-serif", "Test"], 16.5],
-      [[16, "Arial, sans-serif", "Test"], 29],
-      [[36, "Arial, sans-serif", "Test"], 66],
-      [[9, "Arial, sans-serif", "The rabbit goes down the hole"], 121],
-      [[16, "Arial, sans-serif", "The rabbit goes down the hole"], 215],
-      [[36, "Arial, sans-serif", "The rabbit goes down the hole"], 484],
+  test("should measure the laid-out width when the element is really in the document", () => {
+    // The only test here that does not stub getBoundingClientRect, so the only one that
+    // proves the real measurement path works at all.
+    const div = document.createElement("div");
+    div.style.width = "200px";
+    div.style.height = "100px";
+    div.style.position = "absolute";
+    div.style.top = "-9999px";
+    document.body.append(div);
 
-      [[9, "Times, serif", "Test"], 15],
-      [[16, "Times, serif", "Test"], 26],
-      [[36, "Times, serif", "Test"], 59],
-      [[9, "Times, serif", "The rabbit goes down the hole"], 109],
-      [[16, "Times, serif", "The rabbit goes down the hole"], 194],
-      [[36, "Times, serif", "The rabbit goes down the hole"], 437],
+    expect(measureDimensions(div).width).toBeCloseTo(200, 0);
+  });
+});
 
-      [[9, "Courier, monospace", "Test"], 22],
-      [[16, "Courier, monospace", "Test"], 38],
-      [[36, "Courier, monospace", "Test"], 86],
-      [[9, "Courier, monospace", "The rabbit goes down the hole"], 157],
-      [[16, "Courier, monospace", "The rabbit goes down the hole"], 278],
-      [[36, "Courier, monospace", "The rabbit goes down the hole"], 627],
-    ])('%s -> "%s"', (input, output) => {
-      expect(measureText(...input)).toBeCloseTo(output, 0);
-    });
+/**
+ * measureText wraps the canvas text metrics of whatever browser and font stack the suite
+ * happens to run in, so an expected pixel width would pin the environment rather than any
+ * sszvis behaviour and would break unactionably on a font or browser change. These assert
+ * only the relations the callers (axis and legend label layout) actually rely on.
+ */
+describe("measureText", () => {
+  const SHORT = "Test";
+  const LONG = "The rabbit goes down the hole";
+  const FAMILIES = ["Arial, sans-serif", "Times, serif", "Courier, monospace"];
+
+  test.each(FAMILIES)("should report a wider result for a longer string in %s", (family) => {
+    expect(measureText(16, family, LONG)).toBeGreaterThan(measureText(16, family, SHORT));
+  });
+
+  test.each(FAMILIES)("should grow the measured width with the font size in %s", (family) => {
+    expect(measureText(16, family, SHORT)).toBeGreaterThan(measureText(9, family, SHORT));
+    expect(measureText(36, family, SHORT)).toBeGreaterThan(measureText(16, family, SHORT));
+  });
+
+  test.each(FAMILIES)(
+    "should scale the measured width in proportion to the font size in %s",
+    (family) => {
+      // Canvas advance widths are linear in the font size, so quadrupling the size should
+      // quadruple the width. The tolerance absorbs hinting at small sizes.
+      const ratio = measureText(36, family, LONG) / measureText(9, family, LONG);
+      expect(ratio).toBeCloseTo(4, 0);
+    },
+  );
+
+  test.each([16, 36])(
+    "should report a wider result for a monospace face than a proportional one at %spx",
+    (fontSize) => {
+      const monospace = measureText(fontSize, "Courier, monospace", LONG);
+      expect(monospace).toBeGreaterThan(measureText(fontSize, "Arial, sans-serif", LONG));
+      expect(monospace).toBeGreaterThan(measureText(fontSize, "Times, serif", LONG));
+    },
+  );
+
+  test("should report no width when the string is empty", () => {
+    expect(measureText(16, "Arial, sans-serif", "")).toBe(0);
+  });
+
+  test("should report the same width when the same arguments are measured twice", () => {
+    expect(measureText(16, "Arial, sans-serif", LONG)).toBe(
+      measureText(16, "Arial, sans-serif", LONG),
+    );
+  });
+});
+
+describe("label presets", () => {
+  test.each([
+    ["measureAxisLabel", measureAxisLabel, 10],
+    ["measureLegendLabel", measureLegendLabel, 12],
+  ])("should measure %s at its fixed size and face", (_label, preset, fontSize) => {
+    // Compared against measureText rather than a pixel number, so the preset's contract
+    // (which size and face it pins) is asserted without depending on the font stack.
+    for (const text of ["Test", "The rabbit goes down the hole"]) {
+      expect(preset(text)).toBe(measureText(fontSize, "Arial, sans-serif", text));
+    }
   });
 });

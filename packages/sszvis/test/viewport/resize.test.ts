@@ -54,6 +54,10 @@ describe("viewport/resize", () => {
 
   test("should return the viewport object from on, off and trigger so calls chain", () => {
     const cb = vi.fn();
+    // Registered by hand rather than through `listen`, because the return value of `on` is
+    // what is under test here. The bucket still has to be recorded for the afterEach, or a
+    // failing assertion below would leave the listener behind for the next test.
+    registered.add("resize");
     expect(viewport.on("resize", cb)).toBe(viewport);
     expect(viewport.trigger("resize")).toBe(viewport);
     expect(viewport.off("resize", cb)).toBe(viewport);

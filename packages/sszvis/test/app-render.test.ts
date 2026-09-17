@@ -6,7 +6,7 @@ describe("app render", () => {
   installResizeListenerIsolation();
 
   describe("state in render", () => {
-    test("throws when render assigns to the state it was given", async () => {
+    test("should throw a TypeError when render assigns to the state it was given", async () => {
       let thrown: unknown;
       const done = new Promise<void>((resolve) => {
         app<{ count: number }>({
@@ -27,7 +27,7 @@ describe("app render", () => {
       expect(thrown).toBeInstanceOf(TypeError);
     });
 
-    test("keeps a mutation attempt in render out of the next action's draft", async () => {
+    test("should keep the next action's draft unchanged when render attempted a mutation", async () => {
       const seen: number[] = [];
       const render = vi.fn((state: { count: number }, _actions: { bump: () => void }) => {
         seen.push(state.count);
@@ -54,7 +54,7 @@ describe("app render", () => {
       expect(seen).toEqual([0, 1]);
     });
 
-    test("leaves the data hanging off the state mutable, as d3 requires", async () => {
+    test("should allow the write when render mutates data hanging off the state, as d3 requires", async () => {
       let mutated: unknown;
       const done = new Promise<void>((resolve) => {
         app<{ data: { value: number }[] }>({
