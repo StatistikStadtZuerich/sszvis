@@ -21,12 +21,25 @@ type Surround = {
   readonly before: readonly string[];
   readonly after: readonly string[];
   readonly indent: boolean;
+  /** Skip `before` when the template already opens this section itself. */
+  readonly once?: boolean;
 };
 
 const SURROUNDS = {
-  helpers: { before: ["// Helper functions", ""], after: [], indent: false },
+  /*
+   * `once`, because a chart.ts with helper functions of its own already writes the
+   * banner above them, and a feature's helpers belong under that heading rather
+   * than under a second copy of it. Without this the line chart and the stacked
+   * area emitted "// Helper functions" twice, which is what a reader of the
+   * exported file sees.
+   */
+  helpers: { before: ["// Helper functions", ""], after: [], indent: false, once: true },
   actions: { before: ["actions: {"], after: ["},", ""], indent: true },
 } satisfies Readonly<Record<string, Surround>>;
+
+/** Whether the template already carries `line` as a line of its own. */
+const opensWith = (template: string, line: string | undefined) =>
+  line !== undefined && template.split("\n").includes(line);
 
 export const compile = (recipe: Recipe, spec: Spec): Effect.Effect<string, BuilderCompileError> => {
   const implied = recipe.implied(spec);
@@ -48,7 +61,11 @@ export const compile = (recipe: Recipe, spec: Spec): Effect.Effect<string, Build
     const lines = fragments[hole];
     if (lines === undefined || lines.length === 0) continue;
     const inner = surround.indent ? lines.map(indent) : lines;
-    fragments[hole] = [...surround.before, ...inner, ...surround.after];
+    const before =
+      surround.once === true && opensWith(recipe.template, surround.before[0])
+        ? []
+        : surround.before;
+    fragments[hole] = [...before, ...inner, ...surround.after];
   }
 
   const option = (key: OptionKey) => optionValue(recipe.options, spec, key);
