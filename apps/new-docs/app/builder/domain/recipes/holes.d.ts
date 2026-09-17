@@ -29,6 +29,8 @@ declare const __TOOLTIP_TEXT__: ReturnType<typeof sszvis.modularTextHTML>;
 
 /** CSV column holding the date. */
 declare const __DATE_FIELD__: string;
+/** The sszvis parser that reads this table's dates: `parseDate` or `parseYear`. */
+declare const __DATE_PARSER__: (value: string | undefined | null) => Date | null;
 /** How a row's category is read - a column, or `""` for a single series. */
 declare const __CATEGORY_EXPR__: string;
 declare const __X_LABEL__: string;

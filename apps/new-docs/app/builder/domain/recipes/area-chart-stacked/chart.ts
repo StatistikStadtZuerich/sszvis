@@ -72,7 +72,7 @@ sszvis.app<State, Actions>({
       // NOTE: A row whose date cannot be parsed is skipped - returning null from a
       // d3 row callback drops the row - because every band is positioned by date.
       .csv(config.data, (d) => {
-        const xValue = sszvis.parseDate(d[__DATE_FIELD__]);
+        const xValue = __DATE_PARSER__(d[__DATE_FIELD__]);
         return xValue === null
           ? null
           : {

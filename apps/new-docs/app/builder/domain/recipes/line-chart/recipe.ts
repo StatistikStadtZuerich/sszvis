@@ -1,6 +1,7 @@
 import { referenceLinesCode } from "../../annotations";
 import { code, str } from "../../emit";
 import {
+  ColumnName,
   DATE,
   DESCRIPTION,
   FeatureKey,
@@ -54,10 +55,17 @@ export const lineChart: RecipeDef = {
     { key: Y_LABEL_OPTION, label: "Y axis label", fallback: "" },
   ],
   features: [RULER, LEGEND, POINTS, REFERENCE_LINES_FEATURE],
-  scalars: (spec, option) => ({
+  scalars: (spec, option, column) => ({
     X_LABEL: str(option(X_LABEL_OPTION)),
     Y_LABEL: str(option(Y_LABEL_OPTION)),
     DATE_FIELD: str(spec.fields[DATE] ?? ""),
+    /* A column of years is read by `parseYear`; `parseDate` would return null for
+       every row of it and the chart would draw nothing. */
+    DATE_PARSER: code(
+      column(spec.fields[DATE] ?? ColumnName.make("")).dateFormat === "year"
+        ? "sszvis.parseYear"
+        : "sszvis.parseDate",
+    ),
     VALUE_FIELD: str(spec.fields[VALUE] ?? ""),
     /* An unmapped series emits `""`, not `d[""]`. */
     CATEGORY_EXPR:

@@ -62,7 +62,7 @@ sszvis.app<State, Actions>({
   init: (state) =>
     d3
       .csv(config.data, (d) => {
-        const xValue = sszvis.parseDate(d[__DATE_FIELD__]);
+        const xValue = __DATE_PARSER__(d[__DATE_FIELD__]);
         // NOTE: A row whose date cannot be parsed has no position on the time
         // axis; returning null from the row callback drops it from the data.
         return xValue === null

@@ -41,6 +41,7 @@ import {
   type SortDirection,
   sortOrder,
   type Table,
+  rolledOver,
   unsupportedPins,
 } from "../domain/csv";
 import { ColumnName, KIND_LABEL, type ColumnKind, type ColumnKinds } from "../domain/spec";
@@ -59,6 +60,7 @@ type EditorMeta = {
   readonly isPinned: (column: number) => boolean;
   readonly isUnsupported: (column: number) => boolean;
   readonly isEmpty: (column: number) => boolean;
+  readonly movedDay: (column: number) => { readonly value: string; readonly on: Date } | undefined;
   readonly cycleKind: (column: number) => void;
   readonly beginRename: (column: number) => void;
   readonly setColumn: (column: number, value: string) => void;
@@ -108,6 +110,7 @@ const KindCell = ({
   pinned,
   unsupported,
   empty,
+  moved,
   onCycle,
 }: {
   readonly index: number;
@@ -116,6 +119,7 @@ const KindCell = ({
   readonly pinned: boolean;
   readonly unsupported: boolean;
   readonly empty: boolean;
+  readonly moved: { readonly value: string; readonly on: Date } | undefined;
   readonly onCycle: (index: number) => void;
 }) => {
   const label = KIND_LABEL[kind];
@@ -123,7 +127,11 @@ const KindCell = ({
   const next = KIND_LABEL[nextKind(kind)];
   const warning = empty
     ? `${name} is empty, so a chart reading it as ${label} has nothing to draw.`
-    : `The values in ${name} are not all ${label}. The chart will drop the rows it cannot read.`;
+    : unsupported
+      ? `The values in ${name} are not all ${label}. The chart will drop the rows it cannot read.`
+      : moved === undefined
+        ? undefined
+        : `${moved.value} is not a calendar day. The chart plots it on ${moved.on.toLocaleDateString("de-CH")}.`;
   return (
     <Tooltip>
       <TooltipTrigger
@@ -131,12 +139,15 @@ const KindCell = ({
           <Button
             size="icon-xs"
             variant="ghost"
-            /* Both halves: a control that cycles is unusable if it only says where it is. */
             aria-label={`${name} holds ${label}${pinned ? "" : ", as detected"}. Change to ${next}.`}
             onClick={() => onCycle(index)}
             className="relative ml-0.5 shrink-0"
           >
-            {unsupported ? <TriangleAlertIcon className="text-destructive" /> : <Icon />}
+            {warning === undefined ? (
+              <Icon />
+            ) : (
+              <TriangleAlertIcon className={unsupported || empty ? "text-destructive" : ""} />
+            )}
             {pinned && (
               <span
                 aria-hidden
@@ -147,9 +158,7 @@ const KindCell = ({
         }
       />
       <TooltipContent side="top">
-        {unsupported
-          ? warning
-          : `Holds ${label}${pinned ? "" : ", as detected"} - click for ${next}`}
+        {warning ?? `Holds ${label}${pinned ? "" : ", as detected"} - click for ${next}`}
       </TooltipContent>
     </Tooltip>
   );
@@ -178,6 +187,7 @@ const HeaderCell = ({ column, table: grid }: HeaderContext<typeof features, Row,
           pinned={meta.isPinned(index)}
           unsupported={meta.isUnsupported(index)}
           empty={meta.isEmpty(index)}
+          moved={meta.movedDay(index)}
           onCycle={meta.cycleKind}
         />
       )}
@@ -288,6 +298,11 @@ export const TableEditor = ({
       return name !== undefined && kinds[name] !== undefined;
     },
     isUnsupported: (column) => unsupported.has(table.columns[column] ?? ""),
+    movedDay: (column) => {
+      const name = table.columns[column];
+      if (name === undefined || resolved.get(name) !== "temporal") return undefined;
+      return rolledOver(table, name)[0];
+    },
     isEmpty: (column) => {
       const name = table.columns[column];
       return name !== undefined && !hasValues(table, name);

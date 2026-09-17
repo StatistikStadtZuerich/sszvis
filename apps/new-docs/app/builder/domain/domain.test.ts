@@ -9,7 +9,9 @@ import {
   columnKinds,
   hasValues,
   nextKind,
-  parseSwissDate,
+  dateFormatOf,
+  parseAs,
+  rolledOver,
   renameKind,
   settleColumn,
   unsupportedPins,
@@ -467,14 +469,16 @@ describe("pinned column kinds", () => {
   });
 
   test("should report values a role will not be able to read, however the column is pinned", () => {
-    const table = parse("Jahr,Datum\n1999,01.02.2020");
-    /* The case pinning is most likely to produce: a year held to be a date fits the
-       role exactly, and the chart reading it parses every value and keeps none. */
-    expect(bearsRole(table, ColumnName.make("Jahr"), "date")).toBe(false);
-    expect(bearsRole(table, ColumnName.make("Jahr"), "number")).toBe(true);
+    const table = parse("Jahr,Datum,Wort,Menge\n1999,01.02.2020,x,20892");
+    /* The case this exists for: a column of years is readable as dates, through the
+       year parser rather than the date one. */
+    expect(bearsRole(table, ColumnName.make("Jahr"), "date")).toBe(true);
     expect(bearsRole(table, ColumnName.make("Datum"), "date")).toBe(true);
+    /* Neither notation takes words, or a number too large to be a year. */
+    expect(bearsRole(table, ColumnName.make("Wort"), "date")).toBe(false);
+    expect(bearsRole(table, ColumnName.make("Menge"), "date")).toBe(false);
+    expect(bearsRole(table, ColumnName.make("Wort"), "number")).toBe(false);
     /* An unbound role has nothing to say. */
-    expect(bearsRole(table, ColumnName.make("Jahr"), "category")).toBe(true);
     expect(bearsRole(table, ColumnName.make(""), "date")).toBe(true);
   });
 
@@ -485,10 +489,13 @@ describe("pinned column kinds", () => {
   });
 
   test("should report a pin the column's values will not bear", () => {
-    const table = parse("Wort,Zahl,Datum\nx,1,01.02.2020");
+    const table = parse("Wort,Zahl,Datum,Menge\nx,1999,01.02.2020,20892");
     expect(unsupportedPins(table, pin("Wort", "nominal"))).toEqual(new Set());
     expect(unsupportedPins(table, pin("Wort", "continuous"))).toEqual(new Set(["Wort"]));
-    expect(unsupportedPins(table, pin("Zahl", "temporal"))).toEqual(new Set(["Zahl"]));
+    /* Too many digits to be a year, and not a date either. */
+    expect(unsupportedPins(table, pin("Menge", "temporal"))).toEqual(new Set(["Menge"]));
+    /* Four digits or fewer, so pinning it to dates is a reading it can bear. */
+    expect(unsupportedPins(table, pin("Zahl", "temporal"))).toEqual(new Set());
     /* The values bear it, so pinning what was detected anyway says nothing. */
     expect(unsupportedPins(table, pin("Datum", "temporal"))).toEqual(new Set());
     /* A column of dates reads as text quite happily. */
@@ -505,14 +512,31 @@ describe("pinned column kinds", () => {
     expect(hasValues(table, ColumnName.make("Leer"))).toBe(false);
   });
 
-  test("should refuse a date that names no calendar day", () => {
-    /* The shape is right and the day is not: a chart parses it to nothing and drops
-       the row, so the column must not pass as dates on the pattern alone. */
-    const table = parse("Tag\n31.02.2020");
-    expect(columnKinds(table, {}).get("Tag")).toBe("nominal");
-    expect(bearsRole(table, ColumnName.make("Tag"), "date")).toBe(false);
-    expect(Option.isSome(parseSwissDate("29.02.2020"))).toBe(true);
-    expect(Option.isSome(parseSwissDate("29.02.2021"))).toBe(false);
+  test("should read a day that rolls over the way the chart will, and say where it lands", () => {
+    /* The chart plots it, so the column is still dates - refusing it would cost the
+       column its whole reading over one typo, and would disagree with the code the
+       builder writes. The reader is told which day it lands on instead. */
+    const table = parse("Tag\n01.03.2020\n31.02.2020");
+    expect(columnKinds(table, {}).get("Tag")).toBe("temporal");
+    expect(bearsRole(table, ColumnName.make("Tag"), "date")).toBe(true);
+    expect(rolledOver(table, ColumnName.make("Tag"))).toEqual([
+      { value: "31.02.2020", on: new Date(2020, 2, 2) },
+    ]);
+    /* A day that exists is not reported, in a leap year or out of one. */
+    expect(rolledOver(parse("Tag\n29.02.2020"), ColumnName.make("Tag"))).toEqual([]);
+    expect(rolledOver(parse("Tag\n29.02.2021"), ColumnName.make("Tag"))).toHaveLength(1);
+  });
+
+  test("should read years only when told to, not on the column's own evidence", () => {
+    /* `%Y` takes one to four digits, so counts would read as years. */
+    const table = parse("Jahr\n1999\n2000");
+    expect(columnKinds(table, {}).get("Jahr")).toBe("continuous");
+    expect(columnKinds(table, pin("Jahr", "temporal")).get("Jahr")).toBe("temporal");
+    /* Pinned, it bears a date role - which is the whole point of pinning it. */
+    expect(bearsRole(table, ColumnName.make("Jahr"), "date")).toBe(true);
+    expect(dateFormatOf(["1999", "2000"])).toBe("year");
+    expect(dateFormatOf(["17.08.2014"])).toBe("swiss");
+    expect(dateFormatOf(["17.08.2014", "1999"])).toBeUndefined();
   });
 
   test("should keep a pin under the column's new name when it is renamed", () => {
@@ -1113,10 +1137,11 @@ describe("annotations", () => {
     label,
   });
 
-  test("should read a Swiss date when it names a calendar day", () => {
-    expect(parseSwissDate(" 1.3.2020 ")).toEqual(Option.some(new Date(2020, 2, 1)));
-    expect(parseSwissDate("31.02.2020")).toEqual(Option.none());
-    expect(parseSwissDate("2020-03-01")).toEqual(Option.none());
+  test("should read a value under the notation it is written in", () => {
+    expect(parseAs("swiss", "1.3.2020")).toEqual(Option.some(new Date(2020, 2, 1)));
+    expect(parseAs("swiss", "2020-03-01")).toEqual(Option.none());
+    expect(parseAs("year", "1999")).toEqual(Option.some(new Date(1999, 0, 1)));
+    expect(parseAs("year", "17.08.2014")).toEqual(Option.none());
   });
 
   test("should accept a position only when it parses for the axis kind", () => {
@@ -1126,12 +1151,14 @@ describe("annotations", () => {
     expect(isValidPosition("number", { kind: "value", value: "abc" })).toBe(false);
     expect(isValidPosition("number", { kind: "value", value: "" })).toBe(false);
     expect(isValidPosition("date", { kind: "value", value: "01.01.2020" })).toBe(true);
-    expect(isValidPosition("date", { kind: "value", value: "2020" })).toBe(false);
+    /* A line on a year axis is typed as a year, and reaches the chart as one. */
+    expect(isValidPosition("date", { kind: "value", value: "2020" })).toBe(true);
   });
 
   test("should emit nothing at all for a position it rejects", () => {
     expect(positionCode("number", { kind: "value", value: "abc" })).toEqual(Option.none());
-    expect(positionCode("date", { kind: "value", value: "31.02.2020" })).toEqual(Option.none());
+    /* The chart plots a rolled-over day, so the line may sit on one too. */
+    expect(positionCode("date", { kind: "value", value: "not a date" })).toEqual(Option.none());
     expect(positionCode("category", { kind: "value", value: "Zürich" })).toEqual(Option.none());
     expect(positionCode("date", { kind: "mean" })).toEqual(Option.none());
     expect(positionCode("number", { kind: "value", value: " 30000 " })).toEqual(
