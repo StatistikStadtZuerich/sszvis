@@ -171,7 +171,7 @@ example, so it needs `pnpm run build` and a running docs server first.
 
 ## Structure
 
-`packages/sszvis/src/` is 100% TypeScript. `packages/sszvis/test/` is TypeScript apart from seven legacy `.js` files.
+`packages/sszvis/src/` is 100% TypeScript. `packages/sszvis/test/` is TypeScript apart from the Playwright suite, `test/snapshot/snapshot.spec.js`.
 
 ```txt
 src/
