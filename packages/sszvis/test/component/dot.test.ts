@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import dot from "../../src/component/dot.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 type Datum = { x: number; y: number; r: number; color?: string };
@@ -71,6 +72,18 @@ describe("component/dot", () => {
       .flatMap((s) => s.tween.map((t) => t.name));
   };
 
+  describesTheMarkJoin<Datum>(() => ({
+    make: dotOf,
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    data: testData,
+    marks: circles,
+    anchorCount: (node) => anchors(node).length,
+  }));
+
   describe("rendering", () => {
     test("should render one classed circle per datum", () => {
       const node = render(dotOf(), testData);
@@ -107,32 +120,6 @@ describe("component/dot", () => {
       const node = render(dot().x(0).y(0).radius(3), [{}]);
       expect(circles(node)[0].getAttribute("fill")).toBeNull();
       expect(circles(node)[0].getAttribute("stroke")).toBeNull();
-    });
-
-    test("should render nothing for an empty data array", () => {
-      const node = render(dotOf(), []);
-      expect(circles(node).length).toBe(0);
-      expect(anchors(node)).toEqual([]);
-    });
-
-    test("should re-render in place rather than appending duplicates", () => {
-      const component = dotOf();
-      const g = group("rerender");
-      g.datum(testData).call(component as never);
-      g.datum(testData).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(circles(node).length).toBe(2);
-      expect(anchors(node).length).toBe(2);
-    });
-
-    test("should remove circles and anchors when the data shrinks", () => {
-      const component = dotOf();
-      const g = group("shrink");
-      g.datum(testData).call(component as never);
-      g.datum([testData[0]]).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(circles(node).length).toBe(1);
-      expect(anchors(node).length).toBe(1);
     });
 
     test("should update the geometry when the data changes", () => {

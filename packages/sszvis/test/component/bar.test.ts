@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import bar from "../../src/component/bar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 type Datum = { x: number; y: number; w: number; h: number; color?: string };
@@ -72,6 +73,18 @@ describe("component/bar", () => {
       .flatMap((s) => s.tween.map((t) => t.name));
   };
 
+  describesTheMarkJoin<Datum>(() => ({
+    make: barOf,
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    data: testData,
+    marks: bars,
+    anchorCount: (node) => anchors(node).length,
+  }));
+
   describe("rendering", () => {
     test("should render one classed rect per datum", () => {
       const node = render(barOf(), testData);
@@ -117,32 +130,6 @@ describe("component/bar", () => {
       const node = render(bar().x(0).y(0).width(10).height(10), [{}]);
       expect(bars(node)[0].getAttribute("fill")).toBeNull();
       expect(bars(node)[0].getAttribute("stroke")).toBeNull();
-    });
-
-    test("should render nothing for an empty data array", () => {
-      const node = render(barOf(), []);
-      expect(bars(node).length).toBe(0);
-      expect(anchors(node)).toEqual([]);
-    });
-
-    test("should re-render in place rather than appending duplicates", () => {
-      const component = barOf();
-      const g = group("rerender");
-      g.datum(testData).call(component as never);
-      g.datum(testData).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(bars(node).length).toBe(2);
-      expect(anchors(node).length).toBe(2);
-    });
-
-    test("should remove bars and anchors when the data shrinks", () => {
-      const component = barOf();
-      const g = group("shrink");
-      g.datum(testData).call(component as never);
-      g.datum([testData[0]]).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(bars(node).length).toBe(1);
-      expect(anchors(node).length).toBe(1);
     });
 
     test("should update the geometry when the data changes", () => {
