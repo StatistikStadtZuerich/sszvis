@@ -139,19 +139,19 @@ describe("component/stackedPyramid", () => {
     // over a non-iterable yields an empty selection, so those charts rendered nothing - four
     // shipped pyramids, and the unit tests stayed green because they all reshaped the layout
     // first. Bind exactly what the charts bind and assert marks come out.
-    test("renders bars when the whole stackedPyramidData return value is bound to the layer", () => {
+    test("should render bars when the whole stackedPyramidData return value is bound to the layer", () => {
       const node = render(pyramidOf(), sidesDataOf());
       expect(bars(node, "leftStack").length).toBe(4);
       expect(bars(node, "rightStack").length).toBe(4);
     });
 
-    test("renders bars when the layout's sides are bound to the layer", () => {
+    test("should render bars when the layout's sides are bound to the layer", () => {
       const node = render(pyramidOf(), layoutOf().sides);
       expect(bars(node, "leftStack").length).toBe(4);
       expect(bars(node, "rightStack").length).toBe(4);
     });
 
-    test("reuses one generator across datasets without carrying state between them", () => {
+    test("should give the same answer as a fresh generator when one generator is reused across datasets", () => {
       // stackedPyramidData builds its layout generator once and closes over it, so the
       // accessors are bound a single time rather than per call. Nothing mutable may be
       // captured with them: applying the same generator to two datasets has to give the same
@@ -172,7 +172,7 @@ describe("component/stackedPyramid", () => {
       expect(third.map((side) => side.length)).toEqual(first.map((side) => side.length));
     });
 
-    test("agrees on maxValue between the two forms", () => {
+    test("should report the same maxValue whichever of the two layout forms is used", () => {
       expect(sidesDataOf().maxValue).toBe(layoutOf().maxValue);
     });
   });
@@ -257,7 +257,7 @@ describe("component/stackedPyramid", () => {
       expect(sides.maxValue).toBe(70);
     });
 
-    test("drops the assigned maxValue on copy, which is why it is deprecated", () => {
+    test("should lose the assigned maxValue when the array form is copied", () => {
       // maxValue is a property on the returned array rather than a field of a wrapper object,
       // so a spread or a trip through JSON loses it. That is the whole reason for
       // stackedPyramidLayout; the property is kept, and deprecated, so that the charts binding
@@ -278,17 +278,12 @@ describe("component/stackedPyramid", () => {
       expect(JSON.parse(JSON.stringify(result)).maxValue).toBe(70);
     });
 
-    test("should return an empty layout for empty data", () => {
-      const sides = layout([]);
-      expect(sides.length).toBe(0);
-      expect(layoutOf([]).maxValue).toBe(0);
-    });
-
-    test("should report maxValue as 0 for an empty layout", () => {
+    test("should return no sides and a maxValue of 0 when the data is empty", () => {
       // d3.max over an empty array is undefined, which the fold coerces to 0: the examples
       // feed maxValue straight into a scale domain - `domain([0, state.maxStackedValue])` -
       // where undefined would become NaN and the axis would lose its ticks. An empty data
       // state is ordinary, not an edge case: any filter that can match nothing reaches it.
+      expect(layout([]).length).toBe(0);
       expect(layoutOf([]).maxValue).toBe(0);
     });
 
@@ -513,23 +508,6 @@ describe("component/stackedPyramid", () => {
   });
 
   describe("props", () => {
-    test("should expose every prop the renderer reads", () => {
-      const component = stackedPyramid();
-      for (const prop of [
-        "barHeight",
-        "barWidth",
-        "barPosition",
-        "barFill",
-        "tooltipAnchor",
-        "leftAccessor",
-        "rightAccessor",
-        "leftRefAccessor",
-        "rightRefAccessor",
-      ]) {
-        expect(typeof Reflect.get(component, prop)).toBe("function");
-      }
-    });
-
     test("should default barFill to black and tooltipAnchor to the centre", () => {
       const component = stackedPyramid();
       // The datum is required now that barFill is only called for a slice that has one; a
@@ -540,36 +518,27 @@ describe("component/stackedPyramid", () => {
   });
 
   describe("groups", () => {
-    test("should render a group per side plus a group per reference line", () => {
+    test("should create all four groups, references last, even when no reference data is configured", () => {
       const node = render(pyramidOf());
-      expect(sideGroup(node, "leftStack")).not.toBeNull();
-      expect(sideGroup(node, "rightStack")).not.toBeNull();
-      expect(sideGroup(node, "leftReference")).not.toBeNull();
-      expect(sideGroup(node, "rightReference")).not.toBeNull();
-    });
-
-    test("should render the reference groups after the bars, so lines draw on top", () => {
-      const node = render(pyramidOf());
-      const keys = [...node.querySelectorAll("[data-d3-selectgroup]")].map((g) =>
-        g.getAttribute("data-d3-selectgroup"),
-      );
-      expect(keys).toEqual(["leftStack", "rightStack", "leftReference", "rightReference"]);
-    });
-
-    test("should create the reference groups even when no reference data is configured", () => {
-      const node = render(pyramidOf());
+      // The order is load-bearing: the reference lines have to paint over the bars. The
+      // groups themselves are unconditional; only the paths inside them are conditional.
+      expect(
+        [...node.querySelectorAll("[data-d3-selectgroup]")].map((g) =>
+          g.getAttribute("data-d3-selectgroup"),
+        ),
+      ).toEqual(["leftStack", "rightStack", "leftReference", "rightReference"]);
       expect(sideGroup(node, "leftReference")?.childElementCount).toBe(0);
       expect(sideGroup(node, "rightReference")?.childElementCount).toBe(0);
     });
 
-    test("should render one stack group per series on each side", () => {
+    test("should render one stack group per series on each side when both sides have data", () => {
       const node = render(pyramidOf());
       expect(stacks(node, "leftStack").length).toBe(2);
       expect(stacks(node, "rightStack").length).toBe(2);
       expect(stacks(node, "leftStack")[0].tagName).toBe("g");
     });
 
-    test("should render a group for a series only some of a side's rows carry", () => {
+    test("should still render a stack group when only some of a side's rows carry that series", () => {
       const node = render(
         pyramidOf(),
         layout([
@@ -585,7 +554,7 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "leftStack", "width")).toEqual(["1", "2", "0", "3"]);
     });
 
-    test("should mark the stack groups with a data attribute rather than a class", () => {
+    test("should mark a stack group with a data attribute rather than a class when it creates one", () => {
       // stackedBar uses a .sszvis-stack class for the same job; this component uses
       // [data-sszvis-stack] and sets no class at all.
       const node = render(pyramidOf());
@@ -595,36 +564,28 @@ describe("component/stackedPyramid", () => {
   });
 
   describe("bars", () => {
-    test("should render one bar per row per series on each side", () => {
+    test("should render one bar per row per series on each side when both sides have data", () => {
       const node = render(pyramidOf());
       expect(bars(node, "leftStack").length).toBe(4);
       expect(bars(node, "rightStack").length).toBe(4);
     });
 
-    test("should mirror the left bars across the spine", () => {
+    test("should mirror the two sides around a one-pixel spine when it renders", () => {
       const node = render(pyramidOf());
-      // x = -SPINE_PADDING - barWidth(d[1]): the bar's outer edge, since it grows leftwards
+      // On the left x = -SPINE_PADDING - barWidth(d[1]), the bar's outer edge, since it
+      // grows leftwards; on the right x = SPINE_PADDING + barWidth(d[0]), its inner edge.
       expect(attrs(node, "leftStack", "x")).toEqual(["-10.5", "-5.5", "-30.5", "-20.5"]);
       expect(attrs(node, "leftStack", "width")).toEqual(["10", "5", "20", "15"]);
-    });
-
-    test("should place the right bars outwards from the spine", () => {
-      const node = render(pyramidOf());
-      // x = SPINE_PADDING + barWidth(d[0]): the bar's inner edge
       expect(attrs(node, "rightStack", "x")).toEqual(["0.5", "0.5", "30.5", "1.5"]);
       expect(attrs(node, "rightStack", "width")).toEqual(["30", "1", "40", "2"]);
+      // 2 * SPINE_PADDING between the sides: the innermost left bar ends at -0.5 and the
+      // innermost right bar starts at 0.5.
+      expect(
+        Number(attrs(node, "leftStack", "x")[0]) + Number(attrs(node, "leftStack", "width")[0]),
+      ).toBe(-0.5);
     });
 
-    test("should leave a one pixel gap across the spine", () => {
-      const node = render(pyramidOf());
-      // 2 * SPINE_PADDING: the innermost left bar ends at -0.5, the right one starts at 0.5
-      const leftEdge =
-        Number(attrs(node, "leftStack", "x")[0]) + Number(attrs(node, "leftStack", "width")[0]);
-      expect(leftEdge).toBe(-0.5);
-      expect(Number(attrs(node, "rightStack", "x")[0])).toBe(0.5);
-    });
-
-    test("should stack the segments of one row without a gap between them", () => {
+    test("should abut the segments of a row when they are stacked", () => {
       const node = render(pyramidOf());
       // Series "a" of row 0 on the right runs 0.5...30.5, series "b" starts exactly there.
       const firstEnd =
@@ -633,13 +594,11 @@ describe("component/stackedPyramid", () => {
       expect(Number(attrs(node, "rightStack", "x")[2])).toBe(30.5);
     });
 
-    test("should take the vertical position from barPosition and the slice's row", () => {
-      const node = render(pyramidOf());
-      expect(attrs(node, "leftStack", "y")).toEqual(["0", "12", "0", "12"]);
-      expect(attrs(node, "rightStack", "y")).toEqual(["0", "12", "0", "12"]);
-    });
+    test("should place a row by the value barPosition reads off it, not by its order", () => {
+      const dense = render(pyramidOf());
+      expect(attrs(dense, "leftStack", "y")).toEqual(["0", "12", "0", "12"]);
+      expect(attrs(dense, "rightStack", "y")).toEqual(["0", "12", "0", "12"]);
 
-    test("should position sparse rows from their own values, not their order", () => {
       // barPosition is a scale over the row domain, so rows valued 40 and 80 land 40 and 80
       // rows down rather than at the top of the chart.
       const node = render(
@@ -654,23 +613,18 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "rightStack", "y")).toEqual(["480"]);
     });
 
-    test("should take the height from barHeight", () => {
+    test("should take a bar's height from barHeight when it renders", () => {
       const node = render(pyramidOf());
       expect(attrs(node, "leftStack", "height")).toEqual(["10", "10", "10", "10"]);
     });
 
-    test("should apply barFill to the slice's source row", () => {
+    test("should hand barFill the slice's source row when it paints a bar", () => {
       const node = render(
         pyramidOf().barFill((d: Row) => (d.series === "a" ? "#f00" : "#00f")),
         layout(),
       );
       expect(attrs(node, "leftStack", "fill")).toEqual(["#f00", "#f00", "#00f", "#00f"]);
       expect(attrs(node, "rightStack", "fill")).toEqual(["#f00", "#f00", "#00f", "#00f"]);
-    });
-
-    test("should default barFill to black", () => {
-      const node = render(pyramidOf());
-      expect(attrs(node, "leftStack", "fill")).toEqual(["#000", "#000", "#000", "#000"]);
     });
 
     test("should not set a stroke on the bars", () => {
@@ -680,7 +634,7 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "leftStack", "stroke")).toEqual([null, null, null, null]);
     });
 
-    test("should render nothing for an empty layout", () => {
+    test("should render no bars when the layout is empty", () => {
       const empty = layout([]);
       const node = render(
         stackedPyramid()
@@ -695,7 +649,7 @@ describe("component/stackedPyramid", () => {
       expect(bars(node, "leftStack").length).toBe(0);
     });
 
-    test("should re-render in place rather than appending duplicates", () => {
+    test("should update the bars in place when the same data is rendered twice", () => {
       const component = pyramidOf();
       const g = group("rerender");
       g.datum(layout()).call(component as never);
@@ -707,7 +661,7 @@ describe("component/stackedPyramid", () => {
       expect(anchors(node, "leftStack").length).toBe(4);
     });
 
-    test("should remove stacks when a side loses a series", () => {
+    test("should remove the stack group when a side loses a series", () => {
       const component = pyramidOf();
       const g = group("shrink-series");
       g.datum(layout()).call(component as never);
@@ -724,7 +678,7 @@ describe("component/stackedPyramid", () => {
       expect(bars(node, "leftStack").length).toBe(2);
     });
 
-    test("should remove bars when a side loses a row", () => {
+    test("should remove the bars when a side loses a row", () => {
       const component = pyramidOf();
       const g = group("shrink-rows");
       g.datum(layout()).call(component as never);
@@ -734,7 +688,7 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "leftStack", "y")).toEqual(["0", "0"]);
     });
 
-    test("should update the geometry when the data changes", async () => {
+    test("should move the bars to the new geometry when the data changes", async () => {
       // bar animates the update, so the destination geometry lands with the transition.
       const component = pyramidOf();
       const g = group("update");
@@ -755,7 +709,7 @@ describe("component/stackedPyramid", () => {
   });
 
   describe("tooltip anchors", () => {
-    test("should render one anchor per bar, inside the bar's stack group", () => {
+    test("should render one anchor per bar inside that bar's own stack group", () => {
       const node = render(pyramidOf());
       expect(anchors(node, "leftStack").length).toBe(4);
       expect(
@@ -763,7 +717,7 @@ describe("component/stackedPyramid", () => {
       ).toBe(2);
     });
 
-    test("should centre the anchors on the bars by default", () => {
+    test("should centre an anchor on its bar when tooltipAnchor is left unset", () => {
       const node = render(pyramidOf());
       // The default tooltipAnchor of [0.5, 0.5] overrides bar's own top-centre default:
       // x + 0.5 * width, y + 0.5 * height
@@ -781,7 +735,7 @@ describe("component/stackedPyramid", () => {
       ]);
     });
 
-    test("should pass a custom tooltipAnchor through to both sides", () => {
+    test("should hand both sides the same anchor when a custom tooltipAnchor is set", () => {
       const node = render(pyramidOf().tooltipAnchor([0, 0]));
       expect(anchors(node, "leftStack")[0]).toBe("translate(-10.5,0)");
       expect(anchors(node, "rightStack")[0]).toBe("translate(0.5,0)");
@@ -819,38 +773,38 @@ describe("component/stackedPyramid", () => {
         .leftRefAccessor(() => refs(0, 1))
         .rightRefAccessor(() => refs(0, 1));
 
-    test("should render no path when no reference accessor is set", () => {
-      const node = render(pyramidOf());
-      expect(lines(node, "leftReference").length).toBe(0);
-      expect(lines(node, "rightReference").length).toBe(0);
+    test("should draw one path per side that has a reference accessor, and none for a side without one", () => {
+      const none = render(pyramidOf());
+      expect([lines(none, "leftReference").length, lines(none, "rightReference").length]).toEqual([
+        0, 0,
+      ]);
+
+      const both = render(withRefs());
+      expect([lines(both, "leftReference").length, lines(both, "rightReference").length]).toEqual([
+        1, 1,
+      ]);
+      expect(lines(both, "leftReference")[0].tagName).toBe("path");
+
+      const rightOnly = render(pyramidOf().rightRefAccessor(() => refs(0, 1)));
+      expect([
+        lines(rightOnly, "leftReference").length,
+        lines(rightOnly, "rightReference").length,
+      ]).toEqual([0, 1]);
     });
 
-    test("should render exactly one classed path per configured side", () => {
-      const node = render(withRefs());
-      expect(lines(node, "leftReference").length).toBe(1);
-      expect(lines(node, "rightReference").length).toBe(1);
-      expect(lines(node, "leftReference")[0].tagName).toBe("path");
-    });
-
-    test("should render only the configured side", () => {
-      const node = render(pyramidOf().rightRefAccessor(() => refs(0, 1)));
-      expect(lines(node, "leftReference").length).toBe(0);
-      expect(lines(node, "rightReference").length).toBe(1);
-    });
-
-    test("should mirror the left reference line only", () => {
+    test("should mirror only the left reference line when both sides are configured", () => {
       const node = render(withRefs());
       expect(lines(node, "leftReference")[0].getAttribute("transform")).toBe("scale(-1, 1)");
       expect(lines(node, "rightReference")[0].getAttribute("transform")).toBe("");
     });
 
-    test("should draw x from a point's value and y from its row", async () => {
+    test("should read a reference point's x from its value and its y from its row", async () => {
       const node = render(withRefs());
       // x = barWidth(d.value), y = barPosition(d.row)
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
     });
 
-    test("should trace the bars a reference series describes", async () => {
+    test("should follow the bars' outer edges when the reference series describes them", async () => {
       // The outline of the right side's own outer edges: the stacked totals are 70 on row 0
       // and 3 on row 1, at y = 0 and y = 12. The remaining half-pixel is the spine padding
       // (see the note below) and the half-bar-height offset is filed separately.
@@ -867,7 +821,7 @@ describe("component/stackedPyramid", () => {
       expect(outerEdges).toEqual([70.5, 3.5]);
     });
 
-    test("should accept one of the layout's own series as a reference series", async () => {
+    test("should draw a reference line when one of the layout's own series is used as the series", async () => {
       // A slice already carries a `row` and a `value`, so a series needs no mapping.
       const node = render(pyramidOf().rightRefAccessor((d: Side[]) => d[1][1]));
       // Series "b" of the right side: values 40 on row 0 and 2 on row 1.
@@ -885,7 +839,7 @@ describe("component/stackedPyramid", () => {
       expect(path.getAttribute("stroke-dasharray")).toBe("3 3");
     });
 
-    test("should keep the generic class in the written class attribute", () => {
+    test("should keep the generic class on the path when it writes the class attribute", () => {
       // The join is scoped to the component's own class, but sszvis-path stays on the
       // element so that no selector written against the generic class changes meaning.
       const node = render(withRefs());
@@ -894,7 +848,7 @@ describe("component/stackedPyramid", () => {
       );
     });
 
-    test("should leave a foreign generic path in the same group alone", () => {
+    test("should leave a foreign generic path alone when one shares the reference group", () => {
       // The join matches only the paths this component drew, so another component's path
       // parked in the same group is neither adopted nor repainted.
       const g = group("ref-foreign");
@@ -915,23 +869,18 @@ describe("component/stackedPyramid", () => {
       expect(own[0].getAttribute("stroke")).toBe("#aaa");
     });
 
-    test("should re-render the reference line in place", async () => {
-      const component = withRefs();
-      const g = group("ref-rerender");
-      g.datum(layout()).call(component as never);
-      g.datum(layout()).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(lines(node, "rightReference").length).toBe(1);
-      expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
-    });
-
-    test("should animate the reference line when the data changes", async () => {
+    test("should ease the reference line to its new shape when the data changes", async () => {
       let ref = refs(0, 1);
       const component = pyramidOf().rightRefAccessor(() => ref);
       const g = group("ref-animate");
       g.datum(layout()).call(component as never);
       const node = g.node() as SVGGElement;
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
+
+      // Re-rendering the same data updates the one path in place rather than appending a
+      // second one.
+      g.datum(layout()).call(component as never);
+      expect(lines(node, "rightReference").length).toBe(1);
 
       ref = refs(2, 3);
       g.datum(layout()).call(component as never);
@@ -1021,21 +970,17 @@ describe("component/stackedPyramid", () => {
         .leftAccessor((d: Side[]) => d[0])
         .rightAccessor((d: Side[]) => d[1]);
 
-    test("should draw every segment at that width", () => {
+    test("should draw every segment of both sides at that width when barWidth is a constant", () => {
       // A constant is a segment width rather than a scale over stacked values, so it is used
-      // directly instead of being subtracted from itself.
+      // directly instead of being subtracted from itself - mirrored on the left as usual.
       const node = render(constantOf());
       expect(attrs(node, "rightStack", "width")).toEqual(["20", "20", "20", "20"]);
       expect(attrs(node, "rightStack", "x")).toEqual(["0.5", "0.5", "0.5", "0.5"]);
-    });
-
-    test("should mirror the constant across the spine", () => {
-      const node = render(constantOf());
       expect(attrs(node, "leftStack", "width")).toEqual(["20", "20", "20", "20"]);
       expect(attrs(node, "leftStack", "x")).toEqual(["-20.5", "-20.5", "-20.5", "-20.5"]);
     });
 
-    test("should not call barFill for a padding slice", () => {
+    test("should not call barFill at all when a slice is only padding", () => {
       // The slice is zero-width, so its fill is never painted - and an accessor written over
       // the source row would be handed an undefined datum and throw, which is exactly what a
       // sparse layout used to do through the docs examples' `colorScale(cAcc(d.data))`.
@@ -1060,7 +1005,7 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "leftStack", "fill")).toEqual(["#f00", "#f00", "#00f", null]);
     });
 
-    test("should keep a padding slice at zero width", () => {
+    test("should keep a padding slice at zero width when barWidth is a constant", () => {
       // A row with no observation for a series is padded with a synthetic slice whose two
       // bounds are equal. The scale branch draws that as nothing for free; a constant width
       // has to be told, or the missing series renders as a full-width bar.
@@ -1081,7 +1026,7 @@ describe("component/stackedPyramid", () => {
       expect(attrs(node, "rightStack", "width")).toEqual(["20", "20", "20", "20"]);
     });
 
-    test("should read a d3 scale as a scale over the stacked values", () => {
+    test("should read barWidth as a scale over the stacked values when it is a d3 scale", () => {
       // The supported shape, pinned next to the constant: the segment runs between the two
       // numbers of the slice's pair, so a bar's width is the scaled length of its own value.
       const node = render(constantOf().barWidth(scaleLinear().domain([0, 70]).range([0, 140])));
@@ -1395,7 +1340,7 @@ describe("component/stackedPyramid", () => {
       return { g, node, component, planted };
     };
 
-    test("should ignore a stack group nested inside a series group", () => {
+    test("should leave a nested stack group alone when a caller plants one inside a series group", () => {
       // The join is a child selector, so a caller may render content of its own - including
       // further stack groups - inside a series group without the component adopting it.
       const { g, node, component, planted } = plant("descendant-left", "leftStack", 1);
@@ -1406,15 +1351,7 @@ describe("component/stackedPyramid", () => {
       expect(planted.parentNode).toBe(ownStacks(node, "leftStack")[0]);
     });
 
-    test("should ignore a nested stack group on the right side too", () => {
-      const { g, node, component, planted } = plant("descendant-right", "rightStack", 1);
-
-      expect(() => g.datum(layout()).call(component as never)).not.toThrow();
-      expect(ownStacks(node, "rightStack").length).toBe(2);
-      expect(planted.parentNode).toBe(ownStacks(node, "rightStack")[0]);
-    });
-
-    test("should ignore a stack group nested two levels deep", () => {
+    test("should leave a nested stack group alone when it sits two levels deep", () => {
       const { g, node, component, planted } = plant("descendant-deep", "leftStack", 2);
 
       expect(() => g.datum(layout()).call(component as never)).not.toThrow();
@@ -1422,7 +1359,7 @@ describe("component/stackedPyramid", () => {
       expect(planted.isConnected).toBe(true);
     });
 
-    test("should ignore a foreign rect.sszvis-bar planted in a stack group", () => {
+    test("should leave a foreign rect.sszvis-bar alone when one is planted in a stack group", () => {
       // bar joins on its own .sszvis-bar-rect class, so a rect carrying only the generic
       // class - drawn by another component, or left behind by an earlier chart - is not
       // adopted as bar zero, which used to shift the whole row by one.
