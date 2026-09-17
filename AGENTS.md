@@ -38,7 +38,9 @@ The publish workflow re-runs the first three (not snapshots) before publishing f
 Test paths passed to `vitest` are relative to `packages/sszvis`, not the repo root.
 The library's unit tests run in a real browser (Vitest browser mode, Playwright/Chromium), so
 `playwright install` is required once after cloning. `@sszvis/regression-cli`'s tests are plain
-Node and need no browser. There is no test-helper module — tests import from `src/` directly.
+Node and need no browser. Tests import from `src/` directly; the only shared test code is
+`test/support/`, which holds parameterised conformance suites for contracts every component in a
+family shares (the d3 join, for instance). Fixtures and setup stay local to each test file.
 
 Only `correctness` lint rules fail the build. `suspicious` and `perf` rules are
 advisory and there is a standing backlog of ~34 warnings (mostly `no-shadow`), so
