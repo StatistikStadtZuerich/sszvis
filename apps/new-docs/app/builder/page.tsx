@@ -125,6 +125,16 @@ const Builder = ({
 
   const compiling = useHeldFor(freshness === "compiling", 350);
 
+  /*
+   * The recipe the settled build was made from, which mid-rebuild is not the one the
+   * form now names. Every value the frame is given has to come from that one build:
+   * the generated document is the iframe's key, so a title taken from the live
+   * recipe reloads the frame with the old chart's code under the new chart's name,
+   * and the reader watches the chart they are leaving redraw itself before the one
+   * they asked for arrives.
+   */
+  const settledRecipe = settled === undefined ? undefined : recipeOf(recipes, settled.spec);
+
   const status: PreviewStatus =
     error !== null
       ? { kind: "error", message: error }
@@ -406,8 +416,13 @@ const Builder = ({
               csv={settled?.generated.csv.raw ?? ""}
               /* The exported page titles itself from the resolved option (workers/pipeline.ts),
                  so an empty Title field has to fall back to the recipe's German default here too. */
-              title={settled === undefined ? "" : optionValue(recipe.options, settled.spec, TITLE)}
+              title={
+                settled === undefined || settledRecipe === undefined
+                  ? ""
+                  : optionValue(settledRecipe.options, settled.spec, TITLE)
+              }
               status={status}
+              pending={compiling}
               assets={settled?.generated.assets}
               /* From the settled build, not the live recipe: mid-rebuild the two are
                  different charts, and the source decides which globals it needs. */
