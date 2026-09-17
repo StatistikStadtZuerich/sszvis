@@ -82,12 +82,20 @@ a `brands` annotation to the AST, adds no check and leaves the encoded shape
 alone - so the RPC payload and any persisted spec are exactly what they were.
 
 A raw string becomes a key only where one genuinely enters, by calling the
-brand's own `make` (`RoleKey.make(...)`), which cannot fail. A recipe names its keys once as consts at
-the top of its `recipe.ts` and uses them for `roles`, `features`, `options` and
-every `spec.fields[...]` lookup; the CSV parser brands the header row; the table
-editor brands a column the user renames or adds; a `.tmpl` filename becomes a
-feature key in `recipe.ts`; and the two option keys the builder itself reads are
-exported from `spec.ts` as `TITLE` and `DESCRIPTION`.
+brand's own `make` (`RoleKey.make(...)`), which cannot fail. A recipe names its
+option and feature keys once as consts at the top of its `recipe.ts` and uses
+them for `features`, `options` and every lookup; the CSV parser brands the
+header row; the table editor brands a column the user renames or adds; and a
+`.tmpl` filename becomes a feature key in `recipe.ts`.
+
+Role keys are the exception: a role means the same thing in every recipe, so
+`spec.ts` exports `CATEGORY`, `VALUE`, `DATE` and `SERIES` and recipes import
+them rather than minting their own. Switching chart type carries the user's
+annotations over by role, which only works while the recipes agree on the
+spelling - a recipe that said `val` would silently keep nothing. A role
+peculiar to one recipe still belongs in that recipe. The two option keys the
+builder itself reads are exported from `spec.ts` the same way, as `TITLE` and
+`DESCRIPTION`.
 
 ## Parameters
 
