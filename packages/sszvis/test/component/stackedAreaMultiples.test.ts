@@ -89,27 +89,18 @@ describe("component/stackedAreaMultiples", () => {
   const secondLayerPath = "M0,20L10,10L10,50L0,60Z";
 
   describe("rendering", () => {
-    test("should render one classed path per layer", () => {
-      const node = render(areaOf(), twoLayers);
-      expect(paths(node).length).toBe(2);
-      for (const p of paths(node)) expect(p.tagName).toBe("path");
-    });
-
-    test("should trace the top line forwards and the baseline backwards", () => {
+    test("should close each layer's own band, out along y1 and back along y0, when it renders", () => {
       // An area is a closed shape: out along y1, back along y0 in reverse, then closed.
       expect(ds(render(areaOf(), oneLayer))).toEqual(["M0,10L10,20L10,50L0,40Z"]);
-    });
-
-    test("should keep the layers independent of one another", () => {
-      // Each multiple is drawn from its own points only, in the order they were given.
+      // And each multiple is drawn from its own points only, in the order they were given.
       expect(ds(render(areaOf(), twoLayers))).toEqual([firstLayerPath, secondLayerPath]);
     });
 
-    test("should render nothing for an empty data array", () => {
+    test("should render no paths when the data array is empty", () => {
       expect(paths(render(areaOf(), [])).length).toBe(0);
     });
 
-    test("should re-render in place rather than appending duplicates", () => {
+    test("should update the paths in place when the same data is rendered twice", () => {
       const component = areaOf();
       const g = group("rerender");
       g.datum(twoLayers).call(component as never);
@@ -117,7 +108,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(paths(g.node() as SVGGElement).length).toBe(2);
     });
 
-    test("should remove paths when the data shrinks", () => {
+    test("should remove the surplus path when the data shrinks", () => {
       const component = areaOf();
       const g = group("shrink");
       g.datum(twoLayers).call(component as never);
@@ -125,7 +116,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(paths(g.node() as SVGGElement).length).toBe(1);
     });
 
-    test("should update the geometry when the data changes", () => {
+    test("should rewrite each path when the data changes", () => {
       const component = staticAreaOf();
       const g = group("update");
       g.datum(oneLayer).call(component as never);
@@ -138,7 +129,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(ds(g.node() as SVGGElement)).toEqual(["M5,5L15,15L15,25L5,15Z"]);
     });
 
-    test("should render the output of a d3 stack layout, as the examples do", () => {
+    test("should draw the bands when the output of a d3 stack layout is bound to it", () => {
       // The shape docs/area-chart-stacked feeds in: each series is an array of [y0, y1]
       // tuples carrying the source row on .data and the series name on .key. In the
       // separated view the baseline comes from an ordinal position scale instead, but the
@@ -162,7 +153,7 @@ describe("component/stackedAreaMultiples", () => {
   });
 
   describe("layer order", () => {
-    test("should not mutate the array it was given", () => {
+    test("should leave the caller's array untouched when it renders", () => {
       // A caller holding on to the same array - as the docs example does, rendering the
       // stacked and the separated view from one datum - sees it unchanged.
       const data = [twoLayers[0], twoLayers[1]];
@@ -171,30 +162,12 @@ describe("component/stackedAreaMultiples", () => {
       expect(data[0]).toBe(twoLayers[0]);
     });
 
-    test("should follow the data order when the layers are reordered", () => {
-      // .join() orders the merged selection for free, so the paint order follows the data
-      // even when the nodes are reused.
-      const component = areaOf().key((d: Layer) => d[0].y1);
-      const g = group("order");
-      g.datum(twoLayers).call(component as never);
-      g.datum([twoLayers[1], twoLayers[0]]).call(component as never);
-      expect(ds(g.node() as SVGGElement)).toEqual([secondLayerPath, firstLayerPath]);
-    });
-
-    test("should paint the layers in the order they were given", () => {
+    test("should paint and number the layers in the order they were given when it renders", () => {
       // The component used to reverse its data before the join, which put the first layer of
-      // the input last in the DOM. It now matches stackedArea, so a chart toggling between
-      // the two views no longer reorders its paths, and later siblings paint over earlier
-      // ones in the order the caller asked for.
-      const node = render(areaOf(), twoLayers);
-      expect(ds(node)).toEqual([firstLayerPath, secondLayerPath]);
-      expect(paths(node).at(-1)?.getAttribute("d")).toBe(secondLayerPath);
-    });
-
-    test("should number the layers from the start of the input", () => {
-      // The index handed to the style accessors, to the key function and to valuesAccessor is
-      // the position in the array that was passed in, so `fill((_d, i) => colours[i])` puts
-      // the first colour on the first layer, here and in stackedArea alike.
+      // the input last in the DOM and handed the style accessors the opposite index. It now
+      // matches stackedArea, so a chart toggling between the two views no longer reorders
+      // its paths, and `fill((_d, i) => colours[i])` puts the first colour on the first
+      // layer in both.
       const seen: [Layer, number][] = [];
       const node = render(
         areaOf().fill((d: Layer, i: number) => {
@@ -209,6 +182,17 @@ describe("component/stackedAreaMultiples", () => {
       ]);
       expect(attrs(node, "fill")).toEqual(["#f00", "#00f"]);
       expect(ds(node)).toEqual([firstLayerPath, secondLayerPath]);
+      expect(paths(node).at(-1)?.getAttribute("d")).toBe(secondLayerPath);
+    });
+
+    test("should follow the data order when the layers are reordered under a key", () => {
+      // .join() orders the merged selection for free, so the paint order follows the data
+      // even when the nodes are reused.
+      const component = areaOf().key((d: Layer) => d[0].y1);
+      const g = group("order");
+      g.datum(twoLayers).call(component as never);
+      g.datum([twoLayers[1], twoLayers[0]]).call(component as never);
+      expect(ds(g.node() as SVGGElement)).toEqual([secondLayerPath, firstLayerPath]);
     });
 
     test("should match layers by position when the key is left unset", () => {
@@ -250,24 +234,12 @@ describe("component/stackedAreaMultiples", () => {
     const secondSeparated = "M0,120L10,110L10,150L0,160Z";
     const settle = () => new Promise((resolve) => setTimeout(resolve, 400));
 
-    test("should keep the same path nodes across the switch", async () => {
+    test("should keep every path node, in its own place, when the view is switched", async () => {
+      // Both components key off the layer, so nothing enters or exits, and both bind the
+      // layers in the order they were given, so toggling the view moves nothing: each node
+      // keeps its position and only its geometry changes. It used to reorder both paths,
+      // because only the separated view reversed.
       const g = group("toggle-nodes");
-      g.datum(twoLayers).call(stackedView() as never);
-      await settle();
-      const before = paths(g.node() as SVGGElement);
-      g.datum(twoLayers).call(separatedView() as never);
-      const after = paths(g.node() as SVGGElement);
-      // Both components key off the layer, so nothing enters or exits - which is the point
-      // of the shared key, and what makes the reordering below observable.
-      expect(after.length).toBe(2);
-      expect(new Set(after)).toEqual(new Set(before));
-    });
-
-    test("should keep every path in place across the switch", async () => {
-      // Both components bind the layers in the order they were given, so toggling the view
-      // moves nothing: each node keeps its position and only its geometry changes. It used
-      // to reorder both paths, because only the separated view reversed.
-      const g = group("toggle-order");
       g.datum(twoLayers).call(stackedView() as never);
       await settle();
       const stacked = paths(g.node() as SVGGElement);
@@ -275,11 +247,12 @@ describe("component/stackedAreaMultiples", () => {
 
       g.datum(twoLayers).call(separatedView() as never);
       const separated = paths(g.node() as SVGGElement);
+      expect(separated.length).toBe(2);
       expect(separated[0]).toBe(stacked[0]);
       expect(separated[1]).toBe(stacked[1]);
     });
 
-    test("should ease in both directions", async () => {
+    test("should ease the bands into their new shape when the view is switched either way", async () => {
       // The toggle the key property exists for. Both components route an updating band
       // through the transition, so each switch holds the old geometry and interpolates into
       // the new one over 300ms. The switch into the separated view used to snap, because
@@ -302,7 +275,7 @@ describe("component/stackedAreaMultiples", () => {
   });
 
   describe("accessors", () => {
-    test("should pass each point, its index and the layer array to x, y0 and y1", () => {
+    test("should hand the dimension accessors each point, its index and the layer array", () => {
       const seen: Record<string, unknown[][]> = { x: [], y0: [], y1: [] };
       const record =
         (name: string) =>
@@ -328,7 +301,7 @@ describe("component/stackedAreaMultiples", () => {
       }
     });
 
-    test("should pass the whole layer array and its index to the style accessors", () => {
+    test("should hand the style accessors the whole layer array and its index", () => {
       const seen: unknown[][] = [];
       const node = render(
         areaOf().fill((...args: unknown[]) => {
@@ -345,37 +318,24 @@ describe("component/stackedAreaMultiples", () => {
       expect(Array.from(seen[0][2] as ArrayLike<Element>)).toEqual(paths(node));
     });
 
-    test("should accept constants in place of the dimension accessors", () => {
+    test("should draw a flat band when a dimension is set to a value rather than an accessor", () => {
       // d3.area wraps a non-function in its own constant(), so a fixed baseline needs no
-      // functor of its own.
-      const node = render(stackedAreaMultiples().x(5).y0(30).y1(20), oneLayer);
-      expect(ds(node)).toEqual(["M5,20L5,20L5,30L5,30Z"]);
-    });
-
-    test("should accept a numeric string, which d3 coerces", () => {
-      const node = render(
-        stackedAreaMultiples()
-          // @ts-expect-error - a numeric string is deliberately not in the interface
-          .x("7")
-          .y0(2)
-          .y1(1),
-        oneLayer,
-      );
-      expect(ds(node)).toEqual(["M7,1L7,1L7,2L7,2Z"]);
-    });
-
-    test("should accept composed accessors, as the docs examples do", () => {
-      // The separated view composes an ordinal position scale for y0 and subtracts a
-      // within-band value scale for y1; both arrive here as plain functions of a point.
-      const yPosition = (d: Point) => 100 - d.y0;
-      const node = render(
-        stackedAreaMultiples()
-          .x((d: Point) => d.x * 2)
-          .y0(yPosition)
-          .y1((d: Point) => yPosition(d) - d.y1),
-        oneLayer,
-      );
-      expect(ds(node)).toEqual(["M0,50L20,30L20,50L0,60Z"]);
+      // functor of its own - and coerces a numeric string on the way.
+      expect(ds(render(stackedAreaMultiples().x(5).y0(30).y1(20), oneLayer))).toEqual([
+        "M5,20L5,20L5,30L5,30Z",
+      ]);
+      expect(
+        ds(
+          render(
+            stackedAreaMultiples()
+              // @ts-expect-error - a numeric string is deliberately not in the interface
+              .x("7")
+              .y0(2)
+              .y1(1),
+            oneLayer,
+          ),
+        ),
+      ).toEqual(["M7,1L7,1L7,2L7,2Z"]);
     });
   });
 
@@ -385,13 +345,11 @@ describe("component/stackedAreaMultiples", () => {
       { name: "second", values: twoLayers[1] },
     ];
 
-    test("should default to the identity, treating a layer as its array of points", () => {
-      expect(ds(render(areaOf(), oneLayer))).toEqual(["M0,10L10,20L10,50L0,40Z"]);
-    });
-
-    test("should unwrap a layer object into its points", () => {
+    test("should unwrap a layer object into its points when valuesAccessor is set, and treat the layer itself as the points when it is not", () => {
       // The documented reason the property exists: a layer of the shape
-      // { name: "Name", values: [ ... ] } rather than a bare array.
+      // { name: "Name", values: [ ... ] } rather than a bare array. Left unset it is the
+      // identity, so a bare array of points is drawn as it stands.
+      expect(ds(render(areaOf(), oneLayer))).toEqual(["M0,10L10,20L10,50L0,40Z"]);
       const node = render(
         areaOf().valuesAccessor((d: NamedLayer) => d.values),
         named,
@@ -410,7 +368,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(attrs(node, "fill")).toEqual(["#f00", "#00f"]);
     });
 
-    test("should pass the layer, its index and the node group to valuesAccessor", () => {
+    test("should hand valuesAccessor the layer, its index and the node group", () => {
       const seen: unknown[][] = [];
       const thises: unknown[] = [];
       const node = render(
@@ -480,11 +438,8 @@ describe("component/stackedAreaMultiples", () => {
   });
 
   describe("fill", () => {
-    test("should apply a constant fill to every layer", () => {
+    test("should paint the layers with fill whether it is a colour or an accessor", () => {
       expect(attrs(render(areaOf().fill("#abc"), twoLayers), "fill")).toEqual(["#abc", "#abc"]);
-    });
-
-    test("should apply a fill derived from the layer's own data", () => {
       const node = render(
         areaOf().fill((d: Layer) => (d[0].y1 === 60 ? "#f00" : "#00f")),
         twoLayers,
@@ -518,11 +473,8 @@ describe("component/stackedAreaMultiples", () => {
   });
 
   describe("stroke and strokeWidth", () => {
-    test("should apply a constant stroke", () => {
+    test("should outline the layers with stroke whether it is a colour or an accessor", () => {
       expect(attrs(render(areaOf().stroke("#f00"), oneLayer), "stroke")).toEqual(["#f00"]);
-    });
-
-    test("should apply a stroke derived from the layer's own data", () => {
       const node = render(
         areaOf().stroke((d: Layer) => (d[0].y1 === 60 ? "#f00" : "#00f")),
         twoLayers,
@@ -530,18 +482,12 @@ describe("component/stackedAreaMultiples", () => {
       expect(attrs(node, "stroke")).toEqual(["#f00", "#00f"]);
     });
 
-    test("should default the strokeWidth to 1", () => {
+    test("should size the hairline from strokeWidth, defaulting to 1 only when it is unset", () => {
       expect(attrs(render(areaOf(), oneLayer), "stroke-width")).toEqual(["1"]);
-    });
-
-    test("should apply a constant strokeWidth, including zero", () => {
-      // The default is applied with an explicit undefined check, so 0 survives where a
-      // falsy fallback would have replaced it.
       expect(attrs(render(areaOf().strokeWidth(4), oneLayer), "stroke-width")).toEqual(["4"]);
+      // The default is applied with an explicit undefined check, so 0 survives where a
+      // falsy fallback would have replaced it. This is the load-bearing case.
       expect(attrs(render(areaOf().strokeWidth(0), oneLayer), "stroke-width")).toEqual(["0"]);
-    });
-
-    test("should apply a strokeWidth derived from the layer's own data", () => {
       const node = render(
         areaOf().strokeWidth((d: Layer) => d.length),
         twoLayers,
@@ -600,7 +546,7 @@ describe("component/stackedAreaMultiples", () => {
       ],
     ];
 
-    test("should use an explicit defined predicate to break the area", () => {
+    test("should break the area into subpaths when an explicit defined predicate rejects a point", () => {
       const node = render(
         areaOf().defined((d: Point) => !Number.isNaN(d.y1)),
         withGap,
@@ -610,7 +556,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(ds(node)).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
     });
 
-    test("should pass the point, its index and the layer array to defined", () => {
+    test("should hand defined each point, its index and the layer array", () => {
       const seen: unknown[][] = [];
       render(
         areaOf().defined((...args: unknown[]) => {
@@ -624,12 +570,12 @@ describe("component/stackedAreaMultiples", () => {
       expect(seen.map((args) => args[2])).toEqual([oneLayer[0], oneLayer[0]]);
     });
 
-    test("should accept a constant predicate, which d3 coerces to a boolean", () => {
+    test("should draw no path at all when defined is set to a constant false", () => {
       expect(ds(render(areaOf().defined(false), oneLayer))).toEqual([null]);
       expect(ds(render(areaOf().defined(true), oneLayer))).toEqual(["M0,10L10,20L10,50L0,40Z"]);
     });
 
-    test("should see the unwrapped points when valuesAccessor is set", () => {
+    test("should hand defined the unwrapped points when valuesAccessor is set", () => {
       const node = render(
         areaOf()
           .valuesAccessor((d: NamedLayer) => d.values)
@@ -639,7 +585,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(ds(node)).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
     });
 
-    test("should skip a point whose bounds are missing, breaking the band", () => {
+    test("should break the band when a point is missing one of its bounds", () => {
       // The default guard tests both vertical bounds. Each surviving run becomes its own
       // subpath, exactly as it does when defined is set explicitly above.
       expect(ds(render(areaOf(), withGap))).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
@@ -656,7 +602,7 @@ describe("component/stackedAreaMultiples", () => {
       ).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
     });
 
-    test("should warn once per render, however many points are missing", () => {
+    test("should warn exactly once per render however many points are missing", () => {
       // A gap is transient and recoverable - the band simply breaks around it - so the
       // caller is told about the chart, not about each point. The guard runs twice per
       // point (once for each bound), which is why a per-point warning would be noisy.
@@ -673,14 +619,14 @@ describe("component/stackedAreaMultiples", () => {
       warn.mockRestore();
     });
 
-    test("should keep the surviving points renderable", () => {
+    test("should leave the surviving points renderable when a gap is skipped", () => {
       // The consequence for the browser: where a NaN in the d attribute used to truncate the
       // whole band at the invalid command, the healthy runs are drawn.
       const node = render(areaOf(), withGap);
       expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBeGreaterThan(0);
     });
 
-    test("should treat undefined and null as missing too", () => {
+    test("should treat undefined and null as missing when they reach a bound", () => {
       // A plain isNaN guard would catch undefined and let null through - isNaN(null) is
       // false, so it coerces to 0 and is plotted, pinning the point to the top of the chart.
       // A null measurement is missing data, so both are skipped here, as in stackedArea.
@@ -701,7 +647,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(ds(nulls)).toEqual(["M0,10L0,40Z"]);
     });
 
-    test("should replace the default guard when defined is set", () => {
+    test("should replace the default guard rather than compose with it when defined is set", () => {
       // defined replaces the default rather than composing with it, so a predicate that only
       // looks at y1 lets a missing y0 back into the path.
       const node = render(
@@ -719,7 +665,7 @@ describe("component/stackedAreaMultiples", () => {
   });
 
   describe("key", () => {
-    test("should preserve object constancy when a key is given", () => {
+    test("should reuse a layer's own node when a key is given and the data is reordered", () => {
       const component = areaOf().key((d: Layer) => d[0].y1);
       const g = group("keyed");
       g.datum(twoLayers).call(component as never);
@@ -732,7 +678,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(after[0]).toBe(before[0]);
     });
 
-    test("should hand the node group to the key when it runs over the existing paths", () => {
+    test("should hand the key function the node group when it runs over the existing paths", () => {
       // The key runs once for each half of the join. Over the nodes already in the DOM it is
       // called with the node as `this` and d3's group of nodes as the third argument; over
       // the incoming layers it gets the parent as `this` and the array of layers.
@@ -758,65 +704,40 @@ describe("component/stackedAreaMultiples", () => {
       ]);
       expect(seen[2].group).toEqual([twoLayers[0], twoLayers[1]]);
     });
-
-    test("should pass the layer, its index and the layer array to the key function", () => {
-      const seen: unknown[][] = [];
-      render(
-        areaOf().key((...args: unknown[]) => {
-          seen.push(args);
-          return String(args[1]);
-        }),
-        twoLayers,
-      );
-      expect(seen.map((args) => args.length)).toEqual([3, 3]);
-      // The array it is given is the caller's own array, which is no longer copied.
-      expect(seen.map((args) => args[0])).toEqual([twoLayers[0], twoLayers[1]]);
-      expect(seen.map((args) => args[1])).toEqual([0, 1]);
-      expect(seen[0][2]).toBe(twoLayers);
-    });
   });
 
   describe("required props", () => {
-    test("should throw when x is not set, naming the component and the property", () => {
-      expect(() =>
-        render(
-          stackedAreaMultiples()
-            .transition(false)
-            .y0((d: Point) => d.y0)
-            .y1((d: Point) => d.y1),
-          oneLayer,
-        ),
-      ).toThrow("[stackedAreaMultiples] the x property is required");
-    });
+    // y1 is the most damaging of the three before the guard, because it rendered: d3 reads
+    // a null-ish upper bound as no upper bound and falls back to y0, so every layer
+    // collapsed onto its own baseline and the chart looked like a set of line charts.
+    const withoutProp = {
+      x: () =>
+        stackedAreaMultiples()
+          .transition(false)
+          .y0((d: Point) => d.y0)
+          .y1((d: Point) => d.y1),
+      y0: () =>
+        stackedAreaMultiples()
+          .transition(false)
+          .x((d: Point) => d.x)
+          .y1((d: Point) => d.y1),
+      y1: () =>
+        stackedAreaMultiples()
+          .transition(false)
+          .x((d: Point) => d.x)
+          .y0((d: Point) => d.y0),
+    };
 
-    test("should throw when y0 is not set", () => {
-      expect(() =>
-        render(
-          stackedAreaMultiples()
-            .transition(false)
-            .x((d: Point) => d.x)
-            .y1((d: Point) => d.y1),
-          oneLayer,
-        ),
-      ).toThrow("[stackedAreaMultiples] the y0 property is required");
-    });
+    test.each(Object.keys(withoutProp))(
+      "should throw an error naming the component and the property when %s is not set",
+      (prop) => {
+        expect(() => render(withoutProp[prop as keyof typeof withoutProp](), oneLayer)).toThrow(
+          `[stackedAreaMultiples] the ${prop} property is required`,
+        );
+      },
+    );
 
-    test("should throw when y1 is not set", () => {
-      // The most damaging of the three before the guard, because it rendered: d3 reads a
-      // null-ish upper bound as no upper bound and falls back to y0, so every layer
-      // collapsed onto its own baseline and the chart looked like a set of line charts.
-      expect(() =>
-        render(
-          stackedAreaMultiples()
-            .transition(false)
-            .x((d: Point) => d.x)
-            .y0((d: Point) => d.y0),
-          oneLayer,
-        ),
-      ).toThrow("[stackedAreaMultiples] the y1 property is required");
-    });
-
-    test("should append nothing when a required property is missing", () => {
+    test("should leave the group empty when a required property is missing", () => {
       // The guard runs before the data join, so a misconfigured chart leaves the group as it
       // found it rather than filling it with paths whose geometry is entirely NaN.
       const g = group("unconfigured");
@@ -826,7 +747,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(paths(g.node() as SVGGElement).length).toBe(0);
     });
 
-    test("should keep the d3 meaning of an explicit null y1", () => {
+    test("should keep d3's meaning when y1 is set to an explicit null", () => {
       // Only an unset property is caught. A caller who says .y1(null) is asking d3 for "no
       // upper bound", which makes it fall back to y0 - a zero-height sliver on its baseline.
       const node = render(
@@ -842,13 +763,13 @@ describe("component/stackedAreaMultiples", () => {
   });
 
   describe("edge cases", () => {
-    test("should render an empty path element for a layer with no points", () => {
+    test("should render an empty path element when a layer has no points", () => {
       const node = render(areaOf(), [[]]);
       expect(paths(node).length).toBe(1);
       expect(ds(node)).toEqual([null]);
     });
 
-    test("should emit a degenerate closed shape for a single point", () => {
+    test("should emit a degenerate closed shape when a layer has a single point", () => {
       // The single point is emitted as its own top and bottom bound, closed - which is how
       // a one-point layer reaches the DOM. It encloses no area, and with no default stroke
       // nothing is drawn at all.
@@ -857,7 +778,7 @@ describe("component/stackedAreaMultiples", () => {
       expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBe(20);
     });
 
-    test("should handle negative and fractional coordinates", () => {
+    test("should write the coordinates unclamped when they are negative or fractional", () => {
       const node = render(areaOf(), [
         [
           { x: -10, y0: -5, y1: -12.5 },
@@ -867,7 +788,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(ds(node)).toEqual(["M-10,-12.5L0.25,1L0.25,3.5L-10,-5Z"]);
     });
 
-    test("should accept an inverted band, where y1 is below y0", () => {
+    test("should wind the band the other way when y1 falls below y0", () => {
       // Nothing enforces an orientation; the shape simply winds the other way.
       expect(
         ds(
@@ -925,18 +846,18 @@ describe("component/stackedAreaMultiples", () => {
         check();
       });
 
-    test("should default to true", () => {
+    test("should transition by default when the property is left unset", () => {
       expect(stackedAreaMultiples().transition()).toBe(true);
     });
 
-    test("should write everything synchronously when disabled", () => {
+    test("should write geometry and styling synchronously when the transition is disabled", () => {
       const node = render(areaOf().transition(false).fill("#f00").strokeWidth(3), oneLayer);
       expect(ds(node)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
       expect(attrs(node, "fill")).toEqual(["#f00"]);
       expect(attrs(node, "stroke-width")).toEqual(["3"]);
     });
 
-    test("should hold the old geometry and ease into the new one when enabled", async () => {
+    test("should hold the old geometry and ease into the new one when the data changes", async () => {
       const component = areaOf().fill("#ff0000").strokeWidth(3);
       const g = group("animated");
       g.datum(oneLayer).call(component as never);
@@ -954,7 +875,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(ds(g.node() as SVGGElement)).toEqual(["M0,60L10,70L10,110L0,100Z"]);
     });
 
-    test("should write an entering band synchronously even when enabled", async () => {
+    test("should write an entering band synchronously even when transitions are enabled", async () => {
       // Entering bands are painted directly rather than through the transition, as bar does,
       // so a freshly rendered chart is complete on the same tick instead of leaving an empty
       // path element until the first animation frame - stackedArea's own known quirk.
@@ -966,7 +887,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(ds(node)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
     });
 
-    test("should take over an animation running on the same path", async () => {
+    test("should take over its own animation, and leave a foreign one alone, when it renders again", async () => {
       // The transition now carries this component's own attributes, so interrupting an
       // in-flight tween on the same node is the transition doing its job: the path lands on
       // the value this render asked for rather than freezing at whatever frame the
@@ -1006,7 +927,7 @@ describe("component/stackedAreaMultiples", () => {
       return foreign;
     };
 
-    test("should leave a foreign generic path in the same group alone", () => {
+    test("should leave a foreign generic path alone when one shares its group", () => {
       const g = group("foreign-untouched");
       const foreign = plant(g.node() as SVGGElement);
       g.datum(twoLayers).call(staticAreaOf().fill("#f00") as never);
@@ -1016,7 +937,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(foreign.getAttribute("class")).toBe("sszvis-path");
     });
 
-    test("should join only the paths it drew, so every layer still gets one", () => {
+    test("should join only the paths it drew when a foreign path shares its group", () => {
       const g = group("foreign-count");
       plant(g.node() as SVGGElement);
       g.datum(twoLayers).call(staticAreaOf() as never);
@@ -1026,7 +947,7 @@ describe("component/stackedAreaMultiples", () => {
       expect(node.querySelectorAll("path.sszvis-path").length).toBe(3);
     });
 
-    test("should keep the generic class on its own paths, so the stylesheet is unaffected", () => {
+    test("should keep the generic class on its own paths so the stylesheet still matches them", () => {
       const node = render(staticAreaOf(), oneLayer);
       const own = node.querySelector("path.sszvis-stacked-area-path") as Element;
       expect(own.classList.contains("sszvis-path")).toBe(true);

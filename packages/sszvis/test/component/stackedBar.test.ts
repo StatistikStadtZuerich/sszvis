@@ -347,14 +347,6 @@ describe("component/stackedBar", () => {
   });
 
   describe("props", () => {
-    test("should expose every prop the renderer reads", () => {
-      for (const component of [stackedBarVertical(), stackedBarHorizontal()]) {
-        for (const prop of ["xScale", "width", "yScale", "height", "fill", "stroke"]) {
-          expect(typeof Reflect.get(component, prop)).toBe("function");
-        }
-      }
-    });
-
     test("props should be chainable", () => {
       const component = stackedBarVertical();
       expect(

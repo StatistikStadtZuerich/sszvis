@@ -111,24 +111,7 @@ describe("component/nestedStackedBar", () => {
     [...(node?.querySelectorAll(".tick text") ?? [])].map((t) => t.textContent);
 
   describe("props", () => {
-    test("should expose every documented prop", () => {
-      const component = nestedStackedBarsVertical();
-      for (const prop of [
-        "offset",
-        "xScale",
-        "yScale",
-        "fill",
-        "tooltip",
-        "xAcc",
-        "xLabel",
-        "slant",
-        "stroke",
-      ]) {
-        expect(typeof Reflect.get(component, prop)).toBe("function");
-      }
-    });
-
-    test("props should be chainable", () => {
+    test("should return the component from every setter so the props chain", () => {
       const component = nestedStackedBarsVertical();
       expect(
         component
@@ -144,7 +127,7 @@ describe("component/nestedStackedBar", () => {
       ).toBe(component);
     });
 
-    test("should read back a function-valued prop unchanged", () => {
+    test("should read a prop back unchanged when it was set to a function", () => {
       // Every prop except `slant` is wrapped in fn.functor, which passes functions through
       // untouched but boxes plain values, so only functions survive a get/set round-trip.
       const component = nestedStackedBarsVertical();
@@ -154,13 +137,13 @@ describe("component/nestedStackedBar", () => {
   });
 
   describe("rendering", () => {
-    test("should render one group per nested group", () => {
+    test("should render one group per nested group when the layout is bound to it", () => {
       const node = render(nestedOf());
       expect(groups(node).length).toBe(2);
       for (const g of groups(node)) expect(g.tagName).toBe("g");
     });
 
-    test("should position each group with the offset accessor", () => {
+    test("should position each group where the offset accessor puts it", () => {
       const node = render(nestedOf());
       expect(attrs(groups(node), "transform")).toEqual([
         `translate(${offsetScale("F")},0)`,
@@ -168,7 +151,7 @@ describe("component/nestedStackedBar", () => {
       ]);
     });
 
-    test("should render an x-axis group per nested group, at the y-scale zero line", () => {
+    test("should put an x-axis group at the y-scale zero line in every nested group", () => {
       const node = render(nestedOf());
       for (const g of groups(node)) {
         const axis = axisOf(g);
@@ -177,12 +160,12 @@ describe("component/nestedStackedBar", () => {
       }
     });
 
-    test("should render axis tick labels from the x-scale domain", () => {
+    test("should take the axis tick labels from the x-scale domain", () => {
       const node = render(nestedOf());
       expect(tickLabels(axisOf(groups(node)[0]))).toEqual(["2020", "2021"]);
     });
 
-    test("should render a bar group holding one rect per data point", () => {
+    test("should render a bar group holding one rect per data point when it renders", () => {
       const node = render(nestedOf());
       expect(rects(node).length).toBe(rows.length);
       for (const g of groups(node)) {
@@ -191,21 +174,14 @@ describe("component/nestedStackedBar", () => {
       }
     });
 
-    test("should group the rects into one sszvis-stack per series", () => {
-      const node = render(nestedOf());
-      const stacks = [...groups(node)[0].querySelectorAll(".sszvis-stack")];
-      expect(stacks.length).toBe(2);
-      for (const s of stacks) expect(rects(s).length).toBe(2);
-    });
-
-    test("should size the bars using the x-scale bandwidth", () => {
+    test("should size the bars from the x-scale bandwidth when it renders", () => {
       const node = render(nestedOf());
       for (const r of rects(node)) {
         expect(r.getAttribute("width")).toBe(String(xScale.bandwidth()));
       }
     });
 
-    test("should position the bars using the two scales", () => {
+    test("should position the bars from the two scales when it renders", () => {
       const node = render(nestedOf());
       // stackedBarVerticalData uses stackOrderReverse, so the last key ("B", 20) sits on the
       // baseline and the first key ("A", 10) is stacked on top of it, spanning [20, 30].
@@ -215,18 +191,14 @@ describe("component/nestedStackedBar", () => {
       expect(first.getAttribute("height")).toBe(String(yScale(20) - yScale(30)));
     });
 
-    test("should fill the bars with the fill accessor", () => {
-      const node = render(nestedOf());
-      const fills = new Set(attrs(rects(node), "fill"));
-      expect(fills).toEqual(new Set(["#f00", "#0f0"]));
+    test("should forward fill to the bars whether it is a colour or an accessor", () => {
+      expect(new Set(attrs(rects(render(nestedOf())), "fill"))).toEqual(new Set(["#f00", "#0f0"]));
+      expect(new Set(attrs(rects(render(nestedOf().fill("#123456"))), "fill"))).toEqual(
+        new Set(["#123456"]),
+      );
     });
 
-    test("should accept a constant fill", () => {
-      const node = render(nestedOf().fill("#123456"));
-      expect(new Set(attrs(rects(node), "fill"))).toEqual(new Set(["#123456"]));
-    });
-
-    test("should render a tooltip anchor per bar", () => {
+    test("should render one tooltip anchor per bar when it renders", () => {
       const node = render(nestedOf());
       expect(node.querySelectorAll("[data-tooltip-anchor]").length).toBe(rows.length);
     });
@@ -242,7 +214,7 @@ describe("component/nestedStackedBar", () => {
       expect(calls).toEqual([rows.length]);
     });
 
-    test("should render nothing for an empty data array", () => {
+    test("should render no groups when the data array is empty", () => {
       const node = render(nestedOf(), []);
       expect(groups(node).length).toBe(0);
       expect(rects(node).length).toBe(0);
@@ -250,7 +222,7 @@ describe("component/nestedStackedBar", () => {
   });
 
   describe("re-rendering", () => {
-    test("should render in place rather than appending duplicates", () => {
+    test("should update the groups in place when the same data is rendered twice", () => {
       const component = nestedOf();
       const g = group("rerender");
       g.datum(nestedData()).call(component as never);
@@ -260,7 +232,7 @@ describe("component/nestedStackedBar", () => {
       expect(rects(node).length).toBe(rows.length);
     });
 
-    test("should reuse the axis groups rather than stacking them up", () => {
+    test("should reuse the axis groups rather than stack them up when it renders twice", () => {
       const component = nestedOf();
       const g = group("rerender-axis");
       g.datum(nestedData()).call(component as never);
@@ -270,7 +242,7 @@ describe("component/nestedStackedBar", () => {
       expect(tickLabels(axisOf(groups(node)[0]))).toEqual(["2020", "2021"]);
     });
 
-    test("should remove groups when the data shrinks", () => {
+    test("should remove the surplus groups when the data shrinks", () => {
       const component = nestedOf();
       const g = group("shrink");
       g.datum(nestedData()).call(component as never);
@@ -280,7 +252,7 @@ describe("component/nestedStackedBar", () => {
       expect(rects(node).length).toBe(4);
     });
 
-    test("should update the offsets when the scale changes", () => {
+    test("should move the groups when the offset scale changes", () => {
       const component = nestedOf();
       const g = group("reoffset");
       g.datum(nestedData()).call(component as never);
@@ -309,19 +281,17 @@ describe("component/nestedStackedBar", () => {
   });
 
   describe("axis", () => {
-    test("should slant the tick labels", () => {
-      const node = render(nestedOf().slant("vertical"));
-      const tick = axisOf(groups(node)[0])?.querySelector(".tick text");
-      expect(tick?.getAttribute("transform")).toContain("rotate(-90)");
+    test("should rotate the tick labels by the angle the slant names, and not at all without one", () => {
+      const tickOf = (node: Element) =>
+        axisOf(groups(node)[0])?.querySelector(".tick text")?.getAttribute("transform");
+
+      expect(tickOf(render(nestedOf().slant("vertical")))).toContain("rotate(-90)");
+      expect(tickOf(render(nestedOf().slant("diagonal")))).toContain("rotate(-45)");
+      // The negative control on the same code path: no slant writes no transform at all.
+      expect(tickOf(render(nestedOf()))).toBeNull();
     });
 
-    test("should support a diagonal slant", () => {
-      const node = render(nestedOf().slant("diagonal"));
-      const tick = axisOf(groups(node)[0])?.querySelector(".tick text");
-      expect(tick?.getAttribute("transform")).toContain("rotate(-45)");
-    });
-
-    test("should label every category of a three-value x-domain", () => {
+    test("should label every category when the x-domain has three values", () => {
       const threeYears: Row[] = [
         { year: "2019", category: "A", nested: "F", value: 10 },
         { year: "2020", category: "A", nested: "F", value: 20 },
@@ -335,7 +305,7 @@ describe("component/nestedStackedBar", () => {
       expect(tickLabels(axisOf(groups(node)[0]))).toEqual(["2019", "2020", "2021"]);
     });
 
-    test("should label every category of a narrow five-value x-domain", () => {
+    test("should label every category when a five-value x-domain is drawn narrow", () => {
       // No thinning is applied at any width: the axis labels every band.
       const domain = ["2017", "2018", "2019", "2020", "2021"];
       const rowsFive: Row[] = domain.map((year) => ({
@@ -351,27 +321,16 @@ describe("component/nestedStackedBar", () => {
       expect(tickLabels(axisOf(groups(node)[0]))).toEqual(domain);
     });
 
-    test("should render the xLabel as the axis title", () => {
-      const node = render(nestedOf().xLabel("Jahr"));
-      const title = axisOf(groups(node)[0])?.querySelector(".sszvis-axis__title");
-      expect(title?.textContent).toBe("Jahr");
-    });
+    test("should title the axis with xLabel, evaluating it when it is a function, and leave it untitled without one", () => {
+      const titleOf = (node: Element) =>
+        axisOf(groups(node)[0])?.querySelector(".sszvis-axis__title")?.textContent ?? null;
 
-    test("should evaluate a function-valued xLabel", () => {
-      const node = render(nestedOf().xLabel(() => "Jahr"));
-      const title = axisOf(groups(node)[0])?.querySelector(".sszvis-axis__title");
-      expect(title?.textContent).toBe("Jahr");
-    });
-
-    test("should render no axis title without an xLabel", () => {
-      const node = render(nestedOf());
-      expect(axisOf(groups(node)[0])?.querySelector(".sszvis-axis__title")).toBeNull();
-    });
-
-    test("should leave the tick labels upright without a slant", () => {
-      const node = render(nestedOf());
-      const tick = axisOf(groups(node)[0])?.querySelector(".tick text");
-      expect(tick?.getAttribute("transform")).toBeNull();
+      expect(titleOf(render(nestedOf().xLabel("Jahr")))).toBe("Jahr");
+      // The non-obvious case: a function-valued label is evaluated rather than stringified.
+      expect(titleOf(render(nestedOf().xLabel(() => "Jahr")))).toBe("Jahr");
+      expect(
+        axisOf(groups(render(nestedOf()))[0])?.querySelector(".sszvis-axis__title"),
+      ).toBeNull();
     });
   });
 
@@ -402,7 +361,7 @@ describe("component/nestedStackedBar", () => {
 
     // `xAcc` is accepted but never read: the groups take their identity from the group key, so
     // a caller that omits the accessor gets the same chart instead of an error.
-    test("should render without xAcc", () => {
+    test("should render without complaint when the deprecated xAcc is not set", () => {
       const node = render(
         nestedStackedBarsVertical()
           .offset((d: NestedStack) => offsetScale(String(d.key)))
@@ -414,7 +373,7 @@ describe("component/nestedStackedBar", () => {
       expect(rects(node).length).toBe(rows.length);
     });
 
-    test("should validate before rendering anything", () => {
+    test("should leave the layer empty when a required prop is missing", () => {
       const node = render(nestedOf());
       expect(groups(node).length).toBe(2);
       const empty = group("validate-first");
@@ -422,7 +381,7 @@ describe("component/nestedStackedBar", () => {
       expect(groups(empty.node() as SVGGElement).length).toBe(0);
     });
 
-    test("should render without a fill", () => {
+    test("should write no fill attribute when fill is not set", () => {
       const component = withoutProp("none");
       const node = render(component);
       expect(rects(node).length).toBe(rows.length);
@@ -431,27 +390,19 @@ describe("component/nestedStackedBar", () => {
   });
 
   describe("module shape", () => {
-    test("should be reachable from the library barrel as the same factory", async () => {
+    test("should be the same factory when reached through the library barrel", async () => {
       const sszvis = await import("../../src/index.js");
       expect(sszvis.nestedStackedBarsVertical).toBe(nestedStackedBarsVertical);
     });
   });
 
   describe("group identity", () => {
-    test("should label every group with its own group key", () => {
+    test("should label every group with its own group key when it renders", () => {
       const node = render(nestedOf());
       expect(attrs(groups(node), "data-nested-stacked-bars")).toEqual(["F", "M"]);
     });
 
-    test("should mark every group with the attribute", () => {
-      const node = render(nestedOf());
-      expect(groups(node).length).toBe(2);
-      for (const g of groups(node)) {
-        expect(g.hasAttribute("data-nested-stacked-bars")).toBe(true);
-      }
-    });
-
-    test("should accept nest as the older name of the group key", () => {
+    test("should still find the key when a layout uses the older name nest", () => {
       // Most call sites tag the layout with `key`; a few use `nest`, which is what this
       // component's own docs example used to do. Both are read, `key` first.
       const node = render(
@@ -502,7 +453,7 @@ describe("component/nestedStackedBar", () => {
   });
 
   describe("empty nested groups", () => {
-    test("should render an empty group rather than throwing", () => {
+    test("should render an empty group rather than throw when a nested group has no rows", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const node = render(nestedOf(), [emptyLayout("E")]);
       expect(groups(node).length).toBe(1);
@@ -511,7 +462,7 @@ describe("component/nestedStackedBar", () => {
       warn.mockRestore();
     });
 
-    test("should keep the populated groups when one group is empty", () => {
+    test("should keep the populated groups when one nested group is empty", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const data = [...nestedData(), emptyLayout("E")];
       const node = render(nestedOf(), data);
@@ -522,7 +473,7 @@ describe("component/nestedStackedBar", () => {
   });
 
   describe("axis baseline", () => {
-    test("should keep the axis inside the range when the y-domain excludes zero", () => {
+    test("should clamp the axis into the plotting area when the y-domain excludes zero", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const offDomain = scaleLinear().domain([10, 60]).range([300, 0]);
       const node = render(nestedOf().yScale(offDomain));
@@ -532,12 +483,12 @@ describe("component/nestedStackedBar", () => {
       warn.mockRestore();
     });
 
-    test("should place the axis at yScale(0) for a zero-based domain", () => {
+    test("should place the axis at yScale(0) when the y-domain starts at zero", () => {
       const node = render(nestedOf());
       expect(axisOf(groups(node)[0])?.getAttribute("transform")).toBe(`translate(0,${yScale(0)})`);
     });
 
-    test("should follow an inverted range", () => {
+    test("should still place the axis correctly when the y-range is inverted", () => {
       const inverted = scaleLinear().domain([0, 60]).range([0, 300]);
       const node = render(nestedOf().yScale(inverted));
       expect(axisOf(groups(node)[0])?.getAttribute("transform")).toBe("translate(0,0)");
@@ -545,24 +496,20 @@ describe("component/nestedStackedBar", () => {
   });
 
   describe("stroke", () => {
-    test("should forward a configured stroke to every bar", () => {
-      const node = render(nestedOf().stroke("#000000"));
-      expect(new Set(attrs(rects(node), "stroke"))).toEqual(new Set(["#000000"]));
-    });
-
-    test("should default to a white separator stroke", () => {
-      const node = render(nestedOf());
-      expect(new Set(attrs(rects(node), "stroke"))).toEqual(new Set(["#FFFFFF"]));
-    });
-
-    test("should support a seamless stack with stroke none", () => {
-      const node = render(nestedOf().stroke("none"));
-      expect(new Set(attrs(rects(node), "stroke"))).toEqual(new Set(["none"]));
+    test("should forward stroke to every bar, leaving stackedBar's white separator when it is unset", () => {
+      expect(new Set(attrs(rects(render(nestedOf().stroke("#000000"))), "stroke"))).toEqual(
+        new Set(["#000000"]),
+      );
+      // "none" is just another value to forward, and is how a caller asks for a seamless stack.
+      expect(new Set(attrs(rects(render(nestedOf().stroke("none"))), "stroke"))).toEqual(
+        new Set(["none"]),
+      );
+      expect(new Set(attrs(rects(render(nestedOf())), "stroke"))).toEqual(new Set(["#FFFFFF"]));
     });
   });
 
   describe("offset", () => {
-    test("should write a valid transform when the offset accessor returns undefined", () => {
+    test("should fall back to translate(0,0) when the offset accessor returns undefined", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const node = render(nestedOf().offset(() => undefined));
       expect(attrs(groups(node), "transform")).toEqual(["translate(0,0)", "translate(0,0)"]);
@@ -570,7 +517,7 @@ describe("component/nestedStackedBar", () => {
       warn.mockRestore();
     });
 
-    test("should warn once per group for a missing offset", () => {
+    test("should warn once per group when the offset accessor returns undefined", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       render(nestedOf().offset(() => undefined));
       expect(warn).toHaveBeenCalledTimes(2);

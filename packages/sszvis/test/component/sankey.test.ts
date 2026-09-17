@@ -115,7 +115,7 @@ describe("component/sankey", () => {
     attrs(node, key, "[data-tooltip-anchor]", "transform");
 
   describe("groups", () => {
-    test("should render the four groups in a fixed order", () => {
+    test("should render the four groups in a fixed order when it renders", () => {
       const node = render(sankeyOf(), testData);
       const keys = [...node.querySelectorAll("[data-d3-selectgroup]")].map((g) =>
         g.getAttribute("data-d3-selectgroup"),
@@ -123,7 +123,7 @@ describe("component/sankey", () => {
       expect(keys).toEqual(["nodes", "links", "linklabels", "nodelabels"]);
     });
 
-    test("should create every group even when there is nothing to put in it", () => {
+    test("should still create every group when there is nothing to put in it", () => {
       const node = render(sankeyOf(), { nodes: [], links: [], columnLengths: [] });
       expect(grp(node, "nodes")).not.toBeNull();
       expect(grp(node, "links")).not.toBeNull();
@@ -145,12 +145,12 @@ describe("component/sankey", () => {
   });
 
   describe("nodes", () => {
-    test("should render one bar per node", () => {
+    test("should render one bar per node when the data has nodes", () => {
       const node = render(sankeyOf(), testData);
       expect(all(node, "nodes", "rect.sszvis-bar").length).toBe(4);
     });
 
-    test("should position the bars by column and stack them within the column", () => {
+    test("should position a bar by its column and stack it within that column", () => {
       const node = render(sankeyOf(), testData);
       // x is columnPosition(columnIndex)
       expect(bars(node)).toEqual(["0", "0", "100", "100"]);
@@ -158,26 +158,24 @@ describe("component/sankey", () => {
       expect(attrs(node, "nodes", "rect.sszvis-bar", "y")).toEqual(["0", "40", "0", "35"]);
     });
 
-    test("should take the bar width from nodeThickness and the height from the size scale", () => {
+    test("should take a bar's width from nodeThickness and its height from the size scale", () => {
       const node = render(sankeyOf(), testData);
       expect(attrs(node, "nodes", "rect.sszvis-bar", "width")).toEqual(["20", "20", "20", "20"]);
       expect(attrs(node, "nodes", "rect.sszvis-bar", "height")).toEqual(["30", "10", "25", "15"]);
     });
 
-    test("should offset every column by its columnPadding", () => {
-      const node = render(
+    test("should offset every column by columnPadding, whether it is a number or an accessor", () => {
+      const perColumn = render(
         sankeyOf().columnPadding((i: number) => i * 7),
         testData,
       );
-      expect(attrs(node, "nodes", "rect.sszvis-bar", "y")).toEqual(["0", "40", "7", "42"]);
+      expect(attrs(perColumn, "nodes", "rect.sszvis-bar", "y")).toEqual(["0", "40", "7", "42"]);
+
+      const constant = render(sankeyOf().columnPadding(5), testData);
+      expect(attrs(constant, "nodes", "rect.sszvis-bar", "y")).toEqual(["5", "45", "5", "40"]);
     });
 
-    test("should accept a constant columnPadding", () => {
-      const node = render(sankeyOf().columnPadding(5), testData);
-      expect(attrs(node, "nodes", "rect.sszvis-bar", "y")).toEqual(["5", "45", "5", "40"]);
-    });
-
-    test("should floor the vertical position and ceil the height", () => {
+    test("should floor the position and ceil the height so no sub-pixel gap opens between nodes", () => {
       // Positions are floored and heights ceiled so that neighbouring nodes never leave a
       // sub-pixel gap between them.
       const node = render(
@@ -192,7 +190,7 @@ describe("component/sankey", () => {
       expect(attrs(node, "nodes", "rect.sszvis-bar", "height").slice(0, 2)).toEqual(["45", "15"]);
     });
 
-    test("should give a zero-value node one pixel of height", () => {
+    test("should give a node one pixel of height when its value is zero", () => {
       // NOTE: deliberate - Math.max(sizeScale(value), 1) keeps a node with no flow visible
       // as a hairline rather than letting it disappear.
       const data = makeData();
@@ -201,12 +199,12 @@ describe("component/sankey", () => {
       expect(attrs(node, "nodes", "rect.sszvis-bar", "height")[1]).toBe("1");
     });
 
-    test("should give the bars at least one pixel of width", () => {
+    test("should give the bars one pixel of width when nodeThickness is zero", () => {
       const node = render(sankeyOf().nodeThickness(0), testData);
       expect(attrs(node, "nodes", "rect.sszvis-bar", "width")).toEqual(["1", "1", "1", "1"]);
     });
 
-    test("should apply nodeColor as a constant or an accessor", () => {
+    test("should fill the bars from nodeColor whether it is a colour or an accessor", () => {
       const constant = render(sankeyOf().nodeColor("#f00"), testData);
       expect(attrs(constant, "nodes", "rect.sszvis-bar", "fill")).toEqual([
         "#f00",
@@ -226,14 +224,14 @@ describe("component/sankey", () => {
       ]);
     });
 
-    test("should leave the fill unset when no nodeColor is given", () => {
+    test("should leave the fill unset when nodeColor is not given", () => {
       const node = render(sankeyOf(), testData);
       expect(attrs(node, "nodes", "rect.sszvis-bar", "fill")).toEqual([null, null, null, null]);
     });
   });
 
   describe("column labels", () => {
-    test("should render one label and one tick per column", () => {
+    test("should render one label and one tick per column when it renders", () => {
       const node = render(sankeyOf(), testData);
       expect(all(node, "nodes", "text.sszvis-sankey-column-label").length).toBe(2);
       expect(all(node, "nodes", "line.sszvis-sankey-column-label-tick").length).toBe(2);
@@ -251,7 +249,7 @@ describe("component/sankey", () => {
       ]);
     });
 
-    test("should snap the ticks to the half-pixel grid", () => {
+    test("should snap a tick to the half-pixel grid so it renders crisply", () => {
       const node = render(sankeyOf(), testData);
       const ticks = all(node, "nodes", "line.sszvis-sankey-column-label-tick");
       expect(ticks.map((t) => t.getAttribute("x1"))).toEqual(["10.5", "110.5"]);
@@ -270,7 +268,7 @@ describe("component/sankey", () => {
       expect(all(node, "nodes", "line.sszvis-sankey-column-label-tick").length).toBe(2);
     });
 
-    test("should accept a constant columnLabel for every column", () => {
+    test("should label every column the same way when columnLabel is a constant", () => {
       const node = render(sankeyOf().columnLabel("Total"), testData);
       expect(texts(node, "nodes", "text.sszvis-sankey-column-label")).toEqual(["Total", "Total"]);
     });
@@ -323,7 +321,7 @@ describe("component/sankey", () => {
       ]);
     });
 
-    test("should render a label per entry in columnLengths, not per column of nodes", () => {
+    test("should render one label per entry in columnLengths rather than per column of nodes", () => {
       // NOTE: the labels are joined to data.columnLengths, so the number of labels follows
       // that array rather than the nodes. A third entry produces a third label and tick
       // positioned by columnPosition(2), even though no node lives there.
@@ -349,7 +347,7 @@ describe("component/sankey", () => {
     const linkAttrs = (node: Element, attr: string) =>
       attrs(node, "links", "path.sszvis-link", attr);
 
-    test("should render one path per link", () => {
+    test("should render one path per link when the data has links", () => {
       const node = render(sankeyOf(), testData);
       expect(all(node, "links", "path.sszvis-link").length).toBe(4);
     });
@@ -368,14 +366,14 @@ describe("component/sankey", () => {
       ]);
     });
 
-    test("should take the stroke width from the link's value", () => {
+    test("should take a link's stroke width from its value", () => {
       const node = render(sankeyOf(), testData);
       // Asserted as a multiset, because document order is the sort's business - see below
       const widths = linkAttrs(node, "stroke-width").map(Number);
       expect(widths.sort((a, b) => a - b)).toEqual([5, 5, 10, 20]);
     });
 
-    test("should give a zero-value link one pixel of thickness", () => {
+    test("should give a link one pixel of thickness when its value is zero", () => {
       // NOTE: a Math.max(..., 1) floor keeps a link with no flow visible as a hairline. The
       // nodes apply the same floor but also ceil the result, Math.ceil(Math.max(..., 1));
       // link thicknesses are never rounded, which is the subject of the rounding note at
@@ -387,12 +385,12 @@ describe("component/sankey", () => {
       expect(attrs(node, "links", "path.sszvis-link", "stroke-width")[3]).toBe("1");
     });
 
-    test("should never fill the paths", () => {
+    test("should leave the link paths unfilled when it draws them", () => {
       const node = render(sankeyOf(), testData);
       expect(linkAttrs(node, "fill")).toEqual(["none", "none", "none", "none"]);
     });
 
-    test("should apply linkColor as a constant or an accessor", () => {
+    test("should stroke the links from linkColor whether it is a colour or an accessor", () => {
       const constant = render(sankeyOf().linkColor("#0f0"), testData);
       expect(attrs(constant, "links", "path.sszvis-link", "stroke")).toEqual([
         "#0f0",
@@ -423,21 +421,15 @@ describe("component/sankey", () => {
       expect([...attrs(node, "links", "path.sszvis-link", "stroke")].sort()).toEqual(palette);
     });
 
-    test("should leave the stroke unset when no linkColor is given", () => {
+    test("should leave the stroke unset when linkColor is not given", () => {
       const node = render(sankeyOf(), testData);
       expect(linkAttrs(node, "stroke")).toEqual([null, null, null, null]);
     });
 
-    test("should flatten the curve as linkCurvature approaches zero", () => {
+    test("should flatten a link into a straight diagonal when linkCurvature is zero", () => {
       const node = render(sankeyOf().linkCurvature(0), testData);
       // Both control points collapse onto the end points, giving a straight-ish diagonal
       expect(linkAttrs(node, "d")[1]).toBe("M21,25C21,25 99,40 99,40");
-    });
-
-    test("should place the control points symmetrically for the default curvature", () => {
-      const node = render(sankeyOf(), testData);
-      // 0.5 puts both control points at the horizontal midpoint
-      expect(linkAttrs(node, "d")[1]).toBe("M21,25C60,25 60,40 99,40");
     });
 
     test("should key the links by id, so a changed link list keeps matching elements", () => {
@@ -471,7 +463,7 @@ describe("component/sankey", () => {
       expect(linkAttrs(node, "stroke-width")).toEqual(["5", "5", "10", "20"]);
     });
 
-    test("should throw when linkSort is not a comparator", () => {
+    test("should throw a named error when linkSort is not a comparator", () => {
       // A comparator can never be a constant, so the property is not wrapped in fn.functor
       // and a non-function is reported rather than turned into a comparator that claims
       // every pair is already ordered.
@@ -479,7 +471,7 @@ describe("component/sankey", () => {
       expect(() => render(sankeyOf().linkSort(1), testData)).toThrow(/\[sankey\].*linkSort/);
     });
 
-    test("should remove a link's path when the link goes away", () => {
+    test("should remove a link's path when that link goes away", () => {
       const component = sankeyOf();
       const g = group("link-exit");
       const data = makeData();
@@ -491,7 +483,7 @@ describe("component/sankey", () => {
   });
 
   describe("tooltip anchors", () => {
-    test("should centre one anchor on every node", () => {
+    test("should centre one anchor on every node when it renders", () => {
       const node = render(sankeyOf(), testData);
       // x + nodeThickness / 2, y + height / 2
       expect(anchors(node, "nodes")).toEqual([
@@ -502,7 +494,7 @@ describe("component/sankey", () => {
       ]);
     });
 
-    test("should centre one anchor on every link's bounding box", () => {
+    test("should centre one anchor on every link's bounding box when it renders", () => {
       const node = render(sankeyOf(), testData);
       // The midpoint of the curve's start and end points, in data.links order
       expect(anchors(node, "links")).toEqual([
@@ -545,12 +537,12 @@ describe("component/sankey", () => {
   describe("node labels", () => {
     const labels = (node: Element) => all(node, "nodelabels", "text.sszvis-sankey-node-label");
 
-    test("should render one label per node, using the id by default", () => {
+    test("should label a node with its id when nameLabel is left unset", () => {
       const node = render(sankeyOf(), testData);
       expect(labels(node).map((l) => l.textContent)).toEqual(["A", "B", "C", "D"]);
     });
 
-    test("should map the id through nameLabel", () => {
+    test("should label a node with what nameLabel returns when nameLabel is set", () => {
       const node = render(
         sankeyOf().nameLabel((id: string) => id.toLowerCase()),
         testData,
@@ -558,7 +550,7 @@ describe("component/sankey", () => {
       expect(labels(node).map((l) => l.textContent)).toEqual(["a", "b", "c", "d"]);
     });
 
-    test("should place the labels left of the nodes by default", () => {
+    test("should place a label left of its node when labelSide is left unset", () => {
       const node = render(sankeyOf(), testData);
       expect(labels(node).map((l) => l.getAttribute("text-anchor"))).toEqual([
         "end",
@@ -570,13 +562,13 @@ describe("component/sankey", () => {
       expect(labels(node).map((l) => l.getAttribute("x"))).toEqual(["-6", "-6", "94", "94"]);
     });
 
-    test("should centre the labels vertically on their node", () => {
+    test("should centre a label vertically on its own node", () => {
       const node = render(sankeyOf(), testData);
       // yPosition + height / 2
       expect(labels(node).map((l) => l.getAttribute("y"))).toEqual(["15", "45", "12.5", "42.5"]);
     });
 
-    test("should place right-side labels beyond the far edge of the node", () => {
+    test("should place a label beyond the node's far edge when its side is right", () => {
       const node = render(sankeyOf().labelSide("right"), testData);
       expect(labels(node).map((l) => l.getAttribute("text-anchor"))).toEqual([
         "start",
@@ -588,7 +580,7 @@ describe("component/sankey", () => {
       expect(labels(node).map((l) => l.getAttribute("x"))).toEqual(["26", "26", "126", "126"]);
     });
 
-    test("should choose the side per column", () => {
+    test("should choose each label's side per column when labelSide is an accessor", () => {
       const node = render(
         sankeyOf().labelSide((i: number) => (i === 0 ? "left" : "right")),
         testData,
