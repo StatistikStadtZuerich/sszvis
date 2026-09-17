@@ -1,13 +1,15 @@
 import { Effect, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { isValidPosition, parseSwissDate, positionCode, referenceLinesCode } from "./annotations";
+import { isValidPosition, positionCode, referenceLinesCode } from "./annotations";
 import { compile } from "./compile";
 import {
   addedName,
   bearsRole,
   columnKinds,
+  hasValues,
   nextKind,
+  parseSwissDate,
   renameKind,
   settleColumn,
   unsupportedPins,
@@ -471,7 +473,7 @@ describe("pinned column kinds", () => {
     expect(bearsRole(table, ColumnName.make("Jahr"), "date")).toBe(false);
     expect(bearsRole(table, ColumnName.make("Jahr"), "number")).toBe(true);
     expect(bearsRole(table, ColumnName.make("Datum"), "date")).toBe(true);
-    /* Any value can be a label, and an unbound role has nothing to say. */
+    /* An unbound role has nothing to say. */
     expect(bearsRole(table, ColumnName.make("Jahr"), "category")).toBe(true);
     expect(bearsRole(table, ColumnName.make(""), "date")).toBe(true);
   });
@@ -484,7 +486,6 @@ describe("pinned column kinds", () => {
 
   test("should report a pin the column's values will not bear", () => {
     const table = parse("Wort,Zahl,Datum\nx,1,01.02.2020");
-    /* Any value can serve as a label, so a column called text never disagrees. */
     expect(unsupportedPins(table, pin("Wort", "nominal"))).toEqual(new Set());
     expect(unsupportedPins(table, pin("Wort", "continuous"))).toEqual(new Set(["Wort"]));
     expect(unsupportedPins(table, pin("Zahl", "temporal"))).toEqual(new Set(["Zahl"]));
@@ -494,9 +495,24 @@ describe("pinned column kinds", () => {
     expect(unsupportedPins(table, pin("Datum", "nominal"))).toEqual(new Set());
   });
 
-  test("should hold nothing against a column with no values to disagree with", () => {
+  test("should report a column with nothing in it as unable to bear a reading", () => {
+    /* `every` on no values is true, so an empty column would otherwise be held to
+       be dates, satisfy a chart's date role, and draw nothing at all. */
     const table = parse("Leer\n\n");
-    expect(unsupportedPins(table, pin("Leer", "temporal"))).toEqual(new Set());
+    expect(unsupportedPins(table, pin("Leer", "temporal"))).toEqual(new Set(["Leer"]));
+    expect(unsupportedPins(table, pin("Leer", "nominal"))).toEqual(new Set());
+    expect(bearsRole(table, ColumnName.make("Leer"), "date")).toBe(false);
+    expect(hasValues(table, ColumnName.make("Leer"))).toBe(false);
+  });
+
+  test("should refuse a date that names no calendar day", () => {
+    /* The shape is right and the day is not: a chart parses it to nothing and drops
+       the row, so the column must not pass as dates on the pattern alone. */
+    const table = parse("Tag\n31.02.2020");
+    expect(columnKinds(table, {}).get("Tag")).toBe("nominal");
+    expect(bearsRole(table, ColumnName.make("Tag"), "date")).toBe(false);
+    expect(Option.isSome(parseSwissDate("29.02.2020"))).toBe(true);
+    expect(Option.isSome(parseSwissDate("29.02.2021"))).toBe(false);
   });
 
   test("should keep a pin under the column's new name when it is renamed", () => {

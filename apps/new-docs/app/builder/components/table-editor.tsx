@@ -32,6 +32,7 @@ import {
 import {
   addedName,
   columnKinds,
+  hasValues,
   nextKind,
   parseBlock,
   reorder,
@@ -42,7 +43,7 @@ import {
   type Table,
   unsupportedPins,
 } from "../domain/csv";
-import { ColumnName, type ColumnKind, type ColumnKinds } from "../domain/spec";
+import { ColumnName, KIND_LABEL, type ColumnKind, type ColumnKinds } from "../domain/spec";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { PastePanel } from "./paste-panel";
 
@@ -57,6 +58,7 @@ type EditorMeta = {
   readonly kindOf: (column: number) => ColumnKind;
   readonly isPinned: (column: number) => boolean;
   readonly isUnsupported: (column: number) => boolean;
+  readonly isEmpty: (column: number) => boolean;
   readonly cycleKind: (column: number) => void;
   readonly beginRename: (column: number) => void;
   readonly setColumn: (column: number, value: string) => void;
@@ -93,26 +95,17 @@ const plural = new Intl.PluralRules("en");
 const count = (n: number, one: string, other: string) =>
   `${n} ${plural.select(n) === "one" ? one : other}`;
 
-/*
- * The kinds as the person building the chart says them, matching the words the
- * chart-type picker uses. The `ColumnKind` names are measurement levels, which
- * belong in the types and not on a button.
- */
-const KIND = {
-  nominal: { label: "text", Icon: TypeIcon },
-  continuous: { label: "number", Icon: HashIcon },
-  temporal: { label: "date", Icon: CalendarIcon },
-} satisfies Record<ColumnKind, { label: string; Icon: typeof TypeIcon }>;
+const KIND_ICON = {
+  nominal: TypeIcon,
+  continuous: HashIcon,
+  temporal: CalendarIcon,
+} satisfies Record<ColumnKind, typeof TypeIcon>;
 
 /**
  * What a column holds, and a click to say otherwise. One button rather than a menu:
- * it shows the kind in force, and each click moves on by one.
- *
- * Until it is clicked the column reads as the table detects it and re-reads as the
- * data is edited. The first click settles on the next kind round, and from then on
- * the column keeps whatever it was last set to - including when that agrees with
- * what would have been detected anyway, which is how a column is held to a kind
- * against data pasted in later.
+ * it shows the kind in force, and each click moves on by one. An unpinned column
+ * re-reads as the data is edited; once clicked it keeps what it was set to, which
+ * is how a column is held to a kind against data pasted in later.
  */
 const KindCell = ({
   index,
@@ -120,6 +113,7 @@ const KindCell = ({
   kind,
   pinned,
   unsupported,
+  empty,
   onCycle,
 }: {
   readonly index: number;
@@ -127,11 +121,15 @@ const KindCell = ({
   readonly kind: ColumnKind;
   readonly pinned: boolean;
   readonly unsupported: boolean;
+  readonly empty: boolean;
   readonly onCycle: (index: number) => void;
 }) => {
-  const { label, Icon } = KIND[kind];
-  const next = KIND[nextKind(kind)].label;
-  const warning = `The values in ${name} are not all ${label}. The chart will drop the rows it cannot read.`;
+  const label = KIND_LABEL[kind];
+  const Icon = KIND_ICON[kind];
+  const next = KIND_LABEL[nextKind(kind)];
+  const warning = empty
+    ? `${name} is empty, so a chart reading it as ${label} has nothing to draw.`
+    : `The values in ${name} are not all ${label}. The chart will drop the rows it cannot read.`;
   return (
     <Tooltip>
       <TooltipTrigger
@@ -145,7 +143,6 @@ const KindCell = ({
             className="relative ml-0.5 shrink-0"
           >
             {unsupported ? <TriangleAlertIcon className="text-destructive" /> : <Icon />}
-            {/* Set by hand rather than read off the data, which the icon alone cannot say. */}
             {pinned && (
               <span
                 aria-hidden
@@ -186,6 +183,7 @@ const HeaderCell = ({ column, table: grid }: HeaderContext<typeof features, Row,
           kind={meta.kindOf(index)}
           pinned={meta.isPinned(index)}
           unsupported={meta.isUnsupported(index)}
+          empty={meta.isEmpty(index)}
           onCycle={meta.cycleKind}
         />
       )}
@@ -235,9 +233,8 @@ const ValueCell = ({
   );
 };
 
-/* Drawn as a button rather than left bare: at the end of a row of plain cells an
-   unadorned glyph reads as one more value, and the row it belongs to is the one
-   thing it must not be mistaken for. */
+/* `outline` rather than `ghost`: at the end of a row of input cells a borderless
+   glyph reads as one more editable value, and this one deletes the row. */
 const RemoveCell = ({ row, table: grid }: CellContext<typeof features, Row, unknown>) => (
   <Button
     size="icon-xs"
@@ -259,8 +256,7 @@ export const TableEditor = ({
 }: {
   readonly table: Table;
   /* The pins belong to the spec, so the editor reports a change to them rather
-     than holding them - the shape `table`/`onChange` already has. Nothing renders
-     them yet; they move here because renaming a column has to carry one. */
+     than holding them - the shape `table`/`onChange` already has. */
   readonly kinds: ColumnKinds;
   readonly onChange: (table: Table) => void;
   readonly onKindsChange: (kinds: ColumnKinds) => void;
@@ -283,8 +279,7 @@ export const TableEditor = ({
     [table, view],
   );
 
-  /* The name the column being edited carried before the caret entered it, which is
-     the only name its pin can safely be moved from. See `settleColumn`. */
+  /* The name the column carried before the caret entered it. See `settleColumn`. */
   const renaming = useRef<{ readonly column: number; readonly from: ColumnName } | null>(null);
 
   const resolved = useMemo(() => columnKinds(table, kinds), [table, kinds]);
@@ -302,8 +297,15 @@ export const TableEditor = ({
 
   const meta: EditorMeta = {
     kindOf,
-    isPinned: (column) => kinds[table.columns[column] ?? ColumnName.make("")] !== undefined,
+    isPinned: (column) => {
+      const name = table.columns[column];
+      return name !== undefined && kinds[name] !== undefined;
+    },
     isUnsupported: (column) => unsupported.has(table.columns[column] ?? ""),
+    isEmpty: (column) => {
+      const name = table.columns[column];
+      return name !== undefined && !hasValues(table, name);
+    },
     /* The first click settles on the kind after whatever was detected, so a control
        whose first use appeared to do nothing cannot happen. */
     cycleKind: (column) => {
@@ -433,6 +435,8 @@ export const TableEditor = ({
         ),
         helper.display({
           id: "remove",
+          /* The column has no visible heading, but a table column with no header at
+             all is announced as a blank cell. */
           header: () => <span className="sr-only">Remove row</span>,
           cell: RemoveCell,
         }),
@@ -462,10 +466,8 @@ export const TableEditor = ({
     return (
       <PastePanel
         initial={serialize(table)}
-        /* A wholly new table, so the pins go with the old one, exactly as loading a
-           sample drops them. Not done in `replace`, which also serves adding a row,
-           adding a column, applying a sort order and pasting a block - all of which
-           keep the columns they started with, and their pins with them. */
+        /* A wholly new table, so the pins go with the old one, as loading a sample
+           drops them. Not in `replace`, whose other callers keep their columns. */
         onSave={(next) => {
           onKindsChange({});
           replace(next);

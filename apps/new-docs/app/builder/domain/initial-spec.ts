@@ -103,16 +103,14 @@ export function initialSpec(
     features: allFeatures(recipe),
     tooltip: recipe.defaultTooltip,
     annotations: [],
-    /* A fresh spec disagrees with the detector nowhere. */
     kinds: {},
   };
 }
 
 /*
- * A wholly new table, so the pins go with the old one: a pin that survived would
- * land on whichever column of the sample happened to share its name, and that is
- * coincidence rather than anything the user meant. Rebinding therefore reads the
- * new table as the detector finds it.
+ * A wholly new table, so the pins go with the old one: a surviving pin would land
+ * on whichever sample column happened to share its name. Rebinding therefore reads
+ * the new table as the detector finds it.
  */
 export function applySample(spec: Spec, recipe: RecipeSummary, csv: string): Spec {
   return { ...spec, csv, kinds: {}, fields: bindRoles(recipe, parse(csv), {}, spec.fields) };

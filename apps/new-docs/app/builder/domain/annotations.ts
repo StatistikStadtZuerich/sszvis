@@ -1,23 +1,8 @@
 import { Array, Option } from "effect";
 
+import { parseSwissDate } from "./csv";
 import { code, str, type Safe } from "./emit";
 import type { Annotation, AnnotationAxis, Position, RoleKind } from "./spec";
-
-/** `dd.mm.yyyy`, which is what `sszvis.parseDate` reads. */
-const SWISS_DATE = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
-
-/** The date a `dd.mm.yyyy` string names, or `None` when it does not name a calendar day. */
-export const parseSwissDate = (value: string): Option.Option<Date> => {
-  const match = SWISS_DATE.exec(value.trim());
-  if (match === null) return Option.none();
-  const [, day = "", month = "", year = ""] = match;
-  const date = new Date(Number(year), Number(month) - 1, Number(day));
-  const isCalendarDay =
-    date.getFullYear() === Number(year) &&
-    date.getMonth() === Number(month) - 1 &&
-    date.getDate() === Number(day);
-  return isCalendarDay ? Option.some(date) : Option.none();
-};
 
 const parseFiniteNumber = (value: string): Option.Option<number> => {
   const trimmed = value.trim();

@@ -54,7 +54,7 @@ export const lineChart: RecipeDef = {
     { key: Y_LABEL_OPTION, label: "Y axis label", fallback: "" },
   ],
   features: [RULER, LEGEND, POINTS, REFERENCE_LINES_FEATURE],
-  scalars: (spec, option, _kind) => ({
+  scalars: (spec, option) => ({
     X_LABEL: str(option(X_LABEL_OPTION)),
     Y_LABEL: str(option(Y_LABEL_OPTION)),
     DATE_FIELD: str(spec.fields[DATE] ?? ""),

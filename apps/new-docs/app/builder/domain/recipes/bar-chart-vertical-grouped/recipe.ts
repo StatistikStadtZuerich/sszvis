@@ -58,7 +58,7 @@ export const barChartVerticalGrouped: RecipeDef = {
     { key: Y_LABEL_OPTION, label: "Y axis label", fallback: "" },
   ],
   features: [TOOLTIP, LEGEND],
-  scalars: (spec, option, _kind) => ({
+  scalars: (spec, option) => ({
     X_LABEL: str(option(X_LABEL_OPTION)),
     Y_LABEL: str(option(Y_LABEL_OPTION)),
     CATEGORY_FIELD: str(spec.fields[CATEGORY] ?? ""),

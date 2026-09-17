@@ -33,39 +33,18 @@ import { Preview, type PreviewStatus, roleList } from "./components/preview";
 import { Step } from "./components/step";
 import { TableEditor } from "./components/table-editor";
 import { TooltipFields } from "./components/tooltip-fields";
-import { bearsRole, columnKinds, fitRank, parse, serialize } from "./domain/csv";
+import {
+  bearsRole,
+  columnKinds,
+  fitRank,
+  hasValues,
+  parse,
+  REQUIRED,
+  serialize,
+} from "./domain/csv";
 import { applySample, switchRecipe, unmappedRoles } from "./domain/initial-spec";
 import { isPristine, type Sample, samples } from "./domain/samples";
-import {
-  optionValue,
-  type ColumnKind,
-  type RecipeSummary,
-  type RoleKind,
-  TITLE,
-} from "./domain/spec";
-
-/*
- * The kinds in the words the person building the chart uses. Not the `ColumnKind`
- * names: those are measurement levels, which earn their place in the types by
- * leaving room for finer ones, and are jargon to a chart author. The chart-type
- * picker names a column it needs with the same three words.
- */
-const KIND_LABEL = {
-  nominal: "text",
-  continuous: "number",
-  temporal: "date",
-} satisfies Record<ColumnKind, string>;
-
-/** The kind of value a role reads, for naming what a column failed to hold. */
-const REQUIRED = {
-  category: "nominal",
-  number: "continuous",
-  date: "temporal",
-} satisfies Record<RoleKind, ColumnKind>;
-
-/** Whether a column fills a role outright, which is when its kind needs no remark. */
-const fits = (column: ColumnKind | undefined, role: RoleKind) =>
-  fitRank(column ?? "nominal", role) === 0;
+import { KIND_LABEL, optionValue, type RecipeSummary, TITLE } from "./domain/spec";
 
 export const clientLoader = () => null;
 clientLoader.hydrate = true as const;
@@ -289,9 +268,11 @@ const Builder = ({
                 },
                 ...table.columns.map((column) => ({
                   value: column,
-                  label: fits(kinds.get(column), role.kind)
-                    ? column
-                    : `${column} (looks ${KIND_LABEL[kinds.get(column) ?? "nominal"]})`,
+                  /* A remark only where the column does not fill the role outright. */
+                  label:
+                    fitRank(kinds.get(column) ?? "nominal", role.kind) === 0
+                      ? column
+                      : `${column} (looks ${KIND_LABEL[kinds.get(column) ?? "nominal"]})`,
                 })),
               ];
               const id = `mapping-${role.key}`;
@@ -330,8 +311,9 @@ const Builder = ({
                        appears above - but the chart parses every value and keeps
                        none, so the warning has to come from the values themselves. */
                     <FieldError>
-                      The values in {column} are not all {KIND_LABEL[REQUIRED[role.kind]]}s, so the
-                      chart will drop the rows it cannot read.
+                      {hasValues(table, column)
+                        ? `The values in ${column} are not all ${KIND_LABEL[REQUIRED[role.kind]]}s, so the chart will drop the rows it cannot read.`
+                        : `${column} is empty, so the chart will have nothing to draw.`}
                     </FieldError>
                   ) : (
                     role.hint !== undefined && <FieldDescription>{role.hint}</FieldDescription>
