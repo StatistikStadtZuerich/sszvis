@@ -45,13 +45,18 @@ describe("formatNumber", () => {
 });
 
 describe("formatPreciseNumber", () => {
-  testMatrix("With three decimal places", "three decimal places are requested", formatPreciseNumber(3), [
-    [0, "0.000"],
-    [0.0001, "0.000"],
-    [0.0005, "0.001"],
-    [10_250, `10${THINSP}250.000`],
-    [10_250.1234, `10${THINSP}250.123`],
-  ]);
+  testMatrix(
+    "With three decimal places",
+    "three decimal places are requested",
+    formatPreciseNumber(3),
+    [
+      [0, "0.000"],
+      [0.0001, "0.000"],
+      [0.0005, "0.001"],
+      [10_250, `10${THINSP}250.000`],
+      [10_250.1234, `10${THINSP}250.123`],
+    ],
+  );
 });
 
 // -----------------------------------------------------------------------------

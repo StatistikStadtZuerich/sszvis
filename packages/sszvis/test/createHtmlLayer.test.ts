@@ -47,5 +47,4 @@ describe("createHtmlLayer", () => {
     expect(style.left).toBe("25px");
     expect(style.top).toBe("15px");
   });
-
 });

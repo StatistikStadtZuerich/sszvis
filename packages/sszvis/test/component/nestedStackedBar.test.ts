@@ -219,7 +219,6 @@ describe("component/nestedStackedBar", () => {
       // every nested group in one (multi-group) selection - not once per nested group.
       expect(calls).toEqual([rows.length]);
     });
-
   });
 
   describe("re-rendering", () => {
