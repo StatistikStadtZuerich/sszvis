@@ -1,0 +1,21 @@
+The lake, drawn over the areas it cuts into. Not something the reader switches on:
+every map of Zurich in the corpus has it, and one without it reads as a mistake.
+Implied by the geography, because not every geography has a lake to draw - the
+Swiss cantons have none, and the statistical zones include the lake as areas of
+their own.
+
+// #hidden
+// #label Lake
+// #hint The lake, drawn over the map.
+
+// #region mapDataTypes
+lakeFeatures: import("d3").GeoPermissibleObjects;
+// #endregion
+
+// #region mapData
+lakeFeatures: topojson.feature(topo, topo.objects[__LAKE_LAYER__]),
+// #endregion
+
+// #region mapProps
+.lakeFeatures(state.mapData.lakeFeatures)
+// #endregion

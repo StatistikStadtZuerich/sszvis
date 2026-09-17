@@ -1,11 +1,13 @@
 import { Effect } from "effect";
 import * as d3 from "d3";
 import * as sszvis from "sszvis";
+import * as topojson from "topojson-client";
 import tsBlankSpace from "ts-blank-space";
 import { afterEach, describe, expect, test } from "vitest";
 
 import { compile } from "./domain/compile";
 import { initialSpec } from "./domain/initial-spec";
+import { assetsFor } from "./domain/compile";
 import { recipes } from "./domain/recipes";
 import { summarize, type Recipe, type Spec } from "./domain/spec";
 
@@ -58,6 +60,17 @@ const EXPECTED: Readonly<Record<string, { readonly marks: string; readonly count
   /* The same two series, as two stacked bands. The specific class, not the generic
      `.sszvis-path`, which the pie and the line share. */
   "area-chart-stacked": { marks: "path.sszvis-stacked-area-path", count: 2 },
+  /*
+   * The areas that were matched to a row, rather than all of them. A map draws every
+   * area whatever the data says, at full size, so a count of `.sszvis-map__area` is 34
+   * for a chart that matched nothing at all - which is precisely how a wrong geography,
+   * or a code column read the wrong way, fails. Of the 34 statistical quarters the
+   * sample names, three have no value, and those are hatched rather than filled.
+   */
+  "map-choropleth": {
+    marks: ".sszvis-map__area:not(.sszvis-map__area--undefined)",
+    count: 31,
+  },
 };
 
 /** How long to let a chart finish drawing before reading it. */
@@ -104,13 +117,29 @@ const draw = async (
   container.style.width = `${WIDTH}px`;
   document.body.append(container);
 
-  const config = { data: csvUrl(spec.csv), id: `#${container.id}`, fallback: "" };
+  /*
+   * A recipe that loads a second file gets it the way the page would: a URL under a key
+   * on `config`. The bytes are the app's own, so this is the same topology the builder
+   * would put in the bundle rather than a fixture that could drift from it.
+   */
+  const assets = await Promise.all(
+    assetsFor(recipe, spec).map(async (asset) => [
+      asset.key,
+      URL.createObjectURL(await (await fetch(asset.source)).blob()),
+    ]),
+  );
+  const config = {
+    data: csvUrl(spec.csv),
+    id: `#${container.id}`,
+    fallback: "",
+    ...Object.fromEntries(assets),
+  };
   /*
    * The emitted file is a script, not a module: it reads `d3`, `sszvis` and `config` as
    * globals, exactly as the generated index.html supplies them. Running it through
    * `new Function` rather than an import is what keeps this the real artefact.
    */
-  new Function("d3", "sszvis", "config", js)(d3, sszvis, config);
+  new Function("d3", "sszvis", "topojson", "config", js)(d3, sszvis, topojson, config);
 
   await painted(container, expected.marks, expected.count);
   return container;

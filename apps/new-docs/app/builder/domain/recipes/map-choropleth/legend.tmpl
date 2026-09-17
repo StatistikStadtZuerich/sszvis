@@ -1,0 +1,32 @@
+A continuous colour legend, because the fill comes from a sequential scale.
+
+// #label Legend
+// #hint A colour bar showing what the shades mean.
+
+// #region magicNumbers
+/** Gap in px between the bottom of the map and the legend. */
+const LEGEND_GUTTER = 60;
+// #endregion
+
+// #scalar BOTTOM_PADDING 90
+
+// #region components
+const legend = sszvis
+  .legendColorLinear()
+  .scale(colorScale)
+  .width(props.legendWidth)
+  .labelFormat(sszvis.formatNumber);
+// #endregion
+
+// #region render
+chartLayer
+  .selectGroup("legend")
+  .attr(
+    "transform",
+    sszvis.translateString(
+      bounds.width / 2 - props.legendWidth / 2,
+      bounds.innerHeight + LEGEND_GUTTER,
+    ),
+  )
+  .call(legend);
+// #endregion

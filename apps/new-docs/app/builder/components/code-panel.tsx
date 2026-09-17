@@ -6,8 +6,9 @@ import { ToggleButtonGroup } from "~/components/ui/toggle-button-group";
 import { cn } from "~/lib/utils";
 
 import fallbackUrl from "../../../examples/_static/fallback.png?url";
+import { bundleEntries } from "../domain/bundle";
 import { BUNDLE } from "../domain/host";
-import { utf8, zip } from "../domain/zip";
+import { zip } from "../domain/zip";
 import type { Generated } from "../workers/domain";
 
 /* The generated files the panel can show. `assets` is bytes the bundle carries, not source. */
@@ -35,40 +36,12 @@ export const CodePanel = ({
 
   const downloadBundle = async () => {
     if (!ready || generated === undefined) return;
-    /* The image the chart shows in place of itself when the data fails to load. The
-       page names it either way, so it travels with the bundle rather than 404ing. */
-    const fallback = await fetch(fallbackUrl)
-      /* `fetch` rejects only when the network does, so a 404 arrives here as a perfectly
-         good response carrying an error page - which would ship as the image. */
-      .then(async (response) => (response.ok ? new Uint8Array(await response.arrayBuffer()) : null))
-      .catch(() => null);
-    /* Whatever else the chart loads - a map's geometry, say - travels with it for the same reason. */
-    const extras = await Promise.all(
-      generated.assets.map(async (asset) =>
-        fetch(asset.source)
-          .then(async (response) =>
-            response.ok
-              ? { name: asset.path, content: new Uint8Array(await response.arrayBuffer()) }
-              : null,
-          )
-          .catch(() => null),
-      ),
+    const entries = await bundleEntries(
+      { html: generated.html.raw, js: generated.js.raw, csv: generated.csv.raw },
+      generated.assets,
+      fallbackUrl,
     );
-    save(
-      "chart-bundle.zip",
-      new Blob(
-        [
-          zip([
-            { name: BUNDLE.html, content: utf8(generated.html.raw) },
-            { name: BUNDLE.chart, content: utf8(generated.js.raw) },
-            { name: BUNDLE.data, content: utf8(generated.csv.raw) },
-            ...(fallback === null ? [] : [{ name: BUNDLE.fallback, content: fallback }]),
-            ...extras.filter((entry) => entry !== null),
-          ]),
-        ],
-        { type: "application/zip" },
-      ),
-    );
+    save("chart-bundle.zip", new Blob([zip(entries)], { type: "application/zip" }));
   };
 
   return (

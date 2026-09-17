@@ -1,5 +1,31 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import { playwright } from "@vitest/browser-playwright";
-import { defineConfig } from "vitest/config";
+import { defineConfig, type Plugin } from "vitest/config";
+
+const TOPO_DIR = "../../packages/geodata/dist/topo";
+const TOPO_PREFIX = "/preview/_static/topo/";
+
+/*
+ * The map recipe names its topology by the URL the app serves it under, and a test
+ * that fetched a fixture instead could pass while the app asked for a file that is
+ * not there. This serves the same directory the examples plugin does, so the test
+ * reads the bytes through the URL the recipe actually emits.
+ */
+const topo = (): Plugin => ({
+  name: "sszvis-topo",
+  configureServer(server) {
+    server.middlewares.use((request, response, next) => {
+      const url = request.url ?? "";
+      if (!url.startsWith(TOPO_PREFIX)) return next();
+      const file = path.join(TOPO_DIR, path.basename(url));
+      if (!fs.existsSync(file)) return next();
+      response.setHeader("Content-Type", "application/json");
+      response.end(fs.readFileSync(file));
+    });
+  },
+});
 
 /*
  * The builder's domain tests run under node and finish in seconds; these run a real
@@ -11,6 +37,7 @@ import { defineConfig } from "vitest/config";
  * nothing to do with the chart.
  */
 export default defineConfig({
+  plugins: [topo()],
   test: {
     include: ["app/**/*.browser.test.ts"],
     browser: {

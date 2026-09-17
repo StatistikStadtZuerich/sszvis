@@ -6,8 +6,9 @@ import {
   ChartColumnIcon,
   ChartColumnStackedIcon,
   ChartLineIcon,
-  ChartScatterIcon as UnknownChartIcon,
+  MapIcon,
   type LucideIcon,
+  ChartScatterIcon as UnknownChartIcon,
 } from "lucide-react";
 import { useId } from "react";
 import { Field, FieldDescription, FieldError } from "~/components/ui/field";
@@ -24,6 +25,7 @@ const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
   ["bar-chart-vertical-grouped", ChartColumnBigIcon],
   ["line-chart", ChartLineIcon],
   ["area-chart-stacked", ChartAreaIcon],
+  ["map-choropleth", MapIcon],
 ]);
 
 const KIND_LABEL = { category: "text", number: "number", date: "date" } as const;

@@ -1,0 +1,79 @@
+Hovering an area names it and reads its value. `panning` rather than `move`,
+because the areas are irregular shapes rather than a grid: it tracks whichever one
+is under the pointer and keeps working when a touch is dragged across the map.
+
+The same selection drives the highlight, so the area being read is also the one
+outlined. A darker shade of its own fill, except where there is no fill to darken.
+
+// #label Tooltip
+// #hint Names the area and reads its value on hover.
+
+// #region stateTypes
+selection: Datum[];
+// #endregion
+
+// #region init
+state.selection = [];
+// #endregion
+
+// #region actionTypes
+selectHovered: (state: State, e: Event, d: MapDatum) => void;
+deselectHovered: (state: State) => void;
+// #endregion
+
+// #region actions
+selectHovered(state, _e, d) {
+  // NOTE: An area that matched no row still fires; there is nothing to show for it.
+  if (d.datum === undefined) {
+    return;
+  }
+  state.selection = [d.datum];
+},
+
+deselectHovered(state) {
+  state.selection = [];
+},
+// #endregion
+
+// #region layers
+const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+// #endregion
+
+// #region mapProps
+.highlight(state.selection)
+.highlightStroke((d) =>
+  Number.isNaN(d.value) ? "white" : sszvis.muchDarker(colorScale(d.value)),
+)
+.highlightStrokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width) + 1)
+// #endregion
+
+// #region components
+const tooltip = sszvis
+  .tooltip<MapDatum>()
+  .renderInto(tooltipLayer)
+  .header(__TOOLTIP_TEXT__)
+  .orientation(sszvis.fitTooltip("bottom", bounds))
+  .visible(isSelected(state));
+// #endregion
+
+// #region render
+chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
+// #endregion
+
+// #region interaction
+const interactionLayer = sszvis
+  .panning<MapDatum>()
+  .elementSelector(".sszvis-map__area")
+  .on("start", actions.selectHovered)
+  .on("pan", actions.selectHovered)
+  .on("end", actions.deselectHovered);
+
+chartLayer.call(interactionLayer);
+// #endregion
+
+// #scalar ACTIONS_PARAM actions
+
+// #region helpers
+const isSelected = (state: State) => (d: MapDatum) =>
+  d.datum !== undefined && sszvis.contains(state.selection, d.datum);
+// #endregion

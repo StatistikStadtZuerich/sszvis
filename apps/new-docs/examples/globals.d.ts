@@ -18,6 +18,8 @@ declare const config: {
   readonly data: string;
   readonly id: string;
   readonly fallback: string;
+  /* A second file the chart loads, when it needs one: a map's geometry. */
+  readonly topology?: string;
 };
 
 /**

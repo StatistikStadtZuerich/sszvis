@@ -33,6 +33,21 @@ export const cases = (recipes: readonly Recipe[]): readonly Case[] =>
         recipe,
         spec: { ...spec, fields: { ...spec.fields, [role.key]: "" } },
       }));
+    /*
+     * One case per value of a choice option. A choice can change which hidden
+     * features a spec implies - a map's geography decides whether its lake is
+     * drawn, and whether that lake has a shoreline - so leaving the other values
+     * out would type-check one geography and ship six.
+     */
+    const chosen = recipe.options.flatMap((option) =>
+      (option.choices ?? [])
+        .filter((choice) => choice.value !== spec.options[option.key])
+        .map((choice) => ({
+          label: `${recipe.key}-${option.key}-${choice.value}`,
+          recipe,
+          spec: { ...spec, options: { ...spec.options, [option.key]: choice.value } },
+        })),
+    );
     const annotated =
       recipe.annotationAxes.length === 0
         ? []
@@ -43,7 +58,7 @@ export const cases = (recipes: readonly Recipe[]): readonly Case[] =>
               spec: { ...spec, annotations: sampleAnnotations(recipe.annotationAxes) },
             },
           ];
-    return [{ label: recipe.key, recipe, spec }, ...single, ...annotated];
+    return [{ label: recipe.key, recipe, spec }, ...single, ...chosen, ...annotated];
   });
 
 /** Only checkbox features vary; hidden ones follow the spec's content. */
