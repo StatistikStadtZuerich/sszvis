@@ -55,7 +55,7 @@ describe("control/handleRuler", () => {
     ...node.querySelectorAll<SVGTextElement>("text.sszvis-ruler__label-outline"),
   ];
 
-  test("should render its parts inside a single group", () => {
+  test("should draw a rule, a handle and a grip inside one group when rendered", () => {
     const node = render(ruler());
     const groups = node.querySelectorAll("g.sszvis-handleRuler__group");
     expect(groups.length).toBe(1);
@@ -64,25 +64,14 @@ describe("control/handleRuler", () => {
     expect(handleMark(node)).toBeTruthy();
   });
 
-  test("should keep one of each part when rendered again", () => {
+  test("should draw the same single ruler, with the handle behind the dots, however often it is rendered", () => {
     const control = ruler();
     const group = d3Select(svg).append("g").datum(data);
+    group.call(control);
     group.call(control);
     group.call(control);
     const node = group.node() as SVGGElement;
     expect(node.querySelectorAll("g.sszvis-handleRuler__group").length).toBe(1);
-    expect(node.querySelectorAll("line.sszvis-ruler__rule").length).toBe(1);
-    expect(node.querySelectorAll("rect.sszvis-handleRuler__handle").length).toBe(1);
-    expect(node.querySelectorAll("line.sszvis-handleRuler__handle-mark").length).toBe(1);
-  });
-
-  test("should stay idempotent over repeated renders and keep the handle behind the dots", () => {
-    const control = ruler();
-    const group = d3Select(svg).append("g").datum(data);
-    group.call(control);
-    group.call(control);
-    group.call(control);
-    const node = group.node() as SVGGElement;
     expect(node.querySelectorAll("line.sszvis-ruler__rule").length).toBe(1);
     expect(node.querySelectorAll("rect.sszvis-handleRuler__handle").length).toBe(1);
     expect(node.querySelectorAll("line.sszvis-handleRuler__handle-mark").length).toBe(1);
@@ -97,7 +86,7 @@ describe("control/handleRuler", () => {
     expect(rule(node)?.getAttribute("x1")).toBe("40.5");
   });
 
-  test("should keep one of each static part when re-rendered with fewer data", () => {
+  test("should drop the extra dots and labels, keeping one rule, when re-rendered with fewer data", () => {
     const control = ruler();
     const group = d3Select(svg).append("g").datum(data);
     group.call(control);
@@ -109,7 +98,7 @@ describe("control/handleRuler", () => {
     expect(node.querySelectorAll("line.sszvis-ruler__rule").length).toBe(1);
   });
 
-  test("should not adopt a rule that belongs to something else in the container", () => {
+  test("should leave a foreign rule of the same class alone when it sits outside its own group", () => {
     const group = d3Select(svg).append("g").datum(data);
     // an annotation ruler's rule, which shares the class but is not inside the handle
     // ruler's own group
@@ -122,7 +111,7 @@ describe("control/handleRuler", () => {
     expect(rulerGroup.querySelector("line.sszvis-ruler__rule")?.getAttribute("x1")).toBe("40.5");
   });
 
-  test("should position the rule and handle from an x accessor", () => {
+  test("should position the rule, handle and dots from the x accessor when one is configured", () => {
     const node = render(
       handleRuler<Datum>()
         .x((d: Datum) => d.x)
@@ -136,7 +125,7 @@ describe("control/handleRuler", () => {
     expect(dots(node).map((d) => d.getAttribute("cx"))).toEqual(["40.5", "40.5"]);
   });
 
-  test("should resolve the ruler group to the first datum when x values differ", () => {
+  test("should draw the single rule at the first datum when the data disagree about x", () => {
     // There is only one rule, so it has to come from one datum; the first one wins.
     const node = render(
       handleRuler<Datum>()
@@ -155,18 +144,17 @@ describe("control/handleRuler", () => {
     expect(dots(node).map((d) => d.getAttribute("cx"))).toEqual(["40.5", "100.5"]);
   });
 
-  test("should nudge a label above the top by the same constant as one on the ruler", () => {
-    const node = render(ruler(), [{ x: 40, y: 10, label: "high" }]);
-    expect(labels(node)[0]?.getAttribute("transform")).toBe("translate(50.5,15.5)");
+  // The nudge is a constant, whether the label is above the top or just short of it. The
+  // y = 19 case is the worst case for the old `2 * y` arithmetic, which put that label at 58.5.
+  test.each([
+    { y: 10, expected: "translate(50.5,15.5)" },
+    { y: 19, expected: "translate(50.5,24.5)" },
+  ])("should place a label at y $y at $expected, above the top of the ruler", ({ y, expected }) => {
+    const node = render(ruler(), [{ x: 40, y, label: "high" }]);
+    expect(labels(node)[0]?.getAttribute("transform")).toBe(expected);
   });
 
-  test("should nudge a label just below the top threshold by that same constant", () => {
-    // The worst case for the old `2 * y` arithmetic, which put this label at 58.5.
-    const node = render(ruler(), [{ x: 40, y: 19, label: "nearly" }]);
-    expect(labels(node)[0]?.getAttribute("transform")).toBe("translate(50.5,24.5)");
-  });
-
-  test("should draw the rule from the top down to 4px above the bottom, on half pixels", () => {
+  test("should draw the rule from the top down to 4px above the bottom when both are configured", () => {
     const node = render(ruler());
     const line = rule(node) as SVGLineElement;
     // x comes from the first datum, snapped to a half pixel for crisp rendering
@@ -177,7 +165,7 @@ describe("control/handleRuler", () => {
     expect(line.getAttribute("y2")).toBe("196.5");
   });
 
-  test("should draw a 10x24 rounded handle sitting on top of the rule", () => {
+  test("should draw the handle as a 10x24 rounded box with a grip inside it, sitting on the rule", () => {
     const node = render(ruler());
     const rect = handle(node) as SVGRectElement;
     expect(rect.getAttribute("width")).toBe("10");
@@ -188,10 +176,7 @@ describe("control/handleRuler", () => {
     expect(rect.getAttribute("x")).toBe("35.5");
     // top 20 less the 24px handle height, snapped to a half pixel: floor(-4) + 0.5
     expect(rect.getAttribute("y")).toBe("-3.5");
-  });
 
-  test("should draw the grip mark inside the middle of the handle", () => {
-    const node = render(ruler());
     const mark = handleMark(node) as SVGLineElement;
     expect(mark.getAttribute("x1")).toBe("40.5");
     expect(mark.getAttribute("x2")).toBe("40.5");
@@ -200,7 +185,7 @@ describe("control/handleRuler", () => {
     expect(mark.getAttribute("y2")).toBe("16.5");
   });
 
-  test("should render one dot per datum, positioned on half pixels", () => {
+  test("should draw one dot per datum, on half pixels, when data are bound", () => {
     const node = render(ruler());
     expect(dots(node).length).toBe(2);
     expect(dots(node).map((d) => d.getAttribute("cx"))).toEqual(["40.5", "40.5"]);
@@ -235,69 +220,62 @@ describe("control/handleRuler", () => {
     expect(fromDots.map((call) => call.datum.y)).toEqual([60, 120]);
   });
 
-  test("should fill the dots with the configured color", () => {
-    const node = render(ruler().color("#0f0"));
-    expect(dots(node).map((d) => d.getAttribute("fill"))).toEqual(["#0f0", "#0f0"]);
+  test("should fill the dots from color, whether it is a constant or reads the datum or its index", () => {
+    expect(dots(render(ruler().color("#0f0"))).map((d) => d.getAttribute("fill"))).toEqual([
+      "#0f0",
+      "#0f0",
+    ]);
+    const byDatum = render(ruler().color((d: Datum) => (d.y > 100 ? "#00f" : "#f00")));
+    expect(dots(byDatum).map((d) => d.getAttribute("fill"))).toEqual(["#f00", "#00f"]);
+    const byIndex = render(ruler().color((_d: Datum, i: number) => ["red", "blue"][i]));
+    expect(dots(byIndex).map((d) => d.getAttribute("fill"))).toEqual(["red", "blue"]);
   });
 
-  test("should accept a color function evaluated per datum", () => {
-    const node = render(ruler().color((d: Datum) => (d.y > 100 ? "#00f" : "#f00")));
-    expect(dots(node).map((d) => d.getAttribute("fill"))).toEqual(["#f00", "#00f"]);
-  });
-
-  test("should accept constants for x and y", () => {
+  test("should place the rule and dots from plain numbers when x and y are constants", () => {
     const node = render(handleRuler<Datum>().x(80).y(50).top(20).bottom(200));
     expect(rule(node)?.getAttribute("x1")).toBe("80.5");
     expect(dots(node).map((d) => d.getAttribute("cy"))).toEqual(["50.5", "50.5"]);
   });
 
-  test("should default the label to an empty string when none is given", () => {
+  test("should leave the labels empty when no label is configured", () => {
     const node = render(handleRuler<Datum>().x(40).y(60).top(20).bottom(200));
     expect(labels(node).map((l) => l.innerHTML)).toEqual(["", ""]);
   });
 
-  test("should render a label and a matching outline for each datum", () => {
+  test("should draw a label and a matching outline for each datum when a label is configured", () => {
     const node = render(ruler());
     expect(labels(node).map((l) => l.innerHTML)).toEqual(["first", "second"]);
     expect(outlines(node).map((l) => l.innerHTML)).toEqual(["first", "second"]);
   });
 
-  test("should place labels to the right of the ruler by default", () => {
-    const node = render(ruler());
-    // x + 10, y + 5 for a label between top and bottom
-    expect(labels(node).map((l) => l.getAttribute("transform"))).toEqual([
+  test("should put the labels on the side flip asks for, whether it is unset, set or a predicate", () => {
+    // x + 10, y + 5 for a label between top and bottom; flipped, x - 10 and anchored the
+    // other way, so the label always reads away from the rule.
+    const right = render(ruler());
+    expect(labels(right).map((l) => l.getAttribute("transform"))).toEqual([
       "translate(50.5,65.5)",
       "translate(50.5,125.5)",
     ]);
-    expect(labels(node).map((l) => l.style.textAnchor)).toEqual(["start", "start"]);
-  });
+    expect(labels(right).map((l) => l.style.textAnchor)).toEqual(["start", "start"]);
 
-  test("should flip labels to the left when flip is set", () => {
-    const node = render(ruler().flip(true));
-    expect(labels(node).map((l) => l.getAttribute("transform"))).toEqual([
+    const left = render(ruler().flip(true));
+    expect(labels(left).map((l) => l.getAttribute("transform"))).toEqual([
       "translate(30.5,65.5)",
       "translate(30.5,125.5)",
     ]);
-    expect(labels(node).map((l) => l.style.textAnchor)).toEqual(["end", "end"]);
+    expect(labels(left).map((l) => l.style.textAnchor)).toEqual(["end", "end"]);
+
+    const perDatum = render(ruler().flip((d: Datum) => d.y > 100));
+    expect(labels(perDatum).map((l) => l.style.textAnchor)).toEqual(["start", "end"]);
   });
 
-  test("should accept a flip predicate evaluated per datum", () => {
-    const node = render(ruler().flip((d: Datum) => d.y > 100));
-    expect(labels(node).map((l) => l.style.textAnchor)).toEqual(["start", "end"]);
-  });
-
-  test("should nudge a label sitting below the bottom back onto the ruler", () => {
+  test("should pull a label back onto the ruler when its datum sits below the bottom", () => {
     // dy is 0 rather than 5 once y is past props.bottom
     const node = render(ruler().bottom(100));
     expect(labels(node)[1]?.getAttribute("transform")).toBe("translate(50.5,120.5)");
   });
 
-  test("should pass the index to the color accessor", () => {
-    const node = render(ruler().color((_d: Datum, i: number) => ["red", "blue"][i]));
-    expect(dots(node).map((d) => d.getAttribute("fill"))).toEqual(["red", "blue"]);
-  });
-
-  test("should render nothing per-datum for an empty data array", () => {
+  test("should still draw the rule, and nothing per datum, when the data array is empty", () => {
     const node = render(ruler(), []);
     expect(dots(node)).toEqual([]);
     expect(labels(node)).toEqual([]);

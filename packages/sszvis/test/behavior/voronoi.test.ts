@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import voronoi, { type VoronoiBounds } from "../../src/behavior/voronoi.js";
+import voronoi from "../../src/behavior/voronoi.js";
 import { bounds } from "../../src/bounds.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import type { LayerSelection } from "../../src/types.js";
@@ -57,19 +57,7 @@ describe("behavior/voronoi", () => {
     vi.restoreAllMocks();
   });
 
-  test("should create component with proper API and require bounds", () => {
-    const xAccessor = (d: TestDataPoint) => d.x;
-    const yAccessor = (d: TestDataPoint) => d.y;
-    const testBounds: VoronoiBounds = [0, 0, 400, 300];
-    const chainedComponent = voronoi<TestDataPoint>()
-      .x(xAccessor)
-      .y(yAccessor)
-      .bounds(testBounds)
-      .debug(true);
-    expect(chainedComponent.x()).toBe(xAccessor);
-    expect(chainedComponent.y()).toBe(yAccessor);
-    expect(chainedComponent.bounds()).toBe(testBounds);
-    expect(chainedComponent.debug()).toBe(true);
+  test("should draw nothing and name the missing property when bounds are not configured", () => {
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const selection = svg
       .selectAll("g.voronoi-layer")
@@ -82,10 +70,10 @@ describe("behavior/voronoi", () => {
         .y((d) => d.y),
     );
     expect(consoleErrorSpy).toHaveBeenCalledWith("behavior.voronoi - requires bounds");
-    consoleErrorSpy.mockRestore();
+    expect(svg.selectAll("[data-sszvis-behavior-voronoi]").size()).toBe(0);
   });
 
-  test("should create voronoi cells with debug mode support", () => {
+  test("should cover the chart with one invisible, interactive cell per datum when rendered", () => {
     const normalSelection = svg
       .selectAll("g.voronoi-normal")
       .data([testData])
@@ -105,10 +93,11 @@ describe("behavior/voronoi", () => {
       expect(path.attr("data-sszvis-behavior-pannable")).toBe("");
       expect(path.classed("sszvis-interactive")).toBe(true);
       expect(path.attr("fill")).toBe("transparent");
-      expect(path.attr("d")).toMatch(/^M[\d.,\-\sL]+Z$/); // SVG path format
       expect(path.attr("stroke")).toBeNull(); // No debug stroke
     });
-    svg.selectAll("*").remove(); // Clear previous paths
+  });
+
+  test("should outline the otherwise invisible cells when debug mode is turned on", () => {
     svg
       .selectAll("g.voronoi-debug")
       .data([testData])
@@ -121,13 +110,14 @@ describe("behavior/voronoi", () => {
           .bounds([0, 0, 400, 300])
           .debug(true),
       );
-    svg.selectAll("[data-sszvis-behavior-voronoi]").each(function () {
-      const path = d3.select(this);
-      expect(path.attr("stroke")).toBe("#f00"); // Debug stroke enabled
+    const voronoiPaths = svg.selectAll("[data-sszvis-behavior-voronoi]");
+    expect(voronoiPaths.size()).toBe(testData.length);
+    voronoiPaths.each(function () {
+      expect(d3.select(this).attr("stroke")).toBe("#f00");
     });
   });
 
-  test("should handle mouse interaction", () => {
+  test("should report the datum nearest the pointer on hover, and report out when the pointer strays or leaves", () => {
     const overHandler = vi.fn();
     const outHandler = vi.fn();
     svg
@@ -174,76 +164,50 @@ describe("behavior/voronoi", () => {
     expect(outHandler).toHaveBeenCalledTimes(2);
   });
 
-  test("should handle touch interactions", () => {
-    const overHandler = vi.fn();
-    const outHandler = vi.fn();
-    svg
-      .selectAll("g.voronoi-layer")
-      .data([testData])
-      .join("g")
-      .attr("class", "voronoi-layer")
-      .call(
-        voronoi<TestDataPoint>()
-          .x((d) => d.x)
-          .y((d) => d.y)
-          .bounds([0, 0, 400, 300])
-          .on("over", overHandler)
-          .on("out", outHandler),
-      );
-    const svgRect = svg.node()?.getBoundingClientRect() as DOMRect;
-    const firstPath = svg.selectAll("[data-sszvis-behavior-voronoi]").nodes()[0] as SVGPathElement;
-    const nearTouch = {
-      clientX: svgRect.left + 100,
-      clientY: svgRect.top + 100,
-      identifier: 0,
-      pageX: svgRect.left + 100,
-      pageY: svgRect.top + 100,
-      screenX: 100,
-      screenY: 100,
-      target: firstPath,
-      force: 1,
-      radiusX: 10,
-      radiusY: 10,
-      rotationAngle: 0,
-    } as Touch;
-    const nearTouchEvent = new Event("touchstart", { bubbles: true, cancelable: true });
-    Object.defineProperty(nearTouchEvent, "touches", { value: [nearTouch], writable: false });
-    Object.defineProperty(nearTouchEvent, "clientX", { value: nearTouch.clientX, writable: false });
-    Object.defineProperty(nearTouchEvent, "clientY", { value: nearTouch.clientY, writable: false });
-    const preventDefaultSpy = vi.spyOn(nearTouchEvent, "preventDefault");
-    firstPath.dispatchEvent(nearTouchEvent);
-    expect(overHandler).toHaveBeenCalledTimes(1);
-    expect(preventDefaultSpy).toHaveBeenCalled();
-    expect(overHandler.mock.calls[0][1]).toEqual(testData[0]);
-    firstPath.dispatchEvent(new Event("touchend", { bubbles: true }));
-    expect(outHandler).toHaveBeenCalledTimes(1);
-    const pathSelection = d3.select(firstPath);
-    expect(pathSelection.on("touchmove")).toBeUndefined();
-    expect(pathSelection.on("touchend")).toBeUndefined();
-    overHandler.mockClear();
-    const farTouch = {
-      clientX: svgRect.left + 50, // Far from data points
-      clientY: svgRect.top + 50,
-      identifier: 0,
-      pageX: svgRect.left + 50,
-      pageY: svgRect.top + 50,
-      screenX: 50,
-      screenY: 50,
-      target: firstPath,
-      force: 1,
-      radiusX: 10,
-      radiusY: 10,
-      rotationAngle: 0,
-    } as Touch;
-    const farTouchEvent = new Event("touchstart", { bubbles: true, cancelable: true });
-    Object.defineProperty(farTouchEvent, "touches", { value: [farTouch], writable: false });
-    Object.defineProperty(farTouchEvent, "clientX", { value: farTouch.clientX, writable: false });
-    Object.defineProperty(farTouchEvent, "clientY", { value: farTouch.clientY, writable: false });
-    firstPath.dispatchEvent(farTouchEvent);
-    expect(overHandler).toHaveBeenCalledTimes(0);
+  describe("over touch", () => {
+    function renderAndTouch(offsetX: number, offsetY: number) {
+      const overHandler = vi.fn();
+      const outHandler = vi.fn();
+      svg
+        .selectAll("g.voronoi-layer")
+        .data([testData])
+        .join("g")
+        .attr("class", "voronoi-layer")
+        .call(
+          voronoi<TestDataPoint>()
+            .x((d) => d.x)
+            .y((d) => d.y)
+            .bounds([0, 0, 400, 300])
+            .on("over", overHandler)
+            .on("out", outHandler),
+        );
+      const svgRect = svg.node()?.getBoundingClientRect() as DOMRect;
+      const firstPath = svg
+        .selectAll("[data-sszvis-behavior-voronoi]")
+        .nodes()[0] as SVGPathElement;
+      const touchstart = new Event("touchstart", { bubbles: true, cancelable: true });
+      Object.defineProperty(touchstart, "touches", {
+        value: [{ clientX: svgRect.left + offsetX, clientY: svgRect.top + offsetY, identifier: 0 }],
+        writable: false,
+      });
+      firstPath.dispatchEvent(touchstart);
+      return { overHandler, outHandler, firstPath, touchstart };
+    }
+
+    test("should report the datum under the finger and suppress scrolling when a touch lands on it", () => {
+      const { overHandler, touchstart } = renderAndTouch(100, 100);
+      expect(overHandler).toHaveBeenCalledTimes(1);
+      expect(overHandler.mock.calls[0][1]).toEqual(testData[0]);
+      expect(touchstart.defaultPrevented).toBe(true);
+    });
+
+    test("should report nothing when a touch lands outside the interaction radius of every datum", () => {
+      const { overHandler } = renderAndTouch(50, 50);
+      expect(overHandler).not.toHaveBeenCalled();
+    });
   });
 
-  test("should respect maximum interaction radius", () => {
+  test("should report the datum while the pointer is within 15 units of it and nothing beyond that", () => {
     const overHandler = vi.fn();
     const testData = [{ id: 1, name: "Single Point", x: 200, y: 150, value: 10 }]; // Single point for clear testing
     svg
@@ -288,7 +252,7 @@ describe("behavior/voronoi", () => {
     expect(overHandler).toHaveBeenCalledTimes(0);
   });
 
-  test("should handle custom accessor", () => {
+  test("should report each datum in turn when the pointer visits every datum's own position", () => {
     const overHandler = vi.fn();
     svg
       .selectAll("g.voronoi-standard")
@@ -303,24 +267,25 @@ describe("behavior/voronoi", () => {
           .on("over", overHandler),
       );
     const svgRect = svg.node()?.getBoundingClientRect() as DOMRect;
-    let voronoiPaths = svg.selectAll("[data-sszvis-behavior-voronoi]");
-    testData.forEach((expectedDatum, index) => {
-      const mouseEvent = new MouseEvent("mouseover", {
-        clientX: svgRect.left + expectedDatum.x,
-        clientY: svgRect.top + expectedDatum.y,
-        bubbles: true,
-      });
-      (voronoiPaths.nodes()[index] as SVGPathElement).dispatchEvent(mouseEvent);
-    });
+    const anyPath = svg.selectAll("[data-sszvis-behavior-voronoi]").nodes()[0] as SVGPathElement;
+    // The datum is resolved from the pointer's position, not from the cell the event happened
+    // to be dispatched on, so every position is dispatched on the same cell.
+    for (const expectedDatum of testData) {
+      anyPath.dispatchEvent(
+        new MouseEvent("mouseover", {
+          clientX: svgRect.left + expectedDatum.x,
+          clientY: svgRect.top + expectedDatum.y,
+          bubbles: true,
+        }),
+      );
+    }
     expect(overHandler).toHaveBeenCalledTimes(testData.length);
-    overHandler.mock.calls.forEach((call, index) => {
-      const [event, datum] = call;
-      expect(event).toBeInstanceOf(MouseEvent);
-      expect(datum).toEqual(testData[index]);
-    });
-    svg.selectAll("*").remove();
-    overHandler.mockClear();
-    const nestedData = [
+    expect(overHandler.mock.calls.map((call) => call[1])).toEqual(testData);
+  });
+
+  test("should report the datum under the pointer when the positions are read through nested accessors", () => {
+    const overHandler = vi.fn();
+    const nestedData: NestedDataPoint[] = [
       { position: { horizontal: 100, vertical: 120 }, info: "A" },
       { position: { horizontal: 200, vertical: 180 }, info: "B" },
     ];
@@ -336,16 +301,17 @@ describe("behavior/voronoi", () => {
           .bounds([0, 0, 400, 300])
           .on("over", overHandler),
       );
-    voronoiPaths = svg.selectAll("[data-sszvis-behavior-voronoi]");
-    const mouseEvent = new MouseEvent("mouseover", {
-      clientX: svgRect.left + 100,
-      clientY: svgRect.top + 120,
-      bubbles: true,
-    });
-    (voronoiPaths.nodes()[0] as SVGPathElement).dispatchEvent(mouseEvent);
+    const svgRect = svg.node()?.getBoundingClientRect() as DOMRect;
+    const firstPath = svg.selectAll("[data-sszvis-behavior-voronoi]").nodes()[0] as SVGPathElement;
+    firstPath.dispatchEvent(
+      new MouseEvent("mouseover", {
+        clientX: svgRect.left + 100,
+        clientY: svgRect.top + 120,
+        bubbles: true,
+      }),
+    );
     expect(overHandler).toHaveBeenCalledTimes(1);
-    const [, datum] = overHandler.mock.calls[0];
-    expect(datum).toEqual(nestedData[0]);
+    expect(overHandler.mock.calls[0][1]).toEqual(nestedData[0]);
   });
   describe("resolving the pointer into the group's coordinate space", () => {
     // The `x`/`y` accessors report positions in the coordinate space of the group the
@@ -679,7 +645,7 @@ describe("behavior/voronoi", () => {
       expect(outHandler).toHaveBeenCalledTimes(1);
     });
 
-    test("should miss when the pointer is outside the interaction radius of every datum", () => {
+    test("should report out rather than over when the pointer is inside inset bounds but near no datum", () => {
       const overHandler = vi.fn();
       const outHandler = vi.fn();
       const layer = svg

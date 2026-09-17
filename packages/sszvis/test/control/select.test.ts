@@ -1,8 +1,17 @@
 import { select as d3Select } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import buttonGroup from "../../src/control/buttonGroup.js";
 import selectMenu from "../../src/control/select.js";
+import {
+  buttonGroupSpec,
+  describeOptionSelectableConformance,
+  selectSpec,
+} from "../support/optionSelectableConformance.js";
 import "../../src/d3-selectdiv.js";
+
+// The promises this control shares with `control/buttonGroup` - values coercion, the wrapper
+// class, the change callback, the accessible name, re-rendering and the swap between the two
+// controls - are asserted once, for both controls, in the shared suite.
+describeOptionSelectableConformance(selectSpec, buttonGroupSpec);
 
 describe("control/select", () => {
   let container: HTMLDivElement;
@@ -29,84 +38,33 @@ describe("control/select", () => {
     container.querySelector<HTMLSelectElement>(".sszvis-control-select__element");
   const options = () => [...(selectEl()?.options ?? [])];
 
-  test("should render a wrapper carrying both the shared and the specific class", () => {
-    render(selectMenu().values(["A", "B"]).current("A"));
-    const el = wrapper();
-    expect(el).toBeTruthy();
-    expect(el?.classList.contains("sszvis-control-optionSelectable")).toBe(true);
-  });
-
-  test("should default the width to 300px and size the select 30px wider", () => {
+  test("should size the wrapper at the configured width, or 300px, and the select 30px wider", () => {
     render(selectMenu().values(["A", "B"]).current("A"));
     expect(wrapper()?.style.width).toBe("300px");
     expect(selectEl()?.style.width).toBe("330px");
-  });
-
-  test("should apply a configured width to both the wrapper and the select", () => {
+    container.textContent = "";
     render(selectMenu().values(["A", "B"]).current("A").width(200));
     expect(wrapper()?.style.width).toBe("200px");
     expect(selectEl()?.style.width).toBe("230px");
   });
 
-  test("should render an empty control when values is left unset", () => {
-    render(selectMenu());
-    expect(wrapper()).toBeTruthy();
-    expect(selectEl()).toBeTruthy();
-    expect(options()).toHaveLength(0);
-  });
-
-  test("should render an empty control when values is set to undefined", () => {
-    // The shape the issue was filed against: a chart hands the control a state key that is only
-    // assigned when its CSV resolves, so the setter is called with undefined rather than skipped.
-    render(selectMenu().width(200).values(undefined));
-    expect(wrapper()).toBeTruthy();
-    expect(options()).toHaveLength(0);
-  });
-
-  test("should render an unset values the same as an empty one", () => {
-    render(selectMenu().width(200));
-    const unset = container.innerHTML;
-    container.innerHTML = "";
-    render(selectMenu().width(200).values([]));
-    expect(container.innerHTML).toBe(unset);
-  });
-
-  test("should render an undefined values the same as an empty one", () => {
-    render(selectMenu().width(200).values(undefined));
-    const undef = container.innerHTML;
-    container.innerHTML = "";
-    render(selectMenu().width(200).values([]));
-    expect(container.innerHTML).toBe(undef);
-  });
-
-  test("should render one option per value, in order", () => {
+  test("should render one option per value, in order, when values are configured", () => {
     render(selectMenu().values(["A", "B", "C"]).current("A"));
     expect(options().map((o) => o.textContent)).toEqual(["A", "B", "C"]);
   });
 
-  test("should store the value itself in each option", () => {
+  test("should store the value itself in each option, so a selection resolves by value", () => {
     render(selectMenu().values(["A", "B", "C"]).current("A"));
     expect(options().map((o) => o.getAttribute("value"))).toEqual(["A", "B", "C"]);
   });
 
-  test("should coerce a non-string value when writing it as the option value", () => {
-    render(
-      selectMenu()
-        // @ts-expect-error - the ported types constrain values to strings; this pins the
-        // runtime coercion that protects JS consumers and the built bundle.
-        .values([42])
-        .current(""),
-    );
-    expect(options()[0]?.getAttribute("value")).toBe("42");
-  });
-
-  test("should mark the current value as selected", () => {
+  test("should mark the current value as selected when it is one of the values", () => {
     render(selectMenu().values(["A", "B", "C"]).current("B"));
     expect(options().map((o) => o.selected)).toEqual([false, true, false]);
     expect(selectEl()?.value).toBe("B");
   });
 
-  test("should compare the current value strictly, not by rendered label", () => {
+  test("should select only the exact value when another value merely looks like it", () => {
     // The values are compared with `===`, so a value that merely stringifies like the
     // current one is not treated as selected. The ported types constrain values to
     // strings, so this is only observable for strings that differ in case or whitespace.
@@ -114,14 +72,14 @@ describe("control/select", () => {
     expect(options().map((o) => o.selected)).toEqual([false, true]);
   });
 
-  test("should select nothing when current matches no value", () => {
+  test("should leave the browser showing the first option when current matches no value", () => {
     render(selectMenu().values(["A", "B"]).current("Z"));
     expect(options().map((o) => o.selected)).toEqual([true, false]);
     // With no option marked selected the browser falls back to the first one.
     expect(selectEl()?.value).toBe("A");
   });
 
-  test("a duplicated value renders twice and selects the last match", () => {
+  test("should render a duplicated value twice and select the last of them, without warning", () => {
     // Selectedness is written per option with no notion of uniqueness, but a
     // single-select element holds exactly one selection, so the last write wins. Options
     // are keyed by value, yet a repeated value still gets one option per occurrence.
@@ -134,7 +92,7 @@ describe("control/select", () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  test("two distinct values that coerce to the same string resolve to the first", () => {
+  test("should warn and resolve to the first value when two values coerce to the same string", () => {
     // NOTE: the option key is `String(d)`, so distinct values sharing a coercion are
     // indistinguishable and the first of them wins. Only reachable from JS consumers and
     // the built bundle, since the types require strings.
@@ -162,54 +120,7 @@ describe("control/select", () => {
     expect(metrics?.style.position).toBe("absolute");
   });
 
-  describe("accessibility", () => {
-    test("should carry no aria-label when ariaLabel is unset", () => {
-      render(selectMenu().values(["A", "B"]).current("A"));
-      expect(selectEl()?.hasAttribute("aria-label")).toBe(false);
-    });
-
-    test("should name the select element with the given ariaLabel", () => {
-      // The name goes on the `select`, not the wrapper `div`, which has no role to name.
-      render(selectMenu().values(["A", "B"]).current("A").ariaLabel("Year"));
-      expect(selectEl()?.getAttribute("aria-label")).toBe("Year");
-      expect(wrapper()?.hasAttribute("aria-label")).toBe(false);
-    });
-
-    test("should keep an explicitly empty ariaLabel rather than dropping it", () => {
-      // `??`, not `||`: an empty string is a value the caller supplied, not an absence.
-      render(selectMenu().values(["A", "B"]).current("A").ariaLabel(""));
-      expect(selectEl()?.getAttribute("aria-label")).toBe("");
-    });
-
-    test("should remove the name again when a later render omits ariaLabel", () => {
-      const sel = d3Select(container);
-      sel.call(selectMenu().values(["A", "B"]).current("A").ariaLabel("Year") as never);
-      sel.call(selectMenu().values(["A", "B"]).current("A") as never);
-      expect(selectEl()?.hasAttribute("aria-label")).toBe(false);
-    });
-  });
-
   describe("change callback", () => {
-    test("should be called with the event and the newly selected value", () => {
-      const change = vi.fn();
-      render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
-      const el = selectEl() as HTMLSelectElement;
-      el.value = "C";
-      el.dispatchEvent(new Event("change"));
-      expect(change).toHaveBeenCalledTimes(1);
-      expect(change.mock.calls[0][0]).toBeInstanceOf(Event);
-      expect(change.mock.calls[0][1]).toBe("C");
-    });
-
-    test("should not change the component's own state", () => {
-      const menu = selectMenu().values(["A", "B"]).current("A").change(vi.fn());
-      render(menu);
-      const el = selectEl() as HTMLSelectElement;
-      el.value = "B";
-      el.dispatchEvent(new Event("change"));
-      expect(menu.current()).toBe("A");
-    });
-
     test("should blur the select after a change so it stops being highlighted", async () => {
       const focus = vi.spyOn(window, "focus");
       render(selectMenu().values(["A", "B"]).current("A").change(vi.fn()));
@@ -221,7 +132,7 @@ describe("control/select", () => {
       expect(focus).toHaveBeenCalled();
     });
 
-    test("should ignore a selection that matches none of the configured values", () => {
+    test("should warn and report nothing when the selection matches none of the configured values", () => {
       const change = vi.fn();
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
@@ -235,43 +146,34 @@ describe("control/select", () => {
       expect(warn).toHaveBeenCalled();
     });
 
-    test("should ignore an empty select value when no value is an empty string", () => {
-      const change = vi.fn();
-      vi.spyOn(console, "warn").mockImplementation(() => {});
-      render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
-      const el = selectEl() as HTMLSelectElement;
-      el.querySelectorAll("option")[1]?.setAttribute("value", "");
-      el.value = "";
-      el.dispatchEvent(new Event("change"));
-      expect(change).not.toHaveBeenCalled();
-    });
-
-    test("should resolve an empty string that is itself one of the values", () => {
+    test("should report an empty selection only when the empty string is itself one of the values", () => {
       // Resolution is by value, so "" is a value like any other rather than standing for
       // "nothing selected" as it did when the value attribute held an index.
       const change = vi.fn();
-      render(selectMenu().values(["", "B"]).current("B").change(change));
-      const el = selectEl() as HTMLSelectElement;
-      el.value = "";
-      el.dispatchEvent(new Event("change"));
-      expect(change).toHaveBeenCalledWith(expect.any(Event), "");
-    });
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(selectMenu().values(["A", "B", "C"]).current("A").change(change));
+      const notAValue = selectEl() as HTMLSelectElement;
+      notAValue.querySelectorAll("option")[1]?.setAttribute("value", "");
+      notAValue.value = "";
+      notAValue.dispatchEvent(new Event("change"));
+      expect(change).not.toHaveBeenCalled();
 
-    test("should default to a no-op-ish handler that does not throw", () => {
-      render(selectMenu().values(["A", "B"]).current("A"));
-      const el = selectEl() as HTMLSelectElement;
-      el.value = "B";
-      expect(() => el.dispatchEvent(new Event("change"))).not.toThrow();
+      container.textContent = "";
+      render(selectMenu().values(["", "B"]).current("B").change(change));
+      const isAValue = selectEl() as HTMLSelectElement;
+      isAValue.value = "";
+      isAValue.dispatchEvent(new Event("change"));
+      expect(change).toHaveBeenCalledWith(expect.any(Event), "");
     });
   });
 
   describe("label truncation", () => {
-    test("should leave labels that fit untouched", () => {
+    test("should leave a label untouched when it fits the control", () => {
       render(selectMenu().values(["A", "B"]).current("A").width(300));
       expect(options().map((o) => o.textContent)).toEqual(["A", "B"]);
     });
 
-    test("should trim an overlong label and mark it with an ellipsis", () => {
+    test("should keep the start of the label and mark it with an ellipsis when it does not fit", () => {
       const long = "A very long option label that will certainly not fit";
       render(selectMenu().values([long]).current(long).width(120));
       const text = options()[0]?.textContent ?? "";
@@ -280,7 +182,7 @@ describe("control/select", () => {
       expect(long.startsWith(text.slice(0, -1))).toBe(true);
     });
 
-    test("should truncate against width minus 40px, not the full width", () => {
+    test("should keep more of the label when the control is wider, reserving 40px for the chrome", () => {
       const long = "A very long option label that will certainly not fit";
       const narrow = (
         render(selectMenu().values([long]).current(long).width(120)).querySelector("option")
@@ -294,15 +196,6 @@ describe("control/select", () => {
       expect(wide).toBeGreaterThan(narrow);
     });
 
-    test("should stop measuring as soon as the candidate stops shrinking", () => {
-      // "…" is a fixed point of the shortening step, so a negative measuring budget
-      // (width below the 40px allowance) must bail out instead of running MAX_RECURSION.
-      const clientWidth = vi.spyOn(Element.prototype, "clientWidth", "get");
-      render(selectMenu().values(["Hello"]).current("Hello").width(20));
-      expect(options()[0]?.textContent).toBe("…");
-      expect(clientWidth.mock.calls.length).toBeLessThan(20);
-    });
-
     test("should truncate a one-character label that still overflows", () => {
       // "A" and the "…" it shortens to are both one character long, so a length-based
       // fixed-point test never took the first step and returned the overflowing original.
@@ -310,7 +203,9 @@ describe("control/select", () => {
       expect(options()[0]?.textContent).toBe("…");
     });
 
-    test("should keep layout reads proportional to the option count, not to MAX_RECURSION", () => {
+    test("should render every label as an ellipsis, in bounded time, when the control is too narrow for any of them", () => {
+      // "…" is a fixed point of the shortening step, so a measuring budget below the 40px
+      // allowance has to bail out rather than run MAX_RECURSION times per option.
       const values = ["one", "two", "three", "four", "five", "six", "seven", "eight"];
       const clientWidth = vi.spyOn(Element.prototype, "clientWidth", "get");
       render(selectMenu().values(values).current("one").width(20));
@@ -319,21 +214,21 @@ describe("control/select", () => {
       expect(clientWidth.mock.calls.length).toBeLessThan(values.length * 20);
     });
 
-    test("should coerce a non-string value before trimming it", () => {
+    test("should show a non-string value as its own digits, whether or not the label has to be trimmed", () => {
       render(
         selectMenu()
-          // @ts-expect-error - the ported types constrain values to strings; this pins
-          // the runtime coercion that protects JS consumers and the built bundle.
+          // @ts-expect-error - the ported types constrain values to strings; this pins the
+          // runtime coercion that protects JS consumers and the built bundle, on the
+          // truncating path and on the plain one.
           .values([123_456_789_012_345])
           .current("")
           .width(60),
       );
-      const text = options()[0]?.textContent ?? "";
-      expect(text.endsWith("…")).toBe(true);
-      expect("123456789012345".startsWith(text.slice(0, -1))).toBe(true);
-    });
+      const trimmed = options()[0]?.textContent ?? "";
+      expect(trimmed.endsWith("…")).toBe(true);
+      expect("123456789012345".startsWith(trimmed.slice(0, -1))).toBe(true);
 
-    test("should coerce a non-string value that does not need trimming", () => {
+      container.textContent = "";
       render(
         selectMenu()
           // @ts-expect-error - as above: coercion must happen on the non-truncating path too.
@@ -342,76 +237,30 @@ describe("control/select", () => {
           .width(300),
       );
       expect(options()[0]?.textContent).toBe("42");
+      expect(options()[0]?.getAttribute("value")).toBe("42");
     });
-  });
-
-  test("should re-render in place rather than appending duplicates", () => {
-    const menu = selectMenu().values(["A", "B"]).current("A");
-    const sel = d3Select(container);
-    sel.call(menu as never);
-    sel.call(menu as never);
-    expect(container.querySelectorAll(".sszvis-control-select").length).toBe(1);
-    expect(container.querySelectorAll(".sszvis-control-select__element").length).toBe(1);
-    expect(options().length).toBe(2);
-  });
-
-  test("should shrink the option list when fewer values are rendered", () => {
-    const sel = d3Select(container);
-    sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
-    sel.call(selectMenu().values(["A"]).current("A") as never);
-    expect(options().map((o) => o.textContent)).toEqual(["A"]);
-  });
-
-  test("should replace a buttonGroup rendered into the same container", () => {
-    // Both controls key their wrapper off `.sszvis-control-optionSelectable` with the
-    // control name as the join key, so swapping between the two is a data change and
-    // the previous control's DOM is removed. This is what makes them interchangeable.
-    const sel = d3Select(container);
-    sel.call(buttonGroup().values(["A", "B"]).current("A") as never);
-    expect(container.querySelectorAll(".sszvis-control-buttonGroup").length).toBe(1);
-    sel.call(selectMenu().values(["A", "B"]).current("A") as never);
-    expect(container.querySelectorAll(".sszvis-control-buttonGroup").length).toBe(0);
-    expect(container.querySelectorAll(".sszvis-control-select").length).toBe(1);
   });
 
   describe("interaction after re-render", () => {
-    test("should call the handler configured by the most recent render", () => {
-      const first = vi.fn();
-      const second = vi.fn();
-      const sel = d3Select(container);
-      sel.call(selectMenu().values(["A", "B"]).current("A").change(first) as never);
-      sel.call(selectMenu().values(["A", "B"]).current("A").change(second) as never);
-      const el = selectEl() as HTMLSelectElement;
-      el.value = "B";
-      el.dispatchEvent(new Event("change"));
-      expect(first).not.toHaveBeenCalled();
-      expect(second).toHaveBeenCalledWith(expect.any(Event), "B");
-    });
-
-    test("should move the selection back to current after the user has changed it", () => {
+    test("should show whatever current says, in either direction, after the user has picked something else", () => {
       const sel = d3Select(container);
       sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
       const el = selectEl() as HTMLSelectElement;
       el.value = "C";
       el.dispatchEvent(new Event("change"));
+
+      // Back to where it started: the user's own pick is not remembered.
       sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
       expect(el.value).toBe("A");
       expect(options().map((o) => o.selected)).toEqual([true, false, false]);
-    });
 
-    test("should follow current in both directions after user interaction", () => {
-      const sel = d3Select(container);
-      sel.call(selectMenu().values(["A", "B", "C"]).current("A") as never);
-      const el = selectEl() as HTMLSelectElement;
-      el.value = "C";
-      el.dispatchEvent(new Event("change"));
       sel.call(selectMenu().values(["A", "B", "C"]).current("B") as never);
       expect(el.value).toBe("B");
       sel.call(selectMenu().values(["A", "B", "C"]).current("C") as never);
       expect(el.value).toBe("C");
     });
 
-    test("should not resolve a stale selection to whatever now sits at that index", () => {
+    test("should report nothing rather than the wrong value when a stale selection arrives after a new list is rendered", () => {
       const change = vi.fn();
       vi.spyOn(console, "warn").mockImplementation(() => {});
       const sel = d3Select(container);
