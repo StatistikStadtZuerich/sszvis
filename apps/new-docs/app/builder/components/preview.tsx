@@ -100,6 +100,7 @@ export const Preview = ({
   csv,
   title,
   status,
+  pending = false,
   assets = [],
   scripts = [],
 }: {
@@ -107,6 +108,8 @@ export const Preview = ({
   readonly csv: string;
   readonly title: string;
   readonly status: PreviewStatus;
+  /** A rebuild is in flight, and the chart below it is the one before the change. */
+  readonly pending?: boolean;
   readonly assets?: readonly Asset[];
   readonly scripts?: readonly string[];
 }) => {
@@ -171,7 +174,21 @@ export const Preview = ({
         </Blocked>
       ) : (
         /* White is the chart's own ground, so it stays on the frame and off every other state. */
-        <div className="overflow-hidden rounded-lg border bg-white">
+        <div className="relative overflow-hidden rounded-lg border bg-white">
+          {/*
+           * Over the frame rather than in it: the generated document is the iframe's
+           * key, so anything said inside it would reload the chart to say it. Hidden
+           * from assistive technology because the note under the code panel already
+           * announces the rebuild, and one change should be reported once.
+           */}
+          {pending && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-10 grid place-items-center bg-white/70"
+            >
+              <p className={typefaceCaption()}>Rebuilding…</p>
+            </div>
+          )}
           <iframe
             key={srcDoc}
             ref={frameRef}
