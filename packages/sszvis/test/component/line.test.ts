@@ -89,8 +89,9 @@ describe("component/line", () => {
         .datum(data)
         .call(component as never)
         .node() as SVGGElement,
-    data: twoLines,
-    marks: paths,
+    count: (node) => ({ paths: paths(node).length }),
+    full: { data: twoLines, marks: { paths: 2 } },
+    smaller: { data: [twoLines[0]], marks: { paths: 1 } },
   }));
 
   describe("rendering", () => {

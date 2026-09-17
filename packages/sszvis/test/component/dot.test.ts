@@ -79,9 +79,9 @@ describe("component/dot", () => {
         .datum(data)
         .call(component as never)
         .node() as SVGGElement,
-    data: testData,
-    marks: circles,
-    anchorCount: (node) => anchors(node).length,
+    count: (node) => ({ circles: circles(node).length, anchors: anchors(node).length }),
+    full: { data: testData, marks: { circles: 2, anchors: 2 } },
+    smaller: { data: [testData[0]], marks: { circles: 1, anchors: 1 } },
   }));
 
   describe("rendering", () => {

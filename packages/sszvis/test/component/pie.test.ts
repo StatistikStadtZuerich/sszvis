@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import pie from "../../src/component/pie.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
+import { describesTheMarkJoin } from "../support/componentConformance.js";
 import "../../src/d3-selectgroup.js";
 
 /**
@@ -115,6 +116,18 @@ describe("component/pie", () => {
     expect(got1).toBeCloseTo(a1, 4);
   };
 
+  describesTheMarkJoin<Datum>(() => ({
+    make: () => pieOf(),
+    renderInto: (key, component, data) =>
+      group(key)
+        .datum(data)
+        .call(component as never)
+        .node() as SVGGElement,
+    count: (node) => ({ wedges: wedges(node).length, anchors: anchorNodes(node).length }),
+    full: { data: testData(), marks: { wedges: 2, anchors: 2 } },
+    smaller: { data: [{ value: 1 }], marks: { wedges: 1, anchors: 1 } },
+  }));
+
   describe("rendering", () => {
     test("should render one classed path per datum", () => {
       const node = render(pieOf(), testData());
@@ -170,32 +183,6 @@ describe("component/pie", () => {
         [{ value: 1 }],
       );
       expect(attrs(node, "fill")).toEqual([null]);
-    });
-
-    test("should render nothing for an empty data array", () => {
-      const node = render(pieOf(), []);
-      expect(wedges(node).length).toBe(0);
-      expect(anchors(node)).toEqual([]);
-    });
-
-    test("should re-render in place rather than appending duplicates", () => {
-      const component = pieOf();
-      const g = group("rerender");
-      g.datum(testData()).call(component as never);
-      g.datum(testData()).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(wedges(node).length).toBe(2);
-      expect(anchorNodes(node).length).toBe(2);
-    });
-
-    test("should remove wedges and anchors when the data shrinks", () => {
-      const component = pieOf();
-      const g = group("shrink");
-      g.datum(testData()).call(component as never);
-      g.datum([{ value: 1 }]).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(wedges(node).length).toBe(1);
-      expect(anchorNodes(node).length).toBe(1);
     });
 
     test("should add wedges and anchors when the data grows", () => {
