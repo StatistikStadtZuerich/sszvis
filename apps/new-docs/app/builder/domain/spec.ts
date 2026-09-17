@@ -30,6 +30,19 @@ export type OptionKey = typeof OptionKey.Type;
 export const TITLE = OptionKey.make("title");
 export const DESCRIPTION = OptionKey.make("description");
 
+/*
+ * The role keys recipes share. A role means the same thing wherever it appears -
+ * `VALUE` is the number a mark is sized by, whichever axis that lands on - so
+ * switching chart type can carry what the user set over by role rather than by
+ * position. Minting these locally would leave that agreement to spelling, and a
+ * recipe that said `val` would silently keep nothing. A role peculiar to one
+ * recipe still belongs in that recipe.
+ */
+export const CATEGORY = RoleKey.make("category");
+export const VALUE = RoleKey.make("value");
+export const DATE = RoleKey.make("date");
+export const SERIES = RoleKey.make("series");
+
 export const Fields = Schema.Record(RoleKey, ColumnName);
 
 export type Fields = typeof Fields.Type;

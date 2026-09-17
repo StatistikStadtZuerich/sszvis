@@ -1,12 +1,14 @@
 import { referenceLinesCode } from "../../annotations";
 import { code, str } from "../../emit";
 import {
+  DATE,
   DESCRIPTION,
   FeatureKey,
   OptionKey,
   RecipeKey,
-  RoleKey,
+  SERIES,
   TITLE,
+  VALUE,
   type AnnotationAxis,
   type RecipeDef,
 } from "../../spec";
@@ -17,12 +19,7 @@ const ANNOTATION_AXES: readonly AnnotationAxis[] = [
   { axis: "y", kind: "number", label: "Value axis" },
 ];
 
-/* The role keys, named once: they key `roles`, `spec.fields` and the ruler roles alike. */
-const DATE = RoleKey.make("date");
-const VALUE = RoleKey.make("value");
-const SERIES = RoleKey.make("series");
-
-/* The option and feature keys, named once for the same reason. */
+/* The option and feature keys, named once: they key `options`, `features` and every lookup. */
 const X_LABEL_OPTION = OptionKey.make("xLabel");
 const Y_LABEL_OPTION = OptionKey.make("yLabel");
 const RULER = FeatureKey.make("ruler");
