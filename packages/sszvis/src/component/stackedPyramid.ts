@@ -48,11 +48,9 @@
  *
  * @property {string, function} [barFill]     The color of a bar. Defaults to #000 and applies to
  *                                            both sides; a per-datum accessor is the usual way to
- *                                            colour the series. It is composed with the slice's
+ *                                            colour the series. It is called with the slice's
  *                                            `data`, so it reads a source row rather than a slice,
- *                                            and fn.compose forwards d3's arguments only to the
- *                                            innermost function, so it is called with that row
- *                                            alone.
+ *                                            and with d3's index, as bar's own fill is.
  * @property {number, function} barHeight     The height of a bar. Required: an unset prop throws a
  *                                            TypeError naming it before anything is drawn. It used
  *                                            to be the one dimension handed straight to bar, so an
@@ -81,9 +79,11 @@
  *                                            before anything is drawn. It is
  *                                            called with the slice's `row`, i.e. the value the
  *                                            layout's row accessor returned, so it is a scale over
- *                                            the row domain. It is called with nothing else, so an
- *                                            index-aware accessor yields NaN and bar's guard
- *                                            flattens it to 0.
+ *                                            the row domain. It is called with d3's index too, as
+ *                                            bar's own accessors are; before that it went through
+ *                                            fn.compose, which forwards every argument only to the
+ *                                            innermost function, so an index-aware accessor
+ *                                            yielded NaN and bar's guard flattened it to 0.
  * @property {Array<number>} [tooltipAnchor]  The anchor position for the tooltips. Uses
  *                                            sszvis.component.bar.tooltipAnchor under the hood to
  *                                            optionally reposition the tooltip anchors in the
@@ -523,7 +523,7 @@ type PyramidValue<A, R> = R | ((value: A, index: number) => R);
 
 /**
  * A constant or an accessor over a slice's source row. barFill is called with the slice's `data`
- * and with nothing else, so unlike bar's own fill it receives no index. A padding slice - one
+ * and with d3's index, as bar's own fill is. A padding slice - one
  * standing for a series the row has no observation for - is zero-width, so the accessor is not
  * called for it and never has to handle a missing row.
  */
@@ -652,14 +652,22 @@ export function stackedPyramid<
         // zero-wide, so its fill is never visible - and calling barFill for it would hand a
         // row-shaped accessor an undefined datum, which is what used to throw. Skipped
         // rather than widened, so the public accessor contract stays honest.
-        const barFillOf = (d: StackedPyramidSlice<T, S>) =>
-          d.data === undefined ? undefined : props.barFill(d.data);
+        const barFillOf = (d: StackedPyramidSlice<T, S>, i: number) =>
+          d.data === undefined ? undefined : props.barFill(d.data, i);
+
+        // barPosition is called with the slice's row rather than the slice, but with the same
+        // index bar hands its own accessors. It used to go through fn.compose, which forwards
+        // every argument only to the innermost function - rowAcc - so barPosition, the outer
+        // one, received exactly one and an index-aware accessor returned NaN, which bar's
+        // guard flattened to y="0".
+        const barPositionOf = (d: StackedPyramidSlice<T, S>, i: number) =>
+          props.barPosition(rowAcc(d), i);
 
         // Components
 
         const leftBar = bar<StackedPyramidSlice<T, S>>()
           .x((d, i) => -SPINE_PADDING - outerEdge(d, i))
-          .y(fn.compose(props.barPosition, rowAcc))
+          .y(barPositionOf)
           .height(props.barHeight)
           .width(segmentWidth)
           .fill(barFillOf)
@@ -667,7 +675,7 @@ export function stackedPyramid<
 
         const rightBar = bar<StackedPyramidSlice<T, S>>()
           .x((d, i) => SPINE_PADDING + innerEdge(d, i))
-          .y(fn.compose(props.barPosition, rowAcc))
+          .y(barPositionOf)
           .height(props.barHeight)
           .width(segmentWidth)
           .fill(barFillOf)

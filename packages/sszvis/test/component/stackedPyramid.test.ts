@@ -740,6 +740,33 @@ describe("component/stackedPyramid", () => {
       // index produces none at all.
       expect(attrs(indexed, "rightStack", "width")).toEqual(attrs(plain, "rightStack", "width"));
     });
+
+    test("forwards d3's index to barPosition and barFill too", () => {
+      // Both used to be called with one argument, by two different routes: barPosition went
+      // through fn.compose, which forwards every argument only to the innermost function -
+      // rowAcc - and barFill through a one-parameter arrow, so no index could reach it at
+      // all. A position accessor failed visibly, as NaN flattened to y="0"; a fill accessor
+      // failed as an undefined-indexed lookup, which reads as a palette bug.
+      const positionArgs: unknown[][] = [];
+      const fillArgs: unknown[][] = [];
+      render(
+        pyramidOf()
+          .barPosition((...args: unknown[]) => {
+            positionArgs.push(args);
+            return 0;
+          })
+          .barFill((...args: unknown[]) => {
+            fillArgs.push(args);
+            return "#000";
+          }),
+      );
+      // SAFETY: without these, an accessor that is never called would satisfy every
+      // assertion below vacuously.
+      expect(positionArgs.length).toBeGreaterThan(0);
+      expect(fillArgs.length).toBeGreaterThan(0);
+      expect(positionArgs.every((args) => typeof args[1] === "number")).toBe(true);
+      expect(fillArgs.every((args) => typeof args[1] === "number")).toBe(true);
+    });
   });
 
   describe("tooltip anchors", () => {
@@ -1248,24 +1275,6 @@ describe("component/stackedPyramid", () => {
       );
       expect(seen.every((v) => typeof v === "number")).toBe(true);
       expect(seen).toContain(30);
-    });
-
-    test.skip("forwards d3's index to barPosition and barFill too", () => {
-      const positionArgs: unknown[][] = [];
-      const fillArgs: unknown[][] = [];
-      render(
-        pyramidOf()
-          .barPosition((...args: unknown[]) => {
-            positionArgs.push(args);
-            return 0;
-          })
-          .barFill((...args: unknown[]) => {
-            fillArgs.push(args);
-            return "#000";
-          }),
-      );
-      expect(positionArgs.every((args) => typeof args[1] === "number")).toBe(true);
-      expect(fillArgs.every((args) => typeof args[1] === "number")).toBe(true);
     });
 
     test("puts a reference point on the outer edge of the bar it describes", async () => {
