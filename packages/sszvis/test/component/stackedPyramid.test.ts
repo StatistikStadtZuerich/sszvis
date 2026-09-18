@@ -728,6 +728,18 @@ describe("component/stackedPyramid", () => {
         expect(attrs(node, "rightStack", "width")).toEqual(["7"]);
       });
     });
+
+    test("forwards d3's index when computing the bars' width and x", () => {
+      // bar passes (d, i) to the accessors it owns, and the closures that read barWidth pass
+      // both on. Before that they forwarded only the value, so an index-aware accessor
+      // returned NaN and bar's guard collapsed every width and every x to 0.
+      const indexed = render(pyramidOf().barWidth((v: number, i: number) => v + i));
+      const plain = render(pyramidOf().barWidth((v: number) => v));
+      // SAFETY: the index cancels out of a stacked width - (v1 + i) - (v0 + i) - so an
+      // index-aware accessor must produce exactly the widths a plain one does. A dropped
+      // index produces none at all.
+      expect(attrs(indexed, "rightStack", "width")).toEqual(attrs(plain, "rightStack", "width"));
+    });
   });
 
   describe("tooltip anchors", () => {
@@ -1238,31 +1250,6 @@ describe("component/stackedPyramid", () => {
       expect(seen).toContain(30);
     });
 
-    // BUG(#79): barWidth is invoked as props.barWidth(d[1]) with a single argument, while
-    // bar passes (d, i, nodes) to the accessors it owns. An index-aware or node-aware
-    // barWidth therefore sees undefined for i on every bar of both sides, and 30 + undefined
-    // is NaN, which bar's guard turns into 0. Shared with pyramid, where the index is now
-    // forwarded. The index cancels out of the stacked width, so an index-aware accessor has
-    // to produce the same widths as a plain one; today it produces none at all.
-    // current: every width and every x collapses to 0. expected: the index is forwarded.
-    // Skipped, not deleted: it fails with "expected [ '0', '0', '0', '0' ] to deeply equal [ '30', '1', '40', '2' ]".
-    test.skip("forwards d3's index when computing the bars' width and x", () => {
-      const indexed = render(pyramidOf().barWidth((v: number, i: number) => v + i));
-      const plain = render(pyramidOf().barWidth((v: number) => v));
-      expect(attrs(indexed, "rightStack", "width")).toEqual(attrs(plain, "rightStack", "width"));
-    });
-
-    // BUG(#434): barPosition and barFill are both called with one argument too, by two
-    // different routes. barPosition is composed with the row accessor, .y(fn.compose(
-    // props.barPosition, rowAcc)) on both bars, and fn.compose forwards every argument only
-    // to the innermost function - barPosition is the outer one, so it receives exactly one,
-    // returns NaN for an index-aware accessor, and bar's guard flattens that to y="0".
-    // barFill is never composed: it goes through barFillOf, a one-parameter arrow, so no
-    // index can reach it at all. A fill accessor returns a colour string rather than NaN,
-    // so the consequence there is an undefined-indexed lookup, not a flattened 0.
-    // current: every argument after the first is dropped. expected: the index is
-    // forwarded, as it is to the accessors bar owns.
-    // Skipped, not deleted: it fails with "expected false to be true".
     test.skip("forwards d3's index to barPosition and barFill too", () => {
       const positionArgs: unknown[][] = [];
       const fillArgs: unknown[][] = [];
@@ -1360,12 +1347,14 @@ describe("component/stackedPyramid", () => {
 
     test("drops d3's index on the reference line too", async () => {
       // NOTE: d3.line calls its x accessor as (d, i, data), but the line reads the point's
-      // value out of it and calls barWidth with that alone, so the property has one calling
-      // convention everywhere - and an index-aware accessor sees undefined and yields NaN on
-      // the line just as it does on the bars. Since every point is then non-finite, the
-      // missing-value guard skips all of them and the outline has no geometry at all rather
-      // than a NaN-poisoned path string; either way nothing is drawn, because a d the
-      // browser cannot parse renders nothing. Fixing the calling convention is #434.
+      // value out of it and calls barWidth with that alone, so an index-aware accessor sees
+      // undefined and yields NaN. Every point is then non-finite, the missing-value guard
+      // skips all of them, and the outline has no geometry at all rather than a NaN-poisoned
+      // path string; either way nothing is drawn. The bars no longer share this - they pass
+      // d3's index through - so the two disagree, which is deliberate: a reference point is
+      // {row, value} rather than a slice, so the only index the line could forward is the
+      // point's position in its own series, which is not the bar index a caller writing
+      // (v, i) is reaching for.
       const node = render(
         pyramidOf()
           .barWidth((v: number, i: number) => v + i)
@@ -1377,7 +1366,6 @@ describe("component/stackedPyramid", () => {
       // Read directly rather than through lineD, which waits for a d to appear.
       await new Promise((resolve) => setTimeout(resolve, 400));
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
-      expect(attrs(node, "rightStack", "width")).toEqual(["0", "0", "0", "0"]);
     });
 
     test("gives the right reference line an empty transform attribute", () => {
