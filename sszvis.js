@@ -11142,19 +11142,30 @@
      * Note: a falsy keyName, the empty string included, falls back to GEO_KEY_DEFAULT rather than being
      * used as given.
      *
-     * Note: dataset is guarded but geoJson is not, so a missing map throws where missing data returns
-     * an entry per feature with no datum.
+     * Note: the two required arguments deliberately fail in opposite directions. Missing data is a
+     * state a chart passes through before its load, so a dataset that is not an array is treated as no
+     * data and yields an entry per feature with no datum; a missing geoJson leaves nothing to merge
+     * onto at all, so it is reported by name.
      *
      * See test/map/mapUtils.test.ts.
      *
      * @param  {Array} [dataset]         The array of input data to match. Anything that is not an array is
      *                                   treated as no data at all.
-     * @param  {Object} geoJson          The geojson object. This function will attempt to match each geojson feature to a data object
+     * @param  {Object} geoJson          The geojson object. This function will attempt to match each geojson feature to a data object.
+     *                                   Required, and reported by name when it is missing.
      * @param  {String} keyName          The name of the property on each data object which will be matched with each geojson id.
      * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
      *                                   geoJson property which is the feature, and a datum property which is the matched datum.
      */
     function prepareMergedGeoData(dataset, geoJson, keyName) {
+      // Reported by name, rather than thrown at from the features read below with a bare TypeError
+      // naming neither the argument nor the function. The dataset is guarded instead of rejected -
+      // missing data is a state a chart passes through before its load, and yields a feature per
+      // entry with an undefined datum - but there is no map to merge against without this one, so
+      // the two required arguments deliberately fail in opposite directions.
+      if (geoJson === undefined || geoJson === null) {
+        throw new TypeError("map/mapUtils: prepareMergedGeoData requires a geoJson, since it carries the features the data are merged onto");
+      }
       // Any falsy key name, the empty string included, falls back to the default.
       const key = keyName || GEO_KEY_DEFAULT;
       // group the input data by map entity id
@@ -11515,8 +11526,8 @@
      *                                                  updating one interpolates to its new radius, and a departing one
      *                                                  shrinks to zero before it is removed.
      *
-     * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are all
-     * required in practice, and each fails differently when left out.
+     * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are
+     * all required, and each is reported by name before anything is drawn.
      *
      * Note: the over, out and click handlers registered through .on() are called with the hovered map
      * entity's datum - undefined for a feature that matched no data. Registering one of them is also
@@ -11560,8 +11571,8 @@
      * it is never observable and offers no enter-only styling hook; the anchor positions go through
      * getGeoJsonCenter, which computes the centre on every call and caches nothing, and the transform
      * is rewritten on the merged enter+update selection, so moving a feature's geometry moves its
-     * bubble on the next render; and mapPath must be a real d3.geoPath,
-     * since the positions read mapPath.projection(). The transition is the intended one:
+     * bubble on the next render; and mapPath must be a real d3.geoPath, since the positions read
+     * mapPath.projection(), which the render checks up front. The transition is the intended one:
      * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
      *
      * Note: this component adds no tooltip anchors of its own; a bubble map's tooltips are anchored by
@@ -11606,9 +11617,10 @@
     /** Reads the datum off a merged entry, as the JavaScript's module-level accessor did. */
     const datumAcc = prop("datum");
     /**
-     * Reads the anchor position for a feature, as the JavaScript did: through mapPath.projection(),
-     * which is why a bare path function throws here rather than being reported. The projection's own
-     * result is indexed unguarded too, so a clipped point throws from that index.
+     * Reads the anchor position for a feature, as the JavaScript did: through mapPath.projection().
+     * That a mapPath must therefore be a real d3.geoPath is checked in the render before anything is
+     * drawn, so a bare path function is reported rather than failing from in here. The projection's
+     * own result is indexed unguarded, so a clipped point throws from that index.
      */
     function anchorPosition(mapPath, geoJson) {
       // The type argument is unchecked, as in base.ts: GeoPath types projection() as a union that
@@ -11616,9 +11628,9 @@
       const projection = mapPath.projection();
       if (projection === null || typeof projection !== "function") {
         // Reachable only for a real d3.geoPath whose projection was never set, where the JavaScript
-        // threw "projection is not a function" from the call below. A bare path function throws one
-        // line above instead, from reading .projection, as it did in the JavaScript. Not covered by
-        // the suite: the message is reconstructed rather than observed.
+        // threw "projection is not a function" from the call below. A mapPath that is not a geoPath
+        // at all no longer reaches this, since the render rejects it up front. Not covered by the
+        // suite: the message is reconstructed rather than observed.
         throw new TypeError("projection is not a function");
       }
       // The centre is handed over whole rather than narrowed to a pair, as the JavaScript did: an
@@ -11645,6 +11657,41 @@
       const anchoredCirclesComponent = component().prop("mergedData").prop("mapPath").prop("radius", functor).prop("fill", functor).prop("strokeColor", functor).strokeColor("#ffffff").prop("strokeWidth", functor).strokeWidth(1).prop("transition").transition(true).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
+        // Validate before anything is created, so a misconfigured layer renders nothing rather
+        // than a half-built one. Each of these used to surface as a bare TypeError naming
+        // neither the property nor the component, and each arrived after part of the layer had
+        // been built: mergedData from d3's join once the group existed, radius from the sort
+        // comparator and fill from the style callback, both once every circle had been created,
+        // positioned and styled. The mesh and raster renderers report their own the same way.
+        if (props.mergedData === undefined) {
+          throw new TypeError("map/renderer/bubble: mergedData is required, since it carries the features to place a circle on");
+        }
+        if (props.radius === undefined) {
+          throw new TypeError("map/renderer/bubble: radius is required, since it sizes each circle and there is no default");
+        }
+        if (props.fill === undefined) {
+          throw new TypeError("map/renderer/bubble: fill is required, since it colours each circle and there is no default");
+        }
+        // mapPath is used two ways: as the d-equivalent callback, and as the source of the
+        // projection the anchor positions read. A bare path function satisfies the first and not
+        // the second, and used to throw from inside the transform callback - after every circle
+        // had been created, sorted and styled - leaving a half-drawn layer behind. Presence and
+        // capability are reported separately, so each says which of the two is wrong; `== null`
+        // rather than `=== undefined`, so an explicit null is reported here too instead of
+        // reaching the capability test and dying anonymously on a property of null.
+        if (props.mapPath == null) {
+          throw new TypeError("map/renderer/bubble: mapPath is required, since it places each circle on its feature");
+        }
+        if (typeof props.mapPath.projection !== "function") {
+          throw new TypeError("map/renderer/bubble: mapPath must be a d3.geoPath, since the anchor positions are read through mapPath.projection()");
+        }
+        // The getter existing is not enough: a real geoPath whose projection was never set has
+        // one and answers null, and the circles were then created, sorted and styled before
+        // anchorPosition threw on the way to placing them. The projection is resolved once here
+        // so that failure lands before the join too.
+        if (typeof props.mapPath.projection() !== "function") {
+          throw new TypeError("map/renderer/bubble: mapPath.projection() must return a projection, since the anchor positions are placed through it");
+        }
         // Composed rather than written as an arrow: fn.compose invokes each stage with .call(this),
         // so a radius accessor written as a function receives d3's circle node as `this`, exactly as
         // the JavaScript did. An arrow here would call it with `this === undefined`.
@@ -11995,10 +12042,11 @@
      * consumer cannot restyle a highlight from their own stylesheet either, since an inline style
      * beats any author rule short of !important.
      *
-     * Note: the component sets neither fill nor pointer-events; both come from sszvis.css. Rendered
-     * without that stylesheet, a highlight is a filled black shape covering the entity, and it
-     * swallows the base layer's hover and click events - which matters more here than for the mesh,
-     * since a highlight is normally driven by exactly that hover.
+     * Note: fill: none and pointer-events: none are written as inline styles alongside the stroke, so
+     * a highlight does not need sszvis.css: SVG's initial fill is black, which would cover the entity
+     * the highlight is meant to outline, and without pointer-events it swallows the base layer's hover
+     * - which matters more here than for the mesh, since a highlight is normally driven by exactly
+     * that hover. stroke-linejoin and user-select stay on the class, since both are cosmetic.
      *
      * Note: the paths are scoped by key and the join is keyed by map entity. Each layer joins only the
      * paths inside its own wrapper group, so two highlight layers rendered into one group
@@ -12136,7 +12184,13 @@
         highlightBorders
         // Keyed by map entity, so an element stays with its entity when the highlight array
         // shrinks or is reordered rather than being re-purposed by position.
-        .data(mergedHighlight, d => d.joinKey).join("path").classed("sszvis-map__highlight", true).attr(KEY_ATTRIBUTE$4, props.key).attr("d", d => props.mapPath(d.geoJson)).style("stroke", d => colorToString(props.highlightStroke(d.datum))).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
+        .data(mergedHighlight, d => d.joinKey).join("path").classed("sszvis-map__highlight", true).attr(KEY_ATTRIBUTE$4, props.key).attr("d", d => props.mapPath(d.geoJson))
+        // Written inline alongside the stroke, so a highlight does not need sszvis.css: SVG's
+        // initial fill is black, which without the stylesheet covers the entity it is meant to
+        // outline, and without pointer-events it swallows the base layer's hover - which
+        // matters more here than for the mesh, since a highlight is normally driven by exactly
+        // that hover. stroke-linejoin and user-select stay on the class: both are cosmetic.
+        .style("fill", "none").style("pointer-events", "none").style("stroke", d => colorToString(props.highlightStroke(d.datum))).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
       });
     }
 
@@ -12354,9 +12408,12 @@
      * consumer cannot restyle a mesh border from their own stylesheet either, since an inline style
      * beats any author rule short of !important.
      *
-     * Note: the component sets neither fill nor pointer-events; both come from sszvis.css. Rendered
-     * without that stylesheet, the mesh is a filled black shape covering the map, and it swallows the
-     * base layer's hover and click events rather than letting them through.
+     * Note: fill: none and pointer-events: none are written as inline styles alongside the stroke, so
+     * the mesh does not need sszvis.css: the border is one single path, so SVG's initial black fill
+     * would otherwise turn it into a shape covering the map, and without pointer-events it swallows
+     * the base layer's hover and click events rather than letting them through. stroke-linejoin and
+     * user-select stay on the class, since both are cosmetic - as does the class itself, so a
+     * consumer's own rule for either still applies.
      *
      * Note: the border path is scoped to the rendering group's own children and identified by the key
      * property, so a mesh only ever rebinds the path it drew itself. Two meshes in one group therefore
@@ -12428,7 +12485,14 @@
         const meshLine = selection.selectAll(":scope > path.sszvis-map__border").filter(function () {
           return this.getAttribute(KEY_ATTRIBUTE$2) === props.key;
         }).data([geoJson]).join("path").classed("sszvis-map__border", true).attr(KEY_ATTRIBUTE$2, props.key);
-        meshLine.attr("d", mapPath).style("stroke", asColorString(withDefault(props.borderColor, DEFAULT_BORDER_COLOR))).style("stroke-width", withDefault(props.strokeWidth, DEFAULT_STROKE_WIDTH));
+        meshLine.attr("d", mapPath)
+        // Written inline alongside the stroke, so the borders do not need sszvis.css: SVG's
+        // initial fill is black, which without the stylesheet turns this single path into a
+        // filled shape covering the map, and without pointer-events it swallows the base
+        // layer's hover and click events. The component already owns this element's
+        // presentation - it writes both stroke properties - so the two belong here too.
+        // stroke-linejoin and user-select stay on the class: both are cosmetic.
+        .style("fill", "none").style("pointer-events", "none").style("stroke", asColorString(withDefault(props.borderColor, DEFAULT_BORDER_COLOR))).style("stroke-width", withDefault(props.strokeWidth, DEFAULT_STROKE_WIDTH));
       });
     }
 
@@ -12451,7 +12515,8 @@
      *                                      being wrapped in a group the caller empties.
      * @property {GeoJson} lakeBounds       A GeoJson object which provides data for the shape of map entity borders which lie over the
      *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
-     *                                      Never validated, like lakeFeature.
+     *                                      Optional: a geography can have a lake with no borders reaching over it, and
+     *                                      absent means no border path is drawn at all.
      * @property {String, Function} lakePathColor  The stroke colour of those borders. No default: the stylesheet's grey
      *                                      dotted stroke stands unless this is set. A falsy colour - "" - clears the
      *                                      inline stroke again. Not wrapped in fn.functor.
@@ -12487,11 +12552,12 @@
      * the same group. Only the definitions carrying this overlay's scope are ever removed from it.
      *
      * Note: an absent lakeFeature is an instruction rather than a mistake - it clears the overlay - so
-     * it is neither validated nor reported. lakeBounds is still unvalidated in the older sense:
-     * omitting it while there is a lake to draw leaves a classed border path with no geometry, because
-     * the missing property reaches the path generator as undefined, which returns null. A missing
-     * mapPath has d3 remove the attribute without calling anything. The same root defect as the mesh
-     * renderer.
+     * it is neither validated nor reported. Past that branch there is a lake to draw and mapPath is
+     * required, reported by name before either join the way the mesh renderer reports its own;
+     * without it d3 removed the "d" attribute from both paths without calling anything, leaving two
+     * classed, styled paths with no geometry. An absent lakeBounds is likewise an instruction - a
+     * geography can have a lake and no borders over it - so its join is given nothing and the border
+     * path leaves the DOM, rather than being bound undefined and left behind with no geometry.
      *
      * Note: the clearing branch removes only this overlay's own paths and only the three definitions
      * carrying its scope, so clearing one overlay leaves a sibling overlay in the same group intact.
@@ -12510,10 +12576,13 @@
      * stroke alone. A falsy colour - "", or an accessor returning undefined - clears the inline stroke
      * and hands the border back to the stylesheet.
      *
-     * Note: the component sets no pointer-events on either path and no fill on the border path, so
-     * both come from sszvis.css. Rendered without that stylesheet the border path is a filled black
-     * shape covering the lake - SVG's initial fill is black - and both paths swallow the base layer's
-     * hover and click events.
+     * Note: pointer-events: none is written inline on both paths, and fill: none on the border path,
+     * so neither needs sszvis.css to stay out of the way: SVG's initial fill is black, which would
+     * turn the dotted border into a shape covering the lake, and without pointer-events both paths
+     * swallow the base layer's hover and click events across the whole lake. The lake shape's own fill
+     * is the texture pattern, so only its pointer-events was missing. The border's dash pattern and
+     * its default grey stroke stay on the class, so a consumer without the stylesheet still has to
+     * supply a lakePathColor to see those borders at all.
      *
      * Note: both path selectors are scoped to the rendering group's own children and filtered by the
      * overlay's key - so two overlays rendered into one group each draw their own pair of paths as
@@ -12612,6 +12681,22 @@
           ownDefs(`pattern#${patternId}`, `linearGradient#${gradientId}`, `mask#${maskId}`).remove();
           return;
         }
+        // Validated here rather than at the top of the render: an absent lakeFeature means "no
+        // lake", and that state needs no mapPath to clear what an earlier render drew. Past it
+        // there is a lake, and drawing it without a path generator used to leave two classed,
+        // styled paths with no geometry, because d3 removes an attribute set to undefined without
+        // calling anything. The mesh renderer reports its own the same way.
+        //
+        // lakeBounds is deliberately not required alongside it: a geography can have a lake and no
+        // borders reaching over it - the agglomeration is the shipped example, and choropleth
+        // forwards an unset lakeBorders straight through - so its absence is handled at the join
+        // below rather than rejected here.
+        // `== null` rather than `=== undefined`, so an explicit null is reported by name here
+        // instead of reaching d3 and silently removing the attribute, the way lakeFeature - which
+        // is documented as accepting both - is already handled.
+        if (props.mapPath == null) {
+          throw new TypeError("map/renderer/patternedLakeOverlay: mapPath is required, since it turns the lake geometry into path data");
+        }
         // the lake texture. The helpers join their contents, so calling them on every render updates
         // the definition rather than growing it.
         ensureDefsElement(selection, "pattern", patternId).call(mapLakePattern);
@@ -12625,12 +12710,28 @@
           ownDefs(`linearGradient#${gradientId}`, `mask#${maskId}`).remove();
         }
         // generate the Lake Zurich path
-        const zurichSee = ownPaths("sszvis-map__lakezurich").data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath).attr("fill", `url(#${patternId})`);
+        const zurichSee = ownPaths("sszvis-map__lakezurich").data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath).attr("fill", `url(#${patternId})`)
+        // Written inline so the lake does not need sszvis.css to stay out of the way: without
+        // it the shape swallows the base layer's hover and click events across the whole lake.
+        // The fill is the texture above, so only this one is missing. stroke and user-select
+        // stay on the class: neither affects the events.
+        .style("pointer-events", "none");
         // this mask applies the fade effect
         zurichSee.attr("mask", props.fadeOut ? `url(#${maskId})` : null);
         // add a path for the boundaries of map entities which extend over the lake.
         // This path is rendered as a dotted line over the lake shape
-        const lakePath = ownPaths("sszvis-map__lakepath").data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath);
+        // No bounds means no borders reach over this lake, which is a geography's own shape rather
+        // than a misconfiguration - so the join is given nothing and the path leaves the DOM. It
+        // used to be bound undefined, and a d3.geoPath returns null for an undefined feature, so
+        // the result was a classed border path with no geometry: indistinguishable from having had
+        // borders that drew nothing, and still found by CSS rules and hit tests.
+        const lakePath = ownPaths("sszvis-map__lakepath").data(props.lakeBounds === undefined ? [] : [props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath)
+        // As on the lake shape and the mesh border: SVG's initial fill is black, so without
+        // sszvis.css this dotted outline is a filled shape over the lake, and without
+        // pointer-events it swallows the events beneath it. The dash pattern and the default
+        // stroke stay on the class, so a consumer without the stylesheet still has to supply a
+        // lakePathColor to see these borders at all.
+        .style("fill", "none").style("pointer-events", "none");
         // An unset colour writes nothing, so the stylesheet's stroke stands; any value that is set -
         // including a falsy one - is written, so it can clear a colour an earlier render left behind.
         if (props.lakePathColor === undefined) {
@@ -12728,11 +12829,11 @@
      * `if (DEBUG)` on a hardcoded false, and the other three rastermaps never touch the property - so
      * the feature is exercised only by the tests.
      *
-     * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
-     * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
-     * nothing, and the canvas has already been created by the time it throws. The four required
-     * properties are checked before that: width, height, position and fill are all validated before the
-     * canvas is created, so a missing one is named whether or not there are data to draw.
+     * Note: createHtmlLayer binds 0 as its own datum when the caller binds none, so a layer that has
+     * not been handed data yet arrives with a number rather than an array. That is the state every
+     * chart is in before its data load, so it draws an empty raster of the right size rather than
+     * failing. The four required properties are checked before the canvas is created: width, height,
+     * position and fill are all named whether or not there are data to draw.
      *
      * Note: a projection has two ways of failing to place a datum - d3's own answer a pair of NaNs for
      * a point outside the clip, a hand-written one may answer nothing at all - and both now mean the
@@ -12748,12 +12849,13 @@
      * they antialias rather than tiling exactly - and pixelsFromGeoDistance, the intended source for
      * the value, returns a float.
      *
-     * Note: the component writes no position, so the canvas is only positioned because sszvis.css sets
-     * position: absolute on the class - the same dependency as the image renderer, along with
-     * display: block, pointer-events: none and user-select: none. The opacity, by contrast, is written
-     * as an inline style, as are the CSS width and height that pin the scaled bitmap to the layer size;
-     * nothing in sszvis.css sets any of them, so nothing is overridden - but a consumer
-     * cannot restyle it from their own stylesheet either. The positions themselves are written unshifted, and
+     * Note: position: absolute, display: block and pointer-events: none are written as inline styles,
+     * so the canvas aligns over the map and lets the layers beneath it be hovered without sszvis.css -
+     * the same three the image renderer writes, and for the same reason. user-select is still left to
+     * the class, as it is there, since it affects neither the layout nor the events. The opacity and
+     * the CSS width and height that pin the scaled bitmap to the layer size are written inline too.
+     * Everything inline wins over a class rule, so a consumer cannot restyle any of it from their own
+     * stylesheet. The positions themselves are written unshifted, and
      * createHtmlLayer offsets the layer by the bounds padding, so cell positions are layer-relative and
      * the padding is applied exactly once.
      *
@@ -12908,7 +13010,14 @@
         // The bitmap is in device pixels while the element is laid out in CSS pixels, so the cells
         // are as sharp as the SVG layers over them on a high-DPI display.
         const ratio = pixelRatio();
-        canvas.attr("width", Math.round(width * ratio)).attr("height", Math.round(height * ratio)).style("width", `${width}px`).style("height", `${height}px`).style("opacity", props.opacity);
+        canvas.attr("width", Math.round(width * ratio)).attr("height", Math.round(height * ratio))
+        // The positioning and event behaviour the component depends on, written inline so it
+        // does not need sszvis.css: absolute is what lets the canvas sit over the map rather
+        // than in the document flow beneath it, block keeps an inline element from picking up
+        // baseline leading, and none lets the layers underneath be hovered through it. The
+        // image renderer writes the same three, for the same reason. user-select is left to
+        // the stylesheet, as it is there: it affects neither the layout nor the events.
+        .style("position", "absolute").style("display", "block").style("pointer-events", "none").style("width", `${width}px`).style("height", `${height}px`).style("opacity", props.opacity);
         // An empty alt marks the layer decorative, so it is skipped deliberately rather than by
         // accident; a description is exposed both to assistive technology and as fallback content.
         const described = props.alt !== "";
@@ -12924,12 +13033,19 @@
           ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
           ctx.fillRect(0, 0, width, height);
         }
+        // createHtmlLayer binds 0 as the layer's own datum when the caller binds none, so a layer
+        // that has not been handed data yet arrives here with a number rather than an array. That
+        // is the state every chart is in before its data load, not a misconfiguration, so it draws
+        // an empty raster of the right size rather than throwing "data is not iterable" - and it
+        // used to throw after the canvas had been created, leaving the layer holding an empty one
+        // anyway. An empty array already behaved this way.
+        const cells = Array.isArray(data) ? data : [];
         const halfSide = side / 2;
         // A colour scale usually yields only a handful of distinct values, so parsing each one once
         // per render keeps the probe off the hot path.
         const parsed = new Map();
         let unplaced = 0;
-        for (const datum of data) {
+        for (const datum of cells) {
           const at = position(datum);
           if (!isPlaced(at)) {
             unplaced += 1;
@@ -12954,7 +13070,7 @@
         // through sszvis.logger rather than console directly, like every other diagnostic in the
         // library.
         if (unplaced > 0) {
-          warn(`[mapRendererRaster] the position property could not place ${unplaced} of ${data.length} cells; they were not drawn`);
+          warn(`[mapRendererRaster] the position property could not place ${unplaced} of ${cells.length} cells; they were not drawn`);
         }
       });
     }
@@ -12985,7 +13101,7 @@
      * @property {Object} lakeFeatures                    The shape of the part of Lake Zurich that lies within the city.
      *                                                    No default; without it no lake is drawn at all.
      * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default; left
-     *                                                    out while there is a lake, it renders as an empty path.
+     *                                                    out, no border path is drawn over the lake at all.
      * @property {Boolean} lakeFadeOut                    Whether to fade the lake out towards the outer edge. Default false,
      *                                                    which overrides the lake renderer's own default of true.
      * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
