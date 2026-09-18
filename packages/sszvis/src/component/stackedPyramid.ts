@@ -171,12 +171,12 @@
  * properties read the bar's datum and the question does not arise. The only stackedPyramid example
  * sets neither reference accessor.
  *
- * Note: two smaller mismatches ride along, both of them shared with pyramid. The bars are pushed
- * outwards by SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn
- * straight from barWidth and so agrees with the axis scale, which puts a reference value equal to a
- * bar value half a pixel inside that bar's outer edge, symmetrically on both sides. And the line
- * takes its y from barPosition alone and never accounts for barHeight, so the outline runs along
- * the bars' top edges rather than their mid-lines, half a bar height above the values it describes.
+ * Note: one smaller mismatch rides along, shared with pyramid. The bars are pushed outwards by
+ * SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn straight from
+ * barWidth and so agrees with the axis scale, which puts a reference value equal to a bar value
+ * half a pixel inside that bar's outer edge, symmetrically on both sides. The vertical half of
+ * that pair is no longer one: the line adds half a bar height to barPosition, so the outline runs
+ * through the bars' mid-lines rather than along their top edges.
  *
  * Note: a reference line's d attribute is only ever written through a transition, so a freshly
  * rendered path carries no geometry until the first animation frame and anything that measures the
@@ -638,12 +638,50 @@ export function stackedPyramid<
         // constant when barWidth is one.
         const referenceWidth: WidthScale = widthScale ?? (() => constantWidth);
 
+        // The outline is centred on the bars, so it needs their height - but a reference point
+        // is {row, value}, not a slice, so there is nothing on the point to measure. The
+        // heights are read off the side's own slices instead, which is what lets a per-slice
+        // barHeight accessor work here: it receives the slice it expects, rather than the
+        // undefined an argument-less call would hand it. Keyed by row and built per side, so a
+        // height that varies by row - or between the two sides - reaches the reference point it
+        // belongs to rather than being taken from whichever slice happened to come first.
+        //
+        // A reference point on a row the bars do not cover falls back to the first height this
+        // side resolved, rather than to 0: a chart-wide height is the normal case, and falling
+        // to 0 for the odd row would kink the outline instead of merely offsetting it. With no
+        // slices at all, or no barHeight - a chart that draws no bars, which the component
+        // already tolerates silently - the fallback is 0 and the outline sits on the bars' top
+        // edges, where it was before this was corrected. Neither case throws.
+        const halfHeightsByRow = (side: StackedPyramidSide<T, S>) => {
+          const byRow = new Map<string, number>();
+          if (props.barHeight !== undefined) {
+            for (const series of side) {
+              for (const [index, slice] of series.entries()) {
+                const key = String(slice.row);
+                if (byRow.has(key)) continue;
+                const height = Number(props.barHeight(slice, index));
+                if (Number.isFinite(height)) byRow.set(key, height / 2);
+              }
+            }
+          }
+          return { byRow, fallback: byRow.values().next().value ?? 0 };
+        };
+
+        const leftHeights = halfHeightsByRow(props.leftAccessor(data));
+        const rightHeights = halfHeightsByRow(props.rightAccessor(data));
+
         const leftLine = lineComponent()
           .barPosition(props.barPosition)
           .barWidth(referenceWidth)
+          .halfHeightByRow(leftHeights.byRow)
+          .halfHeightDefault(leftHeights.fallback)
           .mirror(true);
 
-        const rightLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth);
+        const rightLine = lineComponent()
+          .barPosition(props.barPosition)
+          .barWidth(referenceWidth)
+          .halfHeightByRow(rightHeights.byRow)
+          .halfHeightDefault(rightHeights.fallback);
 
         // Rendering
 
@@ -731,6 +769,8 @@ function referenceSeries<T, S extends string | number>(
 type ReferenceLineProps = {
   barPosition: StoredPosition;
   barWidth: WidthScale;
+  halfHeightByRow: ReadonlyMap<string, number>;
+  halfHeightDefault: number;
   mirror: boolean;
 };
 
@@ -739,6 +779,10 @@ interface ReferenceLineComponent extends ComponentBuilder<ReferenceLineComponent
   barPosition(value: StoredPosition): ReferenceLineComponent;
   barWidth(): WidthScale;
   barWidth(value: WidthScale): ReferenceLineComponent;
+  halfHeightByRow(): ReadonlyMap<string, number>;
+  halfHeightByRow(value: ReadonlyMap<string, number>): ReferenceLineComponent;
+  halfHeightDefault(): number;
+  halfHeightDefault(value: number): ReferenceLineComponent;
   mirror(): boolean;
   mirror(value: boolean): ReferenceLineComponent;
 }
@@ -752,6 +796,10 @@ function lineComponent(): ReferenceLineComponent {
   return component<ReferenceLineComponent>()
     .prop("barPosition")
     .prop("barWidth")
+    .prop("halfHeightByRow")
+    .halfHeightByRow(new Map<string, number>())
+    .prop("halfHeightDefault")
+    .halfHeightDefault(0)
     .prop("mirror")
     .mirror(false)
     .render(function (this: Element, data: StackedPyramidReferencePoint[][]) {
@@ -760,8 +808,15 @@ function lineComponent(): ReferenceLineComponent {
 
       // Each half of a point is mapped by the property that owns it, so the outline lands in
       // the coordinate system the bars are drawn in.
-      const pointX = (d: StackedPyramidReferencePoint) => props.barWidth(d.value);
-      const pointY = (d: StackedPyramidReferencePoint) => props.barPosition(d.row);
+      // The bars are pushed outwards by SPINE_PADDING, so the outline is too - otherwise a
+      // reference value equal to a bar value lands half a pixel inside that bar's outer edge
+      // rather than on it. barPosition is a bar's top edge, so half that row's bar height is
+      // added to put the outline through the mid-lines of the bars it describes. Both are the
+      // corrections pyramid's own reference line makes.
+      const pointX = (d: StackedPyramidReferencePoint) => SPINE_PADDING + props.barWidth(d.value);
+      const pointY = (d: StackedPyramidReferencePoint) =>
+        props.barPosition(d.row) +
+        (props.halfHeightByRow.get(String(d.row)) ?? props.halfHeightDefault);
 
       const lineGen = d3Line<StackedPyramidReferencePoint>()
         // A point whose geometry is not a finite number is skipped, which breaks the outline
