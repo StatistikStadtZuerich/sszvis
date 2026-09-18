@@ -299,17 +299,22 @@ describe("map utils", () => {
       expect(merged[0].datum).toEqual({ id: 1, value: 1 });
     });
 
-    // BUG(#450): the dataset argument is carefully guarded with Array.isArray, but geoJson is not
-    // guarded at all - the asymmetry means a missing map throws where missing data does not, and
-    // the throw is a bare TypeError naming nothing, unlike the named errors the mesh and raster
-    // renderers now raise for their own missing properties.
-    // Skipped, not deleted: it fails with "expected [Function] to throw error matching /geoJson/
-    // but got 'Cannot read properties of undefined (reading 'features')'".
-    test.skip("should report the missing property by name for a missing geojson", () => {
-      expect(() =>
-        // @ts-expect-error - deliberately exercising the unguarded geoJson path
-        prepareMergedGeoData([{ id: "a" }], undefined, "id"),
-      ).toThrow(/geoJson/);
+    test("should report the missing property by name for a missing geojson", () => {
+      for (const missing of [undefined, null]) {
+        expect(() =>
+          // @ts-expect-error - deliberately exercising the missing geoJson path
+          prepareMergedGeoData([{ id: "a" }], missing, "id"),
+        ).toThrow(/geoJson/);
+      }
+    });
+
+    test("should still tolerate a missing dataset", () => {
+      // SAFETY: the two arguments deliberately fail in opposite directions - no data is a state
+      // a chart passes through before its load, so it yields a feature per entry with an
+      // undefined datum rather than an error.
+      const merged = prepareMergedGeoData(undefined, collection(square("a")), "id");
+      expect(merged).toHaveLength(1);
+      expect(merged[0].datum).toBeUndefined();
     });
 
     test("should return an empty array when the geojson has no features", () => {
