@@ -3798,7 +3798,9 @@
      *          .call(d3TextWrap, x.rangeBand());
      *
      * @param selection d3 selection for one or more <text> object
-     * @param width number - global width in which the text will be word-wrapped.
+     * @param width number - global width in which the text will be word-wrapped. A width that is
+     *        not a finite number skips wrapping altogether and logs a warning, leaving the text
+     *        as it was: unlike the paddings there is no default to fall back to.
      * @param paddingRightLeft number - Padding right and left between the wrapped text and the
      *        'invisible box' of 'width' width. It always narrows the width the text is measured
      *        against, but only reaches the rendered 'x' on untranslated <text>, and only for
@@ -3812,10 +3814,11 @@
      *        'invisible box' of 'width' width. Two pixels are subtracted from it to account for
      *        the borders, so the rendered 'y' is padding - 2: the default of 5 yields y="3" and
      *        an explicit 0 yields y="-2". It is used only when the <text> element carries no 'y'
-     *        attribute of its own; otherwise that attribute wins and this argument is ignored.
+     *        attribute of its own; otherwise that attribute wins - whatever its units, since it is
+     *        copied to the tspans verbatim - and this argument is ignored.
      *        Defaults to 5 when omitted or when the value is not a finite number, which logs a
      *        warning on each such call; an explicit 0 and a negative padding are honoured.
-     * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
+     * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function. Empty when the width was unusable and nothing was wrapped.
      */
     const DEFAULT_PADDING = 5;
     /**
@@ -3848,6 +3851,19 @@
     // Wrapping reads and rewrites the <text> nodes themselves, so the element parameter is
     // fixed; the rest stay generic so any text selection can be passed.
     selection, width, paddingRightLeft, paddingTopBottom) {
+      // Unlike the paddings there is no sensible default width to fall back to - a width is the
+      // whole instruction - so an unusable one skips wrapping instead of substituting a number.
+      // The text is left exactly as it was, which is a readable label rather than a poisoned one:
+      // a non-finite width either disables wrapping entirely (NaN and +Infinity, where no measured
+      // line ever exceeds it) or breaks after every single word (-Infinity, where every line does),
+      // and in each case is written straight into the `x` attribute as "NaN" or "-Infinity". It is
+      // reachable through the public API - fn.defined, which axis screens props.textWrap with,
+      // excludes NaN but not +/-Infinity, so axis().textWrap(Infinity) used to land on every tick
+      // label.
+      if (!Number.isFinite(width)) {
+        warn("sszvis.svgUtils.textWrap: ignoring a non-finite width, not wrapping");
+        return [];
+      }
       const padRightLeft = resolvePadding(paddingRightLeft, "paddingRightLeft");
       // Remove 2 pixels because of the borders
       const padTopBottom = resolvePadding(paddingTopBottom, "paddingTopBottom") - 2;
@@ -3887,8 +3903,13 @@
           end: maxWidth - padRightLeft
         };
         const x = xByAnchor[textAlign];
+        // An SVG 'y' is a length, so "1em" and "50%" are both legal, and neither survives the +
+        // that used to be applied here - +"1em" is NaN, which was written straight back out as
+        // y="NaN". The attribute is copied to the tspans verbatim instead, which honours the
+        // documented rule that a 'y' on the <text> wins over paddingTopBottom whatever its units.
+        // A tspan's 'y' takes the same length syntax, so nothing needs parsing at all.
         const yAttr = text.attr("y");
-        const y = +(yAttr === null ? padTopBottom : yAttr);
+        const y = yAttr === null ? padTopBottom : yAttr;
         let tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", `${dy}em`);
         while (words.length > 0) {
           const word = words.pop() ?? ""; // the loop guard guarantees a value
@@ -5917,10 +5938,11 @@
      * stylesheet's; only an update animates. The cost is that the accessors are evaluated a second
      * time for entering lines. See test/component/line.test.ts.
      *
-     * Note: the default missing-value guard inspects both dimensions, but only catches values that fail
-     * to coerce to a number. Infinity, which a scale over a zero-width domain produces, still reaches the
-     * d attribute verbatim; the browser then renders up to that segment and silently drops the rest of
-     * the series. A null likewise coerces to 0 and is plotted as data rather than breaking the line.
+     * Note: the default missing-value guard inspects both dimensions, and catches any value with no
+     * finite numeric form - so Infinity, which a scale over a zero-width domain produces, breaks the
+     * line at that point rather than reaching the d attribute, where the browser used to render up to
+     * that segment and silently drop the rest of the series. A null still coerces to 0 and is plotted
+     * as data rather than breaking the line; stackedArea's guard differs here and rejects it.
      *
      * @return {sszvis.component}
      */
@@ -5933,17 +5955,20 @@
     /**
      * Whether a value counts as missing, and so breaks the line at that point.
      *
-     * Matches the global isNaN this replaced, which coerces its argument first. The coercion
-     * is load-bearing: a bare Number.isNaN would let a non-numeric y through into the path.
-     * Note that it only catches values that fail to coerce - null, Infinity, booleans and
-     * numeric strings all become numbers and are plotted as data. See
-     * test/component/line.test.ts.
+     * The coercion is load-bearing: a bare Number.isFinite would call every non-numeric y
+     * missing, including the numeric strings a caller may legitimately plot. What is asked of
+     * the coerced value is finiteness rather than NaN-ness, because Infinity is a number as
+     * far as isNaN is concerned but not a coordinate SVG can parse: it used to reach the `d`
+     * attribute, where the browser drops that segment and every one after it, so the line was
+     * truncated at the bad point rather than broken across it the way a NaN is. A scale over a
+     * zero-width domain returns exactly that. null, booleans and numeric strings still coerce
+     * to finite numbers and are still plotted as data. See test/component/line.test.ts.
      *
-     * The one input where this differs from the global isNaN is a BigInt, which isNaN throws
-     * on and this returns false for. It is not observable through the component: d3.line
-     * immediately applies unary + to the value, which throws the identical TypeError.
+     * Besides the non-finite values above, the input where this differs from the global isNaN is
+     * a BigInt, which isNaN throws on. It is not observable through the component either way:
+     * d3.line immediately applies unary + to the value, which throws the identical TypeError.
      */
-    const isMissingVal$2 = value => Number.isNaN(Number(value));
+    const isMissingVal = value => !Number.isFinite(Number(value));
     /**
      * Reports a required property the caller left unset, naming both the component and the
      * property. Called before the data join, so a missing accessor is reported by name instead of
@@ -5973,7 +5998,7 @@
         // attribute verbatim, and the browser then drops that segment along with every
         // segment after it, silently truncating the series. An explicitly set predicate
         // replaces this one rather than composing with it.
-        const defined = props.defined === undefined ? (datum, index, points) => !isMissingVal$2(x(datum, index, points)) && !isMissingVal$2(y(datum, index, points)) : props.defined;
+        const defined = props.defined === undefined ? (datum, index, points) => !isMissingVal(x(datum, index, points)) && !isMissingVal(y(datum, index, points)) : props.defined;
         const linePath = d3.line().defined(defined).x(x).y(y);
         // Rendering
         // Declared with `function` so that `this` is still forwarded to valuesAccessor, as
@@ -6950,7 +6975,7 @@
     ----------------------------------------------- */
     const SPINE_PADDING$1 = 0.5;
     /** Properties with no sensible fallback: without any one of them nothing can be drawn. */
-    const REQUIRED_PROPS = ["barHeight", "barWidth", "barPosition", "leftAccessor", "rightAccessor"];
+    const REQUIRED_PROPS$1 = ["barHeight", "barWidth", "barPosition", "leftAccessor", "rightAccessor"];
     /* Module
     ----------------------------------------------- */
     function pyramid() {
@@ -6960,7 +6985,7 @@
         // Validation, before any element exists: none of these can render correctly when
         // unset, and two of the three bar dimensions used to fail silently by reaching bar's
         // missing-value guard as undefined.
-        for (const name of REQUIRED_PROPS) {
+        for (const name of REQUIRED_PROPS$1) {
           if (props[name] === undefined) {
             throw new Error(`[pyramid] the ${name} property is required`);
           }
@@ -7320,6 +7345,36 @@
     }
 
     /**
+     * Stacked area bounds
+     *
+     * @module sszvis/component/stackedAreaBounds
+     *
+     * The missing-value predicate shared by stackedArea and stackedAreaMultiples, which draw the
+     * same shape from the same [y0, y1] bounds and so answer this question the same way. It lived
+     * in both files as a byte-identical copy, with a comment in each pointing at the other; every
+     * change to it has had to be made twice.
+     */
+    /**
+     * Whether a bound counts as missing, and so breaks the shape at that point.
+     *
+     * A value is missing when it is null-ish or when it has no finite numeric form.
+     *
+     * The null-ish half goes beyond the isNaN guard this default was always meant to be -
+     * isNaN(null) is false, so a null would coerce to 0 and be plotted at the top of the chart -
+     * and beyond src/component/line.ts, whose guard is documented as letting null through. A null
+     * measurement is missing data, not a zero, and there is no way to say "plot this at zero" with
+     * null that saying 0 does not say better.
+     *
+     * Finiteness rather than NaN-ness, because Infinity is a number as far as isNaN is concerned
+     * but not a coordinate SVG can parse: it reached the `d` attribute, where the browser drops
+     * that segment and every one after it, so the shape was truncated at the bad bound rather than
+     * broken across it. A scale over a zero-width domain returns exactly that.
+     */
+    function isMissingBound(value) {
+      return value == null || !Number.isFinite(Number(value));
+    }
+
+    /**
      * Stacked Area component
      *
      * Stacked area charts are useful for showing how component parts contribute to a total quantity
@@ -7462,17 +7517,6 @@
       return () => constant;
     };
     /**
-     * Whether a bound counts as missing, and so breaks the area at that point.
-     *
-     * A value is missing when it is null-ish or when it has no numeric form. The null-ish half
-     * goes beyond the isNaN guard this default was always meant to be - isNaN(null) is false,
-     * so a null would coerce to 0 and be plotted at the top of the chart - and beyond
-     * src/component/line.ts, whose guard is documented as letting null through. A null
-     * measurement is missing data, not a zero, and there is no way to say "plot this at zero"
-     * with null that saying 0 does not say better.
-     */
-    const isMissingVal$1 = value => value == null || Number.isNaN(Number(value));
-    /**
      * As above, for the style properties. An unset property becomes a function returning null,
      * which d3 removes the attribute for - the same thing it does when handed undefined
      * directly.
@@ -7514,7 +7558,7 @@
         // in the data is transient and recoverable: the area simply breaks around it.
         let reported = false;
         const guardMissing = (datum, index, points) => {
-          const missing = isMissingVal$1(y0(datum, index, points)) || y1Given !== undefined && isMissingVal$1(y1Given(datum, index, points));
+          const missing = isMissingBound(y0(datum, index, points)) || y1Given !== undefined && isMissingBound(y1Given(datum, index, points));
           if (missing && !reported) {
             reported = true;
             warn("[stackedArea] a point has a missing y0 or y1 value and was skipped; the area breaks around it.");
@@ -7752,16 +7796,6 @@
       return () => constant;
     };
     /**
-     * Whether a bound counts as missing, and so breaks the band at that point.
-     *
-     * A value is missing when it is null-ish or when it has no numeric form. The null-ish half
-     * goes beyond the isNaN guard this default was always meant to be - isNaN(null) is false,
-     * so a null would coerce to 0 and be plotted at the top of the chart - and beyond
-     * src/component/line.ts, whose guard is documented as letting null through. A null
-     * measurement is missing data, not a zero. Matches src/component/stackedArea.ts.
-     */
-    const isMissingVal = value => value == null || Number.isNaN(Number(value));
-    /**
      * As above, for the style properties. An unset property becomes a function returning null,
      * which d3 removes the attribute for - the same thing it does when handed undefined
      * directly.
@@ -7807,7 +7841,7 @@
         // in the data is transient and recoverable: the band simply breaks around it.
         let reported = false;
         const guardMissing = (datum, index, points) => {
-          const missing = isMissingVal(y0(datum, index, points)) || y1Given !== undefined && isMissingVal(y1Given(datum, index, points));
+          const missing = isMissingBound(y0(datum, index, points)) || y1Given !== undefined && isMissingBound(y1Given(datum, index, points));
           if (missing && !reported) {
             reported = true;
             warn("[stackedAreaMultiples] a point has a missing y0 or y1 value and was skipped; the band breaks around it.");
@@ -7917,18 +7951,21 @@
      *
      * @property {string, function} [barFill]     The color of a bar. Defaults to #000 and applies to
      *                                            both sides; a per-datum accessor is the usual way to
-     *                                            colour the series. It is composed with the slice's
+     *                                            colour the series. It is called with the slice's
      *                                            `data`, so it reads a source row rather than a slice,
-     *                                            and fn.compose forwards d3's arguments only to the
-     *                                            innermost function, so it is called with that row
-     *                                            alone.
-     * @property {number, function} barHeight     The height of a bar. Required, but omitting it is not
-     *                                            reported: it is the one dimension handed straight to
-     *                                            bar, so the value reaches bar's missing-value guard as
-     *                                            undefined and becomes 0, and the chart renders an
-     *                                            empty axis frame with no bars and no warning. Of the
-     *                                            three required dimensions only this one fails
-     *                                            silently. Shared with pyramid.
+     *                                            and with d3's index, as bar's own fill is. That index
+     *                                            counts within one series group, not across a side:
+     *                                            bar is instantiated once per series, so a two-row,
+     *                                            two-series side sees 0, 1, 0, 1 rather than 0..3.
+     *                                            Indexing a palette with it repeats colours per
+     *                                            series; key the colour off the datum instead. The
+     *                                            same holds for barWidth and barPosition.
+     * @property {number, function} barHeight     The height of a bar. Required: an unset prop throws a
+     *                                            TypeError naming it before anything is drawn. It used
+     *                                            to be the one dimension handed straight to bar, so an
+     *                                            unset value reached bar's missing-value guard as
+     *                                            undefined and became 0, and the chart rendered an
+     *                                            empty axis frame with no bars and no warning.
      * @property {number, function} barWidth      The width of a bar. Required: an unset prop throws a
      *                                            named TypeError before anything is drawn, because the
      *                                            component computes both the x and the width of every
@@ -7938,25 +7975,24 @@
      *                                            the same property with the bar's datum, and an
      *                                            accessor written for pyramid reads properties off a
      *                                            number here and yields NaN, which bar's guard turns
-     *                                            into 0. It is called without d3's index and group, so
-     *                                            an index-aware or node-aware accessor collapses every
-     *                                            width and every x to 0 on both sides; pyramid has the
-     *                                            same omission on its left side only. A number is the
+     *                                            into 0. It is called with d3's index, as pyramid calls
+     *                                            it, so an index-aware accessor works; before that it
+     *                                            saw undefined for the index and collapsed every width
+     *                                            and every x to 0 on both sides. A number is the
      *                                            constant width of every segment, measured from the
      *                                            spine outwards, and is the one dimension not run
      *                                            through fn.functor, so that a constant stays
      *                                            distinguishable from a scale.
      * @property {number, function} barPosition   The vertical position of a bar, i.e. its top edge.
-     *                                            Required, and an unset prop throws too, but from
-     *                                            inside fn.compose ("Cannot read properties of
-     *                                            undefined (reading 'call')") rather than from the
-     *                                            component's own closure the way barWidth does. Both
-     *                                            surface while bar is applying its attributes. It is
+     *                                            Required: an unset prop throws a TypeError naming it
+     *                                            before anything is drawn. It is
      *                                            called with the slice's `row`, i.e. the value the
      *                                            layout's row accessor returned, so it is a scale over
-     *                                            the row domain. It is called with nothing else, so an
-     *                                            index-aware accessor yields NaN and bar's guard
-     *                                            flattens it to 0.
+     *                                            the row domain. It is called with d3's index too, as
+     *                                            bar's own accessors are; before that it went through
+     *                                            fn.compose, which forwards every argument only to the
+     *                                            innermost function, so an index-aware accessor
+     *                                            yielded NaN and bar's guard flattened it to 0.
      * @property {Array<number>} [tooltipAnchor]  The anchor position for the tooltips. Uses
      *                                            sszvis.component.bar.tooltipAnchor under the hood to
      *                                            optionally reposition the tooltip anchors in the
@@ -8037,8 +8073,13 @@
      *
      * Note: a reference series is an array of {row, value} points, so barWidth maps the value to x and
      * barPosition the row to y - the same division of labour as in the bars, which is what makes the
-     * outline land in their coordinate system. Neither property receives d3's index, on the line or in
-     * the bars. pyramid's byte-identical lineComponent still takes plain data, since there both
+     * outline land in their coordinate system. Neither property receives d3's index on the line, though
+     * the bars pass it to both: a reference point is {row, value} rather than a slice, so the only
+     * index the line could forward is the point's own position in its series, which is not the bar
+     * index a caller writing (v, i) is reaching for. An index-aware accessor therefore yields a
+     * non-finite coordinate here, every point is skipped, and the outline is not drawn at all - see the
+     * two "drops d3's index on the reference line" tests.
+     * pyramid's byte-identical lineComponent still takes plain data, since there both
      * properties read the bar's datum and the question does not arise. The only stackedPyramid example
      * sets neither reference accessor.
      *
@@ -8104,6 +8145,13 @@
     /* Constants
     ----------------------------------------------- */
     const SPINE_PADDING = 0.5;
+    /**
+     * The properties without which the component cannot draw a bar. Checked by name before any
+     * element exists, so a misconfiguration is reported rather than rendered: barHeight used to
+     * reach bar as undefined and be flattened to a height of 0, which draws an empty axis frame
+     * with no warning. pyramid carries the same list.
+     */
+    const REQUIRED_PROPS = ["barHeight", "barWidth", "barPosition", "leftAccessor", "rightAccessor"];
     const rowAcc = prop("row");
     /**
      * The first source row of a cascade row, i.e. of whichever series that row happens to carry.
@@ -8218,34 +8266,48 @@
       .prop("barWidth").prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-        const barWidth = props.barWidth;
-        if (barWidth === undefined) {
-          // A misconfiguration that can never render: thrown before any element is created,
-          // because the component computes both the x and the width of every bar from it.
-          throw new TypeError("[sszvis.stackedPyramid] the barWidth property is required: pass a scale over the " + "stacked values, or a number for a constant segment width.");
+        // Validation, before any element exists. Every one of these is a misconfiguration
+        // that can never render, so none of them is left to fail on its own terms: barWidth
+        // used to throw from the component's own closure, barPosition from inside fn.compose,
+        // and barHeight not at all - it reached bar as undefined and was flattened to 0.
+        for (const name of REQUIRED_PROPS) {
+          if (props[name] === undefined) {
+            throw new TypeError(`[sszvis.stackedPyramid] the ${name} property is required` + (name === "barWidth" ? ": pass a scale over the stacked values, or a number for a constant segment width." : "."));
+          }
         }
+        const barWidth = props.barWidth;
         // A constant barWidth is a segment width rather than a scale, so it is used directly
         // instead of being subtracted from itself, which would collapse every bar to zero.
         const widthScale = typeof barWidth === "function" ? barWidth : null;
         const constantWidth = typeof barWidth === "function" ? 0 : barWidth;
+        // Each of these is called from an accessor bar owns, so it is handed (d, i) and passes
+        // both on: an index-aware barWidth used to see undefined for i, and `30 + undefined` is
+        // NaN, which bar's guard turns into a width and an x of 0. pyramid forwards the index
+        // through its own mirroring closure for the same reason.
         /** The edge of a segment nearer the spine, measured outwards from it. */
-        const innerEdge = d => widthScale ? widthScale(d[0]) : 0;
+        const innerEdge = (d, i) => widthScale ? widthScale(d[0], i) : 0;
         /** The edge of a segment further from the spine. */
-        const outerEdge = d => widthScale ? widthScale(d[1]) : constantWidth;
+        const outerEdge = (d, i) => widthScale ? widthScale(d[1], i) : constantWidth;
         // A constant barWidth still has to respect the synthetic padding a sparse row is
         // filled with: that slice stands for a series the row has no observation for, so it
         // is a zero-width pad rather than a full-width bar. The scale branch gets this for
         // free, since a pad's two bounds are equal. A genuine zero-valued observation keeps
         // the fixed width, which is the point of constant mode.
-        const segmentWidth = d => widthScale ? widthScale(d[1]) - widthScale(d[0]) : d.data === undefined ? 0 : constantWidth;
+        const segmentWidth = (d, i) => widthScale ? widthScale(d[1], i) - widthScale(d[0], i) : d.data === undefined ? 0 : constantWidth;
         // A padding slice stands for a series this row has no observation for. It is drawn
         // zero-wide, so its fill is never visible - and calling barFill for it would hand a
         // row-shaped accessor an undefined datum, which is what used to throw. Skipped
         // rather than widened, so the public accessor contract stays honest.
-        const barFillOf = d => d.data === undefined ? undefined : props.barFill(d.data);
+        const barFillOf = (d, i) => d.data === undefined ? undefined : props.barFill(d.data, i);
+        // barPosition is called with the slice's row rather than the slice, but with the same
+        // index bar hands its own accessors. It used to go through fn.compose, which forwards
+        // every argument only to the innermost function - rowAcc - so barPosition, the outer
+        // one, received exactly one and an index-aware accessor returned NaN, which bar's
+        // guard flattened to y="0".
+        const barPositionOf = (d, i) => props.barPosition(rowAcc(d), i);
         // Components
-        const leftBar = bar().x(d => -SPINE_PADDING - outerEdge(d)).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(segmentWidth).fill(barFillOf).tooltipAnchor(props.tooltipAnchor);
-        const rightBar = bar().x(d => SPINE_PADDING + innerEdge(d)).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(segmentWidth).fill(barFillOf).tooltipAnchor(props.tooltipAnchor);
+        const leftBar = bar().x((d, i) => -SPINE_PADDING - outerEdge(d, i)).y(barPositionOf).height(props.barHeight).width(segmentWidth).fill(barFillOf).tooltipAnchor(props.tooltipAnchor);
+        const rightBar = bar().x((d, i) => SPINE_PADDING + innerEdge(d, i)).y(barPositionOf).height(props.barHeight).width(segmentWidth).fill(barFillOf).tooltipAnchor(props.tooltipAnchor);
         const leftStack = stackComponent().stackElement(leftBar);
         const rightStack = stackComponent().stackElement(rightBar);
         // The line reads a reference point's value through the same scale, or parks it at the
@@ -8262,19 +8324,17 @@
         // A reference point on a row the bars do not cover falls back to the first height this
         // side resolved, rather than to 0: a chart-wide height is the normal case, and falling
         // to 0 for the odd row would kink the outline instead of merely offsetting it. With no
-        // slices at all, or no barHeight - a chart that draws no bars, which the component
-        // already tolerates silently - the fallback is 0 and the outline sits on the bars' top
-        // edges, where it was before this was corrected. Neither case throws.
+        // slices at all, or a barHeight that is never finite, the fallback is 0 and the outline
+        // sits on the bars' top edges, where it was before this was corrected. Neither case
+        // throws. An unset barHeight cannot reach here at all - it is reported by name above.
         const halfHeightsByRow = side => {
           const byRow = new Map();
-          if (props.barHeight !== undefined) {
-            for (const series of side) {
-              for (const [index, slice] of series.entries()) {
-                const key = String(slice.row);
-                if (byRow.has(key)) continue;
-                const height = Number(props.barHeight(slice, index));
-                if (Number.isFinite(height)) byRow.set(key, height / 2);
-              }
+          for (const series of side) {
+            for (const [index, slice] of series.entries()) {
+              const key = String(slice.row);
+              if (byRow.has(key)) continue;
+              const height = Number(props.barHeight(slice, index));
+              if (Number.isFinite(height)) byRow.set(key, height / 2);
             }
           }
           return {
