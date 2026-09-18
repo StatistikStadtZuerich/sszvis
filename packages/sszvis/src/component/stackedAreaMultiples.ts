@@ -159,6 +159,7 @@ import { area as d3Area, select, type ValueFn } from "d3";
 import { colorToString } from "../color.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import { isMissingBound } from "./stackedAreaBounds.js";
 import * as logger from "../logger.js";
 import { defaultTransition, OWN_TRANSITION } from "../transition.js";
 import type { ColorValue } from "../types.js";
@@ -271,21 +272,6 @@ const dimension = <P>(value: AreaValue<P> | undefined): PointAccessor<P, number>
 };
 
 /**
- * Whether a bound counts as missing, and so breaks the band at that point.
- *
- * A value is missing when it is null-ish or when it has no finite numeric form. The null-ish half
- * goes beyond the isNaN guard this default was always meant to be - isNaN(null) is false,
- * so a null would coerce to 0 and be plotted at the top of the chart - and beyond
- * src/component/line.ts, whose guard is documented as letting null through. A null
- * measurement is missing data, not a zero. Matches src/component/stackedArea.ts. *
- * Finiteness rather than NaN-ness, because Infinity is a number as far as isNaN is
- * concerned but not a coordinate SVG can parse: it reached the `d` attribute, where the
- * browser drops that segment and every one after it, so the area was truncated at the bad
- * bound rather than broken across it. A scale over a zero-width domain returns exactly that.
- */
-const isMissingVal = (value: unknown): boolean => value == null || !Number.isFinite(Number(value));
-
-/**
  * As above, for the style properties. An unset property becomes a function returning null,
  * which d3 removes the attribute for - the same thing it does when handed undefined
  * directly.
@@ -356,8 +342,8 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
         let reported = false;
         const guardMissing: PointAccessor<P, boolean> = (datum, index, points) => {
           const missing =
-            isMissingVal(y0(datum, index, points)) ||
-            (y1Given !== undefined && isMissingVal(y1Given(datum, index, points)));
+            isMissingBound(y0(datum, index, points)) ||
+            (y1Given !== undefined && isMissingBound(y1Given(datum, index, points)));
           if (missing && !reported) {
             reported = true;
             logger.warn(
