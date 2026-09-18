@@ -68,10 +68,10 @@
  *                                            the same property with the bar's datum, and an
  *                                            accessor written for pyramid reads properties off a
  *                                            number here and yields NaN, which bar's guard turns
- *                                            into 0. It is called without d3's index and group, so
- *                                            an index-aware or node-aware accessor collapses every
- *                                            width and every x to 0 on both sides; pyramid has the
- *                                            same omission on its left side only. A number is the
+ *                                            into 0. It is called with d3's index, as pyramid calls
+ *                                            it, so an index-aware accessor works; before that it
+ *                                            saw undefined for the index and collapsed every width
+ *                                            and every x to 0 on both sides. A number is the
  *                                            constant width of every segment, measured from the
  *                                            spine outwards, and is the one dimension not run
  *                                            through fn.functor, so that a constant stays
@@ -466,8 +466,8 @@ export function stackedPyramidData<T, S extends string | number = string>(
 
 /**
  * A barWidth scale: a function from one of the numbers out of a slice's [y0, y1] pair - never
- * from the slice itself - to a distance from the spine. Both parameters are optional because
- * the component passes neither d3's index nor its group.
+ * from the slice itself - to a distance from the spine. The bars pass d3's index along with the
+ * value; the reference line has no bar index to pass, so the parameter stays optional.
  */
 type WidthScale = (value?: number, index?: number) => number;
 
@@ -626,19 +626,24 @@ export function stackedPyramid<
         // instead of being subtracted from itself, which would collapse every bar to zero.
         const widthScale = typeof barWidth === "function" ? barWidth : null;
         const constantWidth = typeof barWidth === "function" ? 0 : barWidth;
+        // Each of these is called from an accessor bar owns, so it is handed (d, i) and passes
+        // both on: an index-aware barWidth used to see undefined for i, and `30 + undefined` is
+        // NaN, which bar's guard turns into a width and an x of 0. pyramid forwards the index
+        // through its own mirroring closure for the same reason.
         /** The edge of a segment nearer the spine, measured outwards from it. */
-        const innerEdge = (d: StackedPyramidSlice<T, S>) => (widthScale ? widthScale(d[0]) : 0);
+        const innerEdge = (d: StackedPyramidSlice<T, S>, i: number) =>
+          widthScale ? widthScale(d[0], i) : 0;
         /** The edge of a segment further from the spine. */
-        const outerEdge = (d: StackedPyramidSlice<T, S>) =>
-          widthScale ? widthScale(d[1]) : constantWidth;
+        const outerEdge = (d: StackedPyramidSlice<T, S>, i: number) =>
+          widthScale ? widthScale(d[1], i) : constantWidth;
         // A constant barWidth still has to respect the synthetic padding a sparse row is
         // filled with: that slice stands for a series the row has no observation for, so it
         // is a zero-width pad rather than a full-width bar. The scale branch gets this for
         // free, since a pad's two bounds are equal. A genuine zero-valued observation keeps
         // the fixed width, which is the point of constant mode.
-        const segmentWidth = (d: StackedPyramidSlice<T, S>) =>
+        const segmentWidth = (d: StackedPyramidSlice<T, S>, i: number) =>
           widthScale
-            ? widthScale(d[1]) - widthScale(d[0])
+            ? widthScale(d[1], i) - widthScale(d[0], i)
             : d.data === undefined
               ? 0
               : constantWidth;
@@ -653,7 +658,7 @@ export function stackedPyramid<
         // Components
 
         const leftBar = bar<StackedPyramidSlice<T, S>>()
-          .x((d) => -SPINE_PADDING - outerEdge(d))
+          .x((d, i) => -SPINE_PADDING - outerEdge(d, i))
           .y(fn.compose(props.barPosition, rowAcc))
           .height(props.barHeight)
           .width(segmentWidth)
@@ -661,7 +666,7 @@ export function stackedPyramid<
           .tooltipAnchor(props.tooltipAnchor);
 
         const rightBar = bar<StackedPyramidSlice<T, S>>()
-          .x((d) => SPINE_PADDING + innerEdge(d))
+          .x((d, i) => SPINE_PADDING + innerEdge(d, i))
           .y(fn.compose(props.barPosition, rowAcc))
           .height(props.barHeight)
           .width(segmentWidth)
