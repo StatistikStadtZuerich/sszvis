@@ -218,6 +218,26 @@ describe("component/line", () => {
       expect((paths(brokenByNaNX)[0] as SVGPathElement).getTotalLength()).toBe(50);
     });
 
+    test("treats a non-finite value as missing, the way it treats NaN", () => {
+      // A scale over a zero-width domain returns Infinity, which is a number as far as
+      // isNaN is concerned. It used to reach the d attribute, where it is not a valid SVG
+      // coordinate, so the browser dropped that segment and everything after it - the line
+      // was truncated at the bad point rather than broken across it.
+      const node = render(lineOf(), [
+        [
+          { x: 0, y: 0 },
+          { x: 30, y: 40 },
+          { x: 10, y: Number.POSITIVE_INFINITY },
+          { x: 60, y: 80 },
+        ],
+      ]);
+      expect(ds(node)[0]).not.toContain("Infinity");
+      // SAFETY: the point must break the line rather than vanish from it, so the segments
+      // on either side survive as their own subpaths. d3.line closes a one-point subpath
+      // with Z.
+      expect(ds(node)[0]).toBe("M0,0L30,40M60,80Z");
+    });
+
     describe("known quirks", () => {
       test("a null y is plotted as zero instead of breaking the line", () => {
         // NOTE: the default predicate uses the global isNaN, which coerces first, and
@@ -257,26 +277,6 @@ describe("component/line", () => {
         expect(yOf([])).toBe("M0,0L10,0L20,20");
         expect(yOf(true)).toBe("M0,0L10,1L20,20");
         expect(yOf("50")).toBe("M0,0L10,50L20,20");
-      });
-
-      // BUG(#440): a scale over a zero-width domain returns Infinity, which is a number as
-      // far as isNaN is concerned. It reaches the d attribute, where it is not a valid SVG
-      // coordinate, so the browser drops that segment and everything after it - the line is
-      // truncated at the bad point rather than broken across it, the way a NaN is. bar has
-      // the same hole in handleMissingVal, and it fails just as silently here.
-      // current: d="M0,0L30,40L10,InfinityL60,80". expected: the non-finite point is treated
-      // as missing, as a NaN already is.
-      // Skipped, not deleted: it fails with "expected 'M0,0L30,40L10,InfinityL60,80' not to contain 'Infinity'".
-      test.skip("treats a non-finite value as missing, the way it treats NaN", () => {
-        const node = render(lineOf(), [
-          [
-            { x: 0, y: 0 },
-            { x: 30, y: 40 },
-            { x: 10, y: Number.POSITIVE_INFINITY },
-            { x: 60, y: 80 },
-          ],
-        ]);
-        expect(ds(node)[0]).not.toContain("Infinity");
       });
 
       test("setting defined silently gives up the NaN guard", () => {
