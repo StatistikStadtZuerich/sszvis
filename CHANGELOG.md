@@ -1,3 +1,28 @@
+## 3.5.2 (2026-09-18)
+
+- the SVG and raster map renderers write the fill, positioning and pointer events they depend on inline, so a chart shipped without `sszvis.css` draws outlines rather than filled shapes covering the map, and lets pointers through to the base layer
+- `sszvis.mapRendererGeoJson()` shapes are a hit area when an `over`, `out` or `click` handler is registered on them
+- `sszvis.line()`, `sszvis.stackedArea()`, `sszvis.stackedAreaMultiples()` and `sszvis.stackedPyramid()` reference outlines break at a non-finite value instead of truncating there
+- `sszvis.line()`, `sszvis.stackedArea()` and `sszvis.sunburst()` write their geometry on the render tick rather than only through the transition, so a chart measured or serialized before the first animation frame is no longer empty
+- `sszvis.sunburst()` anchors its tooltips on the destination angles instead of the ones currently on screen, so they no longer trail a render behind the arcs
+- `sszvis.stackedPyramid()` forwards d3's index to `barWidth`, `barPosition` and `barFill`, centers its reference outlines on the bars they describe, and removes one whose series goes away
+- `sszvis.stackedPyramidLayout()` and `sszvis.stackedPyramidData()` keep the stacking order the series accessor returned and sum every row they place in one cell, as `sszvis.stackedBarData()` already did
+- `sszvis.stackedBarVerticalData()` and `sszvis.stackedBarVerticalLayout()` number each series by its position in the array they return, so an `index` read for a legend is no longer upside down
+- `sszvis.mapRendererBubble()`, `sszvis.mapRendererPatternedLakeOverlay()`, `sszvis.stackedPyramid()` and `sszvis.prepareMergedGeoData()` report their missing required properties by name before drawing, instead of failing partway through the render
+- `sszvis.mapRendererRaster()` draws an empty canvas when the layer has no data bound, the state every chart is in before its data load
+- `sszvis.groupedBarsVertical()` and `sszvis.groupedBarsHorizontal()` take a constant for `x` and `y`, as `width` and `height` already did
+- `sszvis.textWrap()` warns and skips wrapping when `width` is not finite, and keeps a `y` given in non-numeric units such as `1em`
+- the chart's SVG no longer carries a `<title>`, which the browser drew as a native tooltip over the whole chart
+- accessors, formatters and event handlers are typed against the values they actually receive, and `ColorValue`, `Measurement`, `PartialMeasurement` and `sszvis.colorToString` are exported so a chart can name the types its own accessors return
+
+### Worth checking
+
+Two of the stylesheet fixes change what a map draws.
+
+`sszvis.mapRendererGeoJson()` shapes were marked as event targets and had handlers bound to them, but `sszvis.css` gave them `pointer-events: none`, so no handler could ever fire. They are now a target whenever one is registered — which means a geojson overlay shadows the layer beneath it over its own shapes, so a chart driving tooltips from a choropleth base layer under such an overlay will see the overlay win there. With no handler registered the shapes stay inert, exactly as before. This matches `sszvis.mapRendererBubble()`.
+
+`sszvis.mapRendererPatternedLakeOverlay()` writes the lake border's stroke, width and dash pattern inline, defaulting to the grey dotted line the stylesheet used to supply; an explicitly falsy `lakePathColor` now means no border rather than a fallback to the stylesheet. An unset `lakeBounds` draws no border path at all, instead of a classed path with no geometry, and `mapPath` is required whenever there is a lake to draw. Asking for no lake still needs neither property.
+
 ## 3.5.1 (2026-09-10)
 
 - ship `sszvis.css` from the library package, so `sszvis/sszvis.css` resolves from an install instead of only from the documentation site
