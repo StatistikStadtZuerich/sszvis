@@ -245,11 +245,8 @@
 }
 
 .sszvis-map__lakepath {
-  fill: none;
-  pointer-events: none;
-  stroke: #d3d3d3;
-  stroke-width: 1.25;
-  stroke-dasharray: 3 3;
+  /* fill, pointer-events, stroke, stroke-width and stroke-dasharray are all written inline by
+     the renderer, so the borders draw correctly without this stylesheet. */
   user-select: none;
   -moz-user-select: none;
   -webkit-user-select: none;
@@ -257,7 +254,8 @@
 }
 
 .sszvis-map__geojsonelement {
-  pointer-events: none;
+  /* pointer-events is written inline by the renderer: the shapes are a hit area when a handler
+     is registered on the component and inert otherwise, which a static rule cannot express. */
   user-select: none;
   -moz-user-select: none;
   -webkit-user-select: none;

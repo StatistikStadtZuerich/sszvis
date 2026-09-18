@@ -11492,6 +11492,69 @@
     }
 
     /**
+     * Listener registry
+     *
+     * @module sszvis/map/renderer/listenerRegistry
+     *
+     * Tracks which of a component's own event handlers a consumer has registered, so the component
+     * can decide whether its elements should be a hit area or inert decoration.
+     *
+     * d3's dispatch cannot be asked what it holds: dispatch.on("over") reports only the handler
+     * registered under the bare name and returns undefined for one registered as "over.tooltip", so
+     * a component that wants to know whether *anything* is listening has to tally the typenames as
+     * they go by.
+     *
+     * Shared by src/map/renderer/bubble.ts and src/map/renderer/geojson.ts, which make the same
+     * decision about the same kind of element.
+     */
+    function parseTypename(typename) {
+      const dot = typename.indexOf(".");
+      const type = dot < 0 ? typename : typename.slice(0, dot);
+      const name = dot < 0 ? "" : typename.slice(dot + 1);
+      return {
+        type,
+        name,
+        key: `${type}.${name}`
+      };
+    }
+    /** The name half of a canonical key, which is everything after its single separating dot. */
+    function nameOfKey(key) {
+      return key.slice(key.indexOf(".") + 1);
+    }
+    function listenerRegistry() {
+      const registered = new Set();
+      return {
+        hasListeners: () => registered.size > 0,
+        record(typenames, handler) {
+          // d3 accepts a space-separated list of typenames, and a null handler removes rather than
+          // registers. The rest are d3's own rules, checked against it rather than read off its
+          // source: an empty or whitespace-only list does nothing at all, and for a typename carrying
+          // a name but no type a null handler removes that name from every event type while a non-null
+          // one is ignored.
+          const list = String(typenames).trim();
+          if (list === "") return;
+          for (const typename of list.split(/\s+/)) {
+            const {
+              type,
+              name,
+              key
+            } = parseTypename(typename);
+            if (handler == null) {
+              if (type === "") {
+                // oxlint-disable-next-line unicorn/no-useless-spread -- the copy is required: the loop body deletes from `registered`.
+                for (const held of [...registered]) if (nameOfKey(held) === name) registered.delete(held);
+              } else {
+                registered.delete(key);
+              }
+            } else if (type !== "") {
+              registered.add(key);
+            }
+          }
+        }
+      };
+    }
+
+    /**
      * bubble renderer component
      *
      * @module sszvis/map/renderer/bubble
@@ -11581,20 +11644,15 @@
      *
      * @return {sszvis.component}
      */
-    function parseTypename(typename) {
-      const dot = typename.indexOf(".");
-      const type = dot < 0 ? typename : typename.slice(0, dot);
-      const name = dot < 0 ? "" : typename.slice(dot + 1);
-      return {
-        type,
-        name,
-        key: `${type}.${name}`
-      };
-    }
-    /** The name half of a canonical key, which is everything after its single separating dot. */
-    function nameOfKey(key) {
-      return key.slice(key.indexOf(".") + 1);
-    }
+    /**
+     * A stable identity for a feature carrying no id. It cannot be the feature's position: d3 computes
+     * an existing node's key from the selection that node is in, and this component sorts that
+     * selection by radius, so a positional key means something different on the next render. Two
+     * keyless features would then keep their elements but exchange which feature each one stands for.
+     *
+     * Held against the feature object, which is the same object from one render to the next for a
+     * given collection, and weakly so a discarded collection is still collectable.
+     */
     const anonymousKeys = new WeakMap();
     let anonymousCount = 0;
     function anonymousKey(feature) {
@@ -11646,14 +11704,12 @@
     }
     function mapRendererBubble() {
       const event = d3.dispatch("over", "out", "click");
-      /**
-       * The typenames a consumer registered, tallied in on() below because d3's dispatch cannot be
-       * asked what it holds: dispatch.on("over") reports only the handler registered under the bare
-       * name, and returns undefined for one registered as "over.tooltip".
-       */
-      const registered = new Set();
-      /** Whether any of this component's handlers is registered, under any namespace. */
-      const hasListeners = () => registered.size > 0;
+      // The typenames a consumer registered, tallied in on() below. Shared with geojson, which makes
+      // the same hit-area decision from the same information.
+      const {
+        hasListeners,
+        record
+      } = listenerRegistry();
       const anchoredCirclesComponent = component().prop("mergedData").prop("mapPath").prop("radius", functor).prop("fill", functor).prop("strokeColor", functor).strokeColor("#ffffff").prop("strokeWidth", functor).strokeWidth(1).prop("transition").transition(true).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
@@ -11756,31 +11812,9 @@
       anchoredCirclesComponent.on = (...args) => {
         const value = event.on.apply(event, args);
         if (value !== event) return value;
-        // A setter call, and d3 validated the typenames by returning the dispatch. It accepts a
-        // space-separated list of them, and a null handler removes rather than registers. The rest are
-        // d3's own rules, checked against it rather than read off its source: an empty or
-        // whitespace-only list does nothing at all, and for a typename carrying a name but no type a
-        // null handler removes that name from every event type while a non-null one is ignored.
+        // A setter call, and d3 validated the typenames by returning the dispatch.
         const [typenames, handler] = args;
-        const list = String(typenames).trim();
-        if (list === "") return anchoredCirclesComponent;
-        for (const typename of list.split(/\s+/)) {
-          const {
-            type,
-            name,
-            key
-          } = parseTypename(typename);
-          if (handler == null) {
-            if (type === "") {
-              // oxlint-disable-next-line unicorn/no-useless-spread -- the copy is required: the loop body deletes from `registered`.
-              for (const held of [...registered]) if (nameOfKey(held) === name) registered.delete(held);
-            } else {
-              registered.delete(key);
-            }
-          } else if (type !== "") {
-            registered.add(key);
-          }
-        }
+        record(typenames, handler);
         return anchoredCirclesComponent;
       };
       return anchoredCirclesComponent;
@@ -11859,6 +11893,12 @@
     }
     function mapRendererGeoJson() {
       const event = d3.dispatch("over", "out", "click");
+      // The typenames a consumer registered. Shared with bubble, which makes the same hit-area
+      // decision from the same information.
+      const {
+        hasListeners,
+        record
+      } = listenerRegistry();
       const geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
@@ -11899,7 +11939,21 @@
         function getMapStrokeWidth(d) {
           return defined(d.datum) && props.defined(d.datum) ? props.strokeWidth(d.datum) : null;
         }
-        const geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData).join("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "");
+        const geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData).join("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "")
+        // The elements are marked as event targets and this component binds mouseover, mouseout
+        // and click to them, but .sszvis-map__geojsonelement carried pointer-events: none in
+        // sszvis.css, so none of that could ever fire: the class was written alongside the purely
+        // decorative overlays. Registering a handler now makes the shapes a hit area, exactly as
+        // it does for bubble's circles; with none registered they stay inert and the pointer falls
+        // through to the layer beneath, which is what every consumer has had until now. Written
+        // inline rather than left to the stylesheet because an author rule cannot be conditional,
+        // and because a consumer who does not ship sszvis.css should get the same behaviour.
+        //
+        // "all" rather than "auto": for SVG, auto resolves to visiblePainted, which hit-tests
+        // only where the shape is actually painted - so an overlay drawn with fill "none", an
+        // outline-only idiom, would have had an untouchable interior and the handler would still
+        // never fire over most of it. "all" makes the whole geometry a target regardless of fill.
+        .style("pointer-events", () => hasListeners() ? "all" : "none");
         geoElements.classed("sszvis-map__geojsonelement--undefined", d => !defined(d.datum) || !props.defined(d.datum)).attr("d", d => props.mapPath(d.geoJson));
         // The fill is applied exactly once, so the transition has the previous color to interpolate
         // from, and only a color-to-color change is tweened - a paint-server reference cannot be
@@ -11951,7 +12005,11 @@
       // would also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
       geojsonComponent.on = function (...args) {
         const value = event.on.apply(event, args);
-        return value === event ? geojsonComponent : value;
+        if (value !== event) return value;
+        // A setter call, and d3 validated the typenames by returning the dispatch.
+        const [typenames, handler] = args;
+        record(typenames, handler);
+        return geojsonComponent;
       };
       return geojsonComponent;
     }
@@ -12517,9 +12575,10 @@
      *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
      *                                      Optional: a geography can have a lake with no borders reaching over it, and
      *                                      absent means no border path is drawn at all.
-     * @property {String, Function} lakePathColor  The stroke colour of those borders. No default: the stylesheet's grey
-     *                                      dotted stroke stands unless this is set. A falsy colour - "" - clears the
-     *                                      inline stroke again. Not wrapped in fn.functor.
+     * @property {String, Function} lakePathColor  The stroke colour of those borders. Defaults to the grey the
+     *                                      stylesheet used to supply, written inline so the borders draw without it.
+     *                                      A falsy colour - "" - clears the stroke, which means no border rather
+     *                                      than the default. Not wrapped in fn.functor.
      * @property {Boolean} fadeOut          Whether to fade the lake out towards the bottom of the shape with a gradient mask.
      *                                      Default true - but choropleth defaults its own lakeFadeOut to false, so the
      *                                      default branch is the one no in-repo chart takes. Turning it off removes an
@@ -12566,23 +12625,22 @@
      * Note: lakePathColor is not wrapped in fn.functor, unlike the colour properties of the base,
      * geojson and highlight renderers. An accessor is handed straight to d3 and called with the
      * lakeBounds object and d3's index, not with a per-border datum - there is only one path, so there
-     * is no such datum. It is written as an inline style, which does override the stylesheet's stroke
-     * for .sszvis-map__lakepath - and cannot be overridden back from a consumer's stylesheet, since an
-     * inline style beats any author rule short of !important. The mesh's borderColor has the same
-     * shape - though where a dropped mesh style leaves the borders invisible, a dropped style here
-     * falls back to the stylesheet's grey dotted stroke, so the mistake is even quieter.
+     * is no such datum. It is written as an inline style, so it cannot be overridden from a consumer's
+     * stylesheet, since an inline style beats any author rule short of !important - which now applies
+     * to the default grey as well as to a colour the caller set. The mesh's borderColor has the same
+     * shape and the same defaulting.
      *
-     * Note: the colour is written on every render, and only an unset property leaves the stylesheet's
-     * stroke alone. A falsy colour - "", or an accessor returning undefined - clears the inline stroke
-     * and hands the border back to the stylesheet.
+     * Note: the colour is written on every render. An unset property takes the renderer's default; a
+     * falsy colour - "", or an accessor returning undefined - clears the stroke, which leaves the
+     * border invisible rather than falling back to the default.
      *
      * Note: pointer-events: none is written inline on both paths, and fill: none on the border path,
      * so neither needs sszvis.css to stay out of the way: SVG's initial fill is black, which would
      * turn the dotted border into a shape covering the lake, and without pointer-events both paths
      * swallow the base layer's hover and click events across the whole lake. The lake shape's own fill
-     * is the texture pattern, so only its pointer-events was missing. The border's dash pattern and
-     * its default grey stroke stay on the class, so a consumer without the stylesheet still has to
-     * supply a lakePathColor to see those borders at all.
+     * is the texture pattern, so only its pointer-events was missing. The border's dash pattern, width
+     * and default grey stroke are written inline too, so a consumer without the stylesheet sees the
+     * dotted borders without having to supply a lakePathColor.
      *
      * Note: both path selectors are scoped to the rendering group's own children and filtered by the
      * overlay's key - so two overlays rendered into one group each draw their own pair of paths as
@@ -12600,6 +12658,10 @@
      *
      * @return {sszvis.component}
      */
+    /** The dotted grey outline sszvis.css used to supply, owned by the renderer instead. */
+    const DEFAULT_LAKE_PATH_COLOR = "#d3d3d3";
+    const DEFAULT_LAKE_STROKE_WIDTH = 1.25;
+    const DEFAULT_LAKE_DASH_ARRAY = "3 3";
     /**
      * Marks both the group whose generated scope it records and the paths belonging to a scope,
      * mirroring d3-selectgroup's data-d3-selectgroup. Read back through getAttribute in a filter
@@ -12728,14 +12790,20 @@
         const lakePath = ownPaths("sszvis-map__lakepath").data(props.lakeBounds === undefined ? [] : [props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath)
         // As on the lake shape and the mesh border: SVG's initial fill is black, so without
         // sszvis.css this dotted outline is a filled shape over the lake, and without
-        // pointer-events it swallows the events beneath it. The dash pattern and the default
-        // stroke stay on the class, so a consumer without the stylesheet still has to supply a
-        // lakePathColor to see these borders at all.
-        .style("fill", "none").style("pointer-events", "none");
-        // An unset colour writes nothing, so the stylesheet's stroke stands; any value that is set -
-        // including a falsy one - is written, so it can clear a colour an earlier render left behind.
+        // pointer-events it swallows the events beneath it.
+        .style("fill", "none").style("pointer-events", "none")
+        // The dash pattern and width the dotted outline is made of. Written inline for the same
+        // reason as the stroke below: SVG has no dash by default, so a consumer without the
+        // stylesheet used to get a solid line where they had one at all.
+        .style("stroke-width", DEFAULT_LAKE_STROKE_WIDTH).style("stroke-dasharray", DEFAULT_LAKE_DASH_ARRAY);
+        // An unset colour takes the renderer's own default, as the mesh's borderColor does. It used
+        // to write nothing and leave the stroke to .sszvis-map__lakepath, which meant a consumer who
+        // did not ship sszvis.css saw no lake borders at all - SVG's initial stroke is none - unless
+        // they set lakePathColor themselves. A colour that IS set, including a falsy one, is still
+        // written as given, so it can clear a colour an earlier render left behind: an explicit
+        // empty colour means no border rather than "use the default".
         if (props.lakePathColor === undefined) {
-          lakePath.style("stroke", null);
+          lakePath.style("stroke", DEFAULT_LAKE_PATH_COLOR);
         } else {
           const resolve = valueFn(props.lakePathColor);
           lakePath.style("stroke", function (datum, index, groups) {
