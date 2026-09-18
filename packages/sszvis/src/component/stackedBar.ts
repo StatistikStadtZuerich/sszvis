@@ -159,6 +159,12 @@ export type StackedBarSlice<T, X extends string | number = string> = SeriesPoint
 /** All slices sharing a series key, i.e. one layer of the stack, as d3 hands it over. */
 export type StackedBarSeries<T, X extends string | number = string> = StackedBarSlice<T, X>[] & {
   key: string;
+  /**
+   * This series' position in the array it is returned in, so `series[i].index === i` in both
+   * orientations. Not d3's own index, which numbers the stacking order: the vertical layout
+   * stacks in reverse while returning the array in key order, so the two disagreed there and
+   * agreed horizontally.
+   */
   index: number;
 };
 
@@ -263,7 +269,15 @@ function stackedBarData(order: StackOrder) {
       // returns are index-aligned to the rows it was given.
       const stackValues = rows.map((row) => _stackAcc(Object.values(row).flat()[0]));
 
-      const series = stacks.map((stack) => {
+      // index is renumbered to the series' position in this array rather than carried over
+      // from d3. d3 assigns it from the stacking order while returning the array in key
+      // order, so the vertical layout - which stacks in reverse - handed back an array whose
+      // index counted the other way, and a caller that read index to drive a legend got the
+      // stack the wrong way up. The horizontal layout stacks in key order, so the two already
+      // agreed there, which is what made the mismatch easy to miss when moving code between
+      // orientations. The array order itself is unchanged, so nothing about the rendering
+      // moves; only the number a caller reads off a series does.
+      const series = stacks.map((stack, index) => {
         const slices = stack.map((d, i) => {
           const datum = d.data[stack.key]?.[0];
           return Object.assign(d, {
@@ -272,7 +286,7 @@ function stackedBarData(order: StackOrder) {
             stack: stackValues[i],
           });
         });
-        return Object.assign(slices, { key: stack.key, index: stack.index });
+        return Object.assign(slices, { key: stack.key, index });
       });
 
       // Both bounds are considered, so a stack that reaches below the baseline reports an
