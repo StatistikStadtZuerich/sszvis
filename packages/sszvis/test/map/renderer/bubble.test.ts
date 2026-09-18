@@ -1,4 +1,4 @@
-import { geoCentroid, select } from "d3";
+import { geoCentroid, geoPath, select } from "d3";
 import type { Feature, FeatureCollection, Polygon } from "geojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { square, tweenNames } from "../../support/mapReaders.js";
@@ -693,15 +693,7 @@ describe("map/renderer/bubble", () => {
       expect(circles(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
-    // BUG(#445): mapPath is read as a d3.geoPath - the anchor positions call mapPath.projection()
-    // - so a bare path function throws a TypeError from inside the transform callback, after the
-    // circles have been created and sized, leaving a half-drawn layer behind. The message names
-    // neither the property nor the component. The same requirement, and the same failure, as the
-    // base renderer's anchors.
-    // Skipped, not deleted: the error does name mapPath - "mapPath.projection is not a function" -
-    // but the circles are already on screen, so it fails with "expected [ SVGCircleElement, …(2) ]
-    // to have a length of +0 but got 3".
-    test.skip("should draw no circles when mapPath is a bare path function", () => {
+    test("should draw no circles when mapPath is a bare path function", () => {
       const collection = geoJson();
       const layer = group("bubble-bare-path");
       expect(() =>
@@ -718,16 +710,53 @@ describe("map/renderer/bubble", () => {
       expect(circles(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
-    test("should throw when mapPath is missing entirely", () => {
-      const collection = geoJson();
+    test("should draw no circles when mapPath has no projection set", () => {
+      // SAFETY: a real geoPath with no projection has a `projection` getter, so a capability
+      // check alone let it through - and the circles were created, sorted and styled before
+      // placing them threw. The layer must be left empty instead.
+      const layer = group("bubble-no-projection");
       expect(() =>
-        group().call(
+        layer.call(
+          mapRendererBubble()
+            .mergedData(prepareMergedGeoData(fullData, geoJson()))
+            .mapPath(geoPath())
+            .radius(5)
+            .fill("#ff0000"),
+        ),
+      ).toThrow(/mapPath\.projection\(\)/);
+      expect(circles(layer.node() as SVGGElement)).toHaveLength(0);
+    });
+
+    test("should report a null mapPath by name rather than failing on it", () => {
+      // SAFETY: an explicit null used to slip past an `=== undefined` guard and die one line
+      // later reading a property of null - the anonymous failure these guards exist to remove.
+      const collection = geoJson();
+      const layer = group("bubble-null-map-path");
+      expect(() =>
+        layer.call(
+          mapRendererBubble()
+            .mergedData(prepareMergedGeoData(fullData, collection))
+            // @ts-expect-error - null is a caller error; pinned because it must be named
+            .mapPath(null)
+            .radius(5)
+            .fill("#ff0000"),
+        ),
+      ).toThrow(/mapPath is required/);
+      expect(circles(layer.node() as SVGGElement)).toHaveLength(0);
+    });
+
+    test("should report the missing property by name when mapPath is missing entirely", () => {
+      const collection = geoJson();
+      const layer = group("bubble-no-map-path");
+      expect(() =>
+        layer.call(
           mapRendererBubble()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .radius(5)
             .fill("#ff0000"),
         ),
-      ).toThrow(TypeError);
+      ).toThrow(/mapPath is required/);
+      expect(circles(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
     test("should report the missing property by name when radius is missing", () => {
