@@ -60,10 +60,11 @@
  * stylesheet's; only an update animates. The cost is that the accessors are evaluated a second
  * time for entering lines. See test/component/line.test.ts.
  *
- * Note: the default missing-value guard inspects both dimensions, but only catches values that fail
- * to coerce to a number. Infinity, which a scale over a zero-width domain produces, still reaches the
- * d attribute verbatim; the browser then renders up to that segment and silently drops the rest of
- * the series. A null likewise coerces to 0 and is plotted as data rather than breaking the line.
+ * Note: the default missing-value guard inspects both dimensions, and catches any value with no
+ * finite numeric form - so Infinity, which a scale over a zero-width domain produces, breaks the
+ * line at that point rather than reaching the d attribute, where the browser used to render up to
+ * that segment and silently drop the rest of the series. A null still coerces to 0 and is plotted
+ * as data rather than breaking the line; stackedArea's guard differs here and rejects it.
  *
  * @return {sszvis.component}
  */

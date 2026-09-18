@@ -25,5 +25,6 @@
  * that segment and every one after it, so the shape was truncated at the bad bound rather than
  * broken across it. A scale over a zero-width domain returns exactly that.
  */
-export const isMissingBound = (value: unknown): boolean =>
-  value == null || !Number.isFinite(Number(value));
+export function isMissingBound(value: unknown): boolean {
+  return value == null || !Number.isFinite(Number(value));
+}
