@@ -264,6 +264,28 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
       const selection = select(this);
       const props = selection.props<BubbleProps<T>>();
 
+      // Validate before anything is created, so a misconfigured layer renders nothing rather
+      // than a half-built one. Each of these used to surface as a bare TypeError naming
+      // neither the property nor the component, and each arrived after part of the layer had
+      // been built: mergedData from d3's join once the group existed, radius from the sort
+      // comparator and fill from the style callback, both once every circle had been created,
+      // positioned and styled. The mesh and raster renderers report their own the same way.
+      if (props.mergedData === undefined) {
+        throw new TypeError(
+          "map/renderer/bubble: mergedData is required, since it carries the features to place a circle on",
+        );
+      }
+      if (props.radius === undefined) {
+        throw new TypeError(
+          "map/renderer/bubble: radius is required, since it sizes each circle and there is no default",
+        );
+      }
+      if (props.fill === undefined) {
+        throw new TypeError(
+          "map/renderer/bubble: fill is required, since it colours each circle and there is no default",
+        );
+      }
+
       // Composed rather than written as an arrow: fn.compose invokes each stage with .call(this),
       // so a radius accessor written as a function receives d3's circle node as `this`, exactly as
       // the JavaScript did. An arrow here would call it with `this === undefined`.
