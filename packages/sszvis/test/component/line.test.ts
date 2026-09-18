@@ -599,43 +599,35 @@ describe("component/line", () => {
       expect(styles(node, "stroke")).toEqual(["rgb(255, 0, 0)"]);
     });
 
-    describe("known quirks", () => {
-      // BUG(#438): with the default transition, d and stroke-width are only written through
-      // the transition, so a freshly rendered chart has an empty <path> until the
-      // first animation frame runs. Anything that measures the path immediately -
-      // getTotalLength, a bounding box, a server-side or synchronous screenshot -
-      // sees nothing. bar and dot both write their geometry synchronously first.
-      // current: d is null and stroke-width unset on the render tick. expected: both are
-      // written first, with the transition interpolating on top of them. stackedArea has the
-      // widest version of the same hole, deferring its fill and stroke as well.
-      // Skipped, not deleted: it fails with "expected [ null ] to not deeply equal [ null ]".
-      test.skip("writes an entering line's d and stroke-width on the first tick", () => {
-        const node = render(
-          line()
-            .x((d: Point) => d.x)
-            .y((d: Point) => d.y)
-            .strokeWidth(3),
-          oneLine,
-        );
-        expect(paths(node).length).toBe(1);
-        expect(ds(node)).not.toEqual([null]);
-        expect(styles(node, "stroke-width")).not.toEqual([""]);
-      });
+    test("writes an entering line's d and stroke-width on the first tick", () => {
+      const node = render(
+        line()
+          .x((d: Point) => d.x)
+          .y((d: Point) => d.y)
+          .strokeWidth(3),
+        oneLine,
+      );
+      expect(paths(node).length).toBe(1);
+      // SAFETY: the destination geometry, not a placeholder - anything that measures the
+      // path on the render tick (getTotalLength, a bounding box, a synchronous screenshot)
+      // has to see the shape the line settles at.
+      expect(ds(node)).toEqual(["M0,0L10,20L20,10"]);
+      expect(styles(node, "stroke-width")).toEqual(["3"]);
+    });
 
-      test("an entering line snaps to its final shape instead of animating", async () => {
-        // NOTE: the consequence of the above. d3 interpolates the d attribute from the
-        // element's current value, which is null, so there are no matching numbers to
-        // interpolate and the tween returns the target string immediately. Enter is a
-        // jump; only update actually animates.
-        const g = group("enter-snap");
-        g.datum(oneLine).call(
-          line()
-            .x((d: Point) => d.x)
-            .y((d: Point) => d.y) as never,
-        );
-        await new Promise((resolve) => setTimeout(resolve, 30));
-        expect(ds(g.node() as SVGGElement)).toEqual(["M0,0L10,20L20,10"]);
-      });
+    test("an entering line is drawn at its final shape rather than animated into it", async () => {
+      // NOTE: enter writes the destination geometry, so the transition scheduled on top of
+      // it interpolates from the target to the target and nothing moves. Only an update
+      // animates, which is the intent: a line has no previous shape to grow out of.
+      const g = group("enter-snap");
+      g.datum(oneLine).call(
+        line()
+          .x((d: Point) => d.x)
+          .y((d: Point) => d.y) as never,
+      );
+      expect(ds(g.node() as SVGGElement)).toEqual(["M0,0L10,20L20,10"]);
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      expect(ds(g.node() as SVGGElement)).toEqual(["M0,0L10,20L20,10"]);
     });
   });
 });
