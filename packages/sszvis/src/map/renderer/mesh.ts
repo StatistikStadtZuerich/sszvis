@@ -39,9 +39,12 @@
  * consumer cannot restyle a mesh border from their own stylesheet either, since an inline style
  * beats any author rule short of !important.
  *
- * Note: the component sets neither fill nor pointer-events; both come from sszvis.css. Rendered
- * without that stylesheet, the mesh is a filled black shape covering the map, and it swallows the
- * base layer's hover and click events rather than letting them through.
+ * Note: fill: none and pointer-events: none are written as inline styles alongside the stroke, so
+ * the mesh does not need sszvis.css: the border is one single path, so SVG's initial black fill
+ * would otherwise turn it into a shape covering the map, and without pointer-events it swallows
+ * the base layer's hover and click events rather than letting them through. stroke-linejoin and
+ * user-select stay on the class, since both are cosmetic - as does the class itself, so a
+ * consumer's own rule for either still applies.
  *
  * Note: the border path is scoped to the rendering group's own children and identified by the key
  * property, so a mesh only ever rebinds the path it drew itself. Two meshes in one group therefore
@@ -195,6 +198,14 @@ export default function mapRendererMesh(): MapRendererMeshComponent {
 
       meshLine
         .attr("d", mapPath)
+        // Written inline alongside the stroke, so the borders do not need sszvis.css: SVG's
+        // initial fill is black, which without the stylesheet turns this single path into a
+        // filled shape covering the map, and without pointer-events it swallows the base
+        // layer's hover and click events. The component already owns this element's
+        // presentation - it writes both stroke properties - so the two belong here too.
+        // stroke-linejoin and user-select stay on the class: both are cosmetic.
+        .style("fill", "none")
+        .style("pointer-events", "none")
         .style("stroke", asColorString(withDefault(props.borderColor, DEFAULT_BORDER_COLOR)))
         .style("stroke-width", withDefault(props.strokeWidth, DEFAULT_STROKE_WIDTH));
     });

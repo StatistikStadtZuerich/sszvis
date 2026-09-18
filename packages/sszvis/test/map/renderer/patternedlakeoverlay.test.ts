@@ -157,6 +157,17 @@ describe("map/renderer/patternedlakeoverlay", () => {
       expect(node.querySelectorAll("[data-tooltip-anchor]")).toHaveLength(0);
       expect(node.querySelectorAll("[data-event-target]")).toHaveLength(0);
     });
+
+    test("should set the fill and pointer-events both paths depend on", () => {
+      // SAFETY: without these the border path is filled black - SVG's initial fill - covering
+      // the lake it outlines, and both paths swallow the base layer's hover and click events
+      // across the whole lake. The lake shape's own fill is the texture pattern, so only its
+      // pointer-events was missing.
+      const node = render();
+      expect(lakeBorder(node)?.style.fill).toBe("none");
+      expect(lakeBorder(node)?.style.pointerEvents).toBe("none");
+      expect(lakeShape(node)?.style.pointerEvents).toBe("none");
+    });
   });
 
   describe("fadeOut", () => {
@@ -226,8 +237,10 @@ describe("map/renderer/patternedlakeoverlay", () => {
 
   describe("lakePathColor", () => {
     test("should leave the border stroke to the stylesheet when no lakePathColor is set", () => {
+      // The element does carry inline styles - fill and pointer-events are written on every
+      // render - so it is the stroke specifically that has to stay unset for the stylesheet's
+      // dotted grey to stand.
       const node = render();
-      expect(lakeBorder(node)?.hasAttribute("style")).toBe(false);
       expect(lakeBorder(node)?.style.stroke).toBe("");
     });
 
@@ -650,16 +663,6 @@ describe("map/renderer/patternedlakeoverlay", () => {
       const layer = group("lake-none-unvalidated");
       expect(() => layer.call(mapRendererPatternedLakeOverlay())).not.toThrow();
       expect(lakeShape(layer.node() as SVGGElement)).toBeNull();
-    });
-
-    // NOTE: the component sets no pointer-events on either path, so both come from sszvis.css.
-    // Rendered without that stylesheet the border path is filled black - SVG's initial fill -
-    // covering the lake, and both paths swallow the base layer's hover and click events.
-    test("relies on the stylesheet for fill and pointer-events", () => {
-      const node = render();
-      expect(lakeBorder(node)?.hasAttribute("fill")).toBe(false);
-      expect(lakeShape(node)?.style.pointerEvents).toBe("");
-      expect(lakeBorder(node)?.style.pointerEvents).toBe("");
     });
 
     // NOTE: the colour is written as an inline style rather than an attribute, as in the mesh

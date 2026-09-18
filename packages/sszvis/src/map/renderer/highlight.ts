@@ -84,10 +84,11 @@
  * consumer cannot restyle a highlight from their own stylesheet either, since an inline style
  * beats any author rule short of !important.
  *
- * Note: the component sets neither fill nor pointer-events; both come from sszvis.css. Rendered
- * without that stylesheet, a highlight is a filled black shape covering the entity, and it
- * swallows the base layer's hover and click events - which matters more here than for the mesh,
- * since a highlight is normally driven by exactly that hover.
+ * Note: fill: none and pointer-events: none are written as inline styles alongside the stroke, so
+ * a highlight does not need sszvis.css: SVG's initial fill is black, which would cover the entity
+ * the highlight is meant to outline, and without pointer-events it swallows the base layer's hover
+ * - which matters more here than for the mesh, since a highlight is normally driven by exactly
+ * that hover. stroke-linejoin and user-select stay on the class, since both are cosmetic.
  *
  * Note: the paths are scoped by key and the join is keyed by map entity. Each layer joins only the
  * paths inside its own wrapper group, so two highlight layers rendered into one group
@@ -332,6 +333,13 @@ export default function mapRendererHighlight<T = unknown>(): MapRendererHighligh
         .classed("sszvis-map__highlight", true)
         .attr(KEY_ATTRIBUTE, props.key)
         .attr("d", (d) => props.mapPath(d.geoJson))
+        // Written inline alongside the stroke, so a highlight does not need sszvis.css: SVG's
+        // initial fill is black, which without the stylesheet covers the entity it is meant to
+        // outline, and without pointer-events it swallows the base layer's hover - which
+        // matters more here than for the mesh, since a highlight is normally driven by exactly
+        // that hover. stroke-linejoin and user-select stay on the class: both are cosmetic.
+        .style("fill", "none")
+        .style("pointer-events", "none")
         .style("stroke", (d) => colorToString(props.highlightStroke(d.datum)))
         .style("stroke-width", (d) => props.highlightStrokeWidth(d.datum));
     });

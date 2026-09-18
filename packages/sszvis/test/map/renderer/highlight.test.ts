@@ -155,6 +155,16 @@ describe("map/renderer/highlight", () => {
     });
 
     describesNoDecorations(() => render((c) => c.highlight([{ geoId: "a" }])));
+
+    test("should set the fill and pointer-events it depends on, not leave them to the stylesheet", () => {
+      // SAFETY: without these a highlight rendered without sszvis.css is a filled black shape
+      // covering the entity it is meant to outline, and it swallows the base layer's hover -
+      // which is worse here than for the mesh, since a highlight is normally driven by exactly
+      // that hover.
+      const path = highlights(render((c) => c.highlight([{ geoId: "a" }])))[0];
+      expect(path.style.fill).toBe("none");
+      expect(path.style.pointerEvents).toBe("none");
+    });
   });
 
   describe("empty highlight", () => {
@@ -772,17 +782,6 @@ describe("map/renderer/highlight", () => {
       const node = render((c) => c.highlight([{ geoId: "a" }, { geoId: "a" }]));
       expect(highlights(node)).toHaveLength(2);
       expect(highlights(node)[0].getAttribute("d")).toBe(highlights(node)[1].getAttribute("d"));
-    });
-
-    // NOTE: the component sets neither fill nor pointer-events, so both come from sszvis.css. A
-    // highlight rendered without that stylesheet is a filled black shape covering the entity,
-    // and it swallows the base layer's hover and click events - which is worse here than for the
-    // mesh, since a highlight is normally driven by exactly that hover.
-    test("relies on the stylesheet for fill and pointer-events", () => {
-      const path = highlights(render((c) => c.highlight([{ geoId: "a" }])))[0];
-      expect(path.hasAttribute("fill")).toBe(false);
-      expect(path.style.fill).toBe("");
-      expect(path.style.pointerEvents).toBe("");
     });
 
     // NOTE: no transition is scheduled, so a highlight appears and disappears instantly. Pinned
