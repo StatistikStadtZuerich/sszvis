@@ -17,7 +17,8 @@
  *                                      being wrapped in a group the caller empties.
  * @property {GeoJson} lakeBounds       A GeoJson object which provides data for the shape of map entity borders which lie over the
  *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
- *                                      Never validated, like lakeFeature.
+ *                                      Optional: a geography can have a lake with no borders reaching over it, and
+ *                                      absent means no border path is drawn at all.
  * @property {String, Function} lakePathColor  The stroke colour of those borders. No default: the stylesheet's grey
  *                                      dotted stroke stands unless this is set. A falsy colour - "" - clears the
  *                                      inline stroke again. Not wrapped in fn.functor.
@@ -53,11 +54,12 @@
  * the same group. Only the definitions carrying this overlay's scope are ever removed from it.
  *
  * Note: an absent lakeFeature is an instruction rather than a mistake - it clears the overlay - so
- * it is neither validated nor reported. lakeBounds is still unvalidated in the older sense:
- * omitting it while there is a lake to draw leaves a classed border path with no geometry, because
- * the missing property reaches the path generator as undefined, which returns null. A missing
- * mapPath has d3 remove the attribute without calling anything. The same root defect as the mesh
- * renderer.
+ * it is neither validated nor reported. Past that branch there is a lake to draw and mapPath is
+ * required, reported by name before either join the way the mesh renderer reports its own;
+ * without it d3 removed the "d" attribute from both paths without calling anything, leaving two
+ * classed, styled paths with no geometry. An absent lakeBounds is likewise an instruction - a
+ * geography can have a lake and no borders over it - so its join is given nothing and the border
+ * path leaves the DOM, rather than being bound undefined and left behind with no geometry.
  *
  * Note: the clearing branch removes only this overlay's own paths and only the three definitions
  * carrying its scope, so clearing one overlay leaves a sibling overlay in the same group intact.
@@ -124,16 +126,21 @@ type LakePathColor = ColorValue | ValueFn<BaseType, GeoPermissibleObjects, Color
 
 /**
  * The props as this component's contract describes them, which is deliberately narrower than what
- * the runtime tolerates. None of the three geometry props is validated, but their absences differ:
+ * the runtime tolerates. The three geometry props differ in what absence means:
  *
  * - lakeFeature is optional here, because absent means "no lake". The render then removes this
- *   overlay's two paths and its three scoped definitions and returns, drawing nothing else.
- * - mapPath is required here even though it is only ever handed to d3 as the "d" attribute
- *   callback. Absent, d3 removes "d" from both paths without calling anything, leaving two classed,
- *   styled paths - fill, mask and stroke are still written - with no geometry.
- * - lakeBounds is required here for the same reason. Absent, only the border path is affected: it
- *   reaches the path generator as undefined, and a d3.geoPath returns null for an undefined
- *   feature, so "d" is removed from that one path while the lake shape itself still draws.
+ *   overlay's two paths and its three scoped definitions and returns, drawing nothing else - and
+ *   needs neither of the other two to do it, which is why they are validated after this branch
+ *   rather than at the top of the render.
+ * - mapPath is required past that branch even though it is only ever handed to d3 as the "d"
+ *   attribute callback. Absent, d3 removed "d" from both paths without calling anything, leaving
+ *   two classed, styled paths - fill, mask and stroke are still written - with no geometry.
+ * - lakeBounds is optional, because absent means "no borders over this lake" - the agglomeration
+ *   is the shipped example, and choropleth forwards an unset lakeBorders straight through. Its
+ *   join is given nothing, so no border path is created and one drawn earlier is removed. It used
+ *   to be bound undefined, and a d3.geoPath returns null for an undefined feature, so "d" was
+ *   removed from that one path while the lake shape still drew - which is why the map looked
+ *   finished.
  *
  * The characterization tests pin that behaviour, which is why the getters report all three as
  * possibly undefined. Following the same split as src/map/renderer/mesh.ts.
@@ -142,7 +149,8 @@ type LakeOverlayProps = {
   mapPath: LakePath;
   /** Absent - undefined or null - means "no lake": the overlay then removes what it drew. */
   lakeFeature?: GeoPermissibleObjects | null;
-  lakeBounds: GeoPermissibleObjects;
+  /** Absent means "no borders over this lake": the overlay then draws no border path at all. */
+  lakeBounds?: GeoPermissibleObjects;
   /** Undefined until set: this prop has no default, and an unset colour writes no inline style. */
   lakePathColor?: LakePathColor;
   fadeOut: boolean;
@@ -158,7 +166,7 @@ export interface MapRendererPatternedLakeOverlayComponent extends ComponentBuild
     value: GeoPermissibleObjects | null | undefined,
   ): MapRendererPatternedLakeOverlayComponent;
   lakeBounds(): GeoPermissibleObjects | undefined;
-  lakeBounds(value: GeoPermissibleObjects): MapRendererPatternedLakeOverlayComponent;
+  lakeBounds(value: GeoPermissibleObjects | undefined): MapRendererPatternedLakeOverlayComponent;
   lakePathColor(): LakePathColor | undefined;
   lakePathColor(value: LakePathColor): MapRendererPatternedLakeOverlayComponent;
   fadeOut(): boolean;
@@ -274,6 +282,25 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         return;
       }
 
+      // Validated here rather than at the top of the render: an absent lakeFeature means "no
+      // lake", and that state needs no mapPath to clear what an earlier render drew. Past it
+      // there is a lake, and drawing it without a path generator used to leave two classed,
+      // styled paths with no geometry, because d3 removes an attribute set to undefined without
+      // calling anything. The mesh renderer reports its own the same way.
+      //
+      // lakeBounds is deliberately not required alongside it: a geography can have a lake and no
+      // borders reaching over it - the agglomeration is the shipped example, and choropleth
+      // forwards an unset lakeBorders straight through - so its absence is handled at the join
+      // below rather than rejected here.
+      // `== null` rather than `=== undefined`, so an explicit null is reported by name here
+      // instead of reaching d3 and silently removing the attribute, the way lakeFeature - which
+      // is documented as accepting both - is already handled.
+      if (props.mapPath == null) {
+        throw new TypeError(
+          "map/renderer/patternedLakeOverlay: mapPath is required, since it turns the lake geometry into path data",
+        );
+      }
+
       // the lake texture. The helpers join their contents, so calling them on every render updates
       // the definition rather than growing it.
       ensureDefsElement(selection, "pattern", patternId).call(mapLakePattern);
@@ -305,8 +332,13 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
 
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
+      // No bounds means no borders reach over this lake, which is a geography's own shape rather
+      // than a misconfiguration - so the join is given nothing and the path leaves the DOM. It
+      // used to be bound undefined, and a d3.geoPath returns null for an undefined feature, so
+      // the result was a classed border path with no geometry: indistinguishable from having had
+      // borders that drew nothing, and still found by CSS rules and hit tests.
       const lakePath = ownPaths("sszvis-map__lakepath")
-        .data([props.lakeBounds])
+        .data(props.lakeBounds === undefined ? [] : [props.lakeBounds])
         .join("path")
         .classed("sszvis-map__lakepath", true)
         .attr(KEY_ATTRIBUTE, scope)

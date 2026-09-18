@@ -328,6 +328,28 @@ describe("maps/choropleth", () => {
       expect(lake(node)[0].getAttribute("mask")).toBe(`url(#lake-fade-mask-${lakeScope(node)})`);
     });
 
+    test("should draw a lake with no borders over it when lakeBorders is left unset", () => {
+      // SAFETY: a geography can have a lake and no borders reaching over it, and the shipped
+      // agglomeration example is exactly that - it sets lakeFeatures and leaves lakeBorders out
+      // deliberately. choropleth forwards the unset property straight through, so this pins the
+      // contract the map depends on: the lake draws, no border path is left behind, and nothing
+      // throws.
+      const target = layer("lake-no-borders");
+      const node = target
+        .call(
+          choropleth()
+            .features(geoJson())
+            .borders(mesh())
+            .lakeFeatures(lakeFeature())
+            .width(240)
+            .height(240),
+        )
+        .node() as SVGGElement;
+      expect(lake(node)).toHaveLength(1);
+      expect(lake(node)[0].hasAttribute("d")).toBe(true);
+      expect(lakePaths(node)).toHaveLength(0);
+    });
+
     // Turning the fade back off removes it: the renderer drops the mask attribute and both of its
     // definitions rather than only skipping the write, so a chart driving lakeFadeOut from a
     // control can unfade.
