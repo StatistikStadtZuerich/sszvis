@@ -14,7 +14,9 @@
  *          .call(d3TextWrap, x.rangeBand());
  *
  * @param selection d3 selection for one or more <text> object
- * @param width number - global width in which the text will be word-wrapped.
+ * @param width number - global width in which the text will be word-wrapped. A width that is
+ *        not a finite number skips wrapping altogether and logs a warning, leaving the text
+ *        as it was: unlike the paddings there is no default to fall back to.
  * @param paddingRightLeft number - Padding right and left between the wrapped text and the
  *        'invisible box' of 'width' width. It always narrows the width the text is measured
  *        against, but only reaches the rendered 'x' on untranslated <text>, and only for
@@ -28,10 +30,11 @@
  *        'invisible box' of 'width' width. Two pixels are subtracted from it to account for
  *        the borders, so the rendered 'y' is padding - 2: the default of 5 yields y="3" and
  *        an explicit 0 yields y="-2". It is used only when the <text> element carries no 'y'
- *        attribute of its own; otherwise that attribute wins and this argument is ignored.
+ *        attribute of its own, or carries one that cannot be read as a number - an SVG 'y' may
+ *        legally be "1em" or "50%"; otherwise that attribute wins and this argument is ignored.
  *        Defaults to 5 when omitted or when the value is not a finite number, which logs a
  *        warning on each such call; an explicit 0 and a negative padding are honoured.
- * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
+ * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function. Empty when the width was unusable and nothing was wrapped.
  */
 
 import type { BaseType, Selection } from "d3";
@@ -75,6 +78,19 @@ export default function textWrap<D, P extends BaseType, PD>(
   paddingRightLeft?: number,
   paddingTopBottom?: number,
 ): number[] {
+  // Unlike the paddings there is no sensible default width to fall back to - a width is the
+  // whole instruction - so an unusable one skips wrapping instead of substituting a number.
+  // The text is left exactly as it was, which is a readable label rather than a poisoned one:
+  // a non-finite width compares every measured line against NaN, which disables wrapping
+  // anyway, and is written straight into the `x` attribute as "NaN" or "-Infinity". It is
+  // reachable through the public API - fn.defined, which axis screens props.textWrap with,
+  // excludes NaN but not +/-Infinity, so axis().textWrap(Infinity) used to land on every tick
+  // label.
+  if (!Number.isFinite(width)) {
+    logger.warn("sszvis.svgUtils.textWrap: ignoring a non-finite width, not wrapping");
+    return [];
+  }
+
   const padRightLeft = resolvePadding(paddingRightLeft, "paddingRightLeft");
   // Remove 2 pixels because of the borders
   const padTopBottom = resolvePadding(paddingTopBottom, "paddingTopBottom") - 2;
@@ -119,8 +135,12 @@ export default function textWrap<D, P extends BaseType, PD>(
         };
     const x = xByAnchor[textAlign];
 
+    // An SVG 'y' is a length, so "1em" and "50%" are both legal and neither coerces to a
+    // number - +"1em" is NaN, which used to be written straight back out as y="NaN". A 'y'
+    // that cannot be read as a number is treated as absent, so the padding applies.
     const yAttr = text.attr("y");
-    const y = +(yAttr === null ? padTopBottom : yAttr);
+    const parsedY = yAttr === null ? Number.NaN : +yAttr;
+    const y = Number.isFinite(parsedY) ? parsedY : padTopBottom;
 
     let tspan = text
       .text(null)

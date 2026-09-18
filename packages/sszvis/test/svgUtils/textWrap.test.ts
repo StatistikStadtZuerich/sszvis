@@ -267,6 +267,33 @@ describe("svgUtils/textWrap", () => {
         expect(tspansOf(text)[0].getAttribute("y")).toBe("-12");
       });
 
+      test.each([
+        ["middle", "a non-tick text, where x is derived from the full width"],
+        ["start", "a non-tick text, where x is the padding"],
+      ])("should not wrap or write an x when the width is not finite (%s)", (anchorStyle) => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        const text = appendText("aaaaa bbbbb ccccc");
+        text.style.textAnchor = anchorStyle;
+        expect(textWrap(select(text), Number.POSITIVE_INFINITY)).toEqual([]);
+        // The text is left exactly as it was: no tspans, so nothing carries a poisoned x.
+        expect(tspansOf(text).length).toBe(0);
+        expect(text.textContent).toBe("aaaaa bbbbb ccccc");
+        // SAFETY: without this, dropping the warning would leave the suite green.
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
+      });
+
+      test("should not wrap or write an x when a tick label is given a non-finite width", () => {
+        // A tick label derives x from the narrowed width alone, so it is the other path into
+        // the x attribute. axis().textWrap(Infinity) reaches exactly this: fn.defined, which
+        // axis screens the prop with, excludes NaN but not Infinity.
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        const text = appendText("aaaaa bbbbb ccccc", { inTick: true });
+        expect(textWrap(select(text), Number.POSITIVE_INFINITY)).toEqual([]);
+        expect(tspansOf(text).length).toBe(0);
+        warn.mockRestore();
+      });
+
       test("should keep x and y numeric when both paddings are not finite", () => {
         const text = appendText("aaaaa bbbbb ccccc");
         textWrap(select(text), 100, Number.NaN, Number.NaN);
@@ -274,6 +301,16 @@ describe("svgUtils/textWrap", () => {
           expect(tspan.getAttribute("x")).not.toBe("NaN");
           expect(tspan.getAttribute("y")).not.toBe("NaN");
         }
+      });
+
+      test("should treat a y the browser accepts but a number parser does not as absent", () => {
+        // An SVG 'y' is a length, so "1em" is legal. +"1em" is NaN, which used to be written
+        // straight back out as y="NaN" on every tspan. An unreadable y falls back to the
+        // padding, as an absent one does.
+        const text = appendText("aa");
+        text.setAttribute("y", "1em");
+        textWrap(select(text), 100);
+        expect(tspansOf(text)[0].getAttribute("y")).toBe("3");
       });
 
       test("should preserve the y attribute of the text element", () => {
