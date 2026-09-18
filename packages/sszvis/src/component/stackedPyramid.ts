@@ -133,8 +133,8 @@
  * does not have to guard for one.
  *
  * Note: the cascade groups on String(key) - for the sides, the rows and the series alike - so keys
- * that differ only in type merge, and the number 1 and the string "1" land in the same cell where
- * only the first of them is stacked. The ordering follows from the same coercion: JavaScript
+ * that differ only in type merge, and the number 1 and the string "1" land in the same cell, whose
+ * rows are then summed together. The ordering follows from the same coercion: JavaScript
  * iterates array-index keys in ascending numeric order regardless of insertion order, so dense
  * non-negative integer rows sort themselves, while negative, fractional or plain string rows fall
  * back to insertion order and are laid out in whatever order the input happened to be in. Since
@@ -151,10 +151,11 @@
  * and a third side is returned and then dropped without a word by the caller's positional
  * accessors. Shared with stackedBarData.
  *
- * Note: the value of a cell is read from its first row only, so data that is not already aggregated
- * to one row per (side, row, series) triplet is silently truncated rather than summed. The layout
- * function requires the triplet to appear exactly once and says it makes no effort to normalize the
- * data if that is not the case, but nothing reports a violation. Shared with stackedBarData.
+ * Note: a cell's value is the sum of every row the accessors placed in it, so data that is not
+ * already aggregated to one row per (side, row, series) triplet stacks to its true total. The
+ * layout function still documents the triplet as appearing exactly once; what has changed is that
+ * a violation is no longer silently understated to the cell's first row. Shared with
+ * stackedBarData.
  *
  * Note: stackedPyramidData hangs `maxValue` off the returned array rather than wrapping it in an
  * object, so any array operation - a spread, a map, a filter, a trip through JSON - drops it. The
@@ -239,6 +240,7 @@ import {
   type Selection,
   type SeriesPoint,
   select,
+  sum,
 } from "d3";
 import { cascade } from "../cascade.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
@@ -352,8 +354,8 @@ export interface StackedPyramidLayout<T, S extends string | number = string> {
  *  - series: determines in which series (for the stack) the value is.
  *  - value: the numerical value.
  *
- * The combination of each distinct (side,row,series) triplet MUST appear only once
- * in the data. This function makes no effort to normalize the data if that's not the case.
+ * The combination of each distinct (side,row,series) triplet SHOULD appear only once in the data.
+ * Where it does not, every row of the cell is summed rather than only the first being read.
  */
 export function stackedPyramidLayout<T, S extends string | number = string>(
   sideAcc: (datum: T) => S,
@@ -387,9 +389,12 @@ export function stackedPyramidLayout<T, S extends string | number = string>(
 
       const stacks = d3Stack<CascadeRow<T>, string>()
         .keys(keys)
-        // Only the first datum of each cell is read; a cell the row has no datum for
-        // contributes zero.
-        .value((x, key) => (x[key] === undefined ? 0 : valueAcc(x[key][0])))(rows);
+        // Every row the accessors placed in a cell contributes to that cell's value, so data
+        // that is not pre-aggregated to one row per (side, row, series) triplet stacks to its
+        // true total rather than to its first row - which was silently understated, with no
+        // warning and no error, just a shorter bar. A cell the row has no datum for stacks as
+        // zero rather than throwing. The same correction stackedBarData makes.
+        .value((x, key) => sum(x[key] ?? [], valueAcc))(rows);
 
       // Simplify the 'data' property. The slices themselves are the objects d3 created,
       // rewritten in place, so a caller holding one sees the new shape. The series arrays are
@@ -407,7 +412,13 @@ export function stackedPyramidLayout<T, S extends string | number = string>(
             // The value the row accessor returned, read off whichever series the cascade
             // row does carry - a padding slice has no source row of its own.
             row: rowValueAcc(firstCell(d.data)),
-            value: datum === undefined ? 0 : valueAcc(datum),
+            // Taken from the stacked pair rather than from the cell's first row, so it is the
+            // whole cell where the accessors placed more than one row there - the same total
+            // the bar is drawn at. Reading the first row instead left a slice whose value
+            // disagreed with its own extent, which a reference line built from the layout's
+            // own slices then drew at the understated figure while the bars behind it showed
+            // the total. A padding slice has an empty pair, so it still reports 0.
+            value: d[1] - d[0],
           });
         });
         return Object.assign(slices, { key: stack.key, index: stack.index });

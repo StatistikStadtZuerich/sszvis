@@ -383,6 +383,58 @@ describe("component/stackedPyramid", () => {
       expect(strings[0][0].map((d) => d.row)).toEqual(["60+", "0-59"]);
     });
 
+    test("stacks the series in the order the accessor first returns them", () => {
+      // SAFETY: the key order is the stacking order, so which series sits on the baseline -
+      // and with it the whole reading of the chart - has to follow the accessor rather than
+      // the data's key shape. A plain object enumerates integer-like keys numerically, which
+      // is what used to reorder years and numeric codes.
+      const sides = layout([
+        { side: "f", row: 0, series: 2010 as unknown as string, value: 1 },
+        { side: "f", row: 0, series: 2000 as unknown as string, value: 2 },
+      ]);
+      expect(sides[0].map((series) => series.key)).toEqual(["2010", "2000"]);
+    });
+
+    test("keeps each side's stacking order independent of the other's", () => {
+      // The keys are taken per side, so a series one side never carries does not become a
+      // layer there, and the sides do not have to agree on an order.
+      const sides = layout([
+        { side: "f", row: 0, series: "a", value: 1 },
+        { side: "m", row: 0, series: "b", value: 2 },
+        { side: "m", row: 0, series: "a", value: 3 },
+      ]);
+      expect(sides[0].map((series) => series.key)).toEqual(["a"]);
+      expect(sides[1].map((series) => series.key)).toEqual(["b", "a"]);
+    });
+
+    test("sums every row the accessors place in one cell", () => {
+      // SAFETY: unaggregated data used to be understated with no warning and no error, just
+      // a shorter bar - the second row of the cell was simply dropped.
+      const sides = layout([
+        { side: "f", row: 0, series: "a", value: 1 },
+        { side: "f", row: 0, series: "a", value: 100 },
+      ]);
+      const slice = sides[0][0][0];
+      expect(slice[1]).toBe(101);
+      // The slice's own value has to agree with the extent it is drawn at, or a consumer
+      // reading it - a tooltip, or a reference line built from the layout's own slices -
+      // reports a different number from the bar beside it.
+      expect(slice.value).toBe(101);
+    });
+
+    test("still stacks a cell the row carries no datum for as zero", () => {
+      // A series one row has no observation for contributes a zero-width padding slice
+      // rather than throwing, which the summing must not change.
+      const sides = layout([
+        { side: "f", row: 0, series: "a", value: 1 },
+        { side: "f", row: 1, series: "b", value: 2 },
+      ]);
+      const [, seriesB] = sides[0];
+      expect(seriesB.key).toBe("b");
+      // Row 0 carries no "b", so its slice is the zero-width pad.
+      expect(seriesB[0][1] - seriesB[0][0]).toBe(0);
+    });
+
     describe("known quirks", () => {
       test("orders the rows by their stringified keys, not by the order they arrive in", () => {
         // NOTE: the cascade groups the rows into a plain object keyed by String(row), and
@@ -414,46 +466,6 @@ describe("component/stackedPyramid", () => {
           { side: 0 as unknown as string, row: 0, series: "a", value: 2 },
         ]);
         expect(numbers[0][0][0].side).toBe(0);
-      });
-
-      test("stacks the series in the order the accessor first returns them", () => {
-        // SAFETY: the key order is the stacking order, so which series sits on the baseline -
-        // and with it the whole reading of the chart - has to follow the accessor rather than
-        // the data's key shape. A plain object enumerates integer-like keys numerically, which
-        // is what used to reorder years and numeric codes.
-        const sides = layout([
-          { side: "f", row: 0, series: 2010 as unknown as string, value: 1 },
-          { side: "f", row: 0, series: 2000 as unknown as string, value: 2 },
-        ]);
-        expect(sides[0].map((series) => series.key)).toEqual(["2010", "2000"]);
-      });
-
-      test("keeps each side's stacking order independent of the other's", () => {
-        // The keys are taken per side, so a series one side never carries does not become a
-        // layer there, and the sides do not have to agree on an order.
-        const sides = layout([
-          { side: "f", row: 0, series: "a", value: 1 },
-          { side: "m", row: 0, series: "b", value: 2 },
-          { side: "m", row: 0, series: "a", value: 3 },
-        ]);
-        expect(sides[0].map((series) => series.key)).toEqual(["a"]);
-        expect(sides[1].map((series) => series.key)).toEqual(["b", "a"]);
-      });
-
-      // BUG(#433): the stack value is read as x[key][0], so data that is not already
-      // aggregated to one row per (side, row, series) triplet is silently truncated rather
-      // than summed. The header says the triplet "MUST appear only once" and that the
-      // function "makes no effort to normalize the data if that's not the case", but nothing
-      // reports a violation. Shared with stackedBarData, where it was filed as #107 for the
-      // stackedBar layouts only and fixed there.
-      // current: the second 100 is dropped. expected: 101, or a reported error.
-      // Skipped, not deleted: it fails with "expected 1 to be 101".
-      test.skip("sums every row the accessors place in one cell", () => {
-        const sides = layout([
-          { side: "f", row: 0, series: "a", value: 1 },
-          { side: "f", row: 0, series: "a", value: 100 },
-        ]);
-        expect(sides[0][0][0][1]).toBe(101);
       });
 
       test("does not check that there are exactly two sides", () => {
@@ -497,15 +509,15 @@ describe("component/stackedPyramid", () => {
       test("merges keys that differ only in type", () => {
         // NOTE: the cascade groups on String(key), so the number 1 and the string "1" land
         // in the same group - for the sides, the rows and the series alike. The two rows
-        // below become one cell, and only the first of them is stacked, so the second value
-        // vanishes. Shared with stackedBarData.
+        // below become one cell; both are now stacked, so the merge costs a slice rather
+        // than a value. Shared with stackedBarData.
         const sides = layout([
           { side: 1 as unknown as string, row: 0, series: "a", value: 1 },
           { side: "1", row: 0, series: "a", value: 2 },
         ]);
         expect(sides.length).toBe(1);
         expect(sides[0][0].length).toBe(1);
-        expect(sides[0][0][0][1]).toBe(1);
+        expect(sides[0][0][0][1]).toBe(3);
         // The side tag comes from the first row of the merged group, so it keeps its type.
         expect(sides[0][0][0].side).toBe(1);
       });
