@@ -119,10 +119,8 @@
  *                                            satisfies the shape unchanged. Optional, and so is the
  *                                            data: an accessor that yields undefined or null for
  *                                            some states draws no line for that state and warns,
- *                                            rather than throwing. Returning an empty array hides
- *                                            it silently, though the classed path element stays in
- *                                            the DOM with no d attribute, where CSS and hit tests
- *                                            can still find it.
+ *                                            rather than throwing. Returning an empty array hides it
+ *                                            silently, and removes the path element with it.
  * @property {function} [rightRefAccessor]    Reference data for the right side. Same as
  *                                            leftRefAccessor.
  *
@@ -200,12 +198,11 @@
  * from the stylesheet; the class here is deliberately not pyramid's, so the two components do not
  * collide with each other in turn.
  *
- * Note: the reference datum is wrapped in an array, one array of points per path, so each side is
- * capped at a single line and, while a reference accessor is set, the join always has exactly one
- * element and the exit selection can never fire: once a line has been rendered its path element
- * stays in the DOM even after the reference data goes away, with only its d attribute dropped. Only
- * removing the accessor itself empties the group. The mirror property writes transform="" on the
- * right side rather than omitting the attribute. Shared with pyramid.
+ * Note: the reference datum is one array of points per path, so each side is capped at a single
+ * line. referenceSeries resolves a side with nothing to draw to no entry at all rather than to one
+ * empty entry, which is what lets the exit selection fire and the path leave the DOM when the
+ * reference data goes away. The mirror property writes transform="" on the right side rather than
+ * omitting the attribute. Shared with pyramid.
  *
  * Note: the stack join is a child selector, ":scope > [data-sszvis-stack]", so only the groups the
  * component owns take part in it and a caller may render content of its own - including further
@@ -707,12 +704,15 @@ function stackComponent<T, S extends string | number>(): StackComponent<T, S> {
 }
 
 /**
- * Resolves one side's reference series into the array-of-series the line component joins on.
+ * Resolves one side's reference series into the array-of-series the line component joins on:
+ * one entry when there is something to draw, none otherwise. A series with no points therefore
+ * removes its path rather than leaving an empty one behind.
  *
  * An accessor returning undefined or null breaks its contract, so it is warned about - but it
  * is warned about rather than thrown on, because it is data-driven: an accessor indexing into
  * a cascaded object hits it as soon as one series is missing from one state, and that must not
- * take the chart down. The same resolver pyramid uses.
+ * take the chart down. An empty array is a legitimately empty series and passes silently. The
+ * same resolver pyramid uses.
  */
 function referenceSeries<T, S extends string | number>(
   accessor: ReferenceAccessor<T, S> | undefined,
@@ -727,7 +727,7 @@ function referenceSeries<T, S extends string | number>(
     );
     return [];
   }
-  return [series];
+  return series.length === 0 ? [] : [series];
 }
 
 type ReferenceLineProps = {
