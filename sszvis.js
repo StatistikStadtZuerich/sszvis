@@ -5910,11 +5910,12 @@
      * Note: stroke and strokeWidth are written as inline styles, where bar and dot write their colours as
      * attributes. An inline style outranks a stylesheet rule, so a theme can restyle a bar but never a line.
      *
-     * Note: with transition enabled, the d attribute and stroke-width are only written through the
-     * transition, so a freshly rendered line has an empty path element until the first animation frame
-     * runs. Anything measuring the path synchronously - getTotalLength, a bounding box, a screenshot -
-     * sees nothing. Entering lines also snap rather than animate, because d3 has no previous d value to
-     * interpolate from; only updates animate. See test/component/line.test.ts.
+     * Note: with transition enabled an entering line is given its d and stroke-width at the join as
+     * well as on the transition, so a path measured synchronously - getTotalLength, a bounding box, a
+     * screenshot - is never empty. The transition then interpolates from the destination to itself, so
+     * an entering line is drawn at its final shape and its stroke-width no longer grows out of the
+     * stylesheet's; only an update animates. The cost is that the accessors are evaluated a second
+     * time for entering lines. See test/component/line.test.ts.
      *
      * Note: the default missing-value guard inspects both dimensions, but only catches values that fail
      * to coerce to a number. Infinity, which a scale over a zero-width domain produces, still reaches the
@@ -5987,7 +5988,21 @@
           return colorToString(strokeValue.call(this, datum, index, groups));
         };
         const strokeWidth = valueFn(props.strokeWidth ?? null);
-        const path = selection.selectAll(".sszvis-line").data(data, props.key).join("path").classed("sszvis-line", true).style("stroke", stroke);
+        const path = selection.selectAll(".sszvis-line").data(data, props.key).join(enter => {
+          const entered = enter.append("path");
+          // Only the transition branch defers these, and only for an entering line: an
+          // update already has last render's values in the DOM to interpolate from, and
+          // the branch below writes both on the selection when transitions are off.
+          // Writing them here keeps a fresh line out of the geometry-less state a
+          // consumer that measures on the render tick - getTotalLength, a bounding box, a
+          // synchronous screenshot - would otherwise see, at the cost of evaluating the
+          // accessors a second time. The transition then interpolates from the
+          // destination to itself, so nothing jumps.
+          if (props.transition) {
+            entered.attr("d", pathData).style("stroke-width", strokeWidth);
+          }
+          return entered;
+        }).classed("sszvis-line", true).style("stroke", stroke);
         path.order();
         // The visual properties are applied to the transition when there is one, so the two
         // branches are spelled out rather than sharing a variable - a d3 transition and a
@@ -6157,7 +6172,15 @@
         // taken once per row from whichever datum the row does hold. The stack layers d3
         // returns are index-aligned to the rows it was given.
         const stackValues = rows.map(row => _stackAcc(Object.values(row).flat()[0]));
-        const series = stacks.map(stack => {
+        // index is renumbered to the series' position in this array rather than carried over
+        // from d3. d3 assigns it from the stacking order while returning the array in key
+        // order, so the vertical layout - which stacks in reverse - handed back an array whose
+        // index counted the other way, and a caller that read index to drive a legend got the
+        // stack the wrong way up. The horizontal layout stacks in key order, so the two already
+        // agreed there, which is what made the mismatch easy to miss when moving code between
+        // orientations. The array order itself is unchanged, so nothing about the rendering
+        // moves; only the number a caller reads off a series does.
+        const series = stacks.map((stack, index) => {
           const slices = stack.map((d, i) => {
             const datum = d.data[stack.key]?.[0];
             return Object.assign(d, {
@@ -6168,7 +6191,7 @@
           });
           return Object.assign(slices, {
             key: stack.key,
-            index: stack.index
+            index
           });
         });
         // Both bounds are considered, so a stack that reaches below the baseline reports an
@@ -7379,6 +7402,10 @@
      * on line.
      * key sees a layer and its index too, but its third argument depends on which half of the keyed
      * join is running: the array of incoming layers, or the group of nodes already in the DOM.
+     * With a transition, the style accessors are additionally invoked once on the enter selection,
+     * whose group array has a hole at every updating position - so an accessor that walks its third
+     * argument sees a sparse group on that pass, the same shape stackedAreaMultiples documents. The
+     * value that reaches the DOM is the one from the merged pass, which is never sparse.
      *
      * Note: the default defined predicate guards both vertical bounds by hand, as line does. The
      * expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
@@ -7389,20 +7416,14 @@
      * too, which a plain isNaN test would not: isNaN(null) is false, so a null would coerce to 0 and be
      * plotted at the top of the chart. line, by contrast, still lets null through.
      *
-     * Note: with transition enabled the selection is replaced by the transition before any attribute is
-     * written, so d, fill, stroke and stroke-width are all deferred and the class is the only thing
-     * applied synchronously. A freshly rendered chart is an empty path element until the first
-     * animation frame runs, and anything measuring it synchronously - getTotalLength, a bounding box, a
-     * screenshot - sees nothing. line defers d and stroke-width the same way but still writes its
-     * stroke synchronously, and bar and dot write their geometry synchronously, so this is the widest
-     * version of the hole.
-     *
-     * Note: the deferred attributes do not enter uniformly. d and the two colours jump to their target
-     * on the first frame, because d3 interpolates from the element's current value and there is none to
-     * pair with, while stroke-width animates up from 0, because a numeric interpolation coerces the
-     * missing start value and +null is 0. The layers appear at full size with a hairline that thickens
-     * over the transition. Routing the colours through the transition also rewrites them as rgb(), so a
-     * stylesheet or a test matching the hex string that was passed in will not find it.
+     * Note: with transition enabled every visual attribute also goes through the transition, so an
+     * entering area is given d, fill, stroke and stroke-width at the join as well. Without that an
+     * entering path carries only its classes until the first animation frame, and anything measuring
+     * the chart synchronously - getTotalLength, a bounding box, a screenshot - sees nothing. It also
+     * settles what an enter looks like: the transition then interpolates from the destination to
+     * itself, so the layers appear complete instead of at full size with a hairline thickening up from
+     * 0, and d3 skips a constant tween whose start equals its end, so the colours stay as they were
+     * given rather than being rewritten as rgb(). Only an update animates.
      *
      * Note: the header this replaces documented a valuesAccessor property, saying the default treats
      * the layer object as an array of values. The component never declared it, so the setter does not
@@ -7529,7 +7550,22 @@
         // components joining the same path nodes. The generic class stays on the node, so no CSS
         // selector changes meaning, and both are added with classed rather than written as a
         // class attribute, so a class a caller put on the node survives every rerender.
-        const paths = selection.selectAll("path.sszvis-stacked-area-path").data(data, props.key).join("path").classed("sszvis-path", true).classed("sszvis-stacked-area-path", true);
+        const paths = selection.selectAll("path.sszvis-stacked-area-path").data(data, props.key).join(enter => {
+          const entered = enter.append("path");
+          // Only the transition branch defers these, and only for an entering area: an
+          // update already has last render's values in the DOM to interpolate from, and the
+          // branch below writes all four on the selection when transitions are off. Writing
+          // them here keeps a fresh area out of the attribute-less state a consumer that
+          // measures on the render tick - getTotalLength, a bounding box, a synchronous
+          // screenshot - would otherwise see. The transition then interpolates from the
+          // destination to itself, so the hairline no longer grows up from 0. Guarded rather
+          // than written unconditionally, so the no-transition path still evaluates each
+          // accessor exactly once per render - which the accessor tests pin.
+          if (props.transition) {
+            entered.attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+          }
+          return entered;
+        }).classed("sszvis-path", true).classed("sszvis-stacked-area-path", true);
         // Every visual property is applied to the transition when there is one, so the two
         // branches are spelled out rather than sharing a variable - a d3 transition and a d3
         // selection have separate types.
@@ -7649,7 +7685,7 @@
      *
      * Note: transition applies to updating bands only. An entering band is painted directly, as bar
      * does, so a freshly rendered chart is complete on the same tick rather than leaving an empty path
-     * element until the first animation frame, which is what stackedArea does. A band already on screen
+     * element until the first animation frame - the same as stackedArea and bar. A band already on screen
      * holds its old geometry and colours and eases into the new ones over 300ms. Between 47f58578
      * ("perf: change .enter() to .join() API", Oct 2024) and this fix the transition was created on its
      * own statement with its return value dropped, so it carried no tweens and every attribute was
@@ -7803,9 +7839,9 @@
         // only: null and "" are supplied values and reach d3 as given.
         const stroke = colorFn(props.stroke === undefined ? "#ffffff" : props.stroke);
         const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
-        // An entering band is painted synchronously, as bar does, so it is complete on the
-        // tick it appears on rather than staying an empty path element until the first
-        // animation frame - which is stackedArea's own quirk and not one worth importing.
+        // An entering band is painted synchronously, as bar and stackedArea do, so it is
+        // complete on the tick it appears on rather than staying an empty path element until
+        // the first animation frame.
         // Only the bands already on screen are transitioned, so each attribute is written
         // exactly once per render either way. The two branches are spelled out rather than
         // sharing a variable, since a d3 transition and a d3 selection have separate types.
@@ -7966,8 +8002,8 @@
      * does not have to guard for one.
      *
      * Note: the cascade groups on String(key) - for the sides, the rows and the series alike - so keys
-     * that differ only in type merge, and the number 1 and the string "1" land in the same cell where
-     * only the first of them is stacked. The ordering follows from the same coercion: JavaScript
+     * that differ only in type merge, and the number 1 and the string "1" land in the same cell, whose
+     * rows are then summed together. The ordering follows from the same coercion: JavaScript
      * iterates array-index keys in ascending numeric order regardless of insertion order, so dense
      * non-negative integer rows sort themselves, while negative, fractional or plain string rows fall
      * back to insertion order and are laid out in whatever order the input happened to be in. Since
@@ -7975,18 +8011,20 @@
      * which slice is drawn first - but a `row` that is a string comes back as the accessor returned it,
      * not as the cascade's stringified key. The sides are ordered the same way and
      * picked positionally, so a dataset whose first row is male puts men on the left and silently
-     * mirrors the chart. For the series the key order is the stacking order, so a series accessor
-     * returning years or numeric codes restacks the chart in ascending numeric order, and the `series`
-     * tag comes back as a string even when the accessor returned a number. Nothing enforces the
+     * mirrors the chart. The series escape this: their key order is the stacking order, so it is taken
+     * from the data rather than from the cascade row, and a series accessor returning years or numeric
+     * codes keeps the order it returned them in - though the `series` tag still comes back as a string
+     * even when the accessor returned a number. Nothing enforces the
      * cardinality of two the layout function's own documentation requires of the side accessor either:
      * a single side leaves the right accessor returning undefined, which throws from d3's data join,
      * and a third side is returned and then dropped without a word by the caller's positional
      * accessors. Shared with stackedBarData.
      *
-     * Note: the value of a cell is read from its first row only, so data that is not already aggregated
-     * to one row per (side, row, series) triplet is silently truncated rather than summed. The layout
-     * function requires the triplet to appear exactly once and says it makes no effort to normalize the
-     * data if that is not the case, but nothing reports a violation. Shared with stackedBarData.
+     * Note: a cell's value is the sum of every row the accessors placed in it, so data that is not
+     * already aggregated to one row per (side, row, series) triplet stacks to its true total. The
+     * layout function still documents the triplet as appearing exactly once; what has changed is that
+     * a violation is no longer silently understated to the cell's first row. Shared with
+     * stackedBarData.
      *
      * Note: stackedPyramidData hangs `maxValue` off the returned array rather than wrapping it in an
      * object, so any array operation - a spread, a map, a filter, a trip through JSON - drops it. The
@@ -8088,26 +8126,33 @@
      *  - series: determines in which series (for the stack) the value is.
      *  - value: the numerical value.
      *
-     * The combination of each distinct (side,row,series) triplet MUST appear only once
-     * in the data. This function makes no effort to normalize the data if that's not the case.
+     * The combination of each distinct (side,row,series) triplet SHOULD appear only once in the data.
+     * Where it does not, every row of the cell is summed rather than only the first being read.
      */
     function stackedPyramidLayout(sideAcc,
     // cascade stringifies its keys, so a numeric row or series accessor - an age, a year, a
-    // category code - groups the same way a string one does. The series keys are read back off
-    // the cascade row with Object.keys, which is why `series` stays a string.
+    // category code - groups the same way a string one does, which is why `series` stays a
+    // string even though the keys themselves come from the data rather than from the row.
     rowValueAcc, seriesAcc, valueAcc) {
       return data => {
         const grouped = cascade().arrayBy(sideAcc).arrayBy(rowValueAcc).objectBy(seriesAcc).apply(data);
         const sides = grouped.map(rows => {
-          // The union of the series across every row of the side, so a series that appears in
-          // only some of the rows still gets a layer. The key order is the stacking order, and
-          // it follows the order the rows first mention each series in.
-          const keys = set$1(rows.flatMap(row => Object.keys(row)));
           const side = sideAcc(firstCell(rows[0]));
+          // The union of the series across every row of the side, so a series that appears in
+          // only some of the rows still gets a layer. The key order is the stacking order, and it
+          // is taken from the data rather than from the cascade rows: those are plain objects,
+          // which enumerate integer-like keys numerically, so a series accessor returning years or
+          // numeric codes lost the caller's ordering and silently restacked the chart. Filtered to
+          // this side, since a side's layers are the series that side actually carries. The same
+          // correction stackedBarData makes.
+          const keys = set$1(data.filter(datum => String(sideAcc(datum)) === String(side)), datum => String(seriesAcc(datum)));
           const stacks = d3.stack().keys(keys)
-          // Only the first datum of each cell is read; a cell the row has no datum for
-          // contributes zero.
-          .value((x, key) => x[key] === undefined ? 0 : valueAcc(x[key][0]))(rows);
+          // Every row the accessors placed in a cell contributes to that cell's value, so data
+          // that is not pre-aggregated to one row per (side, row, series) triplet stacks to its
+          // true total rather than to its first row - which was silently understated, with no
+          // warning and no error, just a shorter bar. A cell the row has no datum for stacks as
+          // zero rather than throwing. The same correction stackedBarData makes.
+          .value((x, key) => d3.sum(x[key] ?? [], valueAcc))(rows);
           // Simplify the 'data' property. The slices themselves are the objects d3 created,
           // rewritten in place, so a caller holding one sees the new shape. The series arrays are
           // rebuilt, so d3's own `key` and `index` - the only two properties it hangs off a
@@ -8124,7 +8169,13 @@
                 // The value the row accessor returned, read off whichever series the cascade
                 // row does carry - a padding slice has no source row of its own.
                 row: rowValueAcc(firstCell(d.data)),
-                value: datum === undefined ? 0 : valueAcc(datum)
+                // Taken from the stacked pair rather than from the cell's first row, so it is the
+                // whole cell where the accessors placed more than one row there - the same total
+                // the bar is drawn at. Reading the first row instead left a slice whose value
+                // disagreed with its own extent, which a reference line built from the layout's
+                // own slices then drew at the understated figure while the bars behind it showed
+                // the total. A padding slice has an empty pair, so it still reports 0.
+                value: d[1] - d[0]
               });
             });
             return Object.assign(slices, {
@@ -8396,11 +8447,11 @@
      * its `_tag`s; it is rendered the same way - the parentless node is the root either way, and every
      * colour still comes from a node's own top-level ancestor - with one warning per chart.
      *
-     * Note: the angles, the radii and the colours are all interpolated, but the geometry exists only
-     * from the first animation frame, since `d` is written by the arc tween alone and there is no
-     * transition property to opt out of - a chart serialised on the render tick is blank. The handover
-     * matches the old arcs by index, so an arc that did not exist a render ago starts at its
-     * destination and is painted outright, and exits are removed with no transition.
+     * Note: the angles, the radii and the colours are all interpolated, and `d` is written on the
+     * selection before the tween as well, from the geometry already on screen, so a chart serialised on
+     * the render tick carries its arcs rather than coming out blank. There is no transition property to
+     * opt out of. The handover matches the old arcs by index, so an arc that did not exist a render ago
+     * starts at its destination and is painted outright, and exits are removed with no transition.
      *
      * Note: the component keeps no state of its own. It writes x0/x1 (the positions currently on
      * screen), r0/r1 (the radii currently on screen, in pixels) and _x0/_x1 (the positions the running
@@ -8409,9 +8460,11 @@
      * object animates the same way a freshly built one does.
      *
      * Note: the tooltip anchors are rendered from the same flattened array as the arcs, so there is one
-     * anchor per arc, in the same order. They are positioned from the pre-transition angles and are
-     * never repositioned when the transition ends, so after an update they describe the previous
-     * layout. See test/component/sunburst.test.ts.
+     * anchor per arc, in the same order. They are positioned from the destination angles _x0/_x1, so
+     * they describe the layout the arcs are heading for rather than the one they are leaving - on a
+     * hierarchy input, where the re-partition supplies those. On the deprecated flat-array input the
+     * caller's own objects are reused unpartitioned, so _x0/_x1 are whatever the last tween wrote and
+     * the anchors are no better placed than the arcs. See test/component/sunburst.test.ts.
      *
      * @return {sszvis.component}
      */
@@ -8482,8 +8535,11 @@
         // The geometry accessors read positions off a node, so they are declared before the
         // destination values are stamped on. The two radius accessors return pixels, and are
         // the destination of the radius half of the transition.
-        const startAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
-        const endAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
+        // Shared by the on-screen accessors below and by the anchor position, which reads the
+        // destination angles instead.
+        const angleAt = x => Math.max(0, Math.min(TWO_PI, props.angleScale(x)));
+        const startAngle = d => angleAt(d.x0);
+        const endAngle = d => angleAt(d.x1);
         const innerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y0));
         const outerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y1));
         // _x0 and _x1 are the destination values for the transition. We set these to the
@@ -8553,6 +8609,13 @@
         // An entering arc has no colour to ease from, so it is painted outright; every
         // other attribute change goes through the transition below.
         enter.append("path").attr("class", "sszvis-sunburst-arc").attr("stroke", strokeColor).attr("fill", fillColor));
+        // Geometry is applied on the render tick, from the angles and radii already on screen -
+        // the destination ones for an arc that has just entered - so the DOM is never in a
+        // geometry-less state and nothing jumps before the tween takes over. Without it the
+        // attrTween below is the only writer of d, and a chart serialised straight after
+        // rendering comes out blank; so does one rendered in a hidden tab, where
+        // requestAnimationFrame never fires and the tween's first frame never runs.
+        arcs.attr("d", d => arcGen(d) ?? "");
         // One transition for the whole arc: scheduling a second one on the same elements would
         // cancel this one.
         const arcTransition = arcs.transition(defaultTransition());
@@ -8575,8 +8638,13 @@
         });
         // Add tooltip anchors
         const arcTooltipAnchor = tooltipAnchor().position(d => {
-          const startA = startAngle(d);
-          const endA = endAngle(d);
+          // The destination angles, not startAngle/endAngle: the handover above has reset
+          // d.x0/d.x1 to what is on screen, and nothing repositions the anchors once the
+          // transition ends, so reading those would leave every anchor at the previous
+          // layout after an update. The radii need no equivalent - y0/y1 come from the fresh
+          // partition, so innerRadius and outerRadius are destination values already.
+          const startA = angleAt(d._x0);
+          const endA = angleAt(d._x1);
           const a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;
           const r = (innerRadius(d) + outerRadius(d)) / 2;
           return [Math.cos(a) * r, Math.sin(a) * r];
