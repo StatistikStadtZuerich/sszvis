@@ -892,6 +892,48 @@ describe("component/stackedPyramid", () => {
       );
     });
 
+    test("keeps a missing value out of the reference line's path", async () => {
+      // A gap anywhere used to truncate the outline from that point on, because d3 writes
+      // NaN into d verbatim and the browser drops the rest of the path.
+      const node = render(
+        pyramidOf().rightRefAccessor(() => [
+          { row: Number.NaN, value: Number.NaN },
+          { row: 1, value: 1 },
+        ]),
+      );
+      expect(await lineD(node, "rightReference")).not.toContain("NaN");
+    });
+
+    test("breaks the outline at a gap rather than ending it", async () => {
+      // A gap in the middle is the case that shows the difference: everything after it used
+      // to be dropped. d3.line starts a fresh subpath after an undefined point, so the two
+      // drawable runs both survive.
+      const node = render(
+        pyramidOf().rightRefAccessor(() => [
+          { row: 0, value: 0 },
+          { row: 1, value: Number.NaN },
+          { row: 2, value: 2 },
+          { row: 3, value: 3 },
+        ]),
+      );
+      // A one-point run is closed with Z, so the two runs read as M0,0Z then M2,24L3,36.
+      expect(await lineD(node, "rightReference")).toBe("M0,0ZM2,24L3,36");
+    });
+
+    test("skips a missing value in the first and last positions", async () => {
+      // The ends behave differently from the middle: a leading gap has no subpath to break
+      // and a trailing one nothing to resume, so each simply drops its own point.
+      const node = render(
+        pyramidOf().rightRefAccessor(() => [
+          { row: 0, value: Number.NaN },
+          { row: 1, value: 1 },
+          { row: 2, value: 2 },
+          { row: 3, value: Number.NaN },
+        ]),
+      );
+      expect(await lineD(node, "rightReference")).toBe("M1,12L2,24");
+    });
+
     test("draws no reference line for an empty reference series", () => {
       // Distinct from an accessor that returns no data at all: an empty array is a
       // legitimately empty series, so it is hidden without a warning.
@@ -1177,22 +1219,6 @@ describe("component/stackedPyramid", () => {
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
     });
 
-    // BUG(#80): bar runs every geometry value through a NaN guard, but the reference line
-    // passes barWidth and barPosition straight to d3.line. One missing value poisons the
-    // path string; the browser renders the valid prefix and drops the rest of the line.
-    // current: d="MNaN,NaNL1,12". expected: the point is skipped, or coerced to 0 - either
-    // way no NaN reaches the attribute. Shared with pyramid, which now skips such points.
-    // Skipped, not deleted: it fails with "expected 'MNaN,NaNL1,12' not to contain 'NaN'".
-    test.skip("keeps a missing value out of the reference line's path", async () => {
-      const node = render(
-        pyramidOf().rightRefAccessor(() => [
-          { row: Number.NaN, value: Number.NaN },
-          { row: 1, value: 1 },
-        ]),
-      );
-      expect(await lineD(node, "rightReference")).not.toContain("NaN");
-    });
-
     // BUG(#76): the reference line takes y straight from barPosition, which is a bar's top
     // edge, and never accounts for barHeight. The outline is drawn half a bar height above
     // the values it describes, and the error grows with barHeight. Shared with pyramid,
@@ -1266,7 +1292,10 @@ describe("component/stackedPyramid", () => {
       // NOTE: d3.line calls its x accessor as (d, i, data), but the line reads the point's
       // value out of it and calls barWidth with that alone, so the property has one calling
       // convention everywhere - and an index-aware accessor sees undefined and yields NaN on
-      // the line just as it does on the bars.
+      // the line just as it does on the bars. Since every point is then non-finite, the
+      // missing-value guard skips all of them and the outline has no geometry at all rather
+      // than a NaN-poisoned path string; either way nothing is drawn, because a d the
+      // browser cannot parse renders nothing. Fixing the calling convention is #434.
       const node = render(
         pyramidOf()
           .barWidth((v: number, i: number) => v + i)
@@ -1275,7 +1304,9 @@ describe("component/stackedPyramid", () => {
             { row: 1, value: 20 },
           ]),
       );
-      expect(await lineD(node, "rightReference")).toBe("MNaN,0LNaN,12");
+      // Read directly rather than through lineD, which waits for a d to appear.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
       expect(attrs(node, "rightStack", "width")).toEqual(["0", "0", "0", "0"]);
     });
 
