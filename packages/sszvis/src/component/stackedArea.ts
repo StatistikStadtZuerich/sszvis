@@ -228,14 +228,18 @@ const dimension = <P>(value: AreaValue<P> | undefined): PointAccessor<P, number>
 /**
  * Whether a bound counts as missing, and so breaks the area at that point.
  *
- * A value is missing when it is null-ish or when it has no numeric form. The null-ish half
+ * A value is missing when it is null-ish or when it has no finite numeric form. The null-ish half
  * goes beyond the isNaN guard this default was always meant to be - isNaN(null) is false,
  * so a null would coerce to 0 and be plotted at the top of the chart - and beyond
  * src/component/line.ts, whose guard is documented as letting null through. A null
  * measurement is missing data, not a zero, and there is no way to say "plot this at zero"
- * with null that saying 0 does not say better.
+ * with null that saying 0 does not say better. *
+ * Finiteness rather than NaN-ness, because Infinity is a number as far as isNaN is
+ * concerned but not a coordinate SVG can parse: it reached the `d` attribute, where the
+ * browser drops that segment and every one after it, so the area was truncated at the bad
+ * bound rather than broken across it. A scale over a zero-width domain returns exactly that.
  */
-const isMissingVal = (value: unknown): boolean => value == null || Number.isNaN(Number(value));
+const isMissingVal = (value: unknown): boolean => value == null || !Number.isFinite(Number(value));
 
 /**
  * As above, for the style properties. An unset property becomes a function returning null,
