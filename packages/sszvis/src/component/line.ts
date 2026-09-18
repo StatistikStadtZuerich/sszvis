@@ -144,17 +144,20 @@ export interface LineComponent<P = unknown, L = unknown> extends ComponentBuilde
 /**
  * Whether a value counts as missing, and so breaks the line at that point.
  *
- * Matches the global isNaN this replaced, which coerces its argument first. The coercion
- * is load-bearing: a bare Number.isNaN would let a non-numeric y through into the path.
- * Note that it only catches values that fail to coerce - null, Infinity, booleans and
- * numeric strings all become numbers and are plotted as data. See
- * test/component/line.test.ts.
+ * The coercion is load-bearing: a bare Number.isFinite would call every non-numeric y
+ * missing, including the numeric strings a caller may legitimately plot. What is asked of
+ * the coerced value is finiteness rather than NaN-ness, because Infinity is a number as
+ * far as isNaN is concerned but not a coordinate SVG can parse: it used to reach the `d`
+ * attribute, where the browser drops that segment and every one after it, so the line was
+ * truncated at the bad point rather than broken across it the way a NaN is. A scale over a
+ * zero-width domain returns exactly that. null, booleans and numeric strings still coerce
+ * to finite numbers and are still plotted as data. See test/component/line.test.ts.
  *
  * The one input where this differs from the global isNaN is a BigInt, which isNaN throws
  * on and this returns false for. It is not observable through the component: d3.line
  * immediately applies unary + to the value, which throws the identical TypeError.
  */
-const isMissingVal = (value: unknown): boolean => Number.isNaN(Number(value));
+const isMissingVal = (value: unknown): boolean => !Number.isFinite(Number(value));
 
 /**
  * Reports a required property the caller left unset, naming both the component and the
