@@ -462,6 +462,66 @@ describe("map/renderer/geojson", () => {
   });
 
   describe("events", () => {
+    test("should leave the shapes inert when no handler is registered", () => {
+      // The elements are marked data-event-target and the component binds mouseover, mouseout and
+      // click to them, but sszvis.css gave the class pointer-events: none, so none of it could
+      // ever fire. It is written inline now and made conditional, as bubble's circles are: with
+      // nothing listening the shapes stay decoration and the pointer falls through to the layer
+      // beneath, which is what every consumer has had until now.
+      const node = render(fullData, (c) => c.transitionColor(false));
+      expect((elements(node)[0] as SVGPathElement).style.pointerEvents).toBe("none");
+    });
+
+    test("should make the shapes a hit area when a handler is registered", () => {
+      const node = render(fullData, (c) => c.transitionColor(false).on("over", () => undefined));
+      // SAFETY: an empty string would mean the property was removed, which lets the stylesheet's
+      // pointer-events: none win again for any consumer still shipping an older sszvis.css.
+      expect((elements(node)[0] as SVGPathElement).style.pointerEvents).toBe("auto");
+    });
+
+    test("should go back to inert when the only handler is removed", () => {
+      const node = render(fullData, (c) =>
+        c
+          .transitionColor(false)
+          .on("over", () => undefined)
+          // null removes a handler; the typing describes the setter's happy path only.
+          .on("over", null as never),
+      );
+      expect((elements(node)[0] as SVGPathElement).style.pointerEvents).toBe("none");
+    });
+
+    test("should count a namespaced handler as a listener", () => {
+      // d3's dispatch cannot be asked what it holds - on("over") returns undefined for a handler
+      // registered as "over.tooltip" - which is why the registry tallies typenames itself.
+      const node = render(fullData, (c) =>
+        c.transitionColor(false).on("over.tooltip", () => undefined),
+      );
+      expect((elements(node)[0] as SVGPathElement).style.pointerEvents).toBe("auto");
+    });
+
+    test("should put the shape under the pointer when a handler is registered", () => {
+      // The reachability of the handlers, pinned with elementFromPoint rather than a synthetic
+      // dispatch: a dispatched event reaches its listener whatever the pointer policy is, so it
+      // proves nothing about whether a reader could trigger one. This is the assertion the old
+      // suite was missing while the stylesheet made every handler dead. Mirrors bubble's.
+      const node = render(fullData, (c) => c.transitionColor(false).on("over", () => undefined));
+      const shape = elements(node)[0] as SVGPathElement;
+      const box = shape.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      expect(hit).toBe(shape);
+    });
+
+    test("should let the pointer through when no handler is registered", () => {
+      const node = render(fullData, (c) => c.transitionColor(false));
+      const shape = elements(node)[0] as SVGPathElement;
+      const box = shape.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      expect(hit).not.toBe(shape);
+    });
+
+    // The events below are dispatched on an element directly, which keeps them independent of the
+    // pointer policy - and is why the contradiction above went unnoticed: a dispatched event
+    // reaches its listener whatever pointer-events says.
     test("should expose over, out and click through on()", () => {
       const component = mapRendererGeoJson();
       expect(component.on).toBeTypeOf("function");

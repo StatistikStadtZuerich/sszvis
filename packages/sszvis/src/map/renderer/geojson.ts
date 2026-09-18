@@ -77,6 +77,7 @@ import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
+import { listenerRegistry } from "./listenerRegistry.js";
 import { slowTransition } from "../../transition.js";
 import type { ColorValue } from "../../types.js";
 import {
@@ -166,6 +167,10 @@ export default function mapRendererGeoJson<
 >(): MapRendererGeoJsonComponent<T> {
   const event = dispatch("over", "out", "click");
 
+  // The typenames a consumer registered. Shared with bubble, which makes the same hit-area
+  // decision from the same information.
+  const { hasListeners, record } = listenerRegistry();
+
   const geojsonComponent = component()
     .prop("dataKeyName")
     .dataKeyName(GEO_KEY_DEFAULT)
@@ -240,7 +245,16 @@ export default function mapRendererGeoJson<
         .data(mergedData)
         .join("path")
         .classed("sszvis-map__geojsonelement", true)
-        .attr("data-event-target", "");
+        .attr("data-event-target", "")
+        // The elements are marked as event targets and this component binds mouseover, mouseout
+        // and click to them, but .sszvis-map__geojsonelement carried pointer-events: none in
+        // sszvis.css, so none of that could ever fire: the class was written alongside the purely
+        // decorative overlays. Registering a handler now makes the shapes a hit area, exactly as
+        // it does for bubble's circles; with none registered they stay inert and the pointer falls
+        // through to the layer beneath, which is what every consumer has had until now. Written
+        // inline rather than left to the stylesheet because an author rule cannot be conditional,
+        // and because a consumer who does not ship sszvis.css should get the same behaviour.
+        .style("pointer-events", () => (hasListeners() ? "auto" : "none"));
 
       geoElements
         .classed(
@@ -311,7 +325,11 @@ export default function mapRendererGeoJson<
   // would also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
   geojsonComponent.on = function (this: MapRendererGeoJsonComponent<T>, ...args: [string, never]) {
     const value = event.on.apply(event, args);
-    return value === event ? geojsonComponent : value;
+    if (value !== event) return value;
+    // A setter call, and d3 validated the typenames by returning the dispatch.
+    const [typenames, handler] = args;
+    record(typenames, handler);
+    return geojsonComponent;
   };
 
   return geojsonComponent;
