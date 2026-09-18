@@ -102,12 +102,13 @@
  * they antialias rather than tiling exactly - and pixelsFromGeoDistance, the intended source for
  * the value, returns a float.
  *
- * Note: the component writes no position, so the canvas is only positioned because sszvis.css sets
- * position: absolute on the class - the same dependency as the image renderer, along with
- * display: block, pointer-events: none and user-select: none. The opacity, by contrast, is written
- * as an inline style, as are the CSS width and height that pin the scaled bitmap to the layer size;
- * nothing in sszvis.css sets any of them, so nothing is overridden - but a consumer
- * cannot restyle it from their own stylesheet either. The positions themselves are written unshifted, and
+ * Note: position: absolute, display: block and pointer-events: none are written as inline styles,
+ * so the canvas aligns over the map and lets the layers beneath it be hovered without sszvis.css -
+ * the same three the image renderer writes, and for the same reason. user-select is still left to
+ * the class, as it is there, since it affects neither the layout nor the events. The opacity and
+ * the CSS width and height that pin the scaled bitmap to the layer size are written inline too.
+ * Everything inline wins over a class rule, so a consumer cannot restyle any of it from their own
+ * stylesheet. The positions themselves are written unshifted, and
  * createHtmlLayer offsets the layer by the bounds padding, so cell positions are layer-relative and
  * the padding is applied exactly once.
  *
@@ -362,6 +363,15 @@ export default function mapRendererRaster<T = unknown>(): MapRendererRasterCompo
       canvas
         .attr("width", Math.round(width * ratio))
         .attr("height", Math.round(height * ratio))
+        // The positioning and event behaviour the component depends on, written inline so it
+        // does not need sszvis.css: absolute is what lets the canvas sit over the map rather
+        // than in the document flow beneath it, block keeps an inline element from picking up
+        // baseline leading, and none lets the layers underneath be hovered through it. The
+        // image renderer writes the same three, for the same reason. user-select is left to
+        // the stylesheet, as it is there: it affects neither the layout nor the events.
+        .style("position", "absolute")
+        .style("display", "block")
+        .style("pointer-events", "none")
         .style("width", `${width}px`)
         .style("height", `${height}px`)
         .style("opacity", props.opacity);
