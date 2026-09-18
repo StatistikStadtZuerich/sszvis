@@ -76,11 +76,11 @@
  * its `_tag`s; it is rendered the same way - the parentless node is the root either way, and every
  * colour still comes from a node's own top-level ancestor - with one warning per chart.
  *
- * Note: the angles, the radii and the colours are all interpolated, but the geometry exists only
- * from the first animation frame, since `d` is written by the arc tween alone and there is no
- * transition property to opt out of - a chart serialised on the render tick is blank. The handover
- * matches the old arcs by index, so an arc that did not exist a render ago starts at its
- * destination and is painted outright, and exits are removed with no transition.
+ * Note: the angles, the radii and the colours are all interpolated, and `d` is written on the
+ * selection before the tween as well, from the geometry already on screen, so a chart serialised on
+ * the render tick carries its arcs rather than coming out blank. There is no transition property to
+ * opt out of. The handover matches the old arcs by index, so an arc that did not exist a render ago
+ * starts at its destination and is painted outright, and exits are removed with no transition.
  *
  * Note: the component keeps no state of its own. It writes x0/x1 (the positions currently on
  * screen), r0/r1 (the radii currently on screen, in pixels) and _x0/_x1 (the positions the running
@@ -405,6 +405,14 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
             .attr("stroke", strokeColor)
             .attr("fill", fillColor),
         );
+
+      // Geometry is applied on the render tick, from the angles and radii already on screen -
+      // the destination ones for an arc that has just entered - so the DOM is never in a
+      // geometry-less state and nothing jumps before the tween takes over. Without it the
+      // attrTween below is the only writer of d, and a chart serialised straight after
+      // rendering comes out blank; so does one rendered in a hidden tab, where
+      // requestAnimationFrame never fires and the tween's first frame never runs.
+      arcs.attr("d", (d) => arcGen(d) ?? "");
 
       // One transition for the whole arc: scheduling a second one on the same elements would
       // cancel this one.
