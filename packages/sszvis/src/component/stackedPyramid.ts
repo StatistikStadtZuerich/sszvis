@@ -144,9 +144,10 @@
  * which slice is drawn first - but a `row` that is a string comes back as the accessor returned it,
  * not as the cascade's stringified key. The sides are ordered the same way and
  * picked positionally, so a dataset whose first row is male puts men on the left and silently
- * mirrors the chart. For the series the key order is the stacking order, so a series accessor
- * returning years or numeric codes restacks the chart in ascending numeric order, and the `series`
- * tag comes back as a string even when the accessor returned a number. Nothing enforces the
+ * mirrors the chart. The series escape this: their key order is the stacking order, so it is taken
+ * from the data rather than from the cascade row, and a series accessor returning years or numeric
+ * codes keeps the order it returned them in - though the `series` tag still comes back as a string
+ * even when the accessor returned a number. Nothing enforces the
  * cardinality of two the layout function's own documentation requires of the side accessor either:
  * a single side leaves the right accessor returning undefined, which throws from d3's data join,
  * and a third side is returned and then dropped without a word by the caller's positional
@@ -361,8 +362,8 @@ export interface StackedPyramidLayout<T, S extends string | number = string> {
 export function stackedPyramidLayout<T, S extends string | number = string>(
   sideAcc: (datum: T) => S,
   // cascade stringifies its keys, so a numeric row or series accessor - an age, a year, a
-  // category code - groups the same way a string one does. The series keys are read back off
-  // the cascade row with Object.keys, which is why `series` stays a string.
+  // category code - groups the same way a string one does, which is why `series` stays a
+  // string even though the keys themselves come from the data rather than from the row.
   rowValueAcc: (datum: T) => string | number,
   seriesAcc: (datum: T) => string | number,
   valueAcc: (datum: T) => number,
@@ -375,11 +376,18 @@ export function stackedPyramidLayout<T, S extends string | number = string>(
       .apply(data);
 
     const sides = grouped.map((rows) => {
-      // The union of the series across every row of the side, so a series that appears in
-      // only some of the rows still gets a layer. The key order is the stacking order, and
-      // it follows the order the rows first mention each series in.
-      const keys = fn.set<string, string>(rows.flatMap((row) => Object.keys(row)));
       const side = sideAcc(firstCell(rows[0]));
+      // The union of the series across every row of the side, so a series that appears in
+      // only some of the rows still gets a layer. The key order is the stacking order, and it
+      // is taken from the data rather than from the cascade rows: those are plain objects,
+      // which enumerate integer-like keys numerically, so a series accessor returning years or
+      // numeric codes lost the caller's ordering and silently restacked the chart. Filtered to
+      // this side, since a side's layers are the series that side actually carries. The same
+      // correction stackedBarData makes.
+      const keys = fn.set(
+        data.filter((datum) => String(sideAcc(datum)) === String(side)),
+        (datum) => String(seriesAcc(datum)),
+      );
 
       const stacks = d3Stack<CascadeRow<T>, string>()
         .keys(keys)

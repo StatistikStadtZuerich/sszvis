@@ -415,19 +415,28 @@ describe("component/stackedPyramid", () => {
         expect(numbers[0][0][0].side).toBe(0);
       });
 
-      // BUG(#432): the same key coercion applies to the series, and the key order is the
-      // stacking order, so a series accessor returning years or numeric codes silently
-      // restacks the chart in ascending numeric order. Shared with stackedBarData, where it
-      // was filed as #109 for the stackedBar layouts only and fixed there.
-      // current: 2010 arrives first but stacks on top of 2000. expected: the accessor's
-      // order decides the stacking order.
-      // Skipped, not deleted: it fails with "expected [ '2000', '2010' ] to deeply equal [ '2010', '2000' ]".
-      test.skip("stacks the series in the order the accessor first returns them", () => {
+      test("stacks the series in the order the accessor first returns them", () => {
+        // SAFETY: the key order is the stacking order, so which series sits on the baseline -
+        // and with it the whole reading of the chart - has to follow the accessor rather than
+        // the data's key shape. A plain object enumerates integer-like keys numerically, which
+        // is what used to reorder years and numeric codes.
         const sides = layout([
           { side: "f", row: 0, series: 2010 as unknown as string, value: 1 },
           { side: "f", row: 0, series: 2000 as unknown as string, value: 2 },
         ]);
         expect(sides[0].map((series) => series.key)).toEqual(["2010", "2000"]);
+      });
+
+      test("keeps each side's stacking order independent of the other's", () => {
+        // The keys are taken per side, so a series one side never carries does not become a
+        // layer there, and the sides do not have to agree on an order.
+        const sides = layout([
+          { side: "f", row: 0, series: "a", value: 1 },
+          { side: "m", row: 0, series: "b", value: 2 },
+          { side: "m", row: 0, series: "a", value: 3 },
+        ]);
+        expect(sides[0].map((series) => series.key)).toEqual(["a"]);
+        expect(sides[1].map((series) => series.key)).toEqual(["b", "a"]);
       });
 
       // BUG(#433): the stack value is read as x[key][0], so data that is not already
