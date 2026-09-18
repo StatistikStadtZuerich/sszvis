@@ -78,10 +78,13 @@
  * stroke alone. A falsy colour - "", or an accessor returning undefined - clears the inline stroke
  * and hands the border back to the stylesheet.
  *
- * Note: the component sets no pointer-events on either path and no fill on the border path, so
- * both come from sszvis.css. Rendered without that stylesheet the border path is a filled black
- * shape covering the lake - SVG's initial fill is black - and both paths swallow the base layer's
- * hover and click events.
+ * Note: pointer-events: none is written inline on both paths, and fill: none on the border path,
+ * so neither needs sszvis.css to stay out of the way: SVG's initial fill is black, which would
+ * turn the dotted border into a shape covering the lake, and without pointer-events both paths
+ * swallow the base layer's hover and click events across the whole lake. The lake shape's own fill
+ * is the texture pattern, so only its pointer-events was missing. The border's dash pattern and
+ * its default grey stroke stay on the class, so a consumer without the stylesheet still has to
+ * supply a lakePathColor to see those borders at all.
  *
  * Note: both path selectors are scoped to the rendering group's own children and filtered by the
  * overlay's key - so two overlays rendered into one group each draw their own pair of paths as
@@ -325,7 +328,12 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         .classed("sszvis-map__lakezurich", true)
         .attr(KEY_ATTRIBUTE, scope)
         .attr("d", props.mapPath)
-        .attr("fill", `url(#${patternId})`);
+        .attr("fill", `url(#${patternId})`)
+        // Written inline so the lake does not need sszvis.css to stay out of the way: without
+        // it the shape swallows the base layer's hover and click events across the whole lake.
+        // The fill is the texture above, so only this one is missing. stroke and user-select
+        // stay on the class: neither affects the events.
+        .style("pointer-events", "none");
 
       // this mask applies the fade effect
       zurichSee.attr("mask", props.fadeOut ? `url(#${maskId})` : null);
@@ -342,7 +350,14 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         .join("path")
         .classed("sszvis-map__lakepath", true)
         .attr(KEY_ATTRIBUTE, scope)
-        .attr("d", props.mapPath);
+        .attr("d", props.mapPath)
+        // As on the lake shape and the mesh border: SVG's initial fill is black, so without
+        // sszvis.css this dotted outline is a filled shape over the lake, and without
+        // pointer-events it swallows the events beneath it. The dash pattern and the default
+        // stroke stay on the class, so a consumer without the stylesheet still has to supply a
+        // lakePathColor to see these borders at all.
+        .style("fill", "none")
+        .style("pointer-events", "none");
 
       // An unset colour writes nothing, so the stylesheet's stroke stands; any value that is set -
       // including a falsy one - is written, so it can clear a colour an earlier render left behind.
