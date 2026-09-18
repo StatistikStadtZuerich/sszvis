@@ -104,7 +104,7 @@
  *
  * Note: transition applies to updating bands only. An entering band is painted directly, as bar
  * does, so a freshly rendered chart is complete on the same tick rather than leaving an empty path
- * element until the first animation frame, which is what stackedArea does. A band already on screen
+ * element until the first animation frame - the same as stackedArea and bar. A band already on screen
  * holds its old geometry and colours and eases into the new ones over 300ms. Between 47f58578
  * ("perf: change .enter() to .join() API", Oct 2024) and this fix the transition was created on its
  * own statement with its return value dropped, so it carried no tweens and every attribute was
@@ -398,9 +398,9 @@ export default function stackedAreaMultiples<P = unknown, L = P[]>(): StackedAre
         const stroke = colorFn<L>(props.stroke === undefined ? "#ffffff" : props.stroke);
         const strokeWidth = fn.valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
 
-        // An entering band is painted synchronously, as bar does, so it is complete on the
-        // tick it appears on rather than staying an empty path element until the first
-        // animation frame - which is stackedArea's own quirk and not one worth importing.
+        // An entering band is painted synchronously, as bar and stackedArea do, so it is
+        // complete on the tick it appears on rather than staying an empty path element until
+        // the first animation frame.
         // Only the bands already on screen are transitioned, so each attribute is written
         // exactly once per render either way. The two branches are spelled out rather than
         // sharing a variable, since a d3 transition and a d3 selection have separate types.

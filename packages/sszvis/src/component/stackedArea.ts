@@ -81,6 +81,10 @@
  * on line.
  * key sees a layer and its index too, but its third argument depends on which half of the keyed
  * join is running: the array of incoming layers, or the group of nodes already in the DOM.
+ * With a transition, the style accessors are additionally invoked once on the enter selection,
+ * whose group array has a hole at every updating position - so an accessor that walks its third
+ * argument sees a sparse group on that pass, the same shape stackedAreaMultiples documents. The
+ * value that reaches the DOM is the one from the merged pass, which is never sparse.
  *
  * Note: the default defined predicate guards both vertical bounds by hand, as line does. The
  * expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
@@ -91,20 +95,14 @@
  * too, which a plain isNaN test would not: isNaN(null) is false, so a null would coerce to 0 and be
  * plotted at the top of the chart. line, by contrast, still lets null through.
  *
- * Note: with transition enabled the selection is replaced by the transition before any attribute is
- * written, so d, fill, stroke and stroke-width are all deferred and the class is the only thing
- * applied synchronously. A freshly rendered chart is an empty path element until the first
- * animation frame runs, and anything measuring it synchronously - getTotalLength, a bounding box, a
- * screenshot - sees nothing. line defers d and stroke-width the same way but still writes its
- * stroke synchronously, and bar and dot write their geometry synchronously, so this is the widest
- * version of the hole.
- *
- * Note: the deferred attributes do not enter uniformly. d and the two colours jump to their target
- * on the first frame, because d3 interpolates from the element's current value and there is none to
- * pair with, while stroke-width animates up from 0, because a numeric interpolation coerces the
- * missing start value and +null is 0. The layers appear at full size with a hairline that thickens
- * over the transition. Routing the colours through the transition also rewrites them as rgb(), so a
- * stylesheet or a test matching the hex string that was passed in will not find it.
+ * Note: with transition enabled every visual attribute also goes through the transition, so an
+ * entering area is given d, fill, stroke and stroke-width at the join as well. Without that an
+ * entering path carries only its classes until the first animation frame, and anything measuring
+ * the chart synchronously - getTotalLength, a bounding box, a screenshot - sees nothing. It also
+ * settles what an enter looks like: the transition then interpolates from the destination to
+ * itself, so the layers appear complete instead of at full size with a hairline thickening up from
+ * 0, and d3 skips a constant tween whose start equals its end, so the colours stay as they were
+ * given rather than being rewritten as rgb(). Only an update animates.
  *
  * Note: the header this replaces documented a valuesAccessor property, saying the default treats
  * the layer object as an array of values. The component never declared it, so the setter does not
@@ -357,7 +355,26 @@ export default function stackedArea<
       const paths = selection
         .selectAll<SVGPathElement, L>("path.sszvis-stacked-area-path")
         .data(data, props.key)
-        .join("path")
+        .join((enter) => {
+          const entered = enter.append("path");
+          // Only the transition branch defers these, and only for an entering area: an
+          // update already has last render's values in the DOM to interpolate from, and the
+          // branch below writes all four on the selection when transitions are off. Writing
+          // them here keeps a fresh area out of the attribute-less state a consumer that
+          // measures on the render tick - getTotalLength, a bounding box, a synchronous
+          // screenshot - would otherwise see. The transition then interpolates from the
+          // destination to itself, so the hairline no longer grows up from 0. Guarded rather
+          // than written unconditionally, so the no-transition path still evaluates each
+          // accessor exactly once per render - which the accessor tests pin.
+          if (props.transition) {
+            entered
+              .attr("d", pathData)
+              .attr("fill", fill)
+              .attr("stroke", stroke)
+              .attr("stroke-width", strokeWidth);
+          }
+          return entered;
+        })
         .classed("sszvis-path", true)
         .classed("sszvis-stacked-area-path", true);
 

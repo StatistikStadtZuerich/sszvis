@@ -723,57 +723,36 @@ describe("component/stackedArea", () => {
       expect(paths(node).length).toBe(1);
     });
 
-    describe("known quirks", () => {
-      // BUG(#439): with the default transition the selection is replaced by the transition
-      // before any attribute is written, so d, fill, stroke and stroke-width are all
-      // deferred. A freshly rendered chart is an empty <path> until the first animation
-      // frame runs, and anything measuring it synchronously - getTotalLength, a bounding
-      // box, a server-side screenshot - sees nothing. line defers d and stroke-width the
-      // same way but still writes its stroke synchronously, and bar and dot write their
-      // geometry synchronously first, so this is the widest version of the hole.
-      // current: every attribute is null on the render tick. expected: the destination
-      // values are written first, with the transition interpolating on top of them.
-      // Skipped, not deleted: it fails with "expected [ null ] to not deeply equal [ null ]".
-      test.skip("writes an entering area's geometry and styling on the first tick", () => {
-        const node = render(animated(), oneLayer);
-        expect(ds(node)).not.toEqual([null]);
-        expect(attrs(node, "fill")).not.toEqual([null]);
-        expect(attrs(node, "stroke")).not.toEqual([null]);
-        expect(attrs(node, "stroke-width")).not.toEqual([null]);
-      });
+    test("writes an entering area's geometry and styling on the first tick", () => {
+      const node = render(animated(), oneLayer);
+      // SAFETY: the destination values, not placeholders - anything that measures or
+      // serialises the chart on the render tick has to see what it settles at.
+      expect(ds(node)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
+      expect(attrs(node, "fill")).toEqual(["#ff0000"]);
+      expect(attrs(node, "stroke")).toEqual(["#ffffff"]);
+      expect(attrs(node, "stroke-width")).toEqual(["3"]);
+    });
 
-      test("an entering area snaps into shape while its stroke grows in", async () => {
-        // NOTE: the consequence of the above, and it is not uniform across the attributes,
-        // because each one interpolates from the attribute's absence differently. d and the
-        // two colours jump to their target on the first frame: d3 interpolates from the
-        // element's current value, which is null, so the path string has no numbers to pair
-        // with and the tween returns the target immediately, and a colour interpolated from
-        // nothing reads as constant. stroke-width instead animates up from 0, because a
-        // numeric interpolation coerces the missing start value and +null is 0. The layers
-        // therefore appear at full size with a hairline that thickens over 300ms.
-        const g = group("enter-snap");
-        g.datum(oneLayer).call(animated() as never);
-        await new Promise((resolve) => setTimeout(resolve, 80));
-        const node = g.node() as SVGGElement;
-        expect(ds(node)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
-        expect(attrs(node, "fill")).toEqual(["rgb(255, 0, 0)"]);
-        expect(attrs(node, "stroke")).toEqual(["rgb(255, 255, 255)"]);
-        const width = Number(attrs(node, "stroke-width")[0]);
-        expect(width).toBeGreaterThan(0);
-        expect(width).toBeLessThan(3);
-        await settle();
-        expect(attrs(node, "stroke-width")).toEqual(["3"]);
-      });
+    test("an entering area is drawn complete rather than animated into place", async () => {
+      // NOTE: enter writes the destination values, so the transition scheduled on top of
+      // them interpolates from the target to the target. Nothing moves and, in particular,
+      // the hairline no longer thickens up from 0. Only an update animates.
+      const g = group("enter-snap");
+      g.datum(oneLayer).call(animated() as never);
+      await settle();
+      const node = g.node() as SVGGElement;
+      expect(ds(node)).toEqual(["M0,10L10,20L10,50L0,40Z"]);
+      expect(attrs(node, "stroke-width")).toEqual(["3"]);
+    });
 
-      test("the colours are rewritten as rgb() rather than as they were given", async () => {
-        // NOTE: a side effect of routing the colours through the transition - d3 interpolates
-        // them in rgb space and writes the result back. A stylesheet or a test that matches
-        // on the hex string it passed in will not find it.
-        const g = group("rgb");
-        g.datum(oneLayer).call(animated() as never);
-        await settle();
-        expect(attrs(g.node() as SVGGElement, "fill")).toEqual(["rgb(255, 0, 0)"]);
-      });
+    test("keeps a colour as it was given rather than rewriting it as rgb()", async () => {
+      // NOTE: d3 skips a constant tween whose start equals its end, so a colour written at
+      // the join is never routed through an rgb interpolation. A stylesheet or a test that
+      // matches on the hex string it passed in still finds it.
+      const g = group("rgb");
+      g.datum(oneLayer).call(animated() as never);
+      await settle();
+      expect(attrs(g.node() as SVGGElement, "fill")).toEqual(["#ff0000"]);
     });
   });
 
