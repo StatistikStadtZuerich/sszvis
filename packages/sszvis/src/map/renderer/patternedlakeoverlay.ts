@@ -178,16 +178,17 @@ export interface MapRendererPatternedLakeOverlayComponent extends ComponentBuild
   key(value: string): MapRendererPatternedLakeOverlayComponent;
 }
 
+/** The dotted grey outline sszvis.css used to supply, owned by the renderer instead. */
+const DEFAULT_LAKE_PATH_COLOR = "#d3d3d3";
+const DEFAULT_LAKE_STROKE_WIDTH = 1.25;
+const DEFAULT_LAKE_DASH_ARRAY = "3 3";
+
 /**
  * Marks both the group whose generated scope it records and the paths belonging to a scope,
  * mirroring d3-selectgroup's data-d3-selectgroup. Read back through getAttribute in a filter
  * rather than matched with an attribute selector, so a caller-supplied key needs no CSS
  * escaping - the same idiom as mesh's data-mesh-key and raster's data-raster-key.
  */
-const DEFAULT_LAKE_PATH_COLOR = "#d3d3d3";
-const DEFAULT_LAKE_STROKE_WIDTH = 1.25;
-const DEFAULT_LAKE_DASH_ARRAY = "3 3";
-
 const KEY_ATTRIBUTE = "data-lake-key";
 
 let generatedScopes = 0;
@@ -357,9 +358,7 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         .attr("d", props.mapPath)
         // As on the lake shape and the mesh border: SVG's initial fill is black, so without
         // sszvis.css this dotted outline is a filled shape over the lake, and without
-        // pointer-events it swallows the events beneath it. The dash pattern and the default
-        // stroke stay on the class, so a consumer without the stylesheet still has to supply a
-        // lakePathColor to see these borders at all.
+        // pointer-events it swallows the events beneath it.
         .style("fill", "none")
         .style("pointer-events", "none")
         // The dash pattern and width the dotted outline is made of. Written inline for the same

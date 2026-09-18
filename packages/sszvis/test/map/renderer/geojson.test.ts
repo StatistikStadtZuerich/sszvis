@@ -476,7 +476,7 @@ describe("map/renderer/geojson", () => {
       const node = render(fullData, (c) => c.transitionColor(false).on("over", () => undefined));
       // SAFETY: an empty string would mean the property was removed, which lets the stylesheet's
       // pointer-events: none win again for any consumer still shipping an older sszvis.css.
-      expect((elements(node)[0] as SVGPathElement).style.pointerEvents).toBe("auto");
+      expect((elements(node)[0] as SVGPathElement).style.pointerEvents).toBe("all");
     });
 
     test("should go back to inert when the only handler is removed", () => {
@@ -496,7 +496,7 @@ describe("map/renderer/geojson", () => {
       const node = render(fullData, (c) =>
         c.transitionColor(false).on("over.tooltip", () => undefined),
       );
-      expect((elements(node)[0] as SVGPathElement).style.pointerEvents).toBe("auto");
+      expect((elements(node)[0] as SVGPathElement).style.pointerEvents).toBe("all");
     });
 
     test("should put the shape under the pointer when a handler is registered", () => {
@@ -505,6 +505,23 @@ describe("map/renderer/geojson", () => {
       // proves nothing about whether a reader could trigger one. This is the assertion the old
       // suite was missing while the stylesheet made every handler dead. Mirrors bubble's.
       const node = render(fullData, (c) => c.transitionColor(false).on("over", () => undefined));
+      const shape = elements(node)[0] as SVGPathElement;
+      const box = shape.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      expect(hit).toBe(shape);
+    });
+
+    test("should put an unfilled shape under the pointer too", () => {
+      // The case "auto" would have missed: for SVG it resolves to visiblePainted, so a shape
+      // drawn with fill "none" is hit-testable only on its stroke and the interior stays dead.
+      // An outline-only overlay is a normal thing to draw, so the fix has to cover it.
+      const node = render(fullData, (c) =>
+        c
+          .transitionColor(false)
+          .fill("none")
+          .stroke("#000")
+          .on("over", () => undefined),
+      );
       const shape = elements(node)[0] as SVGPathElement;
       const box = shape.getBoundingClientRect();
       const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);

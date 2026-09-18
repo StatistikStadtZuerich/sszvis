@@ -254,7 +254,12 @@ export default function mapRendererGeoJson<
         // through to the layer beneath, which is what every consumer has had until now. Written
         // inline rather than left to the stylesheet because an author rule cannot be conditional,
         // and because a consumer who does not ship sszvis.css should get the same behaviour.
-        .style("pointer-events", () => (hasListeners() ? "auto" : "none"));
+        //
+        // "all" rather than "auto": for SVG, auto resolves to visiblePainted, which hit-tests
+        // only where the shape is actually painted - so an overlay drawn with fill "none", an
+        // outline-only idiom, would have had an untouchable interior and the handler would still
+        // never fire over most of it. "all" makes the whole geometry a target regardless of fill.
+        .style("pointer-events", () => (hasListeners() ? "all" : "none"));
 
       geoElements
         .classed(
