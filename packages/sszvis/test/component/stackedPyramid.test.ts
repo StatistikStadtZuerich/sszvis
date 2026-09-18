@@ -945,25 +945,21 @@ describe("component/stackedPyramid", () => {
       expect(await lineD(node, "rightReference")).toBe("M0.5,5L1.5,17");
     });
 
-    test("draws the outline on the bars' top edges when barHeight was never set", async () => {
-      // A chart with no barHeight draws no bars at all and the component tolerates that
-      // silently, so the reference line must not turn it into a crash. With nothing to
-      // measure the outline falls back to where it sat before it was centred.
-      const g = group("ref-no-bar-height");
-      expect(() =>
-        g.datum(layout()).call(
-          stackedPyramid()
-            .barWidth((v: number) => v)
-            .barPosition((row: number) => row * 12)
-            .leftAccessor((d: Side[]) => d[0])
-            .rightAccessor((d: Side[]) => d[1])
-            .rightRefAccessor(() => [
-              { row: 0, value: 0 },
-              { row: 1, value: 1 },
-            ]) as never,
-        ),
-      ).not.toThrow();
-      expect(await lineD(g.node() as SVGGElement, "rightReference")).toBe("M0.5,0L1.5,12");
+    test("draws the outline on the bars' top edges when no height can be measured", async () => {
+      // The outline is centred on the bars by halving their height, so it needs at least one
+      // finite height to measure. A barHeight that is never finite leaves it nothing, and it
+      // must fall back to where it sat before it was centred rather than emit NaN
+      // coordinates. Reached through the accessor because an *unset* barHeight is now
+      // reported by name - see "required props".
+      const node = render(
+        pyramidOf()
+          .barHeight(() => Number.NaN)
+          .rightRefAccessor(() => [
+            { row: 0, value: 0 },
+            { row: 1, value: 1 },
+          ]),
+      );
+      expect(await lineD(node, "rightReference")).toBe("M0.5,0L1.5,12");
     });
 
     test("traces the mid-lines of the bars it describes", async () => {
@@ -1088,56 +1084,54 @@ describe("component/stackedPyramid", () => {
         .leftAccessor((d: Side[]) => d[0])
         .rightAccessor((d: Side[]) => d[1]);
 
-    test("should throw when leftAccessor is missing", () => {
-      expect(() =>
-        render(
-          stackedPyramid()
-            .barHeight(10)
-            .barWidth((v: number) => v)
-            .barPosition(0),
-        ),
-      ).toThrow(TypeError);
-    });
+    /** Every required property, each row dropping the one it names. */
+    const withoutProp = {
+      barHeight: () =>
+        bare()
+          .barWidth((v: number) => v)
+          .barPosition(0),
+      barWidth: () => bare().barHeight(10).barPosition(0),
+      barPosition: () =>
+        bare()
+          .barHeight(10)
+          .barWidth((v: number) => v),
+      leftAccessor: () =>
+        stackedPyramid()
+          .barHeight(10)
+          .barWidth((v: number) => v)
+          .barPosition(0)
+          .rightAccessor((d: Side[]) => d[1]),
+      rightAccessor: () =>
+        stackedPyramid()
+          .barHeight(10)
+          .barWidth((v: number) => v)
+          .barPosition(0)
+          .leftAccessor((d: Side[]) => d[0]),
+    };
 
-    test("should throw when barWidth is missing", () => {
-      // barWidth is called by the component itself, for both the x and the width of every
-      // bar, so an unset prop dies immediately.
-      expect(() => render(bare().barHeight(10).barPosition(0))).toThrow(TypeError);
-    });
+    test.each(Object.keys(withoutProp))(
+      "should throw an error naming the property when %s is missing",
+      (prop) => {
+        // Before the named guard the three dimensions failed three different ways: barWidth
+        // threw from the component's own closure, barPosition from inside fn.compose ("Cannot
+        // read properties of undefined (reading 'call')"), and barHeight not at all - it
+        // reached bar's missing-value guard as undefined and rendered height="0" with a clean
+        // console. Matches pyramid's coverage.
+        expect(() => render(withoutProp[prop as keyof typeof withoutProp]() as never)).toThrow(
+          `[sszvis.stackedPyramid] the ${prop} property is required`,
+        );
+      },
+    );
 
-    test("should throw when barPosition is missing", () => {
-      // barPosition is composed with the row accessor - fn.compose(props.barPosition,
-      // rowAcc) - and compose calls it as fns[0].call, so an unset prop throws too, but
-      // from inside fn.compose ("Cannot read properties of undefined (reading 'call')")
-      // rather than from the component's own closure the way barWidth does. Both surface
-      // while bar is applying its attributes.
-      expect(() =>
-        render(
-          bare()
-            .barHeight(10)
-            .barWidth((v: number) => v),
-        ),
-      ).toThrow(TypeError);
+    test("should leave the group empty when a required property is missing", () => {
+      // The check runs before the first selectGroup, so a failed render leaves no partial
+      // chart behind for the caller to misread.
+      const g = group("required-no-render");
+      expect(() => g.datum(layout()).call(bare().barHeight(10) as never)).toThrow();
+      expect((g.node() as SVGGElement).childElementCount).toBe(0);
     });
 
     describe("known quirks", () => {
-      // BUG(#78): barHeight is the one dimension passed straight through to bar, which runs
-      // it through its NaN guard, so an unset prop becomes 0 instead of an error. The chart
-      // renders as an empty axis frame with no visible bars and no warning. Of the three
-      // required dimensions only this one fails silently; the other two throw, with two
-      // different messages. Shared with pyramid, where the named-error guard has landed.
-      // current: height="0". expected: an error naming the missing prop.
-      // Skipped, not deleted: it fails with "expected [Function] to throw an error".
-      test.skip("reports the missing prop when barHeight is unset", () => {
-        expect(() =>
-          render(
-            bare()
-              .barWidth((v: number) => v)
-              .barPosition(0),
-          ),
-        ).toThrow(/barHeight/);
-      });
-
       test("throws when a side accessor returns undefined", () => {
         // NOTE: the error comes from d3's data join, so the message names neither the prop
         // nor the component: "undefined is not iterable".

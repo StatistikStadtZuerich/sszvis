@@ -53,13 +53,12 @@
  *                                            and fn.compose forwards d3's arguments only to the
  *                                            innermost function, so it is called with that row
  *                                            alone.
- * @property {number, function} barHeight     The height of a bar. Required, but omitting it is not
- *                                            reported: it is the one dimension handed straight to
- *                                            bar, so the value reaches bar's missing-value guard as
- *                                            undefined and becomes 0, and the chart renders an
- *                                            empty axis frame with no bars and no warning. Of the
- *                                            three required dimensions only this one fails
- *                                            silently. Shared with pyramid.
+ * @property {number, function} barHeight     The height of a bar. Required: an unset prop throws a
+ *                                            TypeError naming it before anything is drawn. It used
+ *                                            to be the one dimension handed straight to bar, so an
+ *                                            unset value reached bar's missing-value guard as
+ *                                            undefined and became 0, and the chart rendered an
+ *                                            empty axis frame with no bars and no warning.
  * @property {number, function} barWidth      The width of a bar. Required: an unset prop throws a
  *                                            named TypeError before anything is drawn, because the
  *                                            component computes both the x and the width of every
@@ -78,11 +77,8 @@
  *                                            through fn.functor, so that a constant stays
  *                                            distinguishable from a scale.
  * @property {number, function} barPosition   The vertical position of a bar, i.e. its top edge.
- *                                            Required, and an unset prop throws too, but from
- *                                            inside fn.compose ("Cannot read properties of
- *                                            undefined (reading 'call')") rather than from the
- *                                            component's own closure the way barWidth does. Both
- *                                            surface while bar is applying its attributes. It is
+ *                                            Required: an unset prop throws a TypeError naming it
+ *                                            before anything is drawn. It is
  *                                            called with the slice's `row`, i.e. the value the
  *                                            layout's row accessor returned, so it is a scale over
  *                                            the row domain. It is called with nothing else, so an
@@ -253,6 +249,20 @@ import bar, { type BarComponent } from "./bar.js";
 /* Constants
 ----------------------------------------------- */
 const SPINE_PADDING = 0.5;
+
+/**
+ * The properties without which the component cannot draw a bar. Checked by name before any
+ * element exists, so a misconfiguration is reported rather than rendered: barHeight used to
+ * reach bar as undefined and be flattened to a height of 0, which draws an empty axis frame
+ * with no warning. pyramid carries the same list.
+ */
+const REQUIRED_PROPS = [
+  "barHeight",
+  "barWidth",
+  "barPosition",
+  "leftAccessor",
+  "rightAccessor",
+] as const;
 
 const rowAcc = fn.prop("row");
 
@@ -593,15 +603,24 @@ export function stackedPyramid<
         const selection = select(this);
         const props = selection.props<StackedPyramidProps<T, S>>();
 
-        const barWidth = props.barWidth;
-        if (barWidth === undefined) {
-          // A misconfiguration that can never render: thrown before any element is created,
-          // because the component computes both the x and the width of every bar from it.
-          throw new TypeError(
-            "[sszvis.stackedPyramid] the barWidth property is required: pass a scale over the " +
-              "stacked values, or a number for a constant segment width.",
-          );
+        // Validation, before any element exists. Every one of these is a misconfiguration
+        // that can never render, so none of them is left to fail on its own terms: barWidth
+        // used to throw from the component's own closure, barPosition from inside fn.compose,
+        // and barHeight not at all - it reached bar as undefined and was flattened to 0.
+        for (const name of REQUIRED_PROPS) {
+          if (props[name] === undefined) {
+            throw new TypeError(
+              `[sszvis.stackedPyramid] the ${name} property is required` +
+                (name === "barWidth"
+                  ? ": pass a scale over the stacked values, or a number for a constant segment width."
+                  : "."),
+            );
+          }
         }
+
+        // Established by the loop above, which the compiler does not follow through the
+        // indexed access.
+        const barWidth = props.barWidth as StoredWidth;
 
         // A constant barWidth is a segment width rather than a scale, so it is used directly
         // instead of being subtracted from itself, which would collapse every bar to zero.
