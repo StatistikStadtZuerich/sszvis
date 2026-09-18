@@ -153,9 +153,9 @@ export interface LineComponent<P = unknown, L = unknown> extends ComponentBuilde
  * zero-width domain returns exactly that. null, booleans and numeric strings still coerce
  * to finite numbers and are still plotted as data. See test/component/line.test.ts.
  *
- * The one input where this differs from the global isNaN is a BigInt, which isNaN throws
- * on and this returns false for. It is not observable through the component: d3.line
- * immediately applies unary + to the value, which throws the identical TypeError.
+ * Besides the non-finite values above, the input where this differs from the global isNaN is
+ * a BigInt, which isNaN throws on. It is not observable through the component either way:
+ * d3.line immediately applies unary + to the value, which throws the identical TypeError.
  */
 const isMissingVal = (value: unknown): boolean => !Number.isFinite(Number(value));
 

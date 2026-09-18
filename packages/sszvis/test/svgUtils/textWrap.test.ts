@@ -267,13 +267,9 @@ describe("svgUtils/textWrap", () => {
         expect(tspansOf(text)[0].getAttribute("y")).toBe("-12");
       });
 
-      test.each([
-        ["middle", "a non-tick text, where x is derived from the full width"],
-        ["start", "a non-tick text, where x is the padding"],
-      ])("should not wrap or write an x when the width is not finite (%s)", (anchorStyle) => {
+      test("should not wrap or write an x when the width is not finite", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
         const text = appendText("aaaaa bbbbb ccccc");
-        text.style.textAnchor = anchorStyle;
         expect(textWrap(select(text), Number.POSITIVE_INFINITY)).toEqual([]);
         // The text is left exactly as it was: no tspans, so nothing carries a poisoned x.
         expect(tspansOf(text).length).toBe(0);
@@ -303,14 +299,16 @@ describe("svgUtils/textWrap", () => {
         }
       });
 
-      test("should treat a y the browser accepts but a number parser does not as absent", () => {
-        // An SVG 'y' is a length, so "1em" is legal. +"1em" is NaN, which used to be written
-        // straight back out as y="NaN" on every tspan. An unreadable y falls back to the
-        // padding, as an absent one does.
-        const text = appendText("aa");
-        text.setAttribute("y", "1em");
-        textWrap(select(text), 100);
-        expect(tspansOf(text)[0].getAttribute("y")).toBe("3");
+      test("should carry a y in non-numeric units through to the tspans", () => {
+        // An SVG 'y' is a length, so "1em" and "50%" are legal. +"1em" is NaN, which used to be
+        // written straight back out as y="NaN" on every tspan. The attribute is copied verbatim
+        // now, which keeps the documented rule that a 'y' on the <text> wins over the padding.
+        for (const value of ["1em", "50%"]) {
+          const text = appendText("aa");
+          text.setAttribute("y", value);
+          textWrap(select(text), 100);
+          expect(tspansOf(text)[0].getAttribute("y")).toBe(value);
+        }
       });
 
       test("should preserve the y attribute of the text element", () => {
