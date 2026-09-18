@@ -19,9 +19,10 @@
  *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
  *                                      Optional: a geography can have a lake with no borders reaching over it, and
  *                                      absent means no border path is drawn at all.
- * @property {String, Function} lakePathColor  The stroke colour of those borders. No default: the stylesheet's grey
- *                                      dotted stroke stands unless this is set. A falsy colour - "" - clears the
- *                                      inline stroke again. Not wrapped in fn.functor.
+ * @property {String, Function} lakePathColor  The stroke colour of those borders. Defaults to the grey the
+ *                                      stylesheet used to supply, written inline so the borders draw without it.
+ *                                      A falsy colour - "" - clears the stroke, which means no border rather
+ *                                      than the default. Not wrapped in fn.functor.
  * @property {Boolean} fadeOut          Whether to fade the lake out towards the bottom of the shape with a gradient mask.
  *                                      Default true - but choropleth defaults its own lakeFadeOut to false, so the
  *                                      default branch is the one no in-repo chart takes. Turning it off removes an
@@ -68,23 +69,22 @@
  * Note: lakePathColor is not wrapped in fn.functor, unlike the colour properties of the base,
  * geojson and highlight renderers. An accessor is handed straight to d3 and called with the
  * lakeBounds object and d3's index, not with a per-border datum - there is only one path, so there
- * is no such datum. It is written as an inline style, which does override the stylesheet's stroke
- * for .sszvis-map__lakepath - and cannot be overridden back from a consumer's stylesheet, since an
- * inline style beats any author rule short of !important. The mesh's borderColor has the same
- * shape - though where a dropped mesh style leaves the borders invisible, a dropped style here
- * falls back to the stylesheet's grey dotted stroke, so the mistake is even quieter.
+ * is no such datum. It is written as an inline style, so it cannot be overridden from a consumer's
+ * stylesheet, since an inline style beats any author rule short of !important - which now applies
+ * to the default grey as well as to a colour the caller set. The mesh's borderColor has the same
+ * shape and the same defaulting.
  *
- * Note: the colour is written on every render, and only an unset property leaves the stylesheet's
- * stroke alone. A falsy colour - "", or an accessor returning undefined - clears the inline stroke
- * and hands the border back to the stylesheet.
+ * Note: the colour is written on every render. An unset property takes the renderer's default; a
+ * falsy colour - "", or an accessor returning undefined - clears the stroke, which leaves the
+ * border invisible rather than falling back to the default.
  *
  * Note: pointer-events: none is written inline on both paths, and fill: none on the border path,
  * so neither needs sszvis.css to stay out of the way: SVG's initial fill is black, which would
  * turn the dotted border into a shape covering the lake, and without pointer-events both paths
  * swallow the base layer's hover and click events across the whole lake. The lake shape's own fill
- * is the texture pattern, so only its pointer-events was missing. The border's dash pattern and
- * its default grey stroke stay on the class, so a consumer without the stylesheet still has to
- * supply a lakePathColor to see those borders at all.
+ * is the texture pattern, so only its pointer-events was missing. The border's dash pattern, width
+ * and default grey stroke are written inline too, so a consumer without the stylesheet sees the
+ * dotted borders without having to supply a lakePathColor.
  *
  * Note: both path selectors are scoped to the rendering group's own children and filtered by the
  * overlay's key - so two overlays rendered into one group each draw their own pair of paths as
@@ -184,6 +184,10 @@ export interface MapRendererPatternedLakeOverlayComponent extends ComponentBuild
  * rather than matched with an attribute selector, so a caller-supplied key needs no CSS
  * escaping - the same idiom as mesh's data-mesh-key and raster's data-raster-key.
  */
+const DEFAULT_LAKE_PATH_COLOR = "#d3d3d3";
+const DEFAULT_LAKE_STROKE_WIDTH = 1.25;
+const DEFAULT_LAKE_DASH_ARRAY = "3 3";
+
 const KEY_ATTRIBUTE = "data-lake-key";
 
 let generatedScopes = 0;
@@ -357,12 +361,21 @@ export default function mapRendererPatternedLakeOverlay(): MapRendererPatternedL
         // stroke stay on the class, so a consumer without the stylesheet still has to supply a
         // lakePathColor to see these borders at all.
         .style("fill", "none")
-        .style("pointer-events", "none");
+        .style("pointer-events", "none")
+        // The dash pattern and width the dotted outline is made of. Written inline for the same
+        // reason as the stroke below: SVG has no dash by default, so a consumer without the
+        // stylesheet used to get a solid line where they had one at all.
+        .style("stroke-width", DEFAULT_LAKE_STROKE_WIDTH)
+        .style("stroke-dasharray", DEFAULT_LAKE_DASH_ARRAY);
 
-      // An unset colour writes nothing, so the stylesheet's stroke stands; any value that is set -
-      // including a falsy one - is written, so it can clear a colour an earlier render left behind.
+      // An unset colour takes the renderer's own default, as the mesh's borderColor does. It used
+      // to write nothing and leave the stroke to .sszvis-map__lakepath, which meant a consumer who
+      // did not ship sszvis.css saw no lake borders at all - SVG's initial stroke is none - unless
+      // they set lakePathColor themselves. A colour that IS set, including a falsy one, is still
+      // written as given, so it can clear a colour an earlier render left behind: an explicit
+      // empty colour means no border rather than "use the default".
       if (props.lakePathColor === undefined) {
-        lakePath.style("stroke", null);
+        lakePath.style("stroke", DEFAULT_LAKE_PATH_COLOR);
       } else {
         const resolve = fn.valueFn<BaseType, GeoPermissibleObjects, ColorValue | null>(
           props.lakePathColor,
