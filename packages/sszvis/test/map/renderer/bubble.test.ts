@@ -682,18 +682,15 @@ describe("map/renderer/bubble", () => {
       expect(calls).toBeGreaterThan(fullData.length);
     });
 
-    // BUG(#444): mergedData is not validated. Omitting it reaches d3's data join as undefined,
-    // which throws a bare TypeError naming neither the property nor the component - and the group
-    // has already been created by then. The mesh renderer now reports its own missing properties
-    // by name before its join (#208), and the raster renderer reports all four of its required
-    // properties before it creates its canvas (#257).
-    // Skipped, not deleted: it fails with "expected [Function] to throw error matching
-    // /mergedData is required/ but got 'undefined is not iterable'".
-    test.skip("should report the missing property by name when mergedData is missing", () => {
+    test("should report the missing property by name when mergedData is missing", () => {
       const collection = geoJson();
+      const layer = group("bubble-no-merged-data");
       expect(() =>
-        group().call(mapRendererBubble().mapPath(mapPathOf(collection)).radius(5).fill("#ff0000")),
+        layer.call(mapRendererBubble().mapPath(mapPathOf(collection)).radius(5).fill("#ff0000")),
       ).toThrow(/mergedData is required/);
+      // SAFETY: the guard runs before the group is created, so a misconfigured layer leaves
+      // nothing half-built behind.
+      expect(circles(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
     // BUG(#445): mapPath is read as a d3.geoPath - the anchor positions call mapPath.projection()
@@ -733,34 +730,32 @@ describe("map/renderer/bubble", () => {
       ).toThrow(TypeError);
     });
 
-    // BUG(#444): neither radius nor fill has a default, and both are called unguarded - so a
-    // bubble map configured without one throws a bare TypeError naming neither property. Of the
-    // component's seven properties (src/map/renderer/bubble.ts:256-265) only strokeColor,
-    // strokeWidth and transition have defaults; the other four are effectively required.
-    // Skipped, not deleted: it fails with "expected [Function] to throw error matching
-    // /radius is required/ but got 'props.radius is not a function'".
-    test.skip("should report the missing property by name when radius is missing", () => {
+    test("should report the missing property by name when radius is missing", () => {
       const collection = geoJson();
+      const layer = group("bubble-no-radius");
       expect(() =>
-        group().call(
+        layer.call(
           mapRendererBubble()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .mapPath(mapPathOf(collection))
             .fill("#ff0000"),
         ),
       ).toThrow(/radius is required/);
+      expect(circles(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
-    test("should throw when fill is missing", () => {
+    test("should report the missing property by name when fill is missing", () => {
       const collection = geoJson();
+      const layer = group("bubble-no-fill");
       expect(() =>
-        group().call(
+        layer.call(
           mapRendererBubble()
             .mergedData(prepareMergedGeoData(fullData, collection))
             .mapPath(mapPathOf(collection))
             .radius(5),
         ),
-      ).toThrow(TypeError);
+      ).toThrow(/fill is required/);
+      expect(circles(layer.node() as SVGGElement)).toHaveLength(0);
     });
 
     // NOTE: a feature with no datum is still given a circle - prepareMergedGeoData pairs every
