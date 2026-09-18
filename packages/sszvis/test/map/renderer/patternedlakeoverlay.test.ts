@@ -236,12 +236,20 @@ describe("map/renderer/patternedlakeoverlay", () => {
   });
 
   describe("lakePathColor", () => {
-    test("should leave the border stroke to the stylesheet when no lakePathColor is set", () => {
-      // The element does carry inline styles - fill and pointer-events are written on every
-      // render - so it is the stroke specifically that has to stay unset for the stylesheet's
-      // dotted grey to stand.
+    test("should write its own default stroke when no lakePathColor is set", () => {
+      // The stroke used to be left to .sszvis-map__lakepath, which meant a consumer who did not
+      // ship sszvis.css saw no lake borders at all: SVG's initial stroke is none. The renderer
+      // owns the default now, as the mesh owns its own borderColor.
       const node = render();
-      expect(lakeBorder(node)?.style.stroke).toBe("");
+      expect(lakeBorder(node)?.style.stroke).toBe("rgb(211, 211, 211)");
+    });
+
+    test("should write the dash pattern and width that make the outline dotted", () => {
+      // The other half of what the stylesheet used to supply: without a dash array the border
+      // draws as a solid line for a consumer who does not ship sszvis.css.
+      const node = render();
+      expect(lakeBorder(node)?.style.strokeWidth).toBe("1.25");
+      expect(lakeBorder(node)?.style.strokeDasharray).toBe("3, 3");
     });
 
     test("should set the border stroke inline when lakePathColor is a constant colour", () => {

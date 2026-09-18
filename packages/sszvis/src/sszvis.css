@@ -245,11 +245,8 @@
 }
 
 .sszvis-map__lakepath {
-  fill: none;
-  pointer-events: none;
-  stroke: #d3d3d3;
-  stroke-width: 1.25;
-  stroke-dasharray: 3 3;
+  /* fill, pointer-events, stroke, stroke-width and stroke-dasharray are all written inline by
+     the renderer, so the borders draw correctly without this stylesheet. */
   user-select: none;
   -moz-user-select: none;
   -webkit-user-select: none;
