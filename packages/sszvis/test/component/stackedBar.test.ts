@@ -309,6 +309,17 @@ describe("component/stackedBar", () => {
       expect(data).toEqual(rows);
       for (const d of data) expect(Object.keys(d)).toEqual(["region", "category", "value"]);
     });
+
+    test("numbers each vertical series by its position in the returned array", () => {
+      // The array stays in key order and only the number changes, so a caller that reads index
+      // to drive a legend gets the same answer in both orientations. The legacy
+      // test/charts/bar-chart-vertical.test.js worked around the mismatch by re-sorting on
+      // index before asserting anything.
+      const vertical = verticalData();
+      expect(vertical.map((series) => series.key)).toEqual(["X", "Y"]);
+      expect(vertical.map((series) => series.index)).toEqual([0, 1]);
+      expect(horizontalData().map((series) => series.index)).toEqual([0, 1]);
+    });
   });
 
   describe("stackedBarHorizontalData", () => {
@@ -752,22 +763,6 @@ describe("component/stackedBar", () => {
 
   describe("known quirks", () => {
     // Skipped, not deleted: it fails with "expected [ 1, +0 ] to deeply equal [ +0, 1 ]".
-    test.skip("returns the vertical series in stacking order", () => {
-      // BUG(#441): the vertical layout stacks with d3's reverse order, which sets each series'
-      // `index` to its position in the stacking order but leaves the returned array in key
-      // order. So `series[i].index !== i`, and a caller that trusts the array order - or
-      // reads `index` to drive a legend - gets the stack the wrong way up. The horizontal
-      // layout stacks in key order, so there the two agree, which makes the mismatch easy
-      // to miss when porting code between the two orientations.
-      // Rescued from the legacy test/charts/bar-chart-vertical.test.js, which worked around
-      // this by re-sorting on `index` before asserting anything.
-      // current: the array is in key order while `index` counts the other way.
-      // expected: the array order and `index` agree, or the layout reports the difference.
-      const vertical = verticalData();
-      expect(vertical.map((series) => series.key)).toEqual(["X", "Y"]);
-      expect(vertical.map((series) => series.index)).toEqual([0, 1]);
-      expect(horizontalData().map((series) => series.index)).toEqual([0, 1]);
-    });
 
     test("orders integer-like stacks numerically too", () => {
       // NOTE: the cascade's arrayBy layer iterates the same kind of object, so the stacks
