@@ -6953,8 +6953,8 @@
         // Rendering
         selection.selectGroup("left").datum(props.leftAccessor(data)).call(leftBar);
         selection.selectGroup("right").datum(props.rightAccessor(data)).call(rightBar);
-        selection.selectGroup("leftReference").datum(referenceSeries(props.leftRefAccessor, data, "leftRefAccessor")).call(leftLine);
-        selection.selectGroup("rightReference").datum(referenceSeries(props.rightRefAccessor, data, "rightRefAccessor")).call(rightLine);
+        selection.selectGroup("leftReference").datum(referenceSeries$1(props.leftRefAccessor, data, "leftRefAccessor")).call(leftLine);
+        selection.selectGroup("rightReference").datum(referenceSeries$1(props.rightRefAccessor, data, "rightRefAccessor")).call(rightLine);
       });
     }
     /**
@@ -6967,7 +6967,7 @@
      * a cascaded object hits it as soon as one category is missing from one state, and that must
      * not take the chart down. An empty array is a legitimately empty series and passes silently.
      */
-    function referenceSeries(accessor, data, name) {
+    function referenceSeries$1(accessor, data, name) {
       if (accessor === undefined) return [];
       const series = accessor(data);
       if (!Array.isArray(series)) {
@@ -6992,7 +6992,7 @@
         const lineGen = d3.line()
         // A point whose geometry is not a finite number is skipped, which breaks the outline
         // at the gap instead of poisoning the path string from there on.
-        .defined((d, i) => isDrawable(pointX(d, i)) && isDrawable(pointY(d, i))).x(pointX).y(pointY);
+        .defined((d, i) => isDrawable$1(pointX(d, i)) && isDrawable$1(pointY(d, i))).x(pointX).y(pointY);
         const line = selection.selectAll(".sszvis-pyramid__referenceline").data(data).join(enter => enter.append("path").attr("class", "sszvis-pyramid__referenceline")
         // Entering paths get their geometry synchronously: a transition alone would
         // leave getBBox, snapshots and PNG exports looking at an empty path.
@@ -7001,7 +7001,7 @@
       });
     }
     /** Whether a computed coordinate can be written into a path string at all. */
-    function isDrawable(value) {
+    function isDrawable$1(value) {
       return Number.isFinite(Number(value));
     }
 
@@ -7949,13 +7949,11 @@
      *                                            reference points, {row, value}: barWidth maps the
      *                                            value to x and barPosition the row to y, the same way
      *                                            round as in the bars, so a slice of the layout
-     *                                            satisfies the shape unchanged. Optional, but the guard
-     *                                            tests whether the accessor was set, not what it
-     *                                            returns: an accessor that yields undefined or null for
-     *                                            some states throws instead of hiding the line.
-     *                                            Returning an empty array does hide it, though the
-     *                                            classed path element stays in the DOM with no d
-     *                                            attribute, where CSS and hit tests can still find it.
+     *                                            satisfies the shape unchanged. Optional, and so is the
+     *                                            data: an accessor that yields undefined or null for
+     *                                            some states draws no line for that state and warns,
+     *                                            rather than throwing. Returning an empty array hides it
+     *                                            silently, and removes the path element with it.
      * @property {function} [rightRefAccessor]    Reference data for the right side. Same as
      *                                            leftRefAccessor.
      *
@@ -8006,22 +8004,20 @@
      * properties read the bar's datum and the question does not arise. The only stackedPyramid example
      * sets neither reference accessor.
      *
-     * Note: two smaller mismatches ride along, both of them shared with pyramid. The bars are pushed
-     * outwards by SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn
-     * straight from barWidth and so agrees with the axis scale, which puts a reference value equal to a
-     * bar value half a pixel inside that bar's outer edge, symmetrically on both sides. And the line
-     * takes its y from barPosition alone and never accounts for barHeight, so the outline runs along
-     * the bars' top edges rather than their mid-lines, half a bar height above the values it describes.
+     * Note: one smaller mismatch rides along, shared with pyramid. The bars are pushed outwards by
+     * SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn straight from
+     * barWidth and so agrees with the axis scale, which puts a reference value equal to a bar value
+     * half a pixel inside that bar's outer edge, symmetrically on both sides. The vertical half of
+     * that pair is no longer one: the line adds half a bar height to barPosition, so the outline runs
+     * through the bars' mid-lines rather than along their top edges.
      *
      * Note: a reference line's d attribute is only ever written through a transition, so a freshly
      * rendered path carries no geometry until the first animation frame and anything that measures the
      * chart synchronously - getBBox, a snapshot, an export to PNG - sees an empty path. Entering lines
      * then snap into place, because d3 has no previous d to interpolate from; only updates animate. The
      * bars underneath animate over the same duration, so the outline and the bars it describes stay
-     * together for the length of the transition. bar also guards every geometry value against NaN while the line
-     * hands barWidth and barPosition straight to d3.line, so one missing value poisons the path string
-     * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
-     * with pyramid.
+     * together for the length of the transition. pyramid's line writes its d at the join as well and
+     * so does not share this one.
      *
      * Note: the reference path carries two classes: the generic .sszvis-path, which no rule in
      * sszvis.css defines, and the component-owned .sszvis-stacked-pyramid__referenceline, which the
@@ -8033,12 +8029,11 @@
      * from the stylesheet; the class here is deliberately not pyramid's, so the two components do not
      * collide with each other in turn.
      *
-     * Note: the reference datum is wrapped in an array, one array of points per path, so each side is
-     * capped at a single line and, while a reference accessor is set, the join always has exactly one
-     * element and the exit selection can never fire: once a line has been rendered its path element
-     * stays in the DOM even after the reference data goes away, with only its d attribute dropped. Only
-     * removing the accessor itself empties the group. The mirror property writes transform="" on the
-     * right side rather than omitting the attribute. Shared with pyramid.
+     * Note: the reference datum is one array of points per path, so each side is capped at a single
+     * line. referenceSeries resolves a side with nothing to draw to no entry at all rather than to one
+     * empty entry, which is what lets the exit selection fire and the path leave the DOM when the
+     * reference data goes away. The mirror property writes transform="" on the right side rather than
+     * omitting the attribute. Shared with pyramid.
      *
      * Note: the stack join is a child selector, ":scope > [data-sszvis-stack]", so only the groups the
      * component owns take part in it and a caller may render content of its own - including further
@@ -8205,13 +8200,46 @@
         // The line reads a reference point's value through the same scale, or parks it at the
         // constant when barWidth is one.
         const referenceWidth = widthScale ?? (() => constantWidth);
-        const leftLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth).mirror(true);
-        const rightLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth);
+        // The outline is centred on the bars, so it needs their height - but a reference point
+        // is {row, value}, not a slice, so there is nothing on the point to measure. The
+        // heights are read off the side's own slices instead, which is what lets a per-slice
+        // barHeight accessor work here: it receives the slice it expects, rather than the
+        // undefined an argument-less call would hand it. Keyed by row and built per side, so a
+        // height that varies by row - or between the two sides - reaches the reference point it
+        // belongs to rather than being taken from whichever slice happened to come first.
+        //
+        // A reference point on a row the bars do not cover falls back to the first height this
+        // side resolved, rather than to 0: a chart-wide height is the normal case, and falling
+        // to 0 for the odd row would kink the outline instead of merely offsetting it. With no
+        // slices at all, or no barHeight - a chart that draws no bars, which the component
+        // already tolerates silently - the fallback is 0 and the outline sits on the bars' top
+        // edges, where it was before this was corrected. Neither case throws.
+        const halfHeightsByRow = side => {
+          const byRow = new Map();
+          if (props.barHeight !== undefined) {
+            for (const series of side) {
+              for (const [index, slice] of series.entries()) {
+                const key = String(slice.row);
+                if (byRow.has(key)) continue;
+                const height = Number(props.barHeight(slice, index));
+                if (Number.isFinite(height)) byRow.set(key, height / 2);
+              }
+            }
+          }
+          return {
+            byRow,
+            fallback: byRow.values().next().value ?? 0
+          };
+        };
+        const leftHeights = halfHeightsByRow(props.leftAccessor(data));
+        const rightHeights = halfHeightsByRow(props.rightAccessor(data));
+        const leftLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth).halfHeightByRow(leftHeights.byRow).halfHeightDefault(leftHeights.fallback).mirror(true);
+        const rightLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth).halfHeightByRow(rightHeights.byRow).halfHeightDefault(rightHeights.fallback);
         // Rendering
         selection.selectGroup("leftStack").datum(props.leftAccessor(data)).call(leftStack);
         selection.selectGroup("rightStack").datum(props.rightAccessor(data)).call(rightStack);
-        selection.selectGroup("leftReference").datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : []).call(leftLine);
-        selection.selectGroup("rightReference").datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : []).call(rightLine);
+        selection.selectGroup("leftReference").datum(referenceSeries(props.leftRefAccessor, data, "leftRefAccessor")).call(leftLine);
+        selection.selectGroup("rightReference").datum(referenceSeries(props.rightRefAccessor, data, "rightRefAccessor")).call(rightLine);
       });
     }
     /**
@@ -8233,17 +8261,50 @@
       });
     }
     /**
+     * Resolves one side's reference series into the array-of-series the line component joins on:
+     * one entry when there is something to draw, none otherwise. A series with no points therefore
+     * removes its path rather than leaving an empty one behind.
+     *
+     * An accessor returning undefined or null breaks its contract, so it is warned about - but it
+     * is warned about rather than thrown on, because it is data-driven: an accessor indexing into
+     * a cascaded object hits it as soon as one series is missing from one state, and that must not
+     * take the chart down. An empty array is a legitimately empty series and passes silently. The
+     * same resolver pyramid uses.
+     */
+    function referenceSeries(accessor, data, name) {
+      if (accessor === undefined) return [];
+      const series = accessor(data);
+      if (!Array.isArray(series)) {
+        warn(`[stackedPyramid] ${name} returned ${String(series)} rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series.`);
+        return [];
+      }
+      return series.length === 0 ? [] : [series];
+    }
+    /**
      * Draws one side's reference outline as a single path. The data is one array of reference
      * points per path, so the datum handed to this component is an array of arrays - in practice
      * always of length one, since each side has at most one reference line.
      */
     function lineComponent() {
-      return component().prop("barPosition").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
+      return component().prop("barPosition").prop("barWidth").prop("halfHeightByRow").halfHeightByRow(new Map()).prop("halfHeightDefault").halfHeightDefault(0).prop("mirror").mirror(false).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
         // Each half of a point is mapped by the property that owns it, so the outline lands in
         // the coordinate system the bars are drawn in.
-        const lineGen = d3.line().x(d => props.barWidth(d.value)).y(d => props.barPosition(d.row));
+        // The bars are pushed outwards by SPINE_PADDING, so the outline is too - otherwise a
+        // reference value equal to a bar value lands half a pixel inside that bar's outer edge
+        // rather than on it. barPosition is a bar's top edge, so half that row's bar height is
+        // added to put the outline through the mid-lines of the bars it describes. Both are the
+        // corrections pyramid's own reference line makes.
+        const pointX = d => SPINE_PADDING + props.barWidth(d.value);
+        const pointY = d => props.barPosition(d.row) + (props.halfHeightByRow.get(String(d.row)) ?? props.halfHeightDefault);
+        const lineGen = d3.line()
+        // A point whose geometry is not a finite number is skipped, which breaks the outline
+        // at the gap instead of poisoning the path string from there on: d3 writes NaN into
+        // d verbatim, and the browser then renders the valid prefix and drops everything
+        // after it. bar guards its own geometry the same way, so the bars survive a gap the
+        // outline used to be truncated by. The same guard pyramid uses.
+        .defined(d => isDrawable(pointX(d)) && isDrawable(pointY(d))).x(pointX).y(pointY);
         // Matching on the component's own class rather than the generic .sszvis-path one, which
         // pie, stackedArea and stackedAreaMultiples also use, keeps a foreign path in the same
         // group out of the join. The generic class stays in the written attribute, so no
@@ -8251,6 +8312,10 @@
         const line = selection.selectAll("path.sszvis-stacked-pyramid__referenceline").data(data).join("path").attr("class", "sszvis-path sszvis-stacked-pyramid__referenceline").attr("fill", "none").attr("stroke", "#aaa").attr("stroke-width", 2).attr("stroke-dasharray", "3 3");
         line.attr("transform", props.mirror ? "scale(-1, 1)" : "").transition(defaultTransition()).attr("d", lineGen);
       });
+    }
+    /** Whether a computed coordinate can be written into a path string at all. */
+    function isDrawable(value) {
+      return Number.isFinite(Number(value));
     }
 
     /**
