@@ -53,11 +53,12 @@
  * Note: stroke and strokeWidth are written as inline styles, where bar and dot write their colours as
  * attributes. An inline style outranks a stylesheet rule, so a theme can restyle a bar but never a line.
  *
- * Note: with transition enabled, the d attribute and stroke-width are only written through the
- * transition, so a freshly rendered line has an empty path element until the first animation frame
- * runs. Anything measuring the path synchronously - getTotalLength, a bounding box, a screenshot -
- * sees nothing. Entering lines also snap rather than animate, because d3 has no previous d value to
- * interpolate from; only updates animate. See test/component/line.test.ts.
+ * Note: with transition enabled an entering line is given its d and stroke-width at the join as
+ * well as on the transition, so a path measured synchronously - getTotalLength, a bounding box, a
+ * screenshot - is never empty. The transition then interpolates from the destination to itself, so
+ * an entering line is drawn at its final shape and its stroke-width no longer grows out of the
+ * stylesheet's; only an update animates. The cost is that the accessors are evaluated a second
+ * time for entering lines. See test/component/line.test.ts.
  *
  * Note: the default missing-value guard inspects both dimensions, but only catches values that fail
  * to coerce to a number. Infinity, which a scale over a zero-width domain produces, still reaches the
@@ -226,7 +227,21 @@ export default function line<P = unknown, L = unknown>(): LineComponent<P, L> {
         const path = selection
           .selectAll<SVGPathElement, L>(".sszvis-line")
           .data(data, props.key)
-          .join("path")
+          .join((enter) => {
+            const entered = enter.append("path");
+            // Only the transition branch defers these, and only for an entering line: an
+            // update already has last render's values in the DOM to interpolate from, and
+            // the branch below writes both on the selection when transitions are off.
+            // Writing them here keeps a fresh line out of the geometry-less state a
+            // consumer that measures on the render tick - getTotalLength, a bounding box, a
+            // synchronous screenshot - would otherwise see, at the cost of evaluating the
+            // accessors a second time. The transition then interpolates from the
+            // destination to itself, so nothing jumps.
+            if (props.transition) {
+              entered.attr("d", pathData).style("stroke-width", strokeWidth);
+            }
+            return entered;
+          })
           .classed("sszvis-line", true)
           .style("stroke", stroke);
 
