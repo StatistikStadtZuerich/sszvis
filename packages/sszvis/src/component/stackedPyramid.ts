@@ -50,7 +50,13 @@
  *                                            both sides; a per-datum accessor is the usual way to
  *                                            colour the series. It is called with the slice's
  *                                            `data`, so it reads a source row rather than a slice,
- *                                            and with d3's index, as bar's own fill is.
+ *                                            and with d3's index, as bar's own fill is. That index
+ *                                            counts within one series group, not across a side:
+ *                                            bar is instantiated once per series, so a two-row,
+ *                                            two-series side sees 0, 1, 0, 1 rather than 0..3.
+ *                                            Indexing a palette with it repeats colours per
+ *                                            series; key the colour off the datum instead. The
+ *                                            same holds for barWidth and barPosition.
  * @property {number, function} barHeight     The height of a bar. Required: an unset prop throws a
  *                                            TypeError naming it before anything is drawn. It used
  *                                            to be the one dimension handed straight to bar, so an
@@ -164,8 +170,13 @@
  *
  * Note: a reference series is an array of {row, value} points, so barWidth maps the value to x and
  * barPosition the row to y - the same division of labour as in the bars, which is what makes the
- * outline land in their coordinate system. Neither property receives d3's index, on the line or in
- * the bars. pyramid's byte-identical lineComponent still takes plain data, since there both
+ * outline land in their coordinate system. Neither property receives d3's index on the line, though
+ * the bars pass it to both: a reference point is {row, value} rather than a slice, so the only
+ * index the line could forward is the point's own position in its series, which is not the bar
+ * index a caller writing (v, i) is reaching for. An index-aware accessor therefore yields a
+ * non-finite coordinate here, every point is skipped, and the outline is not drawn at all - see the
+ * two "drops d3's index on the reference line" tests.
+ * pyramid's byte-identical lineComponent still takes plain data, since there both
  * properties read the bar's datum and the question does not arise. The only stackedPyramid example
  * sets neither reference accessor.
  *
@@ -527,7 +538,7 @@ type PyramidValue<A, R> = R | ((value: A, index: number) => R);
  * standing for a series the row has no observation for - is zero-width, so the accessor is not
  * called for it and never has to handle a missing row.
  */
-type FillValue<U> = ColorValue | undefined | ((datum: U) => ColorValue | undefined);
+type FillValue<U> = ColorValue | undefined | ((datum: U, index: number) => ColorValue | undefined);
 
 type StackedPyramidProps<T, S extends string | number> = {
   barHeight: StoredHeight<T, S>;
@@ -618,9 +629,7 @@ export function stackedPyramid<
           }
         }
 
-        // Established by the loop above, which the compiler does not follow through the
-        // indexed access.
-        const barWidth = props.barWidth as StoredWidth;
+        const barWidth = props.barWidth;
 
         // A constant barWidth is a segment width rather than a scale, so it is used directly
         // instead of being subtracted from itself, which would collapse every bar to zero.
@@ -700,19 +709,17 @@ export function stackedPyramid<
         // A reference point on a row the bars do not cover falls back to the first height this
         // side resolved, rather than to 0: a chart-wide height is the normal case, and falling
         // to 0 for the odd row would kink the outline instead of merely offsetting it. With no
-        // slices at all, or no barHeight - a chart that draws no bars, which the component
-        // already tolerates silently - the fallback is 0 and the outline sits on the bars' top
-        // edges, where it was before this was corrected. Neither case throws.
+        // slices at all, or a barHeight that is never finite, the fallback is 0 and the outline
+        // sits on the bars' top edges, where it was before this was corrected. Neither case
+        // throws. An unset barHeight cannot reach here at all - it is reported by name above.
         const halfHeightsByRow = (side: StackedPyramidSide<T, S>) => {
           const byRow = new Map<string, number>();
-          if (props.barHeight !== undefined) {
-            for (const series of side) {
-              for (const [index, slice] of series.entries()) {
-                const key = String(slice.row);
-                if (byRow.has(key)) continue;
-                const height = Number(props.barHeight(slice, index));
-                if (Number.isFinite(height)) byRow.set(key, height / 2);
-              }
+          for (const series of side) {
+            for (const [index, slice] of series.entries()) {
+              const key = String(slice.row);
+              if (byRow.has(key)) continue;
+              const height = Number(props.barHeight(slice, index));
+              if (Number.isFinite(height)) byRow.set(key, height / 2);
             }
           }
           return { byRow, fallback: byRow.values().next().value ?? 0 };
