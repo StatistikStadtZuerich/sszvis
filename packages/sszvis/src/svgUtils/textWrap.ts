@@ -30,8 +30,8 @@
  *        'invisible box' of 'width' width. Two pixels are subtracted from it to account for
  *        the borders, so the rendered 'y' is padding - 2: the default of 5 yields y="3" and
  *        an explicit 0 yields y="-2". It is used only when the <text> element carries no 'y'
- *        attribute of its own, or carries one that cannot be read as a number - an SVG 'y' may
- *        legally be "1em" or "50%"; otherwise that attribute wins and this argument is ignored.
+ *        attribute of its own; otherwise that attribute wins - whatever its units, since it is
+ *        copied to the tspans verbatim - and this argument is ignored.
  *        Defaults to 5 when omitted or when the value is not a finite number, which logs a
  *        warning on each such call; an explicit 0 and a negative padding are honoured.
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function. Empty when the width was unusable and nothing was wrapped.
@@ -81,8 +81,9 @@ export default function textWrap<D, P extends BaseType, PD>(
   // Unlike the paddings there is no sensible default width to fall back to - a width is the
   // whole instruction - so an unusable one skips wrapping instead of substituting a number.
   // The text is left exactly as it was, which is a readable label rather than a poisoned one:
-  // a non-finite width compares every measured line against NaN, which disables wrapping
-  // anyway, and is written straight into the `x` attribute as "NaN" or "-Infinity". It is
+  // a non-finite width either disables wrapping entirely (NaN and +Infinity, where no measured
+  // line ever exceeds it) or breaks after every single word (-Infinity, where every line does),
+  // and in each case is written straight into the `x` attribute as "NaN" or "-Infinity". It is
   // reachable through the public API - fn.defined, which axis screens props.textWrap with,
   // excludes NaN but not +/-Infinity, so axis().textWrap(Infinity) used to land on every tick
   // label.
@@ -135,12 +136,13 @@ export default function textWrap<D, P extends BaseType, PD>(
         };
     const x = xByAnchor[textAlign];
 
-    // An SVG 'y' is a length, so "1em" and "50%" are both legal and neither coerces to a
-    // number - +"1em" is NaN, which used to be written straight back out as y="NaN". A 'y'
-    // that cannot be read as a number is treated as absent, so the padding applies.
+    // An SVG 'y' is a length, so "1em" and "50%" are both legal, and neither survives the +
+    // that used to be applied here - +"1em" is NaN, which was written straight back out as
+    // y="NaN". The attribute is copied to the tspans verbatim instead, which honours the
+    // documented rule that a 'y' on the <text> wins over paddingTopBottom whatever its units.
+    // A tspan's 'y' takes the same length syntax, so nothing needs parsing at all.
     const yAttr = text.attr("y");
-    const parsedY = yAttr === null ? Number.NaN : +yAttr;
-    const y = Number.isFinite(parsedY) ? parsedY : padTopBottom;
+    const y = yAttr === null ? padTopBottom : yAttr;
 
     let tspan = text
       .text(null)
