@@ -94,6 +94,7 @@ import { dispatch, select } from "d3";
 import { colorToString } from "../../color.js";
 import { type ComponentBuilder, component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
+import { listenerRegistry } from "./listenerRegistry.js";
 import translateString from "../../svgUtils/translateString.js";
 import { defaultTransition, OWN_TRANSITION } from "../../transition.js";
 import type { ColorValue } from "../../types.js";
@@ -156,30 +157,6 @@ export interface MapRendererBubbleComponent<T = unknown> extends ComponentBuilde
  * Held against the feature object, which is the same object from one render to the next for a
  * given collection, and weakly so a discarded collection is still collectable.
  */
-/**
- * A d3 typename split into its two halves and put back together in one canonical form. "over.tip"
- * is type "over" and name "tip"; either half may be empty, so ".tip" carries a name alone and
- * "over" a type alone. d3 reads "over" and "over." as the same registration, which is why the two
- * are stored under one key rather than as written.
- */
-interface Typename {
-  type: string;
-  name: string;
-  key: string;
-}
-
-function parseTypename(typename: string): Typename {
-  const dot = typename.indexOf(".");
-  const type = dot < 0 ? typename : typename.slice(0, dot);
-  const name = dot < 0 ? "" : typename.slice(dot + 1);
-  return { type, name, key: `${type}.${name}` };
-}
-
-/** The name half of a canonical key, which is everything after its single separating dot. */
-function nameOfKey(key: string): string {
-  return key.slice(key.indexOf(".") + 1);
-}
-
 const anonymousKeys = new WeakMap<object, string>();
 let anonymousCount = 0;
 
@@ -240,15 +217,9 @@ function anchorPosition(
 export default function mapRendererBubble<T = unknown>(): MapRendererBubbleComponent<T> {
   const event = dispatch("over", "out", "click");
 
-  /**
-   * The typenames a consumer registered, tallied in on() below because d3's dispatch cannot be
-   * asked what it holds: dispatch.on("over") reports only the handler registered under the bare
-   * name, and returns undefined for one registered as "over.tooltip".
-   */
-  const registered = new Set<string>();
-
-  /** Whether any of this component's handlers is registered, under any namespace. */
-  const hasListeners = () => registered.size > 0;
+  // The typenames a consumer registered, tallied in on() below. Shared with geojson, which makes
+  // the same hit-area decision from the same information.
+  const { hasListeners, record } = listenerRegistry();
 
   const anchoredCirclesComponent = component<MapRendererBubbleComponent<T>>()
     .prop("mergedData")
@@ -401,28 +372,9 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
     const value = event.on.apply(event, args);
     if (value !== event) return value;
 
-    // A setter call, and d3 validated the typenames by returning the dispatch. It accepts a
-    // space-separated list of them, and a null handler removes rather than registers. The rest are
-    // d3's own rules, checked against it rather than read off its source: an empty or
-    // whitespace-only list does nothing at all, and for a typename carrying a name but no type a
-    // null handler removes that name from every event type while a non-null one is ignored.
+    // A setter call, and d3 validated the typenames by returning the dispatch.
     const [typenames, handler] = args;
-    const list = String(typenames).trim();
-    if (list === "") return anchoredCirclesComponent;
-
-    for (const typename of list.split(/\s+/)) {
-      const { type, name, key } = parseTypename(typename);
-      if (handler == null) {
-        if (type === "") {
-          // oxlint-disable-next-line unicorn/no-useless-spread -- the copy is required: the loop body deletes from `registered`.
-          for (const held of [...registered]) if (nameOfKey(held) === name) registered.delete(held);
-        } else {
-          registered.delete(key);
-        }
-      } else if (type !== "") {
-        registered.add(key);
-      }
-    }
+    record(typenames, handler);
     return anchoredCirclesComponent;
   }) as MapRendererBubbleComponent<T>["on"];
 
