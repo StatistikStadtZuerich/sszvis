@@ -240,11 +240,11 @@ describe("component/line", () => {
 
     describe("known quirks", () => {
       test("a null y is plotted as zero instead of breaking the line", () => {
-        // NOTE: the default predicate uses the global isNaN, which coerces first, and
-        // Number(null) is 0. So a null - the usual shape of a gap in a CSV - passes the
-        // guard and d3 plots it at the top of the chart. The same coercion trap is
-        // documented on bar's handleMissingVal. See the coercion table below for which
-        // values break the line and which slip through.
+        // NOTE: the default predicate coerces before testing, and Number(null) is 0. So a
+        // null - the usual shape of a gap in a CSV - passes the guard and d3 plots it at the
+        // top of the chart. stackedArea rejects null for exactly this reason; line does not,
+        // which is the documented difference between the two. See the coercion table below
+        // for which values break the line and which slip through.
         const node = render(lineOf(), [
           [
             { x: 0, y: 0 },
@@ -255,9 +255,10 @@ describe("component/line", () => {
         expect(ds(node)).toEqual(["M0,0L10,0L20,20"]);
       });
 
-      test("only values that coerce to NaN break the line", () => {
-        // NOTE: the guard is not a numeric type check, it is `!isNaN(y)`. This table is
-        // the line equivalent of the coercion cases documented on bar's handleMissingVal.
+      test("only values with no finite numeric form break the line", () => {
+        // NOTE: the guard is not a numeric type check - it coerces first and then asks for
+        // finiteness, so anything that coerces to a finite number is data. This table is the
+        // line equivalent of the coercion cases documented on bar's handleMissingVal.
         const yOf = (value: unknown) =>
           ds(
             render(lineOf(), [
@@ -272,6 +273,11 @@ describe("component/line", () => {
         // Coerce to NaN, so the line breaks into two degenerate subpaths.
         expect(yOf("abc")).toBe("M0,0ZM20,20Z");
         expect(yOf({})).toBe("M0,0ZM20,20Z");
+        // Coerce to a number, but not a finite one, so they break the line the same way. A
+        // numeric string overflows to Infinity rather than failing to parse, which is the
+        // least obvious way into this branch.
+        expect(yOf("1e999")).toBe("M0,0ZM20,20Z");
+        expect(yOf(Number.NEGATIVE_INFINITY)).toBe("M0,0ZM20,20Z");
         // Coerce to a number, so they are plotted as if they were data.
         expect(yOf("")).toBe("M0,0L10,0L20,20");
         expect(yOf([])).toBe("M0,0L10,0L20,20");
@@ -279,10 +285,10 @@ describe("component/line", () => {
         expect(yOf("50")).toBe("M0,0L10,50L20,20");
       });
 
-      test("setting defined silently gives up the NaN guard", () => {
+      test("setting defined silently gives up the missing-value guard", () => {
         // NOTE: defined replaces the default rather than composing with it, so a
         // predicate written for some other purpose - filtering a date range, say - lets
-        // NaN y values back into the path.
+        // NaN and non-finite y values back into the path.
         const node = render(
           lineOf().defined(() => true),
           [
