@@ -891,6 +891,20 @@ describe("component/stackedPyramid", () => {
         expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M2,24L3,36"),
       );
     });
+
+    test("draws no reference line when a reference accessor returns no data", () => {
+      // An accessor that indexes into a cascaded object returns undefined as soon as one
+      // series is missing from one state, so this is reached by data rather than by code and
+      // must not take the chart down. Both no-data returns are covered: they used to throw
+      // differently, undefined as "not iterable" and null through the `in` operator.
+      for (const noData of [undefined, null]) {
+        const node = render(
+          // @ts-expect-error - deliberately violating the accessor's return contract
+          pyramidOf().rightRefAccessor(() => noData),
+        );
+        expect(lines(node, "rightReference").length).toBe(0);
+      }
+    });
   });
 
   describe("required props", () => {
@@ -1126,20 +1140,6 @@ describe("component/stackedPyramid", () => {
       );
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
-    });
-
-    // BUG(#77): the reference line is guarded on the accessor existing, not on it returning
-    // data - `props.rightRefAccessor ? [props.rightRefAccessor(data)] : []`. An accessor
-    // that returns undefined for some states throws instead of hiding the line.
-    // current: TypeError. expected: no line. Shared with pyramid, where `referenceSeries`
-    // now resolves an empty series to no path at all.
-    // Skipped, not deleted: it fails with "TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))".
-    test.skip("draws no reference line when a reference accessor returns no data", () => {
-      const node = render(
-        // @ts-expect-error - deliberately violating the accessor's return contract
-        pyramidOf().rightRefAccessor(() => undefined),
-      );
-      expect(lines(node, "rightReference").length).toBe(0);
     });
 
     test("leaves an empty path element behind for empty reference data", async () => {
