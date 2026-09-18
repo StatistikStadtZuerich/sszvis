@@ -641,6 +641,23 @@ describe("component/stackedAreaMultiples", () => {
       expect(ds(nulls)).toEqual(["M0,10L0,40Z"]);
     });
 
+    test("should treat a non-finite bound as missing", () => {
+      // Infinity is a number as far as isNaN is concerned, so it used to reach the d
+      // attribute and truncate the band at that point rather than break it. Matches
+      // stackedArea and line.
+      const node = render(areaOf(), [
+        [
+          { x: 0, y0: 40, y1: 10 },
+          { x: 10, y0: 50, y1: Number.POSITIVE_INFINITY },
+          { x: 20, y0: 60, y1: 30 },
+        ],
+      ]);
+      // SAFETY: the surviving points must still be drawn, so the bad bound breaks the band
+      // rather than emptying it.
+      expect(ds(node)[0]).not.toContain("Infinity");
+      expect(ds(node)).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
+    });
+
     test("should replace the default guard rather than compose with it when defined is set", () => {
       // defined replaces the default rather than composing with it, so a predicate that only
       // looks at y1 lets a missing y0 back into the path.

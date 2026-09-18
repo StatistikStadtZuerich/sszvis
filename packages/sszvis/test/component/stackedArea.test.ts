@@ -449,6 +449,24 @@ describe("component/stackedArea", () => {
       expect(ds(nulls)).toEqual(["M0,10L0,40Z"]);
     });
 
+    test("should treat a non-finite bound as missing", () => {
+      // Infinity is a number as far as isNaN is concerned, so it used to reach the d
+      // attribute, where it is not a valid SVG coordinate: the browser dropped that segment
+      // and everything after it, truncating the area instead of breaking it. A scale over a
+      // zero-width domain returns exactly that. Matches line and stackedAreaMultiples.
+      const node = render(areaOf(), [
+        [
+          { x: 0, y0: 40, y1: 10 },
+          { x: 10, y0: 50, y1: Number.POSITIVE_INFINITY },
+          { x: 20, y0: 60, y1: 30 },
+        ],
+      ]);
+      // SAFETY: the surviving points must still be drawn, so the bad bound breaks the area
+      // rather than emptying it.
+      expect(ds(node)[0]).not.toContain("Infinity");
+      expect(ds(node)).toEqual(["M0,10L0,40ZM20,30L20,60Z"]);
+    });
+
     test("should replace the default guard when defined is set", () => {
       // defined replaces the default rather than composing with it, so a predicate that only
       // looks at y1 lets a missing y0 back into the path.
