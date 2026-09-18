@@ -590,26 +590,66 @@ describe("map/renderer/patternedlakeoverlay", () => {
   });
 
   describe("known quirks", () => {
-    // BUG(#449): lakeBounds is not validated, and its omission is not reported. The join is
-    // `[props.lakeBounds]`, so exactly one datum is always bound - undefined included - and
-    // geoPath(undefined) returns null, which d3 turns into a removed attribute. The result is a
-    // classed border path with no geometry. The mesh renderer had the same defect and now throws a
-    // named error before its join (#208); this renderer was left behind.
-    // Skipped, not deleted: it fails with "expected [Function] to throw an error".
-    test.skip("should report the missing property by name when lakeBounds is missing", () => {
+    test("should draw no border path at all when lakeBounds is missing", () => {
+      // A geography can have a lake with no borders reaching over it - the agglomeration is the
+      // shipped example - so this is its shape rather than a misconfiguration. What must not
+      // survive is the classed, geometry-less path it used to leave behind, which CSS rules and
+      // hit tests can still find and which reads as borders that drew nothing.
+      const layer = group("lake-no-bounds");
       expect(() =>
-        group().call(mapRendererPatternedLakeOverlay().mapPath(mapPathOf()).lakeFeature(lake())),
-      ).toThrow(/lakeBounds is required/);
+        layer.call(mapRendererPatternedLakeOverlay().mapPath(mapPathOf()).lakeFeature(lake())),
+      ).not.toThrow();
+      const node = layer.node() as SVGGElement;
+      expect(lakeBorder(node)).toBeNull();
+      // SAFETY: the lake itself still draws - only its borders are absent.
+      expect(lakeShape(node)?.hasAttribute("d")).toBe(true);
     });
 
-    // The same root defect by a different d3 mechanism: an attribute set to undefined is removed
-    // without anything being called.
-    test("should render styled but empty paths when mapPath is missing", () => {
-      const node = group()
-        .call(mapRendererPatternedLakeOverlay().lakeFeature(lake()).lakeBounds(bounds()))
-        .node() as SVGGElement;
-      expect(lakeShape(node)?.hasAttribute("d")).toBe(false);
-      expect(lakeBorder(node)?.hasAttribute("d")).toBe(false);
+    test("should remove a border path it drew earlier when lakeBounds goes away", () => {
+      const layer = group("lake-bounds-removed");
+      const renderWith = (lakeBounds?: ReturnType<typeof bounds>) =>
+        layer
+          .call(
+            mapRendererPatternedLakeOverlay()
+              .mapPath(mapPathOf())
+              .lakeFeature(lake())
+              .lakeBounds(lakeBounds),
+          )
+          .node() as SVGGElement;
+      expect(lakeBorder(renderWith(bounds()))).not.toBeNull();
+      expect(lakeBorder(renderWith(undefined))).toBeNull();
+      // It comes back, so the fix cannot over-correct into never drawing borders.
+      expect(lakeBorder(renderWith(bounds()))).not.toBeNull();
+    });
+
+    test("should report a null mapPath by name rather than silently drawing nothing", () => {
+      // SAFETY: d3 removes an attribute set to null without calling anything, so a null
+      // mapPath used to produce the same classed, geometry-less paths a missing one did.
+      const layer = group("lake-null-map-path");
+      const overlay = mapRendererPatternedLakeOverlay()
+        // @ts-expect-error - null is a caller error; pinned because it must be named
+        .mapPath(null)
+        .lakeFeature(lake())
+        .lakeBounds(bounds());
+      expect(() => layer.call(overlay)).toThrow(/mapPath is required/);
+      expect(lakeShape(layer.node() as SVGGElement)).toBeNull();
+    });
+
+    test("should report the missing property by name when mapPath is missing", () => {
+      const layer = group("lake-no-map-path");
+      expect(() =>
+        layer.call(mapRendererPatternedLakeOverlay().lakeFeature(lake()).lakeBounds(bounds())),
+      ).toThrow(/mapPath is required/);
+      expect(lakeShape(layer.node() as SVGGElement)).toBeNull();
+      expect(lakeBorder(layer.node() as SVGGElement)).toBeNull();
+    });
+
+    test("should not require a mapPath when there is no lake to draw", () => {
+      // An absent lakeFeature is an instruction rather than a mistake, so the guard must sit
+      // past it: asking for "no lake" needs no path generator to clear what was drawn before.
+      const layer = group("lake-none-unvalidated");
+      expect(() => layer.call(mapRendererPatternedLakeOverlay())).not.toThrow();
+      expect(lakeShape(layer.node() as SVGGElement)).toBeNull();
     });
 
     // NOTE: the component sets no pointer-events on either path, so both come from sszvis.css.

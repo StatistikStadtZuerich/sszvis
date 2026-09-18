@@ -24,7 +24,7 @@
  * @property {Object} lakeFeatures                    The shape of the part of Lake Zurich that lies within the city.
  *                                                    No default; without it no lake is drawn at all.
  * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default; left
- *                                                    out while there is a lake, it renders as an empty path.
+ *                                                    out, no border path is drawn over the lake at all.
  * @property {Boolean} lakeFadeOut                    Whether to fade the lake out towards the outer edge. Default false,
  *                                                    which overrides the lake renderer's own default of true.
  * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
@@ -163,10 +163,11 @@ export interface AnchoredShape<T> extends ComponentBuilder<AnchoredShape<T>> {
  * The mesh and lake renderers as this component configures them. borders, lakeFeatures and
  * lakeBorders have no defaults, and the JavaScript passed whatever it was given straight through,
  * so the shape these views accept includes the absent case that the renderers' own signatures do
- * not. The absent case no longer means the same thing for all three: a missing lakeBounds still
- * renders an empty border path, a missing lakeFeature is now an instruction rather than an
- * accident - the overlay clears the paths and definitions it drew and returns - while a missing
- * borders reaches the mesh renderer's guard and throws a TypeError naming geoJson. The view keeps the widened parameter so the call site
+ * not. The absent case no longer means the same thing for all three: a missing lakeBounds and a
+ * missing lakeFeature are both instructions rather than accidents - the first draws no border path
+ * over the lake, which is the agglomeration's shape, and the second clears the paths and
+ * definitions the overlay drew and returns - while a missing borders reaches the mesh renderer's
+ * guard and throws a TypeError naming geoJson. The view keeps the widened parameter so the call site
  * type-checks; what it no longer promises is that the render survives. Everything else about them
  * is unchanged; the delegated properties are reached through component.delegate rather than through
  * these types.
