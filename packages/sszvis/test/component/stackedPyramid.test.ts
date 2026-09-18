@@ -739,6 +739,10 @@ describe("component/stackedPyramid", () => {
       // index-aware accessor must produce exactly the widths a plain one does. A dropped
       // index produces none at all.
       expect(attrs(indexed, "rightStack", "width")).toEqual(attrs(plain, "rightStack", "width"));
+      // SAFETY: the widths alone cannot see innerEdge/outerEdge regress, precisely because the
+      // index cancels there. x is where the index survives, so it is what pins those two.
+      expect(attrs(indexed, "rightStack", "x")).toEqual(["0.5", "1.5", "30.5", "2.5"]);
+      expect(attrs(plain, "rightStack", "x")).toEqual(["0.5", "0.5", "30.5", "1.5"]);
     });
 
     test("forwards d3's index to barPosition and barFill too", () => {
@@ -1375,6 +1379,30 @@ describe("component/stackedPyramid", () => {
       // Read directly rather than through lineD, which waits for a d to appear.
       await new Promise((resolve) => setTimeout(resolve, 400));
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
+    });
+
+    test("drops d3's index on the reference line's barPosition too", async () => {
+      // The barWidth case above has a twin: barPosition is forwarded the index on the bars and
+      // not on the line, for the same reason - a reference point is {row, value}, so the only
+      // index available is the point's position in its own series, which is not the bar index.
+      // Worth pinning because the failure is quieter than it used to be: before the bars
+      // forwarded the index the whole chart was visibly broken, and now the bars are correct
+      // and only the outline silently disappears.
+      const node = render(
+        pyramidOf()
+          .barPosition((row: number, i: number) => row * 12 + i)
+          .rightRefAccessor(() => [
+            { row: 0, value: 10 },
+            { row: 1, value: 20 },
+          ]),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
+      // SAFETY: the bars must still be positioned correctly, which is what makes the missing
+      // outline hard to notice. The index runs per series group rather than per side - bar is
+      // instantiated once per series - so the four bars see i = 0, 1, 0, 1 and the two rows
+      // land at 0 and 13 on both.
+      expect(attrs(node, "rightStack", "y")).toEqual(["0", "13", "0", "13"]);
     });
 
     test("gives the right reference line an empty transform attribute", () => {
