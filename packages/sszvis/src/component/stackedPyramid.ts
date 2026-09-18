@@ -183,10 +183,8 @@
  * chart synchronously - getBBox, a snapshot, an export to PNG - sees an empty path. Entering lines
  * then snap into place, because d3 has no previous d to interpolate from; only updates animate. The
  * bars underneath animate over the same duration, so the outline and the bars it describes stay
- * together for the length of the transition. bar also guards every geometry value against NaN while the line
- * hands barWidth and barPosition straight to d3.line, so one missing value poisons the path string
- * and the browser renders the valid prefix and drops the rest of the outline. All of this is shared
- * with pyramid.
+ * together for the length of the transition. pyramid's line writes its d at the join as well and
+ * so does not share this one.
  *
  * Note: the reference path carries two classes: the generic .sszvis-path, which no rule in
  * sszvis.css defines, and the component-owned .sszvis-stacked-pyramid__referenceline, which the
@@ -762,9 +760,18 @@ function lineComponent(): ReferenceLineComponent {
 
       // Each half of a point is mapped by the property that owns it, so the outline lands in
       // the coordinate system the bars are drawn in.
+      const pointX = (d: StackedPyramidReferencePoint) => props.barWidth(d.value);
+      const pointY = (d: StackedPyramidReferencePoint) => props.barPosition(d.row);
+
       const lineGen = d3Line<StackedPyramidReferencePoint>()
-        .x((d) => props.barWidth(d.value))
-        .y((d) => props.barPosition(d.row));
+        // A point whose geometry is not a finite number is skipped, which breaks the outline
+        // at the gap instead of poisoning the path string from there on: d3 writes NaN into
+        // d verbatim, and the browser then renders the valid prefix and drops everything
+        // after it. bar guards its own geometry the same way, so the bars survive a gap the
+        // outline used to be truncated by. The same guard pyramid uses.
+        .defined((d) => isDrawable(pointX(d)) && isDrawable(pointY(d)))
+        .x(pointX)
+        .y(pointY);
 
       // Matching on the component's own class rather than the generic .sszvis-path one, which
       // pie, stackedArea and stackedAreaMultiples also use, keeps a foreign path in the same
@@ -787,4 +794,9 @@ function lineComponent(): ReferenceLineComponent {
         .transition(defaultTransition())
         .attr("d", lineGen);
     });
+}
+
+/** Whether a computed coordinate can be written into a path string at all. */
+function isDrawable(value: number): boolean {
+  return Number.isFinite(Number(value));
 }
