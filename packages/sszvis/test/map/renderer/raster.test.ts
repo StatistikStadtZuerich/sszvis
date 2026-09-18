@@ -357,6 +357,25 @@ describe("map/renderer/raster", () => {
       expect(canvasOf(node)).not.toBeNull();
       expect(pixelAt(node, 10, 10)).toEqual([0, 0, 0, 0]);
     });
+
+    test("should render an empty canvas when the layer has no data of its own bound", () => {
+      const target = layer("raster-no-data");
+      expect(() =>
+        target.call(
+          mapRendererRaster()
+            .width(20)
+            .height(20)
+            .position((d: Cell) => [d.x, d.y])
+            .fill("#ff0000"),
+        ),
+      ).not.toThrow();
+      // SAFETY: a chart renders before its data load, so this is the normal path rather than an
+      // edge case - the canvas has to exist and be sized, with nothing drawn on it.
+      const canvas = canvasOf(target.node() as HTMLElement);
+      expect(canvas).not.toBeNull();
+      expect(canvas?.width).toBe(20);
+      expect(canvas?.height).toBe(20);
+    });
   });
 
   // The runner draws at a ratio of 1, so the scaling is also exercised against a stubbed 2x
@@ -577,26 +596,6 @@ describe("map/renderer/raster", () => {
   });
 
   describe("known quirks", () => {
-    // BUG(#446): the data are iterated without a guard, and createHtmlLayer binds 0 as its own
-    // datum - so a layer the caller forgot to hand data to throws "data is not iterable" rather
-    // than rendering nothing. The canvas has already been created by then, so the layer is left
-    // with an empty one. A chart renders before its data load, which is exactly this state.
-    // Skipped, not deleted: it fails with "expected [Function] to not throw an error but
-    // 'TypeError: data is not iterable' was thrown".
-    test.skip("should render an empty canvas when the layer has no data of its own bound", () => {
-      const target = layer("raster-no-data");
-      expect(() =>
-        target.call(
-          mapRendererRaster()
-            .width(20)
-            .height(20)
-            .position((d: Cell) => [d.x, d.y])
-            .fill("#ff0000"),
-        ),
-      ).not.toThrow();
-      expect(canvasOf(target.node() as HTMLElement)).not.toBeNull();
-    });
-
     // BUG(#447): the component writes no position, so the canvas is only positioned because
     // sszvis.css sets position: absolute on the class. The image renderer had the same dependency
     // and #230 fixed it: it now writes position, display and pointer-events inline

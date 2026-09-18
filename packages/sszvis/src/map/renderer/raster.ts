@@ -82,11 +82,11 @@
  * `if (DEBUG)` on a hardcoded false, and the other three rastermaps never touch the property - so
  * the feature is exercised only by the tests.
  *
- * Note: the data are iterated without a guard, and createHtmlLayer binds 0 as its own datum - so a
- * layer the caller forgot to hand data to throws "data is not iterable" rather than rendering
- * nothing, and the canvas has already been created by the time it throws. The four required
- * properties are checked before that: width, height, position and fill are all validated before the
- * canvas is created, so a missing one is named whether or not there are data to draw.
+ * Note: createHtmlLayer binds 0 as its own datum when the caller binds none, so a layer that has
+ * not been handed data yet arrives with a number rather than an array. That is the state every
+ * chart is in before its data load, so it draws an empty raster of the right size rather than
+ * failing. The four required properties are checked before the canvas is created: width, height,
+ * position and fill are all named whether or not there are data to draw.
  *
  * Note: a projection has two ways of failing to place a datum - d3's own answer a pair of NaNs for
  * a point outside the clip, a hand-written one may answer nothing at all - and both now mean the
@@ -389,12 +389,20 @@ export default function mapRendererRaster<T = unknown>(): MapRendererRasterCompo
         ctx.fillRect(0, 0, width, height);
       }
 
+      // createHtmlLayer binds 0 as the layer's own datum when the caller binds none, so a layer
+      // that has not been handed data yet arrives here with a number rather than an array. That
+      // is the state every chart is in before its data load, not a misconfiguration, so it draws
+      // an empty raster of the right size rather than throwing "data is not iterable" - and it
+      // used to throw after the canvas had been created, leaving the layer holding an empty one
+      // anyway. An empty array already behaved this way.
+      const cells: T[] = Array.isArray(data) ? data : [];
+
       const halfSide = side / 2;
       // A colour scale usually yields only a handful of distinct values, so parsing each one once
       // per render keeps the probe off the hot path.
       const parsed = new Map<string, boolean>();
       let unplaced = 0;
-      for (const datum of data) {
+      for (const datum of cells) {
         const at = position(datum);
         if (!isPlaced(at)) {
           unplaced += 1;
@@ -421,7 +429,7 @@ export default function mapRendererRaster<T = unknown>(): MapRendererRasterCompo
       // library.
       if (unplaced > 0) {
         logger.warn(
-          `[mapRendererRaster] the position property could not place ${unplaced} of ${data.length} cells; they were not drawn`,
+          `[mapRendererRaster] the position property could not place ${unplaced} of ${cells.length} cells; they were not drawn`,
         );
       }
     });
