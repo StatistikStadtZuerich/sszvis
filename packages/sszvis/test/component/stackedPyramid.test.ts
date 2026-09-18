@@ -892,6 +892,41 @@ describe("component/stackedPyramid", () => {
       );
     });
 
+    test("draws no reference line for an empty reference series", () => {
+      // Distinct from an accessor that returns no data at all: an empty array is a
+      // legitimately empty series, so it is hidden without a warning.
+      const node = render(pyramidOf().rightRefAccessor(() => []));
+      expect(lines(node, "rightReference").length).toBe(0);
+    });
+
+    test("removes the reference path when the reference series goes away", async () => {
+      let ref = [
+        { row: 0, value: 0 },
+        { row: 1, value: 1 },
+      ];
+      const component = pyramidOf().rightRefAccessor(() => ref);
+      const g = group("ref-removal");
+      g.datum(layout()).call(component as never);
+      const node = g.node() as SVGGElement;
+      expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
+
+      ref = [];
+      g.datum(layout()).call(component as never);
+      // SAFETY: the element itself has to go, not just its d - CSS rules, hit tests and
+      // snapshots can all still find a path that outlives the data that produced it.
+      expect(lines(node, "rightReference").length).toBe(0);
+
+      // The fix must not over-correct into never rendering: a later non-empty series brings
+      // the path back.
+      ref = [
+        { row: 0, value: 2 },
+        { row: 1, value: 3 },
+      ];
+      g.datum(layout()).call(component as never);
+      expect(lines(node, "rightReference").length).toBe(1);
+      expect(await lineD(node, "rightReference")).toBe("M2,0L3,12");
+    });
+
     test("draws no reference line when a reference accessor returns no data", () => {
       // An accessor that indexes into a cascaded object returns undefined as soon as one
       // series is missing from one state, so this is reached by data rather than by code and
@@ -1140,36 +1175,6 @@ describe("component/stackedPyramid", () => {
       );
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
       expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
-    });
-
-    test("leaves an empty path element behind for empty reference data", async () => {
-      // NOTE: an empty array is handled, but the path is still created - d3.line returns
-      // null for no points, so `d` is simply absent. Shared with pyramid.
-      const node = render(pyramidOf().rightRefAccessor(() => []));
-      expect(lines(node, "rightReference").length).toBe(1);
-      await vi.waitFor(() => expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull());
-    });
-
-    // BUG(#81): the reference datum is wrapped in an array - [props.rightRefAccessor(data)] -
-    // so the join always has exactly one element and the exit selection can never fire.
-    // When the reference series goes away the stale path stays in the DOM; only `d` is
-    // dropped. The same wrapping caps each side at one reference line. Shared with pyramid,
-    // where the path is now removed.
-    // Skipped, not deleted: it fails with "expected 1 to be +0".
-    test.skip("removes the reference path when the reference series goes away", async () => {
-      let ref = [
-        { row: 0, value: 0 },
-        { row: 1, value: 1 },
-      ];
-      const component = pyramidOf().rightRefAccessor(() => ref);
-      const g = group("ref-removal");
-      g.datum(layout()).call(component as never);
-      const node = g.node() as SVGGElement;
-      expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
-
-      ref = [];
-      g.datum(layout()).call(component as never);
-      expect(lines(node, "rightReference").length).toBe(0);
     });
 
     // BUG(#80): bar runs every geometry value through a NaN guard, but the reference line
