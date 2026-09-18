@@ -776,6 +776,44 @@ describe("component/sunburst", () => {
       // its arcs, so every path needs geometry before the first frame.
       for (const d of geometry) expect(d).not.toBeNull();
     });
+
+    test("moves the tooltip anchors to the layout the arcs are heading for", async () => {
+      // The anchors are positioned from the destination angles, so they lead the arcs rather
+      // than trailing a render behind them.
+      const component = sunburstOf();
+      const g = group("stale-anchors");
+      g.datum(hierarchyOf()).call(component as never);
+      await settle();
+      const node = g.node() as SVGGElement;
+      const before = points(node);
+
+      g.datum(
+        hierarchyOf([
+          { cat: "A", sub: "A1", value: 7 },
+          { cat: "A", sub: "A2", value: 1 },
+          { cat: "B", sub: "B1", value: 1 },
+        ]),
+      ).call(component as never);
+      // The new hierarchy gives A1 seven eighths of the circle instead of half, so every
+      // anchor's destination angle has moved.
+      expect(points(node)).not.toEqual(before);
+      // A first render has nothing to ease from, so its anchors are the destination layout
+      // by definition - which makes it the reference the updated ones have to match, both on
+      // the render tick and after the arcs have settled.
+      const destination = points(
+        render(
+          sunburstOf(),
+          hierarchyOf([
+            { cat: "A", sub: "A1", value: 7 },
+            { cat: "A", sub: "A2", value: 1 },
+            { cat: "B", sub: "B1", value: 1 },
+          ]),
+        ),
+      );
+      expect(points(node)).toEqual(destination);
+      await settle();
+      expect(points(node)).toEqual(destination);
+    });
   });
 
   describe("known quirks", () => {

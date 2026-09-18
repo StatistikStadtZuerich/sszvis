@@ -89,9 +89,11 @@
  * object animates the same way a freshly built one does.
  *
  * Note: the tooltip anchors are rendered from the same flattened array as the arcs, so there is one
- * anchor per arc, in the same order. They are positioned from the pre-transition angles and are
- * never repositioned when the transition ends, so after an update they describe the previous
- * layout. See test/component/sunburst.test.ts.
+ * anchor per arc, in the same order. They are positioned from the destination angles _x0/_x1, so
+ * they describe the layout the arcs are heading for rather than the one they are leaving - on a
+ * hierarchy input, where the re-partition supplies those. On the deprecated flat-array input the
+ * caller's own objects are reused unpartitioned, so _x0/_x1 are whatever the last tween wrote and
+ * the anchors are no better placed than the arcs. See test/component/sunburst.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -305,10 +307,11 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
       // The geometry accessors read positions off a node, so they are declared before the
       // destination values are stamped on. The two radius accessors return pixels, and are
       // the destination of the radius half of the transition.
-      const startAngle = (d: SunburstNode<T>) =>
-        Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
-      const endAngle = (d: SunburstNode<T>) =>
-        Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
+      // Shared by the on-screen accessors below and by the anchor position, which reads the
+      // destination angles instead.
+      const angleAt = (x: number) => Math.max(0, Math.min(TWO_PI, props.angleScale(x)));
+      const startAngle = (d: SunburstNode<T>) => angleAt(d.x0);
+      const endAngle = (d: SunburstNode<T>) => angleAt(d.x1);
       const innerRadius = (d: SunburstNode<T>) =>
         props.centerRadius + Math.max(0, props.radiusScale(d.y0));
       const outerRadius = (d: SunburstNode<T>) =>
@@ -440,8 +443,13 @@ export default function sunburst<T = unknown>(): SunburstComponent<T> {
       // Add tooltip anchors
       const arcTooltipAnchor = tooltipAnchor<PositionedNode<T>>().position(
         (d): [number, number] => {
-          const startA = startAngle(d);
-          const endA = endAngle(d);
+          // The destination angles, not startAngle/endAngle: the handover above has reset
+          // d.x0/d.x1 to what is on screen, and nothing repositions the anchors once the
+          // transition ends, so reading those would leave every anchor at the previous
+          // layout after an update. The radii need no equivalent - y0/y1 come from the fresh
+          // partition, so innerRadius and outerRadius are destination values already.
+          const startA = angleAt(d._x0);
+          const endA = angleAt(d._x1);
           const a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;
           const r = (innerRadius(d) + outerRadius(d)) / 2;
           return [Math.cos(a) * r, Math.sin(a) * r];
