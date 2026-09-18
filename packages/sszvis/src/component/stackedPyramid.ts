@@ -116,13 +116,13 @@
  *                                            reference points, {row, value}: barWidth maps the
  *                                            value to x and barPosition the row to y, the same way
  *                                            round as in the bars, so a slice of the layout
- *                                            satisfies the shape unchanged. Optional, but the guard
- *                                            tests whether the accessor was set, not what it
- *                                            returns: an accessor that yields undefined or null for
- *                                            some states throws instead of hiding the line.
- *                                            Returning an empty array does hide it, though the
- *                                            classed path element stays in the DOM with no d
- *                                            attribute, where CSS and hit tests can still find it.
+ *                                            satisfies the shape unchanged. Optional, and so is the
+ *                                            data: an accessor that yields undefined or null for
+ *                                            some states draws no line for that state and warns,
+ *                                            rather than throwing. Returning an empty array hides
+ *                                            it silently, though the classed path element stays in
+ *                                            the DOM with no d attribute, where CSS and hit tests
+ *                                            can still find it.
  * @property {function} [rightRefAccessor]    Reference data for the right side. Same as
  *                                            leftRefAccessor.
  *
@@ -247,6 +247,7 @@ import {
 import { cascade } from "../cascade.js";
 import { type ComponentBuilder, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
 import type { ColorValue } from "../types.js";
 import bar, { type BarComponent } from "./bar.js";
@@ -657,12 +658,12 @@ export function stackedPyramid<
 
         selection
           .selectGroup("leftReference")
-          .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
+          .datum(referenceSeries(props.leftRefAccessor, data, "leftRefAccessor"))
           .call(leftLine);
 
         selection
           .selectGroup("rightReference")
-          .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
+          .datum(referenceSeries(props.rightRefAccessor, data, "rightRefAccessor"))
           .call(rightLine);
       })
   );
@@ -703,6 +704,30 @@ function stackComponent<T, S extends string | number>(): StackComponent<T, S> {
         select(this).datum(d).call(props.stackElement);
       });
     });
+}
+
+/**
+ * Resolves one side's reference series into the array-of-series the line component joins on.
+ *
+ * An accessor returning undefined or null breaks its contract, so it is warned about - but it
+ * is warned about rather than thrown on, because it is data-driven: an accessor indexing into
+ * a cascaded object hits it as soon as one series is missing from one state, and that must not
+ * take the chart down. The same resolver pyramid uses.
+ */
+function referenceSeries<T, S extends string | number>(
+  accessor: ReferenceAccessor<T, S> | undefined,
+  data: StackedPyramidSide<T, S>[],
+  name: string,
+): StackedPyramidReferencePoint[][] {
+  if (accessor === undefined) return [];
+  const series = accessor(data);
+  if (!Array.isArray(series)) {
+    logger.warn(
+      `[stackedPyramid] ${name} returned ${String(series)} rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series.`,
+    );
+    return [];
+  }
+  return [series];
 }
 
 type ReferenceLineProps = {
