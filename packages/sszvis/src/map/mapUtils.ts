@@ -235,14 +235,17 @@ export interface MergedGeoDatum<Datum> {
  * Note: a falsy keyName, the empty string included, falls back to GEO_KEY_DEFAULT rather than being
  * used as given.
  *
- * Note: dataset is guarded but geoJson is not, so a missing map throws where missing data returns
- * an entry per feature with no datum.
+ * Note: the two required arguments deliberately fail in opposite directions. Missing data is a
+ * state a chart passes through before its load, so a dataset that is not an array is treated as no
+ * data and yields an entry per feature with no datum; a missing geoJson leaves nothing to merge
+ * onto at all, so it is reported by name.
  *
  * See test/map/mapUtils.test.ts.
  *
  * @param  {Array} [dataset]         The array of input data to match. Anything that is not an array is
  *                                   treated as no data at all.
- * @param  {Object} geoJson          The geojson object. This function will attempt to match each geojson feature to a data object
+ * @param  {Object} geoJson          The geojson object. This function will attempt to match each geojson feature to a data object.
+ *                                   Required, and reported by name when it is missing.
  * @param  {String} keyName          The name of the property on each data object which will be matched with each geojson id.
  * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
@@ -252,6 +255,17 @@ export function prepareMergedGeoData<Datum extends object>(
   geoJson: ExtendedFeatureCollection,
   keyName?: string,
 ): MergedGeoDatum<Datum>[] {
+  // Reported by name, rather than thrown at from the features read below with a bare TypeError
+  // naming neither the argument nor the function. The dataset is guarded instead of rejected -
+  // missing data is a state a chart passes through before its load, and yields a feature per
+  // entry with an undefined datum - but there is no map to merge against without this one, so
+  // the two required arguments deliberately fail in opposite directions.
+  if (geoJson === undefined || geoJson === null) {
+    throw new TypeError(
+      "map/mapUtils: prepareMergedGeoData requires a geoJson, since it carries the features the data are merged onto",
+    );
+  }
+
   // Any falsy key name, the empty string included, falls back to the default.
   const key = keyName || GEO_KEY_DEFAULT;
 
