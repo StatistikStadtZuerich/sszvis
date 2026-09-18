@@ -33,8 +33,8 @@
  *                                                  updating one interpolates to its new radius, and a departing one
  *                                                  shrinks to zero before it is removed.
  *
- * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are all
- * required in practice, and each fails differently when left out.
+ * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are
+ * all required, and each is reported by name before anything is drawn.
  *
  * Note: the over, out and click handlers registered through .on() are called with the hovered map
  * entity's datum - undefined for a feature that matched no data. Registering one of them is also
@@ -78,8 +78,8 @@
  * it is never observable and offers no enter-only styling hook; the anchor positions go through
  * getGeoJsonCenter, which computes the centre on every call and caches nothing, and the transform
  * is rewritten on the merged enter+update selection, so moving a feature's geometry moves its
- * bubble on the next render; and mapPath must be a real d3.geoPath,
- * since the positions read mapPath.projection(). The transition is the intended one:
+ * bubble on the next render; and mapPath must be a real d3.geoPath, since the positions read
+ * mapPath.projection(), which the render checks up front. The transition is the intended one:
  * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
  *
  * Note: this component adds no tooltip anchors of its own; a bubble map's tooltips are anchored by
@@ -206,9 +206,10 @@ function keyOf<T>(d: MergedGeoDatum<T>): string {
 const datumAcc = fn.prop("datum");
 
 /**
- * Reads the anchor position for a feature, as the JavaScript did: through mapPath.projection(),
- * which is why a bare path function throws here rather than being reported. The projection's own
- * result is indexed unguarded too, so a clipped point throws from that index.
+ * Reads the anchor position for a feature, as the JavaScript did: through mapPath.projection().
+ * That a mapPath must therefore be a real d3.geoPath is checked in the render before anything is
+ * drawn, so a bare path function is reported rather than failing from in here. The projection's
+ * own result is indexed unguarded, so a clipped point throws from that index.
  */
 function anchorPosition(
   mapPath: GeoPath,
@@ -219,9 +220,9 @@ function anchorPosition(
   const projection = mapPath.projection<GeoProjection>();
   if (projection === null || typeof projection !== "function") {
     // Reachable only for a real d3.geoPath whose projection was never set, where the JavaScript
-    // threw "projection is not a function" from the call below. A bare path function throws one
-    // line above instead, from reading .projection, as it did in the JavaScript. Not covered by
-    // the suite: the message is reconstructed rather than observed.
+    // threw "projection is not a function" from the call below. A mapPath that is not a geoPath
+    // at all no longer reaches this, since the render rejects it up front. Not covered by the
+    // suite: the message is reconstructed rather than observed.
     throw new TypeError("projection is not a function");
   }
   // The centre is handed over whole rather than narrowed to a pair, as the JavaScript did: an
@@ -283,6 +284,32 @@ export default function mapRendererBubble<T = unknown>(): MapRendererBubbleCompo
       if (props.fill === undefined) {
         throw new TypeError(
           "map/renderer/bubble: fill is required, since it colours each circle and there is no default",
+        );
+      }
+      // mapPath is used two ways: as the d-equivalent callback, and as the source of the
+      // projection the anchor positions read. A bare path function satisfies the first and not
+      // the second, and used to throw from inside the transform callback - after every circle
+      // had been created, sorted and styled - leaving a half-drawn layer behind. Presence and
+      // capability are reported separately, so each says which of the two is wrong; `== null`
+      // rather than `=== undefined`, so an explicit null is reported here too instead of
+      // reaching the capability test and dying anonymously on a property of null.
+      if (props.mapPath == null) {
+        throw new TypeError(
+          "map/renderer/bubble: mapPath is required, since it places each circle on its feature",
+        );
+      }
+      if (typeof props.mapPath.projection !== "function") {
+        throw new TypeError(
+          "map/renderer/bubble: mapPath must be a d3.geoPath, since the anchor positions are read through mapPath.projection()",
+        );
+      }
+      // The getter existing is not enough: a real geoPath whose projection was never set has
+      // one and answers null, and the circles were then created, sorted and styled before
+      // anchorPosition threw on the way to placing them. The projection is resolved once here
+      // so that failure lands before the join too.
+      if (typeof props.mapPath.projection() !== "function") {
+        throw new TypeError(
+          "map/renderer/bubble: mapPath.projection() must return a projection, since the anchor positions are placed through it",
         );
       }
 
