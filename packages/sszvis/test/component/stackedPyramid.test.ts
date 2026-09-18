@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   type StackedPyramidLayout,
   type StackedPyramidSide,
+  type StackedPyramidSlice,
   type StackedPyramidSidesData,
   stackedPyramid,
   stackedPyramidData,
@@ -800,8 +801,8 @@ describe("component/stackedPyramid", () => {
 
     test("should read a reference point's x from its value and its y from its row when a reference series is set", async () => {
       const node = render(withRefs());
-      // x = barWidth(d.value), y = barPosition(d.row)
-      expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
+      // x = barWidth(d.value), y = barPosition(d.row) + half a bar height
+      expect(await lineD(node, "rightReference")).toBe("M0.5,5L1.5,17");
     });
 
     test("should follow the bars' outer edges when the reference series describes them", async () => {
@@ -814,7 +815,7 @@ describe("component/stackedPyramid", () => {
           { row: 1, value: 3 },
         ]),
       );
-      expect(await lineD(node, "rightReference")).toBe("M70,0L3,12");
+      expect(await lineD(node, "rightReference")).toBe("M70.5,5L3.5,17");
       const outerEdges = bars(node, "rightStack")
         .slice(2)
         .map((b) => Number(b.getAttribute("x")) + Number(b.getAttribute("width")));
@@ -825,7 +826,7 @@ describe("component/stackedPyramid", () => {
       // A slice already carries a `row` and a `value`, so a series needs no mapping.
       const node = render(pyramidOf().rightRefAccessor((d: Side[]) => d[1][1]));
       // Series "b" of the right side: values 40 on row 0 and 2 on row 1.
-      expect(await lineD(node, "rightReference")).toBe("M40,0L2,12");
+      expect(await lineD(node, "rightReference")).toBe("M40.5,5L2.5,17");
     });
 
     test("should inline the line's appearance rather than relying on a stylesheet", () => {
@@ -875,7 +876,7 @@ describe("component/stackedPyramid", () => {
       const g = group("ref-animate");
       g.datum(layout()).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
+      expect(await lineD(node, "rightReference")).toBe("M0.5,5L1.5,17");
 
       // Re-rendering the same data updates the one path in place rather than appending a
       // second one.
@@ -886,10 +887,77 @@ describe("component/stackedPyramid", () => {
       g.datum(layout()).call(component as never);
       // Unlike the bars, the line really does transition: the old path is still in place on
       // the tick the re-render happens.
-      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M0,0L1,12");
+      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M0.5,5L1.5,17");
       await vi.waitFor(() =>
-        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M2,24L3,36"),
+        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M2.5,29L3.5,41"),
       );
+    });
+
+    test("gives each row the height of its own bars when barHeight varies by row", async () => {
+      // SAFETY: sampling one slice for the whole chart would offset every reference point by
+      // the first row's half-height, so a taller row's outline would not sit on its mid-line.
+      const node = render(
+        pyramidOf()
+          .barHeight((slice: StackedPyramidSlice<Row, string>) => (slice.row === 0 ? 10 : 20))
+          .rightRefAccessor(() => [
+            { row: 0, value: 0 },
+            { row: 1, value: 1 },
+          ]),
+      );
+      // Row 0's bars are 10 tall from y=0, row 1's are 20 tall from y=12.
+      expect(await lineD(node, "rightReference")).toBe("M0.5,5L1.5,22");
+    });
+
+    test("measures the bar height from a slice when barHeight is a per-slice accessor", async () => {
+      // SAFETY: a reference point is {row, value}, not a slice, so the height has to be
+      // measured off a real slice of the chart. Calling the accessor with no argument instead
+      // hands it undefined, which is a TypeError for any accessor that reads its datum - a
+      // crash reachable from a supported configuration.
+      const node = render(
+        pyramidOf()
+          .barHeight((slice: StackedPyramidSlice<Row, string>) => (slice.data ? 10 : 10))
+          .rightRefAccessor(() => [
+            { row: 0, value: 0 },
+            { row: 1, value: 1 },
+          ]),
+      );
+      expect(await lineD(node, "rightReference")).toBe("M0.5,5L1.5,17");
+    });
+
+    test("draws the outline on the bars' top edges when barHeight was never set", async () => {
+      // A chart with no barHeight draws no bars at all and the component tolerates that
+      // silently, so the reference line must not turn it into a crash. With nothing to
+      // measure the outline falls back to where it sat before it was centred.
+      const g = group("ref-no-bar-height");
+      expect(() =>
+        g.datum(layout()).call(
+          stackedPyramid()
+            .barWidth((v: number) => v)
+            .barPosition((row: number) => row * 12)
+            .leftAccessor((d: Side[]) => d[0])
+            .rightAccessor((d: Side[]) => d[1])
+            .rightRefAccessor(() => [
+              { row: 0, value: 0 },
+              { row: 1, value: 1 },
+            ]) as never,
+        ),
+      ).not.toThrow();
+      expect(await lineD(g.node() as SVGGElement, "rightReference")).toBe("M0.5,0L1.5,12");
+    });
+
+    test("traces the mid-lines of the bars it describes", async () => {
+      const node = render(
+        pyramidOf().rightRefAccessor(() => [
+          { row: 0, value: 0 },
+          { row: 1, value: 1 },
+        ]),
+      );
+      // SAFETY: the bars span y 0-10 and 12-22, so the outline has to run at 5 and 17 - the
+      // rows' mid-lines - not at their top edges. The error scales with barHeight, so a
+      // chart binned into age groups rather than single years shows it plainly.
+      expect(attrs(node, "rightStack", "y")).toEqual(["0", "12", "0", "12"]);
+      expect(attrs(node, "rightStack", "height")).toEqual(["10", "10", "10", "10"]);
+      expect(await lineD(node, "rightReference")).toBe("M0.5,5L1.5,17");
     });
 
     test("keeps a missing value out of the reference line's path", async () => {
@@ -917,7 +985,7 @@ describe("component/stackedPyramid", () => {
         ]),
       );
       // A one-point run is closed with Z, so the two runs read as M0,0Z then M2,24L3,36.
-      expect(await lineD(node, "rightReference")).toBe("M0,0ZM2,24L3,36");
+      expect(await lineD(node, "rightReference")).toBe("M0.5,5ZM2.5,29L3.5,41");
     });
 
     test("skips a missing value in the first and last positions", async () => {
@@ -931,14 +999,17 @@ describe("component/stackedPyramid", () => {
           { row: 3, value: Number.NaN },
         ]),
       );
-      expect(await lineD(node, "rightReference")).toBe("M1,12L2,24");
+      expect(await lineD(node, "rightReference")).toBe("M1.5,17L2.5,29");
     });
 
-    test("draws no reference line for an empty reference series", () => {
+    test("draws no reference line for an empty reference series, and does not warn", () => {
       // Distinct from an accessor that returns no data at all: an empty array is a
-      // legitimately empty series, so it is hidden without a warning.
+      // legitimately empty series, so it is hidden silently.
+      const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
       const node = render(pyramidOf().rightRefAccessor(() => []));
       expect(lines(node, "rightReference").length).toBe(0);
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
     });
 
     test("removes the reference path when the reference series goes away", async () => {
@@ -950,7 +1021,7 @@ describe("component/stackedPyramid", () => {
       const g = group("ref-removal");
       g.datum(layout()).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
+      expect(await lineD(node, "rightReference")).toBe("M0.5,5L1.5,17");
 
       ref = [];
       g.datum(layout()).call(component as never);
@@ -966,20 +1037,25 @@ describe("component/stackedPyramid", () => {
       ];
       g.datum(layout()).call(component as never);
       expect(lines(node, "rightReference").length).toBe(1);
-      expect(await lineD(node, "rightReference")).toBe("M2,0L3,12");
+      expect(await lineD(node, "rightReference")).toBe("M2.5,5L3.5,17");
     });
 
-    test("draws no reference line when a reference accessor returns no data", () => {
+    test("warns and draws no reference line when the accessor returns something that is not a series", () => {
       // An accessor that indexes into a cascaded object returns undefined as soon as one
       // series is missing from one state, so this is reached by data rather than by code and
-      // must not take the chart down. Both no-data returns are covered: they used to throw
-      // differently, undefined as "not iterable" and null through the `in` operator.
-      for (const noData of [undefined, null]) {
+      // must not take the chart down. The guard tests Array.isArray rather than null-ness, so
+      // an array-like passes as no series too; undefined and null used to throw differently,
+      // as "not iterable" and through the `in` operator. Matches pyramid's own coverage.
+      for (const value of [undefined, null, { length: 0 }, { a: 1 }, "abc"]) {
+        const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
         const node = render(
           // @ts-expect-error - deliberately violating the accessor's return contract
-          pyramidOf().rightRefAccessor(() => noData),
+          pyramidOf().rightRefAccessor(() => value),
         );
         expect(lines(node, "rightReference").length).toBe(0);
+        // SAFETY: without this, removing the logger.warn call would leave the suite green.
+        expect(spy).toHaveBeenCalledOnce();
+        spy.mockRestore();
       }
     });
   });
@@ -1190,18 +1266,16 @@ describe("component/stackedPyramid", () => {
       expect(fillArgs.every((args) => typeof args[1] === "number")).toBe(true);
     });
 
-    test("the reference line ignores the spine padding", async () => {
-      // NOTE: the bars are offset outwards by SPINE_PADDING (0.5) but the line is drawn
-      // straight from barWidth, so a reference value equal to a bar's outer edge lands half
-      // a pixel inside it. The line is the side that agrees with the axis scale - the
-      // padding is a deliberate cosmetic gap at the spine. pyramid makes the identical
-      // choice.
+    test("puts a reference point on the outer edge of the bar it describes", async () => {
+      // SAFETY: the bars are offset outwards by SPINE_PADDING (0.5), so the outline carries
+      // the same offset - otherwise a reference value equal to a bar's outer edge lands half
+      // a pixel inside it. pyramid's reference line makes the identical correction.
       const node = render(pyramidOf().rightRefAccessor(() => [{ row: 0, value: 70 }]));
       const outerEdge =
         Number(attrs(node, "rightStack", "x")[2]) + Number(attrs(node, "rightStack", "width")[2]);
       expect(outerEdge).toBe(70.5);
       // d3.line closes a single-point path with Z
-      expect(await lineD(node, "rightReference")).toBe("M70,0Z");
+      expect(await lineD(node, "rightReference")).toBe("M70.5,5Z");
     });
 
     test("has no d attribute on the tick the reference line is first rendered", async () => {
@@ -1216,26 +1290,7 @@ describe("component/stackedPyramid", () => {
         ]),
       );
       expect(lines(node, "rightReference")[0].getAttribute("d")).toBeNull();
-      expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
-    });
-
-    // BUG(#76): the reference line takes y straight from barPosition, which is a bar's top
-    // edge, and never accounts for barHeight. The outline is drawn half a bar height above
-    // the values it describes, and the error grows with barHeight. Shared with pyramid,
-    // where the outline now runs through barPosition + barHeight / 2.
-    // current: the line passes through the bars' top edges, at 0 and 12. expected: through
-    // their mid-height, at 5 and 17.
-    // Skipped, not deleted: it fails with "expected 'M0,0L1,12' to be 'M0,5L1,17'".
-    test.skip("traces the mid-lines of the bars it describes", async () => {
-      const node = render(
-        pyramidOf().rightRefAccessor(() => [
-          { row: 0, value: 0 },
-          { row: 1, value: 1 },
-        ]),
-      );
-      expect(attrs(node, "rightStack", "y")).toEqual(["0", "12", "0", "12"]);
-      expect(attrs(node, "rightStack", "height")).toEqual(["10", "10", "10", "10"]);
-      expect(await lineD(node, "rightReference")).toBe("M0,5L1,17");
+      expect(await lineD(node, "rightReference")).toBe("M0.5,5L1.5,17");
     });
 
     test("should animate the bars in step with the reference line", async () => {
@@ -1251,7 +1306,7 @@ describe("component/stackedPyramid", () => {
       const g = group("mixed-transitions");
       g.datum(layout()).call(component as never);
       const node = g.node() as SVGGElement;
-      expect(await lineD(node, "rightReference")).toBe("M0,0L1,12");
+      expect(await lineD(node, "rightReference")).toBe("M0.5,5L1.5,17");
 
       ref = [
         { row: 2, value: 2 },
@@ -1266,12 +1321,12 @@ describe("component/stackedPyramid", () => {
       // On this tick the bars have not jumped ahead...
       expect(attrs(node, "rightStack", "width")).toEqual(["30"]);
       // ...and the line still describes the same old state.
-      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M0,0L1,12");
+      expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M0.5,5L1.5,17");
 
       // Once the transition has run, both have arrived.
       await vi.waitFor(() => {
         expect(attrs(node, "rightStack", "width")).toEqual(["99"]);
-        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M2,24L3,36");
+        expect(lines(node, "rightReference")[0].getAttribute("d")).toBe("M2.5,29L3.5,41");
       });
     });
 
