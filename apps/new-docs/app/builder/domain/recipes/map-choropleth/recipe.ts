@@ -1,4 +1,4 @@
-import { controlFields } from "../../controls";
+import { controlFields, CONTROLS_FEATURE, hasControl } from "../../controls";
 import { code, str } from "../../emit";
 import {
   DESCRIPTION,
@@ -141,7 +141,7 @@ export const mapChoropleth: RecipeDef = {
     },
   ],
   /* Bubbles after the legend: it overrides which legend the legend feature draws. */
-  features: [TOOLTIP, LEGEND, BUBBLE, LAKE, LAKE_BOUNDS],
+  features: [TOOLTIP, LEGEND, BUBBLE, LAKE, LAKE_BOUNDS, CONTROLS_FEATURE],
   assets: (_spec, option) => [
     {
       key: "topology",
@@ -202,6 +202,12 @@ export const mapChoropleth: RecipeDef = {
     return [
       ...(geography.lake === undefined ? [] : [LAKE]),
       ...(geography.lakeBounds === undefined ? [] : [LAKE_BOUNDS]),
+      /*
+       * Asking whether the control resolves, rather than whether the spec names one: a
+       * control whose column has left the table or holds a single value draws nothing, and
+       * switching the feature on for it would emit a button group with no buttons.
+       */
+      ...(hasControl(spec) ? [CONTROLS_FEATURE] : []),
     ];
   },
   sample: "auslaenderanteil-quartier",

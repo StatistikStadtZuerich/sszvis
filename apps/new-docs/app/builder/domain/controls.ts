@@ -2,7 +2,10 @@ import { Option } from "effect";
 
 import { columnKinds, distinctValues, parse, type Table } from "./csv";
 import { str, type Scalars } from "./emit";
-import type { ColumnName, Spec } from "./spec";
+import { FeatureKey, type ColumnName, type Spec } from "./spec";
+
+/** The hidden feature a resolving control switches on. */
+export const CONTROLS_FEATURE = FeatureKey.make("controls");
 
 /**
  * Where a button group stops reading as a row of buttons. Advisory: past this the chart is
