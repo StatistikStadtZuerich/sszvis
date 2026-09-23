@@ -218,6 +218,7 @@ describe("optionValue", () => {
     features: [],
     tooltip: tip(""),
     annotations: [],
+    control: null,
     kinds: {},
     chosen: [],
   });
@@ -657,9 +658,38 @@ describe("switchRecipe", () => {
       features: ["two"],
       tooltip: LINE.defaultTooltip,
       annotations: [yLine],
+      control: null,
       kinds: { Anzahl: "continuous" },
       chosen: ["num"],
     });
+  });
+
+  test("should carry a control, which is about a column rather than an axis", () => {
+    const control = {
+      kind: "filter",
+      column: ColumnName.make("Menge"),
+      label: "Menge",
+    } as const;
+    const spec: Spec = {
+      ...initialSpec(RECIPE, DEMO_CSV),
+      csv: "Datum,Anzahl,Menge\n01.01.2020,1,2",
+      fields: mapping({ cat: "Datum", num: "Anzahl", series: "" }),
+      control,
+    };
+    expect(switchRecipe(spec, RECIPE, LINE).control).toEqual(control);
+  });
+
+  test("should drop a control whose column the new chart's roles have taken", () => {
+    const spec: Spec = {
+      ...initialSpec(RECIPE, DEMO_CSV),
+      csv: "Datum,Anzahl,Menge\n01.01.2020,1,2",
+      control: { kind: "filter", column: ColumnName.make("Datum"), label: "" },
+    };
+    /* The line chart wants the date column for its x axis, and a chart filtered by
+       the axis it is drawn along shows one point. */
+    const next = switchRecipe(spec, RECIPE, LINE);
+    expect(Object.values(next.fields)).toContain("Datum");
+    expect(next.control).toBeNull();
   });
 
   test("should re-derive a binding the search guessed rather than carry it", () => {
@@ -1074,6 +1104,7 @@ describe("compile", () => {
     features: keys.map((key) => FeatureKey.make(key)),
     tooltip: tip(""),
     annotations: [],
+    control: null,
     kinds: {},
     chosen: [],
   });
@@ -1254,6 +1285,7 @@ describe("tooltipText", () => {
     features: [],
     tooltip,
     annotations: [],
+    control: null,
     kinds: {},
     chosen: [],
   });

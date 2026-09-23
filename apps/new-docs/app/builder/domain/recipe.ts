@@ -1,7 +1,15 @@
 import { Effect } from "effect";
 
 import { BuilderCompileError, code, scalarHoles, type Safe } from "./emit";
-import { FeatureKey, VALUE, type Feature, type Recipe, type RecipeDef, type Spec } from "./spec";
+import {
+  ColumnName,
+  FeatureKey,
+  VALUE,
+  type Feature,
+  type Recipe,
+  type RecipeDef,
+  type Spec,
+} from "./spec";
 
 export type Sources = Readonly<Record<string, string>>;
 
@@ -101,6 +109,15 @@ const IMPLIED_PROBES: readonly Partial<Spec>[] = [
   {
     annotations: [{ kind: "reference-line", role: VALUE, at: { kind: "mean" }, label: "" }],
   },
+  /*
+   * A control implies its feature only once it would actually be drawn, which takes a
+   * column with two values in it - so this probe carries a table of its own. With the
+   * empty `csv` the others use, the probe would imply nothing and prove nothing.
+   */
+  {
+    csv: "Filter\na\nb",
+    control: { kind: "filter", column: ColumnName.make("Filter"), label: "" },
+  },
 ];
 
 const probeSpec = (def: RecipeDef, over: Partial<Spec>): Spec => ({
@@ -111,6 +128,7 @@ const probeSpec = (def: RecipeDef, over: Partial<Spec>): Spec => ({
   features: [],
   tooltip: def.defaultTooltip,
   annotations: [],
+  control: null,
   kinds: {},
   chosen: [],
   ...over,

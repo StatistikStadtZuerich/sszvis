@@ -230,6 +230,19 @@ export const valuesIn = (table: Table, column: ColumnName): readonly string[] =>
 export const hasValues = (table: Table, column: ColumnName): boolean =>
   valuesIn(table, column).length > 0;
 
+/*
+ * The values a column offers as a choice, deduplicated, in the order they first appear.
+ *
+ * Order is the column's own, because that is the order the chart will show: a control's
+ * options come from `sszvis.set`, which does not sort, so sorting here would describe a
+ * chart nobody is going to see. Blanks are dropped, as they are everywhere else in this
+ * file - a row with no value in this column is not a choice, and the emitted chart filters
+ * it out for the same reason.
+ */
+export const distinctValues = (table: Table, column: ColumnName): readonly string[] => [
+  ...new Set(valuesIn(table, column)),
+];
+
 export const detectedKinds = (table: Table): ReadonlyMap<string, ColumnKind> => {
   const kinds = new Map<string, ColumnKind>();
   for (const [index, column] of table.columns.entries()) {

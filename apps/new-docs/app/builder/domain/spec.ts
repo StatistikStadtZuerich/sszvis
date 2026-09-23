@@ -97,6 +97,23 @@ export const Annotation = Schema.Union([ReferenceLine]);
 
 export type Annotation = typeof Annotation.Type;
 
+/*
+ * A control the reader drives the chart with. It names a COLUMN rather than a role: a role
+ * would be bound by the search that fills the others, which would switch a control on for
+ * a table that never asked for one.
+ */
+export const FilterControl = Schema.Struct({
+  kind: Schema.Literal("filter"),
+  column: ColumnName,
+  label: Schema.String,
+});
+
+export type FilterControl = typeof FilterControl.Type;
+
+export const Control = Schema.Union([FilterControl]);
+
+export type Control = typeof Control.Type;
+
 export const Spec = Schema.Struct({
   recipe: RecipeKey,
   csv: Schema.String,
@@ -105,6 +122,12 @@ export const Spec = Schema.Struct({
   features: Schema.Array(FeatureKey),
   tooltip: Tooltip,
   annotations: Schema.Array(Annotation),
+  /*
+   * `null` rather than an absent key, so that the spec literals which build a chart from
+   * scratch have to say what they mean about it, and so that a test comparing whole specs
+   * sees the difference.
+   */
+  control: Schema.NullOr(Control),
   kinds: ColumnKinds,
   /*
    * The roles whose column the user picked themselves, as against the ones the
