@@ -77,10 +77,12 @@ describe("scalar holes", () => {
     expect(set.length).toBeGreaterThan(0);
   });
 
-  test("should keep the line chart's legend overriding C_SCALE", () => {
+  test("should keep the line chart's legend overriding BOTTOM_PADDING", () => {
     const legend = recipes
       .find((recipe) => recipe.key === "line-chart")
       ?.features.find((feature) => feature.key === "legend");
-    expect(legend?.scalars?.C_SCALE).toBeDefined();
+    expect(legend?.scalars?.BOTTOM_PADDING).toBeDefined();
+    /* And not the colour scale: the chart names that, and the legend is keyed to it. */
+    expect(legend?.scalars?.C_SCALE).toBeUndefined();
   });
 });
