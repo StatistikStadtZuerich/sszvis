@@ -27,15 +27,12 @@ filter: d[__FILTER_FIELD__] ?? "",
 // #endregion
 
 // #region responsiveProps
-// NOTE: More than a couple of options do not fit side by side on a phone, so the button
-// group gives way to a select menu there. The two controls share one interface, and one
-// handler serves both.
+// NOTE: A row of buttons on a wide screen and a menu on a phone, where they stop fitting
+// side by side - or a menu at every width, when there are more values than any row of
+// buttons holds. The two controls share one interface, and one handler serves both.
 const controlProps = sszvis
   .responsiveProps()
-  .prop("control", {
-    palm: () => sszvis.selectMenu<string>,
-    _: () => sszvis.buttonGroup<string>,
-  })
+  .prop("control", __CONTROL_BREAKPOINTS__)
   .prop("controlWidth", { _: (width: number) => Math.min(width, MAX_CONTROL_WIDTH) });
 // #endregion
 

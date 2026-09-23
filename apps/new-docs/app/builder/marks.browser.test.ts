@@ -9,7 +9,15 @@ import { assetsFor, compile } from "./domain/compile";
 import { initialSpec } from "./domain/initial-spec";
 import { sampleFor } from "./domain/samples";
 import { findRecipe, recipes } from "./domain/recipes";
-import { ColumnName, FeatureKey, SERIES, summarize, type Recipe, type Spec } from "./domain/spec";
+import {
+  ColumnName,
+  FeatureKey,
+  RoleKey,
+  SERIES,
+  summarize,
+  type Recipe,
+  type Spec,
+} from "./domain/spec";
 
 /*
  * What a generated chart draws, which is the one thing the node suites cannot see.
@@ -405,6 +413,37 @@ describe("a chart with a filter control", () => {
     expect(container.querySelectorAll(BUTTON)).toHaveLength(0);
     const options = [...container.querySelectorAll("select.sszvis-control-select__element option")];
     expect(options.map((option) => option.textContent)).toEqual(["Mädchen", "Jungen"]);
+  });
+
+  test("should take a menu when the values would not fit as a row of buttons", async () => {
+    /*
+     * The thirty-four statistical quarters, which is what a row of buttons cannot hold: the
+     * group divides its width evenly but will not shrink a button below its own label, so
+     * it runs off the side of the chart instead of compressing. Two categories, so two bars.
+     */
+    const recipe = findRecipeOrThrow("bar-chart-vertical");
+    const sample = sampleFor("eigentuemergruppe-quartier");
+    const spec: Spec = {
+      ...initialSpec(summarize(recipe), sample.csv),
+      fields: {
+        [RoleKey.make("category")]: ColumnName.make("Eigentuemergruppe"),
+        [RoleKey.make("value")]: ColumnName.make("Anteil"),
+      },
+      control: { kind: "filter", column: ColumnName.make("Qname"), label: "Quartier" },
+    };
+    const container = await draw(recipe, spec, { marks: "rect.sszvis-bar", count: 2 });
+
+    expect(container.querySelectorAll(BUTTON)).toHaveLength(0);
+    const options = [...container.querySelectorAll("select.sszvis-control-select__element option")];
+    expect(options).toHaveLength(34);
+
+    /* And the control stays inside the chart, which is the thing the buttons could not do. */
+    const control = container.querySelector(".sszvis-control-optionSelectable");
+    expect(control).not.toBeNull();
+    if (control === null) return;
+    expect(control.getBoundingClientRect().right).toBeLessThanOrEqual(
+      container.getBoundingClientRect().right,
+    );
   });
 
   test("should keep the control clear of the plot", async () => {
