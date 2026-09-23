@@ -1,0 +1,298 @@
+/**
+ * Liniendiagramm
+ *
+ * @generator sszvis-chart-builder
+ * @sszvis    <version>
+ * @chart     line-chart
+ * @features  ruler, legend, points
+ * @date      <date>
+ */
+
+// Magic Numbers
+
+/** Vertical offset of the y axis title, in pixels. */
+const Y_TITLE_OFFSET = -20;
+/** Top padding when the chart has a y axis title, and when it has none. */
+const TOP_PADDING_WITH_TITLE = 30;
+const TOP_PADDING_WITHOUT_TITLE = 10;
+/** Radius of the point markers, in pixels. */
+const DOT_RADIUS = 3;
+
+// Types
+
+/** d3's tick-value type: what an axis hands its `tickFormat`. */
+type AxisDomain = import("d3").AxisDomain;
+/** `app()`'s effect type, which the `sszvis` global cannot name. */
+type Effect = (dispatch: (action: string, props: readonly unknown[]) => void) => void;
+
+type Datum = {
+  xValue: Date;
+  yValue: number;
+  category: string;
+};
+
+type State = {
+  data: Datum[];
+  lineData: Datum[][];
+  xValues: [Date, Date];
+  categories: string[];
+  maxY: number;
+  selection: Datum[];
+};
+
+type Actions = {
+  resetDate: (state: State) => Effect;
+  changeDate: (state: State, e: Event, inputDate: Date | null) => void;
+};
+
+// Responsive Props
+
+const queryProps = sszvis
+  .responsiveProps()
+  .prop("xLabel", { _: "" })
+  .prop("yLabel", { _: "" })
+  .prop("ticks", { palm: 4, _: 5 });
+
+// Accessors
+
+const xAcc = (d: Datum) => d.xValue;
+const yAcc = (d: Datum) => d.yValue;
+const cAcc = (d: Datum) => d.category;
+
+// Application
+
+sszvis.app<State, Actions>({
+  fallback: { element: config.id, src: config.fallback },
+
+  init: (state) =>
+    d3
+      .csv(config.data, (d) => {
+        const xValue = sszvis.parseDate(d["Datum"]);
+        // NOTE: A row whose date cannot be parsed has no position on the time
+        // axis; returning null from the row callback drops it from the data.
+        return xValue === null
+          ? null
+          : {
+              xValue,
+              yValue: sszvis.parseNumber(d["Anzahl"]),
+              category: d["Kategorie"] ?? "",
+            };
+      })
+      .then((data) => {
+        // NOTE: The rows arrive in the order the table holds them, which need not be
+        // chronological. The line is drawn point to point and the ruler finds its datum
+        // by bisection, and both read the order as the x axis - so it is imposed here.
+        state.data = data.sort((a, b) => d3.ascending(xAcc(a), xAcc(b)));
+        // NOTE: One array of points per category; the line component draws each.
+        state.lineData = sszvis.cascade<Datum>().arrayBy(cAcc, d3.ascending).apply<Datum[][]>(data);
+        state.xValues = [d3.min(data, xAcc) ?? new Date(), d3.max(data, xAcc) ?? new Date()];
+        state.categories = sszvis.set(data, cAcc);
+        state.maxY = d3.max(data, yAcc) ?? 0;
+        state.selection = [];
+        // NOTE: The chart opens with the most recent date highlighted.
+        return (dispatch) => dispatch("resetDate", []);
+      }),
+
+  actions: {
+    resetDate(state) {
+      const mostRecentDate = d3.max(state.data, xAcc) ?? null;
+      return (dispatch) => dispatch("changeDate", [null, mostRecentDate]);
+    },
+
+    changeDate(state, _e, inputDate: Date | null) {
+      // Find the datum closest to the input date, then take the first datum on
+      // each line that shares its date and has a value to display.
+      const closest = inputDate === null ? undefined : closestDatum(state.data, xAcc, inputDate);
+      if (closest === undefined) {
+        state.selection = [];
+        return;
+      }
+      const closestDate = xAcc(closest);
+      state.selection = state.lineData.flatMap((linePoints) => {
+        const match = sszvis.find((d) => xAcc(d).toString() === closestDate.toString(), linePoints);
+        return match === undefined || Number.isNaN(yAcc(match)) ? [] : [match];
+      });
+    },
+  },
+
+  render(state, actions) {
+    const props = queryProps(sszvis.measureDimensions(config.id));
+
+    // NOTE: The legend is laid out first because it takes height from the
+    // chart: its measurements feed both the colour scale and the bounds.
+    const legendLayout = sszvis.colorLegendLayout(
+      {
+        axisLabels: state.xValues.map(xLabelFormat),
+        legendLabels: state.categories,
+      },
+      config.id,
+    );
+
+    const colorLegend = legendLayout.legend;
+
+    const cScale = legendLayout.scale;
+
+    const bounds = sszvis.bounds(
+      {
+        top: props.yLabel.length > 0 ? TOP_PADDING_WITH_TITLE : TOP_PADDING_WITHOUT_TITLE,
+        bottom: legendLayout.bottomPadding,
+      },
+      config.id,
+    );
+
+    // Scales
+
+    const xScale = d3.scaleTime().domain(state.xValues).range([0, bounds.innerWidth]);
+
+    /*
+     * NOTE: A nonzero upper bound when there is nothing to scale. d3 maps a degenerate
+     * `[0, 0]` domain to the MIDPOINT of its range, so a pasted table whose value column
+     * is all zeros - or one whose value role was mapped to a column that does not parse -
+     * would draw every line point at half height rather than at none, which reads as data.
+     */
+    const yScale = d3
+      .scaleLinear()
+      .domain([0, state.maxY || 1])
+      .range([bounds.innerHeight, 0]);
+
+    // Layers
+
+    const chartLayer = sszvis
+      .createSvgLayer(config.id, bounds, {
+        title: "Liniendiagramm",
+        description: "",
+      })
+      .datum(state.lineData);
+
+    // Components
+
+    const line = sszvis
+      .line<Datum, Datum[]>()
+      .x((d) => xScale(xAcc(d)))
+      .y((d) => yScale(yAcc(d)))
+      // NOTE: The stroke accessor is handed the whole line, so the colour comes
+      // from the category of its first point.
+      .stroke((linePoints) => String(cScale(cAcc(linePoints[0]))));
+
+    const xAxis = sszvis.axisX
+      .time()
+      .scale(xScale)
+      .orient("bottom")
+      .ticks(props.ticks)
+      .tickFormat(xLabelFormat)
+      .alignOuterLabels(true)
+      .title(props.xLabel);
+
+    const yAxis = sszvis
+      .axisY()
+      .scale(yScale)
+      .orient("right")
+      .tickFormat(yLabelFormat)
+      .contour(true)
+      .title(props.yLabel)
+      .dyTitle(Y_TITLE_OFFSET);
+
+    // NOTE: The highlighted dates are added to the regular ticks, so the ruler
+    // always has a labelled tick underneath it. Two equal dates are different
+    // objects, so the duplicates are removed by their string form.
+    const xTickValues = [
+      ...new Map(
+        [...xScale.ticks(props.ticks), ...state.selection.map(xAcc)].map((d) => [String(d), d]),
+      ).values(),
+    ];
+
+    xAxis.tickValues(xTickValues).highlightTick(isSelected(state));
+
+    const rulerLabel = sszvis
+      .modularTextSVG()
+      .bold((d: Datum) => sszvis.formatNumber(yAcc(d)))
+      .plain(cAcc);
+
+    const highlightLayer = sszvis
+      .annotationRuler<Datum>()
+      .top(0)
+      .bottom(bounds.innerHeight)
+      .x((d) => xScale(xAcc(d)))
+      .y((d) => yScale(yAcc(d)))
+      .label(rulerLabel)
+      .flip((d) => xScale(xAcc(d)) >= bounds.innerWidth / 2)
+      .color((d) => cScale(cAcc(d)));
+
+    const dots = sszvis
+      .dot<Datum>()
+      .x((d) => xScale(xAcc(d)))
+      .y((d) => yScale(yAcc(d)))
+      .radius(DOT_RADIUS)
+      .fill((d) => String(cScale(cAcc(d))));
+
+    // Rendering
+
+    chartLayer.selectGroup("line").call(line);
+
+    chartLayer
+      .selectGroup("xAxis")
+      .attr("transform", sszvis.translateString(0, bounds.innerHeight))
+      .call(xAxis);
+
+    chartLayer.selectGroup("yAxis").call(yAxis);
+
+    chartLayer.selectGroup("highlight").datum(state.selection).call(highlightLayer);
+
+    if (showLegend(state.categories)) {
+      chartLayer
+        .selectGroup("colorLegend")
+        .attr(
+          "transform",
+          sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding),
+        )
+        .call(colorLegend);
+    }
+
+    chartLayer.selectGroup("dots").datum(state.data).call(dots);
+
+    // Interaction
+
+    const interactionLayer = sszvis
+      .move<Date, number>()
+      .xScale(xScale)
+      .yScale(yScale)
+      .on("move", actions.changeDate)
+      .on("end", actions.resetDate);
+
+    chartLayer.selectGroup("interaction").call(interactionLayer);
+  },
+});
+
+// Helper functions
+
+/** Axis labels are years; sub-annual data is shown by the year it falls in. */
+const xLabelFormat = (d: AxisDomain) => (d instanceof Date ? sszvis.formatYear(d) : String(d));
+
+/** The zero tick is drawn by the axis itself, so it carries no label. */
+const yLabelFormat = (d: AxisDomain) => (d === 0 ? null : sszvis.formatNumber(Number(d)));
+
+/** Whether an axis tick sits under the current ruler position. */
+const isSelected = (state: State) => (d: AxisDomain) =>
+  sszvis.contains(state.selection.map(xAcc).map(String), String(d));
+
+/**
+ * The datum whose x-value lies closest to `datum`, by bisection, or `undefined`
+ * when there is nothing to point at: every row whose date cannot be parsed is
+ * dropped, so the data can be empty while the chart still draws its axes.
+ */
+const closestDatum = (data: Datum[], accessor: (d: Datum) => Date, datum: Date) => {
+  const i = d3.bisector(accessor).left(data, datum, 1);
+  const d0 = data[i - 1];
+  if (d0 === undefined) return undefined;
+  const d1 = data[i] ?? d0;
+  return datum.valueOf() - accessor(d0).valueOf() > accessor(d1).valueOf() - datum.valueOf()
+    ? d1
+    : d0;
+};
+
+/**
+ * The categories are read from the data, so a single unnamed series produces
+ * one empty category - and a legend with one blank entry, which is worse
+ * than none.
+ */
+const showLegend = (categories: string[]) => categories[0] != null && categories[0] !== "";
