@@ -100,6 +100,7 @@ export function initialSpec(
     features: allFeatures(recipe),
     tooltip: recipe.defaultTooltip,
     annotations: [],
+    control: null,
     kinds: {},
     chosen: [],
   };
@@ -116,6 +117,8 @@ export function applySample(spec: Spec, recipe: RecipeSummary, csv: string): Spe
     csv,
     kinds: {},
     chosen: [],
+    /* The control named a column of the old table, as the pins and the picks did. */
+    control: null,
     fields: bindRoles(recipe, parse(csv), {}, spec.fields),
   };
 }
@@ -131,6 +134,9 @@ const carryAnnotations = (
     return before !== undefined && after !== undefined && before.kind === after.kind;
   });
 
+const carryControl = (control: Spec["control"], fields: Fields): Spec["control"] =>
+  control !== null && Object.values(fields).includes(control.column) ? null : control;
+
 /** The bindings the user made themselves, which are the only ones worth carrying. */
 const chosenFields = (spec: Spec, roles: readonly RoleKey[]): Fields =>
   Object.fromEntries(
@@ -143,12 +149,13 @@ const chosenFields = (spec: Spec, roles: readonly RoleKey[]): Fields =>
 export function switchRecipe(spec: Spec, from: RecipeSummary, next: RecipeSummary): Spec {
   /* A role the new recipe does not have has nothing to carry. */
   const kept = spec.chosen.filter((role) => next.roles.some((entry) => entry.key === role));
+  const fields = bindRoles(next, parse(spec.csv), spec.kinds, chosenFields(spec, kept));
   return {
     recipe: next.key,
     csv: spec.csv,
     kinds: spec.kinds,
     chosen: kept,
-    fields: bindRoles(next, parse(spec.csv), spec.kinds, chosenFields(spec, kept)),
+    fields,
     options: Object.fromEntries(
       Array.getSomes(
         next.options.map((option) =>
@@ -159,6 +166,13 @@ export function switchRecipe(spec: Spec, from: RecipeSummary, next: RecipeSummar
     features: allFeatures(next),
     tooltip: next.defaultTooltip,
     annotations: carryAnnotations(spec.annotations, from, next),
+    /*
+     * A control is about a column rather than an axis, and the table has not changed, so it
+     * carries where an annotation would not - unless the new chart's roles have just taken
+     * that column. Filtering by the axis a chart is drawn along leaves a single bar, and
+     * the panel does not offer a bound column in the first place.
+     */
+    control: carryControl(spec.control, fields),
   };
 }
 
