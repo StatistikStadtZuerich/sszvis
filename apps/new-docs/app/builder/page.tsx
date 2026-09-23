@@ -26,6 +26,7 @@ import {
 import { recipesAtom, useBuilderCompile, WORKER_STOPPED_MESSAGE } from "./builder-client";
 import { recipeOf, useBuilderForm } from "./builder-form";
 import { Annotations } from "./components/annotations";
+import { ChoiceSelect } from "./components/choice-select";
 import { Controls } from "./components/controls";
 import { ChartType } from "./components/chart-type";
 import { CodePanel } from "./components/code-panel";
@@ -236,30 +237,14 @@ const Builder = ({
                 return (
                   <Field key={option.key}>
                     <FieldLabel htmlFor={id}>{option.label}</FieldLabel>
-                    <Select
+                    <ChoiceSelect
+                      id={id}
                       value={optionValue(recipe.options, spec, option.key)}
-                      onValueChange={(next) =>
-                        form.setFieldValue("options", {
-                          ...spec.options,
-                          [option.key]: next ?? "",
-                        })
+                      choices={option.choices ?? []}
+                      onChange={(next) =>
+                        form.setFieldValue("options", { ...spec.options, [option.key]: next })
                       }
-                      items={(option.choices ?? []).map((choice) => ({
-                        value: choice.value,
-                        label: choice.label,
-                      }))}
-                    >
-                      <SelectTrigger id={id}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent align="start">
-                        {(option.choices ?? []).map((choice) => (
-                          <SelectItem key={choice.value} value={choice.value}>
-                            {choice.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                   </Field>
                 );
               })}
