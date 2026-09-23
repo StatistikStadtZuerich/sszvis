@@ -1,6 +1,14 @@
 import { controlFields, CONTROLS_FEATURE, hasControl } from "../../controls";
 import { code, str } from "../../emit";
 import {
+  colorScaleCode,
+  DEFAULT_PALETTE,
+  DIVERGING_FEATURE,
+  isDiverging,
+  PALETTE,
+  paletteChoices,
+} from "../../palettes";
+import {
   DESCRIPTION,
   FeatureKey,
   GEO,
@@ -139,9 +147,15 @@ export const mapChoropleth: RecipeDef = {
       fallback: DEFAULT_GEOGRAPHY.value,
       choices: GEOGRAPHIES.map(({ value, label }) => ({ value, label })),
     },
+    {
+      key: PALETTE,
+      label: "Colours",
+      fallback: DEFAULT_PALETTE.value,
+      choices: paletteChoices,
+    },
   ],
   /* Bubbles after the legend: it overrides which legend the legend feature draws. */
-  features: [TOOLTIP, LEGEND, BUBBLE, LAKE, LAKE_BOUNDS, CONTROLS_FEATURE],
+  features: [TOOLTIP, LEGEND, BUBBLE, LAKE, LAKE_BOUNDS, CONTROLS_FEATURE, DIVERGING_FEATURE],
   assets: (_spec, option) => [
     {
       key: "topology",
@@ -171,7 +185,7 @@ export const mapChoropleth: RecipeDef = {
       LABEL_EXPR: code(
         `d[${str(labelField === "" ? (spec.fields[GEO] ?? "") : labelField)}] ?? ""`,
       ),
-      COLOR_SCALE: code("sszvis.scaleSeqBlu().domain(state.valueDomain)"),
+      COLOR_SCALE: colorScaleCode(option(PALETTE)),
       /* The bubble feature takes the colour out of the base map and puts it in the circles. */
       MAP_FILL: code('(d) => (d === undefined ? "none" : colorScale(d.value))'),
       LEGEND_X: code("bounds.width / 2 - props.legendWidth / 2"),
@@ -202,6 +216,8 @@ export const mapChoropleth: RecipeDef = {
     return [
       ...(geography.lake === undefined ? [] : [LAKE]),
       ...(geography.lakeBounds === undefined ? [] : [LAKE_BOUNDS]),
+      /* The palette decides this one too: only a diverging ramp needs the second domain. */
+      ...(isDiverging(spec.options[PALETTE] ?? "") ? [DIVERGING_FEATURE] : []),
       /*
        * Asking whether the control resolves, rather than whether the spec names one: a
        * control whose column has left the table or holds a single value draws nothing, and
