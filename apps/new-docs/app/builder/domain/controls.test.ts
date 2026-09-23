@@ -1,7 +1,13 @@
 import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { controlFields, filterCandidates, renameControl, resolveControl } from "./controls";
+import {
+  CROWDED,
+  controlFields,
+  filterCandidates,
+  renameControl,
+  resolveControl,
+} from "./controls";
 import { distinctValues, parse } from "./csv";
 import { ColumnName, RecipeKey, RoleKey, type Spec } from "./spec";
 
@@ -120,6 +126,31 @@ describe("controlFields", () => {
     });
     const { FILTER_FIELD } = controlFields(hostile);
     expect(String(FILTER_FIELD)).toBe('"a\\"); alert(1); ("');
+  });
+
+  const listOf = (count: number) => {
+    const rows = Array.from({ length: count }, (_, index) => `Bau,q${index},${index}`);
+    return specFor({
+      control: filtering("Gebiet"),
+      csv: ["Sektor,Gebiet,Anzahl", ...rows].join("\n"),
+    });
+  };
+
+  test("should keep the buttons for a list a row can hold", () => {
+    const { CONTROL_BREAKPOINTS } = controlFields(listOf(CROWDED));
+    expect(String(CONTROL_BREAKPOINTS)).toContain("buttonGroup");
+    /* Still a menu on a phone, where even a short row stops fitting. */
+    expect(String(CONTROL_BREAKPOINTS)).toContain("palm");
+  });
+
+  test("should take a menu at every width once the row would overflow", () => {
+    /*
+     * A button group divides its width evenly but will not shrink a button below its own
+     * label, so a long list runs off the side of the chart rather than compressing.
+     */
+    const { CONTROL_BREAKPOINTS } = controlFields(listOf(CROWDED + 1));
+    expect(String(CONTROL_BREAKPOINTS)).toContain("selectMenu");
+    expect(String(CONTROL_BREAKPOINTS)).not.toContain("buttonGroup");
   });
 
   test("should emit empty fields when there is no control to emit", () => {

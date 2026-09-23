@@ -1,16 +1,19 @@
 import { Option } from "effect";
 
 import { columnKinds, distinctValues, parse, type Table } from "./csv";
-import { str, type Scalars } from "./emit";
+import { code, str, type Scalars } from "./emit";
 import { FeatureKey, type ColumnName, type Spec } from "./spec";
 
 /** The hidden feature a resolving control switches on. */
 export const CONTROLS_FEATURE = FeatureKey.make("controls");
 
 /**
- * Where a button group stops reading as a row of buttons. Advisory: past this the chart is
- * crowded, not broken, and the reader is told rather than stopped. The library's own
- * `long-labels` example sits exactly here, at seven.
+ * How many options a row of buttons can hold.
+ *
+ * Past this the chart takes a menu at every width instead. A button group divides its width
+ * evenly but will not shrink a button below its own label, so a long list does not compress -
+ * it runs off the side of the chart. The library's own `long-labels` example sits exactly
+ * here, at seven, which is the most any example asks a row of buttons to carry.
  */
 export const CROWDED = 7;
 
@@ -71,18 +74,35 @@ export const filterCandidates = (spec: Spec, table: Table): readonly ColumnName[
   );
 };
 
+/** Which control the chart reaches for, as the breakpoint object `responsiveProps` wants. */
+const RESPONSIVE = code(
+  "{ palm: () => sszvis.selectMenu<string>, _: () => sszvis.buttonGroup<string> }",
+);
+
+/** A menu at every width, for a list no row of buttons can hold. */
+const MENU_ONLY = code("{ _: () => sszvis.selectMenu<string> }");
+
 /**
- * The column and caption the emitted control reads, as source.
+ * What the emitted control reads: its column, its caption, and which control to be.
  *
- * Both are the reader's own text and both go through `str`, which is what keeps a column
- * named `"); alert(1); ("` a column name rather than a statement.
+ * The column and the caption are the reader's own text and both go through `str`, which is
+ * what keeps a column named `"); alert(1); ("` a column name rather than a statement.
+ *
+ * Which control to be is decided here rather than asked, because the count decides it. Up to
+ * `CROWDED` values the chart shows buttons and falls back to a menu on a phone, where they
+ * stop fitting side by side. Past that no width fits them, so it shows a menu everywhere.
  */
 export const controlFields = (spec: Spec): Scalars =>
   Option.match(resolveControl(spec), {
-    onNone: () => ({ FILTER_FIELD: str(""), FILTER_LABEL: str("") }),
+    onNone: () => ({
+      FILTER_FIELD: str(""),
+      FILTER_LABEL: str(""),
+      CONTROL_BREAKPOINTS: RESPONSIVE,
+    }),
     onSome: (control) => ({
       FILTER_FIELD: str(control.column),
       FILTER_LABEL: str(control.label),
+      CONTROL_BREAKPOINTS: control.values.length > CROWDED ? MENU_ONLY : RESPONSIVE,
     }),
   });
 

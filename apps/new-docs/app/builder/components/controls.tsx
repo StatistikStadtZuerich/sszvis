@@ -50,7 +50,7 @@ export const Controls = ({
     : values.length < 2
       ? "A column needs at least two values to offer a choice, so the chart is drawn without a filter."
       : values.length > CROWDED
-        ? `${values.length} buttons is a crowded row; on a narrow screen the chart shows a menu instead.`
+        ? `${values.length} values are more than a row of buttons holds, so the chart shows a menu instead.`
         : null;
 
   return (
@@ -58,7 +58,8 @@ export const Controls = ({
       <div>
         <FieldTitle>Filter</FieldTitle>
         <FieldDescription>
-          Buttons above the chart that narrow it to one value of a column it does not already draw.
+          A control above the chart that narrows it to one value of a column it does not already
+          draw. Buttons where they fit, a menu where they do not.
         </FieldDescription>
       </div>
 

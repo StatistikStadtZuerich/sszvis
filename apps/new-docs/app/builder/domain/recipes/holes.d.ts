@@ -23,6 +23,11 @@ declare const __TOP_PADDING__: number;
  * `.datum()` into `.call()`. The browser test is what proves this one right.
  */
 declare const __PLOT_DATA__: never[];
+/** Which control to draw at which width, as `responsiveProps` takes it. */
+declare const __CONTROL_BREAKPOINTS__: {
+  palm?: () => typeof sszvis.selectMenu<string>;
+  _: () => typeof sszvis.buttonGroup<string> | typeof sszvis.selectMenu<string>;
+};
 /** CSV column the control filters on. */
 declare const __FILTER_FIELD__: string;
 /** What the control is called to a screen reader. */

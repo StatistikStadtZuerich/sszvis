@@ -1,5 +1,5 @@
-import { CONTROLS_FEATURE, filterCandidates } from "./controls";
-import { parse } from "./csv";
+import { CONTROLS_FEATURE, CROWDED, filterCandidates } from "./controls";
+import { distinctValues, parse } from "./csv";
 import { applySample, initialSpec } from "./initial-spec";
 import { samples } from "./samples";
 import {
@@ -46,20 +46,28 @@ const controlled = (
      type-check the plain chart a second time and read as coverage it does not have. */
   if (!recipe.features.some((feature) => feature.key === CONTROLS_FEATURE)) return [];
 
+  /*
+   * Two of them where the data allows: a short list and a long one. The two emit different
+   * source - a long list takes a menu at every width, where a short one keeps the button
+   * group and falls back to a menu only on a phone - so one case leaves the other untyped.
+   */
+  const found = new Map<boolean, Case>();
   for (const sample of samples) {
     const spec = applySample({ ...base, features: [] }, summary, sample.csv);
-    const column = filterCandidates(spec, parse(sample.csv))[0];
-    if (column === undefined) continue;
+    const table = parse(sample.csv);
     const { features: _features, ...rest } = spec;
-    return [
-      {
-        label: `${recipe.key}-controlled`,
+    for (const column of filterCandidates(spec, table)) {
+      const crowded = distinctValues(table, column).length > CROWDED;
+      if (found.has(crowded)) continue;
+      found.set(crowded, {
+        label: `${recipe.key}-controlled${crowded ? "-crowded" : ""}`,
         recipe,
         spec: { ...rest, control: { kind: "filter", column, label: column } },
-      },
-    ];
+      });
+    }
+    if (found.size === 2) break;
   }
-  return [];
+  return [...found.values()];
 };
 
 export const cases = (recipes: readonly Recipe[]): readonly Case[] =>
