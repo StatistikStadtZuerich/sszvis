@@ -1,5 +1,5 @@
 import { referenceLinesCode } from "../../annotations";
-import { controlFields } from "../../controls";
+import { controlFields, CONTROLS_FEATURE, hasControl } from "../../controls";
 import { code, str } from "../../emit";
 import {
   CATEGORY,
@@ -48,7 +48,7 @@ export const barChartVertical: RecipeDef = {
     { key: UNIT, label: "Tooltip unit", fallback: "Einheiten" },
   ],
   /* No sort feature: the bars follow the row order of the data, which the table editor sorts. */
-  features: [TOOLTIP, REFERENCE_LINES_FEATURE],
+  features: [TOOLTIP, REFERENCE_LINES_FEATURE, CONTROLS_FEATURE],
   scalars: (spec, option) => ({
     /*
      * Today's values, so a spec with no control emits exactly what it always did. The
@@ -76,6 +76,14 @@ export const barChartVertical: RecipeDef = {
   tooltipFeature: TOOLTIP,
   defaultTooltip: { header: VALUE, body: [] },
   annotationAxes: ANNOTATION_AXES,
-  implied: (spec) => (spec.annotations.length > 0 ? [REFERENCE_LINES_FEATURE] : []),
+  implied: (spec) => [
+    ...(spec.annotations.length > 0 ? [REFERENCE_LINES_FEATURE] : []),
+    /*
+     * Asking whether the control resolves, rather than whether the spec names one: a
+     * control whose column has left the table or holds a single value draws nothing, and
+     * switching the feature on for it would emit a button group with no buttons.
+     */
+    ...(hasControl(spec) ? [CONTROLS_FEATURE] : []),
+  ],
   sample: "beschaeftigte-sektor",
 };

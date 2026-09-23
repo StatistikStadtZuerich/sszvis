@@ -1,0 +1,90 @@
+// #hidden
+
+/* Drawn whenever the spec names a column to filter on; the recipe's `implied` turns it on. */
+
+// #scalar ACTIONS_PARAM actions
+// #scalar TOP_PADDING CONTROL_HEIGHT
+// #scalar PLOT_DATA state.selectedData
+
+// #region magicNumbers
+/** Vertical space in pixels reserved above the plot for the control. */
+const CONTROL_HEIGHT = 80;
+/** The control stops widening here, however wide the chart gets. */
+const MAX_CONTROL_WIDTH = 300;
+// #endregion
+
+// #region datumFields
+filter: string;
+// #endregion
+
+// #region row
+filter: d[__FILTER_FIELD__] ?? "",
+// #endregion
+
+// #region responsiveProps
+// NOTE: More than a couple of options do not fit side by side on a phone, so the button
+// group gives way to a select menu there. The two controls share one interface, and one
+// handler serves both.
+const controlProps = sszvis
+  .responsiveProps()
+  .prop("control", {
+    palm: () => sszvis.selectMenu<string>,
+    _: () => sszvis.buttonGroup<string>,
+  })
+  .prop("controlWidth", { _: (width: number) => Math.min(width, MAX_CONTROL_WIDTH) });
+// #endregion
+
+// #region stateTypes
+filterValues: string[];
+selectedFilter: string;
+selectedData: Datum[];
+// #endregion
+
+// #region actionTypes
+selectFilter: (state: State, e: Event, value: string) => void;
+// #endregion
+
+// #region init
+// NOTE: A row with no value in this column is no more a choice than a blank button, and
+// the builder leaves it out of the options it counts, so the chart has to agree.
+state.filterValues = sszvis.set(state.data, fAcc).filter((value) => value !== "");
+state.selectedFilter = state.filterValues[0] ?? "";
+state.selectedData = state.data.filter((d) => fAcc(d) === state.selectedFilter);
+// #endregion
+
+// #region actions
+selectFilter(state, _e, value) {
+  state.selectedFilter = value;
+  state.selectedData = state.data.filter((d) => fAcc(d) === value);
+},
+// #endregion
+
+// #region layers
+// NOTE: Its own key, because a layer created without one is shared, and the tooltip's
+// layer is bound to the hovered rows rather than to this.
+const controlLayer = sszvis.createHtmlLayer(config.id, bounds, { key: "controls" });
+// #endregion
+
+// #region components
+const controlProp = controlProps(bounds);
+
+const control = controlProp
+  .control()
+  .values(state.filterValues)
+  .width(controlProp.controlWidth)
+  .current(state.selectedFilter)
+  .change(actions.selectFilter)
+  .ariaLabel(__FILTER_LABEL__);
+// #endregion
+
+// #region render
+controlLayer
+  .selectDiv("controls")
+  .style("left", `${Math.max(0, (bounds.innerWidth - control.width()) / 2)}px`)
+  .style("top", `${20 - bounds.padding.top}px`)
+  .call(control);
+// #endregion
+
+// #region helpers
+const fAcc = (d: Datum) => d.filter;
+// #endregion

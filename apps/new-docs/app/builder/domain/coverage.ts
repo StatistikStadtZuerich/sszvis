@@ -1,5 +1,15 @@
-import { initialSpec } from "./initial-spec";
-import { summarize, type Annotation, type AnnotationAxis, type Recipe, type Spec } from "./spec";
+import { CONTROLS_FEATURE, filterCandidates } from "./controls";
+import { parse } from "./csv";
+import { applySample, initialSpec } from "./initial-spec";
+import { samples } from "./samples";
+import {
+  summarize,
+  type Annotation,
+  type AnnotationAxis,
+  type Recipe,
+  type RecipeSummary,
+  type Spec,
+} from "./spec";
 
 type Case = {
   readonly label: string;
@@ -21,6 +31,36 @@ const sampleAnnotations = (axes: readonly AnnotationAxis[]): readonly Annotation
       ? [{ kind: "reference-line", role: axis.role, at: { kind: "mean" }, label: "" } as const]
       : []),
   ]);
+
+/*
+ * A case carrying a control, on the first sample that offers this chart a column to filter
+ * on. The feature is hidden, so the checkbox powerset never reaches it - without a case
+ * that resolves, the control's emitted code is never type-checked at all.
+ */
+const controlled = (
+  recipe: Recipe,
+  summary: RecipeSummary,
+  base: Omit<Spec, "features">,
+): readonly Case[] => {
+  /* A recipe with no control template emits nothing for one, so a case would only
+     type-check the plain chart a second time and read as coverage it does not have. */
+  if (!recipe.features.some((feature) => feature.key === CONTROLS_FEATURE)) return [];
+
+  for (const sample of samples) {
+    const spec = applySample({ ...base, features: [] }, summary, sample.csv);
+    const column = filterCandidates(spec, parse(sample.csv))[0];
+    if (column === undefined) continue;
+    const { features: _features, ...rest } = spec;
+    return [
+      {
+        label: `${recipe.key}-controlled`,
+        recipe,
+        spec: { ...rest, control: { kind: "filter", column, label: column } },
+      },
+    ];
+  }
+  return [];
+};
 
 export const cases = (recipes: readonly Recipe[]): readonly Case[] =>
   recipes.flatMap((recipe) => {
@@ -58,7 +98,13 @@ export const cases = (recipes: readonly Recipe[]): readonly Case[] =>
               spec: { ...spec, annotations: sampleAnnotations(recipe.annotationAxes) },
             },
           ];
-    return [{ label: recipe.key, recipe, spec }, ...single, ...chosen, ...annotated];
+    return [
+      { label: recipe.key, recipe, spec },
+      ...single,
+      ...chosen,
+      ...annotated,
+      ...controlled(recipe, summary, spec),
+    ];
   });
 
 /** Only checkbox features vary; hidden ones follow the spec's content. */
