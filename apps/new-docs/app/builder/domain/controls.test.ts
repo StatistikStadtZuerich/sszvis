@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { controlFields, filterCandidates, resolveControl } from "./controls";
+import { controlFields, filterCandidates, renameControl, resolveControl } from "./controls";
 import { distinctValues, parse } from "./csv";
 import { ColumnName, RecipeKey, RoleKey, type Spec } from "./spec";
 
@@ -126,5 +126,28 @@ describe("controlFields", () => {
     const { FILTER_FIELD, FILTER_LABEL } = controlFields(specFor());
     expect(String(FILTER_FIELD)).toBe('""');
     expect(String(FILTER_LABEL)).toBe('""');
+  });
+});
+
+describe("renameControl", () => {
+  const control = filtering("Geschlecht");
+
+  test("should follow the column it names", () => {
+    /* A rename moves a column without replacing the table, so the control goes with it
+       rather than being left naming something that is no longer there. */
+    expect(renameControl(control, col("Geschlecht"), col("Sex"))).toEqual(filtering("Sex"));
+  });
+
+  test("should leave a control that names a different column alone", () => {
+    expect(renameControl(control, col("Sektor"), col("Branche"))).toBe(control);
+  });
+
+  test("should keep a label the author typed", () => {
+    const named = filtering("Geschlecht", "Nach Geschlecht");
+    expect(renameControl(named, col("Geschlecht"), col("Sex"))?.label).toBe("Nach Geschlecht");
+  });
+
+  test("should have nothing to do when there is no control", () => {
+    expect(renameControl(null, col("Geschlecht"), col("Sex"))).toBeNull();
   });
 });

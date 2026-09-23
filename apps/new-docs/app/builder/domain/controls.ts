@@ -85,3 +85,18 @@ export const controlFields = (spec: Spec): Scalars =>
       FILTER_LABEL: str(control.label),
     }),
   });
+
+/**
+ * The control after a column has been renamed under it.
+ *
+ * A rename is the one edit that moves a column without replacing the table, so the control
+ * follows it rather than being stranded - the same courtesy `renameKind` does for a pinned
+ * kind. A label the author typed is theirs and stays; one left empty keeps naming the
+ * column, so it follows the new name.
+ */
+export const renameControl = (
+  control: Spec["control"],
+  from: ColumnName,
+  to: ColumnName,
+): Spec["control"] =>
+  control === null || control.column !== from || from === to ? control : { ...control, column: to };

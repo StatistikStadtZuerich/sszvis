@@ -188,7 +188,7 @@ builder itself reads are exported from `spec.ts` the same way, as `TITLE` and
 
 ## Parameters
 
-Two parts of the spec feed features with values rather than switching them on:
+Three parts of the spec feed features with values rather than switching them on:
 
 - `tooltip` names the roles the tooltip (or hover ruler) shows, as role keys;
   `domain/tooltip.ts` turns it into a `modularText` chain the recipe emits as a
@@ -199,6 +199,14 @@ Two parts of the spec feed features with values rather than switching them on:
   which axes a recipe offers and what kind of value positions a line there.
   A new kind of annotation is a new union member, a template region that draws
   it, and a UI row.
+- `control` names a column to filter the chart on, or is `null`.
+  `domain/controls.ts` decides which columns can carry one - not already bound to
+  a role, not a date, and holding at least two values - and resolves the control
+  the chart will draw. A control that no longer resolves emits nothing rather
+  than failing the compile, so renaming its column away loses the control and not
+  the chart. The hidden `controls.tmpl` draws it, and `implied` asks whether the
+  control resolves rather than whether the spec names one: switching the feature
+  on for an unresolvable control would emit a button group with no buttons.
 
 ## Language
 
