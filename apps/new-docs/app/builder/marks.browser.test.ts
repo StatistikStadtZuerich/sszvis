@@ -14,6 +14,7 @@ import {
   FeatureKey,
   GEO,
   GEO_LABEL,
+  OptionKey,
   RoleKey,
   SERIES,
   summarize,
@@ -550,5 +551,116 @@ describe("a chart with a filter control", () => {
       ),
     );
     expect(control.getBoundingClientRect().bottom).toBeLessThanOrEqual(highest);
+  });
+});
+
+/*
+ * A map drawn in a diverging palette, which is the one colour choice that changes more
+ * than a name in the emitted source.
+ *
+ * The rest of the palettes swap one scale for another and read the domain the map has
+ * always had. A diverging one brings a second domain, worked out in the chart's own
+ * `init` from data no suite here ever sees - and every way of getting that domain wrong
+ * type-checks. `[0, max]` puts the ramp's neutral middle at half the largest value;
+ * `d3.extent` puts it wherever the data happens to be lopsided. Both emit a map, both
+ * compile, and both tell the reader that areas are on a side of zero they are not on.
+ *
+ * So this reads the colours off the areas and holds them against the scale itself.
+ */
+describe("a map drawn in a diverging palette", () => {
+  const PALETTE = "div-val-gry";
+
+  /* Ten quarters with values on both sides of zero, so the ramp has two halves to use. */
+  const CHANGE: readonly (readonly [code: string, name: string, value: number])[] = [
+    ["111", "Affoltern", 5.2],
+    ["091", "Albisrieden", -3.1],
+    ["092", "Altstetten", 0.1],
+    ["031", "Alt-Wiedikon", -1.8],
+    ["014", "City", 2.4],
+    ["024", "Enge", -0.4],
+    ["052", "Escher Wyss", 4.6],
+    ["071", "Fluntern", 0.9],
+    ["033", "Friesenberg", -2.7],
+    ["051", "Gewerbeschule", 3.3],
+  ];
+
+  /*
+   * Lopsided on purpose. The largest rise is bigger than the deepest fall, so the domain
+   * the chart should use - the larger extreme, mirrored - is not the one `d3.extent` would
+   * give, and neither is `[0, max]`. A test on symmetric data could not tell the three apart.
+   */
+  const AMPLITUDE = 5.2;
+
+  const csv = [
+    "Qcode,Qname,Veränderung",
+    ...CHANGE.map(([code, name, value]) => `${code},${name},${value}`),
+  ].join("\n");
+
+  const marks = {
+    marks: ".sszvis-map__area:not(.sszvis-map__area--undefined)",
+    count: CHANGE.length,
+  };
+
+  const diverging = (): Spec => {
+    const recipe = findRecipeOrThrow("map-choropleth");
+    const base = initialSpec(summarize(recipe), csv);
+    return {
+      ...base,
+      /* Named rather than guessed: both numeric columns fit the value role. */
+      fields: {
+        ...base.fields,
+        [GEO]: ColumnName.make("Qcode"),
+        [GEO_LABEL]: ColumnName.make("Qname"),
+        [VALUE]: ColumnName.make("Veränderung"),
+      },
+      options: { ...base.options, [OptionKey.make("palette")]: PALETTE },
+      features: [FeatureKey.make("legend")],
+    };
+  };
+
+  test("should shade every area as the palette does on a domain straddling zero", async () => {
+    const container = await draw(findRecipeOrThrow("map-choropleth"), diverging(), marks);
+
+    /*
+     * The library's own scale is the oracle. Comparing against colours written down here
+     * would prove only that two copies of the same guess agree; comparing against the scale
+     * on the domain the chart should have chosen is the claim itself.
+     */
+    const ramp = sszvis.scaleDivValGry().domain([-AMPLITUDE, AMPLITUDE]);
+    const expected = CHANGE.map(([, , value]) => String(ramp(value))).sort();
+
+    const drawn = [...container.querySelectorAll(marks.marks)]
+      .map((area) => area.getAttribute("fill") ?? "")
+      .sort();
+
+    expect(drawn).toEqual(expected);
+  });
+
+  /*
+   * And the legend says so, which is the only place the reader can see the domain. Read
+   * from the far side of the chart from the fills above, so a scale and a legend that
+   * disagreed - the map coloured on one domain and explained on another - is still a
+   * failure rather than two assertions making the same mistake together.
+   */
+  test("should key the ramp from one extreme to its mirror", async () => {
+    const container = await draw(findRecipeOrThrow("map-choropleth"), diverging(), marks);
+
+    const labels = [...container.querySelectorAll(".sszvis-legend__label")].map(
+      (label) => label.textContent,
+    );
+    expect(labels).toEqual([sszvis.formatNumber(-AMPLITUDE), sszvis.formatNumber(AMPLITUDE)]);
+  });
+
+  /* The sequential default, on the same data, to show the second domain is the palette's
+     doing rather than something the map now always does. */
+  test("should leave the domain at zero when the palette does not diverge", async () => {
+    const recipe = findRecipeOrThrow("map-choropleth");
+    const spec = { ...diverging(), options: {} };
+    const container = await draw(recipe, spec, marks);
+
+    const labels = [...container.querySelectorAll(".sszvis-legend__label")].map(
+      (label) => label.textContent,
+    );
+    expect(labels).toEqual([sszvis.formatNumber(0), sszvis.formatNumber(AMPLITUDE)]);
   });
 });
