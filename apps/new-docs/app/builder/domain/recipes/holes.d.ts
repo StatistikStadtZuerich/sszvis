@@ -12,6 +12,22 @@ type __ACTIONS_TYPE__ = Record<string, never>;
 /** The reference lines, as an array literal; the template's constant supplies the element type. */
 declare const __REFERENCE_LINES__: never[];
 
+/* The filter control's holes, which every recipe that can carry one declares. */
+
+/** Space above the chart, which the control grows when it is on. */
+declare const __TOP_PADDING__: number;
+/*
+ * The rows a layer is drawn from: the whole table, or the slice the control has chosen.
+ * Typed loosely on purpose - each recipe binds its own `Datum`, and this file is shared -
+ * which the project cannot check either way, since d3 does not carry a datum type through
+ * `.datum()` into `.call()`. The browser test is what proves this one right.
+ */
+declare const __PLOT_DATA__: never[];
+/** CSV column the control filters on. */
+declare const __FILTER_FIELD__: string;
+/** What the control is called to a screen reader. */
+declare const __FILTER_LABEL__: string;
+
 // Bar charts, vertical and horizontal
 
 /** The single series' name, which is also its key in the colour scale. */

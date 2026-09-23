@@ -20,6 +20,7 @@ const SERIES_KEY = __SERIES_KEY__;
 type Datum = {
   category: string;
   yValue: number;
+  // {{block:datumFields}}
 };
 
 type State = {
@@ -43,6 +44,7 @@ const queryProps = sszvis
   .prop("barPadding", { palm: 0.4, _: 0.2 })
   .prop("bottomPadding", { palm: 140, _: 60 })
   .prop("slant", SLANT);
+// {{block:responsiveProps}}
 
 // Accessors
 
@@ -59,6 +61,7 @@ sszvis.app<State, Actions>({
       .csv(config.data, (d) => ({
         category: d[__CATEGORY_FIELD__] ?? "",
         yValue: sszvis.parseNumber(d[__VALUE_FIELD__]),
+        // {{block:row}}
       }))
       .then((data) => {
         state.data = data;
@@ -76,7 +79,7 @@ sszvis.app<State, Actions>({
     const yMax = d3.max(state.data, yAcc) ?? 0;
     const bounds = sszvis.bounds(
       {
-        top: 3,
+        top: __TOP_PADDING__,
         bottom: props.bottomPadding,
         left: sszvis.measureAxisLabel(sszvis.formatNumber(yMax)),
       },
@@ -123,7 +126,7 @@ sszvis.app<State, Actions>({
         title: __TITLE_TEXT__,
         description: __DESCRIPTION__,
       })
-      .datum(state.data);
+      .datum(__PLOT_DATA__);
 
     // {{block:layers}}
 

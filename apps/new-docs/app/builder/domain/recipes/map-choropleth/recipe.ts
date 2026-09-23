@@ -1,3 +1,4 @@
+import { controlFields } from "../../controls";
 import { code, str } from "../../emit";
 import {
   DESCRIPTION,
@@ -153,6 +154,13 @@ export const mapChoropleth: RecipeDef = {
     const geography = geographyFor(option(GEOGRAPHY_OPTION));
     const labelField = spec.fields[GEO_LABEL] ?? "";
     return {
+      /*
+       * Today's values, so a spec with no control emits exactly what it always did. The
+       * control's own template overrides both.
+       */
+      TOP_PADDING: code("30"),
+      PLOT_DATA: code("state.data"),
+      ...controlFields(spec),
       TOPO_PATH: str(TOPO_PATH),
       LAYER: str(geography.layer),
       LAKE_LAYER: str(geography.lake ?? ""),
