@@ -7,7 +7,8 @@ import { afterEach, describe, expect, test } from "vitest";
 
 import { assetsFor, compile } from "./domain/compile";
 import { initialSpec } from "./domain/initial-spec";
-import { recipes } from "./domain/recipes";
+import { sampleFor } from "./domain/samples";
+import { findRecipe, recipes } from "./domain/recipes";
 import { ColumnName, FeatureKey, SERIES, summarize, type Recipe, type Spec } from "./domain/spec";
 
 /*
@@ -24,6 +25,11 @@ import { ColumnName, FeatureKey, SERIES, summarize, type Recipe, type Spec } fro
  * and a browser is far too slow for 2^n. One chart per recipe, drawn from the sample it
  * ships with, is enough to catch a recipe that emits a chart nobody can see.
  */
+
+/** The control's buttons, which are the same element whichever recipe drew them. */
+const BUTTON = ".sszvis-control-buttonGroup__item";
+
+const findRecipeOrThrow = (key: string): Recipe => Effect.runSync(findRecipe(key));
 
 /** The width the chart lays itself out for; sszvis measures the container, so it needs one. */
 const WIDTH = 800;
@@ -107,13 +113,14 @@ const draw = async (
   recipe: Recipe,
   spec: Spec,
   expected: { readonly marks: string; readonly count: number },
+  width: number = WIDTH,
 ): Promise<HTMLElement> => {
   const ts = Effect.runSync(compile(recipe, spec));
   const js = tsBlankSpace(ts);
 
   const container = document.createElement("div");
   container.id = `chart-${recipe.key}`;
-  container.style.width = `${WIDTH}px`;
+  container.style.width = `${width}px`;
   document.body.append(container);
 
   /*
@@ -275,5 +282,149 @@ describe("a stacked area with no series column", () => {
      * group: an empty `<g>` left behind is not what a reader sees.
      */
     expect(container.querySelectorAll(".sszvis-legend__mark")).toHaveLength(0);
+  });
+});
+
+/*
+ * A chart with a filter control, which is the one thing in the builder that changes what
+ * a chart draws after it has been drawn.
+ *
+ * This matters more than it looks. The expression a layer is given its data by reaches
+ * the template through a hole, and the recipes project does not constrain that hole's
+ * type at all - d3 carries no datum type through `.datum()` into `.call()`, so a hole
+ * emitting the wrong rows, or none, type-checks exactly as well as the right one. Every
+ * other suite passes for a chart that filters nothing, or filters everything away.
+ */
+describe("a chart with a filter control", () => {
+  /* Seven profiles for each of two genders. Filtered, the chart draws one gender. */
+  const SAMPLE = sampleFor("maturitaetsprofil-geschlecht");
+  const SLICE = 7;
+  const marks = { marks: "rect.sszvis-bar", count: SLICE };
+
+  const controlled = (): Spec => {
+    const recipe = findRecipeOrThrow("bar-chart-vertical");
+    return {
+      ...initialSpec(summarize(recipe), SAMPLE.csv),
+      control: { kind: "filter", column: ColumnName.make("Geschlecht"), label: "Geschlecht" },
+    };
+  };
+
+  const bars = (container: HTMLElement) =>
+    [...container.querySelectorAll<SVGGraphicsElement>("rect.sszvis-bar")].map((bar) =>
+      Math.round(bar.getBBox().height),
+    );
+
+  /** The y axis' labels, which are the only numbers the chart writes down. */
+  const yLabels = (container: HTMLElement) =>
+    [...container.querySelectorAll("text")]
+      .map((text) => text.textContent ?? "")
+      .filter((label) => /^\d+$/.test(label));
+
+  /*
+   * Waits for the bars to stop moving, rather than for a number of frames.
+   *
+   * A bar transitions its geometry when its value changes, so the frame after a button is
+   * pressed shows the old slice on its way to the new one. Read there, the tallest bar is
+   * whichever one happens to be passing through - and the chart's own peak is mid-fall, so
+   * it reads higher than either slice ever gets.
+   */
+  const settled = async (container: HTMLElement) => {
+    const deadline = Date.now() + PAINT_TIMEOUT_MS;
+    let last = "";
+    while (Date.now() < deadline) {
+      await frame();
+      const now = bars(container).join();
+      if (now === last) return;
+      last = now;
+    }
+  };
+
+  const press = async (container: HTMLElement, label: string) => {
+    const button = [...container.querySelectorAll<HTMLButtonElement>(BUTTON)].find(
+      (candidate) => candidate.textContent === label,
+    );
+    expect(button, `no button labelled ${label}`).toBeDefined();
+    button?.click();
+    await settled(container);
+  };
+
+  test("should draw one slice of the table rather than all of it", async () => {
+    const container = await draw(findRecipeOrThrow("bar-chart-vertical"), controlled(), marks);
+
+    /* Fourteen rows in the sample; a chart drawing them all is one that never filtered. */
+    expect(container.querySelectorAll("rect.sszvis-bar")).toHaveLength(SLICE);
+  });
+
+  test("should offer every value of the column as a choice", async () => {
+    const container = await draw(findRecipeOrThrow("bar-chart-vertical"), controlled(), marks);
+
+    const labels = [...container.querySelectorAll(BUTTON)].map((button) => button.textContent);
+    expect(labels).toEqual(["Mädchen", "Jungen"]);
+    /* The first value in the column's own order, which is the slice the chart opens on. */
+    const current = [...container.querySelectorAll(BUTTON)].find(
+      (button) => button.getAttribute("aria-checked") === "true",
+    );
+    expect(current?.textContent).toBe("Mädchen");
+  });
+
+  test("should redraw the bars when another value is chosen", async () => {
+    const container = await draw(findRecipeOrThrow("bar-chart-vertical"), controlled(), marks);
+    await settled(container);
+    const before = bars(container);
+
+    await press(container, "Jungen");
+
+    const after = bars(container);
+    expect(after).toHaveLength(SLICE);
+    expect(after).not.toEqual(before);
+  });
+
+  test("should leave the axis where it is when another value is chosen", async () => {
+    const container = await draw(findRecipeOrThrow("bar-chart-vertical"), controlled(), marks);
+    await settled(container);
+    const before = { labels: yLabels(container), tallest: Math.max(...bars(container)) };
+
+    await press(container, "Jungen");
+
+    const after = { labels: yLabels(container), tallest: Math.max(...bars(container)) };
+    expect(after.labels).toEqual(before.labels);
+
+    /*
+     * And the scale behind them has not moved either, which the labels alone would not
+     * show: the two slices peak at 77.0 and 64.3, so a chart measuring each slice against
+     * itself draws both peaks at the same height. Drawn against the whole table they stand
+     * in proportion, and that ratio is the assertion.
+     */
+    expect(after.tallest / before.tallest).toBeCloseTo(64.3 / 77, 1);
+  });
+
+  test("should give way to a select menu where a row of buttons will not fit", async () => {
+    /* Narrower than the palm breakpoint, where the two controls trade places. */
+    const container = await draw(findRecipeOrThrow("bar-chart-vertical"), controlled(), marks, 320);
+
+    expect(container.querySelectorAll(BUTTON)).toHaveLength(0);
+    const options = [...container.querySelectorAll("select.sszvis-control-select__element option")];
+    expect(options.map((option) => option.textContent)).toEqual(["Mädchen", "Jungen"]);
+  });
+
+  test("should keep the control clear of the plot", async () => {
+    const container = await draw(findRecipeOrThrow("bar-chart-vertical"), controlled(), marks);
+
+    const control = container.querySelector(".sszvis-control-optionSelectable");
+    expect(control).not.toBeNull();
+    if (control === null) return;
+
+    /*
+     * Against the tallest bar rather than the first one drawn. The bar that reaches
+     * highest is the only one that can meet the control, so measuring any other leaves
+     * slack the size of whatever that bar happens to be worth - enough to keep passing
+     * with almost no headroom reserved at all.
+     */
+    const highest = Math.min(
+      ...[...container.querySelectorAll("rect.sszvis-bar")].map(
+        (bar) => bar.getBoundingClientRect().top,
+      ),
+    );
+    expect(control.getBoundingClientRect().bottom).toBeLessThanOrEqual(highest);
   });
 });
