@@ -1,5 +1,6 @@
+import { distinctValues, type Table } from "./csv";
 import { code, type Safe } from "./emit";
-import { FeatureKey, OptionKey, type Choice } from "./spec";
+import { FeatureKey, OptionKey, type Choice, type ColumnName } from "./spec";
 
 /** The option a map's colours are chosen with. */
 export const PALETTE = OptionKey.make("palette");
@@ -13,36 +14,49 @@ export const PALETTE = OptionKey.make("palette");
  */
 export const DIVERGING_FEATURE = FeatureKey.make("diverging");
 
-type PaletteKind = "sequential" | "diverging";
+/*
+ * What a scale is for, which is also what decides how it is written down.
+ *
+ * `sequential` and `diverging` shade a number and take a domain of two bounds; `qualitative`
+ * tells categories apart and takes the categories themselves; `keyed` is qualitative with
+ * its domain already built in, naming the values it colours.
+ */
+type PaletteKind = "sequential" | "diverging" | "qualitative" | "keyed";
 
-/** What the menu calls each family. Two, because the choice between them is a meaning. */
+/** What the menu calls each family. The choice between families is a meaning, not a look. */
 const GROUP: Record<PaletteKind, string> = {
   sequential: "Sequential",
   diverging: "Diverging",
+  qualitative: "Categorical",
+  keyed: "Gender",
 };
 
 export type Palette = {
   readonly value: string;
   readonly label: string;
   readonly kind: PaletteKind;
-  /** The sszvis factory that builds the scale. */
+  /** The sszvis factory that builds the scale. Empty where the chart decides for itself. */
   readonly scale: string;
   /** The scale's own stops, as CSS colours. The swatch is drawn from these. */
   readonly stops: readonly string[];
+  /** The values a keyed scale colours, which is the domain it carries. */
+  readonly keys?: readonly string[];
 };
 
 /*
- * The library's continuous scales, and only those. A choropleth shades an area by a number,
- * which rules out the qualitative scales - they are ordinal, keyed by a category name - and
- * the greys, which hold a single colour each.
+ * The continuous scales, for a chart that shades a number: a choropleth's areas.
+ *
+ * The qualitative scales are not here - they are ordinal, keyed by a category name - and
+ * neither are the greys, which hold a single colour each.
  *
  * The names are read off the stops rather than out of the module's own doc comment, which
  * has gone stale: it calls `scaleDivVal` red-to-blue and `scaleDivNtr` brown-to-green, and
  * neither matches the colours those scales actually carry.
  *
- * `stops` is what each scale's `range()` returns, and `palettes.browser.test.ts` holds it to that.
+ * `stops` is what each scale's `range()` returns, and `palettes.browser.test.ts` holds it
+ * to that.
  */
-const PALETTES = [
+const CONTINUOUS = [
   {
     value: "seq-blu",
     label: "Blue",
@@ -143,26 +157,191 @@ const PALETTES = [
   },
 ] as const satisfies readonly Palette[];
 
-export const palettes: readonly Palette[] = PALETTES;
+/**
+ * The value that leaves the choice to the chart.
+ *
+ * Six colours up to six categories and twelve past that, which is what every one of these
+ * recipes did before there was anything to choose and what `colorLegendLayout` still does
+ * on its own. Its swatch is the six, since that is what most charts land on.
+ */
+const AUTOMATIC = {
+  value: "auto",
+  label: "Automatic",
+  kind: "qualitative",
+  scale: "",
+  stops: [
+    "rgb(52, 49, 222)",
+    "rgb(219, 36, 125)",
+    "rgb(29, 148, 46)",
+    "rgb(251, 185, 0)",
+    "rgb(35, 195, 241)",
+    "rgb(255, 114, 12)",
+  ],
+} as const satisfies Palette;
+
+/*
+ * The scales for a chart that tells categories apart: a stack's slices, a line per series.
+ *
+ * The four `qual` scales take the chart's own categories as their domain. The three below
+ * them already carry one - they colour named values, and Zurich's tables are full of them:
+ * 62 charts in the reference corpus reach for a gender scale, which makes it the third most
+ * common colouring there is. They name those values in their labels, because a category
+ * they do not know is drawn in the scale's first colour rather than refused.
+ */
+const CATEGORICAL = [
+  AUTOMATIC,
+  {
+    value: "qual12",
+    label: "Twelve colours",
+    kind: "qualitative",
+    scale: "scaleQual12",
+    stops: [
+      "rgb(52, 49, 222)",
+      "rgb(10, 141, 246)",
+      "rgb(35, 195, 241)",
+      "rgb(123, 79, 183)",
+      "rgb(219, 36, 125)",
+      "rgb(251, 115, 126)",
+      "rgb(0, 124, 120)",
+      "rgb(29, 148, 46)",
+      "rgb(153, 195, 46)",
+      "rgb(154, 91, 1)",
+      "rgb(255, 114, 12)",
+      "rgb(251, 185, 0)",
+    ],
+  },
+  {
+    value: "qual6",
+    label: "Six colours",
+    kind: "qualitative",
+    scale: "scaleQual6",
+    stops: [
+      "rgb(52, 49, 222)",
+      "rgb(219, 36, 125)",
+      "rgb(29, 148, 46)",
+      "rgb(251, 185, 0)",
+      "rgb(35, 195, 241)",
+      "rgb(255, 114, 12)",
+    ],
+  },
+  {
+    value: "qual6a",
+    label: "Six blues and reds",
+    kind: "qualitative",
+    scale: "scaleQual6a",
+    stops: [
+      "rgb(52, 49, 222)",
+      "rgb(10, 141, 246)",
+      "rgb(35, 195, 241)",
+      "rgb(123, 79, 183)",
+      "rgb(219, 36, 125)",
+      "rgb(251, 115, 126)",
+    ],
+  },
+  {
+    value: "qual6b",
+    label: "Six greens and browns",
+    kind: "qualitative",
+    scale: "scaleQual6b",
+    stops: [
+      "rgb(0, 124, 120)",
+      "rgb(29, 148, 46)",
+      "rgb(153, 195, 46)",
+      "rgb(154, 91, 1)",
+      "rgb(255, 114, 12)",
+      "rgb(251, 185, 0)",
+    ],
+  },
+  {
+    value: "gender3",
+    label: "Frauen, Männer, Divers",
+    kind: "keyed",
+    scale: "scaleGender3",
+    stops: ["rgb(52, 152, 148)", "rgb(255, 215, 54)", "rgb(152, 106, 213)"],
+    keys: ["Frauen", "Männer", "Divers"],
+  },
+  {
+    value: "gender6",
+    label: "Schweizerinnen, Ausländerinnen, Schweizer, …",
+    kind: "keyed",
+    scale: "scaleGender6Origin",
+    stops: [
+      "rgb(0, 97, 93)",
+      "rgb(52, 152, 148)",
+      "rgb(218, 156, 0)",
+      "rgb(255, 215, 54)",
+      "rgb(94, 53, 154)",
+      "rgb(152, 106, 213)",
+    ],
+    keys: [
+      "Schweizerinnen",
+      "Ausländerinnen",
+      "Schweizer",
+      "Ausländer",
+      "Divers Schweiz",
+      "Divers Ausland",
+    ],
+  },
+  {
+    value: "gender5",
+    label: "Frau / Frau, Mann / Mann, Frau / Mann, …",
+    kind: "keyed",
+    scale: "scaleGender5Wedding",
+    stops: [
+      "rgb(52, 152, 148)",
+      "rgb(255, 215, 54)",
+      "rgb(52, 49, 222)",
+      "rgb(184, 184, 184)",
+      "rgb(214, 214, 214)",
+    ],
+    keys: ["Frau / Frau", "Mann / Mann", "Frau / Mann", "Frau / Unbekannt", "Mann / Unbekannt"],
+  },
+] as const satisfies readonly Palette[];
+
+export const palettes: readonly Palette[] = [...CONTINUOUS, ...CATEGORICAL];
 
 /** The one every map draws in until someone picks another: 11 of the corpus's 15 use it. */
-export const DEFAULT_PALETTE = PALETTES[0];
+export const DEFAULT_PALETTE = CONTINUOUS[0];
 
-export const paletteFor = (value: string): Palette =>
-  PALETTES.find((candidate) => candidate.value === value) ?? DEFAULT_PALETTE;
+/** The one every categorical chart draws in until someone picks another. */
+export const DEFAULT_CATEGORY_PALETTE = AUTOMATIC;
 
-/** The menu the option is drawn as: a swatch and a name, under the name of its family. */
-export const paletteChoices: readonly Choice[] = PALETTES.map(({ value, label, kind, stops }) => ({
-  value,
-  label,
-  group: GROUP[kind],
-  swatch: stops,
-}));
+const find = (from: readonly Palette[], value: string, fallback: Palette): Palette =>
+  from.find((candidate) => candidate.value === value) ?? fallback;
 
-export const isDiverging = (value: string): boolean => paletteFor(value).kind === "diverging";
+/*
+ * Each menu is built from its own family and each lookup falls back within it, so a spec
+ * carrying a palette its chart cannot use - a map saved as `qual6`, a stack saved as
+ * `div-ntr`, either of them saved before the list was as long as it is - draws in that
+ * chart's own default rather than emitting a scale that makes no sense for it.
+ */
+const continuousFor = (value: string): Palette => find(CONTINUOUS, value, DEFAULT_PALETTE);
+
+const categoricalFor = (value: string): Palette => find(CATEGORICAL, value, AUTOMATIC);
+
+/** The menu a family is drawn as: a swatch and a name, under the name of its own family. */
+const choicesOf = (from: readonly Palette[]): readonly Choice[] =>
+  from.map(({ value, label, kind, stops, scale, keys }) => ({
+    value,
+    label,
+    /* The automatic one belongs to no family: it stands for whichever the chart picks. */
+    ...(scale === "" ? {} : { group: GROUP[kind] }),
+    ...(keys === undefined ? {} : { expects: keys }),
+    swatch: {
+      colors: stops,
+      /* A continuous scale interpolates between its stops; a categorical one does not. */
+      blend: kind === "sequential" || kind === "diverging",
+    },
+  }));
+
+export const continuousChoices: readonly Choice[] = choicesOf(CONTINUOUS);
+
+export const categoricalChoices: readonly Choice[] = choicesOf(CATEGORICAL);
+
+export const isDiverging = (value: string): boolean => continuousFor(value).kind === "diverging";
 
 /**
- * The scale the map colours its areas with.
+ * The scale a map colours its areas with.
  *
  * Which domain it reads is the palette's to decide, not the chart's. A sequential ramp runs
  * from zero to the largest value, which is what `valueDomain` already holds; a diverging one
@@ -170,7 +349,51 @@ export const isDiverging = (value: string): boolean => paletteFor(value).kind ==
  * domain the diverging feature computes.
  */
 export const colorScaleCode = (value: string): Safe => {
-  const palette = paletteFor(value);
+  const palette = continuousFor(value);
   const domain = palette.kind === "diverging" ? "state.colorDomain" : "state.valueDomain";
   return code(`sszvis.${palette.scale}().domain(${domain})`);
+};
+
+/* Written out the way the recipes wrote it before there was anything to choose, so that a
+   chart left on Automatic emits what it always did. */
+const AUTOMATIC_CODE = code(
+  "state.categories.length > 6\n      ? sszvis.scaleQual12().domain(state.categories)\n      : sszvis.scaleQual6().domain(state.categories)",
+);
+
+/**
+ * The scale a chart tells its categories apart with.
+ *
+ * A `qual` scale is given the chart's categories as its domain, and has to be: an sszvis
+ * qualitative scale declares an `unknown` colour, which stops d3 extending the domain
+ * implicitly and paints every category alike. A keyed scale is left as it is, because the
+ * domain it already carries is the whole point of choosing it.
+ */
+export const categoryScaleCode = (value: string): Safe => {
+  const palette = categoricalFor(value);
+  if (palette.scale === "") return AUTOMATIC_CODE;
+  return palette.kind === "keyed"
+    ? code(`sszvis.${palette.scale}()`)
+    : code(`sszvis.${palette.scale}().domain(state.categories)`);
+};
+
+/**
+ * The values in `column` that `choice` will not be colouring.
+ *
+ * A scale carrying its own domain is chosen precisely so that a value always gets the same
+ * colour - Frauen teal wherever it appears. The cost is that it has nothing to say about a
+ * value it was not built for: that one takes the scale's first colour, and the legend is
+ * labelled from the scale's domain rather than the chart's, so a stack of four occupations
+ * drawn in a gender scale comes out one colour under a legend reading Frauen, Männer,
+ * Divers. Both are worth saying out loud before the chart is taken away.
+ *
+ * Empty for a choice that colours positions rather than values, which is most of them.
+ */
+export const unkeyedValues = (
+  choice: Choice | undefined,
+  table: Table,
+  column: ColumnName | undefined,
+): readonly string[] => {
+  const expects = choice?.expects;
+  if (expects === undefined || column === undefined || column === "") return [];
+  return distinctValues(table, column).filter((value) => !expects.includes(value));
 };

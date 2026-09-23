@@ -8,27 +8,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import type { Choice } from "../domain/spec";
+import type { Choice, Swatch } from "../domain/spec";
 
 /**
- * The colours a choice stands for, drawn as the ramp they make.
+ * The colours a choice stands for.
  *
- * Interpolated in Oklab rather than sRGB, which is CSS's default: the library builds its
- * scales in Lab, and a gradient run through sRGB would show a swatch the chart does not
- * match - most visibly in the middle of a diverging ramp, where sRGB dips toward grey.
+ * A blended one is drawn as the ramp its stops make, interpolated in Oklab rather than
+ * sRGB, which is CSS's default: the library builds its scales in Lab, and a gradient run
+ * through sRGB would show a swatch the chart does not match - most visibly in the middle
+ * of a diverging ramp, where sRGB dips toward grey. Everything else is drawn as the
+ * separate colours it is, in equal blocks, since nothing lies between two categories.
  */
-const Swatch = ({ stops }: { readonly stops: readonly string[] }) => {
-  /* One colour is a block, not a ramp, and `linear-gradient` will not take a single stop. */
-  const style =
-    stops.length === 1
-      ? { backgroundColor: stops[0] }
-      : { backgroundImage: `linear-gradient(to right in oklab, ${stops.join(", ")})` };
+const SwatchMark = ({ swatch }: { readonly swatch: Swatch }) => {
+  const stops = swatch.colors;
+  const shared = "h-3 w-10 shrink-0 overflow-hidden rounded-xs border border-border";
+
+  /* One colour is a block whichever it asked for, and `linear-gradient` takes no single stop. */
+  if (swatch.blend === true && stops.length > 1) {
+    return (
+      <span
+        aria-hidden="true"
+        className={shared}
+        style={{ backgroundImage: `linear-gradient(to right in oklab, ${stops.join(", ")})` }}
+      />
+    );
+  }
   return (
-    <span
-      aria-hidden="true"
-      className="h-3 w-10 shrink-0 rounded-xs border border-border"
-      style={style}
-    />
+    <span aria-hidden="true" className={`${shared} flex`}>
+      {stops.map((color, index) => (
+        <span
+          // oxlint-disable-next-line no-array-index-key -- a palette may repeat a colour, and its position is what identifies it.
+          key={index}
+          className="h-full flex-1"
+          style={{ backgroundColor: color }}
+        />
+      ))}
+    </span>
   );
 };
 
@@ -67,7 +82,7 @@ export const ChoiceSelect = ({
 
   const item = (choice: Choice) => (
     <SelectItem key={choice.value} value={choice.value}>
-      {choice.swatch !== undefined && <Swatch stops={choice.swatch} />}
+      {choice.swatch !== undefined && <SwatchMark swatch={choice.swatch} />}
       {choice.label}
     </SelectItem>
   );
@@ -79,12 +94,13 @@ export const ChoiceSelect = ({
       items={choices.map((choice) => ({ value: choice.value, label: choice.label }))}
     >
       <SelectTrigger id={id} className="w-full">
-        {current?.swatch !== undefined && <Swatch stops={current.swatch} />}
+        {current?.swatch !== undefined && <SwatchMark swatch={current.swatch} />}
         <SelectValue />
       </SelectTrigger>
       <SelectContent align="start">
         {groups.map(([name, items]) =>
-          name === "" ? (
+          /* A heading over everything in the menu names nothing, so one family gets none. */
+          name === "" || groups.length === 1 ? (
             <Fragment key={name}>{items.map(item)}</Fragment>
           ) : (
             <SelectGroup key={name}>

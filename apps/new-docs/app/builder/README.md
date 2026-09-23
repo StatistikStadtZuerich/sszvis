@@ -65,10 +65,22 @@ is one shape, so only group choices that emit the same shape. The map's eight co
 ramps are one expression with one of eight names in it, and the two families differ
 only in that a diverging ramp brings a second domain with it.
 
+A swatch `blend`s its colours into one ramp or shows them as the separate colours they
+are; only a continuous scale interpolates between its stops, and a blended set of twelve
+categories would read as a rainbow gradient.
+
 An option can also name, in `supersededBy`, a feature that does its job instead: while
 that feature is on, the panel says so underneath rather than leaving a live control
 that changes nothing. The map's bubbles supersede its colours, since they draw the
 areas in one flat grey.
+
+A choice that colours values rather than positions lists them in `expects`, and its
+option names in `keyedTo` the role whose column they are checked against. The library's
+gender scales carry their own domain - that is why they are chosen, so that Frauen is
+teal wherever it appears - and the cost is that a value they were not built for takes
+the scale's first colour while the legend is labelled from the scale's domain rather
+than the chart's. The panel names the values that will not be coloured rather than
+letting a stack come out one colour under a legend that describes something else.
 
 ## Data
 
