@@ -152,6 +152,13 @@ const Role = Schema.Struct({
 const Choice = Schema.Struct({
   value: Schema.String,
   label: Schema.String,
+  /*
+   * Two things a choice can carry for the menu that shows it, both optional because most
+   * options need neither: the name of the family it belongs to, which the menu groups by,
+   * and the colours it stands for, which the menu draws as a swatch beside the name.
+   */
+  group: Schema.optional(Schema.String),
+  swatch: Schema.optional(Schema.Array(Schema.String)),
 });
 
 export type Choice = typeof Choice.Type;
