@@ -10,7 +10,10 @@ import {
   DEFAULT_CATEGORY_PALETTE,
   DEFAULT_PALETTE,
   isDiverging,
+  DEFAULT_SERIES_PALETTE,
   palettes,
+  seriesChoices,
+  seriesScaleCode,
   unkeyedValues,
 } from "./palettes";
 
@@ -159,4 +162,48 @@ describe("the values a choice will not be colouring", () => {
   test("should be none when the option names no choice at all", () => {
     expect(unkeyedValues(undefined, table, column)).toEqual([]);
   });
+});
+
+describe("the colour scale a chart with one series is drawn with", () => {
+  /*
+   * The domain is the fix, not a detail. An sszvis qualitative scale declares an `unknown`
+   * colour, so a scale with nothing in its domain hands that colour back for every key -
+   * and keeps handing back the same one after `darker()`, which is why the highlight a
+   * tooltip drew was the colour the bar already was.
+   */
+  test("should name the series as the scale's whole domain", () => {
+    expect(seriesScaleCode("qual6b")).toBe("sszvis.scaleQual6b().domain([SERIES_KEY])");
+  });
+
+  test("should draw in what it drew in before by default", () => {
+    expect(seriesScaleCode(DEFAULT_SERIES_PALETTE.value)).toBe(
+      "sszvis.scaleQual12().domain([SERIES_KEY])",
+    );
+  });
+
+  /*
+   * The four `qual` scales and nothing else: Automatic has nothing to decide where one
+   * colour is picked, and a keyed scale colours values this chart does not have.
+   */
+  test("should offer the categorical scales alone", () => {
+    expect(seriesChoices.map((choice) => choice.value)).toEqual([
+      "qual12",
+      "qual6",
+      "qual6a",
+      "qual6b",
+    ]);
+    expect(seriesChoices.every((choice) => choice.expects === undefined)).toBe(true);
+  });
+
+  /* One family, so the menu has no heading to draw over it. */
+  test("should gather them under one name", () => {
+    expect(new Set(seriesChoices.map((choice) => choice.group))).toEqual(new Set(["Categorical"]));
+  });
+
+  test.each(["", "auto", "gender3", "seq-blu", "qual-chartreuse"])(
+    "should fall back to the default when the spec names %s",
+    (value) => {
+      expect(seriesScaleCode(value)).toBe("sszvis.scaleQual12().domain([SERIES_KEY])");
+    },
+  );
 });

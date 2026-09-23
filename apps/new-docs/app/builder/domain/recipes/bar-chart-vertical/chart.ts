@@ -115,7 +115,7 @@ sszvis.app<State, Actions>({
 
     const yPosScale = heightScale.copy().range([...heightScale.range()].reverse());
 
-    const cScale = sszvis.scaleQual12();
+    const cScale = __C_SCALE__;
     const barFill = cScale(SERIES_KEY);
     // {{block:colors}}
 

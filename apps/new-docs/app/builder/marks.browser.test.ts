@@ -664,3 +664,80 @@ describe("a map drawn in a diverging palette", () => {
     expect(labels).toEqual([sszvis.formatNumber(0), sszvis.formatNumber(AMPLITUDE)]);
   });
 });
+
+/*
+ * The highlight a tooltip draws on a bar, which until now was the colour the bar already
+ * was.
+ *
+ * A chart with one series names it rather than reading it from a column, and that name is
+ * the colour scale's whole domain. Leaving the domain unset looks harmless and type-checks
+ * either way, but an sszvis qualitative scale declares an `unknown` colour: with nothing in
+ * its domain it hands that colour back for every key, and goes on handing back the same one
+ * after `darker()`. So `barFillHighlight` and `barFill` were the same colour and hovering a
+ * bar changed nothing, in the builder's charts and in the library's own examples both.
+ *
+ * Nothing but drawing it could catch that. Both spellings compile, both emit a chart, and
+ * both draw six bars.
+ */
+describe("the highlight on a hovered bar", () => {
+  const marks = { marks: "rect.sszvis-bar", count: 6 };
+
+  const fills = (container: HTMLElement) =>
+    [...container.querySelectorAll(marks.marks)].map((bar) => bar.getAttribute("fill"));
+
+  /** Moves the pointer over the chart, which is what the move behaviour listens for. */
+  const hover = async (container: HTMLElement) => {
+    const surface = container.querySelector("rect.sszvis-interactive");
+    expect(surface, "the chart has no interaction surface").not.toBeNull();
+    const box = surface?.getBoundingClientRect();
+    if (box === undefined) return;
+    for (const type of ["mouseover", "mousemove"]) {
+      surface?.dispatchEvent(
+        new MouseEvent(type, {
+          bubbles: true,
+          clientX: box.left + box.width / 12,
+          clientY: box.top + box.height / 2,
+        }),
+      );
+    }
+    await frame();
+    await frame();
+  };
+
+  test("should not be the colour the bar already was", async () => {
+    const recipe = findRecipeOrThrow("bar-chart-vertical");
+    const base = initialSpec(summarize(recipe));
+    const container = await draw(
+      recipe,
+      { ...base, features: [FeatureKey.make("tooltip")] },
+      marks,
+    );
+
+    expect(new Set(fills(container)).size, "the bars start out one colour").toBe(1);
+
+    await hover(container);
+
+    /*
+     * One bar picked out and five left alone. A count of one here is the bug: the chart
+     * selected a bar, drew it in `barFillHighlight`, and that was the same colour.
+     */
+    expect(new Set(fills(container)).size).toBe(2);
+  });
+
+  test("should follow the palette the spec names", async () => {
+    const recipe = findRecipeOrThrow("bar-chart-vertical");
+    const base = initialSpec(summarize(recipe));
+    const container = await draw(
+      recipe,
+      {
+        ...base,
+        options: { ...base.options, [OptionKey.make("palette")]: "qual6b" },
+        features: [],
+      },
+      marks,
+    );
+
+    /* The first colour of `scaleQual6b`, which is the one a single series takes. */
+    expect(fills(container)[0]).toBe(String(sszvis.scaleQual6b().range()[0]));
+  });
+});

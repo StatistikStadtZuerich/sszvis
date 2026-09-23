@@ -74,6 +74,13 @@ that feature is on, the panel says so underneath rather than leaving a live cont
 that changes nothing. The map's bubbles supersede its colours, since they draw the
 areas in one flat grey.
 
+Which families a chart is offered is the chart's own to say, because the question a
+scale answers differs: a choropleth shades a number, so `domain/palettes.ts` offers it
+the sequential and diverging ramps; a stack tells categories apart, so it offers the
+categorical ones; a chart with a single named series gets the four `qual` scales, since
+Automatic has nothing to decide where one colour is picked. A spec carrying a palette
+its chart cannot use falls back to that chart's own default.
+
 A choice that colours values rather than positions lists them in `expects`, and its
 option names in `keyedTo` the role whose column they are checked against. The library's
 gender scales carry their own domain - that is why they are chosen, so that Frauen is

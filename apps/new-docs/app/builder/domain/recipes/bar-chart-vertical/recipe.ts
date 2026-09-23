@@ -1,6 +1,7 @@
 import { referenceLinesCode } from "../../annotations";
 import { controlFields, CONTROLS_FEATURE, hasControl } from "../../controls";
 import { code, str } from "../../emit";
+import { DEFAULT_SERIES_PALETTE, PALETTE, seriesChoices, seriesScaleCode } from "../../palettes";
 import {
   CATEGORY,
   DESCRIPTION,
@@ -45,6 +46,13 @@ export const barChartVertical: RecipeDef = {
     { key: TITLE, label: "Title", fallback: "Vertikales Balkendiagramm" },
     { key: DESCRIPTION, label: "Description", fallback: "" },
     { key: SERIES_KEY, label: "Series name", fallback: "Serie" },
+    {
+      key: PALETTE,
+      label: "Colours",
+      hint: "Which of the library's categorical scales the bars are drawn from. A single series takes its first colour.",
+      fallback: DEFAULT_SERIES_PALETTE.value,
+      choices: seriesChoices,
+    },
     { key: UNIT, label: "Tooltip unit", fallback: "Einheiten" },
   ],
   /* No sort feature: the bars follow the row order of the data, which the table editor sorts. */
@@ -58,6 +66,7 @@ export const barChartVertical: RecipeDef = {
     PLOT_DATA: code("state.data"),
     ...controlFields(spec),
     SERIES_KEY: str(option(SERIES_KEY)),
+    C_SCALE: seriesScaleCode(option(PALETTE)),
     CATEGORY_FIELD: str(spec.fields[CATEGORY] ?? ""),
     VALUE_FIELD: str(spec.fields[VALUE] ?? ""),
     /* The tooltip feature overrides this. */

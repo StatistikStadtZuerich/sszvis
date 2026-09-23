@@ -105,7 +105,7 @@ sszvis.app<State, Actions>({
       .paddingOuter(chartDimensions.outerRatio)
       .rangeRound([0, chartDimensions.totalHeight]);
 
-    const cScale = sszvis.scaleQual12();
+    const cScale = __C_SCALE__;
     const barFill = cScale(SERIES_KEY);
     // {{block:colors}}
 
