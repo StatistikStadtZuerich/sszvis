@@ -1,0 +1,283 @@
+/**
+ * Gestapeltes horizontales Balkendiagramm
+ *
+ * @generator sszvis-chart-builder
+ * @sszvis    <version>
+ * @chart     bar-chart-horizontal-stacked
+ * @features  tooltip, legend
+ * @date      <date>
+ */
+
+// Magic Numbers
+
+const MAX_WIDTH = 800;
+const PADDING_TOP = 20;
+
+// Types
+
+type Datum = {
+  category: string;
+  yValue: string;
+  xValue: number;
+};
+
+/** One layer of the stack, as `stackedBarHorizontalLayout` hands it over. */
+type Series = import("sszvis").StackedBarSeries<Datum>;
+
+/** One slice of one bar: the stacked bounds plus the datum they were built from. */
+type Slice = import("sszvis").StackedBarSlice<Datum>;
+
+type State = {
+  data: Datum[];
+  yValues: string[];
+  categories: string[];
+  stackedData: Series[];
+  maxStacked: number;
+  minStacked: number;
+  selection: Slice[];
+};
+
+type Actions = {
+  showTooltip: (state: State, e: Event, slice: Slice) => void;
+  hideTooltip: (state: State) => void;
+};
+
+// Responsive Props
+
+const queryProps = sszvis.responsiveProps().prop("ticks", { palm: 3, _: 4 });
+
+// Accessors
+
+/*
+ * The value runs along x and the bar's own category down y, as in the plain
+ * horizontal chart; `cAcc` is the slice's series, which is the third dimension.
+ */
+const xAcc = (d: Datum) => d.xValue;
+const yAcc = (d: Datum) => d.yValue;
+const cAcc = (d: Datum) => d.category;
+
+// Application
+
+sszvis.app<State, Actions>({
+  fallback: { element: config.id, src: config.fallback },
+
+  init: (state) =>
+    d3
+      .csv(config.data, (d) => ({
+        yValue: d["Jahr"] ?? "",
+        category: d["Berufsfeld"] ?? "",
+        xValue: sszvis.parseNumber(d["Anzahl"]),
+      }))
+      .then((data) => {
+        // NOTE: The layout does the stacking: it returns the keys in layer order,
+        // one series per key, and the widest total, so nothing here has to know
+        // how d3's stack is shaped.
+        const layout = sszvis.stackedBarHorizontalLayout(yAcc, cAcc, xAcc)(data);
+        state.data = data;
+        state.yValues = sszvis.set(data, yAcc);
+        state.categories = layout.keys;
+        state.stackedData = layout.series;
+        state.maxStacked = layout.maxValue;
+        state.minStacked = layout.minValue;
+        state.selection = [];
+      }),
+
+  actions: {
+    showTooltip(state, _e, slice) {
+      state.selection = [slice];
+    },
+
+    hideTooltip(state) {
+      state.selection = [];
+    },
+  },
+
+  render(state, actions) {
+    const props = queryProps(sszvis.measureDimensions(config.id));
+
+    // NOTE: The labels run horizontally, so the legend reserves a fixed padding for
+    // the axis and never measures `axisLabels`.
+    const legendLayout = sszvis.colorLegendLayout({ legendLabels: state.categories }, config.id);
+
+    const colorLegend = legendLayout.legend;
+
+    // NOTE: The height and the bottom padding both depend on how many rows the
+    // legend needed, so the legend is laid out before the bounds it feeds.
+    const bottomPadding = legendLayout.bottomPadding;
+    const chartDimensions = sszvis.dimensionsHorizontalBarChart(state.yValues.length);
+    const bounds = sszvis.bounds(
+      {
+        height: PADDING_TOP + chartDimensions.totalHeight + bottomPadding,
+        top: PADDING_TOP,
+        bottom: bottomPadding,
+      },
+      config.id,
+    );
+    const chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
+
+    // Scales
+
+    /*
+     * Both bounds, so a stack that reaches left of the baseline is inside the plot. The
+     * layout reports `minValue` for exactly this case and the component draws negative
+     * slices on the other side of the baseline; a domain starting at zero mapped them
+     * off the chart. Stretched to cover zero so the bars stand on the axis.
+     *
+     * NOTE: A nonzero span when there is nothing to scale. d3 maps a degenerate `[0, 0]`
+     * domain to the MIDPOINT of its range, so a pasted table whose value column is all
+     * zeros - or one whose value role was mapped to a column that does not parse - would
+     * draw every mark at half width rather than at none, which reads as data.
+     */
+    const valueLow = Math.min(0, state.minStacked);
+    const valueHigh = Math.max(0, state.maxStacked);
+    const xScale = d3
+      .scaleLinear()
+      .domain(valueLow === valueHigh ? [0, 1] : [valueLow, valueHigh])
+      .range([0, chartWidth]);
+
+    const yScale = d3
+      .scaleBand<string>()
+      .domain(state.yValues)
+      .padding(chartDimensions.padRatio)
+      .paddingOuter(chartDimensions.outerRatio)
+      .range([0, chartDimensions.totalHeight]);
+
+    const cScale = legendLayout.scale;
+
+    // Layers
+
+    const chartLayer = sszvis
+      .createSvgLayer(config.id, bounds, {
+        title: "Gestapeltes horizontales Balkendiagramm",
+        description: "",
+      })
+      .datum(state.stackedData);
+
+    const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+
+    // Components
+
+    const horizontalBars = sszvis
+      .stackedBarHorizontal<Datum>()
+      .xScale(xScale)
+      .height(chartDimensions.barHeight)
+      .yScale(yScale)
+      .fill((slice) => sliceFill(slice, cScale, isSelected(state)));
+
+    const xAxis = sszvis
+      .axisX()
+      .scale(xScale)
+      .orient("bottom")
+      .title("")
+      .alignOuterLabels(true)
+      .ticks(props.ticks);
+
+    // NOTE: Oriented right, so the bar labels are drawn over the bars rather
+    // than in a gutter that a long name would overflow.
+    const yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
+
+    const tooltipText = sszvis
+      .modularTextHTML()
+      .bold((d: Slice) => {
+        const value = sliceValue(d);
+        return Number.isNaN(value) ? "keine" : sszvis.formatNumber(value);
+      })
+      .plain("")
+      .newline()
+      .plain(sliceSeries);
+
+    const tooltip = sszvis
+      .tooltip<Slice>()
+      .renderInto(tooltipLayer)
+      .orientation(sszvis.fitTooltip("bottom", bounds))
+      .header(tooltipText)
+      .visible(isSelected(state));
+
+    // Rendering
+
+    chartLayer.attr(
+      "transform",
+      sszvis.translateString(bounds.innerWidth / 2 - chartWidth / 2, bounds.padding.top),
+    );
+
+    const bars = chartLayer.selectGroup("barchart").call(horizontalBars);
+
+    chartLayer
+      .selectGroup("xAxis")
+      .attr("transform", sszvis.translateString(0, chartDimensions.totalHeight))
+      .call(xAxis);
+
+    chartLayer
+      .selectGroup("yAxis")
+      .attr("transform", sszvis.translateString(0, chartDimensions.axisOffset))
+      .call(yAxis);
+
+    bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+    chartLayer
+      .selectGroup("colorLegend")
+      .attr(
+        "transform",
+        sszvis.translateString(0, chartDimensions.totalHeight + legendLayout.axisLabelPadding),
+      )
+      .call(colorLegend);
+
+    // Interaction
+
+    // NOTE: Panning rather than move: a slice is a shape the pointer is inside,
+    // not a position along a scale, so the bar itself is the event target.
+    const interactionLayer = sszvis
+      .panning<Slice>()
+      .elementSelector(".sszvis-bar")
+      .on("start", actions.showTooltip)
+      .on("pan", actions.showTooltip)
+      .on("end", actions.hideTooltip);
+
+    bars.call(interactionLayer);
+  },
+});
+
+// Helper functions
+
+/*
+ * The tooltip's datum is a slice, not a row - but every slice carries the row it was
+ * built from, so these read the ordinary fields through it. A slice with no datum is
+ * a gap in the stack, and reads as empty rather than throwing.
+ */
+const sliceCategory = (slice: Slice) => (slice.data === undefined ? "" : yAcc(slice.data));
+const sliceSeries = (slice: Slice) => (slice.data === undefined ? "" : cAcc(slice.data));
+/*
+ * NOTE: Read off the slice's own bounds rather than through `slice.data`. The layout sums
+ * every row that shares a (bar, series) cell into the width it draws, but keeps only the
+ * first of those rows as `data` - so a pasted table with a repeated cell would draw the
+ * total and report one row's share of it. The bounds are what the reader can see.
+ *
+ * NOTE: Except when nothing in the cell parsed. `d3.sum` skips the values it cannot read
+ * and returns 0 for a cell of nothing but those, which is a height the reader cannot tell
+ * from a real zero - so a flat slice whose own row has no number reads as missing, and
+ * the tooltip says so rather than inventing a nought.
+ */
+const sliceValue = (slice: Slice) => {
+  if (slice.data === undefined) return Number.NaN;
+  const drawn = slice[1] - slice[0];
+  return drawn === 0 && !Number.isFinite(xAcc(slice.data)) ? Number.NaN : drawn;
+};
+
+const isSelected = (state: State) => (d: Slice) => sszvis.contains(state.selection, d);
+
+/**
+ * The slice's own colour, darkened while it is the one being read.
+ *
+ * NOTE: The scale and the predicate are passed in because both are locals of
+ * `render`, and a slice with no datum returns undefined, which removes the
+ * attribute rather than painting the default black.
+ */
+const sliceFill = (
+  slice: Slice,
+  scale: import("sszvis").ExtendedOrdinalScale,
+  selected: (slice: Slice) => boolean,
+) => {
+  if (slice.data === undefined) return undefined;
+  const colour = scale(cAcc(slice.data));
+  return selected(slice) ? sszvis.slightlyDarker(colour) : colour;
+};
