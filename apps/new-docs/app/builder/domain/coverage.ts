@@ -82,20 +82,39 @@ export const cases = (recipes: readonly Recipe[]): readonly Case[] =>
         spec: { ...spec, fields: { ...spec.fields, [role.key]: "" } },
       }));
     /*
-     * One case per value of a choice option. A choice can change which hidden
-     * features a spec implies - a map's geography decides whether its lake is
-     * drawn, and whether that lake has a shoreline - so leaving the other values
-     * out would type-check one geography and ship six.
+     * The values of a choice option, less the ones nothing would be learned from.
+     *
+     * A choice can change which hidden features a spec implies - a map's geography decides
+     * whether its lake is drawn, and whether that lake has a shoreline - so leaving the
+     * other values out would type-check one geography and ship six. Two of them are worth
+     * dropping all the same. The value the spec already carries is the base case, emitted
+     * verbatim a second time. And where the option gathers its choices into families, the
+     * family is the shape: a map's eight colour ramps are one expression with one of eight
+     * names in it, and only the two families differ in what they emit - a diverging ramp
+     * brings a second domain, a sequential one does not. Keeping all eight cost a third of
+     * this file's running time to type-check the same two shapes four times each.
+     *
+     * The limit, for an option added later: this trusts a family to be one shape. An option
+     * whose choices were grouped for the menu's sake but emitted different types within a
+     * group would have one of them type-checked and the rest not. Leave `group` unset there.
      */
-    const chosen = recipe.options.flatMap((option) =>
-      (option.choices ?? [])
-        .filter((choice) => choice.value !== spec.options[option.key])
+    const chosen = recipe.options.flatMap((option) => {
+      const current = spec.options[option.key] ?? option.fallback;
+      const seen = new Set<string>();
+      return (option.choices ?? [])
+        .filter((choice) => choice.value !== current)
+        .filter((choice) => {
+          if (choice.group === undefined) return true;
+          if (seen.has(choice.group)) return false;
+          seen.add(choice.group);
+          return true;
+        })
         .map((choice) => ({
           label: `${recipe.key}-${option.key}-${choice.value}`,
           recipe,
           spec: { ...spec, options: { ...spec.options, [option.key]: choice.value } },
-        })),
-    );
+        }));
+    });
     const annotated =
       recipe.annotationAxes.length === 0
         ? []

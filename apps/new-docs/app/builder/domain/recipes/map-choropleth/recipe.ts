@@ -152,6 +152,7 @@ export const mapChoropleth: RecipeDef = {
       label: "Colours",
       fallback: DEFAULT_PALETTE.value,
       choices: paletteChoices,
+      supersededBy: BUBBLE,
     },
   ],
   /* Bubbles after the legend: it overrides which legend the legend feature draws. */
