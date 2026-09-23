@@ -57,6 +57,19 @@ directives:
 
 Text outside a region is ignored, so a file can carry explanatory prose.
 
+An option with `choices` is drawn as a menu, and a choice can ask that menu for two
+things beyond its name: a `swatch` of the colours it stands for, and a `group` naming
+the family it belongs to, which the menu heads. `group` is load-bearing beyond the
+menu - `coverage.ts` type-checks one choice per family, on the grounds that a family
+is one shape, so only group choices that emit the same shape. The map's eight colour
+ramps are one expression with one of eight names in it, and the two families differ
+only in that a diverging ramp brings a second domain with it.
+
+An option can also name, in `supersededBy`, a feature that does its job instead: while
+that feature is on, the panel says so underneath rather than leaving a live control
+that changes nothing. The map's bubbles supersede its colours, since they draw the
+areas in one flat grey.
+
 ## Data
 
 Sample tables live in `domain/samples.ts`, independent of the recipes. A recipe
