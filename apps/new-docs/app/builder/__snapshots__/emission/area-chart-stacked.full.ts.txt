@@ -133,7 +133,7 @@ sszvis.app<State, Actions>({
     const props = queryProps(sszvis.measureDimensions(config.id));
 
     // NOTE: The legend is laid out first because it takes height from the
-    // chart: its measurements feed both the colour scale and the bounds.
+    // chart: its measurements feed the bounds.
     const legendLayout = sszvis.colorLegendLayout(
       {
         axisLabels: state.timeExtent.map(xLabelFormat),
@@ -141,8 +141,6 @@ sszvis.app<State, Actions>({
       },
       config.id,
     );
-
-    const colorLegend = legendLayout.legend;
 
     const bounds = sszvis.bounds(
       { top: 20, bottom: legendBottomPadding(legendLayout, state.categories) },
@@ -164,7 +162,10 @@ sszvis.app<State, Actions>({
       .domain([0, state.maxStacked || 1])
       .range([bounds.innerHeight, TOP_HEADROOM]);
 
-    const cScale = legendLayout.scale;
+    const cScale =
+      state.categories.length > 6
+        ? sszvis.scaleQual12().domain(state.categories)
+        : sszvis.scaleQual6().domain(state.categories);
 
     // Layers
 
@@ -240,6 +241,11 @@ sszvis.app<State, Actions>({
       .x(xScale(state.highlightDate))
       .y0((d) => yScale(d[0]))
       .y1((d) => yScale(d[1]));
+
+    // NOTE: The layout sizes the legend and picks a scale of its own on the way; the
+    // chart's colours are the chart's, so the swatches are keyed to the same scale the
+    // marks are rather than to whatever the layout would have chosen.
+    const colorLegend = legendLayout.legend.scale(cScale);
 
     // Rendering
 

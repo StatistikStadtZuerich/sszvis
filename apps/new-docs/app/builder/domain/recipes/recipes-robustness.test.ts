@@ -144,9 +144,11 @@ describe("vertical bar chart layout", () => {
 });
 
 /*
- * `sszvis.colorLegendLayout` chooses qual6 at six labels or fewer and qual12 above,
- * and the legend feature hands that scale to the chart. The colours must not depend
- * on whether the legend is shown, so the recipe's own default follows the same rule.
+ * The chart's colours are the chart's. `sszvis.colorLegendLayout` picks a scale of its own
+ * on the way to sizing the legend - qual6 at six labels or fewer, qual12 above - and the
+ * legend feature used to hand that scale back to the chart, which made the colours depend
+ * on whether the legend was shown and left nothing for the palette option to decide. Now
+ * the recipe names the scale and the legend is keyed to it.
  */
 describe("the line chart's colours", () => {
   const withoutLegend = (recipe: Recipe) => {
@@ -156,14 +158,21 @@ describe("the line chart's colours", () => {
     );
   };
 
-  test("should pick the palette by the same count the legend does", () => {
+  /** The whole `const cScale = ...;` statement, however many lines it runs to. */
+  const scaleOf = (source: string) => sliceFrom(source, "const cScale =", ";\n");
+
+  test("should leave the palette to the chart by default, on the count the legend uses", () => {
     const source = withoutLegend(recipeNamed("line-chart"));
     expect(source).toContain("state.categories.length > 6");
     expect(source).toContain("sszvis.scaleQual12().domain(state.categories)");
     expect(source).toContain("sszvis.scaleQual6().domain(state.categories)");
   });
 
-  test("should let the legend supply the scale when it is shown", () => {
-    expect(emit("line-chart")).toContain("const cScale = legendLayout.scale;");
+  test("should draw in the same colours whether or not the legend is shown", () => {
+    expect(scaleOf(emit("line-chart"))).toBe(scaleOf(withoutLegend(recipeNamed("line-chart"))));
+  });
+
+  test("should key the legend's swatches to the scale the marks are drawn with", () => {
+    expect(emit("line-chart")).toContain("legendLayout.legend.scale(cScale)");
   });
 });

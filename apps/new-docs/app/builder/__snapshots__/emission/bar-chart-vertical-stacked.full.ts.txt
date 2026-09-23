@@ -112,8 +112,6 @@ sszvis.app<State, Actions>({
       config.id,
     );
 
-    const colorLegend = legendLayout.legend;
-
     const bounds = sszvis.bounds(
       {
         top: 30,
@@ -158,7 +156,10 @@ sszvis.app<State, Actions>({
       .domain(valueLow === valueHigh ? [0, 1] : [valueLow, valueHigh])
       .range([bounds.innerHeight, 0]);
 
-    const cScale = legendLayout.scale;
+    const cScale =
+      state.categories.length > 6
+        ? sszvis.scaleQual12().domain(state.categories)
+        : sszvis.scaleQual6().domain(state.categories);
 
     // Layers
 
@@ -215,6 +216,11 @@ sszvis.app<State, Actions>({
       .orientation(sszvis.fitTooltip("bottom", bounds))
       .header(tooltipText)
       .visible(isSelected(state));
+
+    // NOTE: The layout sizes the legend and picks a scale of its own on the way; the
+    // chart's colours are the chart's, so the swatches are keyed to the same scale the
+    // marks are rather than to whatever the layout would have chosen.
+    const colorLegend = legendLayout.legend.scale(cScale);
 
     // Rendering
 
