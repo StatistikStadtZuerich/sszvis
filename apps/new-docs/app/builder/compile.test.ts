@@ -221,3 +221,56 @@ describe("spec text in the generated code", () => {
     expect(ts).toContain(`d[${JSON.stringify(column)}]`);
   });
 });
+
+describe("the colours a map is drawn in", () => {
+  const entry = Effect.runSync(findRecipe("map-choropleth"));
+
+  const build = async (palette: string) => {
+    const { ts } = await generate(entry, {
+      recipe: entry.key,
+      csv: sampleFor(entry.sample).csv,
+      fields: mapping({ geo: "Qcode", value: "Ausländeranteil" }),
+      options: opts(palette === "" ? {} : { palette }),
+      features: [FeatureKey.make("legend")],
+      tooltip: tip("value"),
+      annotations: [],
+      control: null,
+      kinds: {},
+      chosen: [],
+    });
+    return ts.raw;
+  };
+
+  test("should draw in the default blue when the spec names no palette", async () => {
+    expect(await build("")).toContain("sszvis.scaleSeqBlu().domain(state.valueDomain)");
+  });
+
+  test("should draw in the palette the spec names", async () => {
+    expect(await build("seq-brn")).toContain("sszvis.scaleSeqBrn().domain(state.valueDomain)");
+  });
+
+  /*
+   * The whole point of the diverging feature. A ramp whose middle stop is its neutral colour
+   * has to read that middle where the values change sign, so a diverging palette brings a
+   * domain that straddles zero - and leaves `valueDomain` alone, because the bubble radii
+   * read that one and a negative radius is not a circle.
+   */
+  test("should bring a straddling domain when the palette diverges", async () => {
+    const ts = await build("div-val-gry");
+    expect(ts).toContain("sszvis.scaleDivValGry().domain(state.colorDomain)");
+    expect(ts).toContain("const amplitude = d3.max(data, (d) => Math.abs(d.value)) ?? 0;");
+    expect(ts).toContain("state.colorDomain = [-amplitude, amplitude];");
+    expect(ts).toContain("state.valueDomain = [0, d3.max(data, (d) => d.value) ?? 0];");
+  });
+
+  test("should bring no second domain when the palette does not diverge", async () => {
+    expect(await build("seq-grn")).not.toContain("colorDomain");
+  });
+
+  /* A saved spec can name a palette that has since been dropped; a map is still a map. */
+  test("should fall back to the default when the spec names a palette that is gone", async () => {
+    expect(await build("seq-chartreuse")).toContain(
+      "sszvis.scaleSeqBlu().domain(state.valueDomain)",
+    );
+  });
+});

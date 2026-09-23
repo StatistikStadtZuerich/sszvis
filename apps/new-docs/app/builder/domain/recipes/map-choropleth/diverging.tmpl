@@ -1,0 +1,24 @@
+A domain for a ramp that runs out from a neutral middle rather than up from nothing.
+
+A diverging scale's middle stop means "neither", and it only says that where the values
+change sign. The map's own `valueDomain` runs from zero to the largest value, which would
+put that neutral at half the maximum and paint the smallest area in the far negative
+colour - a map of quarters between 15% and 40% would read as though half the city were in
+deficit. So a diverging palette works out a domain of its own.
+
+`valueDomain` is left as it is rather than widened, because the bubbles read it too and a
+radius scale handed a negative domain draws circles with negative radii.
+
+// #hidden
+
+// #region stateTypes
+colorDomain: [number, number];
+// #endregion
+
+// #region init
+// NOTE: The larger of the two extremes, mirrored, so that a value and its negative sit the
+// same distance from the neutral middle - which is what makes the two sides comparable.
+// An area with no number is skipped here as it is skipped on the map.
+const amplitude = d3.max(data, (d) => Math.abs(d.value)) ?? 0;
+state.colorDomain = [-amplitude, amplitude];
+// #endregion

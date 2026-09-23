@@ -4,6 +4,7 @@ import { BuilderCompileError, code, scalarHoles, type Safe } from "./emit";
 import {
   ColumnName,
   FeatureKey,
+  OptionKey,
   VALUE,
   type Feature,
   type Recipe,
@@ -118,6 +119,8 @@ const IMPLIED_PROBES: readonly Partial<Spec>[] = [
     csv: "Filter\na\nb",
     control: { kind: "filter", column: ColumnName.make("Filter"), label: "" },
   },
+  /* A diverging palette, which is the other thing a spec can carry that implies a feature. */
+  { options: { [OptionKey.make("palette")]: "div-val" } },
 ];
 
 const probeSpec = (def: RecipeDef, over: Partial<Spec>): Spec => ({
