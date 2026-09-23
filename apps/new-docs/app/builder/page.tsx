@@ -45,6 +45,7 @@ import {
   serialize,
 } from "./domain/csv";
 import { CONTROLS_FEATURE, renameControl } from "./domain/controls";
+import { unkeyedValues } from "./domain/palettes";
 import { applySample, switchRecipe, unmappedRoles } from "./domain/initial-spec";
 import { isPristine, type Sample, samples } from "./domain/samples";
 import { KIND_LABEL, optionValue, type RecipeSummary, TITLE } from "./domain/spec";
@@ -55,6 +56,9 @@ clientLoader.hydrate = true as const;
 export function HydrateFallback() {
   return <StartupNotice title="Starting the chart builder…" />;
 }
+
+/** "a, b and c", for naming the values a scale will not be colouring. */
+const listing = new Intl.ListFormat("en", { style: "long", type: "conjunction" });
 
 export default function BuilderPage() {
   const recipes = useAtomValue(recipesAtom);
@@ -234,6 +238,7 @@ const Builder = ({
               .filter((option) => option.choices !== undefined)
               .map((option) => {
                 const id = `option-${option.key}`;
+                const value = optionValue(recipe.options, spec, option.key);
                 /* The feature that has taken this option's job over, while it is on. The
                    choice is still the author's to make and keep; it just is not reaching
                    the chart, and a control that silently does nothing is a bug report. */
@@ -241,22 +246,38 @@ const Builder = ({
                   option.supersededBy !== undefined && spec.features.includes(option.supersededBy)
                     ? recipe.features.find((feature) => feature.key === option.supersededBy)
                     : undefined;
+                /* And the values the choice will not be colouring, where it colours values
+                   rather than positions. See `unkeyedValues`. */
+                const unkeyed = unkeyedValues(
+                  (option.choices ?? []).find((choice) => choice.value === value),
+                  table,
+                  option.keyedTo === undefined ? undefined : spec.fields[option.keyedTo],
+                );
+                /*
+                 * One line under the control, in the order of how much it matters: a
+                 * feature has taken the option over, or the choice will not reach some of
+                 * the data, or the option has something of its own to say.
+                 */
+                const caption =
+                  superseded !== undefined
+                    ? `${superseded.label} is on, and it decides this instead.`
+                    : unkeyed.length > 0
+                      ? `This scale does not colour ${listing.format(unkeyed)}, so ${
+                          unkeyed.length === 1 ? "that value takes" : "those values take"
+                        } its first colour and the legend names its own values instead.`
+                      : (option.hint ?? "");
                 return (
                   <Field key={option.key}>
                     <FieldLabel htmlFor={id}>{option.label}</FieldLabel>
                     <ChoiceSelect
                       id={id}
-                      value={optionValue(recipe.options, spec, option.key)}
+                      value={value}
                       choices={option.choices ?? []}
                       onChange={(next) =>
                         form.setFieldValue("options", { ...spec.options, [option.key]: next })
                       }
                     />
-                    {superseded !== undefined && (
-                      <p className={typefaceCaption()}>
-                        {superseded.label} is on, and it decides this instead.
-                      </p>
-                    )}
+                    {caption !== "" && <p className={typefaceCaption()}>{caption}</p>}
                   </Field>
                 );
               })}

@@ -6,7 +6,7 @@ import {
   DIVERGING_FEATURE,
   isDiverging,
   PALETTE,
-  paletteChoices,
+  continuousChoices,
 } from "../../palettes";
 import {
   DESCRIPTION,
@@ -150,8 +150,9 @@ export const mapChoropleth: RecipeDef = {
     {
       key: PALETTE,
       label: "Colours",
+      hint: "How the value is shaded. A diverging ramp reads out from a neutral middle, so it is keyed to the larger extreme either side of zero.",
       fallback: DEFAULT_PALETTE.value,
-      choices: paletteChoices,
+      choices: continuousChoices,
       supersededBy: BUBBLE,
     },
   ],

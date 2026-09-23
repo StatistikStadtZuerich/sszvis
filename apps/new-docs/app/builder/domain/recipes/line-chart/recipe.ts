@@ -1,6 +1,12 @@
 import { referenceLinesCode } from "../../annotations";
 import { code, str } from "../../emit";
 import {
+  categoricalChoices,
+  categoryScaleCode,
+  DEFAULT_CATEGORY_PALETTE,
+  PALETTE,
+} from "../../palettes";
+import {
   ColumnName,
   DATE,
   DESCRIPTION,
@@ -53,6 +59,14 @@ export const lineChart: RecipeDef = {
     { key: DESCRIPTION, label: "Description", fallback: "" },
     { key: X_LABEL_OPTION, label: "X axis label", fallback: "" },
     { key: Y_LABEL_OPTION, label: "Y axis label", fallback: "" },
+    {
+      key: PALETTE,
+      label: "Colours",
+      hint: "How the series are told apart. The last three colour named values, and a value they do not know takes the first colour rather than one of its own.",
+      fallback: DEFAULT_CATEGORY_PALETTE.value,
+      choices: categoricalChoices,
+      keyedTo: SERIES,
+    },
   ],
   features: [RULER, LEGEND, POINTS, REFERENCE_LINES_FEATURE],
   scalars: (spec, option, column) => ({
@@ -77,9 +91,7 @@ export const lineChart: RecipeDef = {
        chart: `colorLegendLayout` picks its palette by the same count, and the domain is
        set because an sszvis qualitative scale declares an `unknown` colour, which stops
        d3 extending the domain implicitly and paints every series alike. */
-    C_SCALE: code(
-      "state.categories.length > 6\n      ? sszvis.scaleQual12().domain(state.categories)\n      : sszvis.scaleQual6().domain(state.categories)",
-    ),
+    C_SCALE: categoryScaleCode(option(PALETTE)),
     BOTTOM_PADDING: code("45"),
     RULER_LABEL: tooltipText(
       "SVG",

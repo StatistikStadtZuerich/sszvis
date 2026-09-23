@@ -149,17 +149,37 @@ const Role = Schema.Struct({
   optional: Schema.optional(Schema.Boolean),
 });
 
+/** The colours a choice stands for, and how they should be drawn. */
+const Swatch = Schema.Struct({
+  colors: Schema.Array(Schema.String),
+  /*
+   * Blended into one ramp rather than shown as the separate colours they are. A
+   * continuous scale interpolates between its stops and a categorical one does not, and a
+   * swatch that blended a set of twelve categories would read as a rainbow gradient.
+   */
+  blend: Schema.optional(Schema.Boolean),
+});
+
 const Choice = Schema.Struct({
   value: Schema.String,
   label: Schema.String,
   /*
    * Two things a choice can carry for the menu that shows it, both optional because most
    * options need neither: the name of the family it belongs to, which the menu groups by,
-   * and the colours it stands for, which the menu draws as a swatch beside the name.
+   * and the colours it stands for, which the menu draws beside the name.
    */
   group: Schema.optional(Schema.String),
-  swatch: Schema.optional(Schema.Array(Schema.String)),
+  swatch: Schema.optional(Swatch),
+  /*
+   * The values this choice colours by name, where it colours values rather than positions.
+   * A scale that carries its own domain paints anything outside it in its first colour and
+   * labels its legend from that domain, so the panel has to be able to say which of the
+   * table's values it will not be colouring.
+   */
+  expects: Schema.optional(Schema.Array(Schema.String)),
 });
+
+export type Swatch = typeof Swatch.Type;
 
 export type Choice = typeof Choice.Type;
 
@@ -167,6 +187,10 @@ const Option = Schema.Struct({
   key: OptionKey,
   label: Schema.String,
   fallback: Schema.String,
+  /** A sentence under the control, as a role has. For what the choices do not say. */
+  hint: Schema.optional(Schema.String),
+  /** The role whose column a choice's `expects` is checked against. */
+  keyedTo: Schema.optional(RoleKey),
   choices: Schema.optional(Schema.Array(Choice)),
   /*
    * A feature that does this option's job instead while it is on. The map's bubbles are
