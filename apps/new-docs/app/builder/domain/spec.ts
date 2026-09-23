@@ -168,6 +168,14 @@ const Option = Schema.Struct({
   label: Schema.String,
   fallback: Schema.String,
   choices: Schema.optional(Schema.Array(Choice)),
+  /*
+   * A feature that does this option's job instead while it is on. The map's bubbles are
+   * the one case: they move the value out of the areas and into the circles, and draw the
+   * areas in a flat grey, so whichever colours were chosen stop reaching the chart. The
+   * option keeps its value - it is the author's, and it comes back when the feature goes
+   * off - but the panel has to say that nothing is coming of it.
+   */
+  supersededBy: Schema.optional(FeatureKey),
 });
 
 export type Option = typeof Option.Type;

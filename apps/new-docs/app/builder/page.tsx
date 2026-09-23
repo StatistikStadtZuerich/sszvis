@@ -234,6 +234,13 @@ const Builder = ({
               .filter((option) => option.choices !== undefined)
               .map((option) => {
                 const id = `option-${option.key}`;
+                /* The feature that has taken this option's job over, while it is on. The
+                   choice is still the author's to make and keep; it just is not reaching
+                   the chart, and a control that silently does nothing is a bug report. */
+                const superseded =
+                  option.supersededBy !== undefined && spec.features.includes(option.supersededBy)
+                    ? recipe.features.find((feature) => feature.key === option.supersededBy)
+                    : undefined;
                 return (
                   <Field key={option.key}>
                     <FieldLabel htmlFor={id}>{option.label}</FieldLabel>
@@ -245,6 +252,11 @@ const Builder = ({
                         form.setFieldValue("options", { ...spec.options, [option.key]: next })
                       }
                     />
+                    {superseded !== undefined && (
+                      <p className={typefaceCaption()}>
+                        {superseded.label} is on, and it decides this instead.
+                      </p>
+                    )}
                   </Field>
                 );
               })}
