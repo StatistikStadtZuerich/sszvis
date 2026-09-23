@@ -334,6 +334,23 @@ const choicesOf = (from: readonly Palette[]): readonly Choice[] =>
     },
   }));
 
+/*
+ * What a chart with one series can be drawn in.
+ *
+ * The four `qual` scales and nothing else. Automatic has nothing to decide where there is
+ * one colour to pick, and a keyed scale colours values the chart does not have: its series
+ * is a name the author typed, not a column of them, so it would take the scale's first
+ * colour and say nothing about why.
+ */
+const SERIES_PALETTES = CATEGORICAL.filter(
+  (palette) => palette.kind === "qualitative" && palette.scale !== "",
+);
+
+export const seriesChoices: readonly Choice[] = choicesOf(SERIES_PALETTES);
+
+/** What a single series is drawn in until someone picks another: what it was before. */
+export const DEFAULT_SERIES_PALETTE = SERIES_PALETTES[0] ?? AUTOMATIC;
+
 export const continuousChoices: readonly Choice[] = choicesOf(CONTINUOUS);
 
 export const categoricalChoices: readonly Choice[] = choicesOf(CATEGORICAL);
@@ -396,4 +413,18 @@ export const unkeyedValues = (
   const expects = choice?.expects;
   if (expects === undefined || column === undefined || column === "") return [];
   return distinctValues(table, column).filter((value) => !expects.includes(value));
+};
+
+/**
+ * The scale a chart with a single series is drawn with.
+ *
+ * Its one series is named rather than read from a column, and that name is the scale's
+ * whole domain. Setting it is what makes the scale work at all: an sszvis qualitative
+ * scale declares an `unknown` colour, so a scale with no domain hands back its first
+ * colour for every key - and, worse, goes on doing so after `darker()`, which is why the
+ * highlight a tooltip draws was the same colour as the bar underneath it.
+ */
+export const seriesScaleCode = (value: string): Safe => {
+  const palette = find(SERIES_PALETTES, value, DEFAULT_SERIES_PALETTE);
+  return code(`sszvis.${palette.scale}().domain([SERIES_KEY])`);
 };
