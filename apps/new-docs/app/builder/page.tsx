@@ -26,6 +26,7 @@ import {
 import { recipesAtom, useBuilderCompile, WORKER_STOPPED_MESSAGE } from "./builder-client";
 import { recipeOf, useBuilderForm } from "./builder-form";
 import { Annotations } from "./components/annotations";
+import { Controls } from "./components/controls";
 import { ChartType } from "./components/chart-type";
 import { CodePanel } from "./components/code-panel";
 import { Notice } from "./components/notice";
@@ -42,6 +43,7 @@ import {
   REQUIRED,
   serialize,
 } from "./domain/csv";
+import { renameControl } from "./domain/controls";
 import { applySample, switchRecipe, unmappedRoles } from "./domain/initial-spec";
 import { isPristine, type Sample, samples } from "./domain/samples";
 import { KIND_LABEL, optionValue, type RecipeSummary, TITLE } from "./domain/spec";
@@ -165,6 +167,9 @@ const Builder = ({
               kinds={spec.kinds}
               onChange={(next) => form.setFieldValue("csv", serialize(next))}
               onKindsChange={(next) => form.setFieldValue("kinds", next)}
+              onRenameColumn={(from, to) =>
+                form.setFieldValue("control", renameControl(spec.control, from, to))
+              }
               actions={
                 pendingSample !== null ? (
                   <ConfirmSample
@@ -368,6 +373,14 @@ const Builder = ({
               recipe={recipe}
               value={spec.annotations}
               onChange={(next) => form.setFieldValue("annotations", next)}
+            />
+
+            <FieldSeparator />
+
+            <Controls
+              spec={spec}
+              table={table}
+              onChange={(next) => form.setFieldValue("control", next)}
             />
           </Step>
 

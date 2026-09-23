@@ -252,12 +252,14 @@ export const TableEditor = ({
   kinds,
   onChange,
   onKindsChange,
+  onRenameColumn,
   actions,
 }: {
   readonly table: Table;
   readonly kinds: ColumnKinds;
   readonly onChange: (table: Table) => void;
   readonly onKindsChange: (kinds: ColumnKinds) => void;
+  readonly onRenameColumn: (from: ColumnName, to: ColumnName) => void;
   readonly actions?: React.ReactNode;
 }) => {
   const past = `${useId()}-past-table`;
@@ -333,8 +335,15 @@ export const TableEditor = ({
       const from = started?.column === column ? started.from : table.columns[column];
       if (from === undefined) return;
       const next = settleColumn(table, column, from, kinds);
-      if (next.table.columns[column] !== table.columns[column]) onChange(next.table);
+      const settled = next.table.columns[column];
+      if (settled !== undefined && settled !== table.columns[column]) onChange(next.table);
       if (next.kinds !== kinds) onKindsChange(next.kinds);
+      /*
+       * Against `from` rather than against the column as it stands: typing has already
+       * renamed it, and settling only steps in when the typed name needs adjusting. Asking
+       * whether settling changed anything would miss every ordinary rename.
+       */
+      if (settled !== undefined && settled !== from) onRenameColumn(from, settled);
     },
     sortBy: (column) => {
       const direction: SortDirection | null =
