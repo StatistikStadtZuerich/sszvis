@@ -1,4 +1,5 @@
 import { referenceLinesCode } from "../../annotations";
+import { controlFields } from "../../controls";
 import { code, str } from "../../emit";
 import {
   CATEGORY,
@@ -49,6 +50,13 @@ export const barChartVertical: RecipeDef = {
   /* No sort feature: the bars follow the row order of the data, which the table editor sorts. */
   features: [TOOLTIP, REFERENCE_LINES_FEATURE],
   scalars: (spec, option) => ({
+    /*
+     * Today's values, so a spec with no control emits exactly what it always did. The
+     * control's own template overrides both.
+     */
+    TOP_PADDING: code("3"),
+    PLOT_DATA: code("state.data"),
+    ...controlFields(spec),
     SERIES_KEY: str(option(SERIES_KEY)),
     CATEGORY_FIELD: str(spec.fields[CATEGORY] ?? ""),
     VALUE_FIELD: str(spec.fields[VALUE] ?? ""),

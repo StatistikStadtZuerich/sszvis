@@ -14,7 +14,7 @@
 const TOPO_URL = config.topology ?? __TOPO_PATH__;
 const MAX_LEGEND_WIDTH = 320;
 /** Vertical padding in px above the map, and below it where the legend sits. */
-const TOP_PADDING = 30;
+const TOP_PADDING = __TOP_PADDING__;
 const BOTTOM_PADDING = __BOTTOM_PADDING__;
 // {{block:magicNumbers}}
 
@@ -25,6 +25,7 @@ type Datum = {
   code: string;
   label: string;
   value: number;
+  // {{block:datumFields}}
 };
 
 /**
@@ -67,6 +68,7 @@ const queryProps = sszvis
     },
   })
   .prop("legendWidth", { _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH) });
+// {{block:responsiveProps}}
 
 // Accessors
 
@@ -100,6 +102,7 @@ sszvis.app<State, Actions>({
         code: areaCode(d[__GEO_FIELD__] ?? ""),
         label: __LABEL_EXPR__,
         value: sszvis.parseNumber(d[__VALUE_FIELD__]),
+        // {{block:row}}
       })),
       d3.json<Topology>(TOPO_URL),
     ]).then(([data, topo]) => {
@@ -134,7 +137,7 @@ sszvis.app<State, Actions>({
         title: __TITLE_TEXT__,
         description: __DESCRIPTION__,
       })
-      .datum(state.data);
+      .datum(__PLOT_DATA__);
 
     // {{block:layers}}
 

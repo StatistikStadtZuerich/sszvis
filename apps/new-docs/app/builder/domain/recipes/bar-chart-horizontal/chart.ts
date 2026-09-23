@@ -20,6 +20,7 @@ const SERIES_KEY = __SERIES_KEY__;
 type Datum = {
   category: string;
   xValue: number;
+  // {{block:datumFields}}
 };
 
 type State = {
@@ -36,6 +37,7 @@ const queryProps = sszvis
   .responsiveProps()
   .prop("xLabel", { _: __X_LABEL__ })
   .prop("ticks", { palm: 4, _: 5 });
+// {{block:responsiveProps}}
 
 // Accessors
 
@@ -56,6 +58,7 @@ sszvis.app<State, Actions>({
       .csv(config.data, (d) => ({
         category: d[__CATEGORY_FIELD__] ?? "",
         xValue: sszvis.parseNumber(d[__VALUE_FIELD__]),
+        // {{block:row}}
       }))
       .then((data) => {
         state.data = data;
@@ -74,8 +77,8 @@ sszvis.app<State, Actions>({
     const chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
     const bounds = sszvis.bounds(
       {
-        height: 30 + chartDimensions.totalHeight + 40,
-        top: 30,
+        height: __TOP_PADDING__ + chartDimensions.totalHeight + 40,
+        top: __TOP_PADDING__,
         bottom: 40,
       },
       config.id,
@@ -113,7 +116,7 @@ sszvis.app<State, Actions>({
         title: __TITLE_TEXT__,
         description: __DESCRIPTION__,
       })
-      .datum(state.data);
+      .datum(__PLOT_DATA__);
 
     // {{block:layers}}
 
