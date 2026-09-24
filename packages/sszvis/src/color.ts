@@ -14,8 +14,8 @@
  * @function qual6     Subset of saturated categorical colors
  * @function qual6a    Subset of blue-green categorical colors
  * @function qual6b    Subset of yellow-red categorical colors
- * @method   darken    Instance method to darken all colors. @returns new scale
- * @method   brighten  Instance method to brighten all colors. @returns new scale
+ * @method   darker    Instance method to darken all colors. @returns new scale
+ * @method   brighter  Instance method to brighten all colors. @returns new scale
  * @method   reverse   Instance method to reverse the color order. @returns new scale
  *
  *
@@ -317,11 +317,14 @@ export const withAlpha = (c: ColorValue, a: number): string => {
 function decorateOrdinalScale(scale: ScaleOrdinal<string, LabColor>): ExtendedOrdinalScale {
   const enhancedScale = scale as ExtendedOrdinalScale;
 
+  // These two were inverted from the first JS version onwards: `darker()` mapped the range
+  // through `lab.brighter()` and vice versa, so every caller asking for a darker scale got a
+  // lighter one. Nothing anywhere called `brighter()`, which is why it survived so long.
   enhancedScale.darker = (): ExtendedOrdinalScale =>
-    decorateOrdinalScale(scale.copy().range(scale.range().map((d) => d.brighter(LIGHTNESS_STEP))));
+    decorateOrdinalScale(scale.copy().range(scale.range().map((d) => d.darker(LIGHTNESS_STEP))));
 
   enhancedScale.brighter = (): ExtendedOrdinalScale =>
-    decorateOrdinalScale(scale.copy().range(scale.range().map((d) => d.darker(LIGHTNESS_STEP))));
+    decorateOrdinalScale(scale.copy().range(scale.range().map((d) => d.brighter(LIGHTNESS_STEP))));
 
   enhancedScale.reverse = (): ExtendedOrdinalScale =>
     decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
