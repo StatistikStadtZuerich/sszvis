@@ -86,4 +86,55 @@ describe("Color scales", () => {
       expect(scale.domain()).toEqual([-1, 0, 1]);
     });
   });
+
+  describe("Qualitative color scales", () => {
+    const qualScales: [string, typeof scaleQual12][] = [
+      ["scaleQual12", scaleQual12],
+      ["scaleQual6", scaleQual6],
+      ["scaleQual6a", scaleQual6a],
+      ["scaleQual6b", scaleQual6b],
+    ];
+
+    test.each(qualScales)(
+      "should lower the lightness of every %s color when darkened",
+      (_name, scale) => {
+        const base = scale().range();
+        for (const [i, color] of scale().darker().range().entries()) {
+          expect(color.l).toBeLessThan(base[i].l);
+        }
+      },
+    );
+
+    test.each(qualScales)(
+      "should raise the lightness of every %s color when brightened",
+      (_name, scale) => {
+        const base = scale().range();
+        for (const [i, color] of scale().brighter().range().entries()) {
+          expect(color.l).toBeGreaterThan(base[i].l);
+        }
+      },
+    );
+
+    test("should shift the lightness of a color looked up through the domain", () => {
+      const scale = scaleQual6b().domain(["a"]);
+      expect(scale.darker()("a").l).toBeLessThan(scale("a").l);
+      expect(scale.brighter()("a").l).toBeGreaterThan(scale("a").l);
+    });
+
+    test("should leave the scale it was called on untouched", () => {
+      const scale = scaleQual12();
+      const before = scale.range().map((c) => c.l);
+      scale.darker();
+      scale.brighter();
+      expect(scale.range().map((c) => c.l)).toEqual(before);
+    });
+
+    /* `copy()` hands back a bare d3 scale, so the result has to be re-decorated to stay chainable. */
+    test("should hand back a scale that can be darkened and brightened again", () => {
+      const scale = scaleQual12();
+      for (const [i, color] of scale.darker().brighter().range().entries()) {
+        expect(color.l).toBeCloseTo(scale.range()[i].l, 10);
+      }
+    });
+  });
 });
