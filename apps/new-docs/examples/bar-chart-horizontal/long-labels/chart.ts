@@ -100,7 +100,7 @@ sszvis.app<State, Actions>({
       .rangeRound([0, chartDimensions.totalHeight])
       .domain(state.categories);
 
-    const cScale = sszvis.scaleQual12();
+    const cScale = sszvis.scaleQual12().domain([SERIES_KEY]);
     const barFill = cScale(SERIES_KEY);
     const barFillHighlight = cScale.darker()(SERIES_KEY);
 
