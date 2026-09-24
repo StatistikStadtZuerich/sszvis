@@ -306,18 +306,20 @@ export const DEFAULT_PALETTE = CONTINUOUS[0];
 /** The one every categorical chart draws in until someone picks another. */
 export const DEFAULT_CATEGORY_PALETTE = AUTOMATIC;
 
-const find = (from: readonly Palette[], value: string, fallback: Palette): Palette =>
-  from.find((candidate) => candidate.value === value) ?? fallback;
-
 /*
  * Each menu is built from its own family and each lookup falls back within it, so a spec
  * carrying a palette its chart cannot use - a map saved as `qual6`, a stack saved as
  * `div-ntr`, either of them saved before the list was as long as it is - draws in that
  * chart's own default rather than emitting a scale that makes no sense for it.
  */
+const find = (from: readonly Palette[], value: string, fallback: Palette): Palette =>
+  from.find((candidate) => candidate.value === value) ?? fallback;
+
 const continuousFor = (value: string): Palette => find(CONTINUOUS, value, DEFAULT_PALETTE);
 
 const categoricalFor = (value: string): Palette => find(CATEGORICAL, value, AUTOMATIC);
+
+const seriesFor = (value: string): Palette => find(SERIES_PALETTES, value, DEFAULT_SERIES_PALETTE);
 
 /** The menu a family is drawn as: a swatch and a name, under the name of its own family. */
 const choicesOf = (from: readonly Palette[]): readonly Choice[] =>
@@ -346,14 +348,14 @@ const SERIES_PALETTES = CATEGORICAL.filter(
   (palette) => palette.kind === "qualitative" && palette.scale !== "",
 );
 
-export const seriesChoices: readonly Choice[] = choicesOf(SERIES_PALETTES);
-
 /** What a single series is drawn in until someone picks another: what it was before. */
-export const DEFAULT_SERIES_PALETTE = SERIES_PALETTES[0] ?? AUTOMATIC;
+export const DEFAULT_SERIES_PALETTE = SERIES_PALETTES[0];
 
 export const continuousChoices: readonly Choice[] = choicesOf(CONTINUOUS);
 
 export const categoricalChoices: readonly Choice[] = choicesOf(CATEGORICAL);
+
+export const seriesChoices: readonly Choice[] = choicesOf(SERIES_PALETTES);
 
 export const isDiverging = (value: string): boolean => continuousFor(value).kind === "diverging";
 
@@ -424,7 +426,5 @@ export const unkeyedValues = (
  * colour for every key - and, worse, goes on doing so after `darker()`, which is why the
  * highlight a tooltip draws was the same colour as the bar underneath it.
  */
-export const seriesScaleCode = (value: string): Safe => {
-  const palette = find(SERIES_PALETTES, value, DEFAULT_SERIES_PALETTE);
-  return code(`sszvis.${palette.scale}().domain([SERIES_KEY])`);
-};
+export const seriesScaleCode = (value: string): Safe =>
+  code(`sszvis.${seriesFor(value).scale}().domain([SERIES_KEY])`);
