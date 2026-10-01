@@ -120,6 +120,10 @@ sszvis.app<State, Actions>({
     // Scales
 
     const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+    // NOTE: Named so the highlight can darken the colour an area is actually drawn in,
+    // which is not the colour scale's once bubbles have turned the map grey.
+    const mapFill: (d: Datum | undefined) => import("sszvis").ColorValue = (d) =>
+      d === undefined ? "none" : colorScale(d.value);
 
     // Layers
 
@@ -145,7 +149,7 @@ sszvis.app<State, Actions>({
       .height(bounds.innerHeight)
       .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
       .defined((d) => d !== undefined && !Number.isNaN(d.value))
-      .fill((d) => (d === undefined ? "none" : colorScale(d.value)));
+      .fill(mapFill);
 
     // Rendering
 
