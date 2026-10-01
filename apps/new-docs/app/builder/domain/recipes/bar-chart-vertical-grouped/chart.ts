@@ -77,6 +77,9 @@ sszvis.app<State, Actions>({
   render(state, __ACTIONS_PARAM__) {
     const props = queryProps(sszvis.measureDimensions(config.id));
 
+    // NOTE: Before the legend, which is laid out from this scale's domain.
+    const cScale = __C_SCALE__;
+
     // {{block:preBounds}}
 
     const bounds = sszvis.bounds({ top: 25, bottom: __BOTTOM_PADDING__ }, config.id);
@@ -108,8 +111,6 @@ sszvis.app<State, Actions>({
     // value and zero, and is as tall as the distance between the two.
     const yPosScale = (v: number) => (Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0)));
     const hScale = (v: number) => Math.abs(yScale(v) - yScale(0));
-
-    const cScale = __C_SCALE__;
 
     // Layers
 

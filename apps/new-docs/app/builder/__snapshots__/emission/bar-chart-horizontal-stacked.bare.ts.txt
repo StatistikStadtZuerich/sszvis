@@ -80,6 +80,12 @@ sszvis.app<State, Actions>({
   render(state, _actions) {
     const props = queryProps(sszvis.measureDimensions(config.id));
 
+    // NOTE: Before the legend, which is laid out from this scale's domain.
+    const cScale =
+      state.categories.length > 6
+        ? sszvis.scaleQual12().domain(state.categories)
+        : sszvis.scaleQual6().domain(state.categories);
+
     // NOTE: The height and the bottom padding both depend on how many rows the
     // legend needed, so the legend is laid out before the bounds it feeds.
     const bottomPadding = 60;
@@ -120,11 +126,6 @@ sszvis.app<State, Actions>({
       .padding(chartDimensions.padRatio)
       .paddingOuter(chartDimensions.outerRatio)
       .range([0, chartDimensions.totalHeight]);
-
-    const cScale =
-      state.categories.length > 6
-        ? sszvis.scaleQual12().domain(state.categories)
-        : sszvis.scaleQual6().domain(state.categories);
 
     // Layers
 

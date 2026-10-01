@@ -90,9 +90,10 @@ sszvis.app<State, Actions>({
   render(state, __ACTIONS_PARAM__) {
     const props = queryProps(sszvis.measureDimensions(config.id));
 
-    // {{block:preBounds}}
-
+    // NOTE: Before the legend, which is laid out from this scale's domain.
     const cScale = __C_SCALE__;
+
+    // {{block:preBounds}}
 
     const bounds = sszvis.bounds(
       {

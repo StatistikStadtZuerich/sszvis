@@ -86,6 +86,12 @@ sszvis.app<State, Actions>({
   render(state, _actions) {
     const props = queryProps(sszvis.measureDimensions(config.id));
 
+    // NOTE: Before the legend, which is laid out from this scale's domain.
+    const cScale =
+      state.categories.length > 6
+        ? sszvis.scaleQual12().domain(state.categories)
+        : sszvis.scaleQual6().domain(state.categories);
+
     const bounds = sszvis.bounds(
       {
         top: 30,
@@ -129,11 +135,6 @@ sszvis.app<State, Actions>({
       .scaleLinear()
       .domain(valueLow === valueHigh ? [0, 1] : [valueLow, valueHigh])
       .range([bounds.innerHeight, 0]);
-
-    const cScale =
-      state.categories.length > 6
-        ? sszvis.scaleQual12().domain(state.categories)
-        : sszvis.scaleQual6().domain(state.categories);
 
     // Layers
 

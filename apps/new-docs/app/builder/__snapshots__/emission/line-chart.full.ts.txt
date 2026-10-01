@@ -118,20 +118,21 @@ sszvis.app<State, Actions>({
   render(state, actions) {
     const props = queryProps(sszvis.measureDimensions(config.id));
 
+    // NOTE: Before the legend, which is laid out from this scale's domain.
+    const cScale =
+      state.categories.length > 6
+        ? sszvis.scaleQual12().domain(state.categories)
+        : sszvis.scaleQual6().domain(state.categories);
+
     // NOTE: The legend is laid out first because it takes height from the
     // chart: its measurements feed the bounds.
     const legendLayout = sszvis.colorLegendLayout(
       {
         axisLabels: state.xValues.map(xLabelFormat),
-        legendLabels: state.categories,
+        legendLabels: cScale.domain(),
       },
       config.id,
     );
-
-    const cScale =
-      state.categories.length > 6
-        ? sszvis.scaleQual12().domain(state.categories)
-        : sszvis.scaleQual6().domain(state.categories);
 
     const bounds = sszvis.bounds(
       {
@@ -221,7 +222,9 @@ sszvis.app<State, Actions>({
 
     // NOTE: The layout sizes the legend and picks a scale of its own on the way; the
     // chart's colours are the chart's, so the swatches are keyed to the same scale the
-    // marks are rather than to whatever the layout would have chosen.
+    // marks are rather than to whatever the layout would have chosen. The layout is
+    // fed that scale's domain for the same reason: a gender scale names values of its
+    // own, and a legend sized for the chart's categories would not hold them.
     const colorLegend = legendLayout.legend.scale(cScale);
 
     const dots = sszvis

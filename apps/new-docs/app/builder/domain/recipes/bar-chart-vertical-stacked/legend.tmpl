@@ -9,7 +9,7 @@
 const legendLayout = sszvis.colorLegendLayout(
   {
     axisLabels: state.xValues,
-    legendLabels: state.categories,
+    legendLabels: cScale.domain(),
     slant: props.xSlant,
   },
   config.id,
@@ -19,7 +19,9 @@ const legendLayout = sszvis.colorLegendLayout(
 // #region components
 // NOTE: The layout sizes the legend and picks a scale of its own on the way; the
 // chart's colours are the chart's, so the swatches are keyed to the same scale the
-// marks are rather than to whatever the layout would have chosen.
+// marks are rather than to whatever the layout would have chosen. The layout is
+// fed that scale's domain for the same reason: a gender scale names values of its
+// own, and a legend sized for the chart's categories would not hold them.
 const colorLegend = legendLayout.legend.scale(cScale);
 // #endregion
 

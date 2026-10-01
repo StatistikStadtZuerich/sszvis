@@ -89,12 +89,18 @@ sszvis.app<State, Actions>({
   render(state, actions) {
     const props = queryProps(sszvis.measureDimensions(config.id));
 
+    // NOTE: Before the legend, which is laid out from this scale's domain.
+    const cScale =
+      state.categories.length > 6
+        ? sszvis.scaleQual12().domain(state.categories)
+        : sszvis.scaleQual6().domain(state.categories);
+
     // NOTE: The legend decides how much room the chart has to leave below it,
     // so it is laid out before the bounds it feeds into.
     const legendLayout = sszvis.colorLegendLayout(
       {
         axisLabels: state.xValues,
-        legendLabels: state.categories,
+        legendLabels: cScale.domain(),
         slant: props.textDirection,
       },
       config.id,
@@ -129,11 +135,6 @@ sszvis.app<State, Actions>({
     // value and zero, and is as tall as the distance between the two.
     const yPosScale = (v: number) => (Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0)));
     const hScale = (v: number) => Math.abs(yScale(v) - yScale(0));
-
-    const cScale =
-      state.categories.length > 6
-        ? sszvis.scaleQual12().domain(state.categories)
-        : sszvis.scaleQual6().domain(state.categories);
 
     // Layers
 
@@ -195,7 +196,9 @@ sszvis.app<State, Actions>({
 
     // NOTE: The layout sizes the legend and picks a scale of its own on the way; the
     // chart's colours are the chart's, so the swatches are keyed to the same scale the
-    // marks are rather than to whatever the layout would have chosen.
+    // marks are rather than to whatever the layout would have chosen. The layout is
+    // fed that scale's domain for the same reason: a gender scale names values of its
+    // own, and a legend sized for the chart's categories would not hold them.
     const colorLegend = legendLayout.legend.scale(cScale);
 
     // Rendering
