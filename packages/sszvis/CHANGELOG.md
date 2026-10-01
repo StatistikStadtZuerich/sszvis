@@ -1,3 +1,9 @@
+## 3.5.3
+
+### Patch Changes
+
+- [#466](https://github.com/StatistikStadtZuerich/sszvis/pull/466) [`95cc3d2`](https://github.com/StatistikStadtZuerich/sszvis/commit/95cc3d2930ad220e12e45f849399178d663555c3) Thanks [@lloydrichards](https://github.com/lloydrichards)! - fix the inverted `darker()` and `brighter()` methods on qualitative colour scales: `darker()` returned brighter colours and `brighter()` returned darker ones. Both now also shift the fallback colour a key outside the domain gets, so `sszvis.scaleQual12().darker()(key)` darkens on a scale given no domain. Charts that highlight a hovered mark with `scale.darker()` now draw a genuinely darker highlight
+
 ## 3.5.2 (2026-09-18)
 
 - the SVG and raster map renderers write the fill, positioning and pointer events they depend on inline, so a chart shipped without `sszvis.css` draws outlines rather than filled shapes covering the map, and lets pointers through to the base layer
