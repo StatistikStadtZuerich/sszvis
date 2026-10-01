@@ -12,9 +12,12 @@ import { findRecipe, recipes } from "./domain/recipes";
 import {
   ColumnName,
   FeatureKey,
+  GEO,
+  GEO_LABEL,
   RoleKey,
   SERIES,
   summarize,
+  VALUE,
   type Recipe,
   type Spec,
 } from "./domain/spec";
@@ -33,6 +36,9 @@ import {
  * and a browser is far too slow for 2^n. One chart per recipe, drawn from the sample it
  * ships with, is enough to catch a recipe that emits a chart nobody can see.
  */
+
+/** What a map area carries: the shape it draws, under the id its topology gives it. */
+type MapArea = { readonly geoJson: { readonly id?: string } };
 
 /** The control's buttons, which are the same element whichever recipe drew them. */
 const BUTTON = ".sszvis-control-buttonGroup__item";
@@ -309,8 +315,8 @@ describe("a chart with a filter control", () => {
   const SLICE = 7;
   const marks = { marks: "rect.sszvis-bar", count: SLICE };
 
-  const controlled = (): Spec => {
-    const recipe = findRecipeOrThrow("bar-chart-vertical");
+  const controlled = (key = "bar-chart-vertical"): Spec => {
+    const recipe = findRecipeOrThrow(key);
     return {
       ...initialSpec(summarize(recipe), SAMPLE.csv),
       control: { kind: "filter", column: ColumnName.make("Geschlecht"), label: "Geschlecht" },
@@ -328,8 +334,20 @@ describe("a chart with a filter control", () => {
       .map((text) => text.textContent ?? "")
       .filter((label) => /^\d+$/.test(label));
 
+  /** Every bar's box and every area's fill, which is everything a new slice can move. */
+  const geometry = (container: HTMLElement) =>
+    [
+      ...[...container.querySelectorAll<SVGGraphicsElement>("rect.sszvis-bar")].map((bar) => {
+        const box = bar.getBBox();
+        return `${Math.round(box.width)}x${Math.round(box.height)}`;
+      }),
+      ...[...container.querySelectorAll(".sszvis-map__area")].map(
+        (area) => area.getAttribute("fill") ?? "",
+      ),
+    ].join();
+
   /*
-   * Waits for the bars to stop moving, rather than for a number of frames.
+   * Waits for the chart to stop moving, rather than for a number of frames.
    *
    * A bar transitions its geometry when its value changes, so the frame after a button is
    * pressed shows the old slice on its way to the new one. Read there, the tallest bar is
@@ -341,7 +359,7 @@ describe("a chart with a filter control", () => {
     let last = "";
     while (Date.now() < deadline) {
       await frame();
-      const now = bars(container).join();
+      const now = geometry(container);
       if (now === last) return;
       last = now;
     }
@@ -404,6 +422,73 @@ describe("a chart with a filter control", () => {
      * in proportion, and that ratio is the assertion.
      */
     expect(after.tallest / before.tallest).toBeCloseTo(64.3 / 77, 1);
+  });
+
+  /*
+   * The two other recipes that take a control. Each reaches its data through holes of its
+   * own, so the vertical bar passing says nothing about either of them.
+   */
+  test("should redraw a horizontal bar chart when another value is chosen", async () => {
+    const recipe = findRecipeOrThrow("bar-chart-horizontal");
+    const container = await draw(recipe, controlled(recipe.key), marks);
+    await settled(container);
+    expect(container.querySelectorAll("rect.sszvis-bar")).toHaveLength(SLICE);
+
+    const widest = () =>
+      Math.max(
+        ...[...container.querySelectorAll<SVGGraphicsElement>("rect.sszvis-bar")].map(
+          (bar) => bar.getBBox().width,
+        ),
+      );
+    const before = widest();
+
+    await press(container, "Jungen");
+
+    /* Lying down, so the same proportion between the two peaks, read along the other axis. */
+    expect(container.querySelectorAll("rect.sszvis-bar")).toHaveLength(SLICE);
+    expect(widest() / before).toBeCloseTo(64.3 / 77, 1);
+  });
+
+  test("should reshade a map when another value is chosen", async () => {
+    /*
+     * A map draws every area whichever rows it was given, so a count cannot tell one slice
+     * from both. Two quarters can: Rathaus and Hard are both 25 under public ownership and
+     * 45 against 23 under private, so they share a fill in one slice and not in the other.
+     * A map shading from both slices at once, or never redrawing, fails one of the two.
+     */
+    const recipe = findRecipeOrThrow("map-choropleth");
+    const sample = sampleFor("eigentuemergruppe-quartier");
+    const base = initialSpec(summarize(recipe), sample.csv);
+    const spec: Spec = {
+      ...base,
+      fields: {
+        ...base.fields,
+        [GEO]: ColumnName.make("Qcode"),
+        [GEO_LABEL]: ColumnName.make("Qname"),
+        [VALUE]: ColumnName.make("Anteil"),
+      },
+      control: { kind: "filter", column: ColumnName.make("Eigentuemergruppe"), label: "" },
+      /* Without bubbles, which take over from the fills and draw every area grey. */
+      features: [FeatureKey.make("legend")],
+    };
+    const areas = ".sszvis-map__area:not(.sszvis-map__area--undefined)";
+    const container = await draw(recipe, spec, { marks: areas, count: 34 });
+    await settled(container);
+
+    const fillOf = (id: string) =>
+      [...container.querySelectorAll<SVGPathElement>(areas)]
+        .find((area) => d3.select<SVGPathElement, MapArea>(area).datum().geoJson.id === id)
+        ?.getAttribute("fill");
+    /* The topology names a quarter by its code, as a string. */
+    const RATHAUS = "11";
+    const HARD = "44";
+
+    expect(fillOf(RATHAUS)).toBeDefined();
+    expect(fillOf(RATHAUS)).toBe(fillOf(HARD));
+
+    await press(container, "Natürliche Personen");
+
+    expect(fillOf(RATHAUS)).not.toBe(fillOf(HARD));
   });
 
   test("should give way to a select menu where a row of buttons will not fit", async () => {
