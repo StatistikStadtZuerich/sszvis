@@ -43,7 +43,7 @@ import {
   REQUIRED,
   serialize,
 } from "./domain/csv";
-import { renameControl } from "./domain/controls";
+import { CONTROLS_FEATURE, renameControl } from "./domain/controls";
 import { applySample, switchRecipe, unmappedRoles } from "./domain/initial-spec";
 import { isPristine, type Sample, samples } from "./domain/samples";
 import { KIND_LABEL, optionValue, type RecipeSummary, TITLE } from "./domain/spec";
@@ -375,13 +375,19 @@ const Builder = ({
               onChange={(next) => form.setFieldValue("annotations", next)}
             />
 
-            <FieldSeparator />
+            {/* Only the charts that can draw a filter offer one: elsewhere the panel would
+                write a control into the spec that the compiled chart never shows. */}
+            {recipe.features.some((feature) => feature.key === CONTROLS_FEATURE) && (
+              <>
+                <FieldSeparator />
 
-            <Controls
-              spec={spec}
-              table={table}
-              onChange={(next) => form.setFieldValue("control", next)}
-            />
+                <Controls
+                  spec={spec}
+                  table={table}
+                  onChange={(next) => form.setFieldValue("control", next)}
+                />
+              </>
+            )}
           </Step>
 
           <Step
