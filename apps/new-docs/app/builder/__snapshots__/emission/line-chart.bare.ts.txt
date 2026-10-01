@@ -85,6 +85,7 @@ sszvis.app<State, Actions>({
   render(state, _actions) {
     const props = queryProps(sszvis.measureDimensions(config.id));
 
+    // NOTE: Before the legend, which is laid out from this scale's domain.
     const cScale =
       state.categories.length > 6
         ? sszvis.scaleQual12().domain(state.categories)

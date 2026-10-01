@@ -84,6 +84,9 @@ sszvis.app<State, Actions>({
   render(state, __ACTIONS_PARAM__) {
     const props = queryProps(sszvis.measureDimensions(config.id));
 
+    // NOTE: Before the legend, which is laid out from this scale's domain.
+    const cScale = __C_SCALE__;
+
     // {{block:preBounds}}
 
     // NOTE: The height and the bottom padding both depend on how many rows the
@@ -126,8 +129,6 @@ sszvis.app<State, Actions>({
       .padding(chartDimensions.padRatio)
       .paddingOuter(chartDimensions.outerRatio)
       .range([0, chartDimensions.totalHeight]);
-
-    const cScale = __C_SCALE__;
 
     // Layers
 

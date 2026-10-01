@@ -71,6 +71,12 @@ sszvis.app<State, Actions>({
   render(state, _actions) {
     const props = queryProps(sszvis.measureDimensions(config.id));
 
+    // NOTE: Before the legend, which is laid out from this scale's domain.
+    const cScale =
+      state.categories.length > 6
+        ? sszvis.scaleQual12().domain(state.categories)
+        : sszvis.scaleQual6().domain(state.categories);
+
     const bounds = sszvis.bounds({ top: 25, bottom: 60 }, config.id);
     const chartWidth = Math.min(MAX_WIDTH, bounds.innerWidth);
 
@@ -100,11 +106,6 @@ sszvis.app<State, Actions>({
     // value and zero, and is as tall as the distance between the two.
     const yPosScale = (v: number) => (Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0)));
     const hScale = (v: number) => Math.abs(yScale(v) - yScale(0));
-
-    const cScale =
-      state.categories.length > 6
-        ? sszvis.scaleQual12().domain(state.categories)
-        : sszvis.scaleQual6().domain(state.categories);
 
     // Layers
 

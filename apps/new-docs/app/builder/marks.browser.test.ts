@@ -666,6 +666,62 @@ describe("a map drawn in a diverging palette", () => {
 });
 
 /*
+ * A legend drawn in a gender scale, which names values of its own rather than the chart's.
+ *
+ * `colorLegendLayout` works out the legend's rows and the padding below the chart from the
+ * labels it is handed, and the chart then hands the legend its own scale. Laid out from the
+ * chart's categories, a six-label scale on a two-series sample gets the room for two: the
+ * labels run past the edge of the SVG, where the reader cannot see them. Both versions
+ * compile and draw every mark.
+ */
+describe("a legend in a scale with values of its own", () => {
+  const GENDER6 = sszvis.scaleGender6Origin().domain();
+
+  /*
+   * Two series for the bar charts, whose own samples carry four: room for four labels holds
+   * six closely enough that the bug never shows. The line and the area open on two already.
+   */
+  const TWO_SERIES = [
+    "Sektor,Geschlecht,Anzahl",
+    "Bau,Frauen,10",
+    "Bau,Männer,20",
+    "Handel,Frauen,30",
+    "Handel,Männer,40",
+  ].join("\n");
+
+  test.each([
+    ["line-chart", undefined, 2],
+    ["area-chart-stacked", undefined, 2],
+    ["bar-chart-vertical-stacked", TWO_SERIES, 4],
+    ["bar-chart-horizontal-stacked", TWO_SERIES, 4],
+    ["bar-chart-vertical-grouped", TWO_SERIES, 4],
+  ] as const)("should leave room for every label in %s", async (key, csv, count) => {
+    const recipe = findRecipeOrThrow(key);
+    const base = initialSpec(summarize(recipe), csv);
+    const spec: Spec = {
+      ...base,
+      options: { ...base.options, [OptionKey.make("palette")]: "gender6" },
+    };
+    const marks = EXPECTED[key]?.marks ?? "";
+    /* A phone's width, where six labels take more than one row. */
+    const container = await draw(recipe, spec, { marks, count }, 320);
+    expect(container.querySelectorAll(marks)).toHaveLength(count);
+
+    const labels = [...container.querySelectorAll<SVGGraphicsElement>(".sszvis-legend__label")];
+    expect(labels.map((label) => label.textContent)).toEqual(GENDER6);
+
+    const svg = container.querySelector("svg")?.getBoundingClientRect();
+    expect(svg).toBeDefined();
+    if (svg === undefined) return;
+    for (const label of labels) {
+      const box = label.getBoundingClientRect();
+      expect(box.bottom, `${label.textContent} below the chart`).toBeLessThanOrEqual(svg.bottom);
+      expect(box.right, `${label.textContent} past its edge`).toBeLessThanOrEqual(svg.right);
+    }
+  });
+});
+
+/*
  * The highlight a tooltip draws on a bar, which until now was the colour the bar already
  * was.
  *
