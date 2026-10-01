@@ -317,14 +317,24 @@ export const withAlpha = (c: ColorValue, a: number): string => {
 function decorateOrdinalScale(scale: ScaleOrdinal<string, LabColor>): ExtendedOrdinalScale {
   const enhancedScale = scale as ExtendedOrdinalScale;
 
+  // A copy keeps the original's `unknown`, and a qualitative scale sets that to its first
+  // colour - so without shifting it too, a key outside the domain (or every key, on a scale
+  // given no domain) would answer the colour it had before. Only a colour is shifted: a
+  // caller may have set `unknown` to something else, and that is theirs to keep.
+  const shifted = (shift: (c: LabColor) => LabColor): ExtendedOrdinalScale => {
+    const copy = scale.copy().range(scale.range().map(shift));
+    const unknown: unknown = scale.unknown();
+    // Set for its effect, as `qualColorScale` does: the setter's return type widens `unknown`.
+    if (unknown instanceof lab) copy.unknown(shift(unknown));
+    return decorateOrdinalScale(copy);
+  };
+
   // These two were inverted from the first JS version onwards: `darker()` mapped the range
   // through `lab.brighter()` and vice versa, so every caller asking for a darker scale got a
   // lighter one. Nothing anywhere called `brighter()`, which is why it survived so long.
-  enhancedScale.darker = (): ExtendedOrdinalScale =>
-    decorateOrdinalScale(scale.copy().range(scale.range().map((d) => d.darker(LIGHTNESS_STEP))));
+  enhancedScale.darker = (): ExtendedOrdinalScale => shifted((d) => d.darker(LIGHTNESS_STEP));
 
-  enhancedScale.brighter = (): ExtendedOrdinalScale =>
-    decorateOrdinalScale(scale.copy().range(scale.range().map((d) => d.brighter(LIGHTNESS_STEP))));
+  enhancedScale.brighter = (): ExtendedOrdinalScale => shifted((d) => d.brighter(LIGHTNESS_STEP));
 
   enhancedScale.reverse = (): ExtendedOrdinalScale =>
     decorateOrdinalScale(scale.copy().range(scale.range().reverse()));

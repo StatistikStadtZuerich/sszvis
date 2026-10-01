@@ -1,4 +1,4 @@
-import type { LabColor } from "d3";
+import { type LabColor, scaleImplicit } from "d3";
 import { describe, expect, test } from "vitest";
 import {
   scaleDeepGry,
@@ -119,6 +119,23 @@ describe("Color scales", () => {
       const scale = scaleQual6b().domain(["a"]);
       expect(scale.darker()("a").l).toBeLessThan(scale("a").l);
       expect(scale.brighter()("a").l).toBeGreaterThan(scale("a").l);
+    });
+
+    /*
+     * The `unknown` colour too, which is what a scale given no domain answers for every key.
+     * Production charts call `qual12().darker()({})` for a highlight, so a darker scale that
+     * kept the original `unknown` handed back the colour the mark already had.
+     */
+    test("should shift the colour a key outside the domain falls back to", () => {
+      const scale = scaleQual12();
+      expect(scale.darker()("anything").l).toBeLessThan(scale("anything").l);
+      expect(scale.brighter()("anything").l).toBeGreaterThan(scale("anything").l);
+    });
+
+    test("should leave an unknown value that is not a colour alone", () => {
+      const scale = scaleQual12();
+      scale.unknown(scaleImplicit);
+      expect(scale.darker().unknown()).toBe(scaleImplicit);
     });
 
     test("should leave the scale it was called on untouched", () => {
