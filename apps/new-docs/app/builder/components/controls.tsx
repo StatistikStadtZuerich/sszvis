@@ -12,7 +12,7 @@ import {
 } from "~/components/ui/select";
 import { typefaceCaption } from "~/components/tokens/typeface";
 import { CROWDED, filterCandidates } from "../domain/controls";
-import { distinctValues, type Table } from "../domain/csv";
+import { columnKinds, distinctValues, type Table } from "../domain/csv";
 import { ColumnName, type Spec } from "../domain/spec";
 
 /** Why a table has no column to filter on, said in the terms the table editor uses. */
@@ -44,14 +44,22 @@ export const Controls = ({
 
   const values = control === null ? [] : distinctValues(table, control.column);
   const gone = control !== null && !table.columns.includes(control.column);
+  /* The two other ways a column stops qualifying, in the order `filterCandidates` tests. */
+  const drawn = control !== null && Object.values(spec.fields).includes(control.column);
+  const dated =
+    control !== null && columnKinds(table, spec.kinds).get(control.column) === "temporal";
   const hintId = `${id}-hint`;
   const hint = gone
     ? `${control.column} is no longer a column in this table, so the chart is drawn without a filter.`
-    : values.length < 2
-      ? "A column needs at least two values to offer a choice, so the chart is drawn without a filter."
-      : values.length > CROWDED
-        ? `${values.length} values are more than a row of buttons holds, so the chart shows a menu instead.`
-        : null;
+    : drawn
+      ? `${control.column} is already drawn by the chart, so the chart is drawn without a filter.`
+      : dated
+        ? `${control.column} holds dates, so the chart is drawn without a filter.`
+        : values.length < 2
+          ? "A column needs at least two values to offer a choice, so the chart is drawn without a filter."
+          : values.length > CROWDED
+            ? `${values.length} values are more than a row of buttons holds, so the chart shows a menu instead.`
+            : null;
 
   return (
     <FieldGroup>
@@ -79,7 +87,7 @@ export const Controls = ({
                 <SelectTrigger
                   id={`${id}-column`}
                   className="w-full"
-                  aria-invalid={gone || undefined}
+                  aria-invalid={gone || drawn || dated || undefined}
                   aria-describedby={hint === null ? undefined : hintId}
                 >
                   <SelectValue />
