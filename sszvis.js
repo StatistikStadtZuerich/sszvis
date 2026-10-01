@@ -1730,8 +1730,8 @@
      * @function qual6     Subset of saturated categorical colors
      * @function qual6a    Subset of blue-green categorical colors
      * @function qual6b    Subset of yellow-red categorical colors
-     * @method   darken    Instance method to darken all colors. @returns new scale
-     * @method   brighten  Instance method to brighten all colors. @returns new scale
+     * @method   darker    Instance method to darken all colors. @returns new scale
+     * @method   brighter  Instance method to brighten all colors. @returns new scale
      * @method   reverse   Instance method to reverse the color order. @returns new scale
      *
      *
@@ -1847,8 +1847,22 @@
     ----------------------------------------------- */
     function decorateOrdinalScale(scale) {
       const enhancedScale = scale;
-      enhancedScale.darker = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
-      enhancedScale.brighter = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
+      // A copy keeps the original's `unknown`, and a qualitative scale sets that to its first
+      // colour - so without shifting it too, a key outside the domain (or every key, on a scale
+      // given no domain) would answer the colour it had before. Only a colour is shifted: a
+      // caller may have set `unknown` to something else, and that is theirs to keep.
+      const shifted = shift => {
+        const copy = scale.copy().range(scale.range().map(shift));
+        const unknown = scale.unknown();
+        // Set for its effect, as `qualColorScale` does: the setter's return type widens `unknown`.
+        if (unknown instanceof d3.lab) copy.unknown(shift(unknown));
+        return decorateOrdinalScale(copy);
+      };
+      // These two were inverted from the first JS version onwards: `darker()` mapped the range
+      // through `lab.brighter()` and vice versa, so every caller asking for a darker scale got a
+      // lighter one. Nothing anywhere called `brighter()`, which is why it survived so long.
+      enhancedScale.darker = () => shifted(d => d.darker(LIGHTNESS_STEP));
+      enhancedScale.brighter = () => shifted(d => d.brighter(LIGHTNESS_STEP));
       enhancedScale.reverse = () => decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
       return enhancedScale;
     }
