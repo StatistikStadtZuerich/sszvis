@@ -262,6 +262,58 @@ describe("the bubble overlay", () => {
     );
     expect(fills, "the base map is not a single colour").toHaveLength(1);
   });
+
+  /*
+   * The outline a hovered area takes, which is a darker shade of the area's own fill. Under
+   * bubbles that fill is the grey, so the palette - which the panel says the bubbles have
+   * taken over from - must not reach it. Darkening the colour scale instead outlines each
+   * area in a shade of a ramp the reader cannot see, and one that moves with the palette.
+   */
+  test("should outline a hovered area in its grey whichever palette is chosen", async () => {
+    const recipe = findRecipeOrThrow("map-choropleth");
+    const base = initialSpec(summarize(recipe));
+    const areas = ".sszvis-map__area:not(.sszvis-map__area--undefined)";
+
+    const outline = async (palette: string) => {
+      const spec: Spec = {
+        ...base,
+        options: { ...base.options, [OptionKey.make("palette")]: palette },
+        features: [FeatureKey.make("bubble"), FeatureKey.make("tooltip")],
+      };
+      const container = await draw(recipe, spec, { marks: areas, count: 31 });
+      const area = container.querySelector(areas);
+      expect(area, "the map drew no area with a value").not.toBeNull();
+      const box = area?.getBoundingClientRect();
+      if (box === undefined) return null;
+      /* What `panning` listens for, at the area's middle. */
+      for (const type of ["mouseenter", "mousemove"]) {
+        area?.dispatchEvent(
+          new MouseEvent(type, {
+            clientX: box.left + box.width / 2,
+            clientY: box.top + box.height / 2,
+          }),
+        );
+      }
+      /* The highlight is drawn on the render the action schedules, so wait for it. */
+      const deadline = Date.now() + PAINT_TIMEOUT_MS;
+      let highlight: SVGPathElement | null = null;
+      while (highlight === null && Date.now() < deadline) {
+        await frame();
+        highlight = container.querySelector<SVGPathElement>(".sszvis-map__highlight");
+      }
+      /* Set as a style rather than an attribute. */
+      const stroke = highlight?.style.stroke;
+      /* Out of the way of the next map, which `draw` gives the same id. */
+      container.remove();
+      return stroke ?? null;
+    };
+
+    const blue = await outline("seq-blu");
+    const red = await outline("seq-red");
+
+    expect(blue).toBe(String(sszvis.muchDarker(sszvis.scaleGry()(0))));
+    expect(red).toBe(blue);
+  });
 });
 
 /*

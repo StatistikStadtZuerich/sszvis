@@ -144,6 +144,10 @@ sszvis.app<State, Actions>({
     // Scales
 
     const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+    // NOTE: Named so the highlight can darken the colour an area is actually drawn in,
+    // which is not the colour scale's once bubbles have turned the map grey.
+    const mapFill: (d: Datum | undefined) => import("sszvis").ColorValue = () =>
+      sszvis.scaleGry()(0);
 
     // NOTE: A square-root scale, so that a value twice as large covers twice the area
     // rather than twice the width, which is what a reader compares.
@@ -176,9 +180,7 @@ sszvis.app<State, Actions>({
       .features(state.mapData.features)
       .borders(state.mapData.borders)
       .highlight(state.selection)
-      .highlightStroke((d) =>
-        Number.isNaN(d.value) ? "white" : sszvis.muchDarker(colorScale(d.value)),
-      )
+      .highlightStroke((d) => (Number.isNaN(d.value) ? "white" : sszvis.muchDarker(mapFill(d))))
       .highlightStrokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width) + 1)
 
       .transitionColor(false)
@@ -193,7 +195,7 @@ sszvis.app<State, Actions>({
       .height(bounds.innerHeight)
       .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
       .defined((d) => d !== undefined && !Number.isNaN(d.value))
-      .fill(() => sszvis.scaleGry()(0));
+      .fill(mapFill);
 
     const tooltip = sszvis
       .tooltip<MapDatum>()

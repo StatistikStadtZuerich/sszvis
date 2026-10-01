@@ -42,7 +42,7 @@ const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selec
 // #region mapProps
 .highlight(state.selection)
 .highlightStroke((d) =>
-  Number.isNaN(d.value) ? "white" : sszvis.muchDarker(colorScale(d.value)),
+  Number.isNaN(d.value) ? "white" : sszvis.muchDarker(mapFill(d)),
 )
 .highlightStrokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width) + 1)
 // #endregion
