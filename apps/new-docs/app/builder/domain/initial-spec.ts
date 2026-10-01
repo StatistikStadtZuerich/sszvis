@@ -156,10 +156,23 @@ export function switchRecipe(spec: Spec, from: RecipeSummary, next: RecipeSummar
     kinds: spec.kinds,
     chosen: kept,
     fields,
+    /*
+     * An option the two charts share keeps its value, unless it is a choice the new chart
+     * does not offer: a map's colour ramp means nothing to a line chart. Carried, it would
+     * reach a menu with no item for it, which shows blank rather than the fallback the
+     * chart is actually drawn in.
+     */
     options: Object.fromEntries(
       Array.getSomes(
         next.options.map((option) =>
-          Option.map(Record.get(spec.options, option.key), (value) => [option.key, value] as const),
+          Record.get(spec.options, option.key).pipe(
+            Option.filter(
+              (value) =>
+                option.choices === undefined ||
+                option.choices.some((choice) => choice.value === value),
+            ),
+            Option.map((value) => [option.key, value] as const),
+          ),
         ),
       ),
     ),
