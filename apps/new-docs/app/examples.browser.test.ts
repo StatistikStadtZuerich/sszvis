@@ -6,12 +6,13 @@ import { afterEach, describe, expect, test } from "vitest";
 /*
  * What the library's own examples draw, for the one thing no other suite can see.
  *
- * `tsc -p examples/tsconfig.json` proves every example type-checks against the real
- * library, and the Playwright suite screenshots them at rest. Neither notices a colour
+ * Until this file, the only check these examples had was `tsc -p examples/tsconfig.json`,
+ * which proves each one type-checks against the real library. The Playwright snapshot
+ * suite screenshots `apps/docs/dist`, not this corpus. A type check cannot see a colour
  * that is wrong: `sszvis.scaleQual12()` has an `unknown` value, so an ordinal scale
- * without a domain answers the same colour for every key, before and after `darker()`.
- * A chart built that way highlights the hovered bar in the colour it already had -
- * valid TypeScript, an identical screenshot, and an interaction that does nothing.
+ * without a domain answers the same colour for every key. A chart built that way can
+ * highlight the hovered bar in the colour it already had - valid TypeScript, and an
+ * interaction that does nothing.
  *
  * So this runs the examples the way the generated page does and reads the fills back.
  */
