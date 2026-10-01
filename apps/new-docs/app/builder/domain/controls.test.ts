@@ -116,6 +116,27 @@ describe("resolveControl", () => {
     });
     expect(Option.isNone(resolveControl(single))).toBe(true);
   });
+
+  test("should resolve to nothing once a role has taken the column", () => {
+    /* The panel keeps a chosen column listed after it stops qualifying, so the spec can
+       name the axis the chart is drawn along. Filtered by it, the chart draws one bar. */
+    const bound = specFor({
+      control: filtering("Geschlecht"),
+      fields: {
+        [RoleKey.make("category")]: col("Geschlecht"),
+        [RoleKey.make("value")]: col("Anzahl"),
+      },
+    });
+    expect(Option.isNone(resolveControl(bound))).toBe(true);
+  });
+
+  test("should resolve to nothing once the column is pinned as a date", () => {
+    const pinned = specFor({
+      control: filtering("Geschlecht"),
+      kinds: { [col("Geschlecht")]: "temporal" },
+    });
+    expect(Option.isNone(resolveControl(pinned))).toBe(true);
+  });
 });
 
 describe("controlFields", () => {

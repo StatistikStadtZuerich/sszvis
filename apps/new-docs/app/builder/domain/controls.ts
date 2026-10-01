@@ -27,10 +27,12 @@ export type ResolvedControl = {
 /**
  * The control this spec emits, if it emits one.
  *
- * A control survives in the spec after the column it names has been renamed away or the
- * table replaced, and one value is not a choice. Neither is worth failing a compile over -
- * the chart is still a chart without its control - so both resolve to nothing here and the
- * feature never switches on.
+ * A control survives in the spec after the column it names has stopped being one the panel
+ * would offer: renamed away, the table replaced, left with one value, taken by a role or
+ * pinned as a date. None of these is worth failing a compile over - the chart is still a
+ * chart without its control - so all of them resolve to nothing here and the feature never
+ * switches on. The test is `filterCandidates` itself, so the chart cannot filter on a
+ * column the panel would refuse.
  */
 export const resolveControl = (
   spec: Spec,
@@ -38,11 +40,9 @@ export const resolveControl = (
 ): Option.Option<ResolvedControl> => {
   const control = spec.control;
   if (control === null) return Option.none();
+  if (!filterCandidates(spec, table).includes(control.column)) return Option.none();
 
-  /* A column renamed away or replaced with the table yields no values at all, which lands
-     in the same place as one holding a single value: neither is a choice to offer. */
   const values = distinctValues(table, control.column);
-  if (values.length < 2) return Option.none();
 
   const label = control.label.trim();
   return Option.some({
