@@ -13,11 +13,11 @@ import type { Choice, Swatch } from "../domain/spec";
 /**
  * The colours a choice stands for.
  *
- * A blended one is drawn as the ramp its stops make, interpolated in Oklab rather than
- * sRGB, which is CSS's default: the library builds its scales in Lab, and a gradient run
- * through sRGB would show a swatch the chart does not match - most visibly in the middle
- * of a diverging ramp, where sRGB dips toward grey. Everything else is drawn as the
- * separate colours it is, in equal blocks, since nothing lies between two categories.
+ * A blended one is drawn as the ramp its stops make, in CSS's default sRGB. The library
+ * writes its stops in Lab but leaves `scaleLinear` on d3's default interpolator, which
+ * blends a colour in RGB, so sRGB is the space the map's own in-between colours are in.
+ * Everything else is drawn as the separate colours it is, in equal blocks, since nothing
+ * lies between two categories.
  */
 const SwatchMark = ({ swatch }: { readonly swatch: Swatch }) => {
   const stops = swatch.colors;
@@ -29,7 +29,7 @@ const SwatchMark = ({ swatch }: { readonly swatch: Swatch }) => {
       <span
         aria-hidden="true"
         className={shared}
-        style={{ backgroundImage: `linear-gradient(to right in oklab, ${stops.join(", ")})` }}
+        style={{ backgroundImage: `linear-gradient(to right, ${stops.join(", ")})` }}
       />
     );
   }
