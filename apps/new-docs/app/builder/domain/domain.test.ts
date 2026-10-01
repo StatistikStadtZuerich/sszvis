@@ -758,6 +758,32 @@ describe("switchRecipe", () => {
     } as const;
     expect(switchRecipe(spec, RECIPE, horizontal).annotations).toEqual([valueLine]);
   });
+
+  test("should drop a choice the new recipe does not offer, and keep one it does", () => {
+    /* A pair sharing the option's key: a choice holds whichever value it was picked as. */
+    const choosing = (values: readonly string[]): RecipeSummary => ({
+      ...RECIPE,
+      options: [
+        ...RECIPE.options,
+        {
+          key: OptionKey.make("palette"),
+          label: "Colours",
+          fallback: values[0] ?? "",
+          choices: values.map((value) => ({ value, label: value })),
+        },
+      ],
+    });
+    const map = choosing(["seq-blu", "seq-red"]);
+    const line = choosing(["auto", "gender3"]);
+    const bar = choosing(["auto", "gender3", "qual6"]);
+
+    /* A ramp has no item on the line chart's menu, so it falls back rather than going blank. */
+    const ramp: Spec = { ...initialSpec(map, DEMO_CSV), options: opts({ palette: "seq-blu" }) };
+    expect(switchRecipe(ramp, map, line).options).toEqual({});
+
+    const gender: Spec = { ...initialSpec(bar, DEMO_CSV), options: opts({ palette: "gender3" }) };
+    expect(switchRecipe(gender, bar, line).options).toEqual(opts({ palette: "gender3" }));
+  });
 });
 
 describe("unmappedRoles", () => {
