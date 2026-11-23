@@ -135,6 +135,9 @@ sszvis.app<State, Actions>({
       .scale(xScale)
       .orient("bottom")
       .contour(true)
+      // NOTE: d3's default tick count. sszvis axes default to fewer (3), which
+      // leaves this axis with a tick or two.
+      .ticks(10)
       .tickFormat((d) => {
         const value = Number(d);
         return value < X_TICK_PRECISION_THRESHOLD ? value.toPrecision(1) : String(value);
@@ -147,6 +150,9 @@ sszvis.app<State, Actions>({
       .orient("right")
       .showZeroY(true)
       .contour(true)
+      // NOTE: d3's default tick count. sszvis axes default to fewer (6), which
+      // leaves this axis with a tick or two.
+      .ticks(10)
       .title(props.yAxisLabel);
 
     const radiusLegend = sszvis
@@ -352,6 +358,9 @@ const hideTickLabelBelow = (maxBottom: number) =>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">scale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">xScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">orient</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bottom</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">contour</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">true</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: d3's default tick count. sszvis axes default to fewer (3), which</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> leaves this axis with a tick or two.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">ticks</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">10</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">tickFormat</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
 <span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">        const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> value </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> Number</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
 <span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">        return</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> value </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">&#x3C;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> X_TICK_PRECISION_THRESHOLD </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">?</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">toPrecision</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">1</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> :</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> String</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
@@ -364,6 +373,9 @@ const hideTickLabelBelow = (maxBottom: number) =>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">orient</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">right</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">showZeroY</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">true</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">contour</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">true</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: d3's default tick count. sszvis axes default to fewer (6), which</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> leaves this axis with a tick or two.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">ticks</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">10</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">title</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">yAxisLabel</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
 <span class="line"></span>
 <span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> radiusLegend </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
@@ -547,6 +559,9 @@ sszvis.app({
       .scale(xScale)
       .orient("bottom")
       .contour(true)
+      // NOTE: d3's default tick count. sszvis axes default to fewer (3), which
+      // leaves this axis with a tick or two.
+      .ticks(10)
       .tickFormat((d) => {
         const value = Number(d);
         return value < X_TICK_PRECISION_THRESHOLD ? value.toPrecision(1) : String(value);
@@ -559,6 +574,9 @@ sszvis.app({
       .orient("right")
       .showZeroY(true)
       .contour(true)
+      // NOTE: d3's default tick count. sszvis axes default to fewer (6), which
+      // leaves this axis with a tick or two.
+      .ticks(10)
       .title(props.yAxisLabel);
 
     const radiusLegend = sszvis
@@ -741,6 +759,9 @@ const hideTickLabelBelow = (maxBottom) =>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">scale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">xScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">orient</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bottom</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">contour</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">true</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: d3's default tick count. sszvis axes default to fewer (3), which</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> leaves this axis with a tick or two.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">ticks</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">10</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">tickFormat</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
 <span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">        const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> value </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> Number</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
 <span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">        return</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> value </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">&#x3C;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> X_TICK_PRECISION_THRESHOLD </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">?</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">toPrecision</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">1</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> :</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> String</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
@@ -753,6 +774,9 @@ const hideTickLabelBelow = (maxBottom) =>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">orient</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">right</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">showZeroY</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">true</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">contour</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">true</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: d3's default tick count. sszvis axes default to fewer (6), which</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> leaves this axis with a tick or two.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">ticks</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">10</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">title</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">yAxisLabel</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
 <span class="line"></span>
 <span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> radiusLegend </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>

@@ -1,0 +1,5 @@
+import{o as e,t}from"./jsx-runtime-B4SJo7uk.js";import{n}from"./lib-BMFDpM32.js";var r=t(),i={toc:[]};function a(e){let t={a:`a`,h1:`h1`,p:`p`,span:`span`,...n(),...e.components},{Gallery:i}=t;return i||s(`Gallery`,!0),(0,r.jsxs)(r.Fragment,{children:[(0,r.jsxs)(t.h1,{id:`gallery`,children:[`Gallery`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#gallery`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Every example in this documentation, in one place. Each thumbnail is the live
+example running in its own page, so what you see here is what the chart type's
+page shows — follow a tile to the page that explains it.`}),`
+`,(0,r.jsx)(i,{})]})}var o=e(function(e={}){let{wrapper:t}={...n(),...e.components};return t?(0,r.jsx)(t,{...e,children:(0,r.jsx)(a,{...e})}):a(e)});function s(e,t){throw Error(`Expected `+(t?`component`:`object`)+" `"+e+"` to be defined: you likely forgot to import, pass, or provide it.")}export{o as default,i as handle};

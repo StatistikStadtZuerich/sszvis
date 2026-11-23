@@ -136,6 +136,9 @@ sszvis.app<State, Actions>({
       .scale(xScale)
       .orient("bottom")
       .alignOuterLabels(true)
+      // NOTE: d3's default tick count. sszvis axes default to fewer (3), which
+      // leaves this axis with a tick or two.
+      .ticks(10)
       .tickFormat((d) => props.xFormat(Number(d)))
       .title(props.xAxisLabel);
 
@@ -350,6 +353,9 @@ const hideTickLabelBelow = (maxBottom: number) =>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">scale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">xScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">orient</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bottom</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">alignOuterLabels</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">true</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: d3's default tick count. sszvis axes default to fewer (3), which</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> leaves this axis with a tick or two.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">ticks</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">10</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">tickFormat</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">xFormat</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">Number</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)))</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">title</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">xAxisLabel</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
 <span class="line"></span>
@@ -543,6 +549,9 @@ sszvis.app({
       .scale(xScale)
       .orient("bottom")
       .alignOuterLabels(true)
+      // NOTE: d3's default tick count. sszvis axes default to fewer (3), which
+      // leaves this axis with a tick or two.
+      .ticks(10)
       .tickFormat((d) => props.xFormat(Number(d)))
       .title(props.xAxisLabel);
 
@@ -735,6 +744,9 @@ const hideTickLabelBelow = (maxBottom) =>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">scale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">xScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">orient</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bottom</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">alignOuterLabels</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">true</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: d3's default tick count. sszvis axes default to fewer (3), which</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> leaves this axis with a tick or two.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">ticks</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">10</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">tickFormat</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">xFormat</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">Number</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)))</span></span>
 <span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">title</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">xAxisLabel</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
 <span class="line"></span>
