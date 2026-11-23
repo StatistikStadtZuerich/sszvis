@@ -1,8 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 
-import { initialSpec, unmappedRoles } from "./domain/initial-spec";
-import type { RecipeSummary, Spec } from "./domain/spec";
+import { initialSpec, unmappedRoles } from "@sszvis/chart-builder/initial-spec";
+import type { RecipeSummary, Spec } from "@sszvis/chart-builder/spec";
 
 export const recipeOf = (
   recipes: readonly RecipeSummary[],

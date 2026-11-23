@@ -2,14 +2,14 @@ import { Effect } from "effect";
 import { HIGHLIGHT_THEMES, highlightOptions } from "../../lib/highlight";
 import type { Source } from "../../lib/source";
 
-import type { BuilderCompileError } from "../domain/emit";
-import { lazy, makeGenerate } from "../domain/generate";
-import { BUNDLE } from "../domain/host";
-import type { Recipe, Spec } from "../domain/spec";
+import type { BuilderCompileError } from "@sszvis/chart-builder/emit";
+import { lazy, makeGenerate } from "@sszvis/chart-builder/generate";
+import { BUNDLE } from "@sszvis/chart-builder/host";
+import type { Recipe, Spec } from "@sszvis/chart-builder/spec";
 import type { Generated } from "./domain";
 
 /*
- * The highlighter is this app's: `domain/generate` produces the files, and the code
+ * The highlighter is this app's: `@sszvis/chart-builder/generate` produces the files, and the code
  * panel wants them rendered with the same options the examples plugin uses at build time.
  */
 const loadHighlighter = () =>

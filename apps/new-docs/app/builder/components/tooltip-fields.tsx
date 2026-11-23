@@ -13,8 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { RoleKey, type RecipeSummary, type Spec, type Tooltip } from "../domain/spec";
-import { boundRoles, resolveTooltip } from "../domain/tooltip";
+import { RoleKey, type RecipeSummary, type Spec, type Tooltip } from "@sszvis/chart-builder/spec";
+import { boundRoles, resolveTooltip } from "@sszvis/chart-builder/tooltip";
 
 export const TooltipFields = ({
   recipe,

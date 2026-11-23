@@ -1,0 +1,13 @@
+/*
+ * Type-checks the code `compile.test.ts` generates for every feature combination,
+ * against sszvis' published types and the globals the host page provides. The
+ * generated files are plain scripts with no imports, so each needs its own scope.
+ */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "moduleDetection": "force"
+  },
+  "include": ["_generated/**/*", "globals.d.ts"],
+  "exclude": []
+}

@@ -5,11 +5,10 @@ import * as topojson from "topojson-client";
 import tsBlankSpace from "ts-blank-space";
 import { afterEach, describe, expect, test } from "vitest";
 
-import { assetUrl } from "./assets";
-import { assetsFor, compile } from "./domain/compile";
-import { initialSpec } from "./domain/initial-spec";
-import { sampleFor } from "./domain/samples";
-import { findRecipe, recipes } from "./domain/recipes";
+import { assetsFor, compile } from "../src/compile";
+import { initialSpec } from "../src/initial-spec";
+import { sampleFor } from "../src/samples";
+import { findRecipe, recipes } from "../src/recipes";
 import {
   ColumnName,
   FeatureKey,
@@ -22,7 +21,10 @@ import {
   VALUE,
   type Recipe,
   type Spec,
-} from "./domain/spec";
+} from "../src/spec";
+
+/* Where vitest.browser.config.ts serves `@sszvis/geodata`'s built topologies. */
+const TOPO = "/topo/";
 
 /*
  * What a generated chart draws, which is the one thing the node suites cannot see.
@@ -147,7 +149,7 @@ const draw = async (
   const assets = await Promise.all(
     assetsFor(recipe, spec).map(async (asset) => [
       asset.key,
-      URL.createObjectURL(await (await fetch(assetUrl(asset))).blob()),
+      URL.createObjectURL(await (await fetch(`${TOPO}${asset.file}`)).blob()),
     ]),
   );
   const config = {

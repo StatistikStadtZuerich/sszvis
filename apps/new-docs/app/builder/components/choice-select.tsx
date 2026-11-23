@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import type { Choice, Swatch } from "../domain/spec";
+import type { Choice, Swatch } from "@sszvis/chart-builder/spec";
 
 /**
  * The colours a choice stands for.

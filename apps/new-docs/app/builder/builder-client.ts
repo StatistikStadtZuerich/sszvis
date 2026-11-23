@@ -7,8 +7,8 @@ import { RpcClient } from "effect/unstable/rpc";
 import { useEffect, useMemo } from "react";
 
 import type { BuilderForm } from "./builder-form";
-import { identity } from "./domain/identity";
-import type { Spec } from "./domain/spec";
+import { identity } from "@sszvis/chart-builder/identity";
+import type { Spec } from "@sszvis/chart-builder/spec";
 import { BuilderRpc } from "./workers/domain";
 
 export const WORKER_STOPPED_MESSAGE = "The chart builder's worker stopped unexpectedly.";

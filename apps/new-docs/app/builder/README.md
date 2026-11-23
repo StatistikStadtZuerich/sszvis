@@ -8,6 +8,10 @@ export cannot disagree. The spec is the only state; code is a projection of it.
 
 ## Layers
 
+The spec-to-code pipeline lives in `packages/chart-builder` (`@sszvis/chart-builder`),
+so other apps can share it. Where this file says `domain/`, read that package's
+`src/`; the app imports it by module, as `@sszvis/chart-builder/<module>`.
+
 - `domain/` - spec in, files out, with no UI: the `Spec` schemas (`spec.ts`), the
   hole-filling emitter (`emit.ts`), `.tmpl` parsing (`recipe.ts`), spec to
   TypeScript (`compile.ts`), the host page (`host.ts`), CSV, ZIP, the initial
@@ -280,19 +284,24 @@ the field in English and titles the chart in German.
 
 ## Verifying
 
-From `apps/new-docs`:
+From `packages/chart-builder`, for the pipeline and the recipes:
 
 - `pnpm test` - both suites below, node first.
-- `pnpm test:node` - the domain and pipeline tests. `compile.test.ts` emits every
-  feature combination into `examples/_builder-check/` and runs
-  `tsc -p examples/tsconfig.json` over it, so the generated code is checked
-  against the library's real types, then removes the directory.
-- `pnpm test:browser` - `marks.browser.test.ts`, in headless chromium
+- `pnpm test:node` - the unit tests beside the code in `src/`, and the
+  integration suites in `test/`. `compile.test.ts` emits every feature
+  combination into `test/_generated/` and runs `tsc -p test/generated.tsconfig.json`
+  over it, so the generated code is checked against the library's real types,
+  then removes the directory. `emission.test.ts` compares each recipe's output
+  with the baselines in `test/__snapshots__/emission/`.
+- `pnpm test:browser` - `test/marks.browser.test.ts`, in headless chromium
   (`vitest.browser.config.ts`). It runs each recipe's emitted chart the way the
   generated `index.html` does - `d3`, `sszvis` and `config` as globals, the CSV
   as a `data:` URL - and checks what it drew.
-- `pnpm type-check` - three projects: the app, `examples/`, and
-  `domain/recipes/tsconfig.json` for the templates.
+- `pnpm type-check` - the package, and `src/recipes/tsconfig.json` for the
+  templates, against `test/globals.d.ts`.
+
+From `apps/new-docs`, for the builder UI: `pnpm test:node` runs the table
+editor's tests, the worker's highlighting, and `boundary.test.ts`.
 
 The browser suite exists because everything else passes for a chart that draws
 nothing. Its `EXPECTED` table names, per recipe, the selector for the data marks

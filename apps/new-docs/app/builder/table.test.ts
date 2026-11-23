@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import { parse } from "./domain/csv";
-import { ColumnName } from "./domain/spec";
+import { parse } from "@sszvis/chart-builder/csv";
+import { ColumnName } from "@sszvis/chart-builder/spec";
 import {
   addedName,
   nextKind,

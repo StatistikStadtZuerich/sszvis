@@ -2,7 +2,7 @@ import { timeFormatLocale } from "d3";
 import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { timeLocale } from "../../../../../packages/sszvis/src/locale.js";
+import { timeLocale } from "../../sszvis/src/locale.js";
 import { parseAs } from "./csv";
 
 /*

@@ -35,6 +35,14 @@
       "outputLogs": "new-only"
     },
     "@sszvis/new-docs#test": {
+      "dependsOn": ["sszvis#build"],
+      "outputLogs": "new-only"
+    },
+    "@sszvis/chart-builder#type-check": {
+      "dependsOn": ["^type-check", "sszvis#build"],
+      "outputLogs": "new-only"
+    },
+    "@sszvis/chart-builder#test": {
       "dependsOn": ["sszvis#build", "@sszvis/geodata#build"],
       "outputLogs": "new-only"
     },

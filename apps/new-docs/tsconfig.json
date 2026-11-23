@@ -7,16 +7,7 @@
     "react-router.config.ts",
     "docs-base.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    ".next",
-    "coverage",
-    "app/builder/domain/recipes/*/chart.ts",
-    "app/builder/domain/recipes/holes.d.ts",
-    "app/builder/domain/recipes/tsconfig.json"
-  ],
+  "exclude": ["node_modules", "dist", "build", ".next", "coverage"],
   "compilerOptions": {
     "rootDirs": [".", "./.react-router/types"],
     "paths": { "~/*": ["./app/*"] }
