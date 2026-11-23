@@ -37,12 +37,22 @@ const CSP = [
   "connect-src 'none'",
 ].join("; ");
 
+/*
+ * A blocked eval does not always throw where anyone sees it - a library that probes for
+ * eval and falls back passes every assertion - but a host still reports it, as MCP Jam's
+ * Strict mode does. So the frame records every violation, before any other script runs.
+ */
+const RECORDER = `window.__violations=[];document.addEventListener("securitypolicyviolation",function(e){window.__violations.push(e.effectiveDirective+" "+e.blockedURI+" at "+e.sourceFile+":"+e.lineNumber+":"+e.columnNumber+" "+e.sample)});`;
+
 const page = Object.entries(LOCAL)
   .reduce(
     (source, [cdn, local]) => source.replaceAll(cdn, new URL(local, location.href).href),
     html,
   )
-  .replace("<head>", `<head><meta http-equiv="Content-Security-Policy" content="${CSP}">`);
+  .replace(
+    "<head>",
+    `<head><meta http-equiv="Content-Security-Policy" content="${CSP}"><script>${RECORDER}</script>`,
+  );
 
 const scope = Effect.runSync(Scope.make());
 let client: McpTest.Client;
@@ -64,8 +74,11 @@ const wire = (value: unknown): unknown => JSON.parse(JSON.stringify(value));
 let frame: HTMLIFrameElement | undefined;
 
 afterEach(() => {
+  const violations = (frame?.contentWindow as (Window & { __violations?: string[] }) | null)
+    ?.__violations;
   frame?.remove();
   frame = undefined;
+  expect(violations ?? [], "CSP violations in the app").toEqual([]);
 });
 
 /** Mounts the app, hands it a render_chart call, and resolves once it has connected. */
