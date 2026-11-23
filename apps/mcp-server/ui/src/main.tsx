@@ -1,3 +1,4 @@
+import "./jitless.ts";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ChartApp } from "./app.tsx";
