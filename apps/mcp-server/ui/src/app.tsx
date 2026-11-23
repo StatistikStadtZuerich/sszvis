@@ -92,11 +92,28 @@ export function ChartApp() {
         const content = result.structuredContent as { readonly spec?: Spec } | undefined;
         if (content?.spec !== undefined) setRequest({ spec: content.spec });
       });
+      /* The host gave up on the call, so nothing more is coming for it. */
+      created.addEventListener("toolcancelled", ({ reason }) => {
+        generation.current += 1;
+        setStatus({
+          state: "error",
+          message: `The chart was cancelled${reason === undefined ? "" : `: ${reason}`}.`,
+        });
+      });
       created.addEventListener("hostcontextchanged", (context) => {
         if (context.displayMode !== undefined) setFullscreen(context.displayMode === "fullscreen");
       });
     },
   });
+
+  /*
+   * The context the host connected with is stored, not announced: a host that opens (or
+   * restores) the app fullscreen sends no hostcontextchanged for it. So read it once here.
+   */
+  useEffect(() => {
+    const mode = app?.getHostContext()?.displayMode;
+    if (mode !== undefined) setFullscreen(mode === "fullscreen");
+  }, [app]);
   useHostStyles(app, app?.getHostContext());
 
   const recipesRef = useRef(recipes);
