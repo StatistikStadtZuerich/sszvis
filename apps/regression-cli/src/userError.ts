@@ -6,7 +6,7 @@
  * exits non-zero on, instead of logging a stack trace at someone who only needs
  * to be told which command to run.
  */
-import { CliError } from "effect/unstable/cli";
+import { CliError } from "effect/cli";
 
 export const userError = (message: string): CliError.UserError =>
   new CliError.UserError({ cause: message, userMessage: message });

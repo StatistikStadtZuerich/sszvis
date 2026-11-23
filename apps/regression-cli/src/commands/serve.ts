@@ -14,15 +14,10 @@ import { createServer } from "node:http";
 import { NodeHttpServer } from "@effect/platform-node";
 import { Config, Effect, Layer, Option } from "effect";
 import { FileSystem } from "effect/FileSystem";
-import { NetAddress } from "effect/unstable/net";
+import { NetAddress } from "effect/net";
 import { Path } from "effect/Path";
-import { Command, Flag } from "effect/unstable/cli";
-import {
-  HttpRouter,
-  HttpServer,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { Command, Flag } from "effect/cli";
+import { HttpRouter, HttpServer, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { Manifest } from "../services/Manifest.ts";
 import { rewriteChart } from "../services/Rewrite.ts";
 import { Workspace } from "../services/Workspace.ts";

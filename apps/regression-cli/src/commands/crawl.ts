@@ -13,8 +13,8 @@
 import { Console, DateTime, Effect, Layer, Option, Ref, Schema } from "effect";
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
-import { Command, Flag } from "effect/unstable/cli";
-import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/unstable/http";
+import { Command, Flag } from "effect/cli";
+import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 import { type Chart, Charts, type Side } from "../domain/Chart.ts";
 import {
   type ChartOutcome,
