@@ -4,8 +4,8 @@ import * as BrowserWorkerRunner from "@effect/platform-browser/BrowserWorkerRunn
 import { Effect, Layer } from "effect";
 import { RpcServer } from "effect/unstable/rpc";
 
-import { findRecipe, recipes } from "../domain/recipes";
-import { summarize } from "../domain/spec";
+import { findRecipe, recipes } from "@sszvis/chart-builder/recipes";
+import { summarize } from "@sszvis/chart-builder/spec";
 import { BuilderRpc } from "./domain";
 import { makePipeline } from "./pipeline";
 

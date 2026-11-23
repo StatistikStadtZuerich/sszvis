@@ -3,10 +3,10 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import { cases, checkboxFeatures } from "./domain/coverage";
-import { recipes } from "./domain/recipes";
-import { FeatureKey, type Recipe, type Spec } from "./domain/spec";
-import { generate } from "./domain/generate";
+import { cases, checkboxFeatures } from "./coverage";
+import { recipes } from "../src/recipes";
+import { FeatureKey, type Recipe, type Spec } from "../src/spec";
+import { generate } from "../src/generate";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 

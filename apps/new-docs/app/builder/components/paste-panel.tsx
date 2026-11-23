@@ -19,7 +19,12 @@ import {
 } from "~/components/ui/table";
 import { Textarea } from "~/components/ui/textarea";
 
-import { type DelimiterName, detectDelimiter, parseDelimited, type Table } from "../domain/csv";
+import {
+  type DelimiterName,
+  detectDelimiter,
+  parseDelimited,
+  type Table,
+} from "@sszvis/chart-builder/csv";
 import { DELIMITER_LABELS } from "../table";
 
 const plural = new Intl.PluralRules("en");

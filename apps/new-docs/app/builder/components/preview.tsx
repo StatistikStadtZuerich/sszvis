@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { typefaceCaption, typefaceMeta } from "~/components/tokens/typeface";
 import { Button } from "~/components/ui/button";
 import { assetUrl } from "../assets";
-import { harmlessValues } from "../domain/csv";
-import { host } from "../domain/host";
-import type { Asset } from "../domain/spec";
+import { harmlessValues } from "@sszvis/chart-builder/csv";
+import { host } from "@sszvis/chart-builder/host";
+import type { Asset } from "@sszvis/chart-builder/spec";
 import { Notice } from "./notice";
 
 /* The workspace's own build of sszvis, so the preview draws with the library as it is in this repo. */

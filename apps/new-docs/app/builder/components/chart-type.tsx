@@ -15,16 +15,16 @@ import { Field, FieldError } from "~/components/ui/field";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { cn } from "~/lib/utils";
 import { ToggleButton, ToggleButtonGroup } from "~/components/ui/toggle-button-group";
-import type { Table } from "../domain/csv";
-import { unmetRoles } from "../domain/initial-spec";
-import { REQUIRED } from "../domain/csv";
+import type { Table } from "@sszvis/chart-builder/csv";
+import { unmetRoles } from "@sszvis/chart-builder/initial-spec";
+import { REQUIRED } from "@sszvis/chart-builder/csv";
 import {
   KIND_LABEL,
   type ColumnKinds,
   type RecipeKey,
   type RecipeSummary,
   type RoleKind,
-} from "../domain/spec";
+} from "@sszvis/chart-builder/spec";
 
 const ICONS: ReadonlyMap<string, LucideIcon> = new Map([
   ["bar-chart-vertical", ChartColumnIcon],

@@ -1,7 +1,7 @@
-import { CONTROLS_FEATURE, CROWDED, filterCandidates } from "./controls";
-import { distinctValues, parse } from "./csv";
-import { applySample, initialSpec } from "./initial-spec";
-import { samples } from "./samples";
+import { CONTROLS_FEATURE, CROWDED, filterCandidates } from "../src/controls";
+import { distinctValues, parse } from "../src/csv";
+import { applySample, initialSpec } from "../src/initial-spec";
+import { samples } from "../src/samples";
 import {
   summarize,
   type Annotation,
@@ -9,7 +9,7 @@ import {
   type Recipe,
   type RecipeSummary,
   type Spec,
-} from "./spec";
+} from "../src/spec";
 
 type Case = {
   readonly label: string;

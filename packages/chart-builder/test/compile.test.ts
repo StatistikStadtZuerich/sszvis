@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 import { Effect } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { cases, checkboxFeatures, combinations } from "./domain/coverage";
-import { serialize } from "./domain/csv";
-import { findRecipe, recipes } from "./domain/recipes";
-import { sampleFor } from "./domain/samples";
+import { cases, checkboxFeatures, combinations } from "./coverage";
+import { serialize } from "../src/csv";
+import { findRecipe, recipes } from "../src/recipes";
+import { sampleFor } from "../src/samples";
 import {
   ColumnName,
   FeatureKey,
@@ -19,9 +19,8 @@ import {
   type Recipe,
   type Spec,
   type Tooltip,
-} from "./domain/spec";
-import { generate } from "./domain/generate";
-import { generate as highlighted } from "./workers/pipeline";
+} from "../src/spec";
+import { generate } from "../src/generate";
 
 /* The spec's keys are branded; these are where this file's literals become keys. */
 const mapping = (entries: Readonly<Record<string, string>>): Fields =>
@@ -38,8 +37,9 @@ const tip = (header: string, body: readonly string[] = []): Tooltip => ({
 });
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const root = path.join(here, "../..");
-const outDir = path.join(root, "examples/_builder-check");
+const root = path.join(here, "..");
+/* Checked by `generated.tsconfig.json`, against `globals.d.ts` and sszvis' published types. */
+const outDir = path.join(here, "_generated");
 
 const emit = async (recipe: Recipe, spec: Omit<Spec, "features">, features: readonly string[]) => {
   const { ts, js } = await generate(recipe, {
@@ -66,7 +66,7 @@ describe("generated code", () => {
       }
       const tsc = spawnSync(
         path.join(root, "node_modules/.bin/tsc"),
-        ["--noEmit", "-p", "examples/tsconfig.json"],
+        ["--noEmit", "-p", "test/generated.tsconfig.json"],
         { cwd: root, encoding: "utf8" },
       );
       expect(tsc.stdout + tsc.stderr).toBe("");
@@ -127,25 +127,6 @@ describe("generated code", () => {
       expect(js).not.toMatch(/\(d: Datum\)/);
     },
   );
-});
-
-describe("highlighting", () => {
-  test("should highlight every file when the pipeline runs", async () => {
-    const entry = Effect.runSync(findRecipe("bar-chart-vertical"));
-    const first = cases([entry])[0];
-    if (first === undefined) throw new Error("no case");
-    const generated = await highlighted(entry, { ...first.spec, features: [] });
-    for (const key of ["ts", "js", "html", "csv"] as const) {
-      const { raw, html } = generated[key];
-      /* `defaultColor: false`: a variable per theme, no inline colour to fight the page's.
-         The variables are the decision; the wrapper's class list is shiki's to spell. */
-      expect(html, key).toContain("--shiki-light:");
-      expect(html, key).toContain("--shiki-dark:");
-      expect(raw.length, key).toBeGreaterThan(0);
-    }
-    expect(generated.csv.raw).toBe(sampleFor(entry.sample).csv);
-    expect(generated.html.raw).toMatch(/^<!doctype html>/);
-  });
 });
 
 describe("spec text in the generated code", () => {

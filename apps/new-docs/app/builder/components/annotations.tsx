@@ -12,8 +12,13 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { typefaceCaption } from "~/components/tokens/typeface";
-import { isValidPosition } from "../domain/annotations";
-import { RoleKey, type Annotation, type AnnotationAxis, type RecipeSummary } from "../domain/spec";
+import { isValidPosition } from "@sszvis/chart-builder/annotations";
+import {
+  RoleKey,
+  type Annotation,
+  type AnnotationAxis,
+  type RecipeSummary,
+} from "@sszvis/chart-builder/spec";
 
 const PLACEHOLDER = { number: "0", date: "01.01.2020", category: "" } as const;
 

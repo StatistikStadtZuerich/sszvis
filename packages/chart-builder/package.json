@@ -1,0 +1,42 @@
+{
+  "name": "@sszvis/chart-builder",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Spec in, chart code out: the sszvis chart builder's recipes, templates and code generation",
+  "license": "BSD-3-Clause",
+  "exports": {
+    "./recipes": "./src/recipes/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit && tsc --noEmit -p src/recipes/tsconfig.json",
+    "test": "vitest run && vitest run --config vitest.browser.config.ts",
+    "test:node": "vitest run",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "d3-dsv": "^3.0.1",
+    "effect": "4.0.0-rc.115",
+    "prettier": "^3.9.6",
+    "sszvis": "workspace:^",
+    "ts-blank-space": "^0.9.0"
+  },
+  "devDependencies": {
+    "@repo/config-typescript": "workspace:*",
+    "@sszvis/geodata": "workspace:*",
+    "@types/d3": "^7.4.3",
+    "@types/d3-dsv": "^3.0.7",
+    "@types/node": "^26.5.1",
+    "@types/topojson-client": "^3.1.5",
+    "@vitest/browser": "^5.0.0",
+    "@vitest/browser-playwright": "^5.0.1",
+    "d3": "^7.9.0",
+    "playwright": "^1.55.0",
+    "topojson-client": "^3.1.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}

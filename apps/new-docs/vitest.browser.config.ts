@@ -1,63 +1,14 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import { playwright } from "@vitest/browser-playwright";
-import { defineConfig, type Plugin } from "vitest/config";
-
-const TOPO_DIR = "../../packages/geodata/dist/topo";
-/* `TOPO_BASE` in app/builder/assets.ts; a config import of app code trips Vite's native loader. */
-const TOPO_PREFIX = "/preview/_static/topo/";
+import { defineConfig } from "vitest/config";
 
 /*
- * The map recipe names its topology by file, and `assetUrl` turns that into the URL
- * the app serves it under. A test that fetched a fixture instead could pass while the
- * app asked for a file that is not there. This serves the same directory the examples
- * plugin does, so the test reads the bytes through the URL the app actually requests.
- */
-const topo = (): Plugin => ({
-  name: "sszvis-topo",
-  /*
-   * Loudly, because falling through to the dev server's index.html gave the chart an
-   * HTML page where it expected a topology: it failed on "Unexpected end of JSON input"
-   * and reported no marks, which reads exactly like a recipe that draws nothing.
-   */
-  buildStart() {
-    const built =
-      fs.existsSync(TOPO_DIR) && fs.readdirSync(TOPO_DIR).some((n) => n.endsWith(".json"));
-    if (!built) {
-      throw new Error(
-        `No TopoJSON in ${TOPO_DIR}. The map recipe loads it at runtime, ` +
-          "so build it first (`pnpm run build:topo`).",
-      );
-    }
-  },
-  configureServer(server) {
-    server.middlewares.use((request, response, next) => {
-      const url = request.url ?? "";
-      if (!url.startsWith(TOPO_PREFIX)) return next();
-      const file = path.join(TOPO_DIR, path.basename(url));
-      if (!fs.existsSync(file)) {
-        response.statusCode = 404;
-        response.end(`No such topology: ${path.basename(url)}`);
-        return;
-      }
-      response.setHeader("Content-Type", "application/json");
-      response.end(fs.readFileSync(file));
-    });
-  },
-});
-
-/*
- * The builder's domain tests run under node and finish in seconds; these run a real
- * browser, because what they check cannot be checked anywhere else. A generated chart
- * that type-checks and reads correctly can still draw nothing - an unbound scale, a
- * datum shape the accessors miss - and only laying it out in a browser tells them
- * apart. jsdom would not: sszvis measures its own dimensions and calls getBBox, and
- * neither exists there, so every chart would report zero marks for reasons that have
- * nothing to do with the chart.
+ * The node tests finish in seconds; these run a real browser, because what they check
+ * cannot be checked anywhere else. jsdom would not do: sszvis measures its own
+ * dimensions and calls getBBox, and neither exists there, so every chart would report
+ * zero marks for reasons that have nothing to do with the chart. The generated charts'
+ * own browser suite lives with them, in packages/chart-builder.
  */
 export default defineConfig({
-  plugins: [topo()],
   test: {
     include: ["app/**/*.browser.test.ts"],
     browser: {

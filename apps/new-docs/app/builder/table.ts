@@ -1,11 +1,16 @@
 /**
  * What the table editor does to a table as the user works on it: naming and renaming
  * columns, cycling a column's kind, sorting rows. None of it reaches the emitted chart,
- * which reads the table through `domain/csv`, so it stays with the editor rather than
+ * which reads the table through `@sszvis/chart-builder/csv`, so it stays with the editor rather than
  * with the code the builder shares.
  */
-import { columnKinds, distinctName, type DelimiterName, type Table } from "./domain/csv";
-import type { ColumnKind, ColumnKinds, ColumnName } from "./domain/spec";
+import {
+  columnKinds,
+  distinctName,
+  type DelimiterName,
+  type Table,
+} from "@sszvis/chart-builder/csv";
+import type { ColumnKind, ColumnKinds, ColumnName } from "@sszvis/chart-builder/spec";
 
 export const DELIMITER_LABELS = {
   comma: "Comma",

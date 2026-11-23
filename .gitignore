@@ -53,8 +53,8 @@ playwright/.cache
 apps/regression-cli/__report__/
 apps/regression-cli/__export__/
 
-# Left behind by apps/new-docs/app/builder/compile.test.ts if a run is killed mid-way.
-apps/new-docs/examples/_builder-check/
+# Left behind by packages/chart-builder/test/compile.test.ts if a run is killed mid-way.
+packages/chart-builder/test/_generated/
 
 # Impeccable design-skill scratch storage (critique snapshots, local config)
 .impeccable/

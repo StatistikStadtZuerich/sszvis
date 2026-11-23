@@ -37,7 +37,7 @@ import {
   type Table,
   rolledOver,
   unsupportedPins,
-} from "../domain/csv";
+} from "@sszvis/chart-builder/csv";
 import {
   addedName,
   nextKind,
@@ -46,7 +46,12 @@ import {
   type SortDirection,
   sortOrder,
 } from "../table";
-import { ColumnName, KIND_LABEL, type ColumnKind, type ColumnKinds } from "../domain/spec";
+import {
+  ColumnName,
+  KIND_LABEL,
+  type ColumnKind,
+  type ColumnKinds,
+} from "@sszvis/chart-builder/spec";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { PastePanel } from "./paste-panel";
 

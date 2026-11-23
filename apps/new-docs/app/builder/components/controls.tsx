@@ -11,9 +11,9 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { typefaceCaption } from "~/components/tokens/typeface";
-import { CROWDED, filterCandidates } from "../domain/controls";
-import { columnKinds, distinctValues, type Table } from "../domain/csv";
-import { ColumnName, type Spec } from "../domain/spec";
+import { CROWDED, filterCandidates } from "@sszvis/chart-builder/controls";
+import { columnKinds, distinctValues, type Table } from "@sszvis/chart-builder/csv";
+import { ColumnName, type Spec } from "@sszvis/chart-builder/spec";
 
 /** Why a table has no column to filter on, said in the terms the table editor uses. */
 const NO_CANDIDATES =

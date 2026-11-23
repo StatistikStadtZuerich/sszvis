@@ -2,8 +2,8 @@ import { Schema } from "effect";
 import { Rpc, RpcGroup } from "effect/unstable/rpc";
 
 import { Source } from "../../lib/source";
-import { BuilderCompileError } from "../domain/emit";
-import { Asset, RecipeSummary, Spec } from "../domain/spec";
+import { BuilderCompileError } from "@sszvis/chart-builder/emit";
+import { Asset, RecipeSummary, Spec } from "@sszvis/chart-builder/spec";
 
 export const Generated = Schema.Struct({
   ts: Source,

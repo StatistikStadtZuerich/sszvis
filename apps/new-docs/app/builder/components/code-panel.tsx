@@ -7,9 +7,9 @@ import { cn } from "~/lib/utils";
 
 import fallbackUrl from "../../../examples/_static/fallback.png?url";
 import { assetUrl } from "../assets";
-import { bundleEntries, MissingAssetError } from "../domain/bundle";
-import { BUNDLE } from "../domain/host";
-import { zip } from "../domain/zip";
+import { bundleEntries, MissingAssetError } from "@sszvis/chart-builder/bundle";
+import { BUNDLE } from "@sszvis/chart-builder/host";
+import { zip } from "@sszvis/chart-builder/zip";
 import type { Generated } from "../workers/domain";
 
 /* The generated files the panel can show. `assets` is bytes the bundle carries, not source. */

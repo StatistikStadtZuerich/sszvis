@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import { cases } from "./coverage";
-import { recipes } from "./recipes";
-import type { Recipe, Spec } from "./spec";
+import { recipes } from "../src/recipes";
+import type { Recipe, Spec } from "../src/spec";
 
 const casesFor = (key: string) => {
   const recipe = recipes.find((candidate) => candidate.key === key);

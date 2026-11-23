@@ -43,12 +43,12 @@ import {
   parse,
   REQUIRED,
   serialize,
-} from "./domain/csv";
-import { CONTROLS_FEATURE, renameControl } from "./domain/controls";
-import { unkeyedValues } from "./domain/palettes";
-import { applySample, switchRecipe, unmappedRoles } from "./domain/initial-spec";
-import { isPristine, type Sample, samples } from "./domain/samples";
-import { KIND_LABEL, optionValue, type RecipeSummary, TITLE } from "./domain/spec";
+} from "@sszvis/chart-builder/csv";
+import { CONTROLS_FEATURE, renameControl } from "@sszvis/chart-builder/controls";
+import { unkeyedValues } from "@sszvis/chart-builder/palettes";
+import { applySample, switchRecipe, unmappedRoles } from "@sszvis/chart-builder/initial-spec";
+import { isPristine, type Sample, samples } from "@sszvis/chart-builder/samples";
+import { KIND_LABEL, optionValue, type RecipeSummary, TITLE } from "@sszvis/chart-builder/spec";
 
 export const clientLoader = () => null;
 clientLoader.hydrate = true as const;
