@@ -87,6 +87,10 @@ interface HostOptions {
   readonly eager?: boolean;
   /** Milliseconds to hold a tool call back, so an older request can finish after a newer one. */
   readonly delay?: (name: string, args: Record<string, unknown> | undefined) => number;
+  /** The display mode the host connects in. */
+  readonly displayMode?: "inline" | "fullscreen";
+  /** Cancel the call instead of sending its result. */
+  readonly cancel?: string;
   /** Changes the spec render_chart returned before the host passes it on. */
   readonly spec?: (spec: Record<string, unknown>) => Record<string, unknown>;
 }
@@ -109,7 +113,12 @@ async function host(args: Record<string, unknown>, options: HostOptions = {}) {
     null,
     { name: "test host", version: "0" },
     { serverTools: {}, serverResources: {} },
-    { hostContext: { displayMode: "inline", availableDisplayModes: ["inline", "fullscreen"] } },
+    {
+      hostContext: {
+        displayMode: options.displayMode ?? "inline",
+        availableDisplayModes: ["inline", "fullscreen"],
+      },
+    },
   );
   /* As Claude does: grant the mode asked for, so the app can open its editing panels. */
   bridge.onrequestdisplaymode = async ({ mode }) => ({ mode });
@@ -144,7 +153,10 @@ async function host(args: Record<string, unknown>, options: HostOptions = {}) {
   iframe.srcdoc = page;
   await initialized;
 
-  if (options.eager !== true) {
+  if (options.cancel !== undefined) {
+    await bridge.sendToolInput({ arguments: args });
+    await bridge.sendToolCancelled({ reason: options.cancel });
+  } else if (options.eager !== true) {
     await bridge.sendToolInput({ arguments: args });
     await bridge.sendToolResult(result);
   }
@@ -435,6 +447,28 @@ describe("the chart app in a host", () => {
     expect(shown).toContain(payload);
     expect(view.document.querySelector(".sszvis-tooltip img")).toBeNull();
     expect((view as Window & { __pwned?: number }).__pwned).toBeUndefined();
+  });
+
+  test("should end the wait and say so when the host cancels the call", async () => {
+    const view = await host({ recipe: "bar-chart-vertical" }, { cancel: "user action" });
+
+    expect(
+      await settle(
+        () => status(view),
+        (text) => text.includes("cancelled"),
+      ),
+    ).toBe("The chart was cancelled: user action.");
+  });
+
+  test("should open with its panels when the host starts it fullscreen", async () => {
+    const view = await host({ recipe: "bar-chart-vertical" }, { displayMode: "fullscreen" });
+    await settle(
+      () => status(view),
+      (text) => text === "",
+    );
+
+    expect(findButton(view, "Horizontal bar")).toBeDefined();
+    expect(findButton(view, "Done")).toBeDefined();
   });
 
   test("should show the generated code", async () => {
