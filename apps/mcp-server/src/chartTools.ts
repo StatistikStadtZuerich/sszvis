@@ -179,6 +179,38 @@ const RenderChart = Tool.make("render_chart", {
 
 const fail = (message: string) => Effect.fail(new ChartInputError({ message }));
 
+/*
+ * chart-builder matches roles to columns by trying every assignment, which grows as the
+ * column count to the power of the recipe's roles: a stacked bar over 1,000 columns is a
+ * billion tries, and this server would stop answering anyone while it made them. Real
+ * tables for these charts have a handful of columns, so a request past these is refused.
+ */
+const MAX_COLUMNS = 40;
+const MAX_CSV_LENGTH = 1_000_000;
+
+/** Why `csv` is too big to chart, or `undefined` if it is not. */
+function oversized(csv: string): string | undefined {
+  if (csv.length > MAX_CSV_LENGTH) {
+    return `The CSV is ${csv.length.toLocaleString("en")} characters; send at most ${MAX_CSV_LENGTH.toLocaleString("en")}.`;
+  }
+  const columns = parse(csv).columns.length;
+  if (columns > MAX_COLUMNS) {
+    return `The CSV has ${columns} columns; send at most ${MAX_COLUMNS}, keeping only the ones the chart needs.`;
+  }
+  return undefined;
+}
+
+/*
+ * Option values are text the generated chart writes into HTML, a tooltip's unit among them,
+ * so markup in one would run in the app. They are plain text; angle brackets are refused.
+ */
+function markup(options: Readonly<Record<string, string>>): string | undefined {
+  const found = Object.entries(options).find(([, value]) => /[<>]/.test(value));
+  return found === undefined
+    ? undefined
+    : `Option "${found[0]}" contains < or >; option values are plain text.`;
+}
+
 /**
  * The model's own bindings, with the roles it left out matched among the columns it did not
  * use. Matching every role first and then overriding some lets a guessed role keep a column
@@ -204,8 +236,12 @@ const specFrom = Effect.fnUntraced(function* (params: RenderChartParams) {
     return yield* fail("Pass either `csv` or `sample`, not both.");
   }
   const csv = params.csv ?? sampleFor(params.sample ?? summary.sample).csv;
+  const tooBig = oversized(csv);
+  if (tooBig !== undefined) return yield* fail(tooBig);
   const columns = parse(csv).columns;
   if (columns.length === 0) return yield* fail("The CSV has no header row.");
+  const marked = markup(params.options ?? {});
+  if (marked !== undefined) return yield* fail(marked);
 
   const base = initialSpec(summary, csv);
   const roleKeys = summary.roles.map((role) => role.key);
@@ -328,6 +364,8 @@ const handlers = Effect.gen(function* () {
       return { spec };
     }),
     update_chart: Effect.fnUntraced(function* ({ spec: current, recipe }) {
+      const refused = oversized(current.csv) ?? markup(current.options);
+      if (refused !== undefined) return yield* fail(refused);
       const from = summaries.find((candidate) => candidate.key === current.recipe);
       const to = summaries.find((candidate) => candidate.key === (recipe ?? current.recipe));
       if (from === undefined || to === undefined) {

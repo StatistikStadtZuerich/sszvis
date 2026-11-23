@@ -174,6 +174,17 @@ describe("render_chart", () => {
     [{ recipe: "line-chart", features: ["sparkles"] }, 'has no feature "sparkles"'],
     [{ recipe: "line-chart", csv: "a,b\n1,2", sample: "regen-november" }, "not both"],
     [{ recipe: "line-chart", csv: "Name\nZürich" }, "No column fits the role(s)"],
+    [
+      { recipe: "bar-chart-vertical", options: { unit: "<img src=x onerror=alert(1)>" } },
+      "plain text",
+    ],
+    [
+      {
+        recipe: "bar-chart-vertical-stacked",
+        csv: `${Array.from({ length: 41 }, (_, at) => `c${at}`).join(",")}\n${"1,".repeat(40)}1`,
+      },
+      "at most 40",
+    ],
   ])("should reject %j with a message the model can act on", async (args, message) => {
     const result = await call("render_chart", args);
 
@@ -183,6 +194,16 @@ describe("render_chart", () => {
 });
 
 describe("update_chart", () => {
+  test("should refuse a spec whose options carry markup, as render_chart does", async () => {
+    const result = await call("render_chart", { recipe: "bar-chart-vertical" });
+    const { spec } = result.structuredContent as { spec: { options: Record<string, string> } };
+    const marked = { ...spec, options: { unit: "<b>kg</b>" } };
+
+    const refused = await call("update_chart", { spec: marked });
+    expect(refused.isError).toBe(true);
+    expect(text(refused)).toContain("plain text");
+  });
+
   const rendered = async () => {
     const result = await call("render_chart", {
       recipe: "bar-chart-vertical",
