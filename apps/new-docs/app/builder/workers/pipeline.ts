@@ -96,7 +96,11 @@ export const makePipeline: Effect.Effect<Generate> = Effect.gen(function* () {
       ts: highlight(ts, "chart.ts"),
       js: highlight(js, BUNDLE.chart),
       html: highlight(
-        host(optionValue(recipe.options, spec, TITLE), assets, recipe.scripts ?? []),
+        host({
+          title: optionValue(recipe.options, spec, TITLE),
+          assets,
+          scripts: recipe.scripts ?? [],
+        }),
         BUNDLE.html,
       ),
       csv: highlight(spec.csv, BUNDLE.data),

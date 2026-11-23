@@ -2,13 +2,13 @@ import { Option, Schema } from "effect";
 import { useEffect, useRef, useState } from "react";
 import { typefaceCaption, typefaceMeta } from "~/components/tokens/typeface";
 import { Button } from "~/components/ui/button";
-import template from "../../../examples/_template.html?raw";
 import { assetUrl } from "../assets";
 import { harmlessValues } from "../domain/csv";
-import { escapeHtml, libraryTags } from "../domain/host";
+import { host } from "../domain/host";
 import type { Asset } from "../domain/spec";
 import { Notice } from "./notice";
 
+/* The workspace's own build of sszvis, so the preview draws with the library as it is in this repo. */
 const ASSETS = "/preview/_assets";
 const FALLBACK = "/preview/_static/fallback.png";
 
@@ -117,27 +117,27 @@ export const Preview = ({
   const [height, setHeight] = useState(RESERVED_HEIGHT);
   const frameRef = useRef<HTMLIFrameElement>(null);
 
-  const config = {
-    data: `data:text/csv;charset=utf-8,${encodeURIComponent(harmlessValues(csv))}`,
-    id: "#sszvis-chart",
-    fallback: FALLBACK,
-    /*
-     * The bundle puts these beside the chart; here the app already serves them, and
-     * the frame has no base URL of its own to resolve a relative path against.
-     */
-    ...Object.fromEntries(
-      assets.map((asset) => [asset.key, new URL(assetUrl(asset), window.location.origin).href]),
-    ),
-  };
-
+  /*
+   * The same page the export ships, with what a frame cannot reach swapped out: the
+   * chart inline rather than beside it, and the data as a URL. The bundle puts the other
+   * files beside the chart; here the app already serves them, and the frame has no base
+   * URL of its own to resolve a relative path against.
+   */
   const srcDoc =
     status.kind === "ready" && js !== ""
-      ? template
-          .replaceAll("{{title}}", () => escapeHtml(title))
-          .replaceAll("{{assets}}", () => ASSETS)
-          .replaceAll("{{config}}", () => JSON.stringify(config, null, 2))
-          .replaceAll("{{scripts}}", () => libraryTags(scripts) + REPORTER)
-          .replaceAll("// {{chart}}", () => indent(js, 6).trimStart())
+      ? host({
+          title,
+          assets,
+          scripts,
+          cdn: { sszvis: `${ASSETS}/sszvis.js`, sszvisCss: `${ASSETS}/sszvis.css` },
+          files: {
+            data: `data:text/csv;charset=utf-8,${encodeURIComponent(harmlessValues(csv))}`,
+            fallback: FALLBACK,
+            asset: (asset) => new URL(assetUrl(asset), window.location.origin).href,
+          },
+          inline: js,
+          before: REPORTER,
+        })
       : "";
 
   useEffect(() => {
@@ -203,12 +203,4 @@ export const Preview = ({
       )}
     </div>
   );
-};
-
-const indent = (code: string, spaces: number) => {
-  const pad = " ".repeat(spaces);
-  return code
-    .split("\n")
-    .map((line) => (line.trim() ? pad + line : line))
-    .join("\n");
 };
