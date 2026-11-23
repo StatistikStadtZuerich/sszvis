@@ -4,6 +4,13 @@ import { globSync } from "glob";
 // Must exceed the library's longest transition
 const RENDER_DELAY = 700;
 
+/*
+ * Tall enough for the tallest example page (976px). A full-page screenshot would
+ * follow each page's height, but that differs by a pixel or two between browsers,
+ * and the three share one baseline - so the viewport is fixed instead.
+ */
+test.use({ viewport: { width: 1280, height: 1024 } });
+
 // The docs site builds every example as a standalone page at /preview/<chart>/<name>/;
 // turbo runs its build first. Kept in sync with playwright.config.js.
 const PREVIEW_DIR = "../../../../apps/docs/build/client/preview";
