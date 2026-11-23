@@ -103,22 +103,34 @@ export async function runChart(
     ...Object.fromEntries(update.assets.map((asset) => [asset.key, asset.path])),
   };
 
-  /* An inline script runs as it is appended, and what it throws reaches window, not here. */
+  /*
+   * What the chart throws reaches window, not here: its setup as the script is appended, and
+   * its render a frame later, from sszvis.app's requestAnimationFrame. So the listener stays
+   * until the chart has drawn, and anything it caught by then fails the run.
+   */
   let thrown: unknown;
+  let stop = () => {};
+  /* An error ends the wait for a chart, which may never come. */
+  const stopped = new Promise<void>((resolve) => (stop = resolve));
   const onError = (event: ErrorEvent) => {
-    thrown = event.error ?? new Error(event.message);
+    thrown ??= event.error ?? new Error(event.message);
+    stop();
   };
   window.addEventListener("error", onError);
-  const script = document.createElement("script");
-  /* Classic scripts share one global scope, so a second chart's top-level consts would clash. */
-  script.textContent = `(() => {\n${update.js}\n})();`;
-  document.body.append(script);
-  script.remove();
-  window.removeEventListener("error", onError);
-  if (thrown !== undefined) {
+  try {
+    const script = document.createElement("script");
+    /* Classic scripts share one global scope, so a second chart's top-level consts would clash. */
+    script.textContent = `(() => {\n${update.js}\n})();`;
+    document.body.append(script);
+    script.remove();
+    if (thrown === undefined) await Promise.race([drawn(container), stopped]);
+    if (thrown !== undefined) throw thrown;
+    /* sszvis.app draws its fallback image in place of a chart whose setup failed. */
+    if (container.querySelector(".sszvis-fallback-image") !== null) {
+      throw new Error("The chart could not be drawn from this data.");
+    }
+  } finally {
+    window.removeEventListener("error", onError);
     host.style.minHeight = "";
-    throw thrown;
   }
-  await drawn(container);
-  host.style.minHeight = "";
 }

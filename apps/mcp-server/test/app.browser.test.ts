@@ -363,6 +363,32 @@ describe("the chart app in a host", () => {
     expect(Math.min(...widths)).toBeGreaterThan(10);
   });
 
+  test("should report a chart that throws while it renders", async () => {
+    const view = await host({ recipe: "bar-chart-vertical" });
+    await settle(
+      () => status(view),
+      (text) => text === "",
+    );
+    button(view, "Edit").click();
+    const box = await settle(
+      () => view.document.querySelector<HTMLElement>('[role="checkbox"]'),
+      (found) => found !== null,
+    );
+    /* sszvis calls render from requestAnimationFrame, after the chart's script has returned. */
+    (view as Window & { sszvis: Record<string, unknown> }).sszvis["createSvgLayer"] = () => {
+      throw new Error("boom in render");
+    };
+    box?.click();
+
+    expect(
+      await settle(
+        () => status(view),
+        (text) => text.includes("boom"),
+      ),
+    ).toContain("boom in render");
+    expect(view.document.querySelector('[role="alert"]')?.textContent).toContain("boom in render");
+  });
+
   test("should show the generated code", async () => {
     const view = await host({ recipe: "line-chart" });
     await settle(
