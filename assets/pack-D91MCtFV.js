@@ -1,0 +1,40 @@
+import{o as e,t}from"./jsx-runtime-B4SJo7uk.js";import{n}from"./lib-BMFDpM32.js";var r=t(),i={toc:[{id:`sszvispack`,value:`sszvis.pack`,depth:2},{id:`data-structure`,value:`Data Structure`,depth:3},{id:`configuration`,value:`Configuration`,depth:3},{id:`packcolorscale`,value:`pack.colorScale`,depth:4},{id:`packtransition`,value:`pack.transition`,depth:4},{id:`packcontainerwidth`,value:`pack.containerWidth`,depth:4},{id:`packcontainerheight`,value:`pack.containerHeight`,depth:4},{id:`packshowlabels`,value:`pack.showLabels`,depth:4},{id:`packlabel`,value:`pack.label`,depth:4},{id:`packminradius`,value:`pack.minRadius`,depth:4},{id:`packcirclestroke`,value:`pack.circleStroke`,depth:4},{id:`packcirclestrokewidth`,value:`pack.circleStrokeWidth`,depth:4},{id:`packradiusscale`,value:`pack.radiusScale`,depth:4},{id:`chart`,value:`Chart`,depth:2}]};function a(e){let t={a:`a`,blockquote:`blockquote`,code:`code`,h1:`h1`,h2:`h2`,h3:`h3`,h4:`h4`,li:`li`,p:`p`,span:`span`,ul:`ul`,...n(),...e.components},{Example:i}=t;return i||s(`Example`,!0),(0,r.jsxs)(r.Fragment,{children:[(0,r.jsxs)(t.h1,{id:`pack`,children:[`Pack`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#pack`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsxs)(t.blockquote,{children:[`
+`,(0,r.jsx)(t.p,{children:`Pack charts (also known as circle pack diagrams) are suited to visualizing hierarchical data with quantitative values, where the size of each circle represents the magnitude of a metric and nested circles show the hierarchical structure.`}),`
+`]}),`
+`,(0,r.jsxs)(t.h2,{id:`sszvispack`,children:[`sszvis.pack`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#sszvispack`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsxs)(t.h3,{id:`data-structure`,children:[`Data Structure`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#data-structure`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The pack component expects data in a hierarchical structure, where each node has the following properties:`}),`
+`,(0,r.jsxs)(t.ul,{children:[`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`data`}),` - the associated data as passed to hierarchy`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`depth`}),` - zero for the root, increasing by one for each descendant generation`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`height`}),` - the greatest distance from any descendant leaf, or zero for leaves`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`parent`}),` - the parent node, or null for the root node`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`children`}),` - an array of child nodes, if any, or undefined for leaves`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`value`}),` - the optional summed value of the node and its descendants`]}),`
+`]}),`
+`,(0,r.jsxs)(t.p,{children:[`Using the `,(0,r.jsx)(t.code,{children:`sszvis.prepareHierarchyData()`}),` function can help structure your data appropriately for the pack component. For more details, see the D3 `,(0,r.jsx)(t.a,{href:`https://d3js.org/d3-hierarchy/hierarchy`,children:`hierarchy documentation`}),`.`]}),`
+`,(0,r.jsx)(t.p,{children:`The component automatically creates tooltip anchors at the center of each circle for easy tooltip integration.`}),`
+`,(0,r.jsxs)(t.h3,{id:`configuration`,children:[`Configuration`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#configuration`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsxs)(t.h4,{id:`packcolorscale`,children:[(0,r.jsx)(t.code,{children:`pack.colorScale`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packcolorscale`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Function that returns colors based on category keys. This is the preferred way to apply colors, as the component will automatically use the top-level category for coloring.`}),`
+`,(0,r.jsxs)(t.h4,{id:`packtransition`,children:[(0,r.jsx)(t.code,{children:`pack.transition`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packtransition`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Boolean flag indicating whether to enable transitions for the pack layout. Defaults to true.`}),`
+`,(0,r.jsxs)(t.h4,{id:`packcontainerwidth`,children:[(0,r.jsx)(t.code,{children:`pack.containerWidth`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packcontainerwidth`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The width of the container for the pack chart. Defaults to 800.`}),`
+`,(0,r.jsxs)(t.h4,{id:`packcontainerheight`,children:[(0,r.jsx)(t.code,{children:`pack.containerHeight`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packcontainerheight`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The height of the container for the pack chart. Defaults to 600.`}),`
+`,(0,r.jsxs)(t.h4,{id:`packshowlabels`,children:[(0,r.jsx)(t.code,{children:`pack.showLabels`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packshowlabels`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Boolean flag indicating whether to display labels on leaf circles. Defaults to false.`}),`
+`,(0,r.jsxs)(t.h4,{id:`packlabel`,children:[(0,r.jsx)(t.code,{children:`pack.label`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packlabel`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsxs)(t.p,{children:[`Accessor function for the label text. Defaults to `,(0,r.jsx)(t.code,{children:`d.data.key`}),`.`]}),`
+`,(0,r.jsxs)(t.h4,{id:`packminradius`,children:[(0,r.jsx)(t.code,{children:`pack.minRadius`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packminradius`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Minimum circle radius for visibility. Circles smaller than this value will be filtered out. Defaults to 1.`}),`
+`,(0,r.jsxs)(t.h4,{id:`packcirclestroke`,children:[(0,r.jsx)(t.code,{children:`pack.circleStroke`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packcirclestroke`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The stroke color for circle borders. Defaults to "#ffffff" (white).`}),`
+`,(0,r.jsxs)(t.h4,{id:`packcirclestrokewidth`,children:[(0,r.jsx)(t.code,{children:`pack.circleStrokeWidth`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packcirclestrokewidth`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The stroke width for circle borders. Defaults to 1.`}),`
+`,(0,r.jsxs)(t.h4,{id:`packradiusscale`,children:[(0,r.jsx)(t.code,{children:`pack.radiusScale`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#packradiusscale`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Custom radius scale function for circle sizing. Optional parameter that allows you to override the default radius calculation from the pack layout.`}),`
+`,(0,r.jsxs)(t.h2,{id:`chart`,children:[`Chart`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#chart`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(i,{id:`pack/basic`})]})}var o=e(function(e={}){let{wrapper:t}={...n(),...e.components};return t?(0,r.jsx)(t,{...e,children:(0,r.jsx)(a,{...e})}):a(e)});function s(e,t){throw Error(`Expected `+(t?`component`:`object`)+" `"+e+"` to be defined: you likely forgot to import, pass, or provide it.")}export{o as default,i as handle};

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Population Pyramid — Reference</title>
+    <link href="/sszvis/preview/_assets/sszvis.css" rel="stylesheet" />
+    <style>
+      /*
+       * sszvis draws for a light page: its text and axes are dark and it sets
+       * no background of its own. Without this the standalone page inherits the
+       * browser's dark preference and the chart is drawn dark-on-dark.
+       */
+      html {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+      }
+      /*
+       * Breathing room inside the frame: embedded in the docs the page is the
+       * chart, and a chart drawn flush to the edge collides with the frame's
+       * own border. `box-sizing` keeps the padding inside the width the chart
+       * measures itself against, so it still fits the viewport it is given.
+       */
+      body {
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      /*
+       * A chart's marks are not always inside its bounds: sszvis places a point
+       * at its value and draws the symbol around it, so the outer half of an
+       * edge bubble - up to the largest radius - falls outside the SVG, which
+       * clips at its own viewport. Letting the SVG paint outside puts that
+       * overhang in the padding above rather than slicing it off.
+       *
+       * The viewport still clips, which matters: a chart given less width than
+       * it was written for can run far past its bounds (the overlapping line
+       * chart lays out ~240px of labels off its right edge at 800px), and that
+       * has to stay out of sight rather than stretching the page sideways.
+       */
+      svg {
+        overflow: visible;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sszvis-chart"></div>
+
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="/sszvis/preview/_assets/sszvis.js"></script>
+    <script>
+      var config = {
+  "data": "data.csv",
+  "id": "#sszvis-chart",
+  "fallback": "../../_static/fallback.png"
+};
+    </script>
+    <script>
+      /**
+       * Population pyramid with a reference outline drawn over the bars.
+       *
+       * @sszvis   3.5.1
+       * @chart    population-pyramid
+       * @features legend
+       * @date     2026-09-14
+       */
+
+      // Magic Numbers
+
+      /**
+       * The pyramid is laid out 2px narrower than the container so that the outermost
+       * bars are not clipped by the edge of the SVG.
+       */
+      const PYRAMID_INSET = 2;
+      const CHART_PADDING = { top: 25, bottom: 86 };
+      /** Vertical gap in pixels between the bottom of the chart area and the colour legend. */
+      const LEGEND_OFFSET = 60;
+      /** The series drawn as bars; the other education group is drawn as the reference line. */
+      const SERIES_KEY = "Hochschulabschluss";
+      const REFERENCE_KEY = "Andere";
+
+      // Types
+
+      /** The rows grouped by education group and then by gender, as the pyramid reads them. */
+
+      // Accessors
+
+      const vAcc = (d) => d.value;
+      const gAcc = (d) => d.gender;
+      const aAcc = (d) => d.age;
+      const groupAcc = (d) => d.group;
+
+      const side = (group, gender) => (p) => p[group]?.[gender] ?? [];
+
+      // Application
+
+      sszvis.app({
+        fallback: { element: config.id, src: config.fallback },
+
+        init: (state) =>
+          d3
+            .csv(config.data, (d) => ({
+              age: sszvis.parseNumber(d["Alter"]),
+              gender: d["Geschlecht"] ?? "",
+              group: d["Ausbildung"] ?? "",
+              value: sszvis.parseNumber(d["Anzahl"]),
+            }))
+            .then((data) => {
+              state.data = data;
+              // The pyramid has one bar per year of age, from newborns to centenarians.
+              state.ages = d3.range(0, 101);
+              state.maxValue = d3.max(data, vAcc) ?? 0;
+              state.populations = sszvis.cascade().objectBy(groupAcc).objectBy(gAcc).apply(data);
+            }),
+
+        render(state) {
+          const pyramidWidth = (sszvis.measureDimensions(config.id).width ?? 0) - PYRAMID_INSET;
+          const pyramidDimensions = sszvis.layoutPopulationPyramid(pyramidWidth, state.ages.length);
+          const bounds = sszvis.bounds(
+            {
+              height: CHART_PADDING.top + pyramidDimensions.totalHeight + CHART_PADDING.bottom,
+              top: CHART_PADDING.top,
+              bottom: CHART_PADDING.bottom,
+              left: pyramidDimensions.chartPadding,
+              right: pyramidDimensions.chartPadding,
+            },
+            config.id,
+          );
+
+          // Scales
+
+          const lengthScale = d3
+            .scaleLinear()
+            .domain([0, state.maxValue])
+            .range([0, pyramidDimensions.maxBarLength]);
+
+          const positionScale = d3.scaleOrdinal().domain(state.ages).range(pyramidDimensions.positions);
+
+          const colorScale = sszvis.scaleGender3();
+
+          // Layers
+
+          const chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: "Bevölkerung der Stadt Zürich nach Alter, Geschlecht und Ausbildung",
+              description:
+                "Anzahl Frauen und Männer mit Hochschulabschluss, mit der übrigen Bevölkerung als Referenzlinie.",
+            })
+            .datum(state.populations);
+
+          // Components
+
+          const pyramid = sszvis
+            .pyramid()
+            .barFill((d) => String(colorScale(gAcc(d))))
+            .barPosition((d) => positionScale(aAcc(d)))
+            .barHeight(pyramidDimensions.barHeight)
+            .barWidth((d) => lengthScale(vAcc(d)))
+            .leftAccessor(side(SERIES_KEY, "Frauen"))
+            .rightAccessor(side(SERIES_KEY, "Männer"))
+            .leftRefAccessor(side(REFERENCE_KEY, "Frauen"))
+            .rightRefAccessor(side(REFERENCE_KEY, "Männer"));
+
+          const xAxis = sszvis.axisX
+            .pyramid()
+            .scale(lengthScale)
+            .orient("bottom")
+            .ticks(5)
+            .title("Anzahl Frauen und Männer mit Hochschulabschluss")
+            .titleAnchor("middle")
+            .titleCenter(true);
+
+          const yAxis = sszvis.axisY
+            .ordinal()
+            .scale(positionScale)
+            .orient("right")
+            // NOTE: The bar for age 0 sits on the axis line, so its label is left out.
+            .tickFormat((d) => (Number(d) === 0 ? "" : sszvis.formatAge(Number(d))))
+            .ticks(5)
+            .title("Alter in Jahren")
+            .dyTitle(-18);
+
+          const colorLegend = sszvis
+            .legendColorOrdinal()
+            .scale(colorScale)
+            .reverse(true)
+            .horizontalFloat(true);
+
+          // Rendering
+
+          chartLayer
+            .selectGroup("populationPyramid")
+            .attr("transform", sszvis.translateString(bounds.innerWidth / 2, 0))
+            .call(pyramid);
+
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight))
+            .call(xAxis);
+
+          chartLayer.selectGroup("yAxis").call(yAxis);
+
+          chartLayer
+            .selectGroup("colorLegend")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + LEGEND_OFFSET))
+            .call(colorLegend);
+        },
+      });
+    </script>
+  </body>
+</html>

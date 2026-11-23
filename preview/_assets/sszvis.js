@@ -1,0 +1,14097 @@
+/*! sszvis v3.5.2, Copyright 2014-present Statistik Stadt Zürich */
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
+    typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.sszvis = {}, global.d3));
+})(this, (function (exports, d3) { 'use strict';
+
+    d3.selection.prototype.selectDiv = function (key) {
+      return this.selectAll(`[data-d3-selectdiv="${key}"]`).data(d => [d]).join("div").attr("data-d3-selectdiv", key).style("position", "absolute");
+    };
+
+    d3.selection.prototype.selectGroup = function (key) {
+      return this.selectAll(`[data-d3-selectgroup="${key}"]`).data(d => [d]).join("g").attr("data-d3-selectgroup", key);
+    };
+
+    /**
+     * d3 plugin to simplify creating reusable charts. Implements
+     * the reusable chart interface and can thus be used interchangeably
+     * with any other reusable charts.
+     *
+     * @example
+     * var myAxis = sszvis.component()
+     *   .prop('ticks').ticks(10)
+     *   .render(function(data, i, j) {
+     *     var selection = select(this);
+     *     var props = selection.props();
+     *     var axis = d3.svg.axis().ticks(props.ticks);
+     *     selection
+     *       .append('g')
+     *       .call(axis);
+     *   })
+     * console.log(myAxis.ticks()); //=> 10
+     * select('svg').call(myAxis.ticks(3));
+     *
+     * @see http://bost.ocks.org/mike/chart/
+     *
+     * @property {function} prop Define a property accessor
+     * @property {function} render The chart's body
+     *
+     * @return {sszvis.component} A d3 reusable chart
+     */
+    function component() {
+      const props = {};
+      let selectionRenderer = null;
+      let renderer = identity$1;
+      /**
+       * Constructor
+       *
+       * @param  {d3.selection} selection Passed in by d3
+       */
+      function sszvisComponent(selection) {
+        if (selectionRenderer) {
+          // Attach the props reader d3's Selection prototype is augmented with below.
+          Reflect.set(selection, "props", () => clone(props));
+          selectionRenderer.apply(selection, slice(arguments));
+        }
+        selection.each(function () {
+          // Stash the props on the node itself, where selection.props() reads them back.
+          Reflect.set(this, "__props__", clone(props));
+          renderer.apply(this, slice(arguments));
+        });
+      }
+      /**
+       * Define a property accessor with an optional setter
+       *
+       * @param  {String} prop The property's name
+       * @param  {Function} [setter] The setter's context will be bound to the
+       *         sszvis.component. Sets the returned value to the given property
+       * @return {sszvis.component}
+       */
+      sszvisComponent.prop = (prop, setter = identity$1) => {
+        // The accessor is created from a runtime prop name, so it cannot be assigned through
+        // a statically known key.
+        Reflect.set(sszvisComponent, prop, accessor$1(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent));
+        return sszvisComponent;
+      };
+      /**
+       * Delegate a properties' accessors to a delegate object
+       *
+       * @param  {String} prop     The property's name
+       * @param  {Object} delegate The target having getter and setter methods for prop
+       * @return {sszvis.component}
+       */
+      sszvisComponent.delegate = (prop, delegate) => {
+        // Same as in prop(): a runtime prop name on both the component and the delegate.
+        const delegated = (...args) => {
+          const target = Reflect.get(delegate, prop);
+          const result = target.apply(delegate, slice(args));
+          return args.length === 0 ? result : sszvisComponent;
+        };
+        Reflect.set(sszvisComponent, prop, delegated);
+        return sszvisComponent;
+      };
+      /**
+       * Creates a render context for the given component's parent selection.
+       * Use this, when you need full control over the rendering of the component
+       * and you need access to the full selection instead of just the selection
+       * of one datum.
+       *
+       * @param  {Function} callback
+       * @return {[sszvis.component]}
+       */
+      sszvisComponent.renderSelection = callback => {
+        selectionRenderer = callback;
+        return sszvisComponent;
+      };
+      /**
+       * Creates a render context for the given component. Implements the
+       * d3.selection.each interface.
+       *
+       * @see https://github.com/mbostock/d3/wiki/Selections#each
+       *
+       * @param  {Function} callback
+       * @return {sszvis.component}
+       */
+      sszvisComponent.render = callback => {
+        renderer = callback;
+        return sszvisComponent;
+      };
+      // The accessors declared by `.prop()` only exist once the component is built, so a
+      // component interface which declares them can only be produced here, by naming it as C.
+      return sszvisComponent;
+    }
+    /**
+     * d3.selection plugin to get the properties of a sszvis.component.
+     * Works similarly to d3.selection.data, but for properties.
+     *
+     * @see https://github.com/mbostock/d3/wiki/Selections
+     *
+     * @return {Object} An object of properties for the given component
+     */
+    d3.selection.prototype.props = function () {
+      // It would be possible to make this work exactly like
+      // d3.selection.data(), but it would need some test cases,
+      // so we currently simplify to the most common use-case:
+      // getting props.
+      if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
+      if (this.size() !== 1) throw new Error("only one group is supported");
+      // _groups is d3's internal selection storage and is not part of its public types.
+      const node = this.node();
+      if (!node) throw new Error("only one node is supported");
+      // The props were stashed on the node itself by the component that rendered it.
+      return Reflect.get(node, "__props__") || {};
+    };
+    /**
+     * Creates an accessor function that either gets or sets a value, depending
+     * on whether or not it is called with arguments.
+     *
+     * @param  {Object} props The props to get from or set to
+     * @param  {String} attr The property to be accessed
+     * @param  {Function} [setter] Transforms the data on set
+     * @return {Function} The accessor function
+     */
+    function accessor$1(props, prop, setter = identity$1) {
+      // Getter when called with no arguments, setter otherwise - the two return different
+      // things, and the prop's own declaration in the component interface states which.
+      return function (...args) {
+        if (args.length === 0) return props[prop];
+        props[prop] = setter.apply(null, args);
+        return this;
+      };
+    }
+    function identity$1(d) {
+      return d;
+    }
+    function slice(arrayLike) {
+      return Array.prototype.slice.call(arrayLike);
+    }
+    function clone(obj) {
+      const copy = {};
+      for (const attr in obj) {
+        if (Object.hasOwn(obj, attr)) copy[attr] = obj[attr];
+      }
+      return copy;
+    }
+
+    /**
+     * A collection of functional programming helper functions
+     *
+     * @module sszvis/fn
+     */
+    /**
+     * fn.identity
+     *
+     * The identity function. It returns the first argument passed to it.
+     * Useful as a default where a function is required.
+     */
+    const identity = value => value;
+    /**
+     * fn.isString
+     *
+     * determine whether the value is a string
+     */
+    const isString = val => Object.prototype.toString.call(val) === "[object String]";
+    /**
+     * fn.isSelection
+     *
+     * determine whether the value is a d3.selection.
+     */
+    const isSelection = val => val instanceof d3.selection;
+    /**
+     * fn.arity
+     *
+     * Wraps a function of any arity (including nullary) in a function that
+     * accepts exactly `n` parameters. Any extraneous parameters will not be
+     * passed to the supplied function.
+     */
+    const arity = (n, fn) => {
+      // arity exists to call `fn` with an argument list its own signature does not describe:
+      // extra arguments are dropped and missing ones padded with undefined. No type can say
+      // "callable with a different number of arguments than it declares", so the widened
+      // callable is asserted once here and every use below goes through it.
+      const callWithAnyArgs = fn;
+      // NOTE: the original hand-unrolled a switch over 0..10 and returned the function
+      // untouched for anything else, so n > 10, negative and non-integer n do no limiting at
+      // all. That passthrough is preserved here, quirk and all.
+      if (!Number.isInteger(n) || n < 0 || n > 10) return callWithAnyArgs;
+      const limited = function (...args) {
+        // Build exactly n slots, so the wrapped function sees arguments.length === n whether
+        // the caller passed too many or too few.
+        const slots = Array.from({
+          length: n
+        }, (_, i) => args[i]);
+        return callWithAnyArgs.apply(this, slots);
+      };
+      // The unrolled version gave each case real named parameters, so .length was n.
+      Object.defineProperty(limited, "length", {
+        value: n,
+        configurable: true
+      });
+      return limited;
+    };
+    /**
+     * fn.compose
+     *
+     * Returns the composition of a set of functions, in arguments order.
+     * For example, if functions F, G, and H are passed as arguments:
+     *
+     * A = fn.compose(F, G, H)
+     *
+     * A will be a function which returns F(G(H(...arguments to A...)))
+     * so that A(x) === F(G(H(x)))
+     *
+     * Note: all composed functions but the last should be of arity 1.
+     */
+    // The chain's intermediate types depend on how many functions were passed and cannot be
+    // related to one another without a fixed-arity overload per length.
+    const compose = (...fns) => {
+      const start = fns.length - 1;
+      return function (...args) {
+        let i = start;
+        let result = Reflect.apply(fns[i], this, args);
+        while (i--) result = fns[i].call(this, result);
+        return result;
+      };
+    };
+    /**
+     * fn.contains
+     *
+     * Checks whether an item is present in the given list (by strict equality).
+     */
+    const contains$1 = (list, d) => list.includes(d);
+    /**
+     * fn.defined
+     *
+     * determines if the passed value is defined.
+     */
+    const defined = val => val !== undefined && val != null && !Number.isNaN(val);
+    /**
+     * fn.derivedSet
+     *
+     * fn.derivedSet is used to create sets of objects from an input array. The objects are
+     * first passed through an accessor function, which should produce a value. The set is calculated
+     * using that value, but the actual members of the set are the input objects. This allows you
+     * to use .derivedSet to create a group of obejcts, where the values of some derived property
+     * of those objects forms a set. This is distinct from other set functions in this toolkit because
+     * in the other set functions, the set of derived properties is returned, whereas this function
+     * returns a set of objects from the input array.
+     */
+    const derivedSet = (arr, acc) => {
+      const accessor = acc || identity;
+      const seen = [];
+      const result = [];
+      let sValue, cValue;
+      for (let i = 0, l = arr.length; i < l; ++i) {
+        sValue = arr[i];
+        cValue = accessor(sValue, i, arr);
+        if (!seen.includes(cValue)) {
+          seen.push(cValue);
+          result.push(sValue);
+        }
+      }
+      return result;
+    };
+    /**
+     * fn.every
+     *
+     * Use a predicate function to test if every element in an array passes some test.
+     * Returns false as soon as an element fails the predicate test. Returns true otherwise.
+     */
+    const every = (predicate, arr) => {
+      for (const element of arr) {
+        if (!predicate(element)) {
+          return false;
+        }
+      }
+      return true;
+    };
+    /**
+     * fn.filledArray
+     *
+     * returns a new array with length `len` filled with `val`
+     */
+    const filledArray = (len, val) => {
+      const arr = Array.from({
+        length: len
+      });
+      for (let i = 0; i < len; ++i) {
+        arr[i] = val;
+      }
+      return arr;
+    };
+    /**
+     * fn.find
+     *
+     * Finds the first occurrence of an element in an array that passes the predicate function
+     */
+    const find = (predicate, arr) => {
+      for (const element of arr) {
+        if (predicate(element)) {
+          return element;
+        }
+      }
+      return undefined;
+    };
+    /**
+     * fn.first
+     *
+     * Returns the first value in the passed array, or undefined if the array is empty
+     */
+    const first = arr => arr[0];
+    /**
+     * fn.flatten
+     *
+     * Flattens the nested input array by one level. The input array is expected to be
+     * a two-dimensional array (i.e. its elements are also arrays). The result is a
+     * one-dimensional array consisting of all the elements of the sub-arrays.
+     */
+    const flatten = arr => arr.flat();
+    /**
+     * fn.firstTouch
+     *
+     * Used to retrieve the first touch from a touch event. Note that in some
+     * cases, the touch event doesn't have any touches in the event.touches list,
+     * but it does have some in the event.changedTouches list (notably the touchend
+     * event works like this).
+     *
+     * @param  {TouchEvent} event   The TouchEvent object from which to retrieve the
+     *                              first Touch object.
+     * @return {Touch|null}         The first Touch object from the TouchEvent's lists
+     *                              of touches.
+     */
+    const firstTouch = event => {
+      if (event.touches && event.touches.length > 0) {
+        return event.touches[0];
+      } else if (event.changedTouches && event.changedTouches.length > 0) {
+        return event.changedTouches[0];
+      }
+      return null;
+    };
+    /**
+     * fn.foldPattern
+     *
+     * Used to lazily fold a sum type into a value.
+     *
+     * @example
+     * sszvis.foldPattern('formalGreeting', {
+     *   formalGreeting: function() { return "Pleased to meet you."},
+     *   informalGreeting: function() { return "How ya' doin!" }
+     * })
+     */
+    const foldPattern = (key, pattern) => {
+      const result = pattern[key];
+      if (typeof result === "function") {
+        return result();
+      }
+      throw new Error(`[foldPattern] No definition provided for key: ${key}`);
+    };
+    /**
+     * fn.hashableSet
+     *
+     * takes an array of elements and returns the unique elements of that array, optionally
+     * after passing them through an accessor function.
+     * the returned array is ordered according to the elements' order of appearance
+     * in the input array. This function differs from fn.set in that the elements
+     * in the input array (or the values returned by the accessor function)
+     * MUST be "hashable" - convertible to unique keys of a JavaScript object.
+     * As payoff for obeying this restriction, the algorithm can run much faster.
+     */
+    const hashableSet = (arr, acc) => {
+      const accessor = acc || identity;
+      // A Set, not a plain object: an object inherits Object.prototype, so values naming one
+      // of its members ("constructor", "toString", ...) read back as already seen and were
+      // dropped from the result. Keys stay stringified, which is what "hashable" means here
+      // and why 1 and "1" are still one key.
+      const seen = new Set();
+      const result = [];
+      for (let i = 0, l = arr.length; i < l; ++i) {
+        const value = accessor(arr[i], i, arr);
+        const key = String(value);
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(value);
+        }
+      }
+      return result;
+    };
+    /**
+     * fn.isFunction
+     *
+     * Determines if the passed value is a function
+     */
+    // The guard has to widen to a callable the caller can actually invoke; narrowing the
+    // parameters to `never[]` would make every call site an error.
+    const isFunction$1 = val => typeof val === "function";
+    /**
+     * fn.isNull
+     *
+     * determines if the passed value is null.
+     */
+    const isNull = val => val === null;
+    /**
+     * fn.isNumber
+     *
+     * determine whether the value is a number
+     */
+    const isNumber = val => Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
+    /**
+     * fn.isObject
+     *
+     * determines if the passed value is of an "object" type, or if it is something else,
+     * e.g. a raw number, string, null, undefined, NaN, something like that.
+     */
+    const isObject = val => Object(val) === val;
+    /**
+     * fn.last
+     *
+     * Returns the last value in the passed array, or undefined if the array is empty
+     */
+    const last = arr => arr[arr.length - 1];
+    /**
+     * fn.not
+     *
+     * Takes as argument a function f and returns a new function
+     * which calls f on its arguments and returns the
+     * boolean opposite of f's return value.
+     */
+    const not = f => function (...args) {
+      return !Reflect.apply(f, this, args);
+    };
+    /**
+     * fn.prop
+     *
+     * takes the name of a property and returns a property accessor function
+     * for the named property. When the accessor function is called on an object,
+     * it returns that object's value for the named property. (or undefined, if the object
+     * does not contain the property.)
+     */
+    const prop = key => object => object[key];
+    /**
+     * fn.propOr
+     *
+     * Like fn.prop, this function takes the name of a property and returns an accessor function
+     * for the named property. However, the returned function has an added feature - it
+     * checks that the argument given to is not `undefined`, and whether the property exists on
+     * the object. If either is false, it returns a default value. The default value is the second
+     * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
+     * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
+     */
+    const propOr = (key, defaultVal) => object => {
+      const value = object === undefined ? undefined : object[key];
+      return value === undefined ? defaultVal : value;
+    };
+    /**
+     * fn.set
+     *
+     * takes an array of elements and returns the unique elements of that array, optionally
+     * after passing them through an accessor function.
+     * the returned array is ordered according to the elements' order of appearance
+     * in the input array, e.g.:
+     *
+     * [2,1,1,6,8,6,5,3] -> [2,1,6,8,5,3]
+     * ["b", a", "b", "b"] -> ["b", "a"]
+     * [{obj1}, {obj2}, {obj1}, {obj3}] -> [{obj1}, {obj2}, {obj3}]
+     */
+    const set$1 = (arr, acc) => {
+      const accessor = acc || identity;
+      const result = [];
+      for (const [i, value] of arr.entries()) {
+        const computed = accessor(value, i, arr);
+        if (!result.includes(computed)) result.push(computed);
+      }
+      return result;
+    };
+    /**
+     * fn.some
+     *
+     * Test an array with a predicate and determine whether some element in the array passes the test.
+     * Returns true as soon as an element passes the test. Returns false otherwise.
+     */
+    const some = (predicate, arr) => {
+      for (const element of arr) {
+        if (predicate(element)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    /**
+     * fn.stringEqual
+     *
+     * Determines whether two values are equal when converted to strings. Useful for comparing
+     * date objects, because two different date objects are not considered equal, even if they
+     * represent the same date.
+     */
+    const stringEqual = (a, b) => a.toString() === b.toString();
+    /**
+     * fn.functor
+     *
+     * Same as fn.functor in d3v3
+     */
+    const functor = v => typeof v === "function" ? v : () => v;
+    /**
+     * Applies `render` to whichever selection `selector` denotes.
+     *
+     * Each branch keeps its own concrete selection type rather than being widened into a shared
+     * variable first: d3's select() has one overload for a selector string and another for a
+     * node, and Selection is invariant in all four of its type parameters, so no single type -
+     * and no union - holds all three cases. `render` is generic, so each branch infers.
+     */
+    function withRootSelection(selector, render) {
+      if (typeof selector === "string") return render(d3.select(selector));
+      if (selector instanceof Element) return render(d3.select(selector));
+      return render(selector);
+    }
+    /**
+     * fn.valueFn
+     *
+     * Wraps a constant in an accessor and leaves an existing accessor alone. Unlike fn.functor
+     * the result takes d3's (datum, index, group) arguments and can be handed straight to
+     * .attr() or .style(). An unset prop resolves to undefined, which d3 treats the same as
+     * null - it removes the attribute either way - so `value ?? null` at a call site is about
+     * the declared return type, not about what d3 renders.
+     */
+    const valueFn = value => typeof value === "function" ? value : () => value;
+    /**
+     * The most entries a memoized function retains. Beyond it the least recently used entry is
+     * dropped. Deliberately in the low tens: the keys a chart revisits are few - a handful of
+     * breakpoint widths, one per map - while a resize drag produces one throwaway key per tick.
+     */
+    const MEMOIZE_CACHE_LIMIT = 32;
+    /**
+     * fn.memoize
+     *
+     * Adapted from lodash's memoize(), using a Map as the cache and exposing it as `.cache`.
+     * See https://lodash.com/docs/4.17.4#memoize
+     *
+     * Differs from lodash deliberately: lodash keys on the first argument and silently returns
+     * that entry for any later arguments, so memoizing a function of several arguments without
+     * a resolver returns wrong results. Here such a call throws instead - pass a resolver that
+     * derives a key from every argument that matters (see swissMapProjection in map/mapUtils).
+     *
+     * Also unlike lodash, the cache is bounded to MEMOIZE_CACHE_LIMIT entries and evicts the least
+     * recently used one, so a caller that keys on a continuously varying value - a chart reprojecting
+     * on every resize tick - no longer retains an entry per tick for the lifetime of the page. A
+     * memoized value is therefore a cache, never a registry: it can disappear between calls, and a
+     * caller that needs a value to survive must hold it itself.
+     *
+     * Recency is tracked by the Map's own insertion order, so a cache hit re-inserts its entry and
+     * moves it to the end. `.cache` stays a plain, publicly mutable Map; only its iteration order
+     * now reflects use rather than first insertion. Every call trims, hit or miss, so a cache filled
+     * past the limit from outside is brought back to it by the next call.
+     */
+    const memoize = (func, resolver) => {
+      if (typeof func !== "function" || resolver != null && typeof resolver !== "function") {
+        throw new TypeError("Expected a function");
+      }
+      const memoized = (...args) => {
+        if (!resolver && args.length > 1) {
+          throw new TypeError("[fn.memoize] A function called with more than one argument needs a resolver: the " + "default cache key is the first argument alone, so differing later arguments would " + "return the first call's result.");
+        }
+        const key = resolver ? resolver(...args) : args[0];
+        const cache = memoized.cache;
+        let result;
+        if (cache.has(key)) {
+          result = cache.get(key);
+          // Re-insert so the entry counts as recently used. Delete first: Map.set on an existing key
+          // keeps its original position.
+          cache.delete(key);
+          cache.set(key, result);
+        } else {
+          result = func(...args);
+          memoized.cache = cache.set(key, result) || cache;
+        }
+        // Iteration starts at the oldest entry, so the first key is the least recently used one. A
+        // loop rather than a single delete, because the cache is public and may have been filled
+        // past the limit from outside; hits trim too, so the bound is restored on any call.
+        while (memoized.cache.size > MEMOIZE_CACHE_LIMIT) {
+          const oldest = memoized.cache.keys().next();
+          if (oldest.done) break;
+          memoized.cache.delete(oldest.value);
+        }
+        return result;
+      };
+      memoized.cache = new Map();
+      return memoized;
+    };
+
+    /**
+     * Breadcrumb navigation component
+     *
+     * Use this component to add a breadcrumb navigation trail for hierarchical visualizations
+     * like treemaps and pack charts. The breadcrumb shows the current path through the hierarchy
+     * and allows users to navigate back to parent nodes by clicking on previous items.
+     *
+     * @module sszvis/annotation/breadcrumb
+     *
+     * @template T The type of the underlying data in hierarchy nodes
+     *
+     * @property {selection} renderInto   Container selection to render breadcrumbs into (required)
+     * @property {Array} items            Array of BreadcrumbItem objects representing the trail
+     * @property {function} label         Accessor to get label text from an item (default: d => d.label)
+     * @property {function} onClick       Callback when a breadcrumb is clicked (receives item and index)
+     * @property {string} rootLabel       Label for the root breadcrumb (default: "Root")
+     * @property {string} separator       Separator text between breadcrumbs (default: " > ")
+     * @property {number} width           Width of the breadcrumb container in pixels
+     *
+     * @return {sszvis.component}
+     */
+    // ============================================================================
+    // Utility Functions
+    // ============================================================================
+    /**
+     * Helper to create breadcrumb items from a hierarchy node.
+     * Extracts the ancestor path and converts to breadcrumb items.
+     *
+     * @example
+     * const items = createBreadcrumbItems(focusedNode);
+     * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
+     */
+    function createBreadcrumbItems(node) {
+      if (!node) return [];
+      // Get ancestors from root to current node, excluding the synthetic root
+      return node.ancestors().reverse().slice(1) // Remove synthetic root node
+      .map(n => ({
+        label: n.data._tag === "leaf" || n.data._tag === "branch" ? n.data.key : "",
+        node: n
+      }));
+    }
+    // ============================================================================
+    // Component Implementation
+    // ============================================================================
+    function breadcrumb () {
+      return component().prop("renderInto").prop("items").items([]).prop("label", functor).label(d => d.label).prop("onClick").onClick(() => {}).prop("rootLabel").rootLabel("Root").prop("separator").separator(" \u203A ").prop("width").width(800).renderSelection(selection => {
+        const props = selection.props();
+        // Prepend root item to the breadcrumb trail
+        const allItems = [{
+          label: props.rootLabel,
+          node: null
+        }, ...props.items];
+        // Create or select breadcrumb container
+        const breadcrumbContainer = props.renderInto.selectDiv("breadcrumbs").style("position", "absolute").style("top", "-40px").style("left", "0px").style("width", `${props.width}px`).style("height", "30px").style("display", "flex").style("align-items", "center").style("gap", "8px").style("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').style("font-size", "14px");
+        // Data join for breadcrumb items
+        const crumbs = breadcrumbContainer.selectAll("span.sszvis-breadcrumb-item").data(allItems, d => props.label(d));
+        // Enter: create new breadcrumb elements
+        const crumbsEnter = crumbs.enter().append("span").classed("sszvis-breadcrumb-item", true);
+        // Add link element
+        crumbsEnter.append("a").style("color", "#0073B3").style("cursor", "pointer").style("text-decoration", "none");
+        // Add separator
+        crumbsEnter.append("span").classed("sszvis-breadcrumb-separator", true).style("color", "#666").text(props.separator);
+        // Update: merge enter + update selections
+        const crumbsMerged = crumbsEnter.merge(crumbs);
+        // Update link text and styling
+        crumbsMerged.select("a").text(d => props.label(d)).style("font-weight", (_d, i) => i === allItems.length - 1 ? "bold" : "normal").style("color", (_d, i) => i === allItems.length - 1 ? "#333" : "#0073B3").style("cursor", (_d, i) => i === allItems.length - 1 ? "default" : "pointer").on("click", (event, d) => {
+          const index = allItems.indexOf(d);
+          // Don't allow clicking on the current (last) breadcrumb
+          if (index === allItems.length - 1) return;
+          event.preventDefault();
+          props.onClick(d, index);
+        });
+        // Hide separator on last item
+        crumbsMerged.select(".sszvis-breadcrumb-separator").style("display", (_d, i) => i === allItems.length - 1 ? "none" : "inline");
+        // Exit: remove old breadcrumbs
+        crumbs.exit().remove();
+      });
+    }
+
+    /**
+     * Patterns module
+     *
+     * @module sszvis/patterns
+     *
+     * This module contains svg patterns and pattern helper functions which are used
+     * to render important textures for various other components.
+     *
+     * Every helper here is idempotent: the contents are data-joined rather than appended, so calling a
+     * helper again on the same element updates that element's contents in place instead of adding a
+     * second copy. Map renderers re-derive their definition selection on every render and `call` these
+     * helpers unconditionally, so appending would grow the definition without bound.
+     *
+     * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
+     * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
+     * @method  mapLakePattern                  The pattern for Lake Zurich in the map component. Used by map.js internally
+     * @method  mapLakeFadeGradient             The pattern which provides a gradient, used by the alpha fade pattern,
+     *                                          in the Lake Zurich shape. Used by map.js internally
+     * @method  mapLakeGradientMask             The pattern which provides a gradient alpha fade for the Lake Zurich shape.
+     *                                           It uses the fadeGradient pattern to create an alpha gradient mask. Used by map.js internally
+     * @method  dataAreaPattern                 The pattern for the data area texture.
+     *
+     */
+    /** The default id `mapLakeFadeGradient` defines and `mapLakeGradientMask` references. */
+    const LAKE_FADE_GRADIENT_ID = "lake-fade-gradient";
+    /**
+     * The pattern for the missing values in the heat table
+     * @param selection A d3 selection of SVG pattern elements
+     */
+    const heatTableMissingValuePattern = selection => {
+      const rectFill = "#FAFAFA",
+        // Light grey color directly
+        crossStroke = "#A4A4A4",
+        crossStrokeWidth = 0.035,
+        cross1 = 0.35,
+        cross2 = 0.65;
+      const lines = [{
+        x1: cross1,
+        y1: cross1,
+        x2: cross2,
+        y2: cross2
+      }, {
+        x1: cross2,
+        y1: cross1,
+        x2: cross1,
+        y2: cross2
+      }];
+      selection.attr("patternUnits", "objectBoundingBox").attr("patternContentUnits", "objectBoundingBox").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1);
+      selection.selectAll("rect").data([0]).join("rect").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1).attr("fill", rectFill);
+      selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
+    };
+    /**
+     * The pattern for the map areas which are missing values
+     * @param selection A d3 selection of SVG pattern elements
+     */
+    const mapMissingValuePattern = selection => {
+      const pWidth = 14,
+        pHeight = 14,
+        fillColor = "#FAFAFA",
+        lineStroke = "#CCCCCC";
+      const lines = [{
+        x1: 1,
+        y1: 10,
+        x2: 5,
+        y2: 14
+      }, {
+        x1: 5,
+        y1: 10,
+        x2: 1,
+        y2: 14
+      }, {
+        x1: 8,
+        y1: 3,
+        x2: 12,
+        y2: 7
+      }, {
+        x1: 12,
+        y1: 3,
+        x2: 8,
+        y2: 7
+      }];
+      selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
+      selection.selectAll("rect").data([0]).join("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", fillColor);
+      selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke", lineStroke);
+    };
+    /**
+     * The pattern for Lake Zurich in the map component
+     * @param selection A d3 selection of SVG pattern elements
+     */
+    const mapLakePattern = selection => {
+      const pWidth = 6;
+      const pHeight = 6;
+      const offset = 0.5;
+      const lines = [{
+        x1: 0,
+        y1: pHeight * offset,
+        x2: pWidth * offset,
+        y2: 0
+      }, {
+        x1: pWidth * offset,
+        y1: pHeight,
+        x2: pWidth,
+        y2: pHeight * offset
+      }];
+      selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
+      selection.selectAll("rect").data([0]).join("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", "#fff");
+      selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke", "#ddd").attr("stroke-linecap", "square");
+    };
+    /**
+     * The gradient used by the alpha fade pattern in the Lake Zurich shape
+     *
+     * The id it writes is the one `mapLakeGradientMask` has to be pointed at. It defaults to the
+     * historical fixed id, so an unparameterised call is unchanged; pass an id to scope the definition
+     * to one map rather than rewriting the attribute afterwards. Because it is a trailing parameter it
+     * can also be handed over as `selection.call(mapLakeFadeGradient, id)`.
+     *
+     * @param selection A d3 selection of SVG linear gradient elements
+     * @param gradientId The id to write on the gradient. Defaults to `lake-fade-gradient`.
+     */
+    const mapLakeFadeGradient = (selection, gradientId = LAKE_FADE_GRADIENT_ID) => {
+      const stops = [{
+        offset: 0.74,
+        opacity: 1
+      }, {
+        offset: 0.97,
+        opacity: 0
+      }];
+      selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", gradientId);
+      selection.selectAll("stop").data(stops).join("stop").attr("offset", d => d.offset).attr("stop-color", "white").attr("stop-opacity", d => d.opacity);
+    };
+    /**
+     * The gradient alpha fade mask for the Lake Zurich shape
+     *
+     * The mask fades the lake by filling itself with the fade gradient, so it is only useful beside a
+     * `mapLakeFadeGradient` that defines the id given here; the two must be scoped together. The id
+     * defaults to the historical fixed one, and is written on every call, so a later call with a new id
+     * repoints the existing rect.
+     *
+     * @param selection A d3 selection of SVG mask elements
+     * @param gradientId The id of the gradient to fill the mask with. Defaults to `lake-fade-gradient`.
+     */
+    const mapLakeGradientMask = (selection, gradientId = LAKE_FADE_GRADIENT_ID) => {
+      selection.attr("maskContentUnits", "objectBoundingBox");
+      selection.selectAll("rect").data([0]).join("rect").attr("fill", `url(#${gradientId})`).attr("width", 1).attr("height", 1);
+    };
+    /**
+     * The pattern for the data area texture
+     * @param selection A d3 selection of SVG pattern elements
+     */
+    const dataAreaPattern = selection => {
+      const pWidth = 6;
+      const pHeight = 6;
+      const offset = 0.5;
+      const lines = [{
+        x1: 0,
+        y1: pHeight * offset,
+        x2: pWidth * offset,
+        y2: 0
+      }, {
+        x1: pWidth * offset,
+        y1: pHeight,
+        x2: pWidth,
+        y2: pHeight * offset
+      }];
+      selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
+      selection.selectAll("line").data(lines).join("line").attr("x1", d => d.x1).attr("y1", d => d.y1).attr("x2", d => d.x2).attr("y2", d => d.y2).attr("stroke", "#e6e6e6").attr("stroke-width", 1.1);
+    };
+
+    /**
+     * Ensure Defs Element
+     *
+     * This method ensures that the provided selection contains a 'defs' object,
+     * and furthermore, that the defs object contains an instance of the provided
+     * element type, with the provided ID.
+     *
+     * @module sszvis/svgUtils/ensureDefsElement
+     *
+     * @param selection  The selection to ensure the defs element within
+     * @param type       Element to create, as an SVG tag name
+     * @param elementId  The ID to assign to the created element
+     *
+     * The id is matched by reading the attribute back rather than by building an id selector,
+     * so any string a caller can put in an id attribute can also be looked up again - the same
+     * idiom the map renderers use for their key attributes. An id selector cannot do that: an id
+     * holding a CSS-significant character either throws (`pattern#a"b` is not a valid selector,
+     * and neither is the `pattern#` an empty id builds) or, worse, parses as something else -
+     * `pattern#a b` is a valid descendant selector that matches nothing, so a fresh definition is
+     * appended on every render.
+     *
+     * Both lookups are scoped to their parent's own children. The defs element belongs to the
+     * selection itself, not to a group nested inside it: with a descendant lookup an outer
+     * selection reuses a nested group's defs, so two overlays end up sharing - and clearing -
+     * each other's definitions.
+     *
+     * The element type is derived from the tag name, so callers get a precisely typed selection
+     * without naming it twice:
+     *
+     *     ensureDefsElement(sel, "pattern", id)  // Selection<SVGPatternElement, ...>
+     *
+     * The selection parameters are generic because d3's Selection is invariant in its element
+     * parameters - no single non-generic type accepts every selection.
+     */
+    function ensureDefsElement(selection, type, elementId) {
+      return ensureDefsSelection(selection).selectAll(`:scope > ${type}`).filter(function () {
+        return this.getAttribute("id") === elementId;
+      }).data([0])
+      // join() reports the union of the elements it entered and those selectAll found.
+      // Naming the entered element here makes both sides the same tag, so the union
+      // collapses on its own and no assertion is needed.
+      .join(type).attr("id", elementId);
+    }
+    /* Helper functions
+    ----------------------------------------------- */
+    /**
+     * This method ensures that the provided selection contains a 'defs' object,
+     * which is required for rendering patterns. SVG elements rendered into a defs
+     * container will not be displayed, but can be referenced by ID in the fill property
+     * of other, visible, elements.
+     */
+    function ensureDefsSelection(selection) {
+      return selection.selectAll(":scope > defs").data([0]).join("defs");
+    }
+
+    /**
+     * Circle annotation
+     *
+     * A component for creating circular data areas. The component should be passed
+     * an array of data values, each of which will be used to render a data area by
+     * passing it through the accessor functions. You can specify a caption to display,
+     * which can be offset from the center of the data area by specifying dx or dy properties.
+     *
+     * @module sszvis/annotation/circle
+     *
+     * @template T The type of the data objects used in the circle annotations
+     * @param {number, function} x        The x-position of the center of the data area.
+     * @param {number, function} y        The y-position of the center of the data area.
+     * @param {number, function} r        The radius of the data area.
+     * @param {number, function} dx       The x-offset of the data area caption.
+     * @param {number, function} dy       The y-offset of the data area caption.
+     * @param {string, function} caption  The caption for the data area. Default position is the center of the circle
+     *
+     * @returns {sszvis.component} a circular data area component
+     */
+    function circle () {
+      return component().prop("x", functor).prop("y", functor).prop("r", functor).prop("dx", functor).prop("dy", functor).prop("caption", functor).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
+        dataAreaPattern(patternSelection);
+        const dataArea = selection.selectAll(".sszvis-dataareacircle").data(data).join("circle").classed("sszvis-dataareacircle", true);
+        dataArea.attr("cx", d => Number(props.x(d))).attr("cy", d => Number(props.y(d))).attr("r", d => Number(props.r(d))).attr("fill", "url(#data-area-pattern)");
+        if (props.caption) {
+          const dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data).join("text").classed("sszvis-dataareacircle__caption", true);
+          dataCaptions.attr("x", d => Number(props.x(d))).attr("y", d => Number(props.y(d))).attr("dx", props.dx ? d => Number(props.dx?.(d)) : null).attr("dy", props.dy ? d => Number(props.dy?.(d)) : null).text(props.caption ? d => props.caption?.(d) || "" : null);
+        }
+      });
+    }
+
+    /**
+     * Default transition attributes for sszvis
+     *
+     * @module sszvis/transition
+     *
+     * Generally speaking, this module is used internally by components which transition the state of the update selection.
+     * Each helper builds a fresh transition carrying the app's standard easing and duration, and is applied by handing it to
+     * a selection: `d3.selection().transition(sszvis.defaultTransition())`. The transition inherits its timing from the one
+     * passed in.
+     *
+     * Do not use `d3.selection().transition().call(sszvis.defaultTransition)`. d3's `transition.call(f)` invokes `f` and
+     * returns the original transition, while these helpers ignore their argument and build a detached transition that is then
+     * discarded - the scheduled transition silently keeps d3's defaults of 250ms and easeCubicInOut.
+     *
+     * fastTransition provides an alternate transition duration for certain situations where the standard duration is
+     * too slow, and slowTransition for where it is too fast.
+     *
+     * defaultTransition takes an optional name. A component that has to interrupt its own transition must pass one and
+     * interrupt by it: `selection.interrupt()` with no name stops the unnamed transition, which is also the one a consumer
+     * gets from a bare `selection.transition()`, so an unnamed interrupt cancels a consumer's animation on the same
+     * elements as well. Naming scopes both halves to the component. Only the components that interrupt need it, so the
+     * argument is optional and every other caller is unchanged.
+     */
+    const defaultEase = d3.easePolyOut;
+    /**
+     * The transition name a component uses for geometry it owns and may need to interrupt.
+     *
+     * Shared rather than per-component: these components never animate the same elements, and one name keeps the
+     * interrupt and the transition it is meant to stop from drifting apart. Exported so a consumer can deliberately
+     * interrupt or inspect the library's own transitions.
+     */
+    const OWN_TRANSITION = "sszvis-own";
+    /**
+     * Creates a default transition with standard easing and duration
+     * @param name Optional transition name. Pass OWN_TRANSITION when the component also interrupts this transition, so
+     *             the interrupt cannot reach a transition the consumer scheduled. Omitted, the transition is unnamed,
+     *             which is d3's default and what every non-interrupting component uses.
+     * @returns A d3 transition with 300ms duration and polynomial ease-out
+     */
+    const defaultTransition = name => d3.transition(name).ease(defaultEase).duration(300);
+    /**
+     * Creates a fast transition for quick animations
+     * @returns A d3 transition with 50ms duration and polynomial ease-out
+     */
+    const fastTransition = () => d3.transition().ease(defaultEase).duration(50);
+    /**
+     * Creates a slow transition for gradual animations
+     * @returns A d3 transition with 500ms duration and polynomial ease-out
+     */
+    const slowTransition = () => d3.transition().ease(defaultEase).duration(500);
+
+    /**
+     * @function sszvis.annotationConfidenceArea
+     *
+     * A component for creating confidence areas. The component should be passed
+     * an array of data values, each of which will be used to render a confidence area
+     * by passing it through the accessor functions. You can specify the x, y0, and y1
+     * properties to define the area. The component also supports stroke, strokeWidth,
+     * and fill properties for styling.
+     *
+     * @module sszvis/annotation/confidenceArea
+     *
+     * @param {function} x             The x-accessor function.
+     * @param {function} y0            The y0-accessor function.
+     * @param {function} y1            The y1-accessor function.
+     * @param {string} [stroke]        The stroke color of the area.
+     * @param {number} [strokeWidth]   The stroke width of the area.
+     * @param {string} [fill]          The fill color of the area.
+     * @param {function} [key]         The key function for data binding.
+     * @param {function} [valuesAccessor] The accessor function for the data values.
+     * @param {boolean} [transition]   Whether to apply a transition to the area.
+     *
+     * @returns {sszvis.component} a confidence area component
+     */
+    function confidenceArea() {
+      return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("stroke").prop("strokeWidth").prop("fill").prop("key").key((_, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
+        dataAreaPattern(patternSelection);
+        // Layouts
+        const area = d3.area().x(d => Number(props.x(d))).y0(d => Number(props.y0(d))).y1(d => Number(props.y1(d)));
+        // Rendering
+        const path = selection.selectAll(".sszvis-area").data(data).join("path").classed("sszvis-area", true);
+        if (props.stroke) {
+          path.style("stroke", String(props.stroke));
+        }
+        path.attr("fill", "url(#data-area-pattern)").order();
+        // Without a transition the attributes below are written synchronously, so an in-flight
+        // tween from an earlier render has to be interrupted or it overwrites them. Interrupted
+        // by name, so a transition the consumer scheduled on this path keeps running.
+        const finalPath = props.transition ? path.transition(defaultTransition(OWN_TRANSITION)) : path.interrupt(OWN_TRANSITION);
+        finalPath.attr("d", d => area(props.valuesAccessor(d)));
+        if (props.stroke) {
+          finalPath.style("stroke", String(props.stroke));
+        }
+        if (props.strokeWidth) {
+          finalPath.style("stroke-width", props.strokeWidth);
+        }
+        finalPath.attr("fill", "url(#data-area-pattern)");
+      });
+    }
+
+    /**
+     * Confidence Bar annotation
+     *
+     * A generic component for creating confidence bars that display confidence intervals or error ranges.
+     * The component should be passed an array of data values, each of which will be used to
+     * render confidence bars by passing them through the accessor functions. Confidence bars consist of
+     * a vertical line connecting the confidence bounds and horizontal caps at the top and bottom.
+     *
+     * @module sszvis/annotation/confidenceBar
+     *
+     * @template T The type of the data objects used in the confidence bars
+     * @param {number, function} x               The x-position accessor for the confidence bars (currently unused)
+     * @param {number, function} y               The y-position accessor for the confidence bars
+     * @param {number, function} confidenceLow   Accessor function for the lower confidence bound
+     * @param {number, function} confidenceHigh  Accessor function for the upper confidence bound
+     * @param {number, function} width           The width of the horizontal confidence cap
+     * @param {number} groupSize                 The number of items in each group
+     * @param {number} groupWidth                The width allocated for each group
+     * @param {number} groupSpace                The spacing between items within a group (default: 0.05)
+     * @param {function} groupScale              Scale function for positioning groups horizontally
+     *
+     * @returns {sszvis.component} An confidence bar annotation component
+     */
+    function confidenceBar() {
+      return component().prop("x", functor).prop("y", functor).prop("confidenceLow", functor).prop("confidenceHigh", functor).prop("width").prop("groupSize").prop("groupWidth").prop("groupSpace").groupSpace(0.05).prop("groupScale", functor).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const inGroupScale = d3.scaleBand().domain(d3.range(props.groupSize).map(String)).rangeRound([0, props.groupWidth]).paddingInner(props.groupSpace).paddingOuter(0);
+        const groups = selection.selectAll("g.sszvis-confidence-bargroup").data(data).join("g").classed("sszvis-confidence-bargroup", true);
+        const barUnits = groups.selectAll("g.sszvis-confidence-barunit").data(d => d).join("g").classed("sszvis-confidence-barunit", true);
+        // The bar's index within its group is recorded against the unit element rather than
+        // written onto the datum, so a datum object reused across groups is not aliased: it is
+        // the element that is unique per bar, not the caller's object. These datum objects are
+        // the consumer's own and are shared with the bar component drawn underneath, which
+        // compares them by identity, so they must come back unmodified.
+        const indexByUnit = new WeakMap();
+        barUnits.each(function (_d, i) {
+          indexByUnit.set(this, i);
+        });
+        // The along-group centre of a bar's slot. Resolved from the element the callback is
+        // running on - a line whose parent is the bar unit - because the index is no longer on
+        // the datum. Every unit is in the map before any of these run, so a miss means the DOM
+        // was changed underneath the component, and it throws rather than defaulting to slot 0.
+        //
+        // Called once per attribute rather than once per unit: groupScale is a consumer
+        // accessor and a stateful one is observable, so the number and order of calls is part
+        // of the existing behaviour and is left alone.
+        const centreAt = function (d) {
+          const index = indexByUnit.get(this.parentNode);
+          if (index === undefined) {
+            throw new Error("[confidenceBar] a bar unit is missing its in-group index");
+          }
+          return props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2;
+        };
+        const capLeftAt = function (d) {
+          return centreAt.call(this, d) - props.width / 2;
+        };
+        const capRightAt = function (d) {
+          return centreAt.call(this, d) + props.width / 2;
+        };
+        const unitsWithValue = barUnits.filter(() => {
+          return true;
+        });
+        unitsWithValue.selectAll("*").remove();
+        // Vertical lines connecting confidence bounds
+        unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", centreAt).attr("y1", d => Number(props.confidenceHigh(d))).attr("x2", centreAt).attr("y2", d => Number(props.confidenceLow(d))).attr("stroke", "#767676").attr("stroke-width", "1");
+        // Horizontal top caps
+        unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", capLeftAt).attr("y1", d => Number(props.confidenceHigh(d))).attr("x2", capRightAt).attr("y2", d => Number(props.confidenceHigh(d))).attr("stroke", "#767676").attr("stroke-width", "1");
+        // Horizontal bottom caps
+        unitsWithValue.append("line").classed("sszvis-confidence-bar", true).attr("x1", capLeftAt).attr("y1", d => Number(props.confidenceLow(d))).attr("x2", capRightAt).attr("y2", d => Number(props.confidenceLow(d))).attr("stroke", "#767676").attr("stroke-width", "1");
+      });
+    }
+
+    /**
+     * @function sszvis.tooltipFit
+     *
+     * This is a useful default function for making a tooltip fit within a horizontal space.
+     * You provide a default orientation for the tooltip, but also provide the bounds of the
+     * space within which the tooltip should stay. When the tooltip is too close to the left
+     * or right edge of the bounds, it is oriented away from the edge. Otherwise the default
+     * is used.
+     *
+     * @template T The type of the data objects used in the tooltip
+     * @param {String} defaultValue         The default value for the tooltip orientation
+     * @param {Object} bounds               The bounds object within which the tooltip should stay.
+     *
+     * @returns {Function}                  A function for calculating the orientation of the tooltips.
+     */
+    function fitTooltip (defaultVal, bounds) {
+      const lo = Math.min(bounds.innerWidth * 1 / 4, 100);
+      const hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
+      return d => {
+        const x = d.x;
+        return x > hi ? "right" : x < lo ? "left" : defaultVal;
+      };
+    }
+
+    /**
+     * Line annotation
+     *
+     * A component for creating reference line data areas. The component should be passed
+     * an array of data values, each of which will be used to render a reference line
+     * by passing it through the accessor functions. You can specify a caption to display,
+     * which will be positioned by default at the midpoint of the line you specify,
+     * aligned with the angle of the line. The caption can be offset from the midpoint
+     * by specifying dx or dy properties.
+     *
+     * @module sszvis/annotation/line
+     *
+     * @template T The type of the data objects used in the line annotations
+     * @param {any} x1             The x-value, in data units, of the first reference line point.
+     * @param {any} x2             The x-value, in data units, of the second reference line point.
+     * @param {any} y1             The y-value, in data units, of the first reference line point.
+     * @param {any} y2             The y-value, in data units, of the second reference line point.
+     * @param {function} xScale         The x-scale of the chart. Used to transform the given x- values into chart coordinates.
+     * @param {function} yScale         The y-scale of the chart. Used to transform the given y- values into chart coordinates.
+     * @param {number} [dx]           The x-offset of the caption
+     * @param {number} [dy]           The y-offset of the caption
+     * @param {string} [caption]      A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
+     * @returns {sszvis.component} a linear data area component (reference line)
+     */
+    function line$1 () {
+      return component().prop("x1").prop("x2").prop("y1").prop("y2").prop("xScale").prop("yScale").prop("dx", functor).dx(0).prop("dy", functor).dy(0).prop("caption", functor).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const x1 = props.xScale(props.x1) || 0;
+        const y1 = props.yScale(props.y1) || 0;
+        const x2 = props.xScale(props.x2) || 0;
+        const y2 = props.yScale(props.y2) || 0;
+        const line = selection.selectAll(".sszvis-referenceline").data(data).join("line").classed("sszvis-referenceline", true);
+        line.attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2);
+        if (props.caption) {
+          const caption = selection.selectAll(".sszvis-referenceline__caption").data([0]).join("text").classed("sszvis-referenceline__caption", true);
+          caption.attr("transform", () => {
+            const vx = x2 - x1;
+            const vy = y2 - y1;
+            const angle = Math.atan2(vy, vx) * 180 / Math.PI;
+            return `translate(${(x1 + x2) / 2},${(y1 + y2) / 2}) rotate(${angle})`;
+          }).attr("dx", props.dx ? Number(props.dx(data[0])) : null).attr("dy", props.dy ? Number(props.dy(data[0])) : null).text(props.caption ? props.caption(data[0]) : null);
+        }
+      });
+    }
+
+    /**
+     * Crisp
+     *
+     * Utilities to render SVG elements crisply by placing them precisely on the
+     * pixel grid. Rectangles should be placed on round pixels, lines and circles
+     * on half-pixels.
+     *
+     * Example of rectangle placement (four • create one pixel)
+     * •    •----•----•    •
+     *      |         |
+     * •    •----•----•    •
+     *
+     * Example of line placement (four • create one pixel)
+     * •    •    •    •    •
+     *    ---------------
+     * •    •    •    •    •
+     *
+     * @module sszvis/svgUtils/crisp
+     */
+    /**
+     * crisp.halfPixel
+     *
+     * To ensure SVG elements are rendered crisply and without anti-aliasing
+     * artefacts, they must be placed on a half-pixel grid.
+     *
+     * @param  {number} pos A pixel position
+     * @return {number}     A pixel position snapped to the pixel grid
+     */
+    const halfPixel = pos => Math.floor(pos) + 0.5;
+    /**
+     * crisp.roundTransformString
+     *
+     * Takes an SVG transform string 'translate(12.3,4.56789) rotate(3.5)' and
+     * rounds the coordinates of its translate instruction down to integers:
+     * 'translate(12,4) rotate(3.5)'.
+     *
+     * A valid translate instruction has the form 'translate(<x> [<y>])' where
+     * x and y can be separated by a space or comma. Both forms are accepted and
+     * the result is always comma-separated.
+     *
+     * Coordinates are floored rather than rounded to the nearest integer, which
+     * keeps this consistent with halfPixel: both place an element on the pixel
+     * grid by moving it towards the origin of its enclosing pixel.
+     *
+     * Scope: only the first translate instruction of a string is processed, and a
+     * translate is expected to carry one or two components. Other instructions
+     * (rotate, scale, …) are passed through untouched. A translate carrying more
+     * than two components is not valid SVG; every component is floored and
+     * re-emitted, which is undefined-input behaviour rather than a guarantee.
+     *
+     * Negative coordinates and coordinates padded with spaces are handled.
+     *
+     * @param  {string} transformStr A valid SVG transform string
+     * @return {string}              An SVG transform string with rounded values
+     */
+    const roundTransformString = transformStr => {
+      const roundNumber = compose(Math.floor, Number);
+      return transformStr.replace(/(translate\()\s*([\d ,.-]+?)\s*(\))/i, (_, left, vecStr, right) => {
+        const roundVec = vecStr.split(/[\s,]+/).map(roundNumber).join(",");
+        return `${left}${roundVec}${right}`;
+      });
+    };
+    /**
+     * crisp.transformTranslateSubpixelShift
+     *
+     * This helper function takes a transform string and returns a vector that
+     * tells us how much to shift an element in order to place it on a half-pixel
+     * grid.
+     *
+     * Each component is the distance from the coordinate down to the origin of its
+     * enclosing pixel, so the shift is always in [0, 1). Because it is measured
+     * from Math.floor — consistent with halfPixel and roundTransformString — a
+     * negative coordinate yields the distance above the enclosing pixel rather
+     * than a negative offset: -12.3 shifts by 0.7, not -0.3.
+     *
+     * A translate carrying only an x component yields a y shift of 0. A transform
+     * with no translate instruction, including the empty string, reports [0, 0].
+     *
+     * @param  {string} transformStr A valid SVG transform string containing a
+     *                               translate instruction
+     * @return {vector}              Two-element array ([dx, dy])
+     */
+    const transformTranslateSubpixelShift = transformStr => {
+      const roundNumber = compose(Math.floor, Number);
+      const m = transformStr.match(/(translate\()\s*([\d ,.-]+?)\s*(\))/i);
+      if (!m) return [0, 0];
+      const vec = m[2].split(/[\s,]+/).map(Number);
+      if (vec.length === 1) vec.push(0);
+      const vecRound = vec.map(roundNumber);
+      return [vec[0] - vecRound[0], vec[1] - vecRound[1]];
+    };
+
+    /**
+     * translateString
+     *
+     * Pass an x and a y component, and this returns a translate string, which can be set as the 'transform' property of
+     * an svg element.
+     *
+     * @module sszvis/svgUtils/translateString
+     *
+     * @param  {number} x     The x-component of the transform
+     * @param  {number} y     The y-component of the transform
+     * @return {string}       The translate string
+     */
+    function translateString(x, y) {
+      return `translate(${x},${y})`;
+    }
+
+    /**
+     * Tooltip anchor annotation
+     *
+     * Tooltip anchors are invisible SVG <rect>s that each component needs to
+     * provide. Because they are real elements we can know their exact position
+     * on the page without any calculations and even if the parent element has
+     * been transformed. These elements need to be <rect>s because some browsers
+     * don't calculate positon information for the better suited <g> elements.
+     *
+     * Tooltips can be bound to by selecting for the tooltip data attribute.
+     *
+     * @module sszvis/annotation/tooltipAnchor
+     * @template T The type of the data objects used with the tooltip anchor
+     *
+     * @example
+     * var tooltip = sszvis.tooltip();
+     * bars.selectAll('[data-tooltip-anchor]').call(tooltip);
+     *
+     * Tooltips use HTML5 data attributes to clarify their intent, which is not
+     * to style an element but to provide an anchor that can be selected using
+     * Javascript.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Using_data_attributes
+     * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Attribute_selectors
+     *
+     * To add a tooltip anchor to an element, create a new tooltip anchor function
+     * and call it on a selection. This is usually the same selection that you have
+     * added the visible elements of your chart to, e.g. the selection that you
+     * render bar <rect>s into.
+     *
+     * @example
+     * var tooltipAnchor = sszvis.tooltipAnchor()
+     *   .position(function(d) {
+     *     return [xScale(d), yScale(d)];
+     *   });
+     * selection.call(tooltipAnchor);
+     *
+     * @property {function} position Accessor (datum, index) returning the tooltip's
+     *                               [x, y] coordinates. The index is d3's element
+     *                               index; accessors may take the datum alone.
+     * @property {boolean}  debug    Renders a visible tooltip anchor when true
+     *
+     * @return {sszvis.component}
+     */
+    /* Helper functions
+      ----------------------------------------------- */
+    function vectorToTranslateString(vec) {
+      return translateString.apply(null, vec);
+    }
+    function tooltipAnchor() {
+      return component().prop("position").position(functor([0, 0])).prop("debug").render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const anchor = selection.selectAll("[data-tooltip-anchor]").data(data).join("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("data-tooltip-anchor", "");
+        // Update
+        anchor.attr("transform", compose(vectorToTranslateString, props.position));
+        // Visible anchor if debug is true
+        if (props.debug) {
+          const referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data).join("circle").attr("data-tooltip-anchor-debug", "");
+          referencePoint.attr("r", 2).attr("fill", "#fff").attr("stroke", "#f00").attr("stroke-width", 1.5).attr("transform", compose(vectorToTranslateString, props.position));
+        }
+      });
+    }
+
+    /**
+     * Range Flag annotation
+     *
+     * The range flag component creates a pair of small white circles which fit well with the range ruler.
+     * However, this is a separate component for implementation reasons, because the data for the range flag
+     * should usually be only one value, distinct from the range ruler which expects multiple values. The range
+     * flag also creates a tooltip anchor between the two dots, to which you can attach a tooltip. See the
+     * interactive stacked area chart examples for a use of the range flag.
+     *
+     * @module sszvis/annotation/rangeFlag
+     *
+     * @property {number functor} x           A value for the x-value of the range flag
+     * @property {number functor} y0          A value for the y-value of the lower range flag dot
+     * @property {number functor} y1          A value for the y-value of the upper range flag dot
+     *
+     * @returns {sszvis.component}
+     */
+    function rangeFlag () {
+      return component().prop("x", functor).prop("y0", functor).prop("y1", functor).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const crispX = compose(halfPixel, props.x);
+        const crispY0 = compose(halfPixel, props.y0);
+        const crispY1 = compose(halfPixel, props.y1);
+        selection.selectAll(".sszvis-rangeFlag__mark.bottom").data(data).call(makeFlagDot("bottom", crispX, crispY0));
+        selection.selectAll(".sszvis-rangeFlag__mark.top").data(data).call(makeFlagDot("top", crispX, crispY1));
+        const ta = tooltipAnchor().position(d => [crispX(d), halfPixel((Number(props.y0(d)) + Number(props.y1(d))) / 2)]);
+        selection.call(ta);
+      });
+    }
+    function makeFlagDot(classed, cx, cy) {
+      // The selection is the one being joined into circles, so its datum is the component's and
+      // its parent parameters are whatever the caller's selection had.
+      return dot => {
+        dot.join("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true).attr("r", 3.5).attr("cx", cx).attr("cy", cy);
+      };
+    }
+
+    /**
+     * Swiss German format locale definition for d3.format functions
+     */
+    const formatLocale = {
+      decimal: ".",
+      thousands: " ",
+      // This is a 'narrow space', not a regular space. Used as the thousands separator by d3.format
+      grouping: [3],
+      currency: ["CHF ", ""]
+    };
+    /**
+     * Swiss German time locale definition for d3.time functions
+     */
+    const timeLocale = {
+      dateTime: "%a. %e. %B %X %Y",
+      date: "%d.%m.%Y",
+      time: "%H:%M:%S",
+      periods: ["", ""],
+      // Fixed: D3 expects a tuple of 2 strings for AM/PM
+      days: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+      shortDays: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+      months: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+      shortMonths: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+    };
+
+    /**
+     * Formatting functions
+     *
+     * @module sszvis/format
+     */
+    const timeFormat = d3.timeFormatLocale(timeLocale).format;
+    const format = d3.formatLocale(formatLocale).format;
+    /**
+     * Format a number as an age
+     */
+    const formatAge = d => String(Math.round(d));
+    /**
+     * A multi time formatter used by the axis class
+     */
+    const formatAxisTimeFormat = d => {
+      const xs = [[".%L", date => date.getMilliseconds()], [":%S", date => date.getSeconds()], ["%H:%M", date => date.getMinutes()], ["%H Uhr", date => date.getHours()], ["%a., %d.", date => Boolean(date.getDay() && date.getDate() !== 1)], ["%e. %b", date => date.getDate() !== 1], ["%B", date => date.getMonth()], ["%Y", () => true]];
+      for (const x of xs) {
+        if (x[1](d)) {
+          return timeFormat(x[0])(d);
+        }
+      }
+      // Fallback - should never happen, but TypeScript requires a return
+      return timeFormat("%Y")(d);
+    };
+    /**
+     * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
+     */
+    const formatMonth = compose(m => m.toUpperCase(), timeFormat("%b"));
+    /**
+     * A year formatter for date objects. Gives the date's year.
+     */
+    const formatYear = timeFormat("%Y");
+    /**
+     * Formatter for no label
+     */
+    const formatNone = () => "";
+    /**
+     * Format numbers according to the sszvis style guide. The most important
+     * rules are:
+     *
+     * - Thousands separator is a thin space (not a space)
+     * - Only apply thousands separator for numbers >= 10000
+     * - Decimal places only for significant decimals
+     * - No decimal places for numbers >= 10000
+     * - One decimal place for numbers >= 100
+     * - Up to 2 significant decimal places for smaller numbers
+     *
+     * See also: many test cases for this function in format.test.js
+     */
+    const formatNumber = d => {
+      let p;
+      const dAbs = Math.abs(d ?? 0);
+      if (d == null || Number.isNaN(d)) {
+        return "–"; // This is an en-dash
+      }
+      // 10250    -> "10 250"
+      // 10250.91 -> "10 251"
+      else if (dAbs >= 1e4) {
+        // Includes ',' for thousands separator. The default use of the 'narrow space' as a separator
+        // is configured in the localization file at vendor/d3-de/d3-de.js (also included with sszvis)
+        return format(",.0f")(d);
+      }
+      // 2350     -> "2350"
+      // 2350.29  -> "2350.3"
+      else if (dAbs >= 100) {
+        p = Math.min(1, decimalPlaces(d));
+        // Where there are decimals, round to 1 position
+        // To display more precision, use the preciseNumber function.
+        return stripTrailingZeroes(format(`.${p}f`)(d));
+      }
+      // 41       -> "41"
+      // 41.1     -> "41.1"
+      // 41.329   -> "41.33"
+      else if (dAbs > 0) {
+        p = Math.min(2, decimalPlaces(d));
+        // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
+        // but not more. To display more precision, use the preciseNumber function.
+        return stripTrailingZeroes(format(`.${p}f`)(d));
+      }
+      // If abs(num) is not > 0, num is 0
+      // 0       -> "0"
+      else {
+        return format(".0f")(0);
+      }
+    };
+    function formatPreciseNumber(p, d) {
+      // This curries the function
+      if (arguments.length > 1 && d !== undefined) return formatPreciseNumber(p)(d);
+      return x => {
+        const dAbs = Math.abs(x);
+        return dAbs >= 100 && dAbs < 1e4 ? format(`.${p}f`)(x) : format(`,.${p}f`)(x);
+      };
+    }
+    /**
+     * Format percentages on the range 0 - 100
+     */
+    const formatPercent = d => {
+      // Uses unix thin space
+      return `${formatNumber(d)} %`;
+    };
+    /**
+     * Format percentages on the range 0 - 1
+     */
+    const formatFractionPercent = d => {
+      // Uses unix thin space
+      return `${formatNumber(d * 100)} %`;
+    };
+    /**
+     * Default formatter for text
+     */
+    const formatText = String;
+    /* Helper functions
+    ----------------------------------------------- */
+    // decLen is the number of decimal places in the number
+    // 0.0002 -> 4
+    // 0.0000 -> 0 (Javascript's number implementation chops off trailing zeroes)
+    // 123456.1 -> 1
+    // 123456.00001 -> 5
+    function decimalPlaces(num) {
+      return (String(Math.abs(num)).split(".")[1] || "").length;
+    }
+    function stripTrailingZeroes(str) {
+      return str.replace(/(\.\d*[1-9])0+$|\.0*$/, "$1");
+    }
+
+    /**
+     * RangeRuler annotation
+     *
+     * The range ruler is similar to the handle ruler and the ruler, except for each data
+     * point which it finds bound to its layer, it generates two small dots, and a label which
+     * states the value of the data point. For an example, see the interactive stacked area charts.
+     * Note that the interactive stacked area charts also include the rangeFlag component for highlighting
+     * certain specific dots. This is a sepearate component.
+     *
+     * @module sszvis/annotation/rangeRuler
+     *
+     * @property {number functor} x            A function for the x-position of the ruler.
+     * @property {number functor} y0           A function for the y-position of the lower dot. Called for each datum.
+     * @property {number functor} y1           A function for the y-position of the upper dot. Called for each datum.
+     * @property {number} top                  A number for the y-position of the top of the ruler
+     * @property {number} bottom               A number for the y-position of the bottom of the ruler
+     * @property {string functor} label        A function which generates labels for each range.
+     * @property {number} total                A number to display as the total of the range ruler (at the top)
+     * @property {boolean functor} flip        Determines whether the rangeRuler labels should be flipped (they default to the right side)
+     *
+     * @return {sszvis.component}
+     */
+    function rangeRuler () {
+      return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("top").prop("bottom").prop("label").prop("removeStroke").label(functor("")).prop("total").prop("flip", functor).flip(false).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const crispX = compose(halfPixel, props.x);
+        const crispY0 = compose(halfPixel, props.y0);
+        const crispY1 = compose(halfPixel, props.y1);
+        const middleY = d => {
+          return halfPixel((Number(props.y0(d)) + Number(props.y1(d))) / 2);
+        };
+        const dotRadius = 1.5;
+        const line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]).join("line").classed("sszvis-rangeRuler__rule", true);
+        line.attr("x1", crispX).attr("y1", props.top).attr("x2", crispX).attr("y2", props.bottom);
+        const marks = selection.selectAll(".sszvis-rangeRuler--mark").data(data).join("g").classed("sszvis-rangeRuler--mark", true);
+        marks.append("circle").classed("sszvis-rangeRuler__p1", true);
+        marks.append("circle").classed("sszvis-rangeRuler__p2", true);
+        marks.append("text").classed("sszvis-rangeRuler__label-contour", true);
+        marks.append("text").classed("sszvis-rangeRuler__label", true);
+        marks.selectAll(".sszvis-rangeRuler__p1").data(d => [d]).attr("cx", crispX).attr("cy", crispY0).attr("r", dotRadius);
+        marks.selectAll(".sszvis-rangeRuler__p2").data(d => [d]).attr("cx", crispX).attr("cy", crispY1).attr("r", dotRadius);
+        marks.selectAll(".sszvis-rangeRuler__label").data(d => [d]).attr("x", d => {
+          const offset = props.flip(d) ? -10 : 10;
+          return crispX(d) + offset;
+        }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
+        .style("text-anchor", d => props.flip(d) ? "end" : "start").text(compose(formatNumber, props.label));
+        //make the contour behind the the label update with the label
+        marks.selectAll(".sszvis-rangeRuler__label-contour").data(d => [d]).attr("x", d => {
+          const offset = props.flip(d) ? -10 : 10;
+          return crispX(d) + offset;
+        }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
+        .style("text-anchor", d => props.flip(d) ? "end" : "start").text(compose(formatNumber, props.label));
+        selection.selectAll("g.sszvis-rangeRuler--mark").each(function () {
+          const g = d3.select(this);
+          const textNode = g.select("text").node();
+          let textContour = g.select(".sszvis-rangeRuler__label-contour");
+          if (textContour.empty()) {
+            if (textNode) {
+              const clonedNode = textNode.cloneNode(true);
+              textContour = d3.select(clonedNode);
+              textContour.classed("sszvis-rangeRuler__label-contour", true).classed("sszvis-rangeRuler__label", false);
+              const contourNode = textContour.node();
+              if (contourNode && this instanceof Element) {
+                this.insertBefore(contourNode, textNode);
+              }
+            }
+          } else {
+            textContour.attr("x", d => {
+              const offset = props.flip(d) ? -10 : 10;
+              return crispX(d) + offset;
+            }).attr("y", d => middleY(d)).attr("dy", "0.35em") // vertically-center
+            .style("text-anchor", d => {
+              return props.flip(d) ? "end" : "start";
+            });
+          }
+          if (textNode) {
+            textContour.text(textNode.textContent || "");
+          }
+        });
+        if (!props.removeStroke) {
+          marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
+        }
+        const total = selection.selectAll(".sszvis-rangeRuler__total").data([last(data)]).join("text").classed("sszvis-rangeRuler__total", true);
+        total.attr("x", d => {
+          const offset = props.flip(d) ? -10 : 10;
+          return crispX(d) + offset;
+        }).attr("y", props.top - 10).style("text-anchor", d => {
+          return props.flip(d) ? "end" : "start";
+        }).text(`Total ${formatNumber(props.total)}`);
+        const totalNode = total.node();
+        let totalContour = selection.select(".sszvis-rangeRuler__total-contour");
+        if (totalContour.empty()) {
+          if (totalNode) {
+            const clonedTotalNode = totalNode.cloneNode(true);
+            totalContour = d3.select(clonedTotalNode);
+            totalContour.classed("sszvis-rangeRuler__total-contour", true).classed("sszvis-rangeRuler__total", false);
+            const contourNode = totalContour.node();
+            if (contourNode && this instanceof Element) {
+              this.insertBefore(contourNode, totalNode);
+            }
+          }
+        } else {
+          totalContour.attr("x", d => {
+            const offset = props.flip(d) ? -10 : 10;
+            return crispX(d) + offset;
+          }).attr("y", props.top - 10).style("text-anchor", d => {
+            return props.flip(d) ? "end" : "start";
+          });
+        }
+        if (totalNode) {
+          totalContour.text(totalNode.textContent || "");
+        }
+        if (!props.removeStroke) {
+          total.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
+        }
+      });
+    }
+
+    /**
+     * Rectangle annotation
+     *
+     * A component for creating rectangular data areas. The component should be passed
+     * an array of data values, each of which will be used to render a data area by
+     * passing it through the accessor functions. You can specify a caption to display,
+     * which can be offset from the center of the data area by specifying dx or dy properties.
+     *
+     * @module sszvis/annotation/rectangle
+     *
+     * @template T The type of the data objects used in the rectangle annotations
+     * @param {number, function} x        The x-position of the upper left corner of the data area.
+     * @param {number, function} y        The y-position of the upper left corner of the data area.
+     * @param {number, function} width    The width of the data area.
+     * @param {number, function} height   The height of the data area.
+     * @param {number, function} dx       The x-offset of the data area caption.
+     * @param {number, function} dy       The y-offset of the data area caption.
+     * @param {string, function} caption  The caption for the data area.
+     *
+     * @returns {sszvis.component} a rectangular data area component
+     */
+    function rectangle () {
+      return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("dx", functor).prop("dy", functor).prop("caption", functor).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
+        dataAreaPattern(patternSelection);
+        const dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data).join("rect").classed("sszvis-dataarearectangle", true);
+        dataArea.attr("x", d => Number(props.x(d))).attr("y", d => Number(props.y(d))).attr("width", d => Number(props.width(d))).attr("height", d => Number(props.height(d))).attr("fill", "url(#data-area-pattern)");
+        if (props.caption) {
+          const dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data).join("text").classed("sszvis-dataarearectangle__caption", true);
+          dataCaptions.attr("x", d => Number(props.x(d)) + Number(props.width(d)) / 2).attr("y", d => Number(props.y(d)) + Number(props.height(d)) / 2).attr("dx", props.dx ? d => Number(props.dx?.(d)) : null).attr("dy", props.dy ? d => Number(props.dy?.(d)) : null).text(d => props.caption?.(d) || "");
+        }
+      });
+    }
+
+    /**
+     * Color scales
+     *
+     * Three kinds of color scales are provided: qualitative, sequential, and
+     * diverging. All color scales can be reversed, qualitative color scales
+     * can also be brightened or darkened.
+     *
+     * @module sszvis/color
+     *
+     *
+     * Qualitative color scales
+     *
+     * @function qual12    The full range of categorical colors
+     * @function qual6     Subset of saturated categorical colors
+     * @function qual6a    Subset of blue-green categorical colors
+     * @function qual6b    Subset of yellow-red categorical colors
+     * @method   darker    Instance method to darken all colors. @returns new scale
+     * @method   brighter  Instance method to brighten all colors. @returns new scale
+     * @method   reverse   Instance method to reverse the color order. @returns new scale
+     *
+     *
+     * Sequential color scales
+     *
+     * @function seqBlu    Linear color scale from bright to dark blue
+     * @function seqRed    Linear color scale from bright to dark red
+     * @function seqGrn    Linear color scale from bright to dark green
+     * @function seqBrn    Linear color scale from bright to dark brown
+     * @method   reverse   Instance method to reverse the color order. @returns new scale
+     *
+     *
+     * Diverging color scales
+     *
+     * @function divVal    Diverging and valued color scale from red to blue
+     * @function divNtr    Diverging and neutral color scale from brown to green
+     * @function divValGry constiation of the valued scale with a grey midpoint
+     * @function divNtrGry constiation of the neutral scale with a grey midpoint
+     * @method   reverse   Instance method to reverse the color order. @returns new scale
+     *
+     * Grey color scales
+     * @function gry       1-color scale for shaded values
+     * @function lightGry  1-color scale for shaded backgrounds
+     */
+    /* Constants
+    ----------------------------------------------- */
+    const LIGHTNESS_STEP = 1;
+    /* Scales
+    ----------------------------------------------- */
+    function qualColorScale(colors) {
+      return () => {
+        const scale = d3.scaleOrdinal().range(colors.map(convertLab));
+        // Set unknown to first color without the type constraint
+        scale.unknown(convertLab(colors[0]));
+        return decorateOrdinalScale(scale);
+      };
+    }
+    const black = "#000000";
+    const white = "#FFFFFF";
+    const darkBlue = "#3431DE";
+    const mediumBlue = "#0A8DF6";
+    const lightBlue = "#23C3F1";
+    const darkRed = "#7B4FB7";
+    const mediumRed = "#DB247D";
+    const lightRed = "#FB737E";
+    const darkGreen = "#007C78";
+    const mediumGreen = "#1D942E";
+    const lightGreen = "#99C32E";
+    const darkBrown = "#9A5B01";
+    const mediumBrown = "#FF720C";
+    const lightBrown = "#FBB900";
+    const scaleQual12 = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed, darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
+    const scaleQual6 = qualColorScale([darkBlue, mediumRed, mediumGreen, lightBrown, lightBlue, mediumBrown]);
+    const scaleQual6a = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed]);
+    const scaleQual6b = qualColorScale([darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
+    const female = "#349894";
+    const male = "#FFD736";
+    const misc = "#986AD5";
+    const scaleGender3 = () => qualColorScale([female, male, misc])().domain(["Frauen", "Männer", "Divers"]);
+    const swissFemale = "#00615D";
+    const foreignFemale = "#349894";
+    const swissMale = "#DA9C00";
+    const foreignMale = "#FFD736";
+    const swissMisc = "#5E359A";
+    const foreignMisc = "#986AD5";
+    const scaleGender6Origin = () => qualColorScale([swissFemale, foreignFemale, swissMale, foreignMale, swissMisc, foreignMisc])().domain(["Schweizerinnen", "Ausländerinnen", "Schweizer", "Ausländer", "Divers Schweiz", "Divers Ausland"]);
+    const femaleFemale = "#349894";
+    const maleMale = "#FFD736";
+    const femaleMale = "#3431DE";
+    const femaleUnknown = "#B8B8B8";
+    const maleUnknown = "#D6D6D6";
+    const scaleGender5Wedding = () => qualColorScale([femaleFemale, maleMale, femaleMale, femaleUnknown, maleUnknown])().domain(["Frau / Frau", "Mann / Mann", "Frau / Mann", "Frau / Unbekannt", "Mann / Unbekannt"]);
+    function seqColorScale(colors) {
+      return () => {
+        const scale = d3.scaleLinear().range(colors.map(convertLab));
+        return decorateLinearScale(scale);
+      };
+    }
+    const scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
+    const scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
+    const scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
+    const scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
+    function divColorScale(colors) {
+      return () => {
+        const scale = d3.scaleLinear().range(colors.map(convertLab));
+        return decorateDivScale(scale);
+      };
+    }
+    const scaleDivVal = divColorScale(["#611F00", "#A13200", "#EA5D00", "#FF9A54", "#FCDDBB", "#CADEFF", "#89AFFF", "#5B6EFF", "#3431DE", "#211A8A"]);
+    const scaleDivValGry = divColorScale(["#782600", "#CC4309", "#FF720C", "#FFBC88", "#E4E0DF", "#AECBFF", "#6B8EFF", "#3B51FF", "#2F2ABB"]);
+    const scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
+    const scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
+    function greyColorScale(colors) {
+      return () => {
+        // Grey color scales are really ordinal but we treat them like linear for the API
+        const scale = d3.scaleOrdinal().range(colors.map(convertLab));
+        return decorateLinearScale(scale);
+      };
+    }
+    const scaleLightGry = greyColorScale(["#FAFAFA"]);
+    const scalePaleGry = greyColorScale(["#EAEAEA"]);
+    const scaleGry = greyColorScale(["#D6D6D6"]);
+    const scaleDimGry = greyColorScale(["#B8B8B8"]);
+    const scaleMedGry = greyColorScale(["#7C7C7C"]);
+    const scaleDeepGry = greyColorScale(["#545454"]);
+    const slightlyDarker = c => d3.hsl(String(c)).darker(0.4);
+    const muchDarker = c => d3.hsl(String(c)).darker(0.7);
+    const withAlpha = (c, a) => {
+      const rgbColor = d3.rgb(String(c));
+      return `rgba(${rgbColor.r},${rgbColor.g},${rgbColor.b},${a})`;
+    };
+    /* Scale extensions
+    ----------------------------------------------- */
+    function decorateOrdinalScale(scale) {
+      const enhancedScale = scale;
+      // A copy keeps the original's `unknown`, and a qualitative scale sets that to its first
+      // colour - so without shifting it too, a key outside the domain (or every key, on a scale
+      // given no domain) would answer the colour it had before. Only a colour is shifted: a
+      // caller may have set `unknown` to something else, and that is theirs to keep.
+      const shifted = shift => {
+        const copy = scale.copy().range(scale.range().map(shift));
+        const unknown = scale.unknown();
+        // Set for its effect, as `qualColorScale` does: the setter's return type widens `unknown`.
+        if (unknown instanceof d3.lab) copy.unknown(shift(unknown));
+        return decorateOrdinalScale(copy);
+      };
+      // These two were inverted from the first JS version onwards: `darker()` mapped the range
+      // through `lab.brighter()` and vice versa, so every caller asking for a darker scale got a
+      // lighter one. Nothing anywhere called `brighter()`, which is why it survived so long.
+      enhancedScale.darker = () => shifted(d => d.darker(LIGHTNESS_STEP));
+      enhancedScale.brighter = () => shifted(d => d.brighter(LIGHTNESS_STEP));
+      enhancedScale.reverse = () => decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
+      return enhancedScale;
+    }
+    function decorateDivScale(scale) {
+      const enhancedScale = interpolatedDivergentColorScale(scale);
+      // decorateDivScale, not decorateLinearScale: copy() returns a bare d3 scale, so the reversed
+      // scale has to be re-wrapped with the diverging expansion. Wrapping it with the linear one
+      // silently downgraded it to the sequential three-stop domain, and every stop past the third
+      // became unreachable - a reversed diverging legend rendered as a single-hue ramp.
+      enhancedScale.reverse = () => decorateDivScale(scale.copy().range(scale.range().reverse()));
+      return enhancedScale;
+    }
+    function interpolatedDivergentColorScale(scale) {
+      const nativeDomain = scale.domain;
+      if (!scale.range()) return scale;
+      const length = scale.range().length;
+      // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+      // Reflect.set writes it without having to restate the scale's type.
+      const replaceDomain = function (dom) {
+        // Only a two-value domain is expanded across the range's stops. Everything else - a
+        // no-argument getter call above all - forwards to the scale's own domain verbatim, so
+        // reading the domain back is not a disguised setter call. Mirrors interpolatedColorScale.
+        if (arguments.length === 1 && dom && dom.length === 2) {
+          const xDomain = [];
+          for (let i = 0; i < length; i++) {
+            xDomain.push(d3.quantile(dom, i / (length - 1)) || 0);
+          }
+          return nativeDomain.call(this, xDomain);
+        }
+        return Reflect.apply(nativeDomain, this, arguments);
+      };
+      Reflect.set(scale, "domain", replaceDomain);
+      return scale;
+    }
+    function decorateLinearScale(scale) {
+      // Only apply interpolation to actual linear scales, not ordinal scales used for grey
+      const processedScale = "interpolate" in scale ? interpolatedColorScale(scale) : scale;
+      const enhancedScale = processedScale;
+      enhancedScale.reverse = () => {
+        const copiedScale = "copy" in scale ? scale.copy() : scale;
+        return decorateLinearScale(copiedScale.range(scale.range().reverse()));
+      };
+      return enhancedScale;
+    }
+    function interpolatedColorScale(scale) {
+      const nativeDomain = scale.domain;
+      // Replacing the scale's own .domain in place is the whole point of these two wrappers.
+      // Reflect.set writes it without having to restate the scale's type.
+      const replaceDomain = function (dom) {
+        if (arguments.length === 1 && dom && dom.length === 2) {
+          const threeDomain = [dom[0], d3.mean(dom) || 0, dom[1]];
+          return nativeDomain.call(this, threeDomain);
+        } else {
+          return Reflect.apply(nativeDomain, this, arguments);
+        }
+      };
+      Reflect.set(scale, "domain", replaceDomain);
+      return scale;
+    }
+    /* Helper functions
+    ----------------------------------------------- */
+    function convertLab(d) {
+      return d3.lab(d);
+    }
+    /**
+     * Renders a colour as the string an SVG attribute needs.
+     *
+     * The scales in this module return d3 `LabColor` objects, and d3 stringifies those itself
+     * when it writes an attribute. Doing it explicitly is the same conversion, and it lets a
+     * property typed as `ColorValue` reach d3's attribute typings, which accept only strings.
+     * Nullish stays nullish: d3 removes the attribute for it.
+     */
+    function colorToString(color) {
+      return color == null ? null : String(color);
+    }
+    const getAccessibleTextColor = backgroundColor => {
+      if (!backgroundColor) {
+        return black;
+      }
+      const bgColor = d3.rgb(String(backgroundColor));
+      const gammaCorrect = c => {
+        const normalized = c / 255;
+        return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+      };
+      const rLum = gammaCorrect(bgColor.r);
+      const gLum = gammaCorrect(bgColor.g);
+      const bLum = gammaCorrect(bgColor.b);
+      // WCAG relative luminance formula
+      const luminance = 0.2126 * rLum + 0.7152 * gLum + 0.0722 * bLum;
+      return luminance > 0.179 ? black : white; // Use SSZVIS gray or white
+    };
+
+    /**
+     * Ruler annotation
+     *
+     * The ruler component can be used to create a vertical line which highlights data at a certain
+     * x-value, for instance in a line chart or area chart. The ruler expects data to be bound to
+     * the layer it renders into, and it will generate a small dot for each data point it finds.
+     *
+     * @module sszvis/annotation/ruler
+     *
+     * @property {number} top                 A number which is the y-position of the top of the ruler line.
+     *                                        Each rule runs from its own datum down to `bottom`, so `top`
+     *                                        acts as an upper bound: a datum above it has its rule clamped
+     *                                        to `top` rather than drawn outside the chart area. The dot and
+     *                                        label stay on the datum. Omit it to leave the rule unbounded.
+     * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
+     * @property {function} x                 A number or function returning a number for the x-position of the ruler line.
+     * @property {function} y                 A function for determining the y-position of the ruler dots. Should take a data
+     *                                        value as an argument and return a y-position.
+     * @property {function} label             A function for determining the labels of the ruler dots. Should take a
+     *                                        data value as argument and return a label.
+     * @property {string, function} color     A string or function to specify the color of the ruler dots.
+     * @property {function} flip              A boolean or function which returns a boolean that specifies
+     *                                        whether the labels on the ruler dots should be flipped. (they default to the right side)
+     * @property {function} labelId           An id accessor function for the labels. This is used to match label data to svg elements,
+     *                                        and it is used by the reduceOverlap algorithm to match calculated bounds and positions with
+     *                                        labels. The default implementation uses the x and y positions of each label, but when labels
+     *                                        overlap, these positions are the same (and one will be removed!). It's generally a good idea
+     *                                        to provide your own function here, but you should especially use this when multiple labels
+     *                                        could overlap with each other. Usually this will be some kind of category accessor function.
+     * @property {boolean} reduceOverlap      Use an iterative relaxation algorithm to adjust the positions of the labels (when there is more
+     *                                        than one label) so that they don't overlap. This can be computationally expensive, when there are
+     *                                        many labels that need adjusting. This is turned off by default.
+     *
+     * @return {sszvis.component}
+     */
+    /** Horizontal distance between a dot and its label. */
+    const LABEL_OFFSET$1 = 10;
+    /** Vertical nudge that drops a label's baseline clear of its dot. */
+    const LABEL_BASELINE_NUDGE$1 = 5;
+    /**
+     * The dot fill, as d3 wants it. An unset `color` - and, as before, any other falsy value -
+     * falls back to black; an accessor is always asked, so a colour it returns is used as-is.
+     */
+    function fillOf$1(color) {
+      if (!color) return () => "black";
+      return typeof color === "function" ? (d, i) => colorToString(color(d, i)) : () => colorToString(color);
+    }
+    const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
+      const selection = d3.select(this);
+      const props = selection.props();
+      const labelId = props.labelId || (d => `${props.x(d)}_${props.y(d)}`);
+      // `top` is an upper bound on the rule, not its anchor: the rule still starts at its
+      // datum, but a datum above `top` is clamped there so the rule stays inside the chart
+      // area. `??` rather than `||` so that a `top` of 0 - what every caller passes - binds.
+      // Unlike control/handleRuler, which draws a single full-height rule anchored at `top`,
+      // this component draws one rule per datum, so it clamps instead of anchoring.
+      const top = props.top ?? Number.NEGATIVE_INFINITY;
+      const ruler = selection.selectAll(".sszvis-ruler__rule").data(data, d => labelId(d)).join("line").classed("sszvis-ruler__rule", true);
+      ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", d => Math.max(Number(props.y(d)), top)).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
+      const dot = selection.selectAll(".sszvis-ruler__dot").data(data, d => labelId(d)).join("circle").classed("sszvis-ruler__dot", true);
+      dot.attr("cx", compose(halfPixel, props.x)).attr("cy", compose(halfPixel, props.y)).attr("r", 3.5).attr("fill", fillOf$1(props.color));
+      selection.selectAll(".sszvis-ruler__label-outline").data(data, d => labelId(d)).join("text").classed("sszvis-ruler__label-outline", true);
+      const label = selection.selectAll(".sszvis-ruler__label").data(data, d => labelId(d)).join("text").classed("sszvis-ruler__label", true);
+      // Update both label and labelOutline selections
+      const crispX = compose(halfPixel, props.x);
+      const crispY = compose(halfPixel, props.y);
+      const textSelection = selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
+        const x = crispX(d);
+        const y = crispY(d);
+        const dx = props.flip(d) ? -LABEL_OFFSET$1 : LABEL_OFFSET$1;
+        // A constant nudge, whether the dot sits on the ruler or above its top; only a
+        // dot below `bottom` needs none. The same expression lives in
+        // src/control/handleRuler.ts and the two must not drift.
+        const dy = y > props.bottom ? 0 : LABEL_BASELINE_NUDGE$1;
+        return translateString(x + dx, y + dy);
+      }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(d => props.label(d));
+      if (props.reduceOverlap) {
+        const THRESHOLD = 2;
+        let ITERATIONS = 10;
+        const labelBounds = [];
+        // Optimization for the lookup later
+        const labelBoundsIndex = {};
+        // Reset vertical shift (set by previous renders)
+        textSelection.attr("y", "");
+        // Create bounds objects
+        label.each(function (d) {
+          const bounds = this.getBoundingClientRect();
+          const item = {
+            top: bounds.top,
+            bottom: bounds.bottom,
+            dy: 0
+          };
+          labelBounds.push(item);
+          labelBoundsIndex[labelId(d)] = item;
+        });
+        // Sort array in place by vertical position
+        // (only supports labels of same height)
+        labelBounds.sort((a, b) => d3.ascending(a.top, b.top));
+        // Using postfix decrement means the expression evaluates to the value of the variable
+        // before the decrement takes place. In the case of 10 iterations, this means that the
+        // variable gets to 0 after the truthiness of the 10th iteration is tested, and the
+        // expression is false at the beginning of the 11th, so 10 iterations are executed.
+        // If you use prefix decrement (--ITERATIONS), the variable gets to 0 at the beginning of
+        // the 10th iteration, meaning that only 9 iterations are executed.
+        while (ITERATIONS--) {
+          // Calculate overlap and correct position
+          for (const [index, firstLabel] of labelBounds.entries()) {
+            for (const secondLabel of labelBounds.slice(index + 1)) {
+              const overlap = firstLabel.bottom - secondLabel.top;
+              if (overlap >= THRESHOLD) {
+                const offset = overlap / 2;
+                firstLabel.bottom -= offset;
+                firstLabel.top -= offset;
+                firstLabel.dy -= offset;
+                secondLabel.bottom += offset;
+                secondLabel.top += offset;
+                secondLabel.dy += offset;
+              }
+            }
+          }
+        }
+        // Shift vertically to remove overlap
+        textSelection.attr("y", d => {
+          const textLabel = labelBoundsIndex[labelId(d)];
+          return textLabel.dy;
+        });
+      }
+    });
+    const rulerLabelVerticalSeparate = cAcc => g => {
+      const THRESHOLD = 2;
+      const labelBounds = [];
+      // Reset vertical shift
+      g.selectAll("text").each(function () {
+        d3.select(this).attr("y", "");
+      });
+      // Calculate bounds
+      g.selectAll(".sszvis-ruler__label").each(function (d) {
+        const bounds = this.getBoundingClientRect();
+        labelBounds.push({
+          category: cAcc(d),
+          top: bounds.top,
+          bottom: bounds.bottom,
+          dy: 0
+        });
+      });
+      // Sort by vertical position (only supports labels of same height)
+      labelBounds.sort((a, b) => d3.ascending(a.top, b.top));
+      // Calculate overlap and correct position
+      for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < labelBounds.length; j++) {
+          for (let k = j + 1; k < labelBounds.length; k++) {
+            if (j === k) continue;
+            const firstLabel = labelBounds[j];
+            const secondLabel = labelBounds[k];
+            const overlap = firstLabel.bottom - secondLabel.top;
+            if (overlap >= THRESHOLD) {
+              firstLabel.bottom -= overlap / 2;
+              firstLabel.top -= overlap / 2;
+              firstLabel.dy -= overlap / 2;
+              secondLabel.bottom += overlap / 2;
+              secondLabel.top += overlap / 2;
+              secondLabel.dy += overlap / 2;
+            }
+          }
+        }
+      }
+      // Shift vertically to remove overlap
+      g.selectAll("text").each(function (d) {
+        const label = find(l => l.category === cAcc(d), labelBounds);
+        if (label) {
+          d3.select(this).attr("y", label.dy);
+        }
+      });
+    };
+
+    /**
+     * Tooltip annotation
+     *
+     * Use this component to add a tooltip to the document. The tooltip component should be
+     * called on a selection of [data-tooltip-anchor], which contain the information necessary to
+     * position the tooltip and provide it with data. The tooltip's visibility should be toggled
+     * using the .visible property, passing a predicate function. Tooltips will be displayed
+     * when .visible returns true.
+     *
+     * @module sszvis/annotation/tooltip
+     *
+     * @template T The type of the data objects used in the tooltip
+     * @property {seletion} renderInto      Provide a selection container into which to render the tooltip.
+     *                                      Unlike most other components, the tooltip isn't rendered directly into the selection
+     *                                      on which it is called. Instead, it's rendered into whichever selection is
+     *                                      passed to the renderInto option
+     * @property {function} visible         Provide a predicate function which accepts a datum and determines whether the associated
+     *                                      tooltip should be visible. (default: false)
+     * @property {function} header          A function accepting a datum. The result becomes the header of the tooltip.
+     *                                      This function can return:
+     *                                      - a plain string
+     *                                      - an HTML string to be used as innerHTML
+     * @property {function} body            A function accepting a datum. The result becomes the body of the tooltip.
+     *                                      This function can return:
+     *                                      - a plain string
+     *                                      - an HTML string to be used as innerHTML
+     *                                      - an array of arrays, which produces a tabular layout where each
+     *                                      sub-array is one row in the table.
+     * @property {function} orientation     A string or function returning a string which determines the orientation. This determines
+     *                                      which direction the tooltip sits relative to its point.
+     *                                      Possible values are: "bottom" (points down), "top" (points upward), "left" (points left), and "right" (points right).
+     *                                      Default is "bottom".
+     * @property {number} dx                A number for the x-offset of the tooltip
+     * @property {number} dy                A number for the y-offset of the tooltip
+     * @property {function} opacity         A function or number which determines the opacity of the tooltip. Default is 1.
+     *
+     * @return {sszvis.component}
+     *
+     */
+    /* Configuration
+    ----------------------------------------------- */
+    const SMALL_CORNER_RADIUS = 3;
+    const LARGE_CORNER_RADIUS = 4;
+    const TIP_SIZE = 6;
+    const BLUR_PADDING = 5;
+    /* Exported module
+    ----------------------------------------------- */
+    function tooltip () {
+      const renderer = tooltipRenderer();
+      return component().delegate("header", renderer).delegate("body", renderer).delegate("orientation", renderer).delegate("dx", renderer).delegate("dy", renderer).delegate("opacity", renderer).prop("renderInto").prop("visible", functor).visible(false).renderSelection(selection => {
+        const props = selection.props();
+        const intoNode = props.renderInto.node();
+        if (!intoNode) throw new Error("[annotation/tooltip] renderInto is an empty selection");
+        const intoBCR = intoNode.getBoundingClientRect();
+        const tooltipData = [];
+        selection.each(function (d) {
+          if (props.visible(d)) {
+            const thisBCR = this.getBoundingClientRect();
+            const pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
+            tooltipData.push({
+              datum: d,
+              x: pos[0],
+              y: pos[1]
+            });
+          }
+        });
+        props.renderInto.datum(tooltipData).call(renderer);
+      });
+    }
+    /**
+     * Tooltip renderer
+     * @private
+     */
+    const tooltipRenderer = () => {
+      return component().prop("header").prop("body").prop("orientation", functor).orientation("bottom").prop("dx", functor).dx(1).prop("dy", functor).dy(1).prop("opacity", functor).opacity(1).renderSelection(selection => {
+        const tooltipData = selection.datum();
+        const props = selection.props();
+        const isDef = defined;
+        const isSmall = isDef(props.header) && !isDef(props.body) || !isDef(props.header) && isDef(props.body);
+        // Select tooltip elements
+        const tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData).join("div");
+        tooltip.style("pointer-events", "none").style("opacity", d => String(props.opacity(d))).style("padding-top", d => props.orientation(d) === "top" ? `${TIP_SIZE}px` : null).style("padding-right", d => props.orientation(d) === "right" ? `${TIP_SIZE}px` : null).style("padding-bottom", d => props.orientation(d) === "bottom" ? `${TIP_SIZE}px` : null).style("padding-left", d => props.orientation(d) === "left" ? `${TIP_SIZE}px` : null).classed("sszvis-tooltip", true);
+        // Enter: tooltip background
+        const enterBackground = tooltip.selectAll(".sszvis-tooltip__background").data([0]).join("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
+        const enterBackgroundPath = enterBackground.selectAll("path").data([0]).join("path");
+        if (supportsSVGFilters()) {
+          const filter = enterBackground.selectAll("filter").data([0]).join("filter").attr("id", "sszvisTooltipShadowFilter").attr("height", "150%");
+          filter.selectAll("feGaussianBlur").data([0]).join("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2);
+          filter.selectAll("feComponentTransfer").data([0]).join("feComponentTransfer").selectAll("feFuncA").data([0]).join("feFuncA").attr("type", "linear").attr("slope", 0.2);
+          const merge = filter.selectAll("feMerge").data([0]).join("feMerge");
+          merge.selectAll("feMergeNode").data([0]).join("feMergeNode"); // Contains the blurred image
+          merge.selectAll("feMergeNode").data([0]).join("feMergeNode") // Contains the element that the filter is applied to
+          .attr("in", "SourceGraphic");
+          enterBackgroundPath.attr("filter", "url(#sszvisTooltipShadowFilter)");
+        } else {
+          enterBackground.classed("sszvis-tooltip__background--fallback", true);
+        }
+        // Enter: tooltip content
+        const enterContent = tooltip.selectAll(".sszvis-tooltip__content").data([0]).join("div").classed("sszvis-tooltip__content", true);
+        enterContent.selectAll(".sszvis-tooltip__header").data([0]).join("div").classed("sszvis-tooltip__header", true);
+        enterContent.selectAll(".sszvis-tooltip__body").data([0]).join("div").classed("sszvis-tooltip__body", true);
+        // Update: content
+        tooltip.select(".sszvis-tooltip__header").datum(prop("datum")).html(props.header || functor(""));
+        tooltip.select(".sszvis-tooltip__body").datum(prop("datum")).html(d => {
+          if (!props.body) return "";
+          const body = typeof props.body === "function" ? props.body(d) : props.body;
+          return Array.isArray(body) ? formatTable(body) : body;
+        });
+        selection.selectAll(".sszvis-tooltip").classed("sszvis-tooltip--small", isSmall).each(function (d) {
+          const tip = d3.select(this);
+          // only using dimensions.width and dimensions.height here. Not affected by scroll position
+          const node = tip.node();
+          if (!node) return;
+          const dimensions = node.getBoundingClientRect();
+          const orientation = props.orientation(d);
+          // Position tooltip element
+          switch (orientation) {
+            case "top":
+              {
+                tip.style("left", `${d.x - dimensions.width / 2}px`).style("top", `${d.y + Number(props.dy(d))}px`);
+                break;
+              }
+            case "bottom":
+              {
+                tip.style("left", `${d.x - dimensions.width / 2}px`).style("top", `${d.y - Number(props.dy(d)) - dimensions.height}px`);
+                break;
+              }
+            case "left":
+              {
+                tip.style("left", `${d.x + Number(props.dx(d))}px`).style("top", `${d.y - dimensions.height / 2}px`);
+                break;
+              }
+            case "right":
+              {
+                tip.style("left", `${d.x - Number(props.dx(d)) - dimensions.width}px`).style("top", `${d.y - dimensions.height / 2}px`);
+                break;
+              }
+          }
+          // Position background element
+          const bgHeight = dimensions.height + 2 * BLUR_PADDING;
+          const bgWidth = dimensions.width + 2 * BLUR_PADDING;
+          tip.select(".sszvis-tooltip__background").attr("height", bgHeight).attr("width", bgWidth).style("left", `${-BLUR_PADDING}px`).style("top", `${-BLUR_PADDING}px`).select("path").attr("d", tooltipBackgroundGenerator([BLUR_PADDING, BLUR_PADDING], [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING], orientation, isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS));
+        });
+      });
+    };
+    /**
+     * formatTable
+     */
+    function formatTable(rows) {
+      const tableBody = rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("");
+      return `<table class="sszvis-tooltip__body__table">${tableBody}</table>`;
+    }
+    function x(d) {
+      return d[0];
+    }
+    function y(d) {
+      return d[1];
+    }
+    function side(cx, cy, x0, y0, x1, y1, showTip) {
+      const mx = x0 + (x1 - x0) / 2;
+      const my = y0 + (y1 - y0) / 2;
+      const corner = ["Q", cx, cy, x0, y0];
+      let tip = [];
+      if (showTip && y0 === y1) {
+        tip = x0 < x1 ?
+        // Top
+        ["L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my] :
+        // Bottom
+        ["L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my];
+      } else if (showTip && x0 === x1) {
+        tip = y0 < y1 ?
+        // Right
+        ["L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE] :
+        // Left
+        ["L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE];
+      }
+      const end = ["L", x1, y1];
+      return [...corner, ...tip, ...end];
+    }
+    /**
+     * Tooltip background generator
+     *
+     * Generates a path description with a tip on the specified side.
+     *
+     *           top
+     *         ________
+     *   left |        | right
+     *        |___  ___|
+     *            \/
+     *          bottom
+     *
+     * @param  {Vector} a           Top-left corner of the tooltip rectangle (x, y)
+     * @param  {Vector} b           Bottom-right corner of the tooltip rectangle (x, y)
+     * @param  {String} orientation The tip will point in this direction (top, right, bottom, left)
+     *
+     * @return {Path}               SVG path description
+     */
+    function tooltipBackgroundGenerator(a, b, orientation, radius) {
+      switch (orientation) {
+        case "top":
+          {
+            a[1] = a[1] + TIP_SIZE;
+            break;
+          }
+        case "bottom":
+          {
+            b[1] = b[1] - TIP_SIZE;
+            break;
+          }
+        case "left":
+          {
+            a[0] = a[0] + TIP_SIZE;
+            break;
+          }
+        case "right":
+          {
+            b[0] = b[0] - TIP_SIZE;
+            break;
+          }
+      }
+      return [
+      // Start
+      ["M", x(a), y(a) + radius],
+      // Top side
+      side(x(a), y(a), x(a) + radius, y(a), x(b) - radius, y(a), orientation === "top"),
+      // Right side
+      side(x(b), y(a), x(b), y(a) + radius, x(b), y(b) - radius, orientation === "right"),
+      // Bottom side
+      side(x(b), y(b), x(b) - radius, y(b), x(a) + radius, y(b), orientation === "bottom"),
+      // Left side
+      side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, orientation === "left")].map(d => d.join(" ")).join(" ");
+    }
+    /**
+     * Detect whether the current browser supports SVG filters
+     */
+    function supportsSVGFilters() {
+      return window.SVGFEColorMatrixElement !== undefined && SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE === 2;
+    }
+
+    // src/utils/env.ts
+    var NOTHING = Symbol.for("immer-nothing");
+    var DRAFTABLE = Symbol.for("immer-draftable");
+    var DRAFT_STATE = Symbol.for("immer-state");
+    function die(error, ...args) {
+      throw new Error(`[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`);
+    }
+
+    // src/utils/common.ts
+    var getPrototypeOf = Object.getPrototypeOf;
+    function isDraft(value) {
+      return !!value && !!value[DRAFT_STATE];
+    }
+    function isDraftable(value) {
+      if (!value) return false;
+      return isPlainObject(value) || Array.isArray(value) || !!value[DRAFTABLE] || !!value.constructor?.[DRAFTABLE] || isMap(value) || isSet(value);
+    }
+    var objectCtorString = Object.prototype.constructor.toString();
+    var cachedCtorStrings = /* @__PURE__ */new WeakMap();
+    function isPlainObject(value) {
+      if (!value || typeof value !== "object") return false;
+      const proto = Object.getPrototypeOf(value);
+      if (proto === null || proto === Object.prototype) return true;
+      const Ctor = Object.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+      if (Ctor === Object) return true;
+      if (typeof Ctor !== "function") return false;
+      let ctorString = cachedCtorStrings.get(Ctor);
+      if (ctorString === void 0) {
+        ctorString = Function.toString.call(Ctor);
+        cachedCtorStrings.set(Ctor, ctorString);
+      }
+      return ctorString === objectCtorString;
+    }
+    function each(obj, iter, strict = true) {
+      if (getArchtype(obj) === 0 /* Object */) {
+        const keys = strict ? Reflect.ownKeys(obj) : Object.keys(obj);
+        keys.forEach(key => {
+          iter(key, obj[key], obj);
+        });
+      } else {
+        obj.forEach((entry, index) => iter(index, entry, obj));
+      }
+    }
+    function getArchtype(thing) {
+      const state = thing[DRAFT_STATE];
+      return state ? state.type_ : Array.isArray(thing) ? 1 /* Array */ : isMap(thing) ? 2 /* Map */ : isSet(thing) ? 3 /* Set */ : 0 /* Object */;
+    }
+    function has(thing, prop) {
+      return getArchtype(thing) === 2 /* Map */ ? thing.has(prop) : Object.prototype.hasOwnProperty.call(thing, prop);
+    }
+    function set(thing, propOrOldValue, value) {
+      const t = getArchtype(thing);
+      if (t === 2 /* Map */) thing.set(propOrOldValue, value);else if (t === 3 /* Set */) {
+        thing.add(value);
+      } else thing[propOrOldValue] = value;
+    }
+    function is(x, y) {
+      if (x === y) {
+        return x !== 0 || 1 / x === 1 / y;
+      } else {
+        return x !== x && y !== y;
+      }
+    }
+    function isMap(target) {
+      return target instanceof Map;
+    }
+    function isSet(target) {
+      return target instanceof Set;
+    }
+    function latest(state) {
+      return state.copy_ || state.base_;
+    }
+    function shallowCopy(base, strict) {
+      if (isMap(base)) {
+        return new Map(base);
+      }
+      if (isSet(base)) {
+        return new Set(base);
+      }
+      if (Array.isArray(base)) return Array.prototype.slice.call(base);
+      const isPlain = isPlainObject(base);
+      if (strict === true || strict === "class_only" && !isPlain) {
+        const descriptors = Object.getOwnPropertyDescriptors(base);
+        delete descriptors[DRAFT_STATE];
+        let keys = Reflect.ownKeys(descriptors);
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          const desc = descriptors[key];
+          if (desc.writable === false) {
+            desc.writable = true;
+            desc.configurable = true;
+          }
+          if (desc.get || desc.set) descriptors[key] = {
+            configurable: true,
+            writable: true,
+            // could live with !!desc.set as well here...
+            enumerable: desc.enumerable,
+            value: base[key]
+          };
+        }
+        return Object.create(getPrototypeOf(base), descriptors);
+      } else {
+        const proto = getPrototypeOf(base);
+        if (proto !== null && isPlain) {
+          return {
+            ...base
+          };
+        }
+        const obj = Object.create(proto);
+        return Object.assign(obj, base);
+      }
+    }
+    function freeze(obj, deep = false) {
+      if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj)) return obj;
+      if (getArchtype(obj) > 1) {
+        Object.defineProperties(obj, {
+          set: dontMutateMethodOverride,
+          add: dontMutateMethodOverride,
+          clear: dontMutateMethodOverride,
+          delete: dontMutateMethodOverride
+        });
+      }
+      Object.freeze(obj);
+      if (deep) Object.values(obj).forEach(value => freeze(value, true));
+      return obj;
+    }
+    function dontMutateFrozenCollections() {
+      die(2);
+    }
+    var dontMutateMethodOverride = {
+      value: dontMutateFrozenCollections
+    };
+    function isFrozen(obj) {
+      if (obj === null || typeof obj !== "object") return true;
+      return Object.isFrozen(obj);
+    }
+
+    // src/utils/plugins.ts
+    var plugins = {};
+    function getPlugin(pluginKey) {
+      const plugin = plugins[pluginKey];
+      if (!plugin) {
+        die(0, pluginKey);
+      }
+      return plugin;
+    }
+
+    // src/core/scope.ts
+    var currentScope;
+    function getCurrentScope() {
+      return currentScope;
+    }
+    function createScope(parent_, immer_) {
+      return {
+        drafts_: [],
+        parent_,
+        immer_,
+        // Whenever the modified draft contains a draft from another scope, we
+        // need to prevent auto-freezing so the unowned draft can be finalized.
+        canAutoFreeze_: true,
+        unfinalizedDrafts_: 0
+      };
+    }
+    function usePatchesInScope(scope, patchListener) {
+      if (patchListener) {
+        getPlugin("Patches");
+        scope.patches_ = [];
+        scope.inversePatches_ = [];
+        scope.patchListener_ = patchListener;
+      }
+    }
+    function revokeScope(scope) {
+      leaveScope(scope);
+      scope.drafts_.forEach(revokeDraft);
+      scope.drafts_ = null;
+    }
+    function leaveScope(scope) {
+      if (scope === currentScope) {
+        currentScope = scope.parent_;
+      }
+    }
+    function enterScope(immer2) {
+      return currentScope = createScope(currentScope, immer2);
+    }
+    function revokeDraft(draft) {
+      const state = draft[DRAFT_STATE];
+      if (state.type_ === 0 /* Object */ || state.type_ === 1 /* Array */) state.revoke_();else state.revoked_ = true;
+    }
+
+    // src/core/finalize.ts
+    function processResult(result, scope) {
+      scope.unfinalizedDrafts_ = scope.drafts_.length;
+      const baseDraft = scope.drafts_[0];
+      const isReplaced = result !== void 0 && result !== baseDraft;
+      if (isReplaced) {
+        if (baseDraft[DRAFT_STATE].modified_) {
+          revokeScope(scope);
+          die(4);
+        }
+        if (isDraftable(result)) {
+          result = finalize(scope, result);
+          if (!scope.parent_) maybeFreeze(scope, result);
+        }
+        if (scope.patches_) {
+          getPlugin("Patches").generateReplacementPatches_(baseDraft[DRAFT_STATE].base_, result, scope.patches_, scope.inversePatches_);
+        }
+      } else {
+        result = finalize(scope, baseDraft, []);
+      }
+      revokeScope(scope);
+      if (scope.patches_) {
+        scope.patchListener_(scope.patches_, scope.inversePatches_);
+      }
+      return result !== NOTHING ? result : void 0;
+    }
+    function finalize(rootScope, value, path) {
+      if (isFrozen(value)) return value;
+      const useStrictIteration = rootScope.immer_.shouldUseStrictIteration();
+      const state = value[DRAFT_STATE];
+      if (!state) {
+        each(value, (key, childValue) => finalizeProperty(rootScope, state, value, key, childValue, path), useStrictIteration);
+        return value;
+      }
+      if (state.scope_ !== rootScope) return value;
+      if (!state.modified_) {
+        maybeFreeze(rootScope, state.base_, true);
+        return state.base_;
+      }
+      if (!state.finalized_) {
+        state.finalized_ = true;
+        state.scope_.unfinalizedDrafts_--;
+        const result = state.copy_;
+        let resultEach = result;
+        let isSet2 = false;
+        if (state.type_ === 3 /* Set */) {
+          resultEach = new Set(result);
+          result.clear();
+          isSet2 = true;
+        }
+        each(resultEach, (key, childValue) => finalizeProperty(rootScope, state, result, key, childValue, path, isSet2), useStrictIteration);
+        maybeFreeze(rootScope, result, false);
+        if (path && rootScope.patches_) {
+          getPlugin("Patches").generatePatches_(state, path, rootScope.patches_, rootScope.inversePatches_);
+        }
+      }
+      return state.copy_;
+    }
+    function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath, targetIsSet) {
+      if (childValue == null) {
+        return;
+      }
+      if (typeof childValue !== "object" && !targetIsSet) {
+        return;
+      }
+      const childIsFrozen = isFrozen(childValue);
+      if (childIsFrozen && !targetIsSet) {
+        return;
+      }
+      if (isDraft(childValue)) {
+        const path = rootPath && parentState && parentState.type_ !== 3 /* Set */ &&
+        // Set objects are atomic since they have no keys.
+        !has(parentState.assigned_, prop) ? rootPath.concat(prop) : void 0;
+        const res = finalize(rootScope, childValue, path);
+        set(targetObject, prop, res);
+        if (isDraft(res)) {
+          rootScope.canAutoFreeze_ = false;
+        } else return;
+      } else if (targetIsSet) {
+        targetObject.add(childValue);
+      }
+      if (isDraftable(childValue) && !childIsFrozen) {
+        if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) {
+          return;
+        }
+        if (parentState && parentState.base_ && parentState.base_[prop] === childValue && childIsFrozen) {
+          return;
+        }
+        finalize(rootScope, childValue);
+        if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && (isMap(targetObject) ? targetObject.has(prop) : Object.prototype.propertyIsEnumerable.call(targetObject, prop))) maybeFreeze(rootScope, childValue);
+      }
+    }
+    function maybeFreeze(scope, value, deep = false) {
+      if (!scope.parent_ && scope.immer_.autoFreeze_ && scope.canAutoFreeze_) {
+        freeze(value, deep);
+      }
+    }
+
+    // src/core/proxy.ts
+    function createProxyProxy(base, parent) {
+      const isArray = Array.isArray(base);
+      const state = {
+        type_: isArray ? 1 /* Array */ : 0 /* Object */,
+
+        // Track which produce call this is associated with.
+        scope_: parent ? parent.scope_ : getCurrentScope(),
+        // True for both shallow and deep changes.
+        modified_: false,
+        // Used during finalization.
+        finalized_: false,
+        // Track which properties have been assigned (true) or deleted (false).
+        assigned_: {},
+        // The parent draft state.
+        parent_: parent,
+        // The base state.
+        base_: base,
+        // The base proxy.
+        draft_: null,
+        // set below
+        // The base copy with any updated values.
+        copy_: null,
+        // Called by the `produce` function.
+        revoke_: null,
+        isManual_: false
+      };
+      let target = state;
+      let traps = objectTraps;
+      if (isArray) {
+        target = [state];
+        traps = arrayTraps;
+      }
+      const {
+        revoke,
+        proxy
+      } = Proxy.revocable(target, traps);
+      state.draft_ = proxy;
+      state.revoke_ = revoke;
+      return proxy;
+    }
+    var objectTraps = {
+      get(state, prop) {
+        if (prop === DRAFT_STATE) return state;
+        const source = latest(state);
+        if (!has(source, prop)) {
+          return readPropFromProto(state, source, prop);
+        }
+        const value = source[prop];
+        if (state.finalized_ || !isDraftable(value)) {
+          return value;
+        }
+        if (value === peek(state.base_, prop)) {
+          prepareCopy(state);
+          return state.copy_[prop] = createProxy(value, state);
+        }
+        return value;
+      },
+      has(state, prop) {
+        return prop in latest(state);
+      },
+      ownKeys(state) {
+        return Reflect.ownKeys(latest(state));
+      },
+      set(state, prop, value) {
+        const desc = getDescriptorFromProto(latest(state), prop);
+        if (desc?.set) {
+          desc.set.call(state.draft_, value);
+          return true;
+        }
+        if (!state.modified_) {
+          const current2 = peek(latest(state), prop);
+          const currentState = current2?.[DRAFT_STATE];
+          if (currentState && currentState.base_ === value) {
+            state.copy_[prop] = value;
+            state.assigned_[prop] = false;
+            return true;
+          }
+          if (is(value, current2) && (value !== void 0 || has(state.base_, prop))) return true;
+          prepareCopy(state);
+          markChanged(state);
+        }
+        if (state.copy_[prop] === value && (
+        // special case: handle new props with value 'undefined'
+        value !== void 0 || prop in state.copy_) ||
+        // special case: NaN
+        Number.isNaN(value) && Number.isNaN(state.copy_[prop])) return true;
+        state.copy_[prop] = value;
+        state.assigned_[prop] = true;
+        return true;
+      },
+      deleteProperty(state, prop) {
+        if (peek(state.base_, prop) !== void 0 || prop in state.base_) {
+          state.assigned_[prop] = false;
+          prepareCopy(state);
+          markChanged(state);
+        } else {
+          delete state.assigned_[prop];
+        }
+        if (state.copy_) {
+          delete state.copy_[prop];
+        }
+        return true;
+      },
+      // Note: We never coerce `desc.value` into an Immer draft, because we can't make
+      // the same guarantee in ES5 mode.
+      getOwnPropertyDescriptor(state, prop) {
+        const owner = latest(state);
+        const desc = Reflect.getOwnPropertyDescriptor(owner, prop);
+        if (!desc) return desc;
+        return {
+          writable: true,
+          configurable: state.type_ !== 1 /* Array */ || prop !== "length",
+          enumerable: desc.enumerable,
+          value: owner[prop]
+        };
+      },
+      defineProperty() {
+        die(11);
+      },
+      getPrototypeOf(state) {
+        return getPrototypeOf(state.base_);
+      },
+      setPrototypeOf() {
+        die(12);
+      }
+    };
+    var arrayTraps = {};
+    each(objectTraps, (key, fn) => {
+      arrayTraps[key] = function () {
+        arguments[0] = arguments[0][0];
+        return fn.apply(this, arguments);
+      };
+    });
+    arrayTraps.deleteProperty = function (state, prop) {
+      return arrayTraps.set.call(this, state, prop, void 0);
+    };
+    arrayTraps.set = function (state, prop, value) {
+      return objectTraps.set.call(this, state[0], prop, value, state[0]);
+    };
+    function peek(draft, prop) {
+      const state = draft[DRAFT_STATE];
+      const source = state ? latest(state) : draft;
+      return source[prop];
+    }
+    function readPropFromProto(state, source, prop) {
+      const desc = getDescriptorFromProto(source, prop);
+      return desc ? `value` in desc ? desc.value :
+      // This is a very special case, if the prop is a getter defined by the
+      // prototype, we should invoke it with the draft as context!
+      desc.get?.call(state.draft_) : void 0;
+    }
+    function getDescriptorFromProto(source, prop) {
+      if (!(prop in source)) return void 0;
+      let proto = getPrototypeOf(source);
+      while (proto) {
+        const desc = Object.getOwnPropertyDescriptor(proto, prop);
+        if (desc) return desc;
+        proto = getPrototypeOf(proto);
+      }
+      return void 0;
+    }
+    function markChanged(state) {
+      if (!state.modified_) {
+        state.modified_ = true;
+        if (state.parent_) {
+          markChanged(state.parent_);
+        }
+      }
+    }
+    function prepareCopy(state) {
+      if (!state.copy_) {
+        state.copy_ = shallowCopy(state.base_, state.scope_.immer_.useStrictShallowCopy_);
+      }
+    }
+
+    // src/core/immerClass.ts
+    var Immer2 = class {
+      constructor(config) {
+        this.autoFreeze_ = true;
+        this.useStrictShallowCopy_ = false;
+        this.useStrictIteration_ = true;
+        /**
+         * The `produce` function takes a value and a "recipe function" (whose
+         * return value often depends on the base state). The recipe function is
+         * free to mutate its first argument however it wants. All mutations are
+         * only ever applied to a __copy__ of the base state.
+         *
+         * Pass only a function to create a "curried producer" which relieves you
+         * from passing the recipe function every time.
+         *
+         * Only plain objects and arrays are made mutable. All other objects are
+         * considered uncopyable.
+         *
+         * Note: This function is __bound__ to its `Immer` instance.
+         *
+         * @param {any} base - the initial state
+         * @param {Function} recipe - function that receives a proxy of the base state as first argument and which can be freely modified
+         * @param {Function} patchListener - optional function that will be called with all the patches produced here
+         * @returns {any} a new state, or the initial state if nothing was modified
+         */
+        this.produce = (base, recipe, patchListener) => {
+          if (typeof base === "function" && typeof recipe !== "function") {
+            const defaultBase = recipe;
+            recipe = base;
+            const self = this;
+            return function curriedProduce(base2 = defaultBase, ...args) {
+              return self.produce(base2, draft => recipe.call(this, draft, ...args));
+            };
+          }
+          if (typeof recipe !== "function") die(6);
+          if (patchListener !== void 0 && typeof patchListener !== "function") die(7);
+          let result;
+          if (isDraftable(base)) {
+            const scope = enterScope(this);
+            const proxy = createProxy(base, void 0);
+            let hasError = true;
+            try {
+              result = recipe(proxy);
+              hasError = false;
+            } finally {
+              if (hasError) revokeScope(scope);else leaveScope(scope);
+            }
+            usePatchesInScope(scope, patchListener);
+            return processResult(result, scope);
+          } else if (!base || typeof base !== "object") {
+            result = recipe(base);
+            if (result === void 0) result = base;
+            if (result === NOTHING) result = void 0;
+            if (this.autoFreeze_) freeze(result, true);
+            if (patchListener) {
+              const p = [];
+              const ip = [];
+              getPlugin("Patches").generateReplacementPatches_(base, result, p, ip);
+              patchListener(p, ip);
+            }
+            return result;
+          } else die(1, base);
+        };
+        this.produceWithPatches = (base, recipe) => {
+          if (typeof base === "function") {
+            return (state, ...args) => this.produceWithPatches(state, draft => base(draft, ...args));
+          }
+          let patches, inversePatches;
+          const result = this.produce(base, recipe, (p, ip) => {
+            patches = p;
+            inversePatches = ip;
+          });
+          return [result, patches, inversePatches];
+        };
+        if (typeof config?.autoFreeze === "boolean") this.setAutoFreeze(config.autoFreeze);
+        if (typeof config?.useStrictShallowCopy === "boolean") this.setUseStrictShallowCopy(config.useStrictShallowCopy);
+        if (typeof config?.useStrictIteration === "boolean") this.setUseStrictIteration(config.useStrictIteration);
+      }
+      createDraft(base) {
+        if (!isDraftable(base)) die(8);
+        if (isDraft(base)) base = current(base);
+        const scope = enterScope(this);
+        const proxy = createProxy(base, void 0);
+        proxy[DRAFT_STATE].isManual_ = true;
+        leaveScope(scope);
+        return proxy;
+      }
+      finishDraft(draft, patchListener) {
+        const state = draft && draft[DRAFT_STATE];
+        if (!state || !state.isManual_) die(9);
+        const {
+          scope_: scope
+        } = state;
+        usePatchesInScope(scope, patchListener);
+        return processResult(void 0, scope);
+      }
+      /**
+       * Pass true to automatically freeze all copies created by Immer.
+       *
+       * By default, auto-freezing is enabled.
+       */
+      setAutoFreeze(value) {
+        this.autoFreeze_ = value;
+      }
+      /**
+       * Pass true to enable strict shallow copy.
+       *
+       * By default, immer does not copy the object descriptors such as getter, setter and non-enumrable properties.
+       */
+      setUseStrictShallowCopy(value) {
+        this.useStrictShallowCopy_ = value;
+      }
+      /**
+       * Pass false to use faster iteration that skips non-enumerable properties
+       * but still handles symbols for compatibility.
+       *
+       * By default, strict iteration is enabled (includes all own properties).
+       */
+      setUseStrictIteration(value) {
+        this.useStrictIteration_ = value;
+      }
+      shouldUseStrictIteration() {
+        return this.useStrictIteration_;
+      }
+      applyPatches(base, patches) {
+        let i;
+        for (i = patches.length - 1; i >= 0; i--) {
+          const patch = patches[i];
+          if (patch.path.length === 0 && patch.op === "replace") {
+            base = patch.value;
+            break;
+          }
+        }
+        if (i > -1) {
+          patches = patches.slice(i + 1);
+        }
+        const applyPatchesImpl = getPlugin("Patches").applyPatches_;
+        if (isDraft(base)) {
+          return applyPatchesImpl(base, patches);
+        }
+        return this.produce(base, draft => applyPatchesImpl(draft, patches));
+      }
+    };
+    function createProxy(value, parent) {
+      const draft = isMap(value) ? getPlugin("MapSet").proxyMap_(value, parent) : isSet(value) ? getPlugin("MapSet").proxySet_(value, parent) : createProxyProxy(value, parent);
+      const scope = parent ? parent.scope_ : getCurrentScope();
+      scope.drafts_.push(draft);
+      return draft;
+    }
+
+    // src/core/current.ts
+    function current(value) {
+      if (!isDraft(value)) die(10, value);
+      return currentImpl(value);
+    }
+    function currentImpl(value) {
+      if (!isDraftable(value) || isFrozen(value)) return value;
+      const state = value[DRAFT_STATE];
+      let copy;
+      let strict = true;
+      if (state) {
+        if (!state.modified_) return state.base_;
+        state.finalized_ = true;
+        copy = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
+        strict = state.scope_.immer_.shouldUseStrictIteration();
+      } else {
+        copy = shallowCopy(value, true);
+      }
+      each(copy, (key, childValue) => {
+        set(copy, key, currentImpl(childValue));
+      }, strict);
+      if (state) {
+        state.finalized_ = false;
+      }
+      return copy;
+    }
+
+    // src/immer.ts
+    var immer = new Immer2();
+    immer.produce;
+    var setAutoFreeze = /* @__PURE__ */immer.setAutoFreeze.bind(immer);
+    var createDraft = /* @__PURE__ */immer.createDraft.bind(immer);
+    var finishDraft = /* @__PURE__ */immer.finishDraft.bind(immer);
+
+    /**
+     * Fallback handling
+     *
+     * Defaults to rendering a fallback image with standard chart proportions.
+     *
+     * @example
+     * if (sszvis.fallback.unsupported()) {
+     *   sszvis.fallback.render('#sszvis-chart', {src: '../fallback.png', height: 300});
+     *   return;
+     * }
+     *
+     * @module sszvis/fallback
+     */
+    const fallbackUnsupported = () => {
+      const supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
+      return !supportsSVG;
+    };
+    const fallbackCanvasUnsupported = () => {
+      const supportsCanvas = !!document.createElement("canvas").getContext;
+      return !supportsCanvas;
+    };
+    const fallbackRender = (selector, options = {
+      src: "fallback.png"
+    }) => {
+      const selection = isSelection(selector) ? selector : d3.select(selector);
+      selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
+    };
+
+    /**
+     *
+     * @module sszvis/logger
+     *
+     * A component for logging development messages and errors
+     *
+     * This is a custom logger which accomplishes two goals: 1) to clearly identify log messages
+     * coming from sszvis, and 2) to smooth out cross-browser inconsistencies in the implementation
+     * of various console functions.
+     *
+     * All log messages should be visible in the developer tools Javascript console for your web browser
+     * of choice. For more information on how to access browser developer tools, see the browser documentation.
+     *
+     * The logger provides three log levels. All logging functions can accept any number of arguments of
+     * any type.
+     *
+     * Examples:
+     *
+     * Logging general information:
+     *
+     * sszvis.logger.log('Circle coordinates: ', circle.cx, circle.cy, circle.r);
+     *
+     * Logging a warning:
+     *
+     * sszvis.logger.warn('Configuration options are incompatible: ', props.config1(), props.config2());
+     *
+     * Logging an error:
+     *
+     * sszvis.logger.error('Component X requires the "abc" property');
+     *
+     * @method {any...} log        The basic log level, used for informational purposes
+     * @method {any...} warn       Logs a warning, which identifies a potential, but not critical problem
+     *                             or informs the user about certain implementation issues which may or
+     *                             may not require user attention.
+     * @method {any...} error      Logs an error. This should be used when something has gone wrong in the
+     *                             implementation, or when the API is used in an unsupported manner. An
+     *                             error logged in this way is different from an uncaught exception, in that
+     *                             it does not force an unexpected termination of code execution. Instead,
+     *                             when errors are logged, it is because of a known, and noticed issue, and
+     *                             the error message should provide some information towards resolving the
+     *                             problem, usually by changing the use of the library. The implementation
+     *                             will handle the situation gracefully, and not cause an unexpected termination
+     *                             of execution.
+     */
+    const warn = logger("warn");
+    const error = logger("error");
+    /* Helper functions
+    ----------------------------------------------- */
+    function logger(type) {
+      return (...args) => {
+        if (console?.[type]) {
+          // The console API formats multiple arguments as one entry, which keeps a message
+          // and its cause visually linked; logging them one at a time would split them up.
+          console[type](...args);
+        }
+      };
+    }
+
+    function getDefaultExportFromCjs (x) {
+    	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+    }
+
+    var nanoThrottle;
+    var hasRequiredNanoThrottle;
+
+    function requireNanoThrottle () {
+    	if (hasRequiredNanoThrottle) return nanoThrottle;
+    	hasRequiredNanoThrottle = 1;
+    	nanoThrottle = function (callback, ms, trailing) {
+    	  var t = 0,
+    	    call;
+    	  arguments.length < 3 && (trailing = true);
+    	  return function () {
+    	    var args = arguments;
+    	    var self = this;
+    	    call = function () {
+    	      callback.apply(self, args);
+    	      t = new Date().getTime() + ms;
+    	      call = null;
+    	      trailing && setTimeout(function () {
+    	        call && call();
+    	      }, ms);
+    	    };
+    	    if (new Date().getTime() > t) call();
+    	  };
+    	};
+    	return nanoThrottle;
+    }
+
+    var nanoThrottleExports = requireNanoThrottle();
+    var throttle = /*@__PURE__*/getDefaultExportFromCjs(nanoThrottleExports);
+
+    /**
+     * Viewport Resize watcher
+     *
+     * The resize watcher in the sszvis.viewport module alerts user code to changes in the browser
+     * window size. This includes window resizing on desktop browsers, but also orientation changes
+     * on mobile browsers. Functions registered for the 'resize' event are called when the window
+     * fires a resize event:
+     *
+     * sszvis.viewport.on('resize', listenerFunction);
+     *
+     * The window handler is throttled on a 500ms window, leading edge first: the first resize event
+     * calls the listeners synchronously, and if further events arrive within the window the listeners
+     * are called once more on the trailing edge, 500ms later. A single isolated resize event produces
+     * exactly one call. Resize listeners are called with no arguments.
+     *
+     * The module is a page-wide singleton: there is one registry, shared by every chart on the page.
+     *
+     * @module sszvis/viewport
+     *
+     * @function {string, function} on      registers a listener for an event name. 'resize' is the only
+     *                                      name the module itself ever fires, but any name creates a
+     *                                      bucket that the caller can `trigger` by hand. Registering the
+     *                                      same function twice is de-duplicated: the earlier entry is
+     *                                      dropped and the function is appended, so re-registering moves
+     *                                      it to the end of the call order. Listeners run in registration
+     *                                      order. A listener that is not callable is rejected here, where
+     *                                      the mistake is, rather than on the next resize event.
+     *
+     * @function {string, function} off     removes a listener by function identity. An unknown event name
+     *                                      or an unregistered function is ignored. A single `off` undoes
+     *                                      any number of `on` calls for the same function. Called with
+     *                                      only an event name it drops every listener for that event,
+     *                                      which is how a host releases listeners it no longer holds a
+     *                                      reference to.
+     *
+     * @function {string, ...any} trigger   calls every listener registered for the event name, forwarding
+     *                                      any further arguments. An event name with no listeners is
+     *                                      ignored.
+     *
+     * Note: the registry is a page-wide singleton, so a chart that is torn down has to release its
+     * listener itself - either with `off(name, cb)`, or with `off(name)` to drop the whole bucket.
+     *
+     * Note: `trigger` isolates the listeners from one another. A listener that throws is reported
+     * through `sszvis.logger.error` and the remaining listeners still run, so one broken chart cannot
+     * silence the rest of the page or escape the throttle.
+     *
+     * Note: `on`, `off` and `trigger` return `this`, so they chain when called as methods on the viewport
+     * object but return `undefined` once destructured. The registration itself still works.
+     *
+     * Note: when there is no `window`, nothing is registered and only manual `trigger` calls fire.
+     *
+     * See test/viewport/resize.test.ts.
+     *
+     * @return {Object}
+     */
+    // This rather strange set of functions is designed to support the API:
+    // sszvis.viewport.on('resize', callback);
+    // While still enabling the user to register multiple callbacks for the 'resize'
+    // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
+    // object would not allow.
+    const callbacks = {
+      resize: []
+    };
+    if (globalThis.window !== undefined) {
+      d3.select(globalThis.window).on("resize", throttle(() => {
+        viewport.trigger("resize");
+      }, 500));
+    }
+    function on(name, cb) {
+      // Registering a non-callable listener can never work, so it is rejected here rather than
+      // left to fail inside `trigger` one resize event later, far from the call that caused it.
+      if (typeof cb !== "function") {
+        throw new TypeError(`[sszvis.viewport] The listener for "${name}" must be a function, got ${typeof cb}.`);
+      }
+      if (!callbacks[name]) {
+        callbacks[name] = [];
+      }
+      callbacks[name] = [...callbacks[name].filter(fn => fn !== cb), cb];
+      return this;
+    }
+    function off(name, cb) {
+      if (!callbacks[name]) {
+        return this;
+      }
+      callbacks[name] = cb === undefined ? [] : callbacks[name].filter(fn => fn !== cb);
+      return this;
+    }
+    function trigger(name, ...evtArgs) {
+      if (callbacks[name]) {
+        // A copy, so that a listener which registers or releases listeners cannot change the
+        // list being iterated. Each call is isolated: one failing chart must not silence the
+        // charts after it, nor let the error escape into the throttled window handler.
+        // oxlint-disable-next-line unicorn/no-useless-spread -- the copy is required: a handler may register or remove callbacks while we iterate.
+        for (const fn of [...callbacks[name]]) {
+          try {
+            Reflect.apply(fn, null, evtArgs);
+          } catch (error$1) {
+            error(`[sszvis.viewport] A "${name}" listener threw:`, error$1);
+          }
+        }
+      }
+      return this;
+    }
+    const viewport = {
+      on,
+      off,
+      trigger
+    };
+
+    // d3 mutates state in many places, which is why we have to turn this off.
+    setAutoFreeze(false);
+    /**
+     * Application loop
+     *
+     * Creates a stateful app that can be interacted with through actions. By providing
+     * a structured approach, this allows us to optimize the render loop and clarifies
+     * the relationship between state and actions.
+     *
+     * Within an app, state is modified only through actions. The state object handed to `render`
+     * is frozen, so assigning to it throws instead of silently corrupting the state the next
+     * action drafts from. The freeze is shallow, and immer's own auto-freezing stays off, because
+     * d3 mutates the data objects it is handed in many places; only the top level of the state is
+     * protected.
+     *
+     * Conceptually, an app works like this:
+     *
+     *     init
+     *       ⇣
+     *     state ⭢ render
+     *      ⮤ action ⮠
+     *
+     * Rendering is batched into a single requestAnimationFrame, so several dispatches within
+     * one frame result in exactly one render. A resize reported by the viewport module also
+     * triggers a re-render. Nothing is rendered until `init` has completed: an asynchronous `init`
+     * is awaited and rendered once it resolves, a synchronous one is rendered on the next frame.
+     * An effect returned by `init` or by an action is called with `dispatch`, which takes an
+     * action name and an array of props.
+     *
+     * `app()` returns a handle whose `destroy()` releases the resize listener and stops any queued
+     * frame, so a host that mounts and unmounts charts can tear an app down instead of leaking one
+     * render loop per mount.
+     *
+     * Error handling: an `init` that rejects, or throws synchronously, is reported through `sszvis.logger.error`, keeping the
+     * original error as the reported error's `cause`, and the `fallback` image - if one is
+     * configured - is rendered in its place. The failure does not escape as an unhandled promise
+     * rejection. An effect - whether it came from `init` or from an action - runs on its own path:
+     * an error it throws is reported as an effect failure and never travels through the `init`
+     * rejection path, so it is not mistaken for a chart that could not be built and does not render
+     * the fallback. A dispatch naming an action the `actions` object does not declare is reported the
+     * same way and otherwise ignored, so a mistyped name in an effect leaves the app running.
+     *
+     * @module sszvis/app
+     */
+    const app = ({
+      init,
+      render,
+      actions,
+      fallback
+    }) => {
+      let renderScheduled = false;
+      // Whether `render` is on the stack right now, which is what tells a dispatch made from
+      // inside render apart from one that should coalesce into the frame already queued.
+      let rendering = false;
+      let cascadedRenders = 0;
+      let destroyed = false;
+      let state;
+      invariant(isFunction(init), 'An "init" function must be provided.');
+      invariant(isFunction(render), 'A "render" function must be provided.');
+      // A default parameter, like the original, only fills in for undefined.
+      const actionMap = actions === undefined ? {} : actions;
+      // finishDraft is typed as a conditional over the draft it is given, which TypeScript
+      // cannot resolve back to State while State is still a type parameter.
+      const finish = draft => finishDraft(draft);
+      // The dispatchers mirror the keys of the actions object, which is what
+      // ActionDispatchers<Actions> describes but Object.keys cannot express.
+      const actionDispatchers = Object.keys(actionMap).reduce((acc, key) => {
+        acc[key] = (...args) => {
+          dispatch(key, args);
+        };
+        return acc;
+      }, {});
+      function scheduleUpdate(effect) {
+        scheduleRender();
+        if (isFunction(effect)) runEffect(effect);
+      }
+      function scheduleRender() {
+        if (destroyed || renderScheduled) return;
+        if (rendering) {
+          // A dispatch made from inside render. Its state cannot be shown by the frame that is
+          // painting, so it needs one of its own - and a render that dispatches unconditionally
+          // would then never stop, which is what this cap is for.
+          if (cascadedRenders >= MAX_CASCADED_RENDERS) {
+            warn(`[sszvis.app] Stopped after ${MAX_CASCADED_RENDERS} renders scheduled from inside "render". Dispatch from render only on a condition that eventually becomes false.`);
+            return;
+          }
+          cascadedRenders += 1;
+        } else {
+          cascadedRenders = 0;
+        }
+        renderScheduled = true;
+        requestAnimationFrame(() => {
+          // Cleared before render runs, so that a dispatch made from inside render can queue the
+          // frame its state needs instead of being swallowed by a guard that is still closed.
+          renderScheduled = false;
+          if (destroyed) return;
+          rendering = true;
+          try {
+            // Shallow, so that d3 can still mutate the data hanging off the state, but enough to
+            // turn an accidental `state.x = …` in render into a TypeError rather than a change
+            // that survives into the next action's draft.
+            render(Object.freeze(state), actionDispatchers);
+          } finally {
+            rendering = false;
+          }
+        });
+      }
+      /** Effects are the caller's code, run one turn removed from whatever scheduled them, so
+       * their failures are reported on their own rather than attributed to `init` or thrown at
+       * an unrelated dispatcher's call site. */
+      function runEffect(effect) {
+        try {
+          effect(dispatch);
+        } catch (error) {
+          reportError("An effect failed", error);
+        }
+      }
+      const dispatch = (action, props) => {
+        // Own property only, matching how the dispatchers are built from `Object.keys`: a name
+        // like "toString" resolves on the prototype chain but is not a declared action.
+        const handler = Object.hasOwn(actionMap, action) ? actionMap[action] : undefined;
+        if (handler == null) {
+          // A name dispatch cannot resolve is a configuration mistake, but there is nothing to
+          // validate up front: the dispatchers handed to `render` are built from the keys of the
+          // actions object, so a typo in an interaction handler - `actions.selct(d)` - is not a
+          // function and fails in the caller's own code. The names that reach here as strings come
+          // from effects, at an arbitrary later point, so this is reported like any other runtime
+          // failure instead of thrown: one mistyped dispatch should not take the chart down.
+          reportError("Dispatch failed", new Error(`Action "${action}" is not defined, add it to "actions".`));
+          return;
+        }
+        const draft = createDraft(state);
+        // Each action declares the props it accepts, but which action is being dispatched is
+        // only known from a string at this point, so the props cannot be checked here.
+        const call = handler;
+        // Called on actionMap so that `this` is the actions object, as `actions[action](...)`
+        // in the original implementation made it.
+        const effect = Reflect.apply(call, actionMap, [draft, ...props]);
+        state = finish(draft);
+        scheduleUpdate(effect);
+      };
+      // The app starts out with an empty state that init is expected to populate.
+      const initialState = createDraft({});
+      // `init` is normally async, because the state is normally loaded - but a chart whose data is
+      // already in memory can reasonably write the state and return nothing, and that works just as
+      // well: there is simply no effect and nothing to wait for. The executor of a `new Promise`
+      // runs synchronously, so `init` is still called during `app()` as it always was, while
+      // `resolve` tolerates a plain return value and a synchronous throw becomes a rejection -
+      // reported through the same path as one from a promise, rather than escaping the call site.
+      new Promise(resolve => {
+        resolve(init(initialState));
+      }).then(effect => {
+        state = finish(initialState);
+        // An app destroyed while init was still in flight must not register a listener that
+        // nothing will ever release.
+        if (destroyed) return;
+        // Registered before the effect runs: scheduleUpdate calls the effect synchronously,
+        // and an init effect that destroys the app would otherwise release a listener that
+        // is only installed afterwards, leaving it attached for the life of the page.
+        viewport.on("resize", scheduleUpdate);
+        scheduleUpdate(effect);
+      }).catch(error => {
+        // A rejecting init is a runtime failure, not a misconfiguration: the fallback option
+        // exists precisely for it, so it is reported and the fallback rendered rather than
+        // re-thrown into an unhandled rejection nobody can catch.
+        reportError("Initialisation failed", error);
+        // A destroyed app renders nothing afterwards, fallback included - the container may
+        // already belong to a replacement app. The failure is still reported, since it is
+        // real regardless of who is holding the container now.
+        if (!destroyed && fallback) fallbackRender(fallback.element, {
+          src: fallback.src
+        });
+      });
+      return {
+        destroy() {
+          destroyed = true;
+          viewport.off("resize", scheduleUpdate);
+        }
+      };
+    };
+    // -----------------------------------------------------------------------------
+    // Helper functions
+    /** How many frames in a row may be scheduled by a dispatch made from inside `render` before
+     * the cascade is treated as a runaway loop and cut off. */
+    const MAX_CASCADED_RENDERS = 10;
+    function invariant(condition, message) {
+      if (!condition) {
+        throw new Error(`[sszvis.app] ${message}`);
+      }
+    }
+    /** Reports a runtime failure without escaping as an unhandled rejection. The original error
+     * is kept as the `cause` so its message and stack are not lost. */
+    function reportError(context, cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      error(new Error(`[sszvis.app] ${context}: ${message}`, {
+        cause
+      }));
+    }
+    function isFunction(x) {
+      return typeof x === "function";
+    }
+
+    /**
+     * Responsive design breakpoints for sszvis
+     *
+     * @module sszvis/breakpoint
+     *
+     * Provides breakpoint-related functions, including those which build special
+     * breakpoint objects that can be used to test against screen measurements to see
+     * if the breakpoint matches, and this module also includes the default breakpoint
+     * sizes for SSZVIS. The breakpoints are inclusive upper limits, i.e. when testing a
+     * breakpoint against a given set of measurements, if the breakpoint value is greater than
+     * or equal to all measurements, the breakpoint will match. In code where the user should
+     * supply breakpoints, the user is responsible for specifying the testing order of the breakpoints
+     * provided. The breakpoints are then tested in order, and the first one which matches the measurements
+     * is chosen. The user should, where possible, specify breakpoints in increasing order of size.
+     * Since there are multiple dimensions on which 'size' can be defined, we do not specify our own
+     * algorithm for sorting user-defined breakpoints. We rely on the judgment of the user to do that.
+     *
+     * @property {Function} createSpec
+     * @property {Function} defaultSpec
+     * @property {Function} findByName
+     * @property {Function} find
+     * @property {Function} match
+     * @property {Function} test
+     *
+     * @property {Function} palm Breakpoint for plam-sized devices (phones)
+     * @property {Function} lap  Breakpoint for lap-sized devices (tablets, small notebooks)
+     *
+     * @type Measurement {
+     *   width: number,
+     *   screenHeight: number
+     * }
+     *
+     * @type Breakpoint {
+     *   name: string,
+     *   measurement: Measurement
+     * }
+     */
+    /**
+     * breakpoint.find
+     *
+     * Returns the first matching breakpoint for a given measurement
+     *
+     * @param {Array<Breakpoint>} breakpoints A breakpoint spec
+     * @param {Measurement} partialMeasurement A partial measurement to match to the spec
+     * @returns {Breakpoint}
+     */
+    function breakpointFind(breakpoints, partialMeasurement) {
+      const measurement = parseMeasurement(partialMeasurement);
+      return find(bp => breakpointTest(bp, measurement), breakpoints);
+    }
+    /**
+     * breakpoint.findByName
+     *
+     * Returns the breakpoint with the given name. If there is no such breakpoint,
+     * undefined is returned
+     *
+     * @param {Array<Breakpoint>} breakpoints A breakpoint spec
+     * @param {string} name A breakpoint name
+     * @returns {Breakpoint?} If no breakpoint matches, undefined is returned. If a
+     *          breakpoint for the given name exists, that breakpoint is returned
+     */
+    function breakpointFindByName(breakpoints, name) {
+      const eqName = bp => bp.name === name;
+      return find(eqName, breakpoints);
+    }
+    /**
+     * breakpoint.test
+     *
+     * Returns true if the given measurement fits within the breakpoint.
+     *
+     * @param {Breakpoint} breakpoint A single breakpoint
+     * @param {Measurement} partialMeasurement A partial measurement to match to the breakpoint
+     * @returns {boolean}
+     */
+    function breakpointTest(breakpoint, partialMeasurement) {
+      const bpm = breakpoint.measurement;
+      const measurement = parseMeasurement(partialMeasurement);
+      return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
+    }
+    /**
+     * breakpoint.match
+     *
+     * Returns an array of breakpoints the given measurement fits into. Use this in situations
+     * where you need to match a sparse list of breakpoints.
+     *
+     * @param {Array<Breakpoint>} breakpoints A breakpoint spec
+     * @param {Measurement} partialMeasurement A partial measurement to match to the spec
+     * @returns {Array<Breakpoint>}
+     */
+    function breakpointMatch(breakpoints, partialMeasurement) {
+      const measurement = parseMeasurement(partialMeasurement);
+      return breakpoints.filter(bp => breakpointTest(bp, measurement));
+    }
+    /**
+     * breakpoint.createSpec
+     *
+     * Parses an array of partial breakpoints into a valid breakpoint spec.
+     *
+     * @param {Array<{name: string, width?: number, screenHeight?: number}>} spec An array
+     *        of breakpoint definitions. All breakpoints are parsed into a full representation,
+     *        so it's possible to only provide partial breakpoint definitions.
+     * @returns {Array<Breakpoint>}
+     */
+    function breakpointCreateSpec(spec) {
+      return [...spec.map(parseBreakpoint), parseBreakpoint({
+        name: "_"
+      })];
+    }
+    /**
+     * breakpoint.defaultSpec
+     *
+     * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
+     *          default breakpoint spec.
+     */
+    const breakpointDefaultSpec = () => breakpointCreateSpec([{
+      name: "palm",
+      width: 540
+    }, {
+      name: "lap",
+      width: 749
+    }]);
+    // Default tests
+    const breakpointPalm = makeTest("palm");
+    const breakpointLap = makeTest("lap");
+    // Helpers
+    /**
+     * Measurement
+     *
+     * A measurement is defined as an object with width and screenHeight props.
+     * It is used throughout the breakpoint calculations.
+     *
+     * For parsing, a partial measurement can be supplied. If a property is
+     * not defined, it is initialized to Infinity, which matches all breakpoints.
+     *
+     * @example
+     *   const Measurement = {
+     *     width: number,
+     *     screenHeight: number
+     *   }
+     *
+     * @param {{width?: number, screenHeight?: number}} partialMeasurement
+     * @returns Measurement
+     */
+    function parseMeasurement(partialMeasurement) {
+      const widthOrInf = propOr("width", Infinity);
+      const screenHeightOrInf = propOr("screenHeight", Infinity);
+      return {
+        width: widthOrInf(partialMeasurement),
+        screenHeight: screenHeightOrInf(partialMeasurement)
+      };
+    }
+    /**
+     * Breakpoint
+     *
+     * A breakpoint is defined as an object with name and measurement props.
+     * It is used throughout the breakpoint calculations.
+     *
+     * For parsing, a partial breakpoint can be supplied where measurements
+     * can be directly supplied on the top object.
+     *
+     * @example
+     *   const PartialBreakpoint = {
+     *     name: string,
+     *     width?: number,
+     *     screenHeight?: number
+     *   }
+     *
+     *   const Breakpoint = {
+     *     name: string,
+     *     measurement: Measurement
+     *   }
+     *
+     * @param {{name: string, width?: number, screenHeight?: number, measurement?: Measurement}} bp
+     * @returns Breakpoint
+     */
+    function parseBreakpoint(bp) {
+      // Type guard to check if bp has measurement property
+      const hasMeasurement = obj => {
+        return "measurement" in obj;
+      };
+      const measurement = hasMeasurement(bp) ? parseMeasurement(bp.measurement) : parseMeasurement({
+        width: bp.width,
+        screenHeight: bp.screenHeight
+      });
+      return {
+        name: bp.name,
+        measurement
+      };
+    }
+    /**
+     * Create a partially applied test function
+     */
+    function makeTest(name) {
+      return measurement => {
+        const breakpoint = breakpointFindByName(breakpointDefaultSpec(), name);
+        return breakpoint ? breakpointTest(breakpoint, measurement) : false;
+      };
+    }
+
+    /**
+     * Functions related to aspect ratio calculations. An "auto" function is
+     * provided and should be used in most cases to find the recommended
+     * aspect ratio.
+     *
+     * @module sszvis/aspectRatio
+     */
+    /**
+     * aspectRatio
+     *
+     * The base module is a function which creates an aspect ratio function.
+     * You provide a width and a height of the aspect ratio, and the
+     * returned function accepts any width, returning the corresponding
+     * height for the aspect ratio you configured.
+     *
+     * @param x  The number of parts on the horizontal axis (dividend)
+     * @param y  The number of parts on the vertical axis (divisor)
+     * @return The aspect ratio function. Takes a width as an argument
+     *         and returns the corresponding height based on the
+     *         aspect ratio defined by x:y.
+     */
+    function aspectRatio(x, y) {
+      const ar = x / y;
+      return width => width / ar;
+    }
+    /**
+     * aspectRatio4to3
+     *
+     * Recommended breakpoints:
+     *   - palm
+     */
+    const aspectRatio4to3 = aspectRatio(4, 3);
+    /**
+     * aspectRatio16to10
+     *
+     * Recommended breakpoints:
+     *   - lap
+     */
+    const aspectRatio16to10 = aspectRatio(16, 10);
+    /**
+     * aspectRatio12to5
+     *
+     * Recommended breakpoints:
+     *   - desk
+     */
+    const AR12TO5_MAX_HEIGHT = 500;
+    const aspectRatio12to5 = width => Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
+    aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
+    /**
+     * aspectRatioSquare
+     *
+     * This aspect ratio constrains the returned height to a maximum of 420px.
+     * It is recommended to center charts within this aspect ratio.
+     *
+     * Exposes the MAX_HEIGHT used as a property on the function.
+     *
+     * Recommended breakpoints:
+     *   - palm
+     *   - lap
+     *   - desk
+     */
+    const SQUARE_MAX_HEIGHT = 420;
+    const aspectRatioSquare = width => Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
+    aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
+    /**
+     * aspectRatioPortrait
+     *
+     * This aspect ratio constrains the returned height to a maximum of 600px.
+     * It is recommended to center charts within this aspect ratio.
+     *
+     * Exposes the MAX_HEIGHT used as a property on the function.
+     *
+     * Recommended breakpoints:
+     *   - palm
+     *   - lap
+     *   - desk
+     */
+    const PORTRAIT_MAX_HEIGHT = 600;
+    const aspectRatioPortrait = width => Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
+    aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
+    /**
+     * aspectRatioAuto
+     *
+     * Provides a set of default aspect ratios for different widths. If you provide a set
+     * of measurements for a container and the window itself, it will provide the default
+     * value of the height for that container. Note that the aspect ratio chosen may
+     * depend on the container width itself. This is because of default breakpoints.
+     *
+     * @param measurement The measurements object for the container for which you
+     *                    want a height value. Should have at least the properties:
+     *                      - `width`: container's width
+     *                      - `screenHeight`: the height of the window at the current time.
+     *
+     * @return The height which corresponds to the default aspect ratio for these measurements
+     */
+    const defaultAspectRatios = {
+      palm: aspectRatio4to3,
+      // palm-sized devices
+      lap: aspectRatio16to10,
+      // lap-sized devices
+      _: aspectRatio12to5 // all other cases, including desk
+    };
+    const aspectRatioAuto = measurement => {
+      const bp = breakpointFind(breakpointDefaultSpec(), measurement);
+      const ar = defaultAspectRatios[bp?.name || "_"];
+      return ar(measurement.width);
+    };
+
+    /**
+     * Scale utilities
+     *
+     * @module sszvis/scale
+     */
+    /**
+     * Range extent
+     *
+     * Used to determine the extent of a scale's range, i.e. how far the scale stretches in its
+     * output dimension. Mimics a function found in d3 source code.
+     *
+     * The result is always sorted, smaller value first, whichever direction the scale's own range
+     * runs in. It is therefore a measurement and not a range: passing it back to `scale.range()`
+     * would silently flip a descending scale, which is what every y scale is. Read the scale's own
+     * `range()` when direction matters.
+     */
+    function rangeExtent(scale) {
+      // borrowed from d3 source - svg.axis
+      return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
+    }
+    /**
+     * Scale range
+     *
+     * @deprecated Renamed to `rangeExtent`, because the sorted extent and not the range is what
+     * comes back. Kept as an alias for one release; use `rangeExtent` instead.
+     */
+    const range = rangeExtent;
+    /**
+     * Helper function
+     * Extent
+     *
+     * Used to determine the extent of an array. Mimics a function found in d3 source code.
+     * The array is expected to be sorted in either ascending or descending order; the extent comes
+     * back with the smaller term first either way.
+     */
+    function extent(domain) {
+      // borrowed from d3 source - svg.axis
+      const start = domain[0];
+      const stop = domain[domain.length - 1];
+      return start < stop ? [start, stop] : [stop, start];
+    }
+
+    /**
+     * Text wrap
+     *
+     * Function allowing to 'wrap' the text from an SVG <text> element with <tspan>.
+     *
+     * @module sszvis/svgUtils/textWrap
+     *
+     * Based on https://github.com/mbostock/d3/issues/1642
+     * @example svg.append("g")
+     *      .attr("class", "x axis")
+     *      .attr("transform", "translate(0," + height + ")")
+     *      .call(xAxis)
+     *      .selectAll(".tick text")
+     *          .call(d3TextWrap, x.rangeBand());
+     *
+     * @param selection d3 selection for one or more <text> object
+     * @param width number - global width in which the text will be word-wrapped. A width that is
+     *        not a finite number skips wrapping altogether and logs a warning, leaving the text
+     *        as it was: unlike the paddings there is no default to fall back to.
+     * @param paddingRightLeft number - Padding right and left between the wrapped text and the
+     *        'invisible box' of 'width' width. It always narrows the width the text is measured
+     *        against, but only reaches the rendered 'x' on untranslated <text>, and only for
+     *        text-anchor 'start' (x = padding) and 'end' (x = width - padding); 'middle' is
+     *        centred on the full width instead. On a tick label (<text> inside a translated
+     *        <g class="tick">) 'x' is derived from the narrowed width alone, as -width/2, 0 or
+     *        width/2 by anchor. Defaults to 5 when omitted or when the value is not a finite
+     *        number, which logs a warning on each such call; an explicit 0 and a negative
+     *        padding are honoured.
+     * @param paddingTopBottom number - Padding top and bottom between the wrapped text and the
+     *        'invisible box' of 'width' width. Two pixels are subtracted from it to account for
+     *        the borders, so the rendered 'y' is padding - 2: the default of 5 yields y="3" and
+     *        an explicit 0 yields y="-2". It is used only when the <text> element carries no 'y'
+     *        attribute of its own; otherwise that attribute wins - whatever its units, since it is
+     *        copied to the tspans verbatim - and this argument is ignored.
+     *        Defaults to 5 when omitted or when the value is not a finite number, which logs a
+     *        warning on each such call; an explicit 0 and a negative padding are honoured.
+     * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function. Empty when the width was unusable and nothing was wrapped.
+     */
+    const DEFAULT_PADDING = 5;
+    /**
+     * Reads a padding argument, falling back to the default unless it is a usable number.
+     *
+     * Both padding arguments get the same guard: either can be computed upstream, and either
+     * poisons the render when it is not finite - a non-finite paddingRightLeft makes the
+     * available width non-finite, which compares every measured line against NaN and disables
+     * wrapping entirely, and both are written straight into an `x`/`y` attribute, where "NaN"
+     * or "Infinity" is invalid SVG. `Number.isFinite` does not coerce, so an explicit 0 and a
+     * negative padding are honoured, while undefined, NaN, +/-Infinity and the null/""/false
+     * that only untyped JS callers can pass all take the default - the same value these inputs
+     * produced before an explicit 0 became meaningful, though the old code took it silently and
+     * a supplied one now warns. A supplied-but-unusable padding is a caller bug that used to
+     * render silently, so it warns rather than throws: wrapping still produces a readable
+     * label, and throwing would take down a chart that previously drew fine. The check happens
+     * before the per-element pass, so a bad paddingTopBottom is reported even on a <text> that
+     * carries its own 'y' and would have discarded it. Each unusable argument warns once per
+     * `textWrap` call, the same cadence `sunburst` uses for its own malformed-input warning: a
+     * render-scoped warning needs no state, so the second chart on a page still reports its own
+     * bad padding, which a module-level latch would have swallowed for the lifetime of the page.
+     */
+    function resolvePadding(padding, name) {
+      if (padding === undefined) return DEFAULT_PADDING;
+      if (Number.isFinite(padding)) return padding;
+      warn(`sszvis.svgUtils.textWrap: ignoring a non-finite ${name}, using ${DEFAULT_PADDING}`);
+      return DEFAULT_PADDING;
+    }
+    function textWrap(
+    // Wrapping reads and rewrites the <text> nodes themselves, so the element parameter is
+    // fixed; the rest stay generic so any text selection can be passed.
+    selection, width, paddingRightLeft, paddingTopBottom) {
+      // Unlike the paddings there is no sensible default width to fall back to - a width is the
+      // whole instruction - so an unusable one skips wrapping instead of substituting a number.
+      // The text is left exactly as it was, which is a readable label rather than a poisoned one:
+      // a non-finite width either disables wrapping entirely (NaN and +Infinity, where no measured
+      // line ever exceeds it) or breaks after every single word (-Infinity, where every line does),
+      // and in each case is written straight into the `x` attribute as "NaN" or "-Infinity". It is
+      // reachable through the public API - fn.defined, which axis screens props.textWrap with,
+      // excludes NaN but not +/-Infinity, so axis().textWrap(Infinity) used to land on every tick
+      // label.
+      if (!Number.isFinite(width)) {
+        warn("sszvis.svgUtils.textWrap: ignoring a non-finite width, not wrapping");
+        return [];
+      }
+      const padRightLeft = resolvePadding(paddingRightLeft, "paddingRightLeft");
+      // Remove 2 pixels because of the borders
+      const padTopBottom = resolvePadding(paddingTopBottom, "paddingTopBottom") - 2;
+      const maxWidth = width; // I store the tooltip max width
+      const innerWidth = width - padRightLeft * 2; // Take the padding into account
+      const arrLineCreatedCount = [];
+      selection.each(function () {
+        const text = d3.select(this);
+        const words = text.text().split(/[\t\n\v\f\r ]+/)
+        // Splitting text with leading or trailing whitespace yields empty tokens, which
+        // would be rejoined as spaces and padded into the rendered line and its measured
+        // width. Only these tokens are dropped; the words themselves are untouched.
+        .filter(word => word !== "").reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
+        let line = [];
+        let lineNumber = 0;
+        const lineHeight = 1.1; //Em
+        let createdLineCount = 1; //Total line created count
+        const textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
+        //Clean the data in case <text> does not define those values
+        const parsedDy = Number.parseFloat(text.attr("dy") ?? "");
+        const dy = Number.isNaN(parsedDy) ? 0 : parsedDy; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
+        //Offset the text position based on the text-anchor
+        // Don't wrap the 'normal untranslated' <text> element and the translated
+        // <g class='tick'><text></text></g> elements the same way. A detached <text> has no
+        // parent to read the class off, and cannot be a tick label, so answer false.
+        const wrapTickLabels = this.parentElement ? d3.select(this.parentElement).classed("tick") : false;
+        // An unrecognised text-anchor yields undefined, which d3 treats as "remove the
+        // attribute" - the same outcome as the original switch statements' empty default case.
+        const xByAnchor = wrapTickLabels ? {
+          start: -innerWidth / 2,
+          middle: 0,
+          end: innerWidth / 2
+        } : {
+          //untranslated <text> elements
+          start: padRightLeft,
+          middle: maxWidth / 2,
+          end: maxWidth - padRightLeft
+        };
+        const x = xByAnchor[textAlign];
+        // An SVG 'y' is a length, so "1em" and "50%" are both legal, and neither survives the +
+        // that used to be applied here - +"1em" is NaN, which was written straight back out as
+        // y="NaN". The attribute is copied to the tspans verbatim instead, which honours the
+        // documented rule that a 'y' on the <text> wins over paddingTopBottom whatever its units.
+        // A tspan's 'y' takes the same length syntax, so nothing needs parsing at all.
+        const yAttr = text.attr("y");
+        const y = yAttr === null ? padTopBottom : yAttr;
+        let tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", `${dy}em`);
+        while (words.length > 0) {
+          const word = words.pop() ?? ""; // the loop guard guarantees a value
+          line.push(word);
+          tspan.text(line.join(" "));
+          const tspanNode = tspan.node();
+          if (tspanNode && tspanNode.getComputedTextLength() > innerWidth && line.length > 1) {
+            line.pop();
+            tspan.text(line.join(" "));
+            line = [word];
+            tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", `${++lineNumber * lineHeight + dy}em`).text(word);
+            ++createdLineCount;
+          }
+        }
+        arrLineCreatedCount.push(createdLineCount); //Store the line count in the array
+      });
+      return arrLineCreatedCount;
+    }
+
+    /**
+     * Axis component
+     *
+     * This component is an extension of d3.axis and provides the same interface
+     * with some custom additions. It provides good defaults for sszvis charts
+     * and helps with some commonly used functionality.
+     *
+     * @module sszvis/axis
+     *
+     * The following properties are directly delegated to the d3.axis component.
+     * They are documented in the d3 documentation.
+     * @see https://github.com/mbostock/d3/wiki/SVG-Axes
+     *
+     * @property {function} scale         Delegates to d3.axis
+     * @property {function} orient        Delegates to d3.axis
+     * @property {function} ticks         Delegates to d3.axis
+     * @property {function} tickValues    Delegates to d3.axis
+     * @property {function} tickSize      Delegates to d3.axis
+     * @property {function} innerTickSize Delegates to d3.axis
+     * @property {function} outerTickSize Delegates to d3.axis
+     * @property {function} tickPadding   Delegates to d3.axis
+     * @property {function} tickFormat    Delegates to d3.axis. A function from a tick value to its
+     *                                    label; a label of null or undefined is written as an empty
+     *                                    string. Any other value throws, naming the property, rather
+     *                                    than failing later from inside d3's tick rendering.
+     *
+     * The following properties are custom additions.
+     *
+     * @property {boolean} alignOuterLabels                 Whether or not to align the outer labels to the axis extent so that they do not fall outside the axis space.
+     * @property {boolean} contour                          Specify a 'contour' background for the axis labels.
+     * @property {number} hideBorderTickThreshold           Specifies the pixel distance threshold for the visible tick correction. Ticks which are closer than
+     *                                                      this threshold to the end of the axis (i.e. a tick which is 1 or two pixels from the end) will be
+     *                                                      hidden from view. This prevents the display of a tick very close to the ending line.
+     * @property {number} hideLabelThreshold                By default, labels are hidden when they are closer than LABEL_PROXIMITY_THRESHOLD to a highlighted label.
+     *                                                      If this value is set to 0 or lower, labels won't be hidden, even if they overlap with the highlighted label.
+     * @property {function} highlightTick                   Specifies a predicate function to use to determine whether axis ticks should be highlighted.
+     *                                                      Any tick value which returns true for this predicate function will be treated specially as a highlighted tick.
+     *                                                      Note that this function does NOT have any effect over which ticks are actually included on the axis. To create special
+     *                                                      custom ticks, use tickValues.
+     * @property {boolean} showZeroY                        Whether the axis should display a label for at y=0.
+     * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
+     *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
+     *                                                      Use "horizontal" to reset to a horizontal slant.
+     * @property {number} textWrap                          Specify a width at which to wrap the axis label text.
+     * @property {number, function} tickLength              specify a number or a function which returns a number for setting the tick length.
+     * @property {string, function} title                   Specify a string, or a function returning one, to use as the title of this chart. Default title position depends on the chart orientation
+     * @property {string} titleAnchor                       specify the title text-anchor. Values are 'start', 'middle', and 'end'. Corresponds to the 'text-anchor' svg styling attribute
+     *                                                      the default depends on the axis orient property
+     * @property {boolean} titleCenter                      whether or not to center the axis title along the axis. If true, this sets the title anchor point
+     *                                                      as the midpoint between axis extremes. Should usually be used with titleAnchor('middle') to ensure exact title centering. (default: false)
+     * @property {number} dxTitle                           specify an amount by which to offset the title towards the left. This offsets away from the default position. (default: 0)
+     * @property {number} dyTitle                           specify an amount by which to offset the title towards the top. This offsets away from the default position. (default: 0)
+     * @property {boolean} titleVertical                    whether or not to rotate the title 90 degrees so that it appears vertical, reading from bottom to top. (default: false)
+     * @property {boolean} vertical                         whether the axis is a vertical axis. When true, this property changes certain display properties of the axis according to the style guide.
+     *
+     * @return {sszvis.component}
+     */
+    const TICK_PROXIMITY_THRESHOLD = 8;
+    const TICK_END_THRESHOLD = 12;
+    const LABEL_PROXIMITY_THRESHOLD = 10;
+    function axis() {
+      // const axisDelegate = d3.axisBottom();
+      // axisDelegate.orient = function() { return 'bottom'; };
+      // axisComponent.__delegate__ = axisDelegate;
+      return component().prop("scale").prop("orient").prop("ticks").prop("tickValues").prop("tickSize").prop("tickSizeInner").prop("tickSizeOuter").prop("tickPadding").prop("tickFormat").prop("_scale").prop("orient").orient("bottom").prop("alignOuterLabels").alignOuterLabels(false).prop("contour").prop("hideBorderTickThreshold").hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD).prop("hideLabelThreshold").hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD).prop("highlightTick", functor).prop("showZeroY").showZeroY(false).prop("slant").prop("textWrap").prop("tickLength").prop("title").prop("titleAnchor") // start, end, or middle
+      .prop("titleCenter") // a boolean value - whether to center the title
+      .prop("dxTitle") // a numeric value for the left offset of the title
+      .prop("dyTitle") // a numeric value for the top offset of the title
+      .prop("titleVertical").prop("vertical").vertical(false)
+      //this property is typically used for the x-axis, but not for the y axis
+      //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels
+      .prop("yOffset").yOffset(0).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const isBottom = !props.vertical && props.orient === "bottom";
+        const scale = props.scale || props._scale;
+        if (!scale) {
+          throw new Error("axis: need to specify a scale");
+        }
+        let axisDelegate;
+        switch (props.orient) {
+          case "bottom":
+            {
+              axisDelegate = d3.axisBottom(scale);
+              break;
+            }
+          case "top":
+            {
+              axisDelegate = d3.axisTop(scale);
+              break;
+            }
+          case "left":
+            {
+              axisDelegate = d3.axisLeft(scale);
+              break;
+            }
+          case "right":
+            {
+              axisDelegate = d3.axisRight(scale);
+              break;
+            }
+          default:
+            {
+              axisDelegate = d3.axisBottom(scale);
+              break;
+            }
+        }
+        if (props.scale !== undefined) {
+          axisDelegate.scale(props.scale);
+        }
+        if (props.ticks !== undefined) {
+          if (Array.isArray(props.ticks) && props.ticks.length > 0) {
+            axisDelegate.ticks(...props.ticks);
+          } else {
+            axisDelegate.ticks(props.ticks);
+          }
+        }
+        if (props.tickValues !== undefined) {
+          axisDelegate.tickValues(props.tickValues);
+        }
+        if (props.tickSizeInner !== undefined) {
+          axisDelegate.tickSizeInner(props.tickSizeInner);
+        }
+        if (props.tickSizeOuter !== undefined) {
+          axisDelegate.tickSizeOuter(props.tickSizeOuter);
+        }
+        if (props.tickPadding !== undefined) {
+          axisDelegate.tickPadding(props.tickPadding);
+        }
+        if (props.tickFormat !== undefined) {
+          // Checked here rather than left to d3: invoked from inside the tick text callback, a
+          // non-function fails with a message naming a bundler temporary, which points at neither
+          // the axis nor the call site that set it.
+          const tickFormat = props.tickFormat;
+          if (typeof tickFormat !== "function") {
+            // `null` is named outright: it is d3's own idiom for "reset to the default format",
+            // and "got object" is the least useful thing that could be said about it.
+            const got = tickFormat === null ? "null" : typeof tickFormat;
+            throw new TypeError(`axis: tickFormat must be a function from a tick value to its label, got ${got}`);
+          }
+          axisDelegate.tickFormat(d => tickFormat(d) ?? "");
+        }
+        if (props.tickSize !== undefined) {
+          axisDelegate.tickSize(props.tickSize);
+        }
+        if (props._scale) {
+          axisDelegate.scale(props._scale);
+        }
+        const group = selection.selectGroup("sszvis-axis").classed("sszvis-axis", true).classed("sszvis-axis--top", !props.vertical && props.orient === "top").classed("sszvis-axis--bottom", isBottom).classed("sszvis-axis--vertical", Boolean(props.vertical)).attr("transform", translateString(0, props.yOffset || 0)).call(axisDelegate);
+        group.attr("fill", null).attr("font-size", null).attr("font-family", null);
+        // .attr("text-anchor", null);
+        const axisScale = axisDelegate.scale();
+        // Create selections here which will be used later for many custom configurations
+        // Note: Inconstiant: This is only valid so long as new .tick groups or tick label texts
+        // are not being added after these selections are constructed. If that changes, these
+        // selections need to be re-constructed.
+        const tickGroups = group.selectAll("g.tick");
+        const tickTexts = tickGroups.selectAll("text");
+        // To prevent anti-aliasing on elements that need to be rendered crisply
+        // we need to position them on a half-pixel grid: 0.5, 1.5, 2.5, etc.
+        // We can't translate the whole .tick group, however, because this
+        // leads to weird type rendering artefacts in some browsers. That's
+        // why we reach into the group and translate lines onto the half-pixel
+        // grid by taking the translation of the group into account.
+        tickGroups.each(function () {
+          const subpixelShift = transformTranslateSubpixelShift(this.getAttribute("transform") || "");
+          const dx = halfPixel(0) - subpixelShift[0];
+          const dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
+          d3.select(this).select("line").attr("transform", translateString(dx, dy));
+        });
+        tickTexts.each(function () {
+          if (props.orient === "top" || props.orient === "bottom") {
+            d3.select(this).attr("dx", "-0.5");
+          }
+          if (props.orient === "left" || props.orient === "right") {
+            d3.select(this).attr("y", "-0.5");
+          }
+        });
+        // Place axis line on a half-pixel grid to prevent anti-aliasing
+        group.selectAll("path.domain");
+        // .attr('transform', translateString(halfPixel(0), halfPixel(0)));
+        // hide ticks which are too close to one endpoint
+        const rangeExtent = range(axisScale);
+        tickGroups.selectAll("line").each(function (d) {
+          const pos = axisScale(d) ?? 0,
+            d3this = d3.select(this);
+          const min = rangeExtent[0];
+          const max = rangeExtent[1];
+          d3this.classed("hidden", !d3this.classed("sszvis-axis__longtick") && (absDistance(pos, min) < (props.hideBorderTickThreshold || 0) || absDistance(pos, max) < (props.hideBorderTickThreshold || 0)));
+        });
+        if (defined(props.tickLength)) {
+          const domain = axisScale.domain();
+          const domainExtent = domain.length > 0 ? [domain[0], domain[domain.length - 1]] : [undefined, undefined];
+          const ticks = tickGroups.filter(d => domainExtent[0] !== undefined && domainExtent[1] !== undefined && !stringEqual(d, domainExtent[0]) && !stringEqual(d, domainExtent[1]));
+          const orientation = props.orient;
+          let longLinePadding = 2;
+          if (orientation === "left" || orientation === "right") {
+            ticks.selectAll("text").each(function () {
+              longLinePadding = Math.max(this.getBoundingClientRect().width, longLinePadding);
+            });
+            longLinePadding += 2; // a lil' extra on the end
+          }
+          const lines = ticks.selectAll("line.sszvis-axis__longtick").data([0]).join("line").classed("sszvis-axis__longtick", true);
+          if (props.tickLength > longLinePadding) {
+            switch (orientation) {
+              case "top":
+                {
+                  lines.attr("y1", longLinePadding).attr("y2", props.tickLength);
+                  break;
+                }
+              case "bottom":
+                {
+                  lines.attr("y1", -longLinePadding).attr("y2", -props.tickLength);
+                  break;
+                }
+              case "left":
+                {
+                  lines.attr("x1", -longLinePadding).attr("x2", -props.tickLength);
+                  break;
+                }
+              case "right":
+                {
+                  lines.attr("x1", longLinePadding).attr("x2", props.tickLength);
+                  break;
+                }
+              // No default
+            }
+          } else {
+            lines.remove();
+          }
+        }
+        if (props.alignOuterLabels) {
+          const alignmentBounds = range(axisScale);
+          const min = alignmentBounds[0];
+          const max = alignmentBounds[1];
+          tickTexts.style("text-anchor", d => {
+            const value = axisScale(d) ?? 0;
+            const minVal = min ?? 0;
+            const maxVal = max ?? 0;
+            if (absDistance(value, minVal) < TICK_END_THRESHOLD) {
+              return "start";
+            } else if (absDistance(value, maxVal) < TICK_END_THRESHOLD) {
+              return "end";
+            }
+            return "middle";
+          });
+        }
+        if (defined(props.textWrap)) {
+          tickTexts.call(textWrap, props.textWrap);
+        }
+        if (props.slant && props.orient && slantLabel[props.orient]?.[props.slant]) {
+          tickTexts.call(slantLabel[props.orient][props.slant]);
+        }
+        // Highlight axis labels that return true for props.highlightTick.
+        if (props.highlightTick) {
+          const activeBounds = [];
+          const passiveBounds = [];
+          tickTexts.classed("hidden", false).classed("active", d => props.highlightTick?.(d) || false);
+          // Hide axis labels that overlap with highlighted labels unless
+          // the labels are slanted (in which case the bounding boxes overlap)
+          if ((props.hideLabelThreshold || 0) > 0 && !props.slant) {
+            tickTexts.each(function (d) {
+              // although getBoundingClientRect returns coordinates relative to the window, not the document,
+              // this should still work, since all tick bounds are affected equally by scroll position changes.
+              const bcr = this.getBoundingClientRect();
+              const b = {
+                node: this,
+                bounds: {
+                  top: bcr.top,
+                  right: bcr.right,
+                  bottom: bcr.bottom,
+                  left: bcr.left
+                }
+              };
+              if (props.highlightTick?.(d)) {
+                b.bounds.left -= props.hideLabelThreshold || 0;
+                b.bounds.right += props.hideLabelThreshold || 0;
+                activeBounds.push(b);
+              } else {
+                passiveBounds.push(b);
+              }
+            });
+            for (const active of activeBounds) {
+              for (const passive of passiveBounds) {
+                d3.select(passive.node).classed("hidden", boundsOverlap(passive.bounds, active.bounds));
+              }
+            }
+          }
+        }
+        if (props.title) {
+          // Accept a value or an accessor, like every other property in the library: an
+          // unwrapped function would otherwise be stringified into the chart.
+          const title = group.selectAll(".sszvis-axis__title").data([functor(props.title)()]).join("text").classed("sszvis-axis__title", true);
+          title.text(d => d).attr("transform", () => {
+            const orient = props.orient,
+              axisScaleExtent = range(axisScale);
+            const titleProps = props.titleCenter ? {
+              left: orient === "left" || orient === "right" ? 0 : orient === "top" || orient === "bottom" ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : 0,
+              top: orient === "left" || orient === "right" ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : orient === "top" ? 0 : orient === "bottom" ? 32 : 0,
+              vertical: !!props.titleVertical
+            } : {
+              left: orient === "left" || orient === "right" || orient === "top" ? 0 : orient === "bottom" ? axisScaleExtent[1] : 0,
+              top: orient === "left" || orient === "right" || orient === "top" ? 0 : orient === "bottom" ? 32 : 0,
+              vertical: !!props.titleVertical
+            };
+            titleProps.left += props.dxTitle || 0;
+            titleProps.top += props.dyTitle || 0;
+            return "translate(" + titleProps.left + ", " + titleProps.top + ") rotate(" + (titleProps.vertical ? "-90" : "0") + ")";
+          }).style("text-anchor", () => {
+            const orient = props.orient;
+            if (props.titleAnchor === undefined) {
+              switch (orient) {
+                case "left":
+                  {
+                    return "end";
+                  }
+                case "right":
+                  {
+                    return "start";
+                  }
+                case "top":
+                case "bottom":
+                  {
+                    return "end";
+                  }
+                default:
+                  {
+                    return null;
+                  }
+              }
+            } else {
+              return props.titleAnchor;
+            }
+          });
+        }
+        /**
+         * Add a background to axis labels to make them more readable on
+         * colored backgrounds
+         */
+        if (props.contour && props.slant) {
+          warn("Can't apply contour to slanted labels");
+        } else if (props.contour) {
+          tickGroups.each(function () {
+            const g = d3.select(this);
+            const textNode = g.select("text").node();
+            let textContour = g.select(".sszvis-axis__label-contour");
+            if (textContour.empty() && textNode && "cloneNode" in textNode) {
+              textContour = d3.select(textNode.cloneNode(true)).classed("sszvis-axis__label-contour", true);
+              const contourNode = textContour.node();
+              if (contourNode) this.insertBefore(contourNode, textNode);
+            }
+            if (textNode && "textContent" in textNode) {
+              textContour.text(textNode.textContent || "");
+            }
+          });
+        }
+      });
+    }
+    const setOrdinalTicks = function (count) {
+      // in this function, the 'this' context should be an sszvis.axis
+      const domain = this.scale().domain(),
+        values = [],
+        // A stride of at least one: Math.round(3 / 10) is 0, and a loop advancing by 0 never
+        // terminates. Asking for more ticks than there are categories degrades to one per category.
+        step = Math.max(1, Math.round(domain.length / count));
+      // include the first value
+      if (domain[0] !== undefined) values.push(domain[0]);
+      for (let i = step, l = domain.length; i < l - 1; i += step) {
+        if (domain[i] !== undefined) values.push(domain[i]);
+      }
+      // include the last value, unless it is the first one again — a single-element domain
+      // would otherwise render two identical, overlapping ticks
+      if (domain.length > 1 && domain[domain.length - 1] !== undefined) {
+        values.push(domain[domain.length - 1]);
+      }
+      this.tickValues(values);
+      return count;
+    };
+    const axisX = () => axis().yOffset(2) //gap between chart and x-axis
+    .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6)
+    // The x-axis is numeric; arity(1, ...) drops the index d3 passes as a second argument.
+    .tickFormat(arity(1, formatNumber));
+    axisX.time = () => axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
+    axisX.ordinal = () => axisX()
+    // extend this class a little with a custom implementation of 'ticks'
+    // that allows you to set a custom number of ticks,
+    // including the first and last value in the ordinal scale
+    .prop("ticks", setOrdinalTicks).tickFormat(formatText);
+    // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
+    axisX.pyramid = () => axisX().ticks(10).prop("scale", function (s) {
+      const extended = s.copy();
+      const scaleWithMethods = extended;
+      const extendedDomain = scaleWithMethods.domain();
+      const extendedRange = scaleWithMethods.range();
+      const mirroredDomain = [-extendedDomain[1], extendedDomain[1]];
+      const mirroredRange = [extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]];
+      scaleWithMethods.domain(mirroredDomain);
+      scaleWithMethods.range(mirroredRange);
+      this._scale = extended;
+      return extended;
+    }).tickFormat(v =>
+    // this tick format means that the axis appears to be divergent around 0
+    // when in fact it is -domain[1] -> +domain[1]
+    formatNumber(Math.abs(v)));
+    const axisY = () => {
+      const newAxis = axis().ticks(6).tickSize(0).tickPadding(0).tickFormat(d => 0 === d && !newAxis.showZeroY() ? null : formatNumber(d)).vertical(true);
+      return newAxis;
+    };
+    axisY.time = () => axisY().tickFormat(formatAxisTimeFormat);
+    axisY.ordinal = () => axisY()
+    // add custom 'ticks' function
+    .prop("ticks", setOrdinalTicks).tickFormat(formatText);
+    /* Helper functions
+    ----------------------------------------------- */
+    function absDistance(a, b) {
+      return Math.abs(a - b);
+    }
+    function boundsOverlap(boundsA, boundsB) {
+      return !(boundsB.left > boundsA.right || boundsB.right < boundsA.left || boundsB.top > boundsA.bottom || boundsB.bottom < boundsA.top);
+    }
+    const slantLabel = {
+      top: {
+        horizontal(selection) {
+          selection.style("text-anchor", "middle").attr("dx", "-0.5").attr("dy", "0.71em").attr("transform", null);
+        },
+        vertical(selection) {
+          selection.style("text-anchor", "start").attr("dx", "0em").attr("dy", "0.35em") // vertically-center
+          .attr("transform", "rotate(-90)");
+        },
+        diagonal(selection) {
+          selection.style("text-anchor", "start").attr("dx", "0.1em").attr("dy", "0.1em").attr("transform", "translate(-0.5) rotate(-45)");
+        }
+      },
+      bottom: {
+        horizontal(selection) {
+          selection.style("text-anchor", "middle").attr("dx", "-0.5").attr("dy", "0.71em").attr("transform", null);
+        },
+        vertical(selection) {
+          selection.style("text-anchor", "end").attr("dx", "-1em").attr("dy", "-0.75em").attr("transform", "rotate(-90)");
+        },
+        diagonal(selection) {
+          selection.style("text-anchor", "end").attr("dx", "-0.8em").attr("dy", "0em").attr("transform", "rotate(-45)");
+        }
+      },
+      left: {
+        horizontal(selection) {
+          selection.style("text-anchor", "middle").attr("dx", "-0.5").attr("dy", "0.71em").attr("transform", null);
+        },
+        vertical(selection) {
+          selection.style("text-anchor", "middle").attr("dx", "0em").attr("dy", "0.35em").attr("transform", "rotate(-90)");
+        },
+        diagonal(selection) {
+          selection.style("text-anchor", "end").attr("dx", "-0.8em").attr("dy", "0em").attr("transform", "rotate(-45)");
+        }
+      },
+      right: {
+        horizontal(selection) {
+          selection.style("text-anchor", "middle").attr("dx", "-0.5").attr("dy", "0.71em").attr("transform", null);
+        },
+        vertical(selection) {
+          selection.style("text-anchor", "middle").attr("dx", "0em").attr("dy", "0.35em").attr("transform", "rotate(-90)");
+        },
+        diagonal(selection) {
+          selection.style("text-anchor", "start").attr("dx", "0.1em").attr("dy", "0.1em").attr("transform", "rotate(-45)");
+        }
+      }
+    };
+
+    /**
+     * Move behavior
+     *
+     * The move behavior is used to add a mouseover and touchmove-based interface to a chart.
+     *
+     * Like other behavior components, this behavior adds an invisible layer over the chart,
+     * which the users interact with using touch or mouse actions. The behavior component then interprets
+     * these interactions, and calls the relevant event handler callback functions. These callback functions are
+     * passed values which represent data-space information about the nature of the interaction.
+     * That last sentence was intentionally vague, because different behaviors operate in slightly different ways.
+     *
+     * The move behavior requires scales to be passed to it as configuration, and when a user interacts with the behavior layer,
+     * it inverts the pixel location of the interaction using these scales and passes the resulting data-space values to the callback
+     * functions. This component extends a d3.dispatch instance.
+     *
+     * @module sszvis/behavior/move
+     *
+     * @property {boolean} debug                      Whether or not to render the component in debug mode, which reveals its position in the chart.
+     * @property {function} xScale                    The x-scale for the component. The extent of this scale, plus component padding, is the width of the
+     *                                                component's active area.
+     * @property {function} yScale                    The y-scale for the component. The extent of this scale, plus component padding, is the height of the
+     *                                                component's active area.
+     * @property {boolean} draggable                  Whether or not this component is draggable. This changes certain display properties of the component.
+     * @property {object} padding                     An object which specifies padding, in pixels, added around the scale's range to widen the component's
+     *                                                hit area beyond the scale itself. Defaults are all 0. The options are { top, right, bottom, left }.
+     *                                                Padding only grows the active area; it does not shift the coordinate space, so a pointer in the padded
+     *                                                margin inverts to a value just outside the scale's domain.
+     * @property {boolean|function} cancelScrolling   A predicate function, or a constant boolean, that determines whether the browser's default scrolling
+     *                                                behavior in response to a touch event should be canceled. In area charts and line charts, for example,
+     *                                                you generally don't want to cancel scrolling, as this creates a scroll trap. However, in bar charts
+     *                                                which use this behavior, you want to pass a predicate function here which will determine whether the touch
+     *                                                event falls within the "profile" of the bar chart, and should therefore cancel scrolling and trigger an event.
+     * @property {boolean} fireOnPanOnly              In response to touch events, whether to fire events only while "panning", that is only while performing
+     *                                                a touch move where the default scrolling behavior is canceled, and not otherwise. In area and line charts, this
+     *                                                should be false, since you want to fire events all the time, even while scrolling. In bar charts, we want to
+     *                                                limit the firing of events (and therefore, the showing of tooltips) to only cases where the touch event has its
+     *                                                default scrolling prevented, and the user is therefore "panning" across bars. So this should be true for bar charts.
+     * @property {string and function} on             The .on() method of this component should specify an event name and an event handler function.
+     *                                                Possible event names are:
+     *                                                'start' - when the move action starts - mouseover or touchstart
+     *                                                'move' - called when a 'moving' action happens - mouseover on the element
+     *                                                'drag' - called when a 'dragging' action happens - mouseover with the mouse click down, or touchmove
+     *                                                'end' - called when the event ends - mouseout or touchend
+     *                                                Event handler functions, excepting end, are passed an x-value and a y-value, which are the data values,
+     *                                                computed by inverting the provided xScale and yScale, which correspond to the screen pixel location of the event.
+     *
+     * @return {sszvis.component}
+     */
+    function move() {
+      const event = d3.dispatch("start", "move", "drag", "end");
+      const moveComponent = component().prop("debug").prop("xScale").prop("yScale").prop("draggable").prop("cancelScrolling", functor).cancelScrolling(false).prop("fireOnPanOnly", functor).fireOnPanOnly(false).prop("padding", p => {
+        const defaults = {
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0
+        };
+        for (const prop in p) {
+          const key = prop;
+          if (key in defaults && p[key] !== undefined) {
+            defaults[key] = p[key];
+          }
+        }
+        return defaults;
+      }).padding({}).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Already sorted, smaller value first, so a descending y scale still yields a rect that
+        // grows downwards from its top edge.
+        const xExtent = rangeExtent(props.xScale);
+        const yExtent = rangeExtent(props.yScale);
+        xExtent[0] -= props.padding.left;
+        xExtent[1] += props.padding.right;
+        yExtent[0] -= props.padding.top;
+        yExtent[1] += props.padding.bottom;
+        // The rect below is positioned at the start of the padded range, so its `x`/`y`
+        // attributes carry the offset between the rect's own box and the coordinate space the
+        // scales are defined over. Both input paths resolve through `pointer()`, which inverts
+        // the rect's screen CTM and therefore ignores a rect's `x`/`y` geometry: positions
+        // arrive already in scale space, in the same user-space units the scales use, and
+        // `scaleInvert` and the band/point inverters read `scale.range()` directly.
+        const layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]).join("rect").attr("data-sszvis-behavior-move", "").attr("class", "sszvis-interactive");
+        if (props.draggable) {
+          layer.classed("sszvis-interactive--draggable", true);
+        }
+        layer.attr("x", xExtent[0]).attr("y", yExtent[0]).attr("width", xExtent[1] - xExtent[0]).attr("height", yExtent[1] - yExtent[0]).attr("fill", "transparent").on("mouseover", function (...args) {
+          if (this) event.apply("start", this, args);
+        }).on("mousedown", function (...args) {
+          const target = this;
+          const doc = d3.select(document);
+          const win = d3.select(window);
+          const startDragging = () => {
+            target.__dragging__ = true;
+          };
+          const stopDragging = () => {
+            target.__dragging__ = false;
+            win.on("mousemove.sszvis-behavior-move", null);
+            doc.on("mouseout.sszvis-behavior-move", null);
+            if (target) event.apply("end", target, args);
+          };
+          win.on("mouseup.sszvis-behavior-move", stopDragging);
+          doc.on("mouseout.sszvis-behavior-move", () => {
+            // toElement is a legacy, non-standard alias for relatedTarget and is not in
+            // the DOM types; read it reflectively rather than restating the event's type.
+            const legacyToElement = Reflect.get(args[0], "toElement");
+            const from = args[0].relatedTarget || (legacyToElement instanceof Element ? legacyToElement : null);
+            if (!from || from.nodeName === "HTML") {
+              stopDragging();
+            }
+          });
+          startDragging();
+        }).on("mousemove", function (e) {
+          const target = this;
+          if (!target) return;
+          // Skip touch-originated mouse events on devices that support both
+          // This check helps avoid duplicate event handling on touch devices
+          const sourceCapabilities = e.sourceCapabilities;
+          if (sourceCapabilities?.firesTouchEvents) return;
+          let xy;
+          try {
+            xy = d3.pointer(e);
+          } catch {
+            // Silently fail on invalid events (e.g., when pointer() throws due to invalid coordinates)
+            return;
+          }
+          // Validate coordinates are finite numbers
+          if (!Number.isFinite(xy[0]) || !Number.isFinite(xy[1])) return;
+          const x = scaleInvert(props.xScale, xy[0]);
+          const y = scaleInvert(props.yScale, xy[1]);
+          if (target.__dragging__) {
+            event.apply("drag", target, [e, x, y]);
+          } else {
+            event.apply("move", target, [e, x, y]);
+          }
+        }).on("mouseout", function (...args) {
+          if (this) event.apply("end", this, args);
+        }).on("touchstart", function (e) {
+          const target = this;
+          if (!target) return;
+          // Extract touch coordinates manually for Safari mobile compatibility.
+          // On Safari mobile, TouchEvent objects don't have clientX/clientY properties -
+          // those are on the Touch object inside event.touches[0]. D3's pointer() function
+          // expects clientX/clientY on the event itself, causing it to return NaN on Safari.
+          const touch = firstTouch(e);
+          if (!touch) return;
+          // Validate coordinates exist and are finite
+          if (typeof touch.clientX !== "number" || !Number.isFinite(touch.clientX) || typeof touch.clientY !== "number" || !Number.isFinite(touch.clientY)) {
+            return;
+          }
+          // Resolve through the extracted `Touch`, not the event: `pointer()` only needs
+          // clientX/clientY on its source, and inverting the rect's screen CTM keeps touch in
+          // the same user-space units as the mouse path under a scaled ancestor.
+          const xy = d3.pointer(touch, target);
+          const x = scaleInvert(props.xScale, xy[0]);
+          const y = scaleInvert(props.yScale, xy[1]);
+          const cancelScrolling = props.cancelScrolling(x, y);
+          if (cancelScrolling) {
+            e.preventDefault();
+          }
+          // if fireOnPanOnly => cancelScrolling must be true
+          // if !fireOnPanOnly => always fire events
+          // This is in place because this behavior needs to only fire
+          // events on a successful "pan" action in the bar charts, i.e.
+          // only when scrolling is prevented, but then it also needs to fire
+          // events all the time in the line and area charts, i.e. allow
+          // scrolling to continue as normal but also fire events.
+          // To configure the chart for use in the bar charts, you need
+          // to configure a cancelScrolling function for determining when to
+          // cancel scrolling, i.e. what constitutes a "pan" event, and also
+          // pass fireOnPanOnly = true, which flips this switch and relies on
+          // cancelScrolling to determine whether to fire the events.
+          if (!props.fireOnPanOnly() || cancelScrolling) {
+            event.apply("start", target, [e, x, y]);
+            event.apply("drag", target, [e, x, y]);
+            event.apply("move", target, [e, x, y]);
+            const pan = panEvent => {
+              // Extract touch from the new touchmove event, not the original touchstart event
+              const panTouch = firstTouch(panEvent);
+              if (!panTouch) return;
+              // Validate coordinates
+              if (typeof panTouch.clientX !== "number" || !Number.isFinite(panTouch.clientX) || typeof panTouch.clientY !== "number" || !Number.isFinite(panTouch.clientY)) {
+                return;
+              }
+              const panXY = d3.pointer(panTouch, target);
+              const panX = scaleInvert(props.xScale, panXY[0]);
+              const panY = scaleInvert(props.yScale, panXY[1]);
+              const panCancelScrolling = props.cancelScrolling(panX, panY);
+              if (panCancelScrolling) {
+                panEvent.preventDefault();
+              }
+              // See comment above about the same if condition.
+              if (!props.fireOnPanOnly() || panCancelScrolling) {
+                event.apply("drag", target, [panEvent, panX, panY]);
+                event.apply("move", target, [panEvent, panX, panY]);
+              } else {
+                event.apply("end", target, [panEvent]);
+              }
+            };
+            const end = endEvent => {
+              event.apply("end", target, [endEvent]);
+              d3.select(target).on("touchmove", null).on("touchend", null);
+            };
+            d3.select(target).on("touchmove", pan).on("touchend", end);
+          }
+        });
+        if (props.debug) {
+          layer.attr("fill", "rgba(255,0,0,0.2)");
+        }
+      });
+      // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
+      // callback to never. Narrowing to the four event names would type the callback properly but
+      // would also reject the namespaced typenames d3 accepts at runtime, such as "move.tooltip".
+      moveComponent.on = (...args) => {
+        const value = event.on.apply(event, args);
+        return value === event ? moveComponent : value;
+      };
+      return moveComponent;
+    }
+    function scaleInvert(scale, px) {
+      if ("invert" in scale) {
+        return scale.invert(px);
+      } else if ("paddingInner" in scale) {
+        return invertBandScale(scale, px);
+      } else {
+        return invertPointScale(scale, px);
+      }
+    }
+    function invertBandScale(scale, px) {
+      const step = scale.step();
+      const paddingOuter = scale.paddingOuter() * step;
+      const paddingInner = scale.paddingInner() * step;
+      const bandWidth = scale.bandwidth();
+      const scaleRange = scale.range();
+      const domain = scale.domain();
+      if (domain.length === 1) {
+        if (scaleRange[0] <= px && scaleRange[1] >= px) {
+          return domain[0];
+        }
+        return null;
+      }
+      const ranges = domain.map((_d, i) => {
+        if (i === 0) {
+          return [scaleRange[0], scaleRange[0] + paddingOuter + bandWidth + paddingInner / 2];
+        } else if (i === domain.length - 1) {
+          return [scaleRange[1] - (paddingOuter + bandWidth + paddingInner / 2), scaleRange[1]];
+        } else {
+          return [scaleRange[0] + paddingOuter + i * step - paddingInner / 2, scaleRange[0] + paddingOuter + (i + 1) * step - paddingInner / 2];
+        }
+      });
+      for (let i = 0, l = ranges.length; i < l; i++) {
+        if (ranges[i][0] < px && px <= ranges[i][1]) {
+          return domain[i];
+        }
+      }
+      return null;
+    }
+    function invertPointScale(scale, px) {
+      const step = scale.step();
+      const paddingOuter = scale.padding() * step;
+      const scaleRange = scale.range();
+      const domain = scale.domain();
+      if (domain.length === 1) {
+        if (scaleRange[0] <= px && scaleRange[1] >= px) {
+          return domain[0];
+        }
+        return null;
+      }
+      const ranges = domain.map((_d, i) => {
+        if (i === 0) {
+          return [scaleRange[0], scaleRange[0] + paddingOuter + step / 2];
+        } else if (i === domain.length - 1) {
+          return [scaleRange[1] - (paddingOuter + step / 2), scaleRange[1]];
+        } else {
+          return [scaleRange[0] + paddingOuter + i * step - step / 2, scaleRange[0] + paddingOuter + i * step + step / 2];
+        }
+      });
+      for (let i = 0, l = ranges.length; i < l; i++) {
+        if (ranges[i][0] < px && px <= ranges[i][1]) {
+          return domain[i];
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Behavior utilities
+     *
+     * These utilities are intended for internal usage by the sszvis.behavior components.
+     * They aren't intended for use in example code, but should be in a separate module
+     * because they are accessed by several different behavior components.
+     *
+     * @function {Event} elementFromEvent             Accepts an event, and returns the element, if any,
+     *                                                which is in the document under that event. Uses
+     *                                                document.elementFromPoint to determine the element.
+     *                                                If there is no such element, or the event is invalid,
+     *                                                this function will return null.
+     * @function {Element} datumFromPannableElement   Accepts an element, determines if it's "pannable",
+     *                                                and returns the datum, if any, attached to this element.
+     *                                                This is determined by the presence of the data-sszvis-behavior-pannable
+     *                                                attribute on the element. Behaviors which use "panning" behavior
+     *                                                will attach this attribute to the elements they target.
+     *                                                Elements which have panning behaviors attached to them
+     *                                                will get this attribute assigned to them. If the element doesn't
+     *                                                have this attriute, or doesn't have a datum assigned, this funciton
+     *                                                returns null.
+     * @function {Event} datumFromPanEvent            A combination of elementFromEvent and datumFromPannableElement, which
+     *                                                accepts an event and returns the datum attached to the element under
+     *                                                that event, if such an element and such a datum exists.
+     * @function {Number, Object, Function, Number} testBarThreshold        This function is a convenience function for encapsulating
+     *                                                                      the test which should be performed on a touch interaction,
+     *                                                                      to see whether the touch falls within the "profile" of a bar
+     *                                                                      chart. If so, that is, if the test passes, then scrolling should
+     *                                                                      be prevented on the bar charts, and a tooltip should be shown.
+     *                                                                      This is the behavior known as "panning" over the surface of the chart,
+     *                                                                      while on a mobile device. The function returns true if the touch is
+     *                                                                      considered to be within the "profile" of the bar chart, and false otherwise.
+     *                                                                      The function takes four arguments:
+     *                                                                        cursorValue - This the value, specified in the same units as the original
+     *                                                                                      data, at the touch event's position. This value is
+     *                                                                                      automatically calculated by the 'move' behavior,
+     *                                                                                      by inverting the scale used for the bar charts' extent.
+     *                                                                        datum -       This is the data value at the touch event's position,
+     *                                                                                      against which you are comparing the profile. Since data
+     *                                                                                      values all live in user-land, you should retrieve this
+     *                                                                                      datum yourself. Usually this can be done by using the
+     *                                                                                      inverted value from the other axis of the bar chart,
+     *                                                                                      and searching the data for the datum which matches that
+     *                                                                                      value. However, note that the datum argument can be
+     *                                                                                      undefined, in which case the touch is considered invalid and
+     *                                                                                      the test will return false.
+     *                                                                        accessor -    This is an accessor function for retrieving a numeric value
+     *                                                                                      from the datum. This function should be used to retrieve out
+     *                                                                                      of the datum the value against which cursorValue is compared.
+     *                                                                        threshold -   A small threshold, specified in datum units, i.e. in the units
+     *                                                                                      of the domain (NOT the range) of the scale function. When a bar
+     *                                                                                      value is very small, or 0, or NaN, it would be impossible to have
+     *                                                                                      a touch which is over the "profile" of this bar. So in those cases,
+     *                                                                                      we consider the touch to be within the profile if it and the data
+     *                                                                                      value are under this threshold. This number should be some small
+     *                                                                                      number in the data's domain, and will be compared against both
+     *                                                                                      cursorValue and the value accessed from the datum.
+     */
+    const elementFromEvent = evt => {
+      if (!isNull(evt) && defined(evt)) {
+        return document.elementFromPoint(evt.clientX, evt.clientY);
+      }
+      return null;
+    };
+    const datumFromPannableElement = element => {
+      if (!isNull(element)) {
+        const selection = d3.select(element);
+        if (!isNull(selection.attr("data-sszvis-behavior-pannable"))) {
+          const datum = selection.datum();
+          if (defined(datum)) {
+            return datum;
+          }
+        }
+      }
+      return null;
+    };
+    const datumFromPanEvent = panEvent => {
+      const element = elementFromEvent(panEvent);
+      return datumFromPannableElement(element);
+    };
+
+    /**
+     * Panning behavior
+     *
+     * This behavior is used for adding "panning" functionality to a set of chart elements.
+     * The "panning" functionality refers to a combination of mouseover and touch responsiveness,
+     * where on a mouse interaction an event is fired on hover, but the touch interaction is more
+     * complex. The idea is to sort of imitate the way a hover interaction works, but with only a
+     * finger. When a user starts a touch on an element which has this behavior enabled, the
+     * default scrolling behavior of the browser will be canceled. The user can then move
+     * their finger across the surface of the screen, onto other elements, and the scroll
+     * will be canceled. When the finger moves onto other elements with this behavior attached,
+     * the event will be fired. Meanwhile, if the user starts the interaction somewhere outside
+     * an element, the scroll will happen as usual, and if they move onto an activated element,
+     * no event will be fired and the scrolling will continue.
+     *
+     * This behavior is applied to all the children of a selection which match the elementSelector
+     * property. Event listeners are attached to each of the child elements. The elementSelector
+     * property is necessary to know which elements to attach to (and therefore to also avoid
+     * attaching event listeners to elements which shouldn't be interaction-active).
+     *
+     * @module sszvis/behavior/panning
+     *
+     * @property {String} elementSelector    This should be a string selector that matches child
+     *                                       elements of the selection on which this component
+     *                                       is rendered using the .call(component) pattern. All
+     *                                       child elements will have the panning event listeners
+     *                                       attached to them.
+     * @property {String, Function} on       The .on() method should specify an event name and a handler
+     *                                       function for that event. The supported events are:
+     *                                       'start' - when the interaction starts on an element.
+     *                                       'pan' - when the user pans on the same element or onto another
+     *                                       element (note, no 'start' event will be fired when the user
+     *                                       pans with a touch from one element onto another, since this
+     *                                       behavior is too difficult to test for and emulate).
+     *                                       'end' - when the interaction with an element ends.
+     *
+     * @return {d3.component}
+     */
+    function panning() {
+      const event = d3.dispatch("start", "pan", "end");
+      const panningComponent = component().prop("elementSelector").render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const elements = selection.selectAll(props.elementSelector);
+        elements.attr("data-sszvis-behavior-pannable", "").classed("sszvis-interactive", true).on("mouseenter", function (...args) {
+          if (this) event.apply("start", this, args);
+        }).on("mousemove", function (...args) {
+          if (this) event.apply("pan", this, args);
+        }).on("mouseleave", function (...args) {
+          if (this) event.apply("end", this, args);
+        }).on("touchstart", function (...args) {
+          args[0].preventDefault();
+          if (this) event.apply("start", this, args);
+        }).on("touchmove", function (...args) {
+          args[0].preventDefault();
+          const datum = datumFromPanEvent(firstTouch(args[0]));
+          if (datum === null) {
+            if (this) event.apply("end", this, args);
+          } else {
+            if (this) event.apply("pan", this, args);
+          }
+        }).on("touchend", function (...args) {
+          if (this) event.apply("end", this, args);
+        });
+      });
+      // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler callback
+      // to never. Narrowing to the three event names would type the callback properly but would also
+      // reject the namespaced typenames d3 accepts at runtime, such as "pan.tooltip".
+      panningComponent.on = (...args) => {
+        const value = event.on.apply(event, args);
+        return value === event ? panningComponent : value;
+      };
+      return panningComponent;
+    }
+
+    /**
+     * Voronoi behavior
+     *
+     * The voronoi behavior adds an invisible layer of voronoi cells to a chart. The voronoi cells are calculated
+     * based on the positions of the data objects which should be bound to the interaction layer before this behavior
+     * is called on it. Each voronoi cell is associated with one data object, and this data object is passed to the event
+     * callback functions.
+     *
+     * Like other behavior components, this behavior adds an invisible layer over the chart,
+     * which the users interact with using touch or mouse actions. The behavior component then interprets
+     * these interactions, and calls the relevant event handler callback functions. These callback functions are
+     * passed values which represent data-space information about the nature of the interaction.
+     * That last sentence was intentionally vague, because different behaviors operate in slightly different ways.
+     *
+     * The voronoi behavior expects to find an array of data already bound to the interaction layer. Each datum should
+     * represent a point, and these points are used as the focal points of the construction of voronoi cells. These data
+     * are also associated with the voronoi cells, so that when a user interacts with them, the datum and its index within the
+     * bound data are passed to the callback functions. This component extends a d3.dispatch instance.
+     *
+     * The event handler functions are only called when the event happens within a certain distance
+     * (see MAX_INTERACTION_RADIUS_SQUARED in this file) from the voronoi area's center.
+     *
+     * @module sszvis/behavior/voronoi
+     *
+     * @property {function} x                         Specify an accessor function for the x-position of the voronoi point
+     * @property {function} y                         Specify an accessor function for the y-position of the voronoi point
+     * @property {array[array, array]} bounds         Specify the bounds of the voronoi area. This is essential to the construction of voronoi cells
+     *                                                using the d3.vornoi geom object. The bounds should determine the chart area over which you would like
+     *                                                voronoi cells to be active. Note that if not specified, the voronoi cells will be very large.
+     * @property {boolean} debug                      Whether the component is in debug mode. Being in debug mode renders the voroni cells obviously
+     * @property {string and function} on             The .on() method should specify an event name and an event handler function.
+     *                                                Possible event names are:
+     *                                                'over' - when the user interacts with a voronoi area, either with a mouseover or touchstart
+     *                                                'out' - when the user ceases to interact with a voronoi area, either with a mouseout or touchend
+     *                                                All event handler functions are passed the datum which is the center of the voronoi area.
+     *                                                Note: previously, event handlers were also passed the index of the datum within the dataset.
+     *                                                However, this is no longer the case, due to the difficulty of inferring that information when hit
+     *                                                testing a touch interaction on arbitrary rendered elements in the scene. In addition, the 'out' event
+     *                                                used to be passed the datum itself, but this is no longer the case, also having to do with the impossibility
+     *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
+     *
+     */
+    function voronoi() {
+      const event = d3.dispatch("over", "out");
+      const voronoiComponent = component().prop("x").prop("y").prop("bounds").prop("debug").render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        if (!props.bounds) {
+          error("behavior.voronoi - requires bounds");
+          return;
+        }
+        const delaunay = d3.Delaunay.from(data, d => props.x(d), d => props.y(d));
+        const voronoiDiagram = delaunay.voronoi(props.bounds);
+        const polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoiDiagram.cellPolygons()).join("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
+        polys.attr("d", d => `M${d.join("L")}Z`).attr("fill", "transparent").on("mouseover", function (e) {
+          const parent = this.parentNode;
+          if (!parent) return;
+          const position = d3.pointer(e, parent);
+          const datumIdx = delaunay.find(position[0], position[1]);
+          if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])]) && this) event.apply("over", this, [e, data[datumIdx]]);
+        }).on("mousemove", function (e) {
+          const parent = this.parentNode;
+          if (!parent) return;
+          const position = d3.pointer(e, parent);
+          const datumIdx = delaunay.find(position[0], position[1]);
+          if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
+            if (this) event.apply("over", this, [e, data[datumIdx]]);
+          } else {
+            if (this) event.apply("out", this, [e]);
+          }
+        }).on("mouseout", function (...args) {
+          if (this) event.apply("out", this, args);
+        }).on("touchstart", function (e) {
+          const parent = this.parentNode;
+          if (!parent) return;
+          const firstTouch$1 = firstTouch(e);
+          if (!firstTouch$1) return;
+          if (!hasFiniteCoordinates(firstTouch$1)) return;
+          const position = d3.pointer(firstTouch$1, parent);
+          const datumIdx = delaunay.find(position[0], position[1]);
+          if (nearPoint(position, [props.x(data[datumIdx]), props.y(data[datumIdx])])) {
+            e.preventDefault();
+            if (this) event.apply("over", this, [e, data[datumIdx]]);
+            const pan = panEvent => {
+              // Extract the touch from the new touchmove event, not the original touchstart event
+              const touchEvent = firstTouch(panEvent);
+              if (!touchEvent) return;
+              // Ahead of the presence test below, which throws rather than misses on a
+              // non-finite coordinate: `document.elementFromPoint` takes a WebIDL `double`
+              // and rejects a non-finite one.
+              if (!hasFiniteCoordinates(touchEvent)) return;
+              // Is the finger still over a cell of *this* layer? The pan has to answer that
+              // for itself, because touch capture keeps delivering `touchmove` to the
+              // `touchstart` target no matter what is under the finger, while the browser
+              // retargets the mouse for free. Dropping the test would not align the two paths
+              // but part them: an overlay over the mesh stops the mouse path dead - the cell's
+              // handler never fires - and the pan would keep reporting a datum through it.
+              // The shared `data-sszvis-behavior-pannable` attribute cannot answer the question
+              // either - `behavior/panning` writes it too, so any other pannable element in the
+              // chart would read as "still here" - so test for a voronoi cell whose parent is
+              // this layer's own group.
+              const panTarget = elementFromEvent(touchEvent);
+              if (panTarget === null || !panTarget.hasAttribute("data-sszvis-behavior-voronoi") || panTarget.parentNode !== parent) {
+                if (this) event.apply("out", this, [panEvent]);
+                return;
+              }
+              // Resolve the datum by re-running `delaunay.find` on the panned position rather
+              // than reading `data[polygon.index]` off the cell under the finger. The two agree
+              // in a cell's interior but can disagree right at a cell boundary, where the
+              // browser's hit test and the mesh round differently; `find` answers for where the
+              // finger actually is, which is what the mouse path does and what keeps a finger
+              // on the seam between two cells reporting the same datum the mouse would.
+              const panPosition = d3.pointer(touchEvent, parent);
+              const panDatumIdx = delaunay.find(panPosition[0], panPosition[1]);
+              const panDatum = data[panDatumIdx];
+              if (nearPoint(panPosition, [props.x(panDatum), props.y(panDatum)])) {
+                // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
+                // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
+                // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
+                // we want to avoid.
+                if (panEvent.cancelable) {
+                  panEvent.preventDefault();
+                }
+                if (this) event.apply("over", this, [panEvent, panDatum]);
+              } else {
+                if (this) event.apply("out", this, [panEvent]);
+              }
+            };
+            const end = endEvent => {
+              if (this) event.apply("out", this, [endEvent]);
+              d3.select(this).on("touchmove", null).on("touchend", null);
+            };
+            d3.select(this).on("touchmove", pan).on("touchend", end);
+          }
+        });
+        if (props.debug) {
+          polys.attr("stroke", "#f00");
+        }
+      });
+      // d3-dispatch's `on` is variadic over typenames, so the args tuple types the handler
+      // callback to never. Narrowing to "over" | "out" would type the callback properly but would
+      // also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
+      voronoiComponent.on = (...args) => {
+        const value = event.on.apply(event, args);
+        return value === event ? voronoiComponent : value;
+      };
+      return voronoiComponent;
+    }
+    /**
+     * A `TouchEvent` carries no `clientX`/`clientY` of its own in any browser - it extends `UIEvent`,
+     * not `MouseEvent`, so the position lives on the `Touch` inside `event.touches` - and a malformed
+     * `Touch` can reach a handler carrying neither. Both consumers of a touch position here reject a
+     * non-finite coordinate rather than degrading: `pointer()` throws setting a non-finite
+     * `SVGPoint.x`, and `document.elementFromPoint` takes a WebIDL `double`. `behavior/move` guards
+     * the same shape for the same reason.
+     *
+     * `Number.isFinite` does not coerce, so it rejects a missing coordinate as well as an infinite
+     * one; a `typeof` test alongside it would never change the answer.
+     */
+    function hasFiniteCoordinates(touch) {
+      return Number.isFinite(touch.clientX) && Number.isFinite(touch.clientY);
+    }
+    // Perform distance calculations in units squared to avoid a costly Math.sqrt
+    const MAX_INTERACTION_RADIUS_SQUARED = 15 ** 2;
+    /**
+     * Both points are in the coordinate space of the group the behaviour was called on, which is
+     * also the space the `x` and `y` accessors report positions in. Comparing them there rather
+     * than in screen pixels is what makes the hit test independent of where the group sits on the
+     * page, and correct when an ancestor transform scales the chart.
+     */
+    function nearPoint(position, point) {
+      const dx = position[0] - point[0];
+      const dy = position[1] - point[1];
+      return dx * dx + dy * dy < MAX_INTERACTION_RADIUS_SQUARED;
+    }
+
+    /**
+     * A collection of utilities to measure elements
+     *
+     * @module sszvis/measure
+     */
+    /**
+     * measureDimensions
+     *
+     * Calculates the width of the first DOM element defined by a CSS selector string,
+     * a DOM element reference, or a d3 selection. If the DOM element can't be
+     * measured `undefined` is returned for the width. Returns also measurements of
+     * the screen, which are used by some responsive components.
+     *
+     * @param  {string|Element|d3.selection} arg The element to measure
+     *
+     * @return {DimensionMeasurement} The measurement of the width of the element, plus dimensions of the screen
+     *                  The returned object contains:
+     *                      width: {number|undefined} The width of the element
+     *                      screenWidth: {number} The innerWidth of the screen
+     *                      screenHeight: {number} The innerHeight of the screen
+     */
+    const measureDimensions = arg => {
+      const node = measurableNode(arg);
+      return {
+        width: node ? node.getBoundingClientRect().width : undefined,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight
+      };
+    };
+    /**
+     * The element a MeasurableElement refers to, or null when there is nothing to measure.
+     *
+     * Takes `unknown` rather than the generic parameter type: the three cases are told apart at
+     * runtime, and callers do pass null - the width is reported as undefined for it, which
+     * test/measure.test.ts pins.
+     */
+    function measurableNode(arg) {
+      if (isString(arg)) return d3.select(arg).node();
+      if (isSelection(arg)) {
+        // A selection's node may be any BaseType, but only an Element can be measured.
+        const selected = arg.node();
+        return selected instanceof Element ? selected : null;
+      }
+      return arg instanceof Element ? arg : null;
+    }
+    /**
+     * measureText
+     *
+     * Calculates the width of a string given a font size and a font face. It might
+     * be more convenient to use a preset based on this function that has the font
+     * size and family already set.
+     *
+     * @param {number} fontSize The font size in pixels
+     * @param {string} fontFace The font face ("Arial", "Helvetica", etc.)
+     * @param {string} text The text to measure
+     * @returns {number} The width of the text
+     *
+     * @example
+     * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
+     **/
+    const measureText = (() => {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("[measureText] Could not acquire a 2d canvas context");
+      const cache = {};
+      return (fontSize, fontFace, text) => {
+        const key = [fontSize, fontFace, text].join("-");
+        context.font = `${fontSize}px ${fontFace}`;
+        return cache[key] || context.measureText(text).width;
+      };
+    })();
+    /**
+     * measureAxisLabel
+     *
+     * A preset to measure the widths of axis labels.
+     *
+     * @param {string} text The text to measure
+     * @returns {number} The width of the text
+     *
+     * @example
+     * const labelWidth = sszvis.measureAxisLabel("Hello!")
+     */
+    const measureAxisLabel = text => measureText(10, "Arial, sans-serif", text);
+    /**
+     * measureLegendLabel
+     *
+     * A preset to measure the widths of legend labels.
+     *
+     * @param {string} text The text to measure
+     * @returns {number} The width of the text
+     *
+     * @example
+     * const labelWidth = sszvis.measureLegendLabel("Hello!")
+     */
+    const measureLegendLabel = text => measureText(12, "Arial, sans-serif", text);
+
+    /**
+     * Bounds
+     *
+     * Creates a bounds object to help with the construction of d3 charts
+     * that follow the d3 margin convention. The result of this function
+     * is consumed by sszvis.createSvgLayer and sszvis.createHtmlLayer.
+     *
+     * @module sszvis/bounds
+     *
+     * @see http://bl.ocks.org/mbostock/3019563
+     *
+     * @property {number} DEFAULT_WIDTH The default width used across all charts
+     * @property {number} RATIO The default side length ratio
+     *
+     * @param {Object} bounds Specifies the bounds of a chart area. Valid properties are:
+     *   @property {number} bounds.width The total width of the chart (default: DEFAULT_WIDTH)
+     *   @property {number} bounds.height The total height of the chart (default: height / RATIO)
+     *   @property {number} bounds.top Top padding (default: 0)
+     *   @property {number} bounds.left Left padding (default: 1)
+     *   @property {number} bounds.bottom Bottom padding (default: 0)
+     *   @property {number} bounds.right Right padding (default: 1)
+     * @param {string|d3.selection} [selection] A CSS selector or d3 selection that will be measured to
+     *                                          automatically calculate the bounds width and height using
+     *                                          the SSZVIS responsive aspect ratio calculation. Custom
+     *                                          width and height settings have priority over these auto-
+     *                                          matic calculations, so if they are defined, this argument
+     *                                          has no effect.
+     *                                          This argument is optional to maintain backwards compatibility.
+     *
+     * @return {Object}              The returned object will preserve the properties width and height, or give them default values
+     *                               if unspecified. It will also contain 'innerWidth', which is the width minus left and right padding,
+     *                               and 'innerHeight', which is the height minus top and bottom padding. And it includes a 'padding' sub-object,
+     *                               which contains calculated or default values for top, bottom, left, and right padding.
+     *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
+     */
+    const DEFAULT_WIDTH = 516;
+    function bounds(arg1, arg2) {
+      let _bounds = {};
+      let selection = null;
+      if (arguments.length === 0) {
+        _bounds = {};
+      } else if (arguments.length === 1) {
+        if (isObject(arg1)) {
+          _bounds = arg1;
+        } else if (isSelection(arg1)) {
+          _bounds = {};
+          selection = arg1;
+        } else {
+          _bounds = {};
+          selection = d3.select(arg1);
+        }
+      } else {
+        _bounds = arg1;
+        selection = isSelection(arg2) ? arg2 : d3.select(arg2);
+      }
+      // All padding sides have default values
+      const padding = {
+        top: either(_bounds.top, 0),
+        right: either(_bounds.right, 1),
+        bottom: either(_bounds.bottom, 0),
+        left: either(_bounds.left, 1)
+      };
+      // Width is calculated as: _bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
+      const dimensions = defined(selection) ? measureDimensions(selection) : {
+        width: DEFAULT_WIDTH,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight
+      };
+      const width = either(_bounds.width, dimensions.width ?? DEFAULT_WIDTH);
+      // Create measurement object for aspectRatioAuto that matches the Measurement interface
+      const measurement = {
+        width: width,
+        screenHeight: dimensions.screenHeight
+      };
+      const innerHeight = aspectRatioAuto(measurement);
+      const height = either(_bounds.height, innerHeight + padding.top + padding.bottom);
+      return {
+        innerHeight: height - padding.top - padding.bottom,
+        innerWidth: width - padding.left - padding.right,
+        padding,
+        height,
+        width,
+        screenWidth: dimensions.screenWidth,
+        screenHeight: dimensions.screenHeight
+      };
+    }
+    // This is the default aspect ratio. It is defined as: width / innerHeight
+    // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
+    // To calculate the default innerHeight, do width / ASPECT_RATIO
+    // @deprecated Since the responsive revisions, the default aspect ratio has changed,
+    //             so that it is now responsive to the container width.
+    //             This property is preserved for compatibility reasons.
+    const RATIO = 16 / 9;
+    /* Helper functions
+    ----------------------------------------------- */
+    function either(val, fallback) {
+      return val === undefined ? fallback : val;
+    }
+
+    /**
+     * Cascade module
+     *
+     * @module sszvis/cascade
+     *
+     * sszvis.cascade is a module that can be useful for creating nested data structures.
+     * It can be used in similar ways to d3.nest, but should not be conflated with d3.nest,
+     * since it provides different behavior.
+     *
+     * The cascade class is not a data structure. Rather, it is used to create a data structue
+     * generator. An instance of the cascade class should be configured to specify the desired
+     * characteristics of the resulting data structure, and then applied to a flat array of
+     * objects in order to generate the data structure.
+     *
+     * Fundamental to the cascade class is the concept of "groupBy", which is an operation that
+     * transforms a flat array of data into a nested data structure. It does this by
+     * passing each value in the flat array through an accessor function, and "groping" those
+     * elements based on the return value of that function. Every element in the resulting groups
+     * will have produced the same value when passed into the accessor function.
+     *
+     * For example, if a flat data set contains a number of elements, and some have a value "city = Zurich",
+     * while others have a value "city = Basel", performing a groupBy operation on this data set
+     * and passing a predicate function which returns the value of the "city" property of these objects
+     * will form the objects into groups where all objects in one group have "city = Zurich", and all objects
+     * in the other group have "city = Basel".
+     *
+     * The Cascade module abstracts the concept of "groupBy" on multiple levels, and provides the option
+     * to arrange the resultant groups in different ways.
+     *
+     * There are two options for the form of the resulting groups. (This is where sszvis.cascade
+     * diverges in behavior from d3.nest, which offers two options, but they must be the same through
+     * the entire data structure):
+     *
+     * In one version, the groups are formed into a plain Javascript object with key -> value pairs. The keys are
+     * the set of results from the grouping function. (In our example, the keys would be "Zurich" and "Basel")
+     * In this implementation, the values are each arrays of elements which share the value of the key function.
+     * However, these objects may be nested arbitrarily deep. If multiple layers of objects are specified, then the
+     * values will themselves be objects with key -> value pairs, and so on. The final layer of objects will have
+     * arrays for values, where each element in the arrays is a data object which shares values for all of the specified
+     * key properties with the other objects in its array.
+     *
+     * Alternatively, the input array of objects can be grouped into an array of groups, where the groups
+     * contain data values which all share the same value for a certain key property. These, too, can be nested.
+     * The sub-groups may be formed as arrays, where each element in the next level is grouped
+     * according to the same principle, but with a different key function. Alternatively, the groups may be
+     * objects, grouped according to the principle described in the first version. It is up to the user of the
+     * class to specify the extent and nature of this nesting. If an array of groups is the last level of the cascade,
+     * its values will be arrays of data values.
+     *
+     * At the base of the cascade, regardless of the types of the levels, will be arrays of data objects. These arrays
+     * can also be thought of as containing the leaves of the tree structure.
+     *
+     * Instances of this class are configured using three methods: "objectBy", "arrayBy", and "sort". They are used by
+     * calling the "apply" method, passing a flat array of data objects. The first three methods return the instance
+     * to enable method chaining, while "apply" returns the nested data structure.
+     *
+     * @method objectBy         Takes as argument a predicate function which is called on each element in an input array. The
+     *                          return values of this function are used to create an object with key -> value pairs, where the keys
+     *                          are the results of the calls to the predicate function and the values are a further layer of the cascade.
+     * @method arrayBy          Takes as argument a predicate function which is called on each element in an input array. The
+     *                          return values of this function are used to create an array, where each element of the array
+     *                          is a further layer of the cascade. arrayBy also takes an optional second parameter, which specifys
+     *                          a sorting function. If provided, groups in the resulting array will be sorted by passing the key values
+     *                          of the groups through the sorting function. For example, if an alphabetical sort function is passed
+     *                          as the second parameter to an arrayBy call in the example above, the resulting array will be sorted
+     *                          such that the first group is the one with "city = Basel" and the second group is the one with "city = Zurich".
+     *                          The sort function should take the usual form of a function passed to Array.prototype.sort().
+     * @method sort             This method specifies a sort function for the very last layer of the cascade, which is always arrays of data objects.
+     *                          the sort function passed to this method should accept data objects as values.
+     *
+     * @returns                 An instance of sszvis.cascade
+     */
+    function groupBy(data, keyFunc) {
+      const group = {};
+      let key;
+      for (let i = 0, l = data.length, value; i < l; ++i) {
+        value = data[i];
+        key = keyFunc(value);
+        const keyStr = String(key);
+        if (group[keyStr]) {
+          group[keyStr].push(value);
+        } else {
+          group[keyStr] = [value];
+        }
+      }
+      return group;
+    }
+    function groupEach(data, func) {
+      for (const prop in data) {
+        func(data[prop], prop);
+      }
+    }
+    function arrEach(arr, func) {
+      for (let i = 0, l = arr.length; i < l; ++i) {
+        func(arr[i], i);
+      }
+    }
+    function cascade() {
+      const _cascade = {};
+      const keys = [];
+      // Stored as a string sorter: the grouping stringifies its keys, so that is what a
+      // sorter is handed at runtime whatever K the caller declared.
+      const sorts = [];
+      let valuesSort;
+      function make(data, depth) {
+        if (depth >= keys.length) {
+          if (valuesSort) data.sort(valuesSort);
+          return data;
+        }
+        const sorter = sorts[depth];
+        const key = keys[depth];
+        const nextDepth = depth + 1;
+        const grouped = groupBy(data, key.func);
+        if (key.type === "obj") {
+          const obj = {};
+          groupEach(grouped, (value, k) => {
+            obj[k] = make(value, nextDepth);
+          });
+          return obj;
+        }
+        // key.type is "obj" | "arr", so the remaining case is "arr".
+        {
+          const arr = [];
+          if (sorter) {
+            const groupKeys = Object.keys(grouped).sort(sorter);
+            arrEach(groupKeys, k => {
+              arr.push(make(grouped[k], nextDepth));
+            });
+          } else {
+            groupEach(grouped, value => {
+              arr.push(make(value, nextDepth));
+            });
+          }
+          return arr;
+        }
+      }
+      _cascade.apply = data => make(data, 0);
+      _cascade.objectBy = accessor => {
+        keys.push({
+          type: "obj",
+          func: accessor
+        });
+        return _cascade;
+      };
+      _cascade.arrayBy = (accessor, sorter) => {
+        keys.push({
+          type: "arr",
+          func: accessor
+        });
+        if (sorter) sorts[keys.length - 1] = sorter;
+        return _cascade;
+      };
+      _cascade.sort = sorter => {
+        valuesSort = sorter;
+        return _cascade;
+      };
+      return _cascade;
+    }
+
+    /**
+     * @module sszvis/svgUtils/toFinite
+     *
+     * Coerces a geometry value to a finite number, substituting 0 for anything else.
+     *
+     * Coercion first, so a numeric string still works; the finiteness check then catches NaN
+     * and Infinity as well as the values that do not coerce at all.
+     *
+     * Shared by the mark components - bar, dot and groupedBars - which are expected to agree on
+     * what an unusable geometry value means. It is deliberately not re-exported from
+     * svgUtils/index.js: that barrel is public API, and this is an internal guard.
+     */
+    function toFinite(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : 0;
+    }
+
+    /**
+     * Bar component
+     *
+     * The bar component is a general-purpose component used to render rectangles, including
+     * bars for horizontal and vertical standard and stacked bar charts, bars in the population
+     * pyramids, and the boxes of the heat table.
+     *
+     * The input data should be an array of data values, where each data value contains the information
+     * necessary to render a single rectangle. The x-position, y-position, width, and height of each rectangle
+     * are then extracted from the data objects using accessor functions.
+     *
+     * In addition, the user can specify fill and stroke accessor functions. When called, these functions
+     * are given each rectangle's data object, and should return a valid fill or stroke color to be applied
+     * to the rectangle.
+     *
+     * The x, y, width, height, fill, and stroke properties may also be specified as constants.
+     *
+     * @module sszvis/component/bar
+     *
+     * @template T The type of the data values bound to the bars
+     *
+     * @property {number, function} x             the x-value of the rectangles. Becomes a functor.
+     * @property {number, function} y             the y-value of the rectangles. Becomes a functor.
+     * @property {number, function} width         the width-value of the rectangles. Becomes a functor.
+     * @property {number, function} height        the height-value of the rectangles. Becomes a functor.
+     * @property {string, function} fill          the fill-value of the rectangles. Becomes a functor.
+     * @property {string, function} stroke        the stroke-value of the rectangles. Becomes a functor.
+     * @property {boolean} centerTooltip          Whether or not to center the tooltip anchor within the bar.
+     *                                            The default tooltip anchor position is at the top of the bar,
+     *                                            centered in the width dimension. When this property is true,
+     *                                            the tooltip anchor will also be centered in the height dimension.
+     * @property {Array<Number>} tooltipAnchor    Where, relative to the box formed by the bar, to position the tooltip
+     *                                            anchor. This property is overriden if centerTooltip is true. The
+     *                                            value should be a two-element array, [x, y], where x is the position (in 0 - 1)
+     *                                            of the tooltip in the width dimension, and y is the position (also range 0 - 1)
+     *                                            in the height dimension. For example, the upper left corner would be [0, 0],
+     *                                            the center of the bar would be [0.5, 0.5], the middle of the right side
+     *                                            would be [1, 0.5], and the lower right corner [1, 1]. Used by, for example,
+     *                                            the pyramid chart. Entries beyond the first two are ignored, and an array
+     *                                            with fewer than two entries produces a NaN coordinate rather than a warning.
+     * @property {boolean} transition             Whether or not to transition the geometry of the bar component when it
+     *                                            changes. Defaults to true, and eases over 300ms.
+     *
+     * Note: entering bars receive their geometry on the join, before the transition starts, so they
+     * appear in place rather than animating up from nothing. Only updates animate. fill and stroke are
+     * deliberately not transitioned - a colour change jumps - because the colour scales these charts
+     * use are categorical and interpolating between two category colours reads as a third category.
+     *
+     * Note: the geometry accessors are guarded: x, y, width and height must be finite numbers, so NaN,
+     * Infinity, undefined, null and anything that does not coerce to a finite number all become 0. A
+     * value that does coerce is normalised to its number, so a numeric string is written as a number.
+     * See test/component/bar.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    function bar() {
+      return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("fill", functor).prop("stroke", functor).prop("centerTooltip").prop("tooltipAnchor").prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const xAt = (datum, index) => toFinite(props.x(datum, index));
+        const yAt = (datum, index) => toFinite(props.y(datum, index));
+        const wAt = (datum, index) => toFinite(props.width(datum, index));
+        const hAt = (datum, index) => toFinite(props.height(datum, index));
+        const fillAt = (datum, index) => colorToString(props.fill?.(datum, index));
+        const strokeAt = (datum, index) => colorToString(props.stroke?.(datum, index));
+        // Entering bars are given their geometry on the join, so they are in place before any
+        // transition starts. The geometry is then applied exactly once more - to the transition
+        // when there is one, and to the plain selection otherwise - so an update tweens from its
+        // previous value instead of from the value it already holds.
+        //
+        // Matching on the component's own class rather than the generic .sszvis-bar one keeps a
+        // foreign rect out of the join - groupedBars draws rects under the generic class, and the
+        // join has no key function, so an unscoped descendant selector would adopt one of those,
+        // or one left over from an earlier chart, as bar zero and shift the whole series by one.
+        // The generic class stays on the node, so no CSS selector changes meaning.
+        const bars = selection.selectAll("rect.sszvis-bar-rect").data(data).join(enter => enter.append("rect").attr("class", "sszvis-bar sszvis-bar-rect").attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt)).attr("fill", fillAt).attr("stroke", strokeAt);
+        if (props.transition) {
+          bars.transition(defaultTransition(OWN_TRANSITION)).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+        } else {
+          // A transition scheduled by an earlier render would keep ticking and overwrite the
+          // geometry written here, so `transition(false)` is only deterministic once any
+          // in-flight tween is interrupted. This matters on a resize or an event that lands
+          // mid-animation. groupedBars and pie both do this.
+          //
+          // Only the interrupt is needed here, because every geometry attribute is recomputed
+          // from the data, which makes this write authoritative once the stale tween is
+          // stopped; see pie.ts for the attrTween case, which additionally has to resume from
+          // the in-flight value. The transition branch needs nothing: d3 replaces a transition
+          // of the same name on the same element, so scheduling supersedes the previous one.
+          //
+          // Interrupted by name, so a transition the consumer scheduled on these rects - which
+          // is unnamed, as a bare selection.transition() is - keeps running. Only the geometry
+          // this component owns is stopped.
+          bars.interrupt(OWN_TRANSITION).attr("x", xAt).attr("y", yAt).attr("width", wAt).attr("height", hAt);
+        }
+        // Tooltip anchors
+        let tooltipPosition;
+        if (props.centerTooltip) {
+          tooltipPosition = (d, i) => [xAt(d, i) + wAt(d, i) / 2, yAt(d, i) + hAt(d, i) / 2];
+        } else if (props.tooltipAnchor) {
+          const uv = props.tooltipAnchor.map(value => Number.parseFloat(String(value)));
+          tooltipPosition = (d, i) => [xAt(d, i) + uv[0] * wAt(d, i), yAt(d, i) + uv[1] * hAt(d, i)];
+        } else {
+          tooltipPosition = (d, i) => [xAt(d, i) + wAt(d, i) / 2, yAt(d, i)];
+        }
+        const ta = tooltipAnchor().position(tooltipPosition);
+        selection.call(ta);
+      });
+    }
+
+    /**
+     * Dot component
+     *
+     * Used to render small circles, where each circle corresponds to a data value. The dot component
+     * is built on rendering svg circles, so the configuration properties are directly mapped to circle attributes.
+     *
+     * The input data should be an array of data values, where each data value contains the information
+     * necessary to render a single circle. The x-position, y-position and radius are extracted from the
+     * data objects using accessor functions, as are the fill and stroke colors. Every property may also
+     * be specified as a constant. One tooltip anchor is rendered per datum, as an invisible 1x1 rect at
+     * the center of the circle.
+     *
+     * @module sszvis/component/dot
+     *
+     * @template T The type of the data values bound to the dots
+     *
+     * @property {number, function} x               An accessor function or number for the x-position of the dots,
+     *                                              in pixels. Becomes a functor. Required: leaving it unset throws
+     *                                              before anything is rendered.
+     * @property {number, function} y               An accessor function or number for the y-position of the dots,
+     *                                              in pixels. Becomes a functor. Required, like x.
+     * @property {number, function} radius          An accessor function or number for the radius of the dots, in
+     *                                              pixels. Becomes a functor. Required, like x and y - an unwritten
+     *                                              r attribute would default to 0 and render a full set of
+     *                                              invisible dots. A radius of 0 is still explicitly allowed, and
+     *                                              is how docs/scatterplot-over-time hides dots outside the
+     *                                              selected period.
+     * @property {string, function} stroke          An accessor function or string for the stroke color of the dots.
+     *                                              Becomes a functor. When unset, no stroke attribute is written
+     *                                              and the circles fall back to the SVG and CSS defaults.
+     * @property {string, function} fill            An accessor function or string for the fill color of the dots.
+     *                                              Same as stroke.
+     * @property {boolean} transition               Whether or not to transition the geometry of the dot component
+     *                                              when it changes. Defaults to true, and eases over 300ms.
+     *
+     * Note: the geometry accessors are guarded, in the same spirit as bar's guard: cx, cy and r must be
+     * finite numbers, so NaN - the usual result of feeding a scale a value outside its domain - along
+     * with Infinity, undefined, null and anything that does not coerce to a finite number all become 0.
+     * A negative radius is clamped to 0, since a negative r is an SVG error and would drop the circle
+     * altogether. The guard means a bad value parks one dot at the origin rather than removing it
+     * silently. fill and stroke are not guarded; an accessor may return null or undefined there to leave
+     * the attribute off.
+     *
+     * Note: entering dots receive their geometry on the join, before the transition starts, so they
+     * appear in place rather than animating in from nothing. Only updates animate. fill and stroke are
+     * deliberately not transitioned - a colour change jumps - because the colour scales these charts
+     * use are categorical and interpolating between two category colours reads as a third category.
+     *
+     * Note: x, y and radius are read twice per datum on every render - once for the circle and once for
+     * the tooltip anchor - plus a third time when transitioning, so accessors should be cheap and free
+     * of side effects. The anchor ignores the radius, and is created and positioned even for a dot
+     * hidden with radius 0, which leaves a live tooltip target on an invisible dot. See
+     * test/component/dot.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Reports a required property the caller left unset, naming both the component and the
+     * property. Called before the data join, so a failed configuration leaves no half-rendered
+     * circles or anchors behind, and fails on the first render rather than on the first render
+     * that happens to have data.
+     */
+    function required$4(value, name) {
+      if (value === undefined) {
+        throw new Error(`[dot] the ${name} property is required`);
+      }
+      return value;
+    }
+    function dot() {
+      return component().prop("x", functor).prop("y", functor).prop("radius", functor).prop("stroke", functor).prop("fill", functor).prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const xProp = required$4(props.x, "x");
+        const yProp = required$4(props.y, "y");
+        const radiusProp = required$4(props.radius, "radius");
+        const xAt = (datum, index) => toFinite(xProp(datum, index));
+        const yAt = (datum, index) => toFinite(yProp(datum, index));
+        // A negative r is invalid per the SVG spec and drops the circle, so it is clamped
+        // rather than passed on.
+        const rAt = (datum, index) => Math.max(0, toFinite(radiusProp(datum, index)));
+        const strokeAt = (datum, index) => colorToString(props.stroke?.(datum, index));
+        const fillAt = (datum, index) => colorToString(props.fill?.(datum, index));
+        // Entering circles are given their geometry on the join, so they are in place before
+        // any transition starts. The geometry is then applied exactly once more - to the
+        // transition when there is one, and to the plain selection otherwise - so an update
+        // tweens from its previous value instead of from the value it already holds.
+        const dots = selection.selectAll(".sszvis-circle").data(data).join(enter => enter.append("circle").classed("sszvis-circle", true).attr("cx", xAt).attr("cy", yAt).attr("r", rAt)).attr("stroke", strokeAt).attr("fill", fillAt);
+        if (props.transition) {
+          dots.transition(defaultTransition(OWN_TRANSITION)).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
+        } else {
+          // A transition scheduled by an earlier render would keep ticking and overwrite the
+          // geometry written here, so `transition(false)` is only deterministic once any
+          // in-flight tween is interrupted. Interrupted by name, so a transition the consumer
+          // scheduled on these circles keeps running.
+          dots.interrupt(OWN_TRANSITION).attr("cx", xAt).attr("cy", yAt).attr("r", rAt);
+        }
+        // Tooltip anchors
+        const anchorPosition = (datum, index) => [xAt(datum, index), yAt(datum, index)];
+        const ta = tooltipAnchor().position(anchorPosition);
+        selection.call(ta);
+      });
+    }
+
+    /**
+     * Grouped Bars component
+     *
+     * This component includes both the vertical and horizontal grouped bar chart components.
+     * Both are variations on the same concept, using the same grouping logic but rendered
+     * using different dimensions.
+     *
+     * The input to the grouped bar component should be an array of arrays, where each inner
+     * array contains the bars for a single group. Each of the inner arrays becomes a group, and
+     * each element in those inner arrays becomes a bar.
+     *
+     * In addition to the raw data, the user must provide other information necessary for calculating
+     * the layout of the groups of bars, namely the number of bars in each group (this component requires that
+     * all groups have the same number of bars), a scale for finding the offset of each group (usually an
+     * instance of d3.scaleBand), a width/height for groups, and position/dimension scales for the bars in the group.
+     * Note that the number of bars in each group and the group width/height determines how wide/tall each bar will be,
+     * and this is calculated internally to the groupedBars component.
+     *
+     * The groups are calculated and laid out entirely by the groupedBars component.
+     *
+     * @module sszvis/component/groupedBars/vertical
+     * @module sszvis/component/groupedBars/horizontal
+     * @template T The type of the data objects in the bar groups
+     *
+     * @property {scale} groupScale         This should be a scale function for determining the correct group offset of a member of a group.
+     *                                      This function is passed the group member, and should return a value for the group offset which
+     *                                      is the same for all members of the group. The within-group offset (which is different for each member)
+     *                                      is then added to this group offset in order to position the bars individually within the group.
+     *                                      So, for instance, if the groups are based on the "city" property, the groupScale should return
+     *                                      the same value for all data objects with "city = Zurich".
+     * @property {number} groupSize         This property tells groupedBars how many bars to expect for each group. It is used to assist in
+     *                                      calculating the within-group layout and size of the bars. This number is treated as the same for all
+     *                                      groups. Groups with less members than this number will have visible gaps. (Note that having less members
+     *                                      in a group is not the same as having a member with a missing value, which will be discussed later)
+     * @property {number} groupWidth        The width of the groups (vertical orientation). This value is treated as the same for all groups.
+     *                                      The width available to the groups is divided up among the bars.
+     * @property {number} groupHeight       The height of the groups (horizontal orientation). This value is treated as the same for all groups.
+     *                                      The height available to the groups is divided up among the bars.
+     * @property {number} groupSpace        The percentage of space between each bar within a group. (default: 0.05). Usually the default is fine here.
+     * @property {function} x               The x-position of the bars (horizontal orientation). This function is given a data value and the bar's
+     *                                      index within its group, and should return an x-value. Used for horizontal grouped bars.
+     * @property {function} y               The y-position of the bars (vertical orientation). This function is given a data value and the bar's
+     *                                      index within its group, and should return a y-value. Used for vertical grouped bars.
+     * @property {function} width           The width of the bars (horizontal orientation). This function is given a data value and the bar's
+     *                                      index within its group, and should return a width value. Used for horizontal grouped bars.
+     * @property {function} height          The height of the bars (vertical orientation). This function is given a data value and the bar's
+     *                                      index within its group, and should return a height value. Used for vertical grouped bars.
+     * @property {string, function} fill    A functor which gives the color for each bar (often based on the bar's group). This can be a string or a
+     *                                      function; a function is given a data value and the bar's index within its group.
+     * @property {string, function} stroke  The stroke color for each bar (default: none). As with fill, a function is given a data value and the
+     *                                      bar's index within its group.
+     * @property {function} defined         A predicate function which can be used to determine whether a bar has a defined value. (default: true).
+     *                                      Any bar for which this function returns false, meaning that it has an undefined (missing) value,
+     *                                      will be displayed as a faint "x" in the grouped bar chart. This is in order to distinguish bars with
+     *                                      missing values from bars with very small values, which would display as a very thin rectangle.
+     * @property {boolean} transition       Whether or not to transition the geometry of the bars when it changes.
+     *                                      Defaults to true, and eases over 300ms.
+     *
+     * Note: every consumer accessor - x, y, width, height, fill and stroke - is called with the bar's
+     * index within its group, which is the index inGroupScale is keyed on. That holds for every call
+     * site, including the cross-axis coordinate of the missing-value cross. This is a deliberate change
+     * from the pre-fix behaviour, where d3 supplied the index within the selection of bars it was
+     * applying the attribute to - the bars with a defined value, or the bars without one - so a group
+     * containing missing values could see the same datum handed two different indices in one render.
+     *
+     * Note: the geometry accessors are guarded. A value that is not a finite number - NaN,
+     * Infinity, undefined, null, or anything that does not coerce - becomes 0 rather than being
+     * written into an attribute, so a bad accessor return parks a bar at 0 instead of producing
+     * an invalid rect. The missing-value cross's translation is guarded the same way. fill and
+     * stroke are not guarded, because they are colours. This matches bar and dot.
+     *
+     * Note: each orientation supplies the along-group dimensions itself, so it never calls the
+     * consumer's accessors for them. Vertical grouped bars ignore x and width; horizontal grouped bars
+     * ignore y and height. Passing one of those has no effect and raises no error.
+     *
+     * Note: entering bars receive their geometry on the join, before the transition starts, so they
+     * appear in place rather than animating up from nothing. Only updates animate. fill and stroke are
+     * deliberately not transitioned, matching `bar` - a colour change jumps - because the colour scales
+     * these charts use are categorical and interpolating between two category colours reads as a third
+     * category. The missing-value cross is positioned by a translation on the bar unit, which is not
+     * transitioned either.
+     *
+     * @return {sszvis.component}
+     */
+    function createGroupedBarsComponent(config) {
+      return component().prop("groupScale").prop("groupSize").prop("groupWidth").prop("groupHeight").prop("groupSpace").groupSpace(0.05).prop("x", functor).prop("y", functor).prop("width").prop("height").prop("fill").prop("stroke").prop("defined", functor).defined(true).prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const inGroupScale = d3.scaleBand().domain(d3.range(props.groupSize)).padding(props.groupSpace).paddingOuter(0).rangeRound(config.inGroupRange(props));
+        const groups = selection.selectAll("g.sszvis-bargroup").data(data).join("g").classed("sszvis-bargroup", true);
+        const barUnits = groups.selectAll("g.sszvis-barunit").data(d => d).join("g").classed("sszvis-barunit", true);
+        // The bar's index within its group is recorded against the unit element rather than
+        // written onto the datum, so a datum object reused across groups is not aliased: it is
+        // the element that is unique per bar, not the caller's object. This also keeps the datum
+        // bound to .sszvis-barunit and to the bar's rect exactly the caller's own object, which
+        // consumers rely on - a mouseover handler on `.sszvis-barunit rect` receives it and may
+        // compare it by identity.
+        const groupIndexByUnit = new WeakMap();
+        barUnits.each(function (_d, i) {
+          groupIndexByUnit.set(this, i);
+        });
+        // Accessors are called with the bar's index within its group, which is never the index
+        // d3 would supply: a bar's own rect is joined one datum at a time, where d3 passes 0,
+        // and the missing-value cross is positioned on a filtered selection, where d3 passes
+        // the position among the missing bars only. The index recorded above is used instead.
+        //
+        // It is resolved from the element the callback is running on, so there are two shapes.
+        // A callback on the bar unit - the missing-value cross's transform - reads the unit
+        // directly; a callback on the bar's rect reads the rect's parent, which is the unit.
+        // The `each` above covers the whole barUnits join before any accessor runs, so every
+        // unit is in the map by the time an accessor can ask. A miss therefore means the DOM
+        // was changed underneath the component, and it throws rather than defaulting: a `?? 0`
+        // here would place the bar at its group's left edge, on top of whichever bar belongs
+        // there, which is the silent misrender the configs stopped risking.
+        //
+        // Note this is only about the index lookup. The configs still apply `?? 0` to the
+        // inGroupScale result, whose domain is range(groupSize), so a group holding more
+        // members than groupSize leaves its trailing bars with no band and stacks them at the
+        // group's left edge. That is long-standing behaviour for a group larger than declared
+        // - the component documents the under-full case as visible gaps and does not define
+        // the over-full one - and it is unchanged here.
+        const indexOfUnit = unit => {
+          const index = groupIndexByUnit.get(unit);
+          if (index === undefined) {
+            throw new Error("[groupedBars] a bar unit is missing its in-group index");
+          }
+          return index;
+        };
+        const indexOfRect = rect => indexOfUnit(rect.parentNode);
+        const configX = config.x(props, inGroupScale);
+        const configY = config.y(props, inGroupScale);
+        const configWidth = config.width(props, inGroupScale);
+        const configHeight = config.height(props, inGroupScale);
+        const configMissingTransform = config.missingTransform(props, inGroupScale);
+        // Guarded the way bar and dot guard theirs, so a consumer accessor returning NaN cannot
+        // reach an attribute. fill and stroke are deliberately not guarded - they are colours,
+        // and neither bar nor dot guards those either.
+        const xAt = function (d) {
+          return toFinite(configX(d, indexOfRect(this)));
+        };
+        const yAt = function (d) {
+          return toFinite(configY(d, indexOfRect(this)));
+        };
+        const widthAt = function (d) {
+          return toFinite(typeof configWidth === "function" ? configWidth(d, indexOfRect(this)) : configWidth);
+        };
+        const heightAt = function (d) {
+          return toFinite(typeof configHeight === "function" ? configHeight(d, indexOfRect(this)) : configHeight);
+        };
+        const fillAt = function (d) {
+          return colorToString(typeof props.fill === "function" ? props.fill(d, indexOfRect(this)) : props.fill);
+        };
+        const strokeAt = function (d) {
+          return colorToString(typeof props.stroke === "function" ? props.stroke(d, indexOfRect(this)) : props.stroke);
+        };
+        const missingTransformAt = function (d) {
+          return configMissingTransform(d, indexOfUnit(this));
+        };
+        const unitsWithValue = barUnits.filter(props.defined);
+        const unitsWithoutValue = barUnits.filter(not(props.defined));
+        // A unit keeps its children across renders so they can tween, so each shape is joined
+        // within the unit and the shapes belonging to the other state are joined against no
+        // data, which removes them. That is what lets a bar switch between a rect and the
+        // missing-value cross without the unit being emptied.
+        unitsWithValue.selectAll("line.sszvis-bar--missing").data([]).exit().remove();
+        unitsWithoutValue.selectAll("rect.sszvis-bar-rect").data([]).exit().remove();
+        // The unit's translation only positions the missing-value cross. A unit that regains a
+        // value has to lose it again, because its rect is positioned in the unit's own frame.
+        unitsWithValue.attr("transform", () => translateString(0, 0));
+        unitsWithoutValue.attr("transform", missingTransformAt);
+        // Entering bars are given their geometry on the join, so they are in place before any
+        // transition starts. The geometry is then applied exactly once more - to the transition
+        // when there is one, and to the plain selection otherwise - so an update tweens from its
+        // previous value instead of from the value it already holds.
+        //
+        // The join selector uses the component-owned marker class, as bar() does, so a
+        // consumer-added <rect class="sszvis-bar"> inside the unit is never adopted by the
+        // join nor removed by its exit. The public sszvis-bar class stays on the component's
+        // own rect for styling and consumer selection.
+        const bars = unitsWithValue.selectAll("rect.sszvis-bar-rect").data(d => [d]).join(enter => enter.append("rect").classed("sszvis-bar sszvis-bar-rect", true).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt)).attr("fill", fillAt).attr("stroke", strokeAt);
+        if (props.transition) {
+          bars.transition(defaultTransition(OWN_TRANSITION)).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
+        } else {
+          // A transition scheduled by an earlier render would keep ticking and overwrite the
+          // geometry written here, so `transition(false)` is only deterministic once any
+          // in-flight tween is interrupted. This matters on a resize or an event that lands
+          // mid-animation.
+          // Interrupted by name, so a transition the consumer scheduled on these rects keeps
+          // running; only the geometry this component owns is stopped.
+          bars.interrupt(OWN_TRANSITION).attr("x", xAt).attr("y", yAt).attr("width", widthAt).attr("height", heightAt);
+        }
+        // The join selectors use component-owned marker classes so a consumer-added
+        // <line class="line1"> inside the unit is never adopted or overwritten. The public
+        // line1/line2 classes are kept on the component's own lines for styling.
+        // The geometry is constant, so it is reapplied on the merged selection: the lines are
+        // no longer re-appended on every render, and a mutated attribute must not persist.
+        unitsWithoutValue.selectAll("line.sszvis-bar--missing-cross-1").data(d => [d]).join(enter => enter.append("line").classed("sszvis-bar--missing sszvis-bar--missing-cross-1 line1", true)).attr("x1", -4).attr("y1", -4).attr("x2", 4).attr("y2", 4);
+        unitsWithoutValue.selectAll("line.sszvis-bar--missing-cross-2").data(d => [d]).join(enter => enter.append("line").classed("sszvis-bar--missing sszvis-bar--missing-cross-2 line2", true)).attr("x1", 4).attr("y1", -4).attr("x2", -4).attr("y2", 4);
+        const ta = tooltipAnchor().position(config.tooltipPosition(props, inGroupScale));
+        selection.call(ta);
+      });
+    }
+    const createVerticalConfig = () => ({
+      inGroupRange: ({
+        groupWidth
+      }) => [0, groupWidth],
+      x: ({
+        groupScale
+      }, inGroupScale) => (d, groupIndex) => groupScale(d) + (inGroupScale(groupIndex) ?? 0),
+      y: ({
+        y
+      }) => y,
+      width: (_, inGroupScale) => inGroupScale.bandwidth(),
+      height: ({
+        height
+      }) => height,
+      missingTransform: ({
+        groupScale,
+        y
+      }, inGroupScale) => (d, groupIndex) =>
+      // Both coordinates are guarded as a whole, not just the consumer accessor: translateString
+      // interpolates its arguments into a string, so one non-finite term anywhere in the
+      // expression would yield transform="translate(NaN,0)" rather than a placed cross.
+      translateString(toFinite(groupScale(d) + (inGroupScale(groupIndex) ?? 0) + inGroupScale.bandwidth() / 2), toFinite(y(d, groupIndex))),
+      tooltipPosition: ({
+        groupScale,
+        y
+      }, inGroupScale) => group => {
+        let xTotal = 0;
+        let tallest = Infinity;
+        for (const [i, d] of group.entries()) {
+          xTotal += groupScale(d) + (inGroupScale(i) ?? 0) + inGroupScale.bandwidth() / 2;
+          // smaller y is higher
+          tallest = Math.min(tallest, y(d, i));
+        }
+        return [xTotal / group.length, tallest];
+      }
+    });
+    const createHorizontalConfig = () => ({
+      inGroupRange: props => [0, props.groupHeight],
+      x: ({
+        x
+      }) => x,
+      y: ({
+        groupScale
+      }, inGroupScale) => (d, groupIndex) => groupScale(d) + (inGroupScale(groupIndex) ?? 0),
+      width: ({
+        width
+      }) => width,
+      height: (_, inGroupScale) => inGroupScale.bandwidth(),
+      missingTransform: ({
+        groupScale,
+        x
+      }, inGroupScale) => (d, groupIndex) =>
+      // Guarded as a whole, as in the vertical config.
+      translateString(toFinite(x(d, groupIndex)), toFinite(groupScale(d) + (inGroupScale(groupIndex) ?? 0) + inGroupScale.bandwidth() / 2)),
+      tooltipPosition: ({
+        groupScale,
+        x
+      }, inGroupScale) => group => {
+        let yTotal = 0;
+        let rightmost = -Infinity;
+        for (const [i, d] of group.entries()) {
+          yTotal += groupScale(d) + (inGroupScale(i) ?? 0) + inGroupScale.bandwidth() / 2;
+          // larger x is more to the right
+          rightmost = Math.max(rightmost, x(d, i));
+        }
+        return [rightmost, yTotal / group.length];
+      }
+    });
+    const groupedBarsVertical = () => createGroupedBarsComponent(createVerticalConfig());
+    const groupedBarsHorizontal = () => createGroupedBarsComponent(createHorizontalConfig());
+    /**
+     * The default grouped bars component is the vertical version.
+     *
+     * @deprecated Use `groupedBarsVertical` instead.
+     */
+    const groupedBars = groupedBarsVertical;
+
+    /**
+     * Line component
+     *
+     * The line component is a general-purpose component used to render lines.
+     *
+     * The input data should be an array of arrays, where each inner array
+     * contains the data points necessary to render a line. The line is then
+     * composed of x- and y- values extracted from these data objects
+     * using the x and y accessor functions.
+     *
+     * Each data object in a line's array is passed to the x- and y- accessors, along with
+     * that data object's index in the array. For more information, see the documentation for
+     * d3.line.
+     *
+     * In addition, the user can specify stroke and strokeWidth accessor functions. Because these
+     * functions apply properties to the entire line, when called, they are given the datum for the
+     * whole line, plus the index of that line within the outer array of lines. Note that this
+     * differs slightly from the usual case in that dimension-related accessor functions are given different
+     * data than style-related accessor functions. When valuesAccessor is set, the style accessors
+     * receive the wrapper object rather than the array of points - valuesAccessor is applied only on
+     * the way into d3.line.
+     *
+     * @module sszvis/component/line
+     *
+     * @template P The type of one point along a line
+     * @template L The type of the datum for a whole line
+     *
+     * @property {number, function} x       An accessor function for getting the x-value of the line, in
+     *                                       pixels, or a constant. Becomes a functor. Required: leaving it
+     *                                       unset throws before anything is rendered.
+     * @property {number, function} y        An accessor function for getting the y-value of the line, in
+     *                                       pixels, or a constant. Becomes a functor. Required, like x.
+     * @property {function} [defined]        A per-point predicate handed to d3.line, deciding whether a point is
+     *                                       drawn. Defaults to skipping points whose x or y is missing. It
+     *                                       replaces that default rather than composing with it, so setting it
+     *                                       gives up the missing-value guard.
+     * @property {function} [key]            The key function to be used for the data join. Defaults to the index,
+     *                                       which matches lines by position.
+     * @property {function} [valuesAccessor] An accessor function for getting the data points array of the line
+     * @property {string, function} [stroke] Either a string specifying the stroke color of the line or lines,
+     *                                       or a function which, when passed the datum for the line,
+     *                                       returns a value for the stroke. If left undefined no stroke is set at
+     *                                       all, and since the SVG initial value is none the line renders
+     *                                       invisibly - every chart is expected to set this.
+     * @property {number, function} [strokeWidth] Either a number specifying the stroke-width of the lines,
+     *                                       or a function which, when passed the datum for the line,
+     *                                       returns a value for the stroke-width. If left undefined the component
+     *                                       sets nothing, and the 1.1 in the .sszvis-line rule of sszvis.css
+     *                                       applies.
+     * @property {boolean} transition        Whether to transition the line when its values change. Defaults to
+     *                                       true.
+     *
+     * Note: stroke and strokeWidth are written as inline styles, where bar and dot write their colours as
+     * attributes. An inline style outranks a stylesheet rule, so a theme can restyle a bar but never a line.
+     *
+     * Note: with transition enabled an entering line is given its d and stroke-width at the join as
+     * well as on the transition, so a path measured synchronously - getTotalLength, a bounding box, a
+     * screenshot - is never empty. The transition then interpolates from the destination to itself, so
+     * an entering line is drawn at its final shape and its stroke-width no longer grows out of the
+     * stylesheet's; only an update animates. The cost is that the accessors are evaluated a second
+     * time for entering lines. See test/component/line.test.ts.
+     *
+     * Note: the default missing-value guard inspects both dimensions, and catches any value with no
+     * finite numeric form - so Infinity, which a scale over a zero-width domain produces, breaks the
+     * line at that point rather than reaching the d attribute, where the browser used to render up to
+     * that segment and silently drop the rest of the series. A null still coerces to 0 and is plotted
+     * as data rather than breaking the line; stackedArea's guard differs here and rejects it.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * d3 takes either a constant or a value function, but not a union of the two, so a style
+     * property is narrowed once before it reaches the selection. An unset property becomes a
+     * function returning null, which d3 removes the style for - the same thing it does when
+     * handed undefined directly.
+     */
+    /**
+     * Whether a value counts as missing, and so breaks the line at that point.
+     *
+     * The coercion is load-bearing: a bare Number.isFinite would call every non-numeric y
+     * missing, including the numeric strings a caller may legitimately plot. What is asked of
+     * the coerced value is finiteness rather than NaN-ness, because Infinity is a number as
+     * far as isNaN is concerned but not a coordinate SVG can parse: it used to reach the `d`
+     * attribute, where the browser drops that segment and every one after it, so the line was
+     * truncated at the bad point rather than broken across it the way a NaN is. A scale over a
+     * zero-width domain returns exactly that. null, booleans and numeric strings still coerce
+     * to finite numbers and are still plotted as data. See test/component/line.test.ts.
+     *
+     * Besides the non-finite values above, the input where this differs from the global isNaN is
+     * a BigInt, which isNaN throws on. It is not observable through the component either way:
+     * d3.line immediately applies unary + to the value, which throws the identical TypeError.
+     */
+    const isMissingVal = value => !Number.isFinite(Number(value));
+    /**
+     * Reports a required property the caller left unset, naming both the component and the
+     * property. Called before the data join, so a missing accessor is reported by name instead of
+     * arriving as a TypeError from d3's internals (a missing y) or as an empty path (a missing x).
+     */
+    function required$3(value, name) {
+      if (value === undefined) {
+        throw new Error(`[line] the ${name} property is required`);
+      }
+      return value;
+    }
+    function line() {
+      return component().prop("x", functor).prop("y", functor).prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
+      // The default layer type L is P[], so the values ARE the layer and identity is correct.
+      // A caller who sets a different L must supply a matching accessor; the constraint
+      // cannot express "identity is valid only for the default instantiation".
+      .valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Layouts
+        // Both properties are wrapped by fn.functor on set, so a constant reads back as a
+        // function and needs no normalising here - but an unset property is still undefined,
+        // and is reported by name before anything is rendered.
+        const x = required$3(props.x, "x");
+        const y = required$3(props.y, "y");
+        // Both dimensions are guarded. Checking only y would let a missing x reach the d
+        // attribute verbatim, and the browser then drops that segment along with every
+        // segment after it, silently truncating the series. An explicitly set predicate
+        // replaces this one rather than composing with it.
+        const defined = props.defined === undefined ? (datum, index, points) => !isMissingVal(x(datum, index, points)) && !isMissingVal(y(datum, index, points)) : props.defined;
+        const linePath = d3.line().defined(defined).x(x).y(y);
+        // Rendering
+        // Declared with `function` so that `this` is still forwarded to valuesAccessor, as
+        // it was when this was built with fn.compose.
+        const pathData = function (datum, index) {
+          return linePath(props.valuesAccessor.call(this, datum, index));
+        };
+        // The prop may hold one of the library's colour objects, so it is resolved first and
+        // then rendered as the string d3 writes - the same conversion d3 would do itself.
+        const strokeValue = valueFn(props.stroke ?? null);
+        const stroke = function (datum, index, groups) {
+          return colorToString(strokeValue.call(this, datum, index, groups));
+        };
+        const strokeWidth = valueFn(props.strokeWidth ?? null);
+        const path = selection.selectAll(".sszvis-line").data(data, props.key).join(enter => {
+          const entered = enter.append("path");
+          // Only the transition branch defers these, and only for an entering line: an
+          // update already has last render's values in the DOM to interpolate from, and
+          // the branch below writes both on the selection when transitions are off.
+          // Writing them here keeps a fresh line out of the geometry-less state a
+          // consumer that measures on the render tick - getTotalLength, a bounding box, a
+          // synchronous screenshot - would otherwise see, at the cost of evaluating the
+          // accessors a second time. The transition then interpolates from the
+          // destination to itself, so nothing jumps.
+          if (props.transition) {
+            entered.attr("d", pathData).style("stroke-width", strokeWidth);
+          }
+          return entered;
+        }).classed("sszvis-line", true).style("stroke", stroke);
+        path.order();
+        // The visual properties are applied to the transition when there is one, so the two
+        // branches are spelled out rather than sharing a variable - a d3 transition and a
+        // d3 selection have separate types.
+        if (props.transition) {
+          path.transition(defaultTransition(OWN_TRANSITION)).attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
+        } else {
+          // An in-flight tween from an earlier render would overwrite what is written here, so
+          // it is interrupted first - by name, so a transition the consumer scheduled on this
+          // path keeps running.
+          path.interrupt(OWN_TRANSITION).attr("d", pathData).style("stroke", stroke).style("stroke-width", strokeWidth);
+        }
+      });
+    }
+
+    /**
+     * Stacked Bar components
+     *
+     * This module holds the vertical and the horizontal stacked bar chart, together with the two
+     * data layout functions that prepare their input. Both components are variations on the same
+     * concept and read the same intermediate representation of a stack, but they lay it out along
+     * different dimensions, which is why there are two constructors rather than an orientation
+     * property.
+     *
+     * The layout functions, stackedBarVerticalData and stackedBarHorizontalData, take their
+     * accessors in the order (stackAcc, seriesAcc, valueAcc) and return a function over a flat
+     * array of rows: stackAcc groups the rows into stacks, seriesAcc into the layers within a
+     * stack, and valueAcc supplies the number that is stacked. The accessors are deliberately not
+     * named after the axes, because which axis each one belongs to depends on the orientation: the
+     * examples call stackedBarVerticalData(xAcc, cAcc, yAcc) but stackedBarHorizontalData(yAcc,
+     * cAcc, xAcc) - see docs/bar-chart-vertical-stacked/basic.js and
+     * docs/bar-chart-horizontal-stacked/basic.js.
+     *
+     * The result is an array of series, one per series key, each holding the [y0, y1] pairs
+     * d3.stack computed, and each pair tagged with its `series`, its `stack` and, as `data`, the
+     * single source row it was computed from. That array is what gets bound to the chart layer. The
+     * rows passed in are not modified: the d3v3 stack layout used to write `y0` and `y` onto every
+     * data object, but d3v7 returns pairs instead and leaves the source data alone.
+     *
+     * stackedBarVerticalLayout and stackedBarHorizontalLayout are the same computation returning
+     * the metadata beside the series instead of on them - `{ series, keys, maxValue, minValue }` -
+     * which is the shape new code should use. The two shapes cannot be one return value: an
+     * ordinary array cannot also carry properties that survive being copied.
+     *
+     * @module sszvis/component/stackedBar/horizontal
+     * @module sszvis/component/stackedBar/vertical
+     *
+     * @requires sszvis.component.bar
+     *
+     * @template T The type of the data objects behind the stack slices
+     * @template X The type of the stack values, i.e. the domain of the ordinal scale
+     *
+     * @property {function} xScale          Required. On a vertical chart, a band scale over the
+     *                                      stack values, used to position each stack. On a
+     *                                      horizontal chart, a linear scale over the stacked
+     *                                      values, used for both the left edge and the width of
+     *                                      every segment. Not defaulted: unset, it throws.
+     * @property {function} yScale          Required, and the mirror image of xScale. On a vertical
+     *                                      chart, a linear scale over the stacked values, used for
+     *                                      both the top edge and the height of every segment; on a
+     *                                      horizontal chart, a band scale over the stack values.
+     *                                      Also not defaulted, and also throws by name when unset.
+     * @property {number, function} width   Required by the vertical orientation, which sizes its
+     *                                      bars with it - usually xScale.bandwidth(). The
+     *                                      horizontal orientation computes its width from xScale
+     *                                      and never reads the property. Omitting it on a vertical
+     *                                      chart throws.
+     * @property {number, function} height  Required by the horizontal orientation, and ignored by
+     *                                      the vertical one, which computes its height from yScale.
+     *                                      Omitting it on a horizontal chart throws, just as the
+     *                                      vertical orientation does for width.
+     * @property {string, function} fill    Optional. A constant or an accessor over a slice. When
+     *                                      unset, no fill attribute is written at all and the
+     *                                      rectangles fall back to the SVG/CSS default. An accessor
+     *                                      is not called for a slice the stack carries no row for:
+     *                                      that slice is zero-sized, so its fill would never be
+     *                                      painted, and an accessor reading `d.data` would be
+     *                                      handed undefined. Such a slice gets no fill attribute.
+     * @property {string, function} stroke  Optional. A constant or an accessor over a slice. When
+     *                                      unset, a 1px #FFFFFF stroke separates the segments -
+     *                                      centred on the bar edge, so it overpaints half a pixel
+     *                                      on each side. The default applies when the property is
+     *                                      undefined, whether it was never set or set to undefined
+     *                                      explicitly. Every other value is rendered as set: "none"
+     *                                      replaces the separator, null writes no stroke attribute
+     *                                      at all, and an empty string writes stroke="" - an empty
+     *                                      attribute, not a removed one. An accessor is always
+     *                                      called, and one that returns undefined for a slice
+     *                                      leaves that rect with no stroke attribute rather than
+     *                                      the white default.
+     * @property {boolean} transition       Optional, and forwarded to bar. Whether to animate the
+     *                                      segment geometry on an update. Defaults to bar's own
+     *                                      default of true; pass false for anything that measures
+     *                                      the chart synchronously, or that re-renders faster than
+     *                                      the animation can finish.
+     *
+     * Note: the two layout functions are the same computation and differ only in the stack order,
+     * i.e. in which series key ends up on the baseline. The vertical layout stacks in reverse key
+     * order, so the last key sits on the baseline; the horizontal one keeps the key order, so the
+     * first key does.
+     *
+     * Note: a cell's value is the sum of every row the accessors placed in it, so data that is not
+     * already aggregated to one row per (stack, series) pair stacks to its true total. The slice's
+     * `data` property still points at the first row of the cell. A stack that carries no row for
+     * one of the series keys stacks that series as zero, and the slice's `data` is undefined, so
+     * sparse data needs no padding with explicit zero rows.
+     *
+     * Note: the series keys are collected from the data in order of first appearance, so the
+     * stacking order is the caller's. The stacks themselves are ordered by the cascade, which
+     * enumerates integer-like keys numerically regardless of insertion order; that part is only
+     * cosmetic, since each slice is positioned by its own stack value.
+     *
+     * Note: stackedBar*Data returns the series array with `maxValue` and `minValue` assigned onto
+     * it, so any array operation - a spread, a map, a filter, a trip through JSON - drops them. The
+     * series keys are no longer assigned: `keys` shadowed Array.prototype.keys and made the layout
+     * a badly behaved array, and no caller read it off the array. Use stackedBar*Layout to get all
+     * three beside the series. `maxValue` and `minValue` are the extent of the stacked bounds, so a
+     * negative value is included in them.
+     *
+     * Note: a negative value is drawn on the other side of the baseline: both orientations take
+     * the lower of the two scaled bounds as the segment's origin and the absolute difference as
+     * its size. The layout reports the extent as `minValue` and `maxValue`, so the value scale's
+     * domain has to be built from both to make room for it.
+     *
+     * Note: the scale and size properties each orientation reads are required and are validated
+     * before anything is drawn: a chart built without one throws an error naming the component and
+     * the missing property, rather than rendering zero-size bars or failing inside a helper.
+     *
+     * Note: the group join uses the descendant selector `.sszvis-stack` rather than a child
+     * selector and no key function, so any pre-existing stack below the target group, at any depth,
+     * is captured and re-bound, and surviving groups and rects are matched by index rather than by
+     * series. The component does not forward bar's tooltip anchor properties, so the tooltip anchor
+     * is always at the top centre of a segment. See test/component/stackedBar.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    const stackAcc = prop("stack");
+    /* Data layout
+    ----------------------------------------------- */
+    /**
+     * Both layouts are the same computation and differ only in the stack order, which decides
+     * which series key ends up on the baseline.
+     */
+    function stackedBarData(order) {
+      return (_stackAcc,
+      // cascade.objectBy stringifies its keys, so a numeric series accessor - a year, or a
+      // category code - groups the same way a string one does. The keys themselves are read
+      // back off the cascade row with Object.keys, which is why `series` stays a string.
+      seriesAcc, valueAcc) => data => {
+        const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
+        // The series keys, and with them the stacking order, come from the data rather than
+        // from the cascade rows: those are plain objects, which enumerate integer-like keys
+        // numerically and would drop the caller's ordering for numeric series.
+        const keys = set$1(data, d => String(seriesAcc(d)));
+        const stacks = d3.stack().keys(keys)
+        // Every row the accessors placed in a cell contributes to that cell's value, so
+        // data that is not pre-aggregated to one row per (stack, series) pair stacks to
+        // its true total rather than to its first row.
+        // A stack that carries no row for one of the series keys stacks that series as
+        // zero rather than throwing.
+        .value((x, key) => d3.sum(x[key] ?? [], valueAcc)).order(order)(rows);
+        // Simplify the 'data' property. The slices themselves are the objects d3 created,
+        // rewritten in place, so a caller holding one sees the new shape. The series arrays
+        // are rebuilt, so d3's own `key` and `index` - the only two properties it hangs off a
+        // series - have to be carried across by hand.
+        // The stack value of a row cannot be read off a cell that may be missing, so it is
+        // taken once per row from whichever datum the row does hold. The stack layers d3
+        // returns are index-aligned to the rows it was given.
+        const stackValues = rows.map(row => _stackAcc(Object.values(row).flat()[0]));
+        // index is renumbered to the series' position in this array rather than carried over
+        // from d3. d3 assigns it from the stacking order while returning the array in key
+        // order, so the vertical layout - which stacks in reverse - handed back an array whose
+        // index counted the other way, and a caller that read index to drive a legend got the
+        // stack the wrong way up. The horizontal layout stacks in key order, so the two already
+        // agreed there, which is what made the mismatch easy to miss when moving code between
+        // orientations. The array order itself is unchanged, so nothing about the rendering
+        // moves; only the number a caller reads off a series does.
+        const series = stacks.map((stack, index) => {
+          const slices = stack.map((d, i) => {
+            const datum = d.data[stack.key]?.[0];
+            return Object.assign(d, {
+              series: stack.key,
+              data: datum,
+              stack: stackValues[i]
+            });
+          });
+          return Object.assign(slices, {
+            key: stack.key,
+            index
+          });
+        });
+        // Both bounds are considered, so a stack that reaches below the baseline reports an
+        // extent that covers it.
+        const maxValue = d3.max(series, stack => d3.max(stack, d => Math.max(d[0], d[1]))) ?? 0;
+        const minValue = d3.min(series, stack => d3.min(stack, d => Math.min(d[0], d[1]))) ?? 0;
+        return {
+          series,
+          keys,
+          maxValue,
+          minValue
+        };
+      };
+    }
+    /**
+     * The array-returning form of a layout function: the series themselves, with the extent
+     * assigned onto them so that `.datum(layout)` still binds a real array.
+     */
+    function stackedBarSeriesData(order) {
+      const layout = stackedBarData(order);
+      return (_stackAcc, seriesAcc, valueAcc) => data => {
+        const {
+          series,
+          maxValue,
+          minValue
+        } = layout(_stackAcc, seriesAcc, valueAcc)(data);
+        // `keys` is deliberately not assigned: it shadows Array.prototype.keys, and no caller
+        // reads it off the array. stackedBar*Layout returns it beside the series instead.
+        return Object.assign(series, {
+          maxValue,
+          minValue
+        });
+      };
+    }
+    const stackedBarHorizontalData = stackedBarSeriesData(d3.stackOrderNone);
+    const stackedBarVerticalData = stackedBarSeriesData(d3.stackOrderReverse);
+    const stackedBarHorizontalLayout = stackedBarData(d3.stackOrderNone);
+    const stackedBarVerticalLayout = stackedBarData(d3.stackOrderReverse);
+    /**
+     * Throws for any of the named props the caller never set. The two orientations need
+     * different ones, and each silently ignores the other's, so the message names the component
+     * as well as the property. Called before anything is drawn, so a misconfigured chart renders
+     * nothing rather than a grid of zero-size bars.
+     */
+    function requireProps(name, props, required) {
+      for (const prop of required) {
+        if (Reflect.get(props, prop) === undefined) {
+          throw new Error(`[${name}] the ${prop} property is required`);
+        }
+      }
+    }
+    /**
+     * Joins one group per series and draws that series' slices with the bar component. This is
+     * everything the two orientations have in common; they differ only in how the four bar
+     * dimensions are derived from the props.
+     */
+    function drawStacks(selection, data, barGen) {
+      const groups = selection.selectAll(".sszvis-stack").data(data).join("g").classed("sszvis-stack", true);
+      groups.call(barGen);
+    }
+    /**
+     * Applies a fill to a slice, leaving a slice with no source row unpainted.
+     *
+     * A stack that carries no row for one of its series contributes a zero-height (or zero-width)
+     * slice whose `data` is undefined. Nothing of it is visible, so the caller's accessor - which
+     * is written over the row, as every docs example is - is skipped rather than handed an
+     * undefined datum to dereference.
+     */
+    function fillOf(fill) {
+      if (typeof fill !== "function") return fill;
+      return (slice, index) => slice.data === undefined ? undefined : fill(slice, index);
+    }
+    /**
+     * The stroke as bar takes it. The white separator applies to undefined only - never set, or
+     * set to undefined - so that every other falsy stroke is rendered as set: a null becomes
+     * undefined because bar's setter does not accept null, and bar then writes no stroke
+     * attribute for it, while an empty string reaches the rect as stroke="".
+     */
+    function strokeOf(stroke) {
+      if (stroke === undefined) return "#FFFFFF";
+      return stroke ?? undefined;
+    }
+    function stackedBarHorizontal() {
+      return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        requireProps("stackedBarHorizontal", props, ["xScale", "yScale", "height"]);
+        const barGen = bar()
+        // The lower of the two scaled bounds, so a segment whose value is negative is drawn
+        // on the other side of the baseline rather than with a negative width.
+        .x(d => Math.min(props.xScale(d[0]), props.xScale(d[1]))).y(compose(props.yScale, stackAcc)).width(d => Math.abs(props.xScale(d[1]) - props.xScale(d[0]))).height(props.height).fill(fillOf(props.fill)).stroke(strokeOf(props.stroke)).transition(props.transition);
+        drawStacks(selection, data, barGen);
+      });
+    }
+    function stackedBarVertical() {
+      return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        requireProps("stackedBarVertical", props, ["xScale", "yScale", "width"]);
+        const barGen = bar().x(compose(props.xScale, stackAcc))
+        // The upper edge is whichever bound scales smaller, which keeps the geometry valid
+        // for a negative value and for a y-scale whose range ascends.
+        .y(d => Math.min(props.yScale(d[0]), props.yScale(d[1]))).width(props.width).height(d => Math.abs(props.yScale(d[0]) - props.yScale(d[1]))).fill(fillOf(props.fill)).stroke(strokeOf(props.stroke)).transition(props.transition);
+        drawStacks(selection, data, barGen);
+      });
+    }
+
+    /**
+     * Nested Stacked Bars Vertical component
+     *
+     * This component renders a group of vertical stacked bar charts side by side. The input data
+     * is an array of stack layouts, one per nested group, each as returned by
+     * stackedBarVerticalData and each tagged with the group key the caller cascaded by - `key`,
+     * or `nest` under its older name. For each layout the component emits a group positioned by
+     * `offset`, an ordinal x-axis, and a stackedBarVertical, and finally passes all tooltip
+     * anchors of all groups to `tooltip` in a single call.
+     *
+     * `offset`, `xScale`, `yScale` and `tooltip` are required and are validated before anything is
+     * rendered: a missing one throws an error naming the component and the property. `fill`,
+     * `stroke`, `xAcc`, `xLabel` and `slant` are optional.
+     *
+     * @module sszvis/component/nestedStackedBarsVertical
+     * @template T The type of the data objects behind the stack slices
+     * @template X The type of the x-axis values, i.e. the domain of the x-scale
+     *
+     * @property {function} offset              Required. Positions the nested groups. Receives the whole
+     *                                          stack layout of a group and returns an x-offset in pixels.
+     *                                          An offset that is not a finite number is reported with a
+     *                                          console warning and treated as 0, so the group still gets a
+     *                                          valid transform instead of one the renderer discards.
+     * @property {function} xScale              Required. A band scale for the stack layout. Used to position
+     *                                          the stacks and, via its bandwidth, to size the bars. Must be a
+     *                                          band scale: `bandwidth()` is called on it directly.
+     * @property {function} yScale              Required. A y-scale. After the stack is computed, the y-scale is
+     *                                          used to position each stack, and to place the x-axis at the
+     *                                          baseline. The baseline is `yScale(0)` clamped into the scale's
+     *                                          own range, so a y-domain that excludes 0 keeps the axis inside
+     *                                          the plotting area; clamping is reported with a console warning.
+     *                                          A scale without a `range()` (for instance a constant boxed by
+     *                                          fn.functor) is used as-is.
+     * @property {function} tooltip             Required. A tooltip component, called once with the tooltip
+     *                                          anchors of every nested group in one selection.
+     * @property {function} xAcc                Optional and never read. An x-accessor over a slice datum,
+     *                                          kept so that the existing call sites keep working: the nested
+     *                                          groups are labelled from their own nest key instead.
+     *                                          Deprecated; a major version will remove it.
+     * @property {string, function} fill        Optional. A fill value for the rectangles. When unset, no fill
+     *                                          attribute is written at all and the rectangles fall back to the
+     *                                          SVG/CSS default.
+     * @property {string, function} stroke      Optional. Forwarded to stackedBarVertical, which defaults it to
+     *                                          #FFFFFF so that the stack segments are separated by a white
+     *                                          line. Pass "none" for seamless stacks.
+     * @property {string, function} xLabel      Optional. The title of the nested x-axis. A function is
+     *                                          evaluated before the axis renders it; unset means no title.
+     * @property {string} slant                 Optional. The slant of the x-axis labels ("vertical" or
+     *                                          "diagonal"). Unset leaves them upright. The only prop that is not
+     *                                          wrapped in fn.functor.
+     *
+     * Each nested group carries its group key in `data-nested-stacked-bars`, read from the `key`
+     * field of its own stack layout, or from `nest` where the caller used that name - the same key
+     * `offset` reads. The field is a declared part of the layout type rather than an untyped tag,
+     * but it is not required: a layout with neither name is reported with a console warning and
+     * falls back to the group's index for its label, so the group still renders. `offset` is the
+     * caller's own functor and can position a group from anything it likes, the key included, so a
+     * missing key does not by itself stop a group being placed. A nested group with no stacks is
+     * likewise reported with a console warning and rendered as an empty group rather than taking
+     * the whole chart down.
+     *
+     * @return {sszvis.component}
+     */
+    /** The group key of a layout: `key`, or `nest` under its older name. */
+    function nestKey(layout) {
+      return layout.key ?? layout.nest;
+    }
+    /** Reports a required property the caller left unset, naming it. */
+    function required$2(value, name) {
+      if (value === undefined) {
+        throw new Error(`[nestedStackedBarsVertical] the ${name} property is required`);
+      }
+      return value;
+    }
+    /**
+     * The y-coordinate of the x-axis: `yScale(0)`, kept inside the scale's own range so that a
+     * y-domain excluding 0 - which a linear scale extrapolates past the end of its range - does not
+     * push the axis out of the plotting area. Warns when it has to clamp. A scale that exposes no
+     * `range()` cannot be checked, so its value is used unchanged.
+     */
+    function baseline(yScale) {
+      const zero = yScale(0);
+      const scaleRange = Reflect.get(yScale, "range");
+      if (typeof scaleRange !== "function") return zero;
+      const extent = scaleRange.call(yScale).filter(v => Number.isFinite(v));
+      if (extent.length < 2) return zero;
+      const low = Math.min(...extent);
+      const high = Math.max(...extent);
+      if (zero >= low && zero <= high) return zero;
+      const clamped = zero < low ? low : high;
+      warn(`[nestedStackedBarsVertical] the y-scale baseline ${zero} falls outside its range [${low}, ${high}]; placing the x-axis at ${clamped}`);
+      return clamped;
+    }
+    function nestedStackedBarsVertical() {
+      return component().prop("offset", functor).prop("xScale", functor).prop("yScale", functor).prop("fill", functor).prop("stroke").prop("tooltip", functor).prop("xAcc", functor).prop("xLabel", functor).prop("slant").render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const offset = required$2(props.offset, "offset");
+        const xScale = required$2(props.xScale, "xScale");
+        const yScale = required$2(props.yScale, "yScale");
+        const tooltip = required$2(props.tooltip, "tooltip");
+        const {
+          fill,
+          stroke,
+          xLabel
+        } = props;
+        const xAxis = axisX.ordinal().scale(xScale).tickSize(0).orient("bottom").slant(props.slant)
+        // xLabel is wrapped by fn.functor, so it is always a function here; the axis binds its
+        // title as text data and never calls it, so evaluate it first.
+        .title(xLabel?.());
+        const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
+        const nestedGroups = group.join("g").attr("data-nested-stacked-bars", (d, i) => {
+          if (d.length === 0) {
+            warn(`[nestedStackedBarsVertical] the nested group at index ${i} has no stacks; rendering it empty`);
+          }
+          const key = nestKey(d);
+          if (key === undefined) {
+            warn(`[nestedStackedBarsVertical] the nested group at index ${i} has no key; labelling it by index`);
+            return i;
+          }
+          return key;
+        });
+        nestedGroups.attr("transform", d => {
+          const x = offset(d);
+          if (!Number.isFinite(x)) {
+            warn(`[nestedStackedBarsVertical] the offset accessor returned ${x}; positioning the group at 0`);
+          }
+          return translateString(Number.isFinite(x) ? x : 0, 0);
+        });
+        nestedGroups.selectGroup("nested-x-axis").attr("transform", translateString(0, baseline(yScale))).call(xAxis);
+        const stackedBars = stackedBarVertical().xScale(xScale).width(xScale.bandwidth()).yScale(yScale).fill(fill).stroke(stroke);
+        const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
+        bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+      });
+    }
+
+    function prepareHierarchyData(data, options) {
+      if (data !== undefined && options !== undefined) {
+        const layout = createHierarchyLayout();
+        options.layers.forEach(layer => {
+          layout.layer(layer);
+        });
+        layout.value(options.valueAccessor);
+        return layout.calculate(data);
+      }
+      // Otherwise, return the chained API
+      return createHierarchyLayout();
+    }
+    function createHierarchyLayout() {
+      const layers = [];
+      let valueAcc = identity;
+      let sortFn = (_a, _b) => 0;
+      const api = {
+        calculate: data => {
+          if (layers.length === 0) {
+            throw new Error("At least one layer must be specified before calculating hierarchy data");
+          }
+          const nested = unwrapNested(d3.rollup(data, first, ...layers));
+          const rootData = {
+            _tag: "root",
+            children: nested
+          };
+          return d3.hierarchy(rootData, d => {
+            return d._tag === "leaf" ? undefined : d.children;
+          }).sort(sortFn).sum(node => {
+            return node._tag === "leaf" ? valueAcc(node.data) : 0;
+          });
+        },
+        layer: keyFunc => {
+          layers.push(keyFunc);
+          return api;
+        },
+        value: accfn => {
+          valueAcc = accfn;
+          return api;
+        },
+        sort: sortFunc => {
+          sortFn = sortFunc;
+          return api;
+        }
+      };
+      return api;
+    } // Helper function to safely unwrap nested rollup data
+    /**
+     * Helper function to safely unwrap nested rollup data.
+     * Handles uneven tree structures where some branches terminate earlier than others.
+     * When a layer accessor returns null, the node will use its parent's key as a fallback
+     * to ensure labels remain functional.
+     *
+     * @param roll - The nested Map structure from d3.rollup()
+     * @param parentKey - The key of the parent node (used as fallback for null keys)
+     * @param rootKey - The top-level category key (used for color mapping)
+     * @returns Array of NodeDatum objects representing the hierarchy
+     */
+    function unwrapNested(roll, parentKey = null, rootKey = null) {
+      const rollupMap = roll;
+      return Array.from(rollupMap, ([key, values]) => {
+        // Use parent key as fallback when current key is null/undefined
+        const effectiveKey = key ?? parentKey ?? "";
+        // For root category, use the current key if we're at the first level (rootKey is null)
+        const effectiveRootKey = rootKey ?? effectiveKey;
+        if (values instanceof Map && values.size > 0) {
+          // Branch node - has children
+          return {
+            _tag: "branch",
+            key: effectiveKey,
+            rootKey: effectiveRootKey,
+            children: unwrapNested(values, effectiveKey, effectiveRootKey)
+          };
+        } else {
+          // Leaf node - has data
+          return {
+            _tag: "leaf",
+            key: effectiveKey,
+            rootKey: effectiveRootKey,
+            data: values
+          };
+        }
+      });
+    }
+    /** The fill used when a node carries no key the colour scale can be looked up with. */
+    const HIERARCHY_FALLBACK_COLOR = "#cccccc";
+    /**
+     * The colour key a hierarchy node inherits: its own rootKey when the layout wrote one,
+     * otherwise the key of its top-level ancestor (the child of the root). Leaves and branches
+     * of one category therefore share a colour even when only the root was tagged.
+     *
+     * Returns undefined when neither is available; callers decide whether to fall back to the
+     * node's own key.
+     */
+    function inheritedColorKey(node) {
+      if ("rootKey" in node.data && node.data.rootKey) return node.data.rootKey;
+      const ancestors = node.ancestors();
+      const topLevel = ancestors.find((_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root");
+      if (topLevel && "key" in topLevel.data) return topLevel.data.key;
+      return undefined;
+    }
+    /** `inheritedColorKey`, falling back to the node's own key. */
+    function colorKeyOf(node) {
+      const inherited = inheritedColorKey(node);
+      if (inherited !== undefined) return inherited;
+      return "key" in node.data ? node.data.key : undefined;
+    }
+    /** The fill a hierarchy node is drawn with, or the grey fallback when it has no key. */
+    function nodeColor(node, colorScale) {
+      const key = colorKeyOf(node);
+      return key === undefined ? HIERARCHY_FALLBACK_COLOR : colorScale(key);
+    }
+
+    /**
+     * Pack component
+     *
+     * This component renders a Pack (also known as a circle pack diagram), which displays
+     * hierarchical data as a collection of nested circles. The size of each circle corresponds to
+     * a quantitative value, and circles are positioned using D3's pack layout algorithm to
+     * efficiently fill the available space with minimal overlap.
+     *
+     * The component expects data prepared using the prepareHierarchyData function, which converts
+     * flat data into a hierarchical structure suitable for the pack layout.
+     *
+     * @module sszvis/component/pack
+     * @template T The type of the original flat data objects
+     *
+     * @property {string, function} colorScale        The fill color for circles: a constant colour
+     *                                                or an accessor taking a node's key
+     * @property {boolean} transition                 Whether to animate changes (default true)
+     * @property {number, function} containerWidth    The container width (default 800)
+     * @property {number, function} containerHeight   The container height (default 600)
+     * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
+     * @property {string, function} label             The label text accessor (default d.data.key)
+     * @property {number} minRadius                   Minimum circle radius for visibility (default 1)
+     * @property {string} circleStroke                Circle stroke color (default "#ffffff")
+     * @property {number} circleStrokeWidth           Circle stroke width (default 1)
+     * @property {function} radiusScale               Custom radius scale function for circle sizing (optional)
+     * @property {function} onClick                   Click handler for circles (receives node and event)
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Main Pack component
+     *
+     * @template T The type of the original flat data objects
+     */
+    function pack() {
+      return component().prop("colorScale", functor).prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
+      .prop("containerHeight").containerHeight(600) // Default height
+      .prop("showLabels").showLabels(false) // Default disabled
+      .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("minRadius").minRadius(20).prop("circleStroke").circleStroke("#ffffff").prop("circleStrokeWidth").circleStrokeWidth(1).prop("radiusScale", functor).prop("onClick").render(function (inputData) {
+        // The old datum is the render's own input: the component is called through
+        // selection.each, so the group's datum is exactly what was handed to the render.
+        // Deriving it with typeof rather than restating the type is what keeps the two from
+        // drifting apart, the way they did in #303. pack, treemap and sunburst all declare it
+        // this way. The anchors at the end of the render bind the flattened node array to the
+        // group and then restore this input, so the datum a caller sees is unchanged.
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Apply pack layout to hierarchical data
+        const layout = d3.pack().size([props.containerWidth, props.containerHeight]).padding(4).radius(props.radiusScale || null);
+        layout(inputData);
+        // Flatten the hierarchy and filter out root
+        function flatten(node) {
+          const result = [];
+          if (node.children) {
+            for (const child of node.children) {
+              if (child.data._tag !== "root") {
+                result.push(child);
+              }
+              result.push(...flatten(child));
+            }
+          } else if (node.data._tag !== "root") {
+            result.push(node);
+          }
+          return result;
+        }
+        const packData = flatten(inputData);
+        // Filter out very small circles - include both branches (categories) and leaves
+        const visibleData = packData.filter(d => d.r > (props.minRadius || 1));
+        // The one expression for what a circle is painted. The label colour is derived from
+        // this rather than recomputing nodeColor, so the contrast can never be calculated
+        // against a colour other than the one on screen - today the label data is filtered to
+        // leaves and the two agree, but a branch label would otherwise come out white on white.
+        const circleFillAcc = d =>
+        // Branch nodes get a light fill so they stay clickable.
+        d.children ? "white" : nodeColor(d, props.colorScale);
+        const circles = selection.selectAll(".sszvis-pack-circle").data(visibleData).join("circle").classed("sszvis-pack-circle", true).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r).attr("fill", d => colorToString(circleFillAcc(d))).attr("stroke", d => {
+          // Branches carry the category colour; leaves fall back to the configured stroke.
+          const inherited = inheritedColorKey(d);
+          if (inherited !== undefined) return colorToString(props.colorScale(inherited));
+          if (!d.children) return colorToString(props.circleStroke);
+          return colorToString("key" in d.data ? props.colorScale(d.data.key) : HIERARCHY_FALLBACK_COLOR);
+        }).attr("stroke-width", d => {
+          // Branch nodes get thicker stroke to make them more visible
+          return d.children ? 2 : props.circleStrokeWidth;
+        }).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => props.onClick?.(event, d));
+        // Apply transitions if enabled
+        if (props.transition) {
+          circles.transition(defaultTransition()).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r);
+        }
+        // Render labels if enabled
+        if (props.showLabels) {
+          const fontSize = 12;
+          // Create type-safe label accessor functions
+          const labelAcc = d => typeof props.label === "function" ? props.label(d) : props.label || "";
+          const labelXAcc = d => d.x;
+          const labelYAcc = d => d.y + fontSize / 3;
+          const labelFillAcc = d => getAccessibleTextColor(circleFillAcc(d));
+          // Filter data for labels - only show labels on leaf nodes that are large enough
+          const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < d.r / 3);
+          const labels = selection.selectAll(".sszvis-pack-label").data(labelData).join("text").classed("sszvis-pack-label", true).attr("x", labelXAcc).attr("y", labelYAcc).attr("fill", labelFillAcc).attr("font-size", fontSize).attr("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').attr("text-anchor", "middle").attr("dominant-baseline", "middle").style("pointer-events", "none").text(labelAcc);
+          // Apply transitions to labels if enabled
+          if (props.transition) {
+            labels.transition(defaultTransition()).attr("x", labelXAcc).attr("y", labelYAcc).attr("font-size", fontSize).text(labelAcc);
+          }
+        } else {
+          // Remove labels if showLabels is false
+          selection.selectAll(".sszvis-pack-label").remove();
+        }
+        // Add tooltip anchors at the center of each circle
+        const tooltipPosition = d => [d.x, d.y];
+        const ta = tooltipAnchor().position(tooltipPosition);
+        // Rebind the group to the filtered node array before rendering the anchors, the way
+        // sunburst and pie do. Without it the anchors are joined to whatever datum the caller
+        // bound - for a hierarchy that is the root node, which d3 iterates into every
+        // descendant, so the root gains an anchor of its own, the anchors come out breadth
+        // first while the circles are depth first, and nodes dropped by the minRadius filter
+        // get an anchor with no circle under it.
+        selection.datum(visibleData).call(ta);
+        // ...and put the hierarchy back, so the render is idempotent. The group's datum is the
+        // render's own input, and leaving the flattened array there breaks a caller who holds
+        // its own group selection and re-renders without re-binding: the layout above would be
+        // handed an array instead of a root. The docs examples never hit it, since they
+        // re-datum() on every render and selectGroup re-binds from the parent.
+        selection.datum(inputData);
+      });
+    }
+
+    /**
+     * Pie component
+     *
+     * The pie component is used to draw pie charts. It uses the d3.arc() generator
+     * to create pie wedges.
+     *
+     * The input data should be an array of data values, where each data value represents one wedge in the pie.
+     *
+     * @module sszvis/component/pie
+     *
+     * @property {number} radius                  Required. The outer radius of the pie, in px (no default). It is also
+     *                                            used to translate every wedge to (radius, radius); since the arc
+     *                                            then extends another radius in every direction, the pie occupies a
+     *                                            box of 2 * radius by 2 * radius.
+     *                                            The inner radius is hardcoded to 4px and cannot be configured.
+     *                                            Rendering without it throws.
+     * @property {string, function} fill          a fill color for wedges in the pie. Ideally a function which takes a
+     *                                            data value. If unset, the attribute is omitted and the wedges fall back
+     *                                            to the SVG default, black.
+     * @property {string, function} stroke        the stroke color for wedges in the pie (default "#FFFFFF", which
+     *                                            separates touching wedges). The default applies only when the property
+     *                                            was never set: a falsy value, such as "" or null, is passed through, and
+     *                                            behaves the same whether it is given as a constant or returned from an
+     *                                            accessor.
+     * @property {number, function} angle         Required. Specifies the angle of the wedges in radians. Theoretically
+     *                                            this could be a constant, but that would make for a very strange pie.
+     *                                            Ideally, this is a function which takes a data value and returns the
+     *                                            angle in radians. Angles are summed as given and never clamped, so a
+     *                                            total beyond a full turn overshoots and a negative angle draws its wedge
+     *                                            backwards. A value that is not finite is reported through sszvis.logger and
+     *                                            treated as zero, so one bad datum costs at most its own wedge.
+     *                                            Rendering without the property throws.
+     * @property {boolean} transition             Whether to animate between renders (default true). The wedge angles, the
+     *                                            transform, the fill and the stroke all ease over the default 300ms. With
+     *                                            transition(false) every attribute is written on the render tick instead,
+     *                                            which is what a chart serialised synchronously - a snapshot, an SVG
+     *                                            export - or one rendered in a hidden tab wants, since d3-timer runs on
+     *                                            requestAnimationFrame.
+     *
+     * Note: the component keeps its transition state - the angles currently on screen - in a
+     * WeakMap keyed by the wedge element, so it never writes to the caller's data. Frozen data,
+     * two entries sharing one datum object, and data carrying fields of its own all render
+     * correctly. The wedges carry their own `sszvis-pie-path` class alongside the generic
+     * `sszvis-path` one, and the component matches only the former, so a foreign path left in the
+     * same group by another component is left alone.
+     *
+     * @return {sszvis.component}
+     */
+    /** Reports a required property the caller left unset, naming it. */
+    function required$1(value, name) {
+      if (value === undefined) {
+        throw new Error(`[pie] the ${name} property is required`);
+      }
+      return value;
+    }
+    /**
+     * Turns a colour property into an accessor. A constant and an accessor returning that
+     * constant are equivalent to d3, and so are an unset property and one returning null:
+     * either way d3 removes the attribute.
+     */
+    function toColorAccessor(value) {
+      // The result is rendered to a string because d3's own attr typings accept only strings -
+      // d3 would stringify a LabColor itself - and nullish stays nullish, which d3 reads as
+      // "remove the attribute" either way.
+      return typeof value === "function" ? (d, i) => colorToString(value(d, i)) : () => colorToString(value);
+    }
+    // The angles currently on screen, per wedge element. d3 cannot interpolate an arc path
+    // directly, so a transition needs the previous angles as well as the destination ones -
+    // keying them to the element keeps them out of the caller's data. The map lives at module
+    // scope, keyed on the element rather than on the factory: the shipped examples build a
+    // fresh pie() inside every render (docs/pie-charts/basic.js), so a per-instance map would
+    // find no state for the paths already on screen and tween destination to destination.
+    // Keying on the element still scopes the state to the group being rendered into, and the
+    // entry is collected with the element.
+    const onScreen = new WeakMap();
+    function pie() {
+      // The chain is built on the component rather than returned from it: .prop() and .render()
+      // are declared to return the generic Component type, since the accessors they install
+      // only exist at runtime, so the typed instance has to come from the factory itself.
+      const pieComponent = component();
+      pieComponent.prop("radius").prop("fill").prop("stroke").prop("angle", functor).prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Both required properties are checked before a single element is created, so a
+        // misconfigured pie leaves no half-rendered wedges or stray tooltip anchors behind.
+        const radius = required$1(props.radius, "radius");
+        const angleOf = required$1(props.angle, "angle");
+        // The default applies only when the property was never set, so that a falsy stroke
+        // reaches the DOM whether it was passed as a constant or returned from an accessor.
+        const stroke = props.stroke === undefined ? "#FFFFFF" : props.stroke;
+        const fillAccessor = toColorAccessor(props.fill);
+        const strokeAccessor = toColorAccessor(stroke);
+        const transform = `translate(${radius},${radius})`;
+        // The destination layout, held alongside the data rather than written onto it.
+        const layout = [];
+        let angle = 0;
+        for (const value of data) {
+          const a0 = angle;
+          const step = Number(angleOf(value));
+          if (Number.isFinite(step)) {
+            angle += step;
+          } else {
+            // A scale over a domain containing undefined, an empty group, or a division by a
+            // zero total all land here. Skipping the step keeps the running total usable, so
+            // the wedges after this one are unaffected.
+            warn(`[pie] the angle accessor returned ${step}; drawing a zero-width wedge`);
+          }
+          layout.push({
+            a0,
+            a1: angle
+          });
+        }
+        const arcGen = d3.arc().innerRadius(4).outerRadius(radius).startAngle(d => d.a0).endAngle(d => d.a1);
+        // arc only returns null when it renders into a canvas context, which this one never does.
+        const arcPath = angles => arcGen(angles) ?? "";
+        // Matching on the component's own class rather than the generic .sszvis-path one keeps a
+        // foreign path in the same group out of the join. The generic class stays on the node, so
+        // no CSS selector changes meaning.
+        const segments = selection.selectAll("path.sszvis-pie-path").data(data).join(enter =>
+        // transform, fill and stroke are written here and then only on the transition, so
+        // that they have an old value to animate away from on every later render.
+        enter.append("path").attr("class", "sszvis-path sszvis-pie-path").attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor));
+        // Geometry is applied on the render tick, from the angles already on screen - the
+        // destination ones for a wedge that has just entered - so the DOM is never in a
+        // geometry-less state and nothing jumps before the transition takes over.
+        segments.attr("d", function (_d, i) {
+          const start = onScreen.get(this) ?? layout[i];
+          onScreen.set(this, start);
+          return arcPath(start);
+        });
+        if (props.transition) {
+          segments.transition(defaultTransition(OWN_TRANSITION)).attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor).attrTween("d", function (_d, i) {
+            const from = onScreen.get(this) ?? layout[i];
+            const to = layout[i];
+            const a0 = d3.interpolate(from.a0, to.a0);
+            const a1 = d3.interpolate(from.a1, to.a1);
+            return t => {
+              const current = {
+                a0: a0(t),
+                a1: a1(t)
+              };
+              // Recording every frame lets a render that interrupts this transition pick the
+              // angles up mid-flight.
+              onScreen.set(this, current);
+              return arcPath(current);
+            };
+          });
+        } else {
+          // A render that turns transitions off has to stop whatever the last one started:
+          // the attrTween below writes both the path and onScreen on every frame, so an
+          // uninterrupted transition would overwrite these attributes after they are set.
+          // Interrupted by name, so a transition the consumer scheduled on these paths keeps
+          // running; only the geometry this component owns is stopped.
+          segments.interrupt(OWN_TRANSITION);
+          segments.attr("transform", transform).attr("fill", fillAccessor).attr("stroke", strokeAccessor).attr("d", function (_d, i) {
+            onScreen.set(this, layout[i]);
+            return arcPath(layout[i]);
+          });
+        }
+        const ta = tooltipAnchor().position(
+        // The anchors are placed from the destination angles, so they describe the layout the
+        // wedges are heading for rather than the one they are leaving.
+        (_d, i) => {
+          const {
+            a0,
+            a1
+          } = layout[i] ?? {
+            a0: 0,
+            a1: 0
+          };
+          // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
+          // makes the same correction to svg.arc() angles :o
+          const a = a0 + Math.abs(a1 - a0) / 2 - Math.PI / 2;
+          const r = radius * 2 / 3;
+          return [radius + Math.cos(a) * r, radius + Math.sin(a) * r];
+        });
+        selection.datum(data).call(ta);
+      });
+      return pieComponent;
+    }
+
+    /**
+     * Pyramid component
+     *
+     * The pyramid component is primarily used to show a distribution of age groups
+     * in a population (population pyramid). The chart is mirrored vertically,
+     * meaning that it has a horizontal axis that extends in a positive and negative
+     * direction having the same domain.
+     *
+     * This chart's horizontal point of origin is at its spine, i.e. the center of
+     * the chart.
+     *
+     * The datum bound to the chart layer is typically one object holding both sides of the
+     * pyramid - all the component requires is that the side accessors return arrays. Each
+     * series is then rendered by its own bar component, the left one mirrored across the spine,
+     * so every bar dimension is read from the same accessors on both sides.
+     *
+     * The component always creates four sub-groups, in this order: left, right, leftReference
+     * and rightReference. The order is load-bearing, since it makes the reference lines paint
+     * over the bars, and the reference groups are created even when no reference accessor is
+     * configured.
+     *
+     * @module sszvis/component/pyramid
+     *
+     * @requires sszvis.component.bar
+     *
+     * @template T The type of the datum bound to the chart layer
+     * @template D The type of one bar's datum, i.e. the elements of each side's series
+     *
+     * @property {string, function} [barFill]          The color of a bar. Defaults to #000 and applies to both
+     *                                                 sides; a per-datum accessor is the usual way to colour the
+     *                                                 two sides differently.
+     * @property {number, function} barHeight          The height of a bar, in pixels. Required: an unset
+     *                                                 property throws "[pyramid] the barHeight property is
+     *                                                 required" before anything is rendered.
+     * @property {number, function} barWidth           The width of a bar, in pixels. Required, same error
+     *                                                 shape as barHeight. The component computes the left
+     *                                                 bar's x itself, as -SPINE_PADDING - barWidth(d, i),
+     *                                                 forwarding d3's index so an index-aware accessor
+     *                                                 positions the mirrored bars as it sizes them.
+     * @property {number, function} barPosition        The vertical position of a bar, i.e. its top edge, in
+     *                                                 pixels. Required, same error shape as barHeight.
+     * @property {Array<Number>} [tooltipAnchor]       The anchor position for the tooltips. Uses sszvis.component.bar.tooltipAnchor
+     *                                                 under the hood to optionally reposition the tooltip anchors in the pyramid chart.
+     *                                                 Default value is [0.5, 0.5], which centers tooltips on the bars.
+     *                                                 The value is handed to both bars unchanged rather than being
+     *                                                 mirrored, and bar measures from its own upper left corner, so
+     *                                                 any x other than 0.5 lands on visually opposite sides of the
+     *                                                 pyramid. An array with fewer than two entries yields a NaN
+     *                                                 coordinate, as documented on bar.
+     * @property {function}         leftAccessor       Data for the left side. Required, same error shape as
+     *                                                 barHeight. An accessor that returns undefined or null
+     *                                                 still throws from d3's data join, since a side with no
+     *                                                 data is a broken chart rather than an empty one.
+     * @property {function}         rightAccessor      Data for the right side. Same requirements as leftAccessor.
+     * @property {function}         [leftRefAccessor]  Reference data for the left side, drawn as a single path
+     *                                                 outlining the reference series. Optional in both senses:
+     *                                                 the accessor may be unset, and an accessor that returns
+     *                                                 no data for some state renders no line for that state.
+     *                                                 undefined and null are warned about, since they violate
+     *                                                 the accessor's contract; an empty array is treated as a
+     *                                                 legitimately empty series and passes silently.
+     * @property {function}         [rightRefAccessor] Reference data for the right side. Same as leftRefAccessor.
+     *
+     * Note: a reference point sits at the outer edge of the bar it describes, vertically
+     * centred on it: x is SPINE_PADDING + barWidth, matching the bar's own outer edge, and y is
+     * barPosition + barHeight / 2, the bar's mid-line. Both sides share the same generator; the
+     * left one is mirrored with a scale(-1, 1) transform.
+     *
+     * Note: an entering reference path gets its d attribute synchronously, so getBBox, snapshots
+     * and PNG exports see real geometry on the tick it is rendered. Updates are additionally
+     * written through a transition, so a change of data eases into place. The bars underneath
+     * animate over the same duration, so the outline and the bars it describes stay together for
+     * the length of the transition.
+     *
+     * Note: a reference series with no points renders no path at all, and a path already in the
+     * DOM is removed when its series goes away. Each side is still capped at a single line, since
+     * the series is wrapped in a one-element array before the join.
+     *
+     * Note: the reference line skips points whose barWidth or barPosition is not a finite number,
+     * so a gap in the reference series breaks the outline at the gap rather than truncating it,
+     * the way bar's own missing-value guard keeps the bars drawable.
+     *
+     * Note: the reference line's appearance comes entirely from the
+     * .sszvis-pyramid__referenceline rule in sszvis.css - the component sets only the class.
+     * Without that stylesheet the path renders as a solid black shape, since fill defaults to
+     * black. stackedPyramid's otherwise identical line component inlines the same four values
+     * instead. See test/component/pyramid.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /* Constants
+    ----------------------------------------------- */
+    const SPINE_PADDING$1 = 0.5;
+    /** Properties with no sensible fallback: without any one of them nothing can be drawn. */
+    const REQUIRED_PROPS$1 = ["barHeight", "barWidth", "barPosition", "leftAccessor", "rightAccessor"];
+    /* Module
+    ----------------------------------------------- */
+    function pyramid() {
+      return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Validation, before any element exists: none of these can render correctly when
+        // unset, and two of the three bar dimensions used to fail silently by reaching bar's
+        // missing-value guard as undefined.
+        for (const name of REQUIRED_PROPS$1) {
+          if (props[name] === undefined) {
+            throw new Error(`[pyramid] the ${name} property is required`);
+          }
+        }
+        // Components
+        const leftBar = bar()
+        // Forwards d3's index, so an index-aware barWidth positions the mirrored bars the
+        // same way it sizes them.
+        .x((d, i) => -SPINE_PADDING$1 - props.barWidth(d, i)).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
+        const rightBar = bar().x(SPINE_PADDING$1).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
+        const leftLine = lineComponent$1().barPosition(props.barPosition).barHeight(props.barHeight).barWidth(props.barWidth).mirror(true);
+        const rightLine = lineComponent$1().barPosition(props.barPosition).barHeight(props.barHeight).barWidth(props.barWidth);
+        // Rendering
+        selection.selectGroup("left").datum(props.leftAccessor(data)).call(leftBar);
+        selection.selectGroup("right").datum(props.rightAccessor(data)).call(rightBar);
+        selection.selectGroup("leftReference").datum(referenceSeries$1(props.leftRefAccessor, data, "leftRefAccessor")).call(leftLine);
+        selection.selectGroup("rightReference").datum(referenceSeries$1(props.rightRefAccessor, data, "rightRefAccessor")).call(rightLine);
+      });
+    }
+    /**
+     * Resolves one side's reference series into the array-of-series the line component joins on:
+     * one entry when there is something to draw, none otherwise. A series with no points
+     * therefore removes its path rather than leaving an empty one behind.
+     *
+     * An accessor returning undefined or null breaks its contract, so it is warned about - but it
+     * is warned about rather than thrown on, because it is data-driven: an accessor indexing into
+     * a cascaded object hits it as soon as one category is missing from one state, and that must
+     * not take the chart down. An empty array is a legitimately empty series and passes silently.
+     */
+    function referenceSeries$1(accessor, data, name) {
+      if (accessor === undefined) return [];
+      const series = accessor(data);
+      if (!Array.isArray(series)) {
+        warn(`[pyramid] ${name} returned ${String(series)} rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series.`);
+        return [];
+      }
+      return series.length === 0 ? [] : [series];
+    }
+    /**
+     * Draws one side's reference outline as a single path. The data is one array of points per
+     * path, so the datum handed to this component is an array of arrays - in practice always
+     * of length one, since each side has at most one reference line.
+     */
+    function lineComponent$1() {
+      return component().prop("barPosition").prop("barHeight").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // The reference point is the outer edge of the bar it describes, vertically centred on
+        // it - the same corner-plus-half-height the bars themselves occupy.
+        const pointX = (d, i) => SPINE_PADDING$1 + props.barWidth(d, i);
+        const pointY = (d, i) => props.barPosition(d, i) + props.barHeight(d, i) / 2;
+        const lineGen = d3.line()
+        // A point whose geometry is not a finite number is skipped, which breaks the outline
+        // at the gap instead of poisoning the path string from there on.
+        .defined((d, i) => isDrawable$1(pointX(d, i)) && isDrawable$1(pointY(d, i))).x(pointX).y(pointY);
+        const line = selection.selectAll(".sszvis-pyramid__referenceline").data(data).join(enter => enter.append("path").attr("class", "sszvis-pyramid__referenceline")
+        // Entering paths get their geometry synchronously: a transition alone would
+        // leave getBBox, snapshots and PNG exports looking at an empty path.
+        .attr("d", lineGen));
+        line.attr("transform", props.mirror ? "scale(-1, 1)" : "").transition(defaultTransition()).attr("d", lineGen);
+      });
+    }
+    /** Whether a computed coordinate can be written into a path string at all. */
+    function isDrawable$1(value) {
+      return Number.isFinite(Number(value));
+    }
+
+    /**
+     * Sankey component
+     *
+     * This component is used for making sankey diagrams, also known as parallel sets diagrams. They
+     * depict individual entities as bars, and flows between those entities as thick links connecting
+     * those bars. The entities can be many things associated with flows, for example organizations,
+     * geographic regions, or websites, while the links between them can represent many kinds of flows,
+     * for example payments of money, movements of people, or referral of browsing traffic. In this component,
+     * the entities are referred to as 'nodes', and the connections between them are referred to as 'links'.
+     *
+     * @module sszvis/component/sankey
+     *
+     * @requires sszvis.component.bar
+     *
+     * @property {Function} sizeScale                    A scale function for the size of the nodes. The domain and the range should be configured using
+     *                                                   values returned by the sszvis.layout.sankey.computeLayout function. It scales the links as well:
+     *                                                   a link's thickness is sizeScale(value) and its offset within its node sizeScale(srcOffset).
+     *                                                   Required, and an unset scale throws "props.sizeScale is not a function".
+     * @property {Function} columnPosition               A scale function for the position of the columns of nodes. Should be configured using a value
+     *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required, and throws like sizeScale
+     *                                                   when unset. It is called with a column index for the column labels as well as for the nodes, so
+     *                                                   it is also consulted for columns that hold no node.
+     * @property {Number} nodeThickness                  A number for the horizontal thickness of the node bars. Should be configured using a value
+     *                                                   returned by the sszvis.layout.sankey.computeLayout function. Required: leaving it unset throws
+     *                                                   before anything is drawn. Must be a plain number - an accessor, which most other properties in
+     *                                                   this library accept, is rejected the same way. The bar's width is floored at one pixel but the
+     *                                                   link starts and the column label centring read the raw value, so below a thickness of one the
+     *                                                   two disagree.
+     * @property {Number} nodePadding                    A number for padding between the nodes. Should be configured using a value returned by the
+     *                                                   sszvis.layout.sankey.computeLayout function. It applies between nodes only; the links stacked
+     *                                                   inside a node are spaced by the size scale alone and fill it exactly. It also sets how far a
+     *                                                   label hit box extends past its node, half of it above and half below. Required and must be a
+     *                                                   plain number; leaving it unset, or passing an accessor, throws before anything is drawn.
+     * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number, for padding at the top of
+     *                                                   each column. Used to vertically center the columns. Required despite the functor wrapper: it has
+     *                                                   no default, so leaving it unset throws "props.columnPadding is not a function". An accessor is
+     *                                                   called with the column index alone, without d3's index and group arguments.
+     * @property {String, Function} columnLabel          A string, or a function that returns a string, for the label at the top of each column. Defaults
+     *                                                   to "", so the text elements are always in the DOM, and so are their ticks - which sszvis.css
+     *                                                   gives a stroke, so an unlabelled chart still shows a short line per column pointing at nothing. A
+     *                                                   function is called with the column index alone, not with the label's own datum, which is that
+     *                                                   column's node count; columnLabelOffset decorates the same element but takes the datum first. One
+     *                                                   label and one tick are drawn per entry in data.columnLengths, whether or not a node lives in that
+     *                                                   column.
+     * @property {Number, Function} columnLabelOffset    A value for offsetting the column labels in the x axis. Used to move the column labels around if
+     *                                                   you don't want them to be centered on the columns. This is useful in situations where the normal
+     *                                                   label would overlap outer boundaries or otherwise be inconveniently positioned. You can usually
+     *                                                   forget this, except perhaps in very narrow screen layouts. Default 0. It shifts the label only -
+     *                                                   the tick stays centred on the column - and horizontally only; the vertical position is fixed. A
+     *                                                   function is applied by d3 rather than by the renderer, so it receives the label's datum, that
+     *                                                   column's node count, followed by the column index.
+     * @property {Number, Function} columnLabelOpacity  A value for the opacity of the column labels, or a function taking a column index and returning
+     *                                                   one. Default 1. Use it to fade the column headers out while a hover label occupies the same
+     *                                                   space; labelOpacity does the same for the node labels. Like columnLabel, an accessor is called
+     *                                                   with the column index alone.
+     * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default
+     *                                                   0.5, which puts both control points at the horizontal midpoint. Never clamped: at 1 the control
+     *                                                   points swap ends, which still keeps the curve inside the column gap as a pronounced S, and above
+     *                                                   1 they leave the gap altogether and the curve swings out past both columns. Must be a plain
+     *                                                   number, like nodeThickness; an accessor is reported before anything is drawn.
+     * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color. Optional:
+     *                                                   when unset no fill attribute is written and the bars fall back to the stylesheet.
+     * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color. Optional, as
+     *                                                   nodeColor: unset leaves the stroke attribute off the paths.
+     * @property {Function} linkSort                     A function determining how to sort the links, which are rendered stacked on top of each other.
+     *                                                   The comparator is handed to d3's selection.sort, which orders the elements ascending, so the
+     *                                                   comparator's largest link is the last one in the document and paints over all the others. A
+     *                                                   value that is not a function is reported, since a comparator can never be a constant. The
+     *                                                   default comparator is descending by value, so the thinnest links paint over the thickest and a
+     *                                                   thin link is never hidden by a thick one it crosses. This matches the descending order
+     *                                                   sszvis.layout.sankey.prepareData puts the array in. The sort reorders elements only; the data
+     *                                                   array, and with it the link tooltip
+     *                                                   anchors, keeps its original order.
+     * @property {String, Function} labelSide            A function determining the position of labels for the nodes. Should take a column index and
+     *                                                   return a side ('left' or 'right'). Default is always 'left'. A function receives the column index
+     *                                                   alone, without d3's index and group arguments. The test is `=== "left"`, so any other value, a
+     *                                                   typo included, silently lands the label on the right, and labelSideSwitch then maps it to 'left'.
+     * @property {Boolean} labelSideSwitch               A boolean used to determine whether to switch the label side. When true, 'left' labels will be
+     *                                                   shown on the right side, and 'right' labels on the left side. This is useful as a switch to be
+     *                                                   flipped in very narrow screen layouts, when you want the labels to appear on the opposite side of
+     *                                                   the columns they refer to. The hit boxes follow the switch as well.
+     * @property {Number, Function} labelOpacity         A value for the opacity of the node labels, or a function over a node returning one. Default 1.
+     *                                                   It applies to the node labels only; columnLabelOpacity covers the column labels. Use it to fade
+     *                                                   the node names out when they would overlap with user-triggered hover labels.
+     * @property {Number} labelHitBoxSize                A number for the width of the transparent 'hit boxes' drawn over the labels. This should
+     *                                                   basically be equal to the width of the widest label. For performance reasons, it doesn't make
+     *                                                   sense to calculate this value at run time while the component is rendered. Far better is to
+     *                                                   position the chart so that the labels are visible, find the value of the widest label, and use
+     *                                                   that. Default 0, which leaves a box exactly as wide as a node. Must be a plain number, and an
+     *                                                   accessor is reported: the width
+     *                                                   is computed once, from labelHitBoxSize plus nodeThickness, so every box is the same width
+     *                                                   whatever its own label says. The boxes are appended after the labels and so paint over them,
+     *                                                   which is what lets them catch the pointer.
+     * @property {String, Function} nameLabel           A string, or a function which takes the id of a node and returns the label for that node.
+     *                                                   Defaults to using the id directly.
+     * @property {Array} linkSourceLabels                An array containing the data for links which should have labels on their 'source' end, that is
+     *                                                   the end of the link which is connected to the source node. These data values should match the
+     *                                                   values returned by sszvis.layout.sankey.prepareData. For performance reasons, you need to give
+     *                                                   the data values themselves here. See the examples for an implementation of the most
+     *                                                   straightforward mechanism for this. Defaults to []. The array is used as given and never checked
+     *                                                   against data.links, so a stale link object still renders a label, positioned from its own src and
+     *                                                   tgt and so at a place where no link is drawn.
+     * @property {Array} linkTargetLabels                An array containing data for links which should have labels on their 'target' end, that is the
+     *                                                   end of the link which is connected to the target node. Works the same as linkSourceLabels, but
+     *                                                   used for another set of possible link labels.
+     * @property {String, Function} linkLabel            A string or function returning a string to use for the label of each link. Function versions
+     *                                                   should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels) and
+     *                                                   return text. Optional: when unset the label elements are still created for every entry in
+     *                                                   linkSourceLabels and linkTargetLabels, with no text in them.
+     * @property {Boolean} transition                    Whether to animate the node bars to their new geometry on an update. Forwarded to bar, and
+     *                                                   defaulted to bar's own default of true. Pass false for anything that measures the chart
+     *                                                   synchronously, or that re-renders faster than the animation can finish. Only the node bars
+     *                                                   are affected; the link paths interpolate their own geometry regardless.
+     *
+     * Note: the component always creates four sub-groups, in this order: nodes, links,
+     * linklabels and nodelabels. The order is load-bearing, since it makes the links paint over
+     * the node bars, and every group is created even when there is nothing to put in it. The
+     * column labels and their ticks are not among them: they are selected off the same selection
+     * the bars are rendered into, so they live in the nodes group alongside the rects and the
+     * tooltip anchors. They can still be styled by class - .sszvis-sankey-column-label in
+     * sszvis.css does exactly that - but there is no group of their own to transform, fade or
+     * make click-through as a unit. Their vertical position is a hard-coded -24, above the
+     * group's origin, so they depend on the chart's top padding to be visible at all.
+     *
+     * Note: a one pixel gap is left between a node and the links attached to it, so the curves
+     * never quite touch the bars. It is a local constant, deliberately not a property, and it
+     * does not scale with the chart.
+     *
+     * Note: a size scale that returns NaN for one value - a d3 scale fed undefined, a gap in the
+     * data - is reported. The node bars are guarded by bar, which replaces NaN with 0, and the
+     * node labels and hit boxes follow the same rule with a warning. A link whose geometry is
+     * not finite cannot be drawn correctly at all, so it is warned about and left out of the
+     * document rather than drawn wrong.
+     *
+     * Note: a node's box is snapped to whole pixels, the position floored and the height ceiled,
+     * so neighbouring nodes never leave a sub-pixel gap between them. The link geometry is not
+     * rounded. The links do start from the same floored position as the bar, so they stay glued
+     * to its top edge, but the stack of links inside a node can finish up to a pixel short of
+     * the bar's bottom edge.
+     *
+     * Note: the nodes end up with their tooltip anchors written twice. bar renders its own
+     * anchors into the group it is called on, and the component then calls a second
+     * tooltipAnchor on the same group. Both join to [data-tooltip-anchor] over data.nodes, so
+     * the second pass reuses the first one's rects and overwrites their transforms rather than
+     * adding any. What is observable is four anchors rather than eight, centred on the nodes
+     * rather than at bar's default top-centre.
+     *
+     * Note: the links are keyed by id, so a link keeps its path element across renders, but the
+     * nodes go through bar, whose join is unkeyed, so rect identity follows the array index. A
+     * reordered node array moves no element; it rewrites the attributes in place, and each rect
+     * ends up bound to a different node. That matters for anything holding on to a rect, such as
+     * a hover handler.
+     *
+     * Note: the transition property is forwarded to bar and defaults to bar's own default of
+     * true, so the node rects ease to their new geometry. Pass false to have them snap into
+     * place instead. See test/component/sankey.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /* Constants
+    ----------------------------------------------- */
+    /** Padding between the nodes and the links attached to them. Deliberately not a property. */
+    const LINK_PADDING = 1;
+    /** How far above the columns the column labels and their ticks are drawn. */
+    const COLUMN_LABEL_Y = -24;
+    /* Helper functions
+    ----------------------------------------------- */
+    const linkPathString = (x0, x1, x2, x3, y0, y1) => `M${x0},${y0}C${x1},${y0} ${x2},${y1} ${x3},${y1}`;
+    const linkBounds = (x0, x1, y0, y1) => [x0, x1, y0, y1];
+    /** The links are keyed on their id, so a redrawn link keeps its path element. */
+    const idAcc = link => link.id;
+    /** True when every number is a real, drawable coordinate. */
+    function allFinite(values) {
+      return values.every(v => Number.isFinite(v));
+    }
+    /* Module
+    ----------------------------------------------- */
+    function sankey() {
+      return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("columnLabelOpacity", functor).columnLabelOpacity(1).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort").linkSort((a, b) => b.value - a.value) // Descending, so the thinnest links paint on top
+      .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel", functor).nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Checked before anything is drawn. These four are used directly in arithmetic, so
+        // an unset value or an accessor - the shape most other properties in this library
+        // accept - produces NaN geometry, which bar's missing-value guard turns into an
+        // empty-looking chart rather than an error.
+        for (const name of ["nodeThickness", "nodePadding", "labelHitBoxSize", "linkCurvature"]) {
+          if (typeof props[name] !== "number" || !Number.isFinite(props[name])) {
+            throw new Error(`[sankey] the ${name} property must be a number`);
+          }
+        }
+        if (typeof props.linkSort !== "function") {
+          throw new Error("[sankey] the linkSort property must be a comparator function");
+        }
+        const getNodePosition = node => Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
+        const xPosition = node => props.columnPosition(node.columnIndex);
+        const yPosition = node => getNodePosition(node);
+        const xExtent = () => Math.max(props.nodeThickness, 1);
+        const yExtent = node => Math.ceil(Math.max(props.sizeScale(node.value), 1));
+        // Draw the nodes
+        const barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor).transition(props.transition);
+        const barGroup = selection.selectGroup("nodes").datum(data.nodes);
+        barGroup.call(barGen);
+        const barTooltipAnchor = tooltipAnchor().position(node => [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2]);
+        barGroup.call(barTooltipAnchor);
+        // Draw the column labels
+        const columnLabelX = colIndex => props.columnPosition(colIndex) + props.nodeThickness / 2;
+        const columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
+        // One number for each column
+        .data(data.columnLengths).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
+        columnLabels.attr("transform", (d, i) => translateString(columnLabelX(i) + props.columnLabelOffset(d, i), COLUMN_LABEL_Y)).text((_d, i) => props.columnLabel(i)).style("opacity", (_d, i) => props.columnLabelOpacity(i));
+        const columnLabelTicks = barGroup.selectAll(".sszvis-sankey-column-label-tick").data(data.columnLengths).join("line").attr("class", "sszvis-sankey-column-label-tick");
+        columnLabelTicks.attr("x1", (_d, i) => halfPixel(columnLabelX(i))).attr("x2", (_d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(COLUMN_LABEL_Y + 8)).attr("y2", halfPixel(COLUMN_LABEL_Y + 12));
+        // Draw the links
+        const linkPoints = link => {
+          const curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + LINK_PADDING,
+            curveEnd = props.columnPosition(link.tgt.columnIndex) - LINK_PADDING,
+            startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + props.sizeScale(link.value) / 2,
+            endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + props.sizeScale(link.value) / 2;
+          return [curveStart, curveEnd, startLevel, endLevel];
+        };
+        const linkPath = link => {
+          const points = linkPoints(link),
+            curveInterp = d3.interpolateNumber(points[0], points[1]),
+            curveControlPtA = curveInterp(props.linkCurvature),
+            curveControlPtB = curveInterp(1 - props.linkCurvature);
+          return linkPathString(points[0], curveControlPtA, curveControlPtB, points[1], points[2], points[3]);
+        };
+        const linkBoundingBox = link => {
+          const points = linkPoints(link);
+          return linkBounds(points[0], points[1], points[2], points[3]);
+        };
+        const linkThickness = link => Math.max(props.sizeScale(link.value), 1);
+        // Render the links. A link whose geometry is not finite - a size scale with a gap in
+        // its domain - cannot be drawn at all: coercing it to zero would draw a link that is
+        // merely wrong instead of one that is missing, so it is reported and left out.
+        const drawableLinks = data.links.filter(link => {
+          const points = linkPoints(link);
+          if (allFinite([...points, props.sizeScale(link.value)])) return true;
+          warn("[sankey] skipping a link with non-finite geometry, id:", link.id);
+          return false;
+        });
+        const linksGroup = selection.selectGroup("links");
+        const linksElems = linksGroup.selectAll(".sszvis-link").data(drawableLinks, idAcc).join("path").attr("class", "sszvis-link");
+        linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", (link, i) => colorToString(props.linkColor?.(link, i))).sort(props.linkSort);
+        linksGroup.datum(drawableLinks);
+        const linkTooltipAnchor = tooltipAnchor().position(link => {
+          const bbox = linkBoundingBox(link);
+          return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
+        });
+        linksGroup.call(linkTooltipAnchor);
+        // Render the link labels
+        const linkLabelsGroup = selection.selectGroup("linklabels");
+        // If no props.linkSourceLabels are provided, most of this rendering is no-op
+        const linkSourceLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-source-label").data(props.linkSourceLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label");
+        linkSourceLabels.attr("transform", link => {
+          const bbox = linkBoundingBox(link);
+          return translateString(bbox[0] + 6, bbox[2]);
+        }).text(props.linkLabel ?? null);
+        // If no props.linkTargetLabels are provided, most of this rendering is no-op
+        const linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
+        linkTargetLabels.attr("transform", link => {
+          const bbox = linkBoundingBox(link);
+          return translateString(bbox[1] - 6, bbox[3]);
+        }).text(props.linkLabel ?? null);
+        // Render the node labels and their hit boxes
+        const getLabelSide = colIndex => {
+          let side = props.labelSide(colIndex);
+          if (props.labelSideSwitch) {
+            side = side === "left" ? "right" : "left";
+          }
+          return side;
+        };
+        // The labels and the hit boxes are written by hand, so they need the guard bar
+        // applies to the bars: a non-finite coordinate is reported and drawn at zero, which
+        // keeps them on top of the zero-height bar the same value produced.
+        const guarded = (value, node, what) => {
+          if (Number.isFinite(value)) return value;
+          warn(`[sankey] non-finite ${what} for node`, node.id);
+          return 0;
+        };
+        const safeY = node => guarded(yPosition(node), node, "position");
+        const safeExtent = node => guarded(yExtent(node), node, "height");
+        const nodeLabelsGroup = selection.selectGroup("nodelabels");
+        const barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
+        barLabels.text(node => props.nameLabel(node.id)).attr("text-anchor", node => getLabelSide(node.columnIndex) === "left" ? "end" : "start").attr("x", node => getLabelSide(node.columnIndex) === "left" ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6).attr("y", node => safeY(node) + safeExtent(node) / 2).style("opacity", props.labelOpacity);
+        const barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes).join("rect").attr("class", "sszvis-sankey-hitbox");
+        barLabelHitBoxes.attr("fill", "transparent").attr("x", node => xPosition(node) + (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)).attr("y", node => safeY(node) - props.nodePadding / 2).attr("width", props.labelHitBoxSize + props.nodeThickness).attr("height", node => safeExtent(node) + props.nodePadding);
+      });
+    }
+
+    /**
+     * Stacked area bounds
+     *
+     * @module sszvis/component/stackedAreaBounds
+     *
+     * The missing-value predicate shared by stackedArea and stackedAreaMultiples, which draw the
+     * same shape from the same [y0, y1] bounds and so answer this question the same way. It lived
+     * in both files as a byte-identical copy, with a comment in each pointing at the other; every
+     * change to it has had to be made twice.
+     */
+    /**
+     * Whether a bound counts as missing, and so breaks the shape at that point.
+     *
+     * A value is missing when it is null-ish or when it has no finite numeric form.
+     *
+     * The null-ish half goes beyond the isNaN guard this default was always meant to be -
+     * isNaN(null) is false, so a null would coerce to 0 and be plotted at the top of the chart -
+     * and beyond src/component/line.ts, whose guard is documented as letting null through. A null
+     * measurement is missing data, not a zero, and there is no way to say "plot this at zero" with
+     * null that saying 0 does not say better.
+     *
+     * Finiteness rather than NaN-ness, because Infinity is a number as far as isNaN is concerned
+     * but not a coordinate SVG can parse: it reached the `d` attribute, where the browser drops
+     * that segment and every one after it, so the shape was truncated at the bad bound rather than
+     * broken across it. A scale over a zero-width domain returns exactly that.
+     */
+    function isMissingBound(value) {
+      return value == null || !Number.isFinite(Number(value));
+    }
+
+    /**
+     * Stacked Area component
+     *
+     * Stacked area charts are useful for showing how component parts contribute to a total quantity
+     *
+     * The component renders the output of a d3 stack layout rather than computing one itself, so some
+     * of its configuration properties are similar. It requires an array of layer objects, where each
+     * layer object represents a layer in the stack and is itself the array of points along that layer's
+     * outline. Three independent dimensions are read from each point: x, and the two vertical bounds of
+     * the band at that x.
+     *
+     * @module sszvis/component/stackedArea
+     *
+     * @template P The type of one point along a layer
+     * @template L The type of one layer, an Iterable of P
+     *
+     * @property {number, function} x             An accessor for the x-value of a point, or a constant.
+     *                                            Should return a value in screen pixels. Required:
+     *                                            leaving it unset throws before anything is appended.
+     * @property {number, function} y0            An accessor for the lower bound of the band at a
+     *                                            point, i.e. the baseline, or a constant. In screen
+     *                                            pixels. Required, on the same terms as x.
+     * @property {number, function} y1            An accessor for the upper bound of the band at a
+     *                                            point, or a constant. In screen pixels. Required, on
+     *                                            the same terms as x - but only an unset property is
+     *                                            caught. An explicit null keeps its d3 meaning, which
+     *                                            is "no upper bound": d3 then falls back to y0, so each
+     *                                            layer collapses onto its own baseline and becomes a
+     *                                            zero-height sliver.
+     * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
+     *                                            layer. It has no default, and unlike .sszvis-line
+     *                                            there is no .sszvis-path rule in sszvis.css to fall
+     *                                            back on - the class is only a hook - so an area with
+     *                                            no fill renders as a black slab, the SVG initial
+     *                                            value. An accessor returning undefined removes the
+     *                                            attribute rather than warning, so a colour scale
+     *                                            configured with .unknown(undefined) is black too.
+     *                                            Every chart in docs/area-chart-stacked sets a fill.
+     * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
+     *                                            whole layer. Defaults to #ffffff, the hairline that
+     *                                            visually separates two touching layers. The default
+     *                                            stands in for an unset stroke only - it is applied
+     *                                            with an explicit undefined check, as strokeWidth's
+     *                                            is - so null and "" are
+     *                                            passed through as given - null removes the attribute
+     *                                            and "" writes an invalid paint, both computing to
+     *                                            none - which is how a caller asks for no outline.
+     * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
+     *                                            whole layer. Defaults to 1, applied with an explicit
+     *                                            undefined check, so 0 survives where a falsy fallback
+     *                                            would have replaced it. null is passed through to d3,
+     *                                            which reads a null-ish value as a removal: unset means
+     *                                            1, null means no attribute at all.
+     * @property {boolean, function} [defined]    A per-point predicate handed to d3.area, deciding
+     *                                            whether a point is drawn; a constant is coerced to a
+     *                                            boolean. Each surviving run of points becomes its own
+     *                                            subpath, and a run of one point is emitted as a
+     *                                            degenerate top-and-bottom pair. Defaults to a
+     *                                            missing-value guard over both vertical bounds: a point
+     *                                            whose y0 or y1 is null, undefined or has no numeric
+     *                                            form is skipped and the area breaks around it, and the
+     *                                            first such point in a render is logged as a warning.
+     *                                            Setting it replaces that guard rather than composing
+     *                                            with it, so an explicit predicate must test both
+     *                                            bounds itself.
+     * @property {function} [key]                 The key function for the data join, called with a
+     *                                            layer and its index. The value it returns should be
+     *                                            unique among layers. Defaults to the
+     *                                            index, which matches layers by position; setting it
+     *                                            preserves object constancy across renders, which
+     *                                            matters when a chart transitions between stacked and
+     *                                            separated views.
+     * @property {boolean} transition             Whether to transition the layers when their values
+     *                                            change. Defaults to true.
+     *
+     * Note: the dimension accessors and defined are called by d3.area with a single point, that point's
+     * index within the layer, and the array of points the layer is drawn from. fill, stroke and
+     * strokeWidth are called by the selection with the datum for a whole layer, that layer's index, and
+     * d3's group of path nodes. The style-related accessors therefore receive the array of points
+     * rather than a point, the inverse of what the dimensions receive - the same asymmetry documented
+     * on line.
+     * key sees a layer and its index too, but its third argument depends on which half of the keyed
+     * join is running: the array of incoming layers, or the group of nodes already in the DOM.
+     * With a transition, the style accessors are additionally invoked once on the enter selection,
+     * whose group array has a hole at every updating position - so an accessor that walks its third
+     * argument sees a sparse group on that pass, the same shape stackedAreaMultiples documents. The
+     * value that reaches the DOM is the one from the merged pass, which is never sparse.
+     *
+     * Note: the default defined predicate guards both vertical bounds by hand, as line does. The
+     * expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
+     * fn.compose(...y1); }` and so returned a function rather than calling either composed accessor -
+     * and a function is truthy, which is all d3 tests - so a NaN reached the d attribute verbatim, the
+     * browser stopped rendering at the invalid command, and the whole layer disappeared rather than
+     * only the segment the missing value belonged to. The guard treats null and undefined as missing
+     * too, which a plain isNaN test would not: isNaN(null) is false, so a null would coerce to 0 and be
+     * plotted at the top of the chart. line, by contrast, still lets null through.
+     *
+     * Note: with transition enabled every visual attribute also goes through the transition, so an
+     * entering area is given d, fill, stroke and stroke-width at the join as well. Without that an
+     * entering path carries only its classes until the first animation frame, and anything measuring
+     * the chart synchronously - getTotalLength, a bounding box, a screenshot - sees nothing. It also
+     * settles what an enter looks like: the transition then interpolates from the destination to
+     * itself, so the layers appear complete instead of at full size with a hairline thickening up from
+     * 0, and d3 skips a constant tween whose start equals its end, so the colours stay as they were
+     * given rather than being rewritten as rgb(). Only an update animates.
+     *
+     * Note: the header this replaces documented a valuesAccessor property, saying the default treats
+     * the layer object as an array of values. The component never declared it, so the setter does not
+     * exist and calling it throws a TypeError, and a wrapper object cannot be unwrapped: d3.area runs
+     * the datum through Array.from, which yields [] for a plain object, so a layer that is not an array
+     * is silently skipped as an empty path. stackedAreaMultiples, a near-copy of this component, does
+     * declare valuesAccessor.
+     *
+     * Note: the areas carry a `sszvis-stacked-area-path` class alongside the generic `sszvis-path` one,
+     * and the data join matches only the former, so a pie wedge or a pyramid reference path left in the
+     * same group is left alone. That class is shared with stackedAreaMultiples on purpose - the two are
+     * the two views of one chart, rendered into one group and toggled between, and the eased switch
+     * depends on both joining the same path nodes - and with no other component. The generic class
+     * stays in the class attribute purely as a styling hook.
+     *
+     * Note: nothing constrains the geometry. A layer with no points yields a path element with no d
+     * attribute, a single point yields a closed shape that encloses no area but still draws a vertical
+     * hairline in the default stroke, and a band whose y1 lies below y0 simply winds the other way. See
+     * test/component/stackedArea.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * d3 takes either a constant or a value function, but not a union of the two, so a
+     * dimension is narrowed once before it reaches the generator. Only the constant branch
+     * needs wrapping, and it is wrapped exactly as d3's own constant(+value) was: the value is
+     * coerced once, here, rather than once per point inside the attr callback. An unset
+     * dimension therefore still resolves to NaN, and a value that cannot be coerced still
+     * throws before the data join rather than after it.
+     */
+    const dimension$3 = value => {
+      if (typeof value === "function") return value;
+      // An unset dimension is spelled out because TypeScript will not coerce undefined, and
+      // +undefined is NaN.
+      const constant = value === undefined ? Number.NaN : +value;
+      return () => constant;
+    };
+    /**
+     * As above, for the style properties. An unset property becomes a function returning null,
+     * which d3 removes the attribute for - the same thing it does when handed undefined
+     * directly.
+     */
+    /**
+     * Resolves a colour prop - a constant or a per-layer accessor - to the string d3 writes into
+     * an attribute. Nullish stays nullish, which removes the attribute.
+     */
+    function colorFn$1(value) {
+      const resolve = valueFn(value);
+      return function (datum, index, groups) {
+        return colorToString(resolve.call(this, datum, index, groups));
+      };
+    }
+    function stackedArea() {
+      return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // x, y0 and y1 are all required, and each used to fail differently and silently: an
+        // unset dimension reached d3 as undefined and resolved to a constant NaN, while an
+        // unset y1 was read by d3 as "no upper bound" and fell back to y0, collapsing every
+        // band onto its own baseline - a chart that renders and is wrong. A missing dimension
+        // is a misconfiguration that can never render, so it throws, and it throws before the
+        // data join, so nothing is appended. An explicit .y1(null) keeps its d3 meaning and is
+        // deliberately not caught: only an unset property is.
+        for (const required of ["x", "y0", "y1"]) {
+          if (props[required] === undefined) {
+            throw new Error(`[stackedArea] the ${required} property is required`);
+          }
+        }
+        // Layouts
+        const y0 = dimension$3(props.y0);
+        const y1Given = props.y1 == null ? undefined : dimension$3(props.y1);
+        // The default guards both vertical bounds, the way src/component/line.ts guards both
+        // of its dimensions by hand. It is deliberately not composed: the expression this
+        // replaces - `fn.compose(fn.not(isNaN), props.y0) && fn.compose(..., props.y1)` -
+        // returned a function rather than calling either of them, and a function is truthy,
+        // so the guard never ran. A dropped point is reported once per render, because a gap
+        // in the data is transient and recoverable: the area simply breaks around it.
+        let reported = false;
+        const guardMissing = (datum, index, points) => {
+          const missing = isMissingBound(y0(datum, index, points)) || y1Given !== undefined && isMissingBound(y1Given(datum, index, points));
+          if (missing && !reported) {
+            reported = true;
+            warn("[stackedArea] a point has a missing y0 or y1 value and was skipped; the area breaks around it.");
+          }
+          return !missing;
+        };
+        const defined = props.defined === undefined ? guardMissing : typeof props.defined === "function" ? props.defined : () => Boolean(props.defined);
+        const areaGen = d3.area().defined(defined).x(dimension$3(props.x)).y0(y0);
+        // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
+        // why an unset y1 collapses every layer onto its own baseline. Its typings admit only
+        // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
+        // two identically.
+        if (y1Given === undefined) {
+          areaGen.y1(null);
+        } else {
+          areaGen.y1(y1Given);
+        }
+        // Rendering
+        const pathData = datum => areaGen(datum);
+        // The colour props may hold one of the library's colour objects, so each is resolved
+        // first and then rendered as the string d3 writes - the same conversion d3 would do.
+        const fill = colorFn$1(props.fill ?? null);
+        // The white hairline separating two touching layers. Applied with an explicit undefined
+        // check, as strokeWidth is, so it stands in for an unset stroke only: null and "" are
+        // supplied values and reach d3 as given. A ?? would have swallowed the null.
+        const stroke = colorFn$1(props.stroke === undefined ? "#ffffff" : props.stroke);
+        const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+        // Matching on the stacked-area class rather than the generic .sszvis-path one, which pie
+        // and stackedPyramid also write, keeps a foreign path in the same group out of the join.
+        // The class is deliberately shared with stackedAreaMultiples and with no other component:
+        // docs/area-chart-stacked/sa-two.js renders the two into one group and toggles between
+        // them, and the eased switch between the stacked and the separated view depends on both
+        // components joining the same path nodes. The generic class stays on the node, so no CSS
+        // selector changes meaning, and both are added with classed rather than written as a
+        // class attribute, so a class a caller put on the node survives every rerender.
+        const paths = selection.selectAll("path.sszvis-stacked-area-path").data(data, props.key).join(enter => {
+          const entered = enter.append("path");
+          // Only the transition branch defers these, and only for an entering area: an
+          // update already has last render's values in the DOM to interpolate from, and the
+          // branch below writes all four on the selection when transitions are off. Writing
+          // them here keeps a fresh area out of the attribute-less state a consumer that
+          // measures on the render tick - getTotalLength, a bounding box, a synchronous
+          // screenshot - would otherwise see. The transition then interpolates from the
+          // destination to itself, so the hairline no longer grows up from 0. Guarded rather
+          // than written unconditionally, so the no-transition path still evaluates each
+          // accessor exactly once per render - which the accessor tests pin.
+          if (props.transition) {
+            entered.attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+          }
+          return entered;
+        }).classed("sszvis-path", true).classed("sszvis-stacked-area-path", true);
+        // Every visual property is applied to the transition when there is one, so the two
+        // branches are spelled out rather than sharing a variable - a d3 transition and a d3
+        // selection have separate types.
+        if (props.transition) {
+          paths.transition(defaultTransition(OWN_TRANSITION)).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+        } else {
+          // An in-flight tween from an earlier render would overwrite these, so it is
+          // interrupted first - by name, so a consumer's own transition keeps running.
+          paths.interrupt(OWN_TRANSITION).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+        }
+      });
+    }
+
+    /**
+     * Stacked Area Multiples component
+     *
+     * This component, like stackedArea, requires an array of layer objects, where each layer object is
+     * one of the multiples. In addition to stackedArea, this chart's layers can be separated to provide
+     * two views on the data: a sum of all elements as well as every element on its own. It renders the
+     * output of a d3 stack layout rather than computing one itself, so some of its configuration
+     * properties are similar; in the separated view the baseline comes from an ordinal position scale
+     * rather than from the stack, but the datum is the same. Each layer object is unwrapped by
+     * valuesAccessor, which defaults to treating it as the array of points along that layer's outline.
+     * Three independent dimensions are read from each point: x, and the two vertical bounds of the band
+     * at that x.
+     *
+     * @module sszvis/component/stackedAreaMultiples
+     *
+     * @template P The type of one point along a layer
+     * @template L The type of one layer, whatever valuesAccessor unwraps into points
+     *
+     * @property {number, function} x             An accessor for the x-value of a point, or a constant.
+     *                                            Should return a value in screen pixels. Required:
+     *                                            leaving it unset throws before anything is appended.
+     * @property {number, function} y0            An accessor for the lower bound of the band at a
+     *                                            point, i.e. the baseline, or a constant. In screen
+     *                                            pixels. Required, on the same terms as x.
+     * @property {number, function} y1            An accessor for the upper bound of the band at a
+     *                                            point, or a constant. In screen pixels. Required, on
+     *                                            the same terms as x - but only an unset property is
+     *                                            caught. An explicit null keeps its d3 meaning, which
+     *                                            is "no upper bound": d3 then falls back to y0, so each
+     *                                            band collapses onto its own baseline and becomes a
+     *                                            zero-height sliver, drawn as a hairline in the default
+     *                                            stroke.
+     * @property {string, function} [fill]        The area fill, as a colour or an accessor over a whole
+     *                                            layer. It has no default, and unlike .sszvis-line
+     *                                            there is no .sszvis-path rule in the stylesheet to
+     *                                            fall back on - the class is only a hook - so an area
+     *                                            with no fill renders as a black slab, the SVG initial
+     *                                            value. An accessor returning undefined removes the
+     *                                            attribute rather than warning, so a colour scale
+     *                                            configured with .unknown(undefined) is black too.
+     *                                            Every chart in docs/area-chart-stacked sets a fill.
+     * @property {string, function} [stroke]      The area stroke, as a colour or an accessor over a
+     *                                            whole layer. Defaults to #ffffff, the hairline that
+     *                                            visually separates two touching bands, so the
+     *                                            separated and the stacked view of one chart are
+     *                                            outlined alike. The default stands in for an unset
+     *                                            stroke only: null and "" are passed through as given -
+     *                                            null removes the attribute and "" writes an invalid
+     *                                            paint, both computing to none - which is how a caller
+     *                                            asks for no outline.
+     * @property {number, function} [strokeWidth] The stroke-width, as a number or an accessor over a
+     *                                            whole layer. Defaults to 1, applied with an explicit
+     *                                            undefined check, so 0 survives where a falsy fallback
+     *                                            would have replaced it. null is passed through to d3,
+     *                                            which reads a null-ish value as a removal: unset means
+     *                                            1, null means no attribute at all.
+     * @property {boolean, function} [defined]    A per-point predicate handed to d3.area, deciding
+     *                                            whether a point is drawn; a constant is coerced to a
+     *                                            boolean. Each surviving run of points becomes its own
+     *                                            subpath, and a run of one point is emitted as a
+     *                                            degenerate top-and-bottom pair. Defaults to a
+     *                                            missing-value guard over both vertical bounds: a point
+     *                                            whose y0 or y1 is null, undefined or has no numeric
+     *                                            form is skipped and the band breaks around it, and the
+     *                                            first such point in a render is logged as a warning.
+     *                                            Setting it replaces that guard rather than composing
+     *                                            with it, so an explicit predicate must test both
+     *                                            bounds itself.
+     * @property {function} [key]                 The key function for the data join, called with a
+     *                                            layer and its index. The value it returns should be
+     *                                            unique among layers. Defaults to the index, which
+     *                                            matches layers by position in the array that was
+     *                                            passed in, as stackedArea's does.
+     *                                            Setting it preserves object constancy across renders,
+     *                                            which matters when a chart switches between the
+     *                                            stacked and the separated view.
+     * @property {function} [valuesAccessor]      Pulls the points to draw out of one layer's datum.
+     *                                            Defaults to the identity, which treats the layer
+     *                                            object as the array of points itself. Set it when the
+     *                                            layer objects are wrappers such as
+     *                                            { name: "Name", values: [ ... ] }. It is consulted for
+     *                                            the geometry and defined only: fill, stroke,
+     *                                            strokeWidth and key still see the layer object, which
+     *                                            is what lets the colour be read off the layer's name.
+     * @property {boolean} transition             Whether to transition the layers when their values
+     *                                            change. Defaults to true. An updating band eases into
+     *                                            its new geometry and colours over 300ms; an entering
+     *                                            band is painted synchronously (see below).
+     *
+     * Note: a constant dimension is coerced with unary + once, before the data join, exactly as d3's own
+     * constant() would - so a numeric string works, while a value that has no numeric form, such as
+     * "abc" or {}, becomes NaN once and every point of every layer is drawn from it, which d3 emits as
+     * an invalid path rather than an error. Only a value whose coercion itself throws, such as a Symbol
+     * or a BigInt, raises - and it raises before the join rather than once per point.
+     *
+     * Note: the layers are bound in the order they were given, as stackedArea binds them, so the first
+     * layer of the input is the first path in the DOM and the index handed to the style accessors, to
+     * key and to valuesAccessor is its position in that array. The component used to reverse the data
+     * before the join - a line carrying an unanswered "//sszsch why reverse?" comment since 2017, which
+     * nothing explained - which mirrored every index, applied an index-keyed palette back to front, and
+     * moved both paths whenever docs/area-chart-stacked/sa-two.js toggled between the two views.
+     * .join() orders the merged selection, so the paint order follows the data on every render, even
+     * when the nodes are reused.
+     *
+     * Note: transition applies to updating bands only. An entering band is painted directly, as bar
+     * does, so a freshly rendered chart is complete on the same tick rather than leaving an empty path
+     * element until the first animation frame - the same as stackedArea and bar. A band already on screen
+     * holds its old geometry and colours and eases into the new ones over 300ms. Between 47f58578
+     * ("perf: change .enter() to .join() API", Oct 2024) and this fix the transition was created on its
+     * own statement with its return value dropped, so it carried no tweens and every attribute was
+     * written to the plain selection: nothing animated, while the schedule still interrupted whatever
+     * else was animating those nodes.
+     *
+     * Note: the dimension accessors and defined are called by d3.area with a single point, that point's
+     * index within the layer, and the array of points the layer is drawn from. fill, stroke,
+     * strokeWidth and valuesAccessor are called by the selection with the datum for a whole layer, that
+     * layer's index, and d3's group of path nodes, with the node itself as `this`. The style-related
+     * accessors therefore receive the layer object rather than a point, the inverse of what the
+     * dimensions receive - the same asymmetry documented on line.
+     * That third argument is the group of the half of the join being evaluated, not of the merged
+     * selection: entering and updating bands are styled separately so that an entering one can be
+     * painted synchronously, and d3 leaves a null hole in each half's group for every node belonging
+     * to the other. A render that both reuses and enters bands therefore hands these accessors a
+     * sparse ArrayLike, so an accessor that walks it - rather than reading its own datum, as the
+     * first two arguments give it - has to skip the holes. key has the same caveat, below.
+     * key sees a layer and its index too, but its third argument depends on which half of the keyed
+     * join is running: the array of incoming layers, or the group of nodes already in the DOM.
+     *
+     * Note: the default defined predicate guards both vertical bounds by hand, as stackedArea and line
+     * do. The expression it replaces read `function () { return fn.compose(fn.not(isNaN), props.y0) &&
+     * fn.compose(...y1); }` and so returned a function rather than calling either composed accessor -
+     * and a function is truthy, which is all d3 tests - so a NaN reached the d attribute verbatim, the
+     * browser stopped rendering at the invalid command, and the whole band disappeared rather than only
+     * the segment the missing value belonged to. The guard treats null and undefined as missing too,
+     * which a plain isNaN test would not: isNaN(null) is false, so a null would coerce to 0 and be
+     * plotted at the top of the chart. line, by contrast, still lets null through.
+     *
+     * Note: forgetting valuesAccessor for a wrapper layer produces an empty chart rather than an error,
+     * because d3.area runs its datum through Array.from and that yields [] for a plain object. An
+     * accessor that returns nothing instead throws out of d3.area, which names neither the component
+     * nor the property.
+     *
+     * Note: the bands carry a `sszvis-stacked-area-path` class alongside the generic `sszvis-path` one,
+     * and the data join matches only the former, so a pie wedge or a pyramid reference path left in the
+     * same group is left alone. That class is shared with stackedArea on purpose - the two are the two
+     * views of one chart, rendered into one group and toggled between, and the eased switch depends on
+     * both joining the same path nodes - and with no other component. The generic class stays in the
+     * class attribute purely as a styling hook.
+     *
+     * Note: nothing constrains the geometry, and nothing reports its own absence. A layer with no points
+     * yields a path element with no d attribute, a single point yields a closed shape that encloses no
+     * area but still draws a vertical hairline in the default stroke, and a band whose y1 lies below y0 simply
+     * winds the other way. See test/component/stackedAreaMultiples.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * d3 takes either a constant or a value function, but not a union of the two, so a
+     * dimension is narrowed once before it reaches the generator. Only the constant branch
+     * needs wrapping, and it is wrapped exactly as d3's own constant(+value) was: the value is
+     * coerced once, here, rather than once per point inside the attr callback. An unset
+     * dimension therefore still resolves to NaN, as does one with no numeric form, and only a
+     * value whose coercion itself throws - a Symbol, a BigInt - raises, before the data join
+     * rather than after it.
+     */
+    const dimension$2 = value => {
+      if (typeof value === "function") return value;
+      // An unset dimension is spelled out because TypeScript will not coerce undefined, and
+      // +undefined is NaN.
+      const constant = value === undefined ? Number.NaN : +value;
+      return () => constant;
+    };
+    /**
+     * As above, for the style properties. An unset property becomes a function returning null,
+     * which d3 removes the attribute for - the same thing it does when handed undefined
+     * directly.
+     */
+    /**
+     * Resolves a colour prop - a constant or a per-layer accessor - to the string d3 writes into
+     * an attribute. Nullish stays nullish, which removes the attribute.
+     */
+    function colorFn(value) {
+      const resolve = valueFn(value);
+      return function (datum, index, groups) {
+        return colorToString(resolve.call(this, datum, index, groups));
+      };
+    }
+    function stackedAreaMultiples() {
+      return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((_datum, index) => index).prop("valuesAccessor")
+      // The default layer type L is P[], so the values ARE the layer and identity is correct.
+      // A caller who sets a different L must supply a matching accessor; the constraint
+      // cannot express "identity is valid only for the default instantiation".
+      .valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // x, y0 and y1 are all required, and each used to fail differently and silently: an
+        // unset dimension reached d3 as undefined and resolved to a constant NaN, while an
+        // unset y1 was read by d3 as "no upper bound" and fell back to y0, collapsing every
+        // band onto its own baseline - a chart that renders and is wrong. A missing dimension
+        // is a misconfiguration that can never render, so it throws, and it throws before the
+        // data join, so nothing is appended. An explicit .y1(null) keeps its d3 meaning and is
+        // deliberately not caught: only an unset property is.
+        for (const required of ["x", "y0", "y1"]) {
+          if (props[required] === undefined) {
+            throw new Error(`[stackedAreaMultiples] the ${required} property is required`);
+          }
+        }
+        // Layouts
+        const y0 = dimension$2(props.y0);
+        const y1Given = props.y1 == null ? undefined : dimension$2(props.y1);
+        // The default guards both vertical bounds, the way src/component/line.ts guards both
+        // of its dimensions by hand. It is deliberately not composed: the expression this
+        // replaces - `fn.compose(fn.not(isNaN), props.y0) && fn.compose(..., props.y1)` -
+        // returned a function rather than calling either of them, and a function is truthy,
+        // so the guard never ran. A dropped point is reported once per render, because a gap
+        // in the data is transient and recoverable: the band simply breaks around it.
+        let reported = false;
+        const guardMissing = (datum, index, points) => {
+          const missing = isMissingBound(y0(datum, index, points)) || y1Given !== undefined && isMissingBound(y1Given(datum, index, points));
+          if (missing && !reported) {
+            reported = true;
+            warn("[stackedAreaMultiples] a point has a missing y0 or y1 value and was skipped; the band breaks around it.");
+          }
+          return !missing;
+        };
+        const defined = props.defined === undefined ? guardMissing : typeof props.defined === "function" ? props.defined : () => Boolean(props.defined);
+        const areaGen = d3.area().defined(defined).x(dimension$2(props.x)).y0(y0);
+        // d3 reads a null-ish upper bound as "no upper bound" and falls back to y0, which is
+        // why an unset y1 collapses every band onto its own baseline. Its typings admit only
+        // null, so undefined is spelled out here; d3 itself tests `_ == null` and treats the
+        // two identically.
+        if (y1Given === undefined) {
+          areaGen.y1(null);
+        } else {
+          areaGen.y1(y1Given);
+        }
+        // Rendering
+        // Declared with `function` so that `this` and the node group are still forwarded to
+        // valuesAccessor, as they were when this was built with fn.compose.
+        const pathData = function (datum, index, group) {
+          return areaGen(props.valuesAccessor.call(this, datum, index, group));
+        };
+        // The colour props may hold one of the library's colour objects, so each is resolved
+        // first and then rendered as the string d3 writes - the same conversion d3 would do.
+        const fill = colorFn(props.fill ?? null);
+        // The white hairline separating two touching bands, as stackedArea has. Applied with an
+        // explicit undefined check, as strokeWidth is, so it stands in for an unset stroke
+        // only: null and "" are supplied values and reach d3 as given.
+        const stroke = colorFn(props.stroke === undefined ? "#ffffff" : props.stroke);
+        const strokeWidth = valueFn(props.strokeWidth === undefined ? 1 : props.strokeWidth);
+        // An entering band is painted synchronously, as bar and stackedArea do, so it is
+        // complete on the tick it appears on rather than staying an empty path element until
+        // the first animation frame.
+        // Only the bands already on screen are transitioned, so each attribute is written
+        // exactly once per render either way. The two branches are spelled out rather than
+        // sharing a variable, since a d3 transition and a d3 selection have separate types.
+        // The transition used to be created on its own statement with its return value
+        // dropped, which left it carrying no tweens while still interrupting whatever else
+        // was animating these nodes.
+        // Matching on the stacked-area class rather than the generic .sszvis-path one, which pie
+        // and stackedPyramid also write, keeps a foreign path in the same group out of the join.
+        // The class is deliberately shared with stackedArea and with no other component:
+        // docs/area-chart-stacked/sa-two.js renders the two into one group and toggles between
+        // them, and the eased switch between the stacked and the separated view depends on both
+        // components joining the same path nodes. The generic class stays in the class
+        // attribute, so no CSS selector changes meaning.
+        selection.selectAll("path.sszvis-stacked-area-path").data(data, props.key).join(enter => enter.append("path").attr("class", "sszvis-path sszvis-stacked-area-path").attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth), update => {
+          if (props.transition) {
+            update.transition(defaultTransition(OWN_TRANSITION)).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+            return update;
+          }
+          // An in-flight tween from an earlier render would overwrite these, so it is
+          // interrupted first - by name, so a consumer's own transition keeps running.
+          return update.interrupt(OWN_TRANSITION).attr("d", pathData).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", strokeWidth);
+        });
+      });
+    }
+
+    /**
+     * Stacked Pyramid component
+     *
+     * The pyramid component is primarily used to show a distribution of age groups
+     * in a population (population pyramid). The chart is mirrored vertically,
+     * meaning that it has a horizontal axis that extends in a positive and negative
+     * direction having the same domain.
+     *
+     * This chart's horizontal point of origin is at its spine, i.e. the center of
+     * the chart.
+     *
+     * The datum bound to the chart layer is the sides array, never a wrapper around it: either the
+     * return value of stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc), which is that array,
+     * or the `sides` field of stackedPyramidLayout(...)(rows), which is the same array with the
+     * maximum beside it rather than assigned onto it. Binding the layout object itself draws nothing
+     * - d3's data join over a non-iterable yields an empty selection, without an error. Each accessor
+     * is called with one source row: sideAcc groups the rows into the sides of the pyramid, rowAcc
+     * into the vertical positions within a side, seriesAcc into the layers of each row's stack, and
+     * valueAcc supplies the number that is stacked.
+     *
+     * The result is an array of sides, each an array of the series d3.stack produced for that side,
+     * each series an array of the [y0, y1] slices it computed - so a slice is addressed as
+     * data[side][series][row], and the caller picks the two sides positionally. Every slice carries
+     * five properties beyond its pair: its `series` key, its `side` as the side accessor returned it,
+     * its `row`, its own `value`, and its `data`, narrowed from the whole grouped row to the single
+     * source row the slice was computed from - or undefined, where the row carries no value for that
+     * series and the slice is a zero-width pad. d3's own `key` and `index` are carried across onto each
+     * series. The largest stacked total across both sides is what the horizontal scale's domain is
+     * built from: stackedPyramidData assigns it onto the returned array as `maxValue`, where it is
+     * deprecated because no array operation carries it, and stackedPyramidLayout returns it beside
+     * the sides. The rows passed in are not modified.
+     *
+     * The component always creates four sub-groups, in this order: leftStack, rightStack, leftReference
+     * and rightReference. The order is load-bearing, since it makes the reference lines paint over the
+     * bars, and the reference groups are created even when no reference accessor is configured. Within
+     * a side each series gets its own group, marked with a [data-sszvis-stack] attribute and no class -
+     * stackedBar uses a .sszvis-stack class for the same job - and is drawn by its own bar component,
+     * the left one mirrored across the spine. Both sides are pushed outwards by SPINE_PADDING, so a one
+     * pixel gap runs down the middle of the chart, and every bar dimension is read from the same
+     * accessors on both sides.
+     *
+     * @module sszvis/component/stackedPyramid
+     *
+     * @requires sszvis.component.bar
+     *
+     * @template T The type of one row of the input data, i.e. of a slice's `data`
+     * @template S The type the side accessor returns, i.e. of a slice's `side`
+     *
+     * @property {string, function} [barFill]     The color of a bar. Defaults to #000 and applies to
+     *                                            both sides; a per-datum accessor is the usual way to
+     *                                            colour the series. It is called with the slice's
+     *                                            `data`, so it reads a source row rather than a slice,
+     *                                            and with d3's index, as bar's own fill is. That index
+     *                                            counts within one series group, not across a side:
+     *                                            bar is instantiated once per series, so a two-row,
+     *                                            two-series side sees 0, 1, 0, 1 rather than 0..3.
+     *                                            Indexing a palette with it repeats colours per
+     *                                            series; key the colour off the datum instead. The
+     *                                            same holds for barWidth and barPosition.
+     * @property {number, function} barHeight     The height of a bar. Required: an unset prop throws a
+     *                                            TypeError naming it before anything is drawn. It used
+     *                                            to be the one dimension handed straight to bar, so an
+     *                                            unset value reached bar's missing-value guard as
+     *                                            undefined and became 0, and the chart rendered an
+     *                                            empty axis frame with no bars and no warning.
+     * @property {number, function} barWidth      The width of a bar. Required: an unset prop throws a
+     *                                            named TypeError before anything is drawn, because the
+     *                                            component computes both the x and the width of every
+     *                                            bar itself. A function is a scale over stacked values,
+     *                                            called with one of the numbers out of a slice's [y0,
+     *                                            y1] pair rather than with the slice - pyramid calls
+     *                                            the same property with the bar's datum, and an
+     *                                            accessor written for pyramid reads properties off a
+     *                                            number here and yields NaN, which bar's guard turns
+     *                                            into 0. It is called with d3's index, as pyramid calls
+     *                                            it, so an index-aware accessor works; before that it
+     *                                            saw undefined for the index and collapsed every width
+     *                                            and every x to 0 on both sides. A number is the
+     *                                            constant width of every segment, measured from the
+     *                                            spine outwards, and is the one dimension not run
+     *                                            through fn.functor, so that a constant stays
+     *                                            distinguishable from a scale.
+     * @property {number, function} barPosition   The vertical position of a bar, i.e. its top edge.
+     *                                            Required: an unset prop throws a TypeError naming it
+     *                                            before anything is drawn. It is
+     *                                            called with the slice's `row`, i.e. the value the
+     *                                            layout's row accessor returned, so it is a scale over
+     *                                            the row domain. It is called with d3's index too, as
+     *                                            bar's own accessors are; before that it went through
+     *                                            fn.compose, which forwards every argument only to the
+     *                                            innermost function, so an index-aware accessor
+     *                                            yielded NaN and bar's guard flattened it to 0.
+     * @property {Array<number>} [tooltipAnchor]  The anchor position for the tooltips. Uses
+     *                                            sszvis.component.bar.tooltipAnchor under the hood to
+     *                                            optionally reposition the tooltip anchors in the
+     *                                            pyramid chart. Default value is [0.5, 0.5], which
+     *                                            centers tooltips on the bars. The value is handed to
+     *                                            both bars unchanged rather than being mirrored, and
+     *                                            bar measures from its own upper left corner, which on
+     *                                            the left side is a segment's outer edge, so any x
+     *                                            other than 0.5 lands on visually opposite sides of the
+     *                                            pyramid. An array with fewer than two entries yields a
+     *                                            NaN coordinate, as documented on bar; the component
+     *                                            adds no validation of its own. Shared with pyramid.
+     * @property {function} leftAccessor          Data for the left side, i.e. a function picking one
+     *                                            side out of the layout - the sides are an array, so
+     *                                            docs/population-pyramid/pyramid-stacked.js uses
+     *                                            prop("0") and prop("1"). Required: an unset accessor
+     *                                            throws "props.leftAccessor is not a function" from the
+     *                                            renderer, and an accessor that returns undefined or
+     *                                            null throws from d3's data join instead, with a
+     *                                            message that names neither the property nor the
+     *                                            component.
+     * @property {function} rightAccessor         Data for the right side. Same requirements as
+     *                                            leftAccessor.
+     * @property {function} [leftRefAccessor]     Reference data for the left side, drawn as a single
+     *                                            path outlining the reference series. The elements are
+     *                                            reference points, {row, value}: barWidth maps the
+     *                                            value to x and barPosition the row to y, the same way
+     *                                            round as in the bars, so a slice of the layout
+     *                                            satisfies the shape unchanged. Optional, and so is the
+     *                                            data: an accessor that yields undefined or null for
+     *                                            some states draws no line for that state and warns,
+     *                                            rather than throwing. Returning an empty array hides it
+     *                                            silently, and removes the path element with it.
+     * @property {function} [rightRefAccessor]    Reference data for the right side. Same as
+     *                                            leftRefAccessor.
+     *
+     * Note: a side's series keys are the union of the series across every row of that side, in the
+     * order the rows first mention them, and that order is the stacking order. A row that carries no
+     * value for one of them contributes a zero slice whose `data` is undefined - the alternative would
+     * be to drop the row from the layer entirely, which d3.stack does not offer. Sparse data therefore
+     * needs no padding rows. Such a slice is zero-width, so nothing of it is painted and barFill is
+     * not called for it: an accessor written over the source row never sees an undefined datum, and
+     * does not have to guard for one.
+     *
+     * Note: the cascade groups on String(key) - for the sides, the rows and the series alike - so keys
+     * that differ only in type merge, and the number 1 and the string "1" land in the same cell, whose
+     * rows are then summed together. The ordering follows from the same coercion: JavaScript
+     * iterates array-index keys in ascending numeric order regardless of insertion order, so dense
+     * non-negative integer rows sort themselves, while negative, fractional or plain string rows fall
+     * back to insertion order and are laid out in whatever order the input happened to be in. Since
+     * barPosition receives the row's own value that ordering is cosmetic for the bars - it decides only
+     * which slice is drawn first - but a `row` that is a string comes back as the accessor returned it,
+     * not as the cascade's stringified key. The sides are ordered the same way and
+     * picked positionally, so a dataset whose first row is male puts men on the left and silently
+     * mirrors the chart. The series escape this: their key order is the stacking order, so it is taken
+     * from the data rather than from the cascade row, and a series accessor returning years or numeric
+     * codes keeps the order it returned them in - though the `series` tag still comes back as a string
+     * even when the accessor returned a number. Nothing enforces the
+     * cardinality of two the layout function's own documentation requires of the side accessor either:
+     * a single side leaves the right accessor returning undefined, which throws from d3's data join,
+     * and a third side is returned and then dropped without a word by the caller's positional
+     * accessors. Shared with stackedBarData.
+     *
+     * Note: a cell's value is the sum of every row the accessors placed in it, so data that is not
+     * already aggregated to one row per (side, row, series) triplet stacks to its true total. The
+     * layout function still documents the triplet as appearing exactly once; what has changed is that
+     * a violation is no longer silently understated to the cell's first row. Shared with
+     * stackedBarData.
+     *
+     * Note: stackedPyramidData hangs `maxValue` off the returned array rather than wrapping it in an
+     * object, so any array operation - a spread, a map, a filter, a trip through JSON - drops it. The
+     * property is deprecated for that reason; stackedPyramidLayout returns the same value beside the
+     * sides. It is the maximum of the upper bounds only, so it is not the extent of the data when a
+     * value is negative. An empty layout reports 0, so a scale domain built from it stays valid. A
+     * slice's `value` is a convenience of the same kind: the component never reads it, and it
+     * duplicates d[1] - d[0] as it stood when the layout ran, so it goes stale if a caller rewrites
+     * the pair. Shared with stackedBarData. See test/component/stackedPyramid.test.ts.
+     *
+     * Note: a reference series is an array of {row, value} points, so barWidth maps the value to x and
+     * barPosition the row to y - the same division of labour as in the bars, which is what makes the
+     * outline land in their coordinate system. Neither property receives d3's index on the line, though
+     * the bars pass it to both: a reference point is {row, value} rather than a slice, so the only
+     * index the line could forward is the point's own position in its series, which is not the bar
+     * index a caller writing (v, i) is reaching for. An index-aware accessor therefore yields a
+     * non-finite coordinate here, every point is skipped, and the outline is not drawn at all - see the
+     * two "drops d3's index on the reference line" tests.
+     * pyramid's byte-identical lineComponent still takes plain data, since there both
+     * properties read the bar's datum and the question does not arise. The only stackedPyramid example
+     * sets neither reference accessor.
+     *
+     * Note: one smaller mismatch rides along, shared with pyramid. The bars are pushed outwards by
+     * SPINE_PADDING, a deliberate cosmetic gap at the spine, while the line is drawn straight from
+     * barWidth and so agrees with the axis scale, which puts a reference value equal to a bar value
+     * half a pixel inside that bar's outer edge, symmetrically on both sides. The vertical half of
+     * that pair is no longer one: the line adds half a bar height to barPosition, so the outline runs
+     * through the bars' mid-lines rather than along their top edges.
+     *
+     * Note: a reference line's d attribute is only ever written through a transition, so a freshly
+     * rendered path carries no geometry until the first animation frame and anything that measures the
+     * chart synchronously - getBBox, a snapshot, an export to PNG - sees an empty path. Entering lines
+     * then snap into place, because d3 has no previous d to interpolate from; only updates animate. The
+     * bars underneath animate over the same duration, so the outline and the bars it describes stay
+     * together for the length of the transition. pyramid's line writes its d at the join as well and
+     * so does not share this one.
+     *
+     * Note: the reference path carries two classes: the generic .sszvis-path, which no rule in
+     * sszvis.css defines, and the component-owned .sszvis-stacked-pyramid__referenceline, which the
+     * join matches on. Writing both keeps a selector aimed at the generic class working while keeping
+     * a foreign path out of the join - pie, stackedArea and stackedAreaMultiples all draw paths under
+     * the generic class, and the join has no key function, so an unscoped selector would adopt one of
+     * theirs and repaint it. The appearance still comes from four inlined attributes, the opposite
+     * choice from pyramid, which sets only .sszvis-pyramid__referenceline and takes all four values
+     * from the stylesheet; the class here is deliberately not pyramid's, so the two components do not
+     * collide with each other in turn.
+     *
+     * Note: the reference datum is one array of points per path, so each side is capped at a single
+     * line. referenceSeries resolves a side with nothing to draw to no entry at all rather than to one
+     * empty entry, which is what lets the exit selection fire and the path leave the DOM when the
+     * reference data goes away. The mirror property writes transform="" on the right side rather than
+     * omitting the attribute. Shared with pyramid.
+     *
+     * Note: the stack join is a child selector, ":scope > [data-sszvis-stack]", so only the groups the
+     * component owns take part in it and a caller may render content of its own - including further
+     * stack groups - inside a series group without the join adopting it. The bars inside each series
+     * group are joined by bar itself on its own .sszvis-bar-rect class, so a planted rect carrying
+     * only the generic .sszvis-bar class is not captured there either.
+     *
+     * Note: neither join uses a key function, so on a re-render the stack groups and the rects inside
+     * them are matched by index rather than by series. When a series is dropped from anywhere but the
+     * end, the groups that remain are re-bound to different series and every bar in them is rewritten.
+     * Only the geometry moves, so it is invisible, but any state held on a stack group - a class, a
+     * listener, an in-flight transition - follows the position rather than the series. Shared with
+     * stackedBar.
+     *
+     * Note: bar defaults its transition property to true and this component neither sets it nor exposes
+     * it, so every render creates a d3 transition per rect and then overwrites the geometry on the
+     * plain selection immediately. Nothing animates, but the transition state is still attached and
+     * interrupts any transition already running on those rects. Shared with stackedBar. The component
+     * also leaves bar's stroke unset, so unlike stackedBar, which paints a 1px white separator between
+     * segments, the segments of a row touch without a seam.
+     *
+     * Note: bar guards NaN but not negative numbers. A negative stacked value inverts the pair, so the
+     * width goes negative, which the browser rejects and the segment is not drawn, and on the left side
+     * the double sign flip moves x to the right of the spine. Neither side of the pyramid supports
+     * values below the baseline. Reaching this needs negative input data, which a population pyramid
+     * should not see. See test/component/stackedPyramid.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /* Constants
+    ----------------------------------------------- */
+    const SPINE_PADDING = 0.5;
+    /**
+     * The properties without which the component cannot draw a bar. Checked by name before any
+     * element exists, so a misconfiguration is reported rather than rendered: barHeight used to
+     * reach bar as undefined and be flattened to a height of 0, which draws an empty axis frame
+     * with no warning. pyramid carries the same list.
+     */
+    const REQUIRED_PROPS = ["barHeight", "barWidth", "barPosition", "leftAccessor", "rightAccessor"];
+    const rowAcc = prop("row");
+    /**
+     * The first source row of a cascade row, i.e. of whichever series that row happens to carry.
+     * A cascade row exists only because a source row landed in it, so there is always one.
+     */
+    function firstCell(row) {
+      return Object.values(row)[0][0];
+    }
+    /* Data layout
+    ----------------------------------------------- */
+    /**
+     * This function prepares the data for the stackedPyramid component, returning the sides in
+     * `sides` with the stacked maximum beside them. Prefer it over stackedPyramidData in new code:
+     * the metadata survives being copied.
+     *
+     * The input data is expected to have at least four columns:
+     *
+     *  - side: determines on which side (left/right) the value goes. MUST have cardinality of two!
+     *  - row: determines on which row (vertical position) the value goes.
+     *  - series: determines in which series (for the stack) the value is.
+     *  - value: the numerical value.
+     *
+     * The combination of each distinct (side,row,series) triplet SHOULD appear only once in the data.
+     * Where it does not, every row of the cell is summed rather than only the first being read.
+     */
+    function stackedPyramidLayout(sideAcc,
+    // cascade stringifies its keys, so a numeric row or series accessor - an age, a year, a
+    // category code - groups the same way a string one does, which is why `series` stays a
+    // string even though the keys themselves come from the data rather than from the row.
+    rowValueAcc, seriesAcc, valueAcc) {
+      return data => {
+        const grouped = cascade().arrayBy(sideAcc).arrayBy(rowValueAcc).objectBy(seriesAcc).apply(data);
+        const sides = grouped.map(rows => {
+          const side = sideAcc(firstCell(rows[0]));
+          // The union of the series across every row of the side, so a series that appears in
+          // only some of the rows still gets a layer. The key order is the stacking order, and it
+          // is taken from the data rather than from the cascade rows: those are plain objects,
+          // which enumerate integer-like keys numerically, so a series accessor returning years or
+          // numeric codes lost the caller's ordering and silently restacked the chart. Filtered to
+          // this side, since a side's layers are the series that side actually carries. The same
+          // correction stackedBarData makes.
+          const keys = set$1(data.filter(datum => String(sideAcc(datum)) === String(side)), datum => String(seriesAcc(datum)));
+          const stacks = d3.stack().keys(keys)
+          // Every row the accessors placed in a cell contributes to that cell's value, so data
+          // that is not pre-aggregated to one row per (side, row, series) triplet stacks to its
+          // true total rather than to its first row - which was silently understated, with no
+          // warning and no error, just a shorter bar. A cell the row has no datum for stacks as
+          // zero rather than throwing. The same correction stackedBarData makes.
+          .value((x, key) => d3.sum(x[key] ?? [], valueAcc))(rows);
+          // Simplify the 'data' property. The slices themselves are the objects d3 created,
+          // rewritten in place, so a caller holding one sees the new shape. The series arrays are
+          // rebuilt, so d3's own `key` and `index` - the only two properties it hangs off a
+          // series - have to be carried across by hand.
+          return stacks.map((stack, i) => {
+            const slices = stack.map(d => {
+              // A row the side's series is absent from has no source row to point at, so the
+              // padding slice carries no data and a zero value.
+              const datum = d.data[keys[i]]?.[0];
+              return Object.assign(d, {
+                data: datum,
+                series: keys[i],
+                side,
+                // The value the row accessor returned, read off whichever series the cascade
+                // row does carry - a padding slice has no source row of its own.
+                row: rowValueAcc(firstCell(d.data)),
+                // Taken from the stacked pair rather than from the cell's first row, so it is the
+                // whole cell where the accessors placed more than one row there - the same total
+                // the bar is drawn at. Reading the first row instead left a slice whose value
+                // disagreed with its own extent, which a reference line built from the layout's
+                // own slices then drew at the understated figure while the bars behind it showed
+                // the total. A padding slice has an empty pair, so it still reports 0.
+                value: d[1] - d[0]
+              });
+            });
+            return Object.assign(slices, {
+              key: stack.key,
+              index: stack.index
+            });
+          });
+        });
+        // Compute the max value, for convenience. This value is needed to construct
+        // the horizontal scale.
+        const maxValue = d3.max(sides, s => d3.max(s, rows => d3.max(rows, row => row[1]))) ?? 0;
+        return {
+          sides,
+          maxValue
+        };
+      };
+    }
+    /**
+     * The array-returning form of the layout: the sides themselves, with the stacked maximum
+     * assigned onto them so that `.datum(stackedPyramidData(...)(rows))` still binds a real array
+     * and the side accessors can index into it.
+     */
+    function stackedPyramidData(sideAcc, rowValueAcc, seriesAcc, valueAcc) {
+      const layout = stackedPyramidLayout(sideAcc, rowValueAcc, seriesAcc, valueAcc);
+      return data => {
+        const {
+          sides,
+          maxValue
+        } = layout(data);
+        return Object.assign(sides, {
+          maxValue
+        });
+      };
+    }
+    /* Module
+    ----------------------------------------------- */
+    function stackedPyramid() {
+      return component().prop("barHeight", functor)
+      // Deliberately not fn.functor: see StoredWidth.
+      .prop("barWidth").prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Validation, before any element exists. Every one of these is a misconfiguration
+        // that can never render, so none of them is left to fail on its own terms: barWidth
+        // used to throw from the component's own closure, barPosition from inside fn.compose,
+        // and barHeight not at all - it reached bar as undefined and was flattened to 0.
+        for (const name of REQUIRED_PROPS) {
+          if (props[name] === undefined) {
+            throw new TypeError(`[sszvis.stackedPyramid] the ${name} property is required` + (name === "barWidth" ? ": pass a scale over the stacked values, or a number for a constant segment width." : "."));
+          }
+        }
+        const barWidth = props.barWidth;
+        // A constant barWidth is a segment width rather than a scale, so it is used directly
+        // instead of being subtracted from itself, which would collapse every bar to zero.
+        const widthScale = typeof barWidth === "function" ? barWidth : null;
+        const constantWidth = typeof barWidth === "function" ? 0 : barWidth;
+        // Each of these is called from an accessor bar owns, so it is handed (d, i) and passes
+        // both on: an index-aware barWidth used to see undefined for i, and `30 + undefined` is
+        // NaN, which bar's guard turns into a width and an x of 0. pyramid forwards the index
+        // through its own mirroring closure for the same reason.
+        /** The edge of a segment nearer the spine, measured outwards from it. */
+        const innerEdge = (d, i) => widthScale ? widthScale(d[0], i) : 0;
+        /** The edge of a segment further from the spine. */
+        const outerEdge = (d, i) => widthScale ? widthScale(d[1], i) : constantWidth;
+        // A constant barWidth still has to respect the synthetic padding a sparse row is
+        // filled with: that slice stands for a series the row has no observation for, so it
+        // is a zero-width pad rather than a full-width bar. The scale branch gets this for
+        // free, since a pad's two bounds are equal. A genuine zero-valued observation keeps
+        // the fixed width, which is the point of constant mode.
+        const segmentWidth = (d, i) => widthScale ? widthScale(d[1], i) - widthScale(d[0], i) : d.data === undefined ? 0 : constantWidth;
+        // A padding slice stands for a series this row has no observation for. It is drawn
+        // zero-wide, so its fill is never visible - and calling barFill for it would hand a
+        // row-shaped accessor an undefined datum, which is what used to throw. Skipped
+        // rather than widened, so the public accessor contract stays honest.
+        const barFillOf = (d, i) => d.data === undefined ? undefined : props.barFill(d.data, i);
+        // barPosition is called with the slice's row rather than the slice, but with the same
+        // index bar hands its own accessors. It used to go through fn.compose, which forwards
+        // every argument only to the innermost function - rowAcc - so barPosition, the outer
+        // one, received exactly one and an index-aware accessor returned NaN, which bar's
+        // guard flattened to y="0".
+        const barPositionOf = (d, i) => props.barPosition(rowAcc(d), i);
+        // Components
+        const leftBar = bar().x((d, i) => -SPINE_PADDING - outerEdge(d, i)).y(barPositionOf).height(props.barHeight).width(segmentWidth).fill(barFillOf).tooltipAnchor(props.tooltipAnchor);
+        const rightBar = bar().x((d, i) => SPINE_PADDING + innerEdge(d, i)).y(barPositionOf).height(props.barHeight).width(segmentWidth).fill(barFillOf).tooltipAnchor(props.tooltipAnchor);
+        const leftStack = stackComponent().stackElement(leftBar);
+        const rightStack = stackComponent().stackElement(rightBar);
+        // The line reads a reference point's value through the same scale, or parks it at the
+        // constant when barWidth is one.
+        const referenceWidth = widthScale ?? (() => constantWidth);
+        // The outline is centred on the bars, so it needs their height - but a reference point
+        // is {row, value}, not a slice, so there is nothing on the point to measure. The
+        // heights are read off the side's own slices instead, which is what lets a per-slice
+        // barHeight accessor work here: it receives the slice it expects, rather than the
+        // undefined an argument-less call would hand it. Keyed by row and built per side, so a
+        // height that varies by row - or between the two sides - reaches the reference point it
+        // belongs to rather than being taken from whichever slice happened to come first.
+        //
+        // A reference point on a row the bars do not cover falls back to the first height this
+        // side resolved, rather than to 0: a chart-wide height is the normal case, and falling
+        // to 0 for the odd row would kink the outline instead of merely offsetting it. With no
+        // slices at all, or a barHeight that is never finite, the fallback is 0 and the outline
+        // sits on the bars' top edges, where it was before this was corrected. Neither case
+        // throws. An unset barHeight cannot reach here at all - it is reported by name above.
+        const halfHeightsByRow = side => {
+          const byRow = new Map();
+          for (const series of side) {
+            for (const [index, slice] of series.entries()) {
+              const key = String(slice.row);
+              if (byRow.has(key)) continue;
+              const height = Number(props.barHeight(slice, index));
+              if (Number.isFinite(height)) byRow.set(key, height / 2);
+            }
+          }
+          return {
+            byRow,
+            fallback: byRow.values().next().value ?? 0
+          };
+        };
+        const leftHeights = halfHeightsByRow(props.leftAccessor(data));
+        const rightHeights = halfHeightsByRow(props.rightAccessor(data));
+        const leftLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth).halfHeightByRow(leftHeights.byRow).halfHeightDefault(leftHeights.fallback).mirror(true);
+        const rightLine = lineComponent().barPosition(props.barPosition).barWidth(referenceWidth).halfHeightByRow(rightHeights.byRow).halfHeightDefault(rightHeights.fallback);
+        // Rendering
+        selection.selectGroup("leftStack").datum(props.leftAccessor(data)).call(leftStack);
+        selection.selectGroup("rightStack").datum(props.rightAccessor(data)).call(rightStack);
+        selection.selectGroup("leftReference").datum(referenceSeries(props.leftRefAccessor, data, "leftRefAccessor")).call(leftLine);
+        selection.selectGroup("rightReference").datum(referenceSeries(props.rightRefAccessor, data, "rightRefAccessor")).call(rightLine);
+      });
+    }
+    /**
+     * Joins one group per series and draws that series' slices with the bar component it was
+     * given. The datum handed to this component is one side of the pyramid.
+     */
+    function stackComponent() {
+      return component().prop("stackElement").renderSelection(selection => {
+        const datum = selection.datum();
+        const props = selection.props();
+        const stack = selection
+        // A child selector: a stack group nested inside another one belongs to whoever put
+        // it there, and binding it here would remove a real series group and then throw out
+        // of the join's reorder.
+        .selectAll(":scope > [data-sszvis-stack]").data(datum).join("g").attr("data-sszvis-stack", "");
+        stack.each(function (d) {
+          d3.select(this).datum(d).call(props.stackElement);
+        });
+      });
+    }
+    /**
+     * Resolves one side's reference series into the array-of-series the line component joins on:
+     * one entry when there is something to draw, none otherwise. A series with no points therefore
+     * removes its path rather than leaving an empty one behind.
+     *
+     * An accessor returning undefined or null breaks its contract, so it is warned about - but it
+     * is warned about rather than thrown on, because it is data-driven: an accessor indexing into
+     * a cascaded object hits it as soon as one series is missing from one state, and that must not
+     * take the chart down. An empty array is a legitimately empty series and passes silently. The
+     * same resolver pyramid uses.
+     */
+    function referenceSeries(accessor, data, name) {
+      if (accessor === undefined) return [];
+      const series = accessor(data);
+      if (!Array.isArray(series)) {
+        warn(`[stackedPyramid] ${name} returned ${String(series)} rather than an array; no reference line was drawn. Return an empty array for a state that has no reference series.`);
+        return [];
+      }
+      return series.length === 0 ? [] : [series];
+    }
+    /**
+     * Draws one side's reference outline as a single path. The data is one array of reference
+     * points per path, so the datum handed to this component is an array of arrays - in practice
+     * always of length one, since each side has at most one reference line.
+     */
+    function lineComponent() {
+      return component().prop("barPosition").prop("barWidth").prop("halfHeightByRow").halfHeightByRow(new Map()).prop("halfHeightDefault").halfHeightDefault(0).prop("mirror").mirror(false).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Each half of a point is mapped by the property that owns it, so the outline lands in
+        // the coordinate system the bars are drawn in.
+        // The bars are pushed outwards by SPINE_PADDING, so the outline is too - otherwise a
+        // reference value equal to a bar value lands half a pixel inside that bar's outer edge
+        // rather than on it. barPosition is a bar's top edge, so half that row's bar height is
+        // added to put the outline through the mid-lines of the bars it describes. Both are the
+        // corrections pyramid's own reference line makes.
+        const pointX = d => SPINE_PADDING + props.barWidth(d.value);
+        const pointY = d => props.barPosition(d.row) + (props.halfHeightByRow.get(String(d.row)) ?? props.halfHeightDefault);
+        const lineGen = d3.line()
+        // A point whose geometry is not a finite number is skipped, which breaks the outline
+        // at the gap instead of poisoning the path string from there on: d3 writes NaN into
+        // d verbatim, and the browser then renders the valid prefix and drops everything
+        // after it. bar guards its own geometry the same way, so the bars survive a gap the
+        // outline used to be truncated by. The same guard pyramid uses.
+        .defined(d => isDrawable(pointX(d)) && isDrawable(pointY(d))).x(pointX).y(pointY);
+        // Matching on the component's own class rather than the generic .sszvis-path one, which
+        // pie, stackedArea and stackedAreaMultiples also use, keeps a foreign path in the same
+        // group out of the join. The generic class stays in the written attribute, so no
+        // selector written against it changes meaning.
+        const line = selection.selectAll("path.sszvis-stacked-pyramid__referenceline").data(data).join("path").attr("class", "sszvis-path sszvis-stacked-pyramid__referenceline").attr("fill", "none").attr("stroke", "#aaa").attr("stroke-width", 2).attr("stroke-dasharray", "3 3");
+        line.attr("transform", props.mirror ? "scale(-1, 1)" : "").transition(defaultTransition()).attr("d", lineGen);
+      });
+    }
+    /** Whether a computed coordinate can be written into a path string at all. */
+    function isDrawable(value) {
+      return Number.isFinite(Number(value));
+    }
+
+    /**
+     * Sunburst component
+     *
+     * This component renders a sunburst diagram, which is kind of like a layered pie chart. There is an
+     * inner ring of values, which are total values for some large category. Each of these categories can
+     * be broken down into smaller categories, which are shown in another layer around the inner ring. If these
+     * categories can in turn be broken down into smaller ones, you can add yet another layer. The result
+     * is a hierarchical display with the level of aggregation getting finer and finer as you get further
+     * from the center of the chart.
+     *
+     * This component can accept either:
+     * 1. Pre-processed flat sunburst data (backwards compatibility)
+     * 2. Raw hierarchical data from prepareHierarchyData() (recommended)
+     *
+     * When using raw hierarchical data, the component will automatically apply the partition layout
+     * and flatten the data internally.
+     *
+     * @module sszvis/component/sunburst
+     * @template T The type of the original flat data objects
+     *
+     * @property {Function} angleScale              Scale function for the angle of the segments of the
+     *                                              sunburst chart. The domain should usually be [0, 1]
+     *                                              and the range [0, 2 * PI]. These are used as
+     *                                              defaults: the factory installs a fresh
+     *                                              scaleLinear().range([0, 2 * Math.PI]) on every call,
+     *                                              so the property is optional. It is called with a
+     *                                              node's x0 and x1, which are positions in the scale's
+     *                                              domain and not radians. Both endpoints are then
+     *                                              clamped independently into [0, 2 * PI], so a
+     *                                              position outside the domain saturates rather than
+     *                                              wrapping, and a node whose x1 is below its x0 sweeps
+     *                                              backwards over its neighbours.
+     * @property {Function} radiusScale             Scale function for the radius of segments. Can be
+     *                                              configured using values returned from
+     *                                              sszvis.layout.sunburst.computeLayout. See the
+     *                                              examples for how the scale setup works. Required,
+     *                                              with no default. It is called with y0 and y1, again
+     *                                              positions in its own domain rather than pixels, and
+     *                                              a negative result is clamped to 0, which collapses
+     *                                              the ring onto the centre circle. Leaving it unset
+     *                                              throws before anything is rendered.
+     * @property {Number} centerRadius              The radius of the center of the chart. Can be
+     *                                              configured with
+     *                                              sszvis.layout.sunburst.computeLayout. Required;
+     *                                              leaving it unset throws before anything is
+     *                                              rendered.
+     * @property {Color, Function} fill             Function that returns the fill color for the
+     *                                              segments in the center of the chart. Note that this
+     *                                              will only be called on the centermost segments. The
+     *                                              segments which are subcategories of these center
+     *                                              segments will have their fill determined
+     *                                              recursively, by lightening the color of its parent
+     *                                              segment. It is called with a node's key string, not
+     *                                              with the node. Required - leaving it unset throws
+     *                                              before anything is rendered - and it takes
+     *                                              a constant colour or an accessor, since it is
+     *                                              wrapped in fn.functor on set.
+     *                                              Every ring further out closes 15% of the gap
+     *                                              between its parent's lightness and white, so the
+     *                                              colours run lighter from the inside out without ever
+     *                                              saturating. Siblings therefore share a colour, since
+     *                                              it depends only on the top-level ancestor's key and
+     *                                              on the depth.
+     * @property {Color, Function} stroke           The stroke color of the segments. Defaults to white.
+     *                                              Takes a constant or an accessor, and an accessor is
+     *                                              handed to d3 untouched, so it is called with the
+     *                                              element as its receiver and with d3's index and
+     *                                              group arguments.
+     *
+     * Note: the component accepts either a hierarchy or an array of already flattened nodes. A
+     * hierarchy is re-partitioned in place on every render, always to the partition layout's default
+     * [1, 1] size, so any layout the caller applied is discarded, the radius scale's domain is always
+     * expressed in fractions, and the innermost band belongs to the invisible root: with n layers the
+     * first visible ring starts at 1/(n+1), not at 0. An array is passed through untouched, so it can
+     * be positioned by hand. A hierarchy that did not come from prepareHierarchyData carries none of
+     * its `_tag`s; it is rendered the same way - the parentless node is the root either way, and every
+     * colour still comes from a node's own top-level ancestor - with one warning per chart.
+     *
+     * Note: the angles, the radii and the colours are all interpolated, and `d` is written on the
+     * selection before the tween as well, from the geometry already on screen, so a chart serialised on
+     * the render tick carries its arcs rather than coming out blank. There is no transition property to
+     * opt out of. The handover matches the old arcs by index, so an arc that did not exist a render ago
+     * starts at its destination and is painted outright, and exits are removed with no transition.
+     *
+     * Note: the component keeps no state of its own. It writes x0/x1 (the positions currently on
+     * screen), r0/r1 (the radii currently on screen, in pixels) and _x0/_x1 (the positions the running
+     * transition is heading for) onto every node it renders, so the data has to be mutable - frozen data throws. The on-screen angles are read off
+     * the existing arcs before the re-partition overwrites them, so re-rendering the same hierarchy
+     * object animates the same way a freshly built one does.
+     *
+     * Note: the tooltip anchors are rendered from the same flattened array as the arcs, so there is one
+     * anchor per arc, in the same order. They are positioned from the destination angles _x0/_x1, so
+     * they describe the layout the arcs are heading for rather than the one they are leaving - on a
+     * hierarchy input, where the re-partition supplies those. On the deprecated flat-array input the
+     * caller's own objects are reused unpartitioned, so _x0/_x1 are whatever the last tween wrote and
+     * the anchors are no better placed than the arcs. See test/component/sunburst.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    const TWO_PI = 2 * Math.PI;
+    function sunburst() {
+      // The chain is held in a variable rather than returned inline only to keep the long
+      // configuration block readable: ComponentBuilder declares .prop() and .render() as
+      // returning the component interface itself, so the chain stays typed either way.
+      const sunburstComponent = component();
+      sunburstComponent.prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill", functor).prop("stroke").stroke("white").render(function (inputData) {
+        // The old datum is the render's own input: the component is called through
+        // selection.each, so the group's datum is exactly what was handed to the render -
+        // either a hierarchy root or an already flattened array. Deriving it with typeof
+        // rather than restating the type is what keeps the two from drifting apart, the way
+        // they did in #303. pack, treemap and sunburst all declare it this way. It is rebound
+        // to the flattened node array at the end of the render, and datum() types the new
+        // binding on its own.
+        const selection = d3.select(this);
+        const props = selection.props();
+        // radiusScale, centerRadius and fill are required and have no defaults, and a render
+        // without any one of them cannot come out right - so they are checked here, before a
+        // single element is created. Left unchecked they fail three different ways: fill
+        // throws immediately, radiusScale throws from the tooltip anchor once the arcs and
+        // their transition are already in flight (and then once per frame for the length of
+        // the transition), and centerRadius does not throw at all - it turns every radius
+        // into NaN and renders an empty chart.
+        for (const required of ["radiusScale", "centerRadius", "fill"]) {
+          if (props[required] === undefined) {
+            throw new Error(`[sunburst] the ${required} property is required`);
+          }
+        }
+        // The angles currently on screen, read off the existing arcs before anything below can
+        // overwrite them. A caller who keeps one hierarchy in state and re-sums it hands over
+        // the same node objects the previous render left its x0/x1 on, and the partition
+        // further down replaces those with the new layout - so the handover has to happen
+        // first, or every transition would start where it is meant to end.
+        const onScreen = selection.selectAll(".sszvis-sunburst-arc").nodes().map(element => {
+          // A path inserted without d3 has no datum at all, which throws here rather than
+          // silently shifting the handover - see test/component/sunburst.test.ts.
+          const d = Reflect.get(element, "__data__");
+          return {
+            angles: [d.x0, d.x1],
+            // Absent until a render has drawn this arc once, in which case it starts at
+            // whatever radii this render computes for it.
+            radii: d.r0 === undefined || d.r1 === undefined ? undefined : [d.r0, d.r1]
+          };
+        });
+        // NOTE: Determine if we have raw hierarchical data or pre-computed sunburst data
+        // @deprecated in v3.4.0
+        let nodes;
+        if (Array.isArray(inputData)) {
+          // Already computed sunburst data (backwards compatibility)
+          nodes = inputData;
+        } else {
+          if (inputData.data._tag !== "root") {
+            // A hierarchy that did not come from prepareHierarchyData carries none of its
+            // tags. It is still rendered - the structure is all the layout needs - but the
+            // caller is told once per chart rather than once per node.
+            warn("Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData");
+          }
+          const root = d3.partition()(inputData);
+          const flatten = node => [node, ...(node.children || []).flatMap(flatten)];
+          // The root is the node the layout has no parent for, whether or not it is tagged as
+          // one: it fills the whole circle and would otherwise be drawn as a ring of its own
+          // under the first visible one.
+          nodes = flatten(root).filter(d => d.parent !== null && d.data._tag !== "root");
+        }
+        // The geometry accessors read positions off a node, so they are declared before the
+        // destination values are stamped on. The two radius accessors return pixels, and are
+        // the destination of the radius half of the transition.
+        // Shared by the on-screen accessors below and by the anchor position, which reads the
+        // destination angles instead.
+        const angleAt = x => Math.max(0, Math.min(TWO_PI, props.angleScale(x)));
+        const startAngle = d => angleAt(d.x0);
+        const endAngle = d => angleAt(d.x1);
+        const innerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y0));
+        const outerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y1));
+        // _x0 and _x1 are the destination values for the transition. We set these to the
+        // computed x0 and x1, and r0/r1 to the destination radii, which the handover below
+        // replaces wherever an arc is already on screen. Object.assign writes them onto the
+        // node the caller handed over and hands back that same node typed as carrying them, so
+        // no cast is needed further down. Array.from rather than map, because it visits the
+        // holes of a sparse array the way a for...of loop does, and so still fails before
+        // anything is rendered.
+        const data = Array.from(nodes, d => Object.assign(d, {
+          _x0: d.x0,
+          _x1: d.x1,
+          r0: innerRadius(d),
+          r1: outerRadius(d)
+        }));
+        // Put the on-screen geometry back, matched to the new data by index, so the tween
+        // below has somewhere to start from. An arc past the previous element count keeps what
+        // this render gave it and therefore starts at its destination.
+        for (const [i, previous] of onScreen.entries()) {
+          const node = data[i];
+          if (node) {
+            [node.x0, node.x1] = previous.angles;
+            if (previous.radii) [node.r0, node.r1] = previous.radii;
+          }
+        }
+        // The key a node's colour is looked up under. Only a root has none, and a root never
+        // reaches the recursion below: it is either filtered out of the data, painted
+        // transparent by fillColor, or caught by the parent check one level down.
+        const colorKey = node => "key" in node.data ? node.data.key : "";
+        // Whether a node is the one the whole chart hangs off: tagged as the root by
+        // prepareHierarchyData, or simply parentless in a hierarchy that came from elsewhere.
+        const isRoot = node => node.data._tag === "root" || node.parent === null;
+        // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
+        function getColorRecursive(node) {
+          if (!node.parent) {
+            return d3.hsl(String(props.fill(colorKey(node))));
+          } else if (isRoot(node.parent)) {
+            // Use the color scale
+            return d3.hsl(String(props.fill(colorKey(node))));
+          } else {
+            // Recurse up the tree and adjust the lightness value
+            // Lighten by 15% of what is left between the parent's lightness and white,
+            // rather than by 15% of the lightness itself. Both give the same step from a
+            // mid-tone, but this one can never reach white, so a deep ring stays
+            // distinguishable from the one inside it however light the base colour is.
+            const pColor = getColorRecursive(node.parent);
+            pColor.l += (1 - pColor.l) * 0.15;
+            return pColor;
+          }
+        }
+        // Center node (if the data were prepared using sszvis.prepareHierarchyData). The colour
+        // is stringified here because the recursion needs the mutable d3 colour object while
+        // d3's attr only takes a primitive; setAttribute would have coerced it the same way.
+        const fillColor = node => isRoot(node) ? "transparent" : String(getColorRecursive(node));
+        // The stroke prop may hold one of the library's colour objects, so it is resolved and
+        // then rendered as the string d3 writes - the same conversion d3 would do itself.
+        const strokeResolve = valueFn(props.stroke);
+        const strokeColor = function (datum, index, groups) {
+          return colorToString(strokeResolve.call(this, datum, index, groups));
+        };
+        const arcGen = d3.arc().startAngle(startAngle).endAngle(endAngle)
+        // The radii the arc is drawn at right now, which the tween walks towards the
+        // destination ones. Reading props here instead would put a changed radius scale on
+        // screen in full on the first frame, while the angles were still moving.
+        .innerRadius(d => d.r0).outerRadius(d => d.r1);
+        const arcs = selection.selectAll(".sszvis-sunburst-arc").data(data).join(enter =>
+        // An entering arc has no colour to ease from, so it is painted outright; every
+        // other attribute change goes through the transition below.
+        enter.append("path").attr("class", "sszvis-sunburst-arc").attr("stroke", strokeColor).attr("fill", fillColor));
+        // Geometry is applied on the render tick, from the angles and radii already on screen -
+        // the destination ones for an arc that has just entered - so the DOM is never in a
+        // geometry-less state and nothing jumps before the tween takes over. Without it the
+        // attrTween below is the only writer of d, and a chart serialised straight after
+        // rendering comes out blank; so does one rendered in a hidden tab, where
+        // requestAnimationFrame never fires and the tween's first frame never runs.
+        arcs.attr("d", d => arcGen(d) ?? "");
+        // One transition for the whole arc: scheduling a second one on the same elements would
+        // cancel this one.
+        const arcTransition = arcs.transition(defaultTransition());
+        arcTransition.attr("stroke", strokeColor).attr("fill", fillColor);
+        arcTransition.attrTween("d", d => {
+          const x0Interp = d3.interpolate(d.x0, d._x0);
+          const x1Interp = d3.interpolate(d.x1, d._x1);
+          const r0Interp = d3.interpolate(d.r0, innerRadius(d));
+          const r1Interp = d3.interpolate(d.r1, outerRadius(d));
+          return t => {
+            d.x0 = x0Interp(t);
+            d.x1 = x1Interp(t);
+            d.r0 = r0Interp(t);
+            d.r1 = r1Interp(t);
+            // arc returns null only for an empty path buffer, and every branch of it writes at
+            // least a moveTo - even for NaN radii, which come out as "M0,0Z" - so this is
+            // unreachable.
+            return arcGen(d) ?? "";
+          };
+        });
+        // Add tooltip anchors
+        const arcTooltipAnchor = tooltipAnchor().position(d => {
+          // The destination angles, not startAngle/endAngle: the handover above has reset
+          // d.x0/d.x1 to what is on screen, and nothing repositions the anchors once the
+          // transition ends, so reading those would leave every anchor at the previous
+          // layout after an update. The radii need no equivalent - y0/y1 come from the fresh
+          // partition, so innerRadius and outerRadius are destination values already.
+          const startA = angleAt(d._x0);
+          const endA = angleAt(d._x1);
+          const a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;
+          const r = (innerRadius(d) + outerRadius(d)) / 2;
+          return [Math.cos(a) * r, Math.sin(a) * r];
+        });
+        // Rebind the group to the flattened array before rendering the anchors, the way pie
+        // does. Without it the anchors are joined to whatever datum the caller bound - for a
+        // hierarchy that is the root node, which d3 iterates into every descendant, so the
+        // root gains an anchor of its own and the anchors come out breadth first while the
+        // arcs are depth first.
+        selection.datum(data).call(arcTooltipAnchor);
+      });
+      return sunburstComponent;
+    }
+
+    /**
+     * Treemap component
+     *
+     * This component renders a treemap diagram, which displays hierarchical data as nested rectangles.
+     * The size of each rectangle corresponds to a quantitative value, and rectangles are tiled to fill
+     * the available space efficiently. This component uses D3's treemap layout with the squarified
+     * tiling method for optimal aspect ratios.
+     *
+     * The component expects data prepared using the prepareData function, which converts flat data
+     * into a hierarchical structure and applies the treemap layout.
+     *
+     * @module sszvis/component/treemap
+     * @template T The type of the original flat data objects
+     *
+     * @property {string, function} colorScale        The fill color for rectangles: a constant colour
+     *                                                or an accessor taking a node's key
+     * @property {boolean} transition                 Whether to animate changes (default true)
+     * @property {number, function} containerWidth    The container width (default 800)
+     * @property {number, function} containerHeight   The container height (default 600)
+     * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
+     * @property {string, function} label             The label text accessor (default d.data.key)
+     * @property {string} labelPosition               Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
+     * @property {function} onClick                   Click handler for rectangles (receives node and event)
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Main treemap component
+     *
+     * @template T The type of the original flat data objects
+     */
+    function treemap() {
+      return component().prop("colorScale", functor).prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
+      .prop("containerHeight").containerHeight(600) // Default height
+      .prop("showLabels").showLabels(false) // Default disabled
+      .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("labelPosition").labelPosition("center").prop("onClick").render(function (inputData) {
+        // The old datum is the render's own input: the component is called through
+        // selection.each, so the group's datum is exactly what was handed to the render.
+        // Deriving it with typeof rather than restating the type is what keeps the two from
+        // drifting apart, the way they did in #303. pack, treemap and sunburst all declare it
+        // this way. The anchors at the end of the render bind the flattened node array to the
+        // group and then restore this input, so the datum a caller sees is unchanged.
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Apply treemap layout to hierarchical data
+        const layout = d3.treemap().tile(d3.treemapSquarify).size([props.containerWidth, props.containerHeight]).round(true).paddingInner(1).paddingOuter(2);
+        layout(inputData);
+        // Flatten the hierarchy and filter out root
+        function flatten(node) {
+          const result = [];
+          if (node.children) {
+            for (const child of node.children) {
+              if (child.data._tag !== "root") {
+                result.push(child);
+              }
+              result.push(...flatten(child));
+            }
+          } else if (node.data._tag !== "root") {
+            result.push(node);
+          }
+          return result;
+        }
+        const treemapData = flatten(inputData);
+        // Filter out very small rectangles and show only leaf nodes
+        const visibleData = treemapData.filter(d => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5).filter(d => !d.children);
+        const rectangles = selection.selectAll(".sszvis-treemap-rect").data(visibleData).join("rect").classed("sszvis-treemap-rect", true).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0).attr("fill", d => {
+          return colorToString(nodeColor(d, props.colorScale));
+        }).attr("stroke", "#ffffff").attr("stroke-width", 1).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => props.onClick?.(event, d));
+        // Apply transitions if enabled
+        if (props.transition) {
+          rectangles.transition(defaultTransition()).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0);
+        }
+        // Render labels if enabled
+        if (props.showLabels) {
+          const fontSize = 12;
+          const calculateLabelPosition = (d, position) => {
+            const padding = 8;
+            switch (position) {
+              case "top-left":
+                return {
+                  x: d.x0 + padding,
+                  y: d.y0 + fontSize + padding
+                };
+              case "center":
+                return {
+                  x: d.x0 + (d.x1 - d.x0) / 2,
+                  y: d.y0 + (d.y1 - d.y0) / 2 + fontSize / 3
+                };
+              case "top-right":
+                return {
+                  x: d.x1 - padding,
+                  y: d.y0 + fontSize + padding
+                };
+              case "bottom-left":
+                return {
+                  x: d.x0 + padding,
+                  y: d.y1 - padding
+                };
+              case "bottom-right":
+                return {
+                  x: d.x1 - padding,
+                  y: d.y1 - padding
+                };
+              default:
+                return {
+                  x: d.x0 + padding,
+                  y: d.y0 + fontSize + padding
+                };
+            }
+          };
+          // Create type-safe label accessor functions
+          const labelAcc = d => typeof props.label === "function" ? props.label(d) : props.label || "";
+          const labelXAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").x;
+          const labelYAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").y;
+          const labelFillAcc = d => {
+            return getAccessibleTextColor(nodeColor(d, props.colorScale));
+          };
+          // Filter data for labels - only show labels on leaf nodes that are large enough
+          const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < (d.x1 - d.x0) / 7); // Rough estimate of fitting text
+          const labels = selection.selectAll(".sszvis-treemap-label").data(labelData).join("text").classed("sszvis-treemap-label", true).attr("x", labelXAcc).attr("y", labelYAcc).attr("fill", labelFillAcc).attr("font-size", fontSize).attr("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').style("pointer-events", "none").attr("text-anchor", () => {
+            const position = props.labelPosition || "top-left";
+            switch (position) {
+              case "top-right":
+              case "bottom-right":
+                return "end";
+              case "center":
+                return "middle";
+              default:
+                return "start";
+            }
+          }).attr("dominant-baseline", () => {
+            const position = props.labelPosition || "top-left";
+            switch (position) {
+              case "center":
+                return "middle";
+              case "bottom-left":
+              case "bottom-right":
+                return "alphabetic";
+              default:
+                return "hanging";
+            }
+          }).text(labelAcc);
+          // Apply transitions to labels if enabled
+          if (props.transition) {
+            labels.transition(defaultTransition()).attr("x", labelXAcc).attr("y", labelYAcc).attr("font-size", fontSize).text(labelAcc);
+          }
+        } else {
+          // Remove labels if showLabels is false
+          selection.selectAll(".sszvis-treemap-label").remove();
+        }
+        // Add tooltip anchors at the center of each rectangle
+        const tooltipPosition = d => [(d.x0 + d.x1) / 2, (d.y0 + d.y1) / 2];
+        const ta = tooltipAnchor().position(tooltipPosition);
+        // Rebind the group to the drawn node array before rendering the anchors, the way
+        // sunburst and pie do. Without it the anchors are joined to whatever datum the caller
+        // bound - for a hierarchy that is the root node, which d3 iterates into every
+        // descendant, so the root and every undrawn branch gain anchors of their own and the
+        // anchors come out breadth first while the rectangles are depth first.
+        selection.datum(visibleData).call(ta);
+        // ...and put the hierarchy back, so the render is idempotent. The group's datum is the
+        // render's own input, and leaving the flattened array there breaks a caller who holds
+        // its own group selection and re-renders without re-binding: the layout above would be
+        // handed an array instead of a root. The docs examples never hit it, since they
+        // re-datum() on every render and selectGroup re-binds from the parent.
+        selection.datum(inputData);
+      });
+    }
+
+    /**
+     * Button Group control
+     *
+     * Control for switching top-level filter values. Use this control for changing between several
+     * options which affect the state of the chart. This component should be rendered into an html layer.
+     *
+     * This control is part of the `optionSelectable` class of controls and can be used interchangeably
+     * with other controls of this class (`sszvis.control.selectMenu`).
+     *
+     * @module sszvis/control/buttonGroup
+     *
+     * @property {array} values         an array of values which are the options available in the control.
+     *                                  Each one will become a button. (default: [], which renders an
+     *                                  empty group)
+     * @property {string|number} current the current value of the button group. Should be one of the
+     *                                  options passed to .values(). Compared with ===.
+     * @property {number} width         The total width of the button group, divided evenly between the
+     *                                  options. A label too long for its share wraps onto more lines
+     *                                  rather than widening the group; only an unbreakable word wider
+     *                                  than its share makes an option, and so the group, exceed it.
+     *                                  (default: 300px)
+     * @property {function} change      A callback/event handler function called as (event, value) when
+     *                                  the user clicks on a value. Note that clicking on a value does not
+     *                                  necessarily change any state unless this callback function does
+     *                                  something. (default: fn.identity, which returns the event and
+     *                                  silently discards the value)
+     * @property {string} ariaLabel     An accessible name for the group of options, naming what the
+     *                                  control filters rather than what the options are. Written as
+     *                                  `aria-label` on the radiogroup. (default: undefined, which writes
+     *                                  no attribute, leaving the group unnamed)
+     *
+     * Note: both optionSelectable controls join their wrapper element on the
+     * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
+     * into a container that already holds the other replaces the other's DOM. This is what makes them
+     * interchangeable. They do not accept quite the same values, though: this control labels its buttons
+     * through d3's text coercion and so takes numbers as well as strings, while the select control
+     * trims its labels and therefore requires strings.
+     *
+     * Note: each button is written `width / values.length` pixels wide, unrounded, and the stylesheet
+     * gives it `min-width: min-content`. A label too long for that share therefore wraps onto as many
+     * lines as it needs *inside* its button, and the button only grows past its share when a single
+     * unbreakable word cannot fit at all. `width` is honoured in the normal case, which is what the
+     * call sites that centre the control by it rely on. Labels are never measured or trimmed here -
+     * that is where the control diverges from `selectMenu`, which cannot wrap and shortens the label
+     * instead: the two controls render the same values through the same callback, but not the same
+     * label text. Swapping to `selectMenu` across a breakpoint can substitute an ellipsised label for
+     * one this control would have wrapped.
+     *
+     * Note: #362 left open whether a group whose labels do not fit should shrink its padding, stay
+     * within `width`, or wrap. It wraps. That is what the `display: table-cell` items this row is
+     * descended from actually did - a cell holds its assigned width and wraps its content, growing only
+     * for content that cannot break - and it keeps `props.width` an honest measure of the control's
+     * footprint. Shrinking the padding would have made the option boxes inconsistent between charts
+     * and still failed for a label of any length.
+     *
+     * Note: selectedness is computed per button with no notion of uniqueness, so a value repeated in
+     * `values` renders twice and both copies are highlighted when they equal `current`.
+     *
+     * Note: the options are real `button` elements carrying `role="radio"` inside a `role="radiogroup"`
+     * wrapper, and are operable from the keyboard. Enter and Space activate the focused option; Left/Up
+     * and Right/Down move the selection and wrap at the ends. A roving `tabindex` keeps exactly one
+     * option in the tab order - the current one, or the first option when `current` matches no value, so
+     * the group stays reachable either way. Arrow keys call `change` immediately, the same as a click,
+     * which is the standard radio-group behaviour; the component still holds no state of its own. The
+     * `selected` class is kept as the visual hook alongside `aria-checked`.
+     *
+     * Note: `ariaLabel` is unset by default rather than defaulting to an empty string. A form control is
+     * never decorative, so there is no meaningful "no name wanted" value: an unset `ariaLabel` means the
+     * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
+     * existing call site is unnamed and a per-render warning would be noise rather than a signal.
+     *
+     * Note: `values` is coerced to the empty array, so a render that lands before the data
+     * draws an empty group rather than throwing - whether the prop was never set or was set to `undefined`
+     * from a state key the fetch has not filled in yet. "Not configured yet" and "nothing to offer
+     * yet" are the same state for a control fed from a fetch, and they render the same way.
+     * `selectMenu` does this the same way.
+     *
+     * See test/control/buttonGroup.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    function buttonGroup() {
+      return component()
+      // Coerced rather than merely defaulted: a chart hands this a state key that is only
+      // populated when its data arrives, so the value actually passed is `undefined`, which a
+      // plain default would not catch - `.prop()` stores whatever the setter is given.
+      .prop("values", values => values ?? []).values([]).prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Divided by zero for an empty group, which is only ever written onto buttons - of which
+        // there are then none - so the infinity never reaches the DOM.
+        const buttonWidth = props.width / props.values.length;
+        const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true).attr("role", "radiogroup")
+        // `??` rather than `||`, so an explicitly empty name stays an empty name.
+        .attr("aria-label", props.ariaLabel ?? null);
+        container.style("width", `${props.width}px`);
+        const buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values).join("button").classed("sszvis-control-buttonGroup__item", true).attr("type", "button").attr("role", "radio");
+        // Roving tabindex: exactly one option is in the tab order. That is the current one, or
+        // the first option when `current` matches no value, so the group stays reachable.
+        const currentIndex = props.values.indexOf(props.current);
+        const rovingIndex = currentIndex === -1 ? 0 : currentIndex;
+        const nodes = buttons.nodes();
+        /** Moves the selection by `step` options, wrapping at both ends. */
+        const move = (event, from, step) => {
+          const to = (from + step + nodes.length) % nodes.length;
+          event.preventDefault();
+          nodes[to]?.focus();
+          props.change(event, props.values[to]);
+        };
+        buttons.style("width", `${buttonWidth}px`).classed("selected", d => d === props.current)
+        // Keyed on the index, not on the value: duplicate values are supported, and a
+        // radiogroup with two checked radios is contradictory state for assistive
+        // technology. The legacy `selected` class still highlights every occurrence.
+        .attr("aria-checked", (_d, i) => i === currentIndex ? "true" : "false").attr("tabindex", (_d, i) => i === rovingIndex ? 0 : -1).text(d => d).on("click", props.change).on("keydown", function (event, d) {
+          const index = nodes.indexOf(this);
+          switch (event.key) {
+            case "Enter":
+            case " ":
+              // The native button would activate on its own, but calling `change` here and
+              // suppressing that activation keeps a keypress and a click on one code path.
+              event.preventDefault();
+              props.change(event, d);
+              break;
+            case "ArrowRight":
+            case "ArrowDown":
+              move(event, index, 1);
+              break;
+            case "ArrowLeft":
+            case "ArrowUp":
+              move(event, index, -1);
+              break;
+          }
+        });
+      });
+    }
+
+    /**
+     * Ruler with a handle control
+     *
+     * The handle ruler component is very similar to the ruler component, except that it is rendered
+     * with a 24-pixel tall handle at the top. It is moved and repositioned in the same manner as a ruler,
+     * so the actual interaction with the handle is up to the developer to specify. This component also
+     * creates dots for each data point it finds bound to its layer.
+     *
+     * @module sszvis/control/handleRuler
+     *
+     * @property {function} x                   A function or number which determines the x-position of the ruler
+     * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.
+     * @property {number} top                   A number for the y-position of the top of the ruler.
+     * @property {number} bottom                A number for the y-position of the bottom of the ruler.
+     * @property {string, function} label       A string or string function for the labels of the ruler dots.
+     * @property {string, function} color       A string or color for the fill color of the ruler dots.
+     * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
+     *
+     * Note: there is one rule, one handle and one grip mark however many data points are bound, so
+     * they are positioned from a single datum - the first one. An `x` accessor is called with that
+     * datum; for data whose `x` values differ, the ruler follows the first. With no data bound there is
+     * no first datum, so an `x` accessor is called with `undefined` - pass a number in that case.
+     *
+     * Note: labels are written with `.html()`, as elsewhere in the library, because sszvis.modularText
+     * produces markup. Escaping untrusted label data is the caller's responsibility. Unlike
+     * sszvis.annotation.ruler, this control neither de-overlaps labels nor defaults `color`, and its
+     * labels are joined on the component's own selection rather than on the ruler group - so hiding or
+     * moving that group leaves the labels behind.
+     *
+     * Note: the rule stops 4px above `bottom`, but the label's vertical nudge is decided against the
+     * unadjusted `bottom`. A label falling in that 4px band is offset as if it were still on the ruler.
+     *
+     * Note: `top` and `bottom` have no defaults; leaving them out writes NaN into the geometry and the
+     * ruler silently disappears.
+     *
+     * See test/control/handleRuler.test.ts.
+     *
+     * @returns {sszvis.component}
+     */
+    /** The gap kept between the bottom of the rule and props.bottom. */
+    const RULE_BOTTOM_INSET = 4;
+    const HANDLE_WIDTH$1 = 10;
+    const HANDLE_HEIGHT$1 = 24;
+    /** Where the grip mark starts and ends within the handle, as a fraction of its height. */
+    const HANDLE_MARK_TOP = 0.15;
+    const HANDLE_MARK_BOTTOM = 0.85;
+    const DOT_RADIUS = 3.5;
+    /** Horizontal distance between a dot and its label. */
+    const LABEL_OFFSET = 10;
+    /** Vertical nudge that drops a label's baseline clear of its dot. */
+    const LABEL_BASELINE_NUDGE = 5;
+    function handleRuler() {
+      return component().prop("x", functor).prop("y", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Elements need to be placed on half-pixels in order to be rendered
+        // crisply across browsers. That's why we create this position accessor
+        // here that takes a datum as input, reads out its value (props.x) and
+        // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
+        // Composed with fn.compose rather than written as arrow functions so that d3's full
+        // (d, i, nodes) argument list and its element-bound `this` still reach the accessor.
+        const crispX = compose(halfPixel, props.x);
+        const crispY = compose(halfPixel, props.y);
+        const bottom = props.bottom - RULE_BOTTOM_INSET;
+        const handleTop = props.top - HANDLE_HEIGHT$1;
+        // There is a single rule, handle and grip mark whatever the data, so the group they
+        // live in is bound to one datum - the first - and `props.x` is read from that. The
+        // dots and labels below are joined on the whole data array as usual. The array holds
+        // one slot even for empty data, so the ruler still renders (from a constant `x`).
+        const rulerDatum = [data[0]];
+        const group = selection.selectAll(".sszvis-handleRuler__group").data(rulerDatum).join("g").classed("sszvis-handleRuler__group", true);
+        // The static parts are joined rather than appended so that a re-render - the normal
+        // case for an interactive ruler - neither duplicates them nor moves them in front of
+        // the dots, which are joined further down and must stay on top.
+        group.selectAll(".sszvis-ruler__rule").data(d => [d]).join("line").classed("sszvis-ruler__rule", true).attr("x1", crispX).attr("y1", halfPixel(props.top)).attr("x2", crispX).attr("y2", halfPixel(bottom));
+        group.selectAll(".sszvis-handleRuler__handle").data(d => [d]).join("rect").classed("sszvis-handleRuler__handle", true).attr("x", d => crispX(d) - HANDLE_WIDTH$1 / 2).attr("y", halfPixel(handleTop)).attr("width", HANDLE_WIDTH$1).attr("height", HANDLE_HEIGHT$1).attr("rx", 2).attr("ry", 2);
+        group.selectAll(".sszvis-handleRuler__handle-mark").data(d => [d]).join("line").classed("sszvis-handleRuler__handle-mark", true).attr("x1", crispX).attr("y1", halfPixel(handleTop + HANDLE_HEIGHT$1 * HANDLE_MARK_TOP)).attr("x2", crispX).attr("y2", halfPixel(handleTop + HANDLE_HEIGHT$1 * HANDLE_MARK_BOTTOM));
+        const dots = group.selectAll(".sszvis-ruler__dot").data(data).join("circle").classed("sszvis-ruler__dot", true);
+        dots.attr("cx", crispX).attr("cy", crispY).attr("r", DOT_RADIUS)
+        // Rendered to a string for d3's attr signature, which accepts no colour object;
+        // an unset color stays nullish, which d3 reads as "remove the attribute".
+        .attr("fill", (d, i) => colorToString(typeof props.color === "function" ? props.color(d, i) : props.color));
+        selection.selectAll(".sszvis-ruler__label-outline").data(data).join("text").classed("sszvis-ruler__label-outline", true);
+        selection.selectAll(".sszvis-ruler__label").data(data).join("text").classed("sszvis-ruler__label", true);
+        // Update both labelOutline and labelOutline selections
+        selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
+          const x = crispX(d);
+          const y = crispY(d);
+          const dx = props.flip(d) ? -LABEL_OFFSET : LABEL_OFFSET;
+          // A constant nudge, whether the dot sits on the ruler or above its top; only a
+          // dot below `bottom` needs none. The same expression lives in
+          // src/annotation/ruler.ts and the two must not drift.
+          const dy = y > props.bottom ? 0 : LABEL_BASELINE_NUDGE;
+          return translateString(x + dx, y + dy);
+        }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
+      });
+    }
+
+    /**
+     * Select control
+     *
+     * Control for switching top-level filter values. Use this control for changing between several
+     * options which affect the state of the chart. This component should be rendered into an html layer.
+     *
+     * This control is part of the `optionSelectable` class of controls and can be used interchangeably
+     * with other controls of this class (sszvis.control.buttonGroup).
+     *
+     * @module sszvis/control/select
+     *
+     * @property values         an array of string values which are the options available in
+     *                                  the control. Unset or undefined is read as the empty array,
+     *                                  which renders a select with no options.
+     * @property current       the currently selected value of the select control. Should be one
+     *                                  of the options passed to .values(). Compared with ===.
+     * @property width         The total width of the select control. Labels wider than
+     *                                  `width - 40` are trimmed to fit with an ellipsis mark, the 40px
+     *                                  covering the select's own chrome. (default: 300px)
+     * @property change      A callback/event handler function called as (event, value) when
+     *                                  the user selects an option. Selecting a value does not change any
+     *                                  state unless this callback does something. (default: fn.identity,
+     *                                  which returns the event and silently discards the value)
+     * @property ariaLabel     An accessible name for the control, naming what it filters rather
+     *                                  than what the options are. Written as `aria-label` on the select
+     *                                  element. (default: undefined, which writes no attribute, leaving
+     *                                  the control unnamed)
+     *
+     * Note: both optionSelectable controls join their wrapper element on the
+     * `.sszvis-control-optionSelectable` selector, keyed by the control's own name, so rendering one
+     * into a container that already holds the other replaces the other's DOM. This is what makes them
+     * interchangeable.
+     *
+     * Note: the two controls do not show an overlong label the same way, because they cannot. A native
+     * select element is laid out by the browser: its options can neither wrap onto a second line nor
+     * grow the control, so this control measures each label and trims it with an ellipsis to fit
+     * `width - 40` (`LABEL_WIDTH_ALLOWANCE`, which reserves room for the select's own chrome). The
+     * button group draws ordinary elements it does control, so it wraps a long label over more lines
+     * instead of shortening it. Swapping one control for the other across a breakpoint therefore keeps
+     * the same values and the same callback, but not the same label *text*: expect ellipses here, and
+     * the full string on two or three lines there. This says nothing about which control takes more
+     * room - see the note below on the 30px this one adds to `width`.
+     *
+     * Note: `current` is written as each option's `selected` DOM property, so it stays authoritative
+     * across re-renders even after the user has picked an option themselves. A value duplicated in
+     * `values` selects the last matching option, because a single-select element holds one selection.
+     *
+     * Note: the wrapper is styled to `width`, but the select element itself is rendered 30px wider,
+     * while labels are measured and trimmed against `width - 40`.
+     *
+     * Note: label truncation removes one character more than strictly necessary (the ellipsis replaces
+     * the second-to-last character as well). Values are coerced with `String()` before measuring, so
+     * non-string values are trimmed rather than throwing.
+     *
+     * Note: each option carries its own value, coerced with `String()`, and a selection is resolved
+     * back by that coercion rather than by array position, so a selection recorded against an older
+     * `values` array cannot resolve to a different value. The options are joined on the same key, so an
+     * option element follows its value across a re-render. A value repeated verbatim still renders once
+     * per occurrence, but two *distinct* values that coerce to the same string are indistinguishable:
+     * both render, a selection resolves to the first of them, and the component warns. A selection that
+     * matches no configured value is ignored with a warning instead of invoking `change` with
+     * `undefined`.
+     *
+     * Note: `ariaLabel` is unset by default rather than defaulting to an empty string. A form control is
+     * never decorative, so there is no meaningful "no name wanted" value: an unset `ariaLabel` means the
+     * name has not been supplied yet, and no attribute is written. Nothing warns about it, because every
+     * existing call site is unnamed and a per-render warning would be noise rather than a signal. The
+     * attribute goes on the `select` element itself, not on the wrapper `div`, which carries no role and
+     * so cannot be named; `buttonGroup` names its `radiogroup` wrapper instead.
+     *
+     * Note: `values` resolves to the empty array when it is unset or set to undefined, so a render that
+     * lands before the data does draws an empty control rather than throwing. A chart fed from a fetch
+     * passes a state key that is undefined until the data arrives, so the two spellings of "nothing to
+     * offer yet" have to mean the same thing. `buttonGroup` coerces its `values` the same way.
+     *
+     * See test/control/select.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /** Extra width given to the select element on top of the configured control width. */
+    const SELECT_WIDTH_PADDING = 30;
+    /** Width reserved for the select's own chrome when measuring whether a label fits. */
+    const LABEL_WIDTH_ALLOWANCE = 40;
+    function selectMenu() {
+      return component()
+      // Coerced rather than merely defaulted: a chart hands this a state key that is only
+      // populated when its data arrives, so the value actually passed is `undefined`, which a
+      // plain default would not catch - `.prop()` stores whatever the setter is given.
+      .prop("values", values => values ?? []).values([]).prop("current").prop("width").width(300).prop("change").change(identity).prop("ariaLabel").render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const wrapperEl = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-select"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-select", true);
+        wrapperEl.style("width", `${props.width}px`);
+        const metricsEl = wrapperEl.selectDiv("selectMetrics").classed("sszvis-control-select__metrics", true);
+        const selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]).join("select").classed("sszvis-control-select__element", true).on("change", function (e) {
+          // An option's value can only hold a string, so it holds `String(value)` and the
+          // selection is resolved back by comparing that coercion. Storing the array
+          // position instead let a selection recorded against an older `values` array
+          // resolve to whatever had since moved into that position.
+          const value = this.value;
+          const selected = props.values.find(d => String(d) === value);
+          if (selected === undefined) {
+            // Still reachable: a select with no options at all reports "", and an option
+            // value written by something other than this component matches nothing. A
+            // selection that maps to no value is not a selection.
+            warn(`[selectMenu] ignoring a selection whose option value "${value}" does not match any of the ${props.values.length} configured values.`);
+            return;
+          }
+          props.change(e, selected);
+          // Prevent highlights on the select element after users have selected
+          // an option by moving away from it.
+          setTimeout(() => {
+            window.focus();
+          }, 0);
+        });
+        selectEl.style("width", `${props.width + SELECT_WIDTH_PADDING}px`);
+        // `??` rather than `||`, so an explicitly empty name stays an empty name.
+        selectEl.attr("aria-label", props.ariaLabel ?? null);
+        // Options are keyed by their own value, so an option element follows its value
+        // across a re-render rather than being positionally re-labelled. Values repeated
+        // verbatim are fine - they key the same and resolve to the same thing - but two
+        // *distinct* values that coerce to the same string are indistinguishable, and the
+        // first of them wins when a selection is resolved. Say so rather than guessing.
+        const keyOf = d => String(d);
+        const firstByKey = new Map();
+        const collisions = [];
+        for (const d of props.values) {
+          const key = keyOf(d);
+          if (!firstByKey.has(key)) firstByKey.set(key, d);else if (firstByKey.get(key) !== d) collisions.push(key);
+        }
+        if (collisions.length > 0) {
+          warn(`[selectMenu] values contains distinct entries that are indistinguishable as strings (${collisions.join(", ")}); a selection resolves to the first of each.`);
+        }
+        selectEl.selectAll("option").data(props.values, keyOf).join("option").property("selected", d => d === props.current).attr("value", keyOf).text(d => truncateToWidth(metricsEl, props.width - LABEL_WIDTH_ALLOWANCE, d));
+      });
+    }
+    /**
+     * Shortens a label until it fits within maxWidth, measured by writing it into the
+     * (invisible) metrics element and reading back its rendered width.
+     *
+     * The value is coerced with `String()` first, matching the coercion `.text()` would apply
+     * anyway. Shortening stops as soon as the candidate no longer gets shorter, so a maxWidth
+     * that not even "…" fits into costs a handful of measurements rather than MAX_RECURSION.
+     *
+     * Note: each step replaces the last two characters with a single ellipsis, so the first
+     * step removes one character more than strictly necessary.
+     * See test/control/select.test.ts.
+     */
+    function truncateToWidth(metricsEl, maxWidth, originalString) {
+      const MAX_RECURSION = 1000;
+      const fitText = (str, i) => {
+        metricsEl.text(str);
+        const textWidth = Math.ceil(metricsEl.node().clientWidth);
+        if (i >= MAX_RECURSION || textWidth <= maxWidth) return str;
+        const shorter = `${str.slice(0, -2)}…`;
+        // "…" is a fixed point of the shortening step; without this guard a negative
+        // measuring budget burns the full MAX_RECURSION in forced synchronous layouts.
+        // Compared by text rather than by length: a one-character label such as "A" is the
+        // same length as the "…" it shortens to, and a length test returned the overflowing
+        // original instead of taking the first step.
+        return shorter === str ? str : fitText(shorter, i + 1);
+      };
+      return fitText(String(originalString), 0);
+    }
+
+    /**
+     * Slider control
+     *
+     * Control for use in filtering. Works very much like an interactive axis.
+     * A d3 scale is its primary configuration, and it has a labeled handle which can be used to
+     * select values on that scale. Ticks created using an sszvis.axis show the user where
+     * data values lie.
+     *
+     * @module  sszvis/control/slider
+     *
+     * @property {function} scale                 A scale function which this slider represents. The values in the scale's domain
+     *                                            are used as the possible values of the slider.
+     * @property {array} minorTicks               An array of ticks which become minor (smaller and unlabeled) ticks on the slider's axis
+     * @property {array} majorTicks               An array of ticks which become major (larger and labeled) ticks on the slider's axis
+     * @property {function} tickLabels            A function to use to format the major tick labels.
+     * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
+     *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
+     *                                                      Use "horizontal" to reset to a horizontal slant.
+     * @property {number|Date} value             The current value of the slider. Should be set whenever slider interaction causes the state to change.
+     *                                            Required: rendering without it throws before any element is created. Values outside the
+     *                                            scale's domain are clamped to it.
+     * @property {string, function} label         A string or function for the handle label. The datum associated with it is the current slider value.
+     * @property {function} onchange              A callback function called whenever user interaction attempts to change the slider value.
+     *                                            Note that this component will not change its own state. The callback function must affect some state change
+     *                                            in order for this component's display to be updated.
+     *
+     * Note: the handle, the track fill, the axis and the interaction layer all work through one copy
+     * of the scale whose range is inset by half the handle width at each end, so that the handle stays
+     * inside the track and pointing at the pixel where a value's handle is drawn reports that value.
+     * That copy is clamped, so a `value` outside the domain pins the handle to the end of the track
+     * rather than drawing it past the end. The inset is applied to each end of the configured range in
+     * turn, so a descending range keeps its direction.
+     *
+     * Note: ticks are drawn in track order, not in the order they were configured, so the outermost
+     * major labels are anchored inwards whatever order `majorTicks` is given in.
+     *
+     * Note: the move behaviour's y-scale is given a range but no domain, so the second argument passed
+     * to `onchange` is a meaningless fraction and should be ignored.
+     *
+     * See test/control/slider.test.ts.
+     *
+     * @returns {sszvis.component}
+     */
+    const AXIS_OFFSET = 28; // vertical offset for the axis
+    const MAJOR_TICK_SIZE = 12;
+    const MINOR_TICK_SIZE = 4;
+    const BACKGROUND_OFFSET = halfPixel(18); // vertical offset for the middle of the background
+    const HANDLE_WIDTH = 10; // the width of the handle
+    const HANDLE_HEIGHT = 23; // the height of the handle
+    const BG_WIDTH = 6; // the width of the background
+    const LINE_END_OFFSET = BG_WIDTH / 2; // the amount by which to offset the ends of the background line
+    const HANDLE_SIDE_OFFSET = HANDLE_WIDTH / 2 + 0.5; // the amount by which to offset the position of the handle
+    /** The amount by which to offset the small handle line within the handle. */
+    const HANDLE_LINE_DIMENSION = HANDLE_HEIGHT / 2 - 4;
+    /** Vertical extent of the interaction layer: from the label top (text is 11px tall) to the axis. */
+    const INTERACTION_TOP = -11;
+    function contains(x, a) {
+      return a.includes(x);
+    }
+    function slider() {
+      return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).prop("slant")
+      // fn.identity is the documented "no formatting" default. It returns its argument, so it
+      // cannot satisfy a formatter type that promises a string - d3 stringifies the value at
+      // render time, which its own types do not model.
+      .tickLabels(identity).prop("label", functor).label(identity).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // `value` is only dereferenced further down, once the handle is being labelled, so
+        // without this guard a slider rendered before its state exists would leave a
+        // half-built control on screen. Thrown before anything is appended, and named, so
+        // the caller is not left reading a TypeError out of fn.stringEqual.
+        if (props.value == null) {
+          throw new Error("[sszvis.control.slider] the `value` property is required");
+        }
+        const scaleRange = rangeExtent(props.scale);
+        // Inset each end of the configured range towards the middle rather than rebuilding
+        // it from the sorted extent, so that a descending range keeps its direction.
+        const [rangeStart, rangeEnd] = props.scale.range();
+        const rangeSign = rangeStart <= rangeEnd ? 1 : -1;
+        // Clamped so that a value outside the domain pins the handle to the end of the
+        // track, and so that a drag past either end reports that end of the domain.
+        const alteredScale = props.scale.copy().range([rangeStart + rangeSign * HANDLE_SIDE_OFFSET, rangeEnd - rangeSign * HANDLE_SIDE_OFFSET]).clamp(true);
+        // the mostly unchanging bits
+        const bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]).join("g").classed("sszvis-control-slider__backgroundgroup", true);
+        // Sorted by position along the track, so that the outer-label anchoring below can
+        // read the leftmost and rightmost labels off the ends of the selection.
+        const tickValues = set$1([...props.majorTicks, ...props.minorTicks]);
+        tickValues.sort((a, b) => d3.ascending(alteredScale(a), alteredScale(b)));
+        // create the axis
+        const axis = axisX().scale(alteredScale).orient("bottom").slant(props.slant).hideBorderTickThreshold(0).tickSize(MAJOR_TICK_SIZE).tickPadding(6).tickValues(tickValues).tickFormat(d => contains(d, props.majorTicks) ? props.tickLabels(d) : "");
+        const axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]).join("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
+        axisSelection.attr("transform", translateString(0, AXIS_OFFSET)).call(axis);
+        // adjust visual aspects of the axis to fit the design
+        axisSelection.selectAll(".tick line").filter(d => !contains(d, props.majorTicks)).attr("y2", MINOR_TICK_SIZE);
+        const majorAxisText = axisSelection.selectAll(".tick text").filter(d => contains(d, props.majorTicks));
+        if (!props.slant || props.slant === "horizontal") {
+          // The selection is in track order, so the first and last entries are the labels
+          // at the ends of the track. A lone label needs no inward nudge.
+          const numTicks = majorAxisText.size();
+          majorAxisText.style("text-anchor", (_d, i) => {
+            if (numTicks === 1) return "middle";
+            return i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle";
+          });
+        }
+        if (props.slant === "vertical") {
+          majorAxisText.attr("dx", "-1.8em");
+          majorAxisText.attr("dy", "-1.5em");
+        }
+        if (props.slant === "diagonal") {
+          majorAxisText.attr("dx", "-1.6em");
+          majorAxisText.attr("dy", "0.2em");
+        }
+        // create the slider background
+        const backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]).join("g").classed("sszvis-slider__background", true).attr("transform", translateString(0, BACKGROUND_OFFSET));
+        backgroundSelection.selectAll(".sszvis-slider__background__bg1").data([1]).join("line").classed("sszvis-slider__background__bg1", true).style("stroke-width", BG_WIDTH).style("stroke", "#888").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET)).attr("x2", Math.floor(scaleRange[1] - LINE_END_OFFSET));
+        backgroundSelection.selectAll(".sszvis-slider__background__bg2").data([1]).join("line").classed("sszvis-slider__background__bg2", true).style("stroke-width", BG_WIDTH - 1).style("stroke", "#fff").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + LINE_END_OFFSET)).attr("x2", Math.floor(scaleRange[1] - LINE_END_OFFSET));
+        backgroundSelection.selectAll(".sszvis-slider__backgroundshadow").data([props.value]).join("line").attr("class", "sszvis-slider__backgroundshadow").attr("stroke-width", BG_WIDTH - 1).style("stroke", "#E0E0E0").style("stroke-linecap", "round")
+        // The fill runs from the end of the track the domain minimum sits at, which is
+        // the right-hand end for a descending range.
+        .attr("x1", rangeSign === 1 ? Math.ceil(rangeStart + LINE_END_OFFSET) : Math.floor(rangeStart - LINE_END_OFFSET)).attr("x2", d => rangeSign === 1 ? Math.floor(alteredScale(d)) : Math.ceil(alteredScale(d)));
+        // draw the handle and the label
+        /**
+         * Which end of the track the handle sits at: -1 at the low-pixel end, 1 at the
+         * high-pixel end, 0 anywhere in between. Compared with a sub-pixel tolerance,
+         * since the drawn position is a rounded copy of the inset range.
+         */
+        const handleSide = d => {
+          const x = alteredScale(d);
+          const [insetStart, insetEnd] = alteredScale.range();
+          const low = Math.min(insetStart, insetEnd);
+          const high = Math.max(insetStart, insetEnd);
+          if (x <= low + 1) return -1;
+          if (x >= high - 1) return 1;
+          return 0;
+        };
+        const handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]).join("g").classed("sszvis-control-slider__handle", true).attr("transform", d => translateString(halfPixel(alteredScale(d)), 0.5));
+        handle.selectAll(".sszvis-control-slider--label").data(d => [d]).join("text").classed("sszvis-control-slider--label", true).text(props.label)
+        // Anchored from the pixel the handle is drawn at, not from the value's position
+        // in the domain. A descending range draws the domain's first value at the right-hand end,
+        // where a domain-keyed "start" anchor sends a long label - a date, typically -
+        // off the track instead of tucking it inside; and a value outside the domain is
+        // clamped to an end without equalling either bound, so it would be centred over
+        // an edge. Both fall out of asking which end of the track the handle is at.
+        .style("text-anchor", d => {
+          const side = handleSide(d);
+          return side === 0 ? "middle" : side < 0 ? "start" : "end";
+        }).attr("dx", d => handleSide(d) * (HANDLE_WIDTH / 2));
+        handle.selectAll(".sszvis-control-slider__handlebox").data([1]).join("rect").classed("sszvis-control-slider__handlebox", true).attr("x", -5).attr("y", BACKGROUND_OFFSET - HANDLE_HEIGHT / 2).attr("width", HANDLE_WIDTH).attr("height", HANDLE_HEIGHT).attr("rx", 2).attr("ry", 2);
+        handle.selectAll(".sszvis-control-slider__handleline").data([1]).join("line").classed("sszvis-control-slider__handleline", true).attr("y1", BACKGROUND_OFFSET - HANDLE_LINE_DIMENSION).attr("y2", BACKGROUND_OFFSET + HANDLE_LINE_DIMENSION);
+        // The original always called .on("drag", props.onchange), including with undefined,
+        // which d3-dispatch treats as removing the listener. The guard is equivalent.
+        const sliderInteraction = move()
+        // The same inset scale the handle is drawn with, so that pointing at a handle's
+        // pixel reports that handle's value. The padding is a hit-area widening, not a
+        // coordinate correction: the handle overhangs each end of the inset track by
+        // HANDLE_SIDE_OFFSET, so without it the outer half-handle - including the pixel the
+        // domain's own minimum is drawn at - falls outside the interaction layer and can
+        // never be dragged to.
+        .xScale(alteredScale).padding({
+          left: HANDLE_SIDE_OFFSET,
+          right: HANDLE_SIDE_OFFSET
+        })
+        // range goes from the text top (text is 11px tall) to the bottom of the axis
+        .yScale(d3.scaleLinear().range([INTERACTION_TOP, AXIS_OFFSET + MAJOR_TICK_SIZE])).draggable(true);
+        if (props.onchange) {
+          sliderInteraction.on("drag", props.onchange);
+        }
+        selection.selectGroup("sliderInteraction").classed("sszvis-control-slider--interactionLayer", true).attr("transform", translateString(0, 4)).call(sliderInteraction);
+      });
+    }
+
+    /**
+     * Factory that returns an HTML element appended to the given target selector,
+     * ensuring that it is only created once, even when run again.
+     *
+     * Note on the 'key' property of the optional metadata object:
+     *
+     * The key argument is present so that we can have multiple layers of html content in the same container.
+     * For example, let's imagine you want one html div under an svg, then an svg layer, then another div over the svg.
+     * The reason we need a key for these layers is that the render function in all the example code is designed to be
+     * idempotent - calling it multiple times with the same arguments leaves the app in the same state. Therefore, all
+     * the functions within render also need to be idempotent. A straightforward implementation of "createHtmlLayer" would
+     * return an existing layer if present, or create one and return it if it wasn't present. This prevents createHtmlLayer
+     * from making a new html element every time it's called. In turn, that means that you can call render many times and
+     * always expect the same result (idempotence). But it also means that if you call it multiple times within the same
+     * render function, you don't get multiple html layers. So then you can't have one under the svg and one over.
+     *
+     * The key argument solves this problem. It says, "look for a div in the container which has the given key, and return
+     * it if present. Otherwise, create one with that key and return it. This means that if you call createHtmlLayer
+     * multiple times with the same key, only one element will be created, and you'll get it back on subsequent calls.
+     * But if you call it multiple times with different keys, you'll get multiple different elements. So, when you do:
+     *
+     * createHtmlLayer(..., ..., { key: 'A' })
+     * createSvgLayer(...)
+     * createHtmlLayer(..., ..., { key: 'B' })
+     *
+     * Then you'll have the div-svg-div sandwich, but that sequence of function calls is still idempotent.
+     * Note: createSvgLayer accepts an optional metadata object, with an optional key property, which works the same way.
+     *
+     * @module sszvis/createHtmlLayer
+     *
+     * @param {string|d3.selection} selector    CSS selector string which is used to grab the container object for the created layer
+     * @param {d3.bounds} [bounds]              A bounds object which provides the dimensions and offset for the created layer
+     * @param {object} metadata                 Metadata for this layer. Currently the only used option is:
+     *   @property {string} key                 Used as a unique key for this layer. If you pass different values
+     *                                          of key to this function, the app will create and return different layers
+     *                                          for inserting HTML content. If you pass the same value (including undefined),
+     *                                          you will always get back the same DOM element. For example, this is useful for
+     *                                          adding an HTML layer under an SVG, and then adding one over the SVG.
+     *                                          See the binned raster map for an example of using this effectively.
+     *
+     * @returns {d3.selection}
+     */
+    function createHtmlLayer(selector, bounds$1, metadata = {}) {
+      const {
+        padding
+      } = bounds$1 || bounds();
+      const key = metadata.key || "default";
+      const elementDataKey = `data-sszvis-html-${key}`;
+      const render = root => {
+        root.classed("sszvis-outer-container", true);
+        return root.selectAll(`[data-sszvis-html-layer][${elementDataKey}]`).data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", `${padding.left}px`).style("top", `${padding.top}px`);
+      };
+      return withRootSelection(selector, render);
+    }
+
+    /**
+     * Factory that returns an SVG element appended to the given target selector,
+     * ensuring that it is only created once, even when run again.
+     *
+     * @module sszvis/createSvgLayer
+     *
+     * @param {string|d3.selection} selector
+     * @param {d3.bounds} bounds
+     * @param {object} [metadata] Metadata for this chart. Can include any number of the following:
+     *   @property {string} key Used as a unique key for this layer. If you pass different values
+     *                          of key to this function, the app will create and return different layers.
+     *                          If you pass the same value (including undefined), you will always get back
+     *                          the same DOM element. This is useful for adding multiple SVG elements.
+     *                          See the binned raster map for an example of using this effectively.
+     *                          Note: For more information about this argument, see the detailed explanation in
+     *                          the source code for createHtmlLayer.
+     *
+     * @returns {d3.selection}
+     */
+    function createSvgLayer(selector, bounds$1, metadata = {}) {
+      const {
+        padding,
+        height,
+        width
+      } = bounds$1 || bounds();
+      const key = metadata.key || "default";
+      const elementDataKey = `data-sszvis-svg-${key}`;
+      const title = metadata.title || "";
+      const description = metadata.description || "";
+      const render = root => {
+        const svg = root.selectAll(`svg[${elementDataKey}]`).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", `${title} – ${description}`).attr("height", height).attr("width", width);
+        // No <title> element. The layer is role="img" with an aria-label, which is already its
+        // accessible name for assistive technology; a <title> would add nothing there but would
+        // make the browser show a native tooltip over the whole chart, which fights the chart's
+        // own hover interactions. The description stays in <desc>, which browsers do not surface.
+        svg.selectAll("title").remove();
+        svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
+        return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", `translate(${padding.left},${padding.top})`);
+      };
+      return withRootSelection(selector, render);
+    }
+
+    /**
+     * Ordinal Color Scale Legend
+     *
+     * This component is used for creating a legend for a categorical color scale.
+     *
+     * @module sszvis/legend/ordinalColorScale
+     *
+     * @property {d3.scaleOrdinal()} scale         An ordinal scale which will be transformed into the legend.
+     * @property {Number} rowHeight                 The height of the rows of the legend.
+     * @property {Number} columnWidth               The width of the columns of the legend. null reads as a
+     *                                              column offset of zero; it does not by itself reduce the
+     *                                              column count, so with more than one column the entries of a
+     *                                              row land on top of each other. `colorLegendLayout` passes
+     *                                              null only once it has already settled on one column, where
+     *                                              the horizontal offset is irrelevant.
+     * @property {Number} rows                      The target number of rows for the legend.
+     * @property {Number} columns                    The target number of columns for the legend.
+     * @property {String} orientation               The orientation (layout order) of the legend. Must be either "horizontal" or "vertical".
+     *                                              Required unless horizontalFloat is true, which uses its own layout; a missing or
+     *                                              unrecognised value throws, because no layout can be computed without it.
+     * @property {Boolean} reverse                  Whether to reverse the order that categories appear in the legend. Default false
+     * @property {Boolean} rightAlign               Whether to right-align the legend. Default false.
+     * @property {Boolean} horizontalFloat          A true value changes the legend layout to the horizontal float version. Default false.
+     * @property {Number} floatPadding              The amount of padding between elements in the horizontal float layout. Default 10px
+     * @property {Number} floatWidth                The maximum width of the horizontal float layout. Default 600px
+     *
+     * The color legend works by iterating over the domain of the provided scale, and generating a legend entry for each
+     * element in the domain. The entry consists of a label giving the category, and a circle colored with the category's
+     * corresponding color. When props.rightAlign is false (the default), the circle comes before the name. When rightAlign
+     * is true, the circle comes afterwards. The layout of these labels is governed by the other parameters.
+     *
+     * Default Layout:
+     *
+     * Because the labels are svg elements positioned with translate (and do not use the html box model layout algorithm),
+     * rowHeight is necessary to provide the vertical height of each row. Generally speaking, 20px is fine for the default text size.
+     * In the default layout, labels are organized into rows and columns in a gridded fashion. columnWidth is the total width of
+     * any resulting columns. Note that if there is only one column, columnWidth is irrelevant, and null is accepted
+     * for it rather than being rejected: it is read as a column offset of zero.
+     *
+     * There are two orientation options for the row/column layout. The 'horizontal' orientation lays out elements from the input
+     * domain into rows, creating new rows as necessary. For example, with three columns, the first three elements will form
+     * the top row, then the next three in the second row, and so on. With 'vertical' orientation, labels are stacked into a column,
+     * and new columns are added as necessary to hold all of the elements. Therefore, in the 'horizontal' orientation, the number of columns
+     * is key, as this determines when a row ends and a new row begins. In the 'vertical' layout, the number of rows determines when to start
+     * a new column.
+     *
+     * For the input set { A, B, C, D, E, F, G }
+     *
+     * Horizontal Orientation (3 columns):
+     *
+     *      A    B    C
+     *      D    E    F
+     *      G
+     *
+     * Horizontal Orientation (2 columns):
+     *
+     *     A    B
+     *     C    D
+     *     E    F
+     *     G
+     *
+     * Vertical Orientation (3 rows):
+     *
+     *      A    D    G
+     *      B    E
+     *      C    F
+     *
+     * Vertical Orientation (2 rows):
+     *
+     *      A    C    E    G
+     *      B    D    F
+     *
+     * If reverse is true, items from the input domain will be added to the layout in reversed order.
+     *
+     * For example, Horizontal Orientation (4 columns, reverse = true):
+     *
+     *    G    F    E    D
+     *    C    B    A
+     *
+     * Horizontal Float Layout:
+     *
+     * If horizontalFloat is true, a different layout entirely is used, which relies on the width of each element
+     * to compute the position of the next one. This layout always proceeds left-to-right first, then top-to-bottom
+     * if the floatWidth would be exceeded by a new element. Between each element is an amount of padding configurable
+     * using the floatPadding property.
+     *
+     * For the input set { foo, bar, qux, fooBar, baz, fooBarBaz, fooBaz, barFoo }
+     *
+     * Horizontal Float Layout (within a floatWidth identified by vertical pipes,
+     * with 4 spaces of floatPadding).
+     *
+     * |foo    bar    qux|
+     * |fooBar    baz    |      <--- not enough space for fooBarBaz
+     * |fooBarBaz        |      <--- not enough space for padding + fooBaz
+     * |fooBaz    barFoo |
+     */
+    const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
+    function legendColorOrdinal() {
+      return component().prop("scale").prop("rowHeight").rowHeight(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).prop("columnWidth").columnWidth(200).prop("rows").rows(3).prop("columns").columns(3).prop("verticallyCentered").verticallyCentered(false).prop("orientation").prop("reverse").reverse(false).prop("rightAlign").rightAlign(false).prop("horizontalFloat").horizontalFloat(false).prop("floatPadding").floatPadding(20).prop("floatWidth").floatWidth(600).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Thrown before anything is rendered: without an orientation the row/column layout
+        // cannot be computed at all, and the entries would silently stack at the origin.
+        // horizontalFloat brings its own layout and needs no orientation.
+        if (!props.horizontalFloat && props.orientation !== "horizontal" && props.orientation !== "vertical") {
+          throw new Error('[legendColorOrdinal] orientation must be "horizontal" or "vertical" unless horizontalFloat is true');
+        }
+        let domain = props.scale.domain();
+        if (props.reverse) {
+          domain = [...domain].reverse();
+        }
+        // Zero under horizontalFloat, which does not read them.
+        let rows = 0;
+        let cols = 0;
+        if (props.orientation === "horizontal") {
+          cols = Math.ceil(props.columns);
+          rows = Math.ceil(domain.length / cols);
+        } else if (props.orientation === "vertical") {
+          rows = Math.ceil(props.rows);
+          cols = Math.ceil(domain.length / rows);
+        }
+        const groups = selection.selectAll(".sszvis-legend--entry").data(domain).join("g").classed("sszvis-legend--entry", true);
+        groups.selectAll(".sszvis-legend__mark").data(d => [d]).join("circle").classed("sszvis-legend__mark", true).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => String(props.scale(d))).attr("stroke", d => String(props.scale(d))).attr("stroke-width", 1);
+        groups.selectAll(".sszvis-legend__label").data(d => [d]).join("text").classed("sszvis-legend__label", true).text(d => String(d)).attr("dy", "0.35em") // vertically-center
+        .style("text-anchor", () => props.rightAlign ? "end" : "start").attr("transform", () => {
+          const x = props.rightAlign ? -18 : 18;
+          const y = halfPixel(props.rowHeight / 2);
+          return translateString(x, y);
+        });
+        let verticalOffset = "";
+        if (props.verticallyCentered) {
+          verticalOffset = `translate(0,${String(-(domain.length * props.rowHeight / 2))}) `;
+        }
+        if (props.horizontalFloat) {
+          let rowPosition = 0;
+          let horizontalPosition = 0;
+          groups.attr("transform", function () {
+            // not affected by scroll position
+            const width = this.getBoundingClientRect().width;
+            if (horizontalPosition + width > props.floatWidth) {
+              rowPosition += props.rowHeight;
+              horizontalPosition = 0;
+            }
+            const translate = translateString(horizontalPosition, rowPosition);
+            horizontalPosition += width + props.floatPadding;
+            return verticalOffset + translate;
+          });
+        } else {
+          groups.attr("transform", (_d, i) => {
+            if (props.orientation === "horizontal") {
+              return `${verticalOffset}translate(${i % cols * (props.columnWidth ?? 0)},${Math.floor(i / cols) * props.rowHeight})`;
+            }
+            // Only "vertical" remains - any other value was rejected above.
+            return `${verticalOffset}translate(${Math.floor(i / rows) * (props.columnWidth ?? 0)},${i % rows * props.rowHeight})`;
+          });
+        }
+      });
+    }
+
+    /**
+     * Color Legend Layout
+     *
+     * Sizes an ordinal color legend to the available width: it picks the number of
+     * rows and columns, the label slant, and the bottom padding the chart needs to
+     * leave for it.
+     *
+     * @module sszvis/layout/colorLegendLayout
+     */
+    const SLANTS = ["horizontal", "vertical", "diagonal"];
+    const DEFAULT_COLUMN_COUNT = 2;
+    const LABEL_PADDING = 40;
+    /**
+     * colorLegendLayout
+     *
+     * Generate a color scale and a legend for the given labels. Compute how much
+     * padding labels plus legend needs for use with `sszvis.bounds()`
+     *
+     * Behaviour notes:
+     * - scaleQual6 is used up to six labels, scaleQual12 above six; colours repeat
+     *   silently beyond twelve labels.
+     * - axisLabelPadding is 60 for slant "horizontal", 40 + widest axis label for "vertical",
+     *   and 40 + widest axis label / sqrt(2) for "diagonal". An omitted or null slant is
+     *   horizontal; any other value throws.
+     * - More labels than the chosen colour scale has colours is warned about, because a d3
+     *   ordinal scale recycles its range rather than running out.
+     * - A "vertical" or "diagonal" slant with no axisLabels reserves the 40px base padding
+     *   and nothing for the labels themselves.
+     * - A container that cannot be measured is warned about and treated as having no width.
+     * - legendPadding is rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT.
+     */
+    function colorLegendLayout({
+      legendLabels,
+      axisLabels = [],
+      slant
+    }, container) {
+      // an omitted slant - null included, as the docs examples pass it - is horizontal
+      const resolvedSlant = slant ?? "horizontal";
+      if (!SLANTS.includes(resolvedSlant)) {
+        throw new RangeError(`colorLegendLayout: slant must be one of ${SLANTS.join(", ")}, got ${slant}`);
+      }
+      const measuredWidth = measureDimensions(container).width;
+      if (!measuredWidth) {
+        warn("colorLegendLayout could not measure its container, and is laying the legend out as if it had no width:", container);
+      }
+      const containerWidth = measuredWidth ?? 0;
+      const layout = colorLegendDimensions(legendLabels, containerWidth);
+      const scale = legendLabels.length > 6 ? scaleQual12().domain(legendLabels) : scaleQual6().domain(legendLabels);
+      if (legendLabels.length > scale.range().length) {
+        warn(`colorLegendLayout: ${legendLabels.length} labels share the ${scale.range().length} colours of this scale, so some categories are drawn in the same colour`);
+      }
+      const legend = legendColorOrdinal().scale(scale).horizontalFloat(layout.horizontalFloat).rows(layout.rows).columnWidth(layout.columnWidth).orientation(layout.orientation);
+      const axisLabelPadding = axisLabelHeight(resolvedSlant, axisLabels);
+      const legendPadding = layout.rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;
+      return {
+        axisLabelPadding,
+        legendPadding,
+        bottomPadding: axisLabelPadding + legendPadding,
+        legendWidth: layout.legendWidth,
+        legend,
+        scale
+      };
+    }
+    /**
+     * colorLegendDimensions
+     *
+     * Compute all the dimensions necessary to generate an ordinal color legend.
+     *
+     * Behaviour notes:
+     * - Single column for four or fewer labels; otherwise at most two columns
+     *   (numCols only counts down from DEFAULT_COLUMN_COUNT = 2).
+     * - Horizontal float only when there is one column AND all labels fit on one line.
+     * - Each label is padded by 40px.
+     * - columnWidth is null for a single column.
+     * - legendWidth is columns * widest label, or the width of the whole line for a floated
+     *   legend, which is laid out on one line rather than in columns.
+     * - An empty label list gives a zero legendWidth.
+     * - A container of no width degrades to one column, one row per label.
+     */
+    function colorLegendDimensions(labels, containerWidth) {
+      const labelCount = labels.length;
+      // an empty legend has no labels to be as wide as
+      const maxLabelWidth = d3.max(labels, labelWidth) ?? 0;
+      const totalLabelsWidth = d3.sum(labels, labelWidth);
+      // Use a single column for four or fewer items
+      const columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
+      // Use a horizontal layout if all labels fit on one line
+      const isHorizontal = columns === 1 && totalLabelsWidth <= containerWidth;
+      return {
+        columns,
+        rows: isHorizontal ? 1 : Math.ceil(labelCount / columns),
+        columnWidth: columns === 1 ? null : maxLabelWidth,
+        // a floated legend is one line of labels, not a column of the widest one
+        legendWidth: isHorizontal ? totalLabelsWidth : columns * maxLabelWidth,
+        horizontalFloat: isHorizontal,
+        orientation: isHorizontal ? null : "vertical"
+      };
+    }
+    // -----------------------------------------------------------------------------
+    // Helpers
+    function axisLabelHeight(slant, labels) {
+      switch (slant) {
+        case "vertical":
+          {
+            return 40 + (d3.max(labels, measureAxisLabel) ?? 0);
+          }
+        case "diagonal":
+          {
+            return 40 + Math.sqrt(2 * ((d3.max(labels, measureAxisLabel) ?? 0) / 2) ** 2);
+          }
+        default:
+          {
+            return 60;
+          }
+      }
+    }
+    function labelWidth(label) {
+      return measureLegendLabel(label) + LABEL_PADDING;
+    }
+    function numCols(totalWidth, columnWidth, num) {
+      if (num <= 1) return 1;
+      return columnWidth <= totalWidth / num ? num : numCols(totalWidth, columnWidth, num - 1);
+    }
+
+    /**
+     * Argument checks shared by the layout functions.
+     *
+     * @module sszvis/layout/validate
+     *
+     * Every layout in this directory turns measurements and counts into geometry, and the two
+     * degenerate cases they meet are distinguished here:
+     *
+     * - A size or a count that cannot describe any chart - negative, fractional where only whole
+     *   items exist, or not a number at all - is a misconfiguration. It throws, naming the layout
+     *   and the argument, before any dimension is computed.
+     * - A zero size or a zero count is an ordinary runtime state: a container measured before its
+     *   first paint, or a series filtered down to nothing. Each layout returns a zeroed layout for
+     *   those rather than throwing, so a chart can render itself as empty.
+     */
+    /** Throws unless `value` is a finite number of zero or more pixels. */
+    function requireSize(layoutName, propName, value) {
+      if (!Number.isFinite(value) || value < 0) {
+        throw new RangeError(`${layoutName}: ${propName} must be a finite number of pixels of zero or more, got ${value}`);
+      }
+    }
+    /** Throws unless `value` is a finite ratio within `[0, 1]`. */
+    function requireRatio(layoutName, propName, value) {
+      if (!Number.isFinite(value) || value < 0 || value > 1) {
+        throw new RangeError(`${layoutName}: ${propName} must be a ratio within [0, 1], got ${value}`);
+      }
+    }
+    /** Throws unless `value` is a whole number of zero or more items. */
+    function requireCount(layoutName, propName, value) {
+      if (!Number.isInteger(value) || value < 0) {
+        throw new RangeError(`${layoutName}: ${propName} must be a whole number of zero or more, got ${value}`);
+      }
+    }
+
+    /**
+     * Heat Table Dimensions
+     *
+     * Utility function for calculating different demensions in the heat table
+     *
+     * @module sszvis/layout/heatTableDimensions
+     *
+     * @param  {Number} spaceWidth   the total available width for the heat table within its container
+     * @param  {Number} squarePadding the padding, in pixels, between squares in the heat table
+     * @param  {Number} numX     The number of columns that need to fit within the heat table width
+     * @param {Number} numY The number of rows in the table
+     * @param {Object} [chartPadding] An object that includes padding values for the left, right, top,
+     *                              and bottom padding which the heat table should have within its container.
+     *                              These padding values should be enough to include any axis labels or other things
+     *                              that show up around the table itself. The heat table will then fill the rest
+     *                              of the available space as appropriate (up to a certain maximum size of box)
+     * @return {object}         An object with dimension information about the heat table:
+     *                          {
+     *                              side: the length of one side of a table box
+     *                              paddedSide: the length of the side plus padding
+     *                              padRatio: the ratio of padding to paddedSide (used for configuring d3.scaleOrdinal.rangeBands as the second parameter)
+     *                              width: the total width of all table boxes plus padding in between
+     *                              height: the total height of all table boxes plus padding in between
+     *                              centeredOffset: the left offset required to center the table horizontally within its container
+     *                          }
+     *
+     * Behaviour notes:
+     * - The box side is fitted to the available width only; numY/rows never affect it.
+     * - The side is capped at 30px and floored at 0. Too many columns, a large squarePadding
+     *   or a large horizontal chartPadding leave no room for a box at all, and the whole
+     *   layout is then zeroed rather than reporting a negative side and a padRatio outside
+     *   the [0, 1) range a band scale expects.
+     * - The chartPadding argument is copied before the missing sides are defaulted onto it, so
+     *   a shared or frozen padding object is left as the caller wrote it.
+     * - Defaults for chartPadding are applied with `||`, so an explicit 0 is indistinguishable
+     *   from a missing value.
+     * - Only left/right padding affect the layout; top/bottom are accepted but unused.
+     * - A zero spaceWidth, or a table with no columns or no rows, is a table with nothing to
+     *   draw, and every dimension comes back 0.
+     * - A negative spaceWidth or squarePadding, and a negative or fractional column or row
+     *   count, throw.
+     * - centeredOffset is clamped at 0 but never validated otherwise.
+     */
+    /** A table with no columns, no rows or no room: nothing to draw and nothing to report. */
+    const EMPTY_DIMENSIONS = {
+      side: 0,
+      paddedSide: 0,
+      padRatio: 0,
+      width: 0,
+      height: 0,
+      centeredOffset: 0
+    };
+    function dimensionsHeatTable(spaceWidth, squarePadding, numX, numY, chartPadding) {
+      requireSize("dimensionsHeatTable", "spaceWidth", spaceWidth);
+      requireSize("dimensionsHeatTable", "squarePadding", squarePadding);
+      requireCount("dimensionsHeatTable", "numX", numX);
+      requireCount("dimensionsHeatTable", "numY", numY);
+      if (spaceWidth === 0 || numX === 0 || numY === 0) return {
+        ...EMPTY_DIMENSIONS
+      };
+      // a copy: a dimension calculator has no business writing to its arguments
+      const padding = {
+        ...chartPadding
+      };
+      padding.top ||= 0;
+      padding.right ||= 0;
+      padding.bottom ||= 0;
+      padding.left ||= 0;
+      // this includes the default side length for the heat table
+      const DEFAULT_SIDE = 30,
+        availableChartWidth = spaceWidth - (padding.left ?? 0) - (padding.right ?? 0),
+        // the side is capped from above and floored at 0: a box cannot have a negative side,
+        // and a padRatio derived from one lands outside the [0, 1) a band scale accepts
+        side = Math.max(0, Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE)),
+        paddedSide = side + squarePadding,
+        padRatio = 1 - side / paddedSide,
+        tableWidth = numX * paddedSide - squarePadding,
+        // subtract the squarePadding at the end
+        tableHeight = numY * paddedSide - squarePadding; // subtract the squarePadding at the end
+      // no room for a box means no table to lay out
+      if (side === 0) return {
+        ...EMPTY_DIMENSIONS
+      };
+      return {
+        side,
+        paddedSide,
+        padRatio,
+        width: tableWidth,
+        height: tableHeight,
+        centeredOffset: Math.max((availableChartWidth - tableWidth) / 2, 0)
+      };
+    }
+
+    /**
+     * Horizontal Bar Chart Dimensions
+     *
+     * This function calculates dimensions for the horizontal bar chart. It encapsulates the
+     * layout algorithm for sszvis horizontal bar charts. The object it returns contains several
+     * properties which can be used in other functions and components for layout purposes.
+     *
+     * @module sszvis/layout/horizontalBarChartDimensions
+     *
+     * @param  {number} numBars     the number of bars in the horizontal bar chart
+     * @return {object}             an object containing properties used for layout:
+     *                                 {
+     *                                  barHeight: the height of an individual bar
+     *                                  padHeight: the height of the padding between each bar
+     *                                  padRatio: the ratio of padding to barHeight + padding.
+     *                                            this can be passed as the second argument to d3.scaleOrdinal().rangeBands
+     *                                  outerRatio: the ratio of outer padding to barHeight + padding.
+     *                                              this can be passed as the third parameter to d3.scaleOrdinal().rangeBands
+     *                                  axisOffset: the amount by which to vertically offset the y-axis of the horizontal bar chart
+     *                                              in order to ensure that the axis labels are visible. This can be used as the y-component
+     *                                              of a call to sszvis.svgUtils.translateString.
+     *                                  barGroupHeight: the combined height of all the bars and their inner padding.
+     *                                  totalHeight: barGroupHeight plus the height of the outer padding. Since this layout
+     *                                               has no outer padding, it always equals barGroupHeight; the two are kept
+     *                                               distinct to match the shape of the vertical bar chart layout.
+     *                                 }
+     *
+     * Behaviour notes:
+     * - The layout is fixed: 24px bars separated by 20px of padding. Nothing scales with the
+     *   available space - the caller sizes the container from barGroupHeight, not the reverse.
+     * - outerRatio is always 0, so totalHeight always equals barGroupHeight. The two properties
+     *   are kept distinct only to match the shape of the vertical bar chart layout.
+     * - axisOffset is derived from the constant bar height and is therefore always -22.
+     * - Zero bars give a zero group height; a negative or fractional bar count throws.
+     */
+    function dimensionsHorizontalBarChart(numBars) {
+      requireCount("dimensionsHorizontalBarChart", "numBars", numBars);
+      const DEFAULT_HEIGHT = 24,
+        // the default bar height
+        MIN_PADDING = 20,
+        // the minimum padding size
+        barHeight = DEFAULT_HEIGHT,
+        // the bar height
+        // an empty chart draws no bars, so it draws no gaps between them either
+        numPads = Math.max(numBars - 1, 0),
+        padding = MIN_PADDING,
+        // compute other information
+        padRatio = 1 - barHeight / (barHeight + padding),
+        computedBarSpace = barHeight * numBars + padding * numPads,
+        outerRatio = 0; // no outer padding
+      return {
+        barHeight,
+        padHeight: padding,
+        padRatio,
+        outerRatio,
+        axisOffset: -12 - 10,
+        barGroupHeight: computedBarSpace,
+        totalHeight: computedBarSpace + outerRatio * (barHeight + padding) * 2
+      };
+    }
+
+    /**
+     * Population Pyramid Layout
+     *
+     * This function is used to compute the layout parameters for the population pyramid
+     *
+     * @module sszvis/layout/populationPyramidLayout
+     *
+     * @parameter {number} spaceWidth      The available width for the chart. This is used as a base for calculating the size of the chart
+     *                                    (there's a default aspect ratio for its height), and then for calculating the rounded bar heights.
+     *                                    The returned total height should be nicely proportionate to this value.
+     * @parameter {number} numBars         The number of bars in the population pyramid. In other words, the number of ages or age groups in the dataset.
+     *
+     * @return {object}                   An object containing configuration information for the population pyramid:
+     *                                    {
+     *                                      barHeight: the height of one bar in the population pyramid
+     *                                      padding: the height of the padding between bars in the pyramid
+     *                                      totalHeight: the total height of all bars plus the padding between them. This should be the basis for the bounds calculation
+     *                                      positions: an array of positions, which go from the bottom of the chart (lowest age) to the top. These positions should
+     *                                      be set as the range of a d3.scaleOrdinal scale, where the domain is the list of ages or age groups that will be displayed
+     *                                      in the chart. The domain ages or age groups should be sorted in ascending order, so that the positions will match up. If everything
+     *                                      has gone well, the positions array's length will be numBars,
+     *                                      maxBarLength: The maximum length of the bars to fit within the space while keeping a good aspect ratio.
+     *                                      In situations with very wide screens, this limits the width of the entire pyramid to a reasonable size.
+     *                                      chartPadding: left padding for the chart. When the maxBarLength is less than what would fill the entire width
+     *                                      of the chart, this value is needed to offset the axes and legend so that they line up with the chart. Otherwise,
+     *                                      the value is 0 and no further padding is needed.
+     *                                    }
+     *
+     * Behaviour notes:
+     * - Chart height is the 4:5 portrait ratio, capped at 480px.
+     * - Bar heights are rounded to whole pixels with a 2px floor; the floor wins over the height
+     *   cap, so totalHeight can exceed 480px.
+     * - Padding is always exactly 1px.
+     * - Positions are top-edge y coordinates for the bars, in the order an ascending age domain
+     *   expects them: the first is the bottom bar (the largest y) and the last is the top bar at
+     *   exactly 0. There is one position per bar for a positive whole numBars, since the integer
+     *   arithmetic guarantees the loop lands on 0; a fractional or negative count is not validated.
+     * - maxBarLength is capped at half this module's own MAX_HEIGHT, so a very wide screen keeps
+     *   the whole pyramid to a reasonable size.
+     * - chartPadding is 0 once the pyramid fills the width.
+     * - A zero spaceWidth or a pyramid with no bars is a chart with nothing to draw, and every
+     *   dimension comes back 0.
+     * - A negative spaceWidth, or a negative or fractional bar count, throws.
+     */
+    function layoutPopulationPyramid(spaceWidth, numBars) {
+      requireSize("layoutPopulationPyramid", "spaceWidth", spaceWidth);
+      requireCount("layoutPopulationPyramid", "numBars", numBars);
+      if (spaceWidth === 0 || numBars === 0) {
+        return {
+          barHeight: 0,
+          padding: 0,
+          totalHeight: 0,
+          positions: [],
+          maxBarLength: 0,
+          chartPadding: 0
+        };
+      }
+      const MAX_HEIGHT = 480; // Chart no taller than this
+      const MIN_BAR_HEIGHT = 2; // Bars no shorter than this
+      const defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);
+      const padding = 1;
+      const numPads = numBars - 1;
+      const totalPadding = padding * numPads;
+      let roundedBarHeight = Math.round((defaultHeight - totalPadding) / numBars);
+      roundedBarHeight = Math.max(roundedBarHeight, MIN_BAR_HEIGHT);
+      const totalHeight = numBars * roundedBarHeight + totalPadding;
+      let barPos = totalHeight - roundedBarHeight;
+      const step = roundedBarHeight + padding,
+        positions = [];
+      while (barPos >= 0) {
+        positions.push(barPos);
+        barPos -= step;
+      }
+      // half of each side, up to half the chart's own maximum height
+      const maxBarLength = Math.min(spaceWidth / 2, MAX_HEIGHT / 2);
+      const chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 0);
+      return {
+        barHeight: roundedBarHeight,
+        padding,
+        totalHeight,
+        positions,
+        maxBarLength,
+        chartPadding
+      };
+    }
+
+    /**
+     * @module sszvis/layout/sankey
+     *
+     * A module of helper functions for computing the data structure
+     * and layout required by the sankey component.
+     *
+     * Behaviour notes:
+     * - prepareData's source, target and value accessors are required; a builder missing one throws
+     *   when it is applied.
+     * - a link with an unknown source or target id is warned about and dropped, so the returned
+     *   links array holds only links.
+     * - computeLayout's per-column padding and pixels-per-unit are each reduced to a minimum across
+     *   all columns, but a degenerate column contributes the largest candidate in both cases, so it
+     *   is discarded by the minimum rather than distorting the others.
+     * - computeLayout returns a zeroed layout for a diagram with no columns, no room, or no
+     *   values at all.
+     */
+    /**
+     * sszvis.layout.sankey.prepareData
+     *
+     * Returns a data preparation component for the sankey data.
+     *
+     * Throughout the code, the rectangles representing entities are referred to as 'nodes', while
+     * the chords connection them which represent flows among those entities are referred to as 'links'.
+     *
+     * @property {Array} apply                    Applies the preparation to a dataset of links. Expects a list of links, where the (unique) id
+     *                                            of the source node can be accessed with the source function, and the (unique) id of the target
+     *                                            can be accessed with the target function. Note that no source can have the same id as a target and
+     *                                            vice versa. The nodes are defined implicitly by the fact that they have a link going to them or
+     *                                            from them.
+     * @property {Function} source                An accessor function for getting the source of a link
+     * @property {Function} target                An accessor function for getting the target of a link
+     * @property {Function} value                 An accessor function for getting the value of a link. Must be a number. The total value of a node
+     *                                            is the greater of the sum of the values of its sourced links and its targeting links.
+     * @property {} descendingSort                Toggles the use of a descending value sort for the nodes
+     * @property {} ascendingSort                 Toggles the use of an ascending value sort for the nodes
+     * @property {Array(Array)} idLists           An array of arrays of id values. For each array of ids, the sankey diagram will create a column
+     *                                            of nodes. Each node should have links going to it or coming from it. All ids should be unique.
+     *
+     * @return {Function}                         The data preparation function. Can be called directly, or applied using the '.apply' function.
+     *         When called, returns an object with data to be used in constructing the chart.
+     *               @property {Array} nodes             An array of node data. Each one will become a rectangle in the sankey
+     *               @property {Array} links             An array of link data. Each one will become a path in the sankey
+     *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
+     *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
+     *
+     * Behaviour notes:
+     * - source, target and value are required accessors; a builder missing one throws when it is
+     *   applied, rather than looking the raw row up as a node id.
+     * - a link whose source or target id is not in idLists is warned about and dropped from the
+     *   returned links array.
+     * - a link's id is the index of the row it came from, so re-preparing the same data gives the
+     *   same links the same ids and the component's data join can match them up.
+     * - a duplicate id warns and keeps only the last column.
+     * - a row whose value is not a number of zero or more is warned about and dropped.
+     * - a link whose two ends are in the same column is warned about and dropped: a sankey link
+     *   runs between columns.
+     * - the builder's `apply` shadows Function.prototype.apply; call it as builder.apply(data)
+     *   or builder(data).
+     * - nodes are sorted across all columns at once (descending by default), then offsets are
+     *   assigned per column.
+     */
+    const prepareData = () => {
+      let mGetSource;
+      let mGetTarget;
+      let mGetValue;
+      let mColumnIds = [];
+      // Helper functions
+      const valueAcc = prop("value");
+      const byAscendingValue = (a, b) => d3.ascending(valueAcc(a), valueAcc(b));
+      const byDescendingValue = (a, b) => d3.descending(valueAcc(a), valueAcc(b));
+      let valueSortFunc = byDescendingValue;
+      const main = inputData => {
+        const getSource = mGetSource;
+        const getTarget = mGetTarget;
+        const getValue = mGetValue;
+        if (!getSource || !getTarget || !getValue) {
+          const missing = [getSource ? undefined : "source", getTarget ? undefined : "target", getValue ? undefined : "value"].filter(Boolean);
+          throw new TypeError(`sankeyPrepareData: the ${missing.join(", ")} accessor${missing.length > 1 ? "s are" : " is"} required`);
+        }
+        const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
+          for (const id of columnIdsList) {
+            if (index.has(id)) {
+              warn("Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:", id, "The existing value will be overwritten");
+            }
+            const item = {
+              id,
+              columnIndex: colIndex,
+              // This is the index of the column containing this node
+              nodeIndex: 0,
+              // This will be overwritten at a later stage with the index of this node within its column
+              value: 0,
+              valueOffset: 0,
+              linksFrom: [],
+              linksTo: []
+            };
+            index.set(id, item);
+          }
+          return index;
+        }, new Map());
+        const listOfLinks = inputData.flatMap((datum, rowIndex) => {
+          const srcId = getSource(datum);
+          const tgtId = getTarget(datum);
+          const rawValue = getValue(datum);
+          const value = Number(rawValue);
+          const srcNode = columnIndex.get(srcId);
+          const tgtNode = columnIndex.get(tgtId);
+          if (!srcNode) {
+            warn("Found invalid source column id:", srcId);
+            return [];
+          }
+          if (!tgtNode) {
+            warn("Found invalid target column id:", tgtId);
+            return [];
+          }
+          if (srcNode.columnIndex === tgtNode.columnIndex) {
+            warn("Found a link whose source and target are in the same column, and dropped it:", srcId, tgtId);
+            return [];
+          }
+          if (!Number.isFinite(value) || value < 0) {
+            warn("Found a link value that is not a number of zero or more, and dropped the link:", rawValue, srcId, tgtId);
+            return [];
+          }
+          const item = {
+            // the row's own index: an id that identifies a link rather than a call
+            id: rowIndex,
+            value,
+            src: srcNode,
+            srcOffset: 0,
+            tgt: tgtNode,
+            tgtOffset: 0
+          };
+          srcNode.linksFrom.push(item);
+          tgtNode.linksTo.push(item);
+          return [item];
+        });
+        // Extract the column nodes from the index
+        const listOfNodes = [...columnIndex.values()];
+        // Calculate an array of total values for each column
+        const columnTotals = listOfNodes.reduce((totals, node) => {
+          const fromTotal = d3.sum(node.linksFrom, valueAcc);
+          const toTotal = d3.sum(node.linksTo, valueAcc);
+          // For correct visual display, the node's value is the max of the from and to links
+          node.value = Math.max(fromTotal, toTotal);
+          totals[node.columnIndex] += node.value;
+          return totals;
+        }, filledArray(mColumnIds.length, 0));
+        // An array with the number of nodes in each column
+        const columnLengths = mColumnIds.map(colIds => colIds.length);
+        // Sort the column nodes
+        // (note, this sorts all nodes for all columns in the same array)
+        listOfNodes.sort(valueSortFunc);
+        // Sort the links in descending order of value. This means smaller links will render
+        // on top of larger links.
+        // (note, this sorts all links for all columns in the same array)
+        listOfLinks.sort(byDescendingValue);
+        // Assign the valueOffset and nodeIndex properties
+        // Here, columnData[0] is an array adding up value totals
+        // and columnData[1] is an array adding up the number of nodes in each column
+        // Both are used to assign cumulative properties to the nodes of each column
+        listOfNodes.reduce((columnData, node) => {
+          // Assigns valueOffset and nodeIndex
+          node.valueOffset = columnData[0][node.columnIndex];
+          node.nodeIndex = columnData[1][node.columnIndex];
+          columnData[0][node.columnIndex] += node.value;
+          columnData[1][node.columnIndex] += 1;
+          return columnData;
+        }, [filledArray(mColumnIds.length, 0), filledArray(mColumnIds.length, 0)]);
+        // Once the order of nodes is calculated, we need to sort the links going into the
+        // nodes and the links coming out of the nodes according to the ordering of the nodes
+        // they come from or go to. This creates a visually appealing layout which minimizes
+        // the number of link crossings
+        for (const node of listOfNodes) {
+          node.linksFrom.sort((linkA, linkB) => linkA.tgt.nodeIndex - linkB.tgt.nodeIndex);
+          node.linksTo.sort((linkA, linkB) => linkA.src.nodeIndex - linkB.src.nodeIndex);
+          // Stack the links vertically within the node according to their order
+          node.linksFrom.reduce((sumValue, link) => {
+            link.srcOffset = sumValue;
+            return sumValue + valueAcc(link);
+          }, 0);
+          node.linksTo.reduce((sumValue, link) => {
+            link.tgtOffset = sumValue;
+            return sumValue + valueAcc(link);
+          }, 0);
+        }
+        return {
+          nodes: listOfNodes,
+          links: listOfLinks,
+          columnTotals,
+          columnLengths
+        };
+      };
+      const api = Object.assign(main, {
+        apply(data) {
+          return main(data);
+        },
+        source(func) {
+          mGetSource = func;
+          return api;
+        },
+        target(func) {
+          mGetTarget = func;
+          return api;
+        },
+        value(func) {
+          mGetValue = func;
+          return api;
+        },
+        descendingSort() {
+          valueSortFunc = byDescendingValue;
+          return api;
+        },
+        ascendingSort() {
+          valueSortFunc = byAscendingValue;
+          return api;
+        },
+        idLists(idLists) {
+          mColumnIds = idLists;
+          return api;
+        }
+      });
+      return api;
+    };
+    /** Matches JavaScript's implicit undefined -> NaN coercion in arithmetic. */
+    const num = value => value === undefined ? Number.NaN : value;
+    /**
+     * sszvis.layout.sankey.computeLayout
+     *
+     * Automatically computes visual display properties needed by the sankey component,
+     * including padding between each node, paddings for the tops of columns to vertically center
+     * them, the domain and range of values in the nodes (used for scaling the node rectangles),
+     * the node thickness, and the domain and range of the column positioning scale.
+     *
+     * @param  {Array} columnLengths      An array of lengths (number of nodes) of each column in the diagram.
+     *                                    Used to compute optimal padding between nodes. Provided by the layout.sankey.prepareData function
+     * @param  {Array} columnTotals       An array of column totals (total of all values of all ndoes). Provided by the
+     * @param  {Number} columnHeight      The vertical height available for the columns. The tallest column will be this height. (Usually bounds.innerHeight)
+     * @param  {Number} columnWidth       The width of all columns. The sankey chart will be this width. (Usually bounds.innerWidth)
+     * @return {Object}                   An object of configuration parameters to be passed to the sankey component
+     *         @property {Number} nodePadding         The amount of padding to add between nodes. pass to component.sankey.nodePadding
+     *         @property {Array} columnPaddings       An array of padding values for each column. Index into this with the columnIndex and return to component.sankey.columnPadding
+     *         @property {Array} valueDomain          The domain for the node size scale. Use to configure a linear scale for component.sankey.sizeScale
+     *         @property {Array} valueRange           The range for the node size scale. Use to configure a linear scale for component.sankey.sizeScale
+     *         @property {Number} nodeThickness       The thickness of nodes. Pass to component.sankey.nodeThickness
+     *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
+     *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
+     *
+     * Behaviour notes:
+     * - padding is (columnHeight * 0.15) / (nodes - 1) per column, clamped to [12, 50], and the
+     *   minimum across the columns is used for all of them. A single-node column draws no gaps, so
+     *   it has no padding to contribute and is left out of that minimum; a diagram whose columns
+     *   all hold one node has no padding at all.
+     * - pixels-per-unit is the minimum across the columns of the non-padding pixels divided by the
+     *   column total. A column total of 0 contributes Infinity, which the minimum discards unless
+     *   every total is 0; a diagram whose columns are all empty is zeroed instead.
+     * - columnRange is the per-step offset, computed as (columnWidth - nodeThickness) /
+     *   (numColumns - 1). Fewer than two columns have no step at all and report an offset of 0.
+     * - nodeThickness is always 20.
+     * - A diagram with no columns, no room or no values at all comes back zeroed; a negative
+     *   height or width, or a negative or fractional column length, throws.
+     */
+    const computeLayout$1 = (columnLengths, columnTotals, columnHeight, columnWidth) => {
+      requireSize("sankeyLayout", "columnHeight", columnHeight);
+      requireSize("sankeyLayout", "columnWidth", columnWidth);
+      for (const colLength of columnLengths) {
+        requireCount("sankeyLayout", "columnLengths", colLength);
+      }
+      if (columnTotals.length !== columnLengths.length) {
+        throw new RangeError(`sankeyLayout: columnTotals must hold one total per column, got ${columnTotals.length} for ${columnLengths.length} columns`);
+      }
+      // The maximum total value of any column
+      const maxTotal = d3.max(columnTotals) ?? 0;
+      const nodeThickness = 20;
+      const numColumns = columnLengths.length;
+      // With one column there are no steps to space out, so the offset is zero rather than a
+      // division by zero (issue #120).
+      const columnXMultiplier = numColumns > 1 ? (columnWidth - nodeThickness) / (numColumns - 1) : 0;
+      const columnDomain = [0, 1];
+      const columnRange = [0, columnXMultiplier];
+      // Nothing to scale: no columns, no room for them, or no values in any of them
+      if (numColumns === 0 || columnHeight === 0 || columnWidth === 0 || maxTotal === 0) {
+        return {
+          valuePadding: 0,
+          nodePadding: 0,
+          columnPaddings: columnLengths.map(() => 0),
+          valueDomain: [0, maxTotal],
+          valueRange: [0, 0],
+          nodeThickness,
+          columnDomain,
+          // Zeroed with the rest of the layout. Computed from columnWidth, the multiplier is
+          // negative once columnWidth falls below nodeThickness, which would place the columns
+          // outside a container that has no room for them at all.
+          columnRange: [0, 0]
+        };
+      }
+      // Calculate appropriate scale and padding values (in pixels)
+      const padSpaceRatio = 0.15;
+      const padMin = 12;
+      const padMax = 50;
+      const minDisplayPixels = 1; // Minimum number of pixels used for display area
+      // Compute the padding value (in pixels) for each column, then take the minimum value.
+      // A column of one node draws no gaps, so it has no padding of its own to contribute, and
+      // charging its (divide-by-zero, then clamped) candidate to the other columns would shrink
+      // columns that do draw gaps.
+      const computedPixPadding = d3.min(columnLengths.filter(colLength => colLength > 1).map(colLength => {
+        // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
+        const colPadding = columnHeight * padSpaceRatio / (colLength - 1);
+        // Limit by minimum and maximum pixel padding values
+        return Math.max(padMin, Math.min(padMax, colPadding));
+      })) ?? 0;
+      // Given the computed padding value, compute each column's resulting "pixels per unit"
+      // This is the number of remaining pixels available to display the column's total units,
+      // after padding pixels have been subtracted. Then take the minimum value of that.
+      const pixPerUnit = d3.min(columnLengths.map((colLength, colIndex) => {
+        // The non-padding pixels must have at least minDisplayPixels
+        const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
+        return nonPaddingPixels / num(columnTotals[colIndex]);
+      }));
+      // The padding between bars, in bar value units
+      const valuePadding = computedPixPadding / num(pixPerUnit);
+      // The padding between bars, in pixels
+      const nodePadding = computedPixPadding;
+      // Compute y-padding required to vertically center each column (in pixels)
+      const paddedHeights = columnLengths.map((colLength, colIndex) => num(columnTotals[colIndex]) * num(pixPerUnit) + (colLength - 1) * nodePadding);
+      const maxPaddedHeight = d3.max(paddedHeights);
+      const columnPaddings = columnLengths.map((_colLength, colIndex) => (num(maxPaddedHeight) - num(paddedHeights[colIndex])) / 2);
+      // The domain of the size scale
+      const valueDomain = [0, maxTotal];
+      // The range of the size scale
+      const valueRange = [0, maxTotal * num(pixPerUnit)];
+      return {
+        valuePadding,
+        nodePadding,
+        columnPaddings,
+        valueDomain,
+        valueRange,
+        nodeThickness,
+        columnDomain,
+        columnRange
+      };
+    };
+
+    /**
+     * Small Multiples layout
+     *
+     * Used to generate group elements which contain small multiples charts.
+     *
+     * This component lays out rectangular groups in a grid according to the number of rows
+     * and the number of columns provided. It is possible to specify paddingX and paddingY
+     * values, pixel amounts which will be left as empty space between the columns and the
+     * rows, respectively.
+     *
+     * Data should be passed to this component in a special way: it should be an array of
+     * data values, where each data value represents a single group. IMPORTANT: each data
+     * value must also have a property called 'values' which represents the values corresponding
+     * to that group.
+     *
+     * In the multiple pie charts example, an array of "groups" data is bound to the chart before
+     * the multiples component is called. Each element in the "groups" data has a values property
+     * which contains the data for a single pie chart.
+     *
+     * The multiples component creates the groups and lays them out, attaching the following new properties
+     * to each group object:
+     *
+     * gx - the x-position of the group
+     * gy - the y-position of the group
+     * gw - the width of the group (without padding)
+     * gh - the height of the group (without padding)
+     * cx - the horizontal center point of the group
+     * cy - the vertical center point of the group
+     *
+     * Generally, you should not use source data objects as group objects, but should instead
+     * create new objects which are used to store group information. This creates a data hierarchy
+     * which matches the representation hierarchy, which is very much a d3 pattern.
+     *
+     * Once the groups have been created, the user must still do something with them. The pattern
+     * for creating charts within each group should look something like:
+     *
+     * chart.selectAll('.sszvis-multiple')
+     *   .each(function(d) {
+     *     var groupSelection = select(this);
+     *
+     *     ... do something which creates a chart using groupSelection ...
+     *   });
+     *
+     * @module sszvis/layout/smallMultiples
+     *
+     * @property {number} width           the total width of the collection of multiples
+     * @property {number} height          the total height of the collection of multiples
+     * @property {number} paddingX        x-padding to put between columns
+     * @property {number} paddingY        y-padding to put between rows
+     * @property {number} rows            the number of rows to generate
+     * @property {number} cols            the number of columns to generate
+     * @property {boolean} showTitle      whether to show a title above each multiple (default: false)
+     * @property {function} titleLabel    accessor function to get the title text from the data
+     * @property {string} titleAnchor     text-anchor for the title: "start", "middle", or "end" (default: "middle"). Any other value throws.
+     * @property {number} titleY          y-position offset for the title (default: 0)
+     *
+     * Behaviour notes:
+     * - Groups are laid out left-to-right, then top-to-bottom, one group per datum.
+     * - gx/gy are grid-absolute; cx/cy are unit-relative and identical for every multiple,
+     *   since each group is translated to its own gx/gy.
+     * - The layout writes gx/gy/gw/gh/cx/cy back onto the bound data objects.
+     * - width, height, rows and cols are required: omitting any of them throws before a group
+     *   is created. paddingX and paddingY default to 0, as do the four title properties.
+     * - More data than rows * cols does not fit the declared grid, and throws.
+     * - A datum without a `values` property throws: the inner chart group has nothing to bind.
+     * - titleLabel is called after the layout fields have been attached to the datum, so it
+     *   sees gx/gy/gw/gh/cx/cy alongside the caller's own fields.
+     * - titleAnchor must be "start", "middle" or "end"; any other value throws.
+     *
+     * @return {sszvis.component}
+     */
+    const TITLE_ANCHORS = ["start", "middle", "end"];
+    function smallMultiples () {
+      return component().prop("width").prop("height").prop("paddingX").paddingX(0).prop("paddingY").paddingY(0).prop("rows").prop("cols").prop("showTitle").showTitle(false).prop("titleLabel").titleLabel(() => "").prop("titleAnchor").titleAnchor("middle").prop("titleY").titleY(0).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        for (const propName of ["width", "height", "rows", "cols"]) {
+          if (props[propName] === undefined) {
+            throw new TypeError(`smallMultiples: the ${propName} property is required`);
+          }
+        }
+        if (props.showTitle && !TITLE_ANCHORS.includes(props.titleAnchor)) {
+          throw new RangeError(`smallMultiples: titleAnchor must be one of ${TITLE_ANCHORS.join(", ")}, got ${props.titleAnchor}`);
+        }
+        for (const [index, datum] of data.entries()) {
+          if (!(datum && "values" in datum)) {
+            throw new TypeError(`smallMultiples: group ${index} has no values property`);
+          }
+        }
+        if (data.length > props.rows * props.cols) {
+          throw new RangeError(`smallMultiples: the ${props.rows} x ${props.cols} grid has no room for ${data.length} groups`);
+        }
+        const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
+        const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
+        const horizontalCenter = unitWidth / 2;
+        const verticalCenter = unitHeight / 2;
+        const multiples = selection.selectAll("g.sszvis-multiple").data(data).join("g").classed("sszvis-g sszvis-multiple", true);
+        multiples.selectAll("g.sszvis-multiple-chart").data(d => [d.values]).join("g").classed("sszvis-multiple-chart", true);
+        multiples.datum((d, i) => {
+          d.gx = i % props.cols * (unitWidth + props.paddingX);
+          d.gw = unitWidth;
+          d.cx = horizontalCenter;
+          d.gy = Math.floor(i / props.cols) * (unitHeight + props.paddingY);
+          d.gh = unitHeight;
+          d.cy = verticalCenter;
+          return d;
+        }).attr("transform", d => `translate(${d.gx},${d.gy})`);
+        // Render titles if showTitle is enabled
+        if (props.showTitle) {
+          const titleX = props.titleAnchor === "start" ? 0 : props.titleAnchor === "end" ? unitWidth : horizontalCenter;
+          multiples.selectAll(".sszvis-multiple-title").data(d => [d]).join("text").classed("sszvis-multiple-title", true).attr("x", titleX).attr("y", props.titleY).attr("text-anchor", props.titleAnchor).text(props.titleLabel);
+        } else {
+          multiples.selectAll(".sszvis-multiple-title").remove();
+        }
+      });
+    }
+
+    /**
+     * Stacked Area Multiples Layout
+     *
+     * This function is used to compute layout parameters for the area multiples chart.
+     *
+     * @module sszvis/layout/stackedAreaMultiplesLayout
+     *
+     * @param  {number} height      The available height of the chart
+     * @param  {number} num         The number of individual stacks to display
+     * @param  {number} pct         the planned-for ratio between the space allotted to each area and the amount of space + area.
+     *                              This value is used to compute the baseline positions for the areas, and how much vertical space to leave
+     *                              between the areas.
+     *
+     * @return {object}             An object containing configuration properties for use in laying out the stacked area multiples.
+     *                              {
+     *                                range:          This is an array of baseline positions, counting from the top of the stack downwards.
+     *                                                It should be used to configure a d3.scaleOrdinal(). The values passed into the ordinal
+     *                                                scale will be given a y-value which descends from the top of the stack, so that the resulting
+     *                                                scale will match the organization scheme of sszvis.stackedArea. Use the ordinal scale to
+     *                                                configure the sszvis.stackedAreaMultiples component.
+     *                                bandHeight:     The height of each multiples band. This can be used to configure the within-area y-scale.
+     *                                                This height represents the height of the y-axis of the individual area multiple.
+     *                                padHeight:      This is the amount of vertical padding between each area multiple.
+     *                              }
+     *
+     * Behaviour notes:
+     * - step = height / (num - pct); band and pad split that step in a (1 - pct) / pct ratio.
+     * - By construction, step * (num - pct) === height, so baseline number `num` always lands exactly on `height`.
+     * - The baseline loop terminates on the stack count, so `range` always holds exactly `num`
+     *   baselines, whatever the height.
+     * - pct defaults to 0.1 when it is omitted. An explicit 0 means exactly that: gapless
+     *   multiples. A pct outside [0, 1] throws.
+     * - num is a count of stacks: a negative or fractional value throws, which also rules out the
+     *   num === pct division by zero.
+     * - A step that is not strictly positive - a zero or negative height, or a num at or below pct -
+     *   describes no band at all, and the layout comes back empty rather than looping forever.
+     */
+    /** Nothing can be drawn: no baselines, and no band or padding to report. */
+    const EMPTY_LAYOUT = {
+      range: [],
+      bandHeight: 0,
+      padHeight: 0
+    };
+    function layoutStackedAreaMultiples(height, num, pct) {
+      requireSize("layoutStackedAreaMultiples", "height", height);
+      requireCount("layoutStackedAreaMultiples", "num", num);
+      const padRatio = pct ?? 0.1;
+      requireRatio("layoutStackedAreaMultiples", "pct", padRatio);
+      const step = height / (num - padRatio);
+      // A non-positive step describes no band at all, and an infinite one - num and pct both 0,
+      // or both 1, either of which divides by zero - yields NaN geometry. There is no layout to
+      // describe in either case, so neither reaches the baseline loop. A degenerate height is not
+      // a misconfiguration: it is what a container mid-entrance or a flex parent that has not
+      // settled reports, and it corrects itself, so it is neither warned about nor thrown on.
+      if (!(step > 0) || !Number.isFinite(step)) return {
+        ...EMPTY_LAYOUT
+      };
+      const bandHeight = step * (1 - padRatio),
+        range = [];
+      let level = bandHeight; // count from the top, and start at the bottom of the first band
+      // Terminating on the stack count, not on a pixel slack: step * (num - pct) === height by
+      // construction, so `num` baselines are exactly the ones that fit and the last of them lands
+      // on `height`. The absolute 1px slack this replaces bought an extra iteration or two
+      // whenever the step was under ~1px, and returned more baselines than there are stacks.
+      while (range.length < num) {
+        range.push(level);
+        level += step;
+      }
+      return {
+        range,
+        bandHeight,
+        padHeight: step * padRatio
+      };
+    }
+
+    /**
+     * @module sszvis/layout/sunburst
+     *
+     * Helper functions for transforming your data to match the format required by the sunburst chart.
+     *
+     * Behaviour notes:
+     * - computeLayout does not validate its inputs and can silently produce a layout that
+     *   overflows or under-fills the chart; see the notes on computeLayout below.
+     * - prepareData is deprecated but is still the only builder that produces the partition
+     *   positions (x0/x1/y0/y1) that getRadiusExtent reads. The sunburst component accepts either:
+     *   handed a plain hierarchy it runs d3.partition itself.
+     */
+    const MAX_SUNBURST_RING_WIDTH = 60;
+    const MAX_RW = MAX_SUNBURST_RING_WIDTH;
+    const MIN_SUNBURST_RING_WIDTH = 10;
+    const MIN_RW = MIN_SUNBURST_RING_WIDTH;
+    /**
+     * sszvis.layout.sunburst.computeLayout
+     *
+     * Computes layout parameters for good visual display of the sunburst chart.
+     *
+     * @param  {Number} numLayers          The number of layers in the sunburst chart.
+     * @param  {Number} chartWidth         The total width available for displaying the sunburst chart.
+     * @return {Object}                    Some parameters for the sunburst chart:
+     *       @property {Number} centerRadius      The central radius of the chart (used by the sunburst component)
+     *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
+     *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
+     *
+     * Behaviour notes:
+     * - centerRadius is chartWidth / 6, shrunk when the rings would not otherwise fit.
+     * - ringWidth is the remaining radius divided by numLayers, clamped to [10, 60].
+     * - The 10px floor is reconciled with the centre: a deep hierarchy in a narrow chart gives
+     *   its rings the room by shrinking centerRadius, so that
+     *   centerRadius + ringWidth * numLayers stays within chartWidth / 2 - the outer radius the
+     *   sunburst component draws, per docs/sunburst/basic.js. A hierarchy so deep that even a
+     *   centre of nothing cannot hold it warns and overflows. The 60px cap is not compensated
+     *   for in the other direction: a shallow hierarchy simply leaves empty space.
+     * - A zero chartWidth or a hierarchy with no layers is a chart with nothing to draw, and
+     *   every dimension comes back 0.
+     * - A negative chartWidth, or a negative or fractional layer count, throws.
+     */
+    const computeLayout = (numLayers, chartWidth) => {
+      requireCount("sunburstLayout", "numLayers", numLayers);
+      requireSize("sunburstLayout", "chartWidth", chartWidth);
+      if (numLayers === 0 || chartWidth === 0) {
+        return {
+          centerRadius: 0,
+          numLayers,
+          ringWidth: 0
+        };
+      }
+      // Diameter of the center circle is one-third the width
+      const halfWidth = chartWidth / 2;
+      const targetCenterRadius = halfWidth / 3;
+      const ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - targetCenterRadius) / numLayers));
+      // Once the ring width is floored, the rings may need more room than the target centre
+      // leaves them. Give it to them, down to a centre of nothing.
+      const centerRadius = Math.max(0, Math.min(targetCenterRadius, halfWidth - ringWidth * numLayers));
+      if (ringWidth * numLayers > halfWidth) {
+        warn(`sunburstLayout: ${numLayers} rings of the minimum ${MIN_RW}px do not fit a chart ${chartWidth}px wide, and will be drawn outside it`);
+      }
+      return {
+        centerRadius,
+        numLayers,
+        ringWidth
+      };
+    };
+    /**
+     * sszvis.layout.sunburst.getRadiusExtent
+     * @param  {Array} formattedData      An array of data to inspect for the extent of the radius scale
+     *
+     * @return {Array}                    The minimum and maximum radius values (in d3's partition layout's terms). Use this as
+     *                                    The domain of the radius scale you use to configure the sunburst chart. This is a convenience
+     *                                    function which abstracts away the way d3 stores positions within the partition layout used
+     *                                    by the sunburst chart.
+     *
+     * Behaviour notes:
+     * - Returns [min y0, max y1] taken independently of each other.
+     * - d3.min/max skip undefined and NaN nodes.
+     * - An empty array gives [0, 0], which is a usable, if empty, scale domain.
+     */
+    const getRadiusExtent = formattedData => [d3.min(formattedData, d => d.y0) ?? 0, d3.max(formattedData, d => d.y1) ?? 0];
+
+    /**
+     * Vertical Bar Chart Dimensions
+     *
+     * Generates a dimension configuration object to be used for laying out the vertical bar chart.
+     *
+     * @module sszvis/layout/verticalBarChartDimensions
+     *
+     * @param  {number} width         the total width available to the horizontal bar chart. The computed chart layout is not guaranteed
+     *                                to fit inside this width.
+     * @param  {number} numBars       The number of bars in the bar chart.
+     * @return {object}               An object containing configuration properties for use in laying out the vertical bar chart.
+     *                                {
+     *                                  barWidth:             the width of each bar in the bar chart
+     *                                  padWidth:             the width of the padding between the bars in the bar chart
+     *                                  padRatio:             the ratio between the padding and the step (barWidth + padding). This can be passed
+     *                                                        as the second parameter to d3.scaleOrdinal().rangeBands().
+     *                                  outerRatio:           the outer ratio between the outer padding and the step. This can be passed as the
+     *                                                        third parameter to d3.scaleOrdinal().rangeBands().
+     *                                  barGroupWidth:        the width of all the bars plus all the padding between the bars.
+     *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
+     *                                }
+     *
+     * Behaviour notes:
+     * - Targets a 70/30 split of each step between bar width and padding.
+     * - Bar width is capped at 48px; when capped, padding is recomputed from the leftover width.
+     * - Padding is then clamped to [2, 100] WITHOUT recomputing the bar width, so the bar group
+     *   can overflow or underflow the given width (outerRatio can go negative).
+     * - padRatio/outerRatio are derived from the clamped barWidth/padding, not from the 0.7/0.3 target.
+     * - numBars === 1 has zero padding spaces, so it reports no padding at all.
+     * - A zero width or a zero bar count is a chart with nothing to draw, and every dimension
+     *   comes back 0 (totalWidth still reports the width that was asked for).
+     * - A negative width, or a negative or fractional bar count, throws.
+     */
+    function dimensionsVerticalBarChart(width, numBars) {
+      requireSize("dimensionsVerticalBarChart", "width", width);
+      requireCount("dimensionsVerticalBarChart", "numBars", numBars);
+      if (width === 0 || numBars === 0) {
+        return {
+          barWidth: 0,
+          padWidth: 0,
+          padRatio: 0,
+          outerRatio: 0,
+          barGroupWidth: 0,
+          totalWidth: width
+        };
+      }
+      const MAX_BAR_WIDTH = 48,
+        // the maximum width of a bar
+        MIN_PADDING = 2,
+        // the minimum padding value
+        MAX_PADDING = 100,
+        // the maximum padding value
+        TARGET_BAR_RATIO = 0.7,
+        // the ratio of width to width + padding used to compute the initial width and padding
+        TARGET_PADDING_RATIO = 1 - TARGET_BAR_RATIO,
+        // the inverse of the bar ratio, this is the ratio of padding to width + padding
+        numPads = numBars - 1; // the number of padding spaces
+      // compute the target size of the padding
+      // the derivation of this equation is available upon request
+      let padding = width * TARGET_PADDING_RATIO / (TARGET_PADDING_RATIO * numPads + TARGET_BAR_RATIO * numBars);
+      // based on the computed padding, calculate the bar width
+      let barWidth = (width - padding * numPads) / numBars;
+      // adjust for min and max bounds
+      if (barWidth > MAX_BAR_WIDTH) {
+        barWidth = MAX_BAR_WIDTH;
+        // recompute the padding value where necessary
+        padding = numPads === 0 ? 0 : (width - barWidth * numBars) / numPads;
+      }
+      if (numPads === 0) {
+        // a single bar draws no gaps, so any padding reported here is a phantom that would
+        // still feed padRatio
+        padding = 0;
+      } else {
+        if (padding < MIN_PADDING) padding = MIN_PADDING;
+        if (padding > MAX_PADDING) padding = MAX_PADDING;
+      }
+      // compute other information
+      const padRatio = 1 - barWidth / (barWidth + padding),
+        computedBarSpace = barWidth * numBars + padding * numPads,
+        outerRatio = (width - computedBarSpace) / 2 / (barWidth + padding);
+      return {
+        barWidth,
+        padWidth: padding,
+        padRatio,
+        outerRatio,
+        barGroupWidth: computedBarSpace,
+        totalWidth: width
+      };
+    }
+
+    /**
+     * Binned Color Scale Legend
+     *
+     * Use for displaying the values of discontinuous (binned) color scale's bins
+     *
+     * Each display value becomes the upper edge of a bin, and a final bin runs from the last
+     * display value to the upper endpoint. Bins are floored onto whole pixels and widened by
+     * their subpixel remainder so that no gap shows between them, which means adjacent bins
+     * overlap very slightly.
+     *
+     * Every bin except the trailing one carries a tick line and a label beneath its upper
+     * edge. The line is snapped to the half-pixel grid to stay crisp while the label is
+     * placed on the raw edge, so the two can sit half a pixel apart.
+     *
+     * @module sszvis/legend/binnedColorScale
+     *
+     * @property {function} scale           A scale to use to generate the color values
+     * @property {array} displayValues      An array of values which should be displayed. Usually these should be the bin edges
+     * @property {array} endpoints          The endpoints of the scale (note that these are not necessarily the first and last
+     *                                      bin edges). These will become labels at either end of the legend.
+     * @property {number} width             The pixel width of the legend. Default 200
+     * @property {function} labelFormat     A formatter function for the labels of the displayValues.
+     *
+     * @return {sszvis.component}
+     */
+    function binnedColorScale () {
+      return component().prop("scale").prop("displayValues").prop("endpoints").prop("width").width(200).prop("labelFormat").labelFormat(identity).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        if (!props.scale) {
+          error("legend.binnedColorScale - a scale must be specified.");
+          return;
+        }
+        if (!props.displayValues) {
+          error("legend.binnedColorScale - display values must be specified.");
+          return;
+        }
+        if (!props.endpoints) {
+          error("legend.binnedColorScale - endpoints must be specified");
+          return;
+        }
+        const segHeight = 10;
+        const circleRad = segHeight / 2;
+        const innerRange = [0, props.width - 2 * circleRad];
+        const barWidth = d3.scaleLinear().domain(props.endpoints).range(innerRange);
+        let sum = 0;
+        const labelledBins = [];
+        let pPrev = props.endpoints[0];
+        for (const p of props.displayValues) {
+          const w = barWidth(p) - sum;
+          const offset = sum % 1;
+          labelledBins.push({
+            x: Math.floor(circleRad + sum),
+            w: w + offset,
+            c: colorToString(props.scale(pPrev)),
+            p
+          });
+          sum += w;
+          pPrev = p;
+        }
+        // add the final box (last display value - > endpoint)
+        const finalBin = {
+          x: Math.floor(circleRad + sum),
+          w: innerRange[1] - sum,
+          c: colorToString(props.scale(pPrev))
+        };
+        const rectData = [...labelledBins, finalBin];
+        const circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints).join("circle").classed("sszvis-legend__circle", true);
+        circles.attr("r", circleRad).attr("cy", circleRad).attr("cx", (_d, i) => i === 0 ? circleRad : props.width - circleRad).attr("fill", d => colorToString(props.scale(d)));
+        const segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData).join("rect").classed("sszvis-legend__crispmark", true);
+        segments.attr("x", d => d.x).attr("y", 0).attr("width", d => d.w).attr("height", segHeight).attr("fill", d => d.c);
+        // Every bin except the trailing one gets a tick line and a label.
+        const lineData = labelledBins;
+        const lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData).join("line").classed("sszvis-legend__crispmark", true);
+        lines.attr("x1", d => halfPixel(d.x + d.w)).attr("x2", d => halfPixel(d.x + d.w)).attr("y1", segHeight + 1).attr("y2", segHeight + 6).attr("stroke", "#B8B8B8");
+        const labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData).join("text").classed("sszvis-legend__axislabel", true);
+        labels.style("text-anchor", "middle").attr("transform", d => `translate(${d.x + d.w},${segHeight + 20})`).text(d => props.labelFormat(d.p));
+      });
+    }
+
+    /**
+     * Linear Color Scale Legend
+     *
+     * Use for displaying the values of a continuous linear color scale.
+     *
+     * The ramp is drawn as a row of abutting segments, one per displayed value, with a rounded
+     * cap at each end and a label outside each cap. Segments are stretched by a pixel in each
+     * direction so that no antialiasing seam shows between them.
+     *
+     * @module sszvis/legend/linearColorScale
+     *
+     * @property {function} scale                   The scale to use to generate the legend
+     * @property {array} displayValues              A list of specific values to display. If not specified, defaults to using scale.ticks
+     * @property {number} width                     The pixel width of the legend (default 200).
+     * @property {number} segments                  The number of segments to aim for. Note, this is only used if displayValues isn't specified,
+     *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default)
+     * @property {array} labelText                  An array of labels for the legend endpoints. If not supplied, defaults to the
+     *                                              first and last tick values. For string labels, name the type:
+     *                                              `legendColorLinear<string>()`.
+     * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
+     */
+    function legendColorLinear() {
+      return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat")
+      // fn.identity is the documented "no formatting" default. It returns its argument, so it
+      // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
+      // at render time, which its own types do not model.
+      .labelFormat(identity).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        if (!props.scale) {
+          error("legend.linearColorScale - a scale must be specified.");
+          return;
+        }
+        const domain = props.scale.domain();
+        // Equivalent to fn.last(domain), without widening the element type to undefined.
+        const domainMax = domain[domain.length - 1];
+        let values = props.displayValues;
+        if (values.length === 0 && props.scale.ticks) {
+          values = props.scale.ticks(props.segments - 1);
+        }
+        // Never write into the caller's array, and only extend the ramp to the domain
+        // maximum when the values do not already reach it - scale.ticks() usually does.
+        values = values.length > 0 && values[values.length - 1] === domainMax ? [...values] : [...values, domainMax];
+        const segWidth = props.width / values.length;
+        const segHeight = 10;
+        const segments = selection.selectAll("rect.sszvis-legend__mark").data(values).join("rect").classed("sszvis-legend__mark", true);
+        segments.attr("x", (_d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
+        .attr("y", 0).attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
+        .attr("height", segHeight).attr("fill", d => colorToString(props.scale(d)));
+        const startEnd = [domain[0], domainMax];
+        const labelText = props.labelText ?? startEnd;
+        // rounded end caps for the segments
+        const endCaps = selection.selectAll("circle.sszvis-legend__mark").data(startEnd).join("circle").attr("class", "sszvis-legend__mark");
+        endCaps.attr("cx", (_d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => colorToString(props.scale(d)));
+        const labels = selection.selectAll(".sszvis-legend__label").data(labelText).join("text").classed("sszvis-legend__label", true);
+        const labelPadding = 16;
+        labels.style("text-anchor", (_d, i) => i === 0 ? "end" : "start").attr("dy", "0.35em") // vertically-center
+        .attr("transform", (_d, i) => `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`).text((d, i) => props.labelFormat(d, i));
+      });
+    }
+
+    /**
+     * Radius size legend
+     *
+     * Use for showing how different radius sizes correspond to data values.
+     *
+     * The legend draws one nested circle per tick, all resting on a common baseline, with a
+     * dashed leader line and a label at the top edge of each circle.
+     *
+     * When tickValues are not supplied, the ticks default to the domain maximum, the value at
+     * the midpoint of the scale's range, and the domain minimum. Deriving that middle tick
+     * calls scale.invert(), so the default only works for a continuous scale; pass tickValues
+     * explicitly to use any other kind.
+     *
+     * Every tick produces a circle, a leader line and a label, including a tick whose value
+     * maps to a zero radius - the circle is then invisible but the line and label still mark
+     * that value. Pass tickValues to leave it out.
+     *
+     * @module sszvis/legend/radius
+     *
+     * @property {function} scale         A scale to use to generate the radius sizes
+     * @property {function} [tickFormat]  Formatter function for the labels (default identity)
+     * @property {array} [tickValues]     An array of domain values to be used as radii that the legend shows
+     *
+     * @returns {sszvis.component}
+     */
+    function radius () {
+      return component().prop("scale").prop("tickFormat")
+      // fn.identity is the documented "no formatting" default. It returns its argument, so it
+      // cannot satisfy a formatter type that promises a primitive - d3 stringifies the value
+      // at render time, which its own types do not model.
+      .tickFormat(identity).prop("tickValues").render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const tickValues = props.tickValues || defaultTickValues(props.scale);
+        const maxRadius = rangeExtent(props.scale)[1];
+        const group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]).join("g").attr("class", "sszvis-legend__elementgroup");
+        group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
+        const circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues).join("circle").classed("sszvis-legend__greyline", true);
+        const getCircleCenter = d => maxRadius - props.scale(d);
+        const getCircleEdge = d => maxRadius - 2 * props.scale(d);
+        circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
+        const lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues).join("line").classed("sszvis-legend__dashedline", true);
+        lines.attr("x1", 0).attr("y1", getCircleEdge).attr("x2", maxRadius + 15).attr("y2", getCircleEdge);
+        const labels = group
+        // Typed so the join yields SVGTextElement, which is what the formatter's
+        // `this` is bound to.
+        .selectAll(".sszvis-legend__label").data(tickValues).join("text").attr("class", "sszvis-legend__label sszvis-legend__label--small");
+        labels.attr("dx", maxRadius + 18).attr("y", getCircleEdge).attr("dy", "0.35em") // vertically-center
+        // Wrapped only to resolve the tick to a number; `this` and the nodes are
+        // forwarded, so the formatter still gets d3's full callback contract.
+        .text(function (d, i, nodes) {
+          return props.tickFormat.call(this, Number(d), i, nodes);
+        });
+      });
+    }
+    /**
+     * The default ticks: the domain maximum, the value at the midpoint of the scale's range,
+     * and the domain minimum. Deriving the middle value calls scale.invert(), so this only
+     * works for a continuous scale - supply tickValues to use any other kind.
+     */
+    function defaultTickValues(scale) {
+      const {
+        invert
+      } = scale;
+      if (!invert) {
+        throw new TypeError("legend.radius - scale.invert is required to derive the default ticks; supply tickValues instead.");
+      }
+      const domain = scale.domain();
+      // mean() only returns undefined for an empty range, which a d3 scale never has.
+      return [domain[1], invert(d3.mean(scale.range()) ?? Number.NaN), domain[0]];
+    }
+
+    /**
+     * Handle data load errors in a standardized way
+     *
+     * @module sszvis/loadError
+     */
+    /**
+     * Handle data loading errors by logging them
+     * @param error The error object from a failed data load operation
+     */
+    const loadError = error$1 => {
+      error(error$1);
+      // Don't use alert()!
+      // TODO: render an inline error in the chart instead
+      // if (error.status === 404) {
+      //   alert('Die Daten konnten nicht geladen werden.\n\n' + error.responseURL + '\n\n' + RELOAD_MSG);
+      // } else {
+      //   alert('Ein Fehler ist aufgetreten und die Visualisierung kann nicht angezeigt werden. ' + RELOAD_MSG);
+      // }
+    };
+
+    /**
+     * A collection of utilities used by the map modules
+     *
+     * @module sszvis/map/utils
+     */
+    const STADT_KREISE_KEY = "zurichStadtKreise";
+    const STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
+    const STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
+    const WAHL_KREISE_KEY = "zurichWahlKreise";
+    const AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
+    const SWITZERLAND_KEY = "switzerland";
+    /**
+     * swissMapProjection
+     *
+     * A function for creating d3 projection functions, customized for the dimensions of the map you need.
+     * Because this projection generator involves calculating the boundary of the features that will be
+     * projected, the result of these calculations is cached internally. Hence the featureBoundsCacheKey.
+     *
+     * Note: the cache key is width, height and featureBoundsCacheKey only. Reusing a key for a
+     * different feature collection returns the projection fitted to the first collection, which places
+     * the second collection outside the destination box. Omitting the key is therefore safe rather than
+     * shared: with no key the cache is bypassed and the collection is always fitted afresh.
+     *
+     * Note: the memo cache is bounded (see fn.MEMOIZE_CACHE_LIMIT) and evicts the least recently used
+     * width/height/key triple, so a keyed chart that reprojects on every resize tick no longer retains
+     * an entry per tick. A projection may therefore be refitted after enough intervening sizes;
+     * identity is a cache hit, never a guarantee.
+     *
+     * See test/map/mapUtils.test.ts.
+     *
+     * @param  {Number} width                           The width of the projection destination space.
+     * @param  {Number} height                          The height of the projection destination space.
+     * @param  {Object} featureCollection               The feature collection that will be projected by the returned function. Needed to calculated a good size.
+     * @param  {String} [featureBoundsCacheKey]         The cache key for the expensive bounds calculation.
+     *                                                  Must identify the feature collection: the collection
+     *                                                  itself is not part of the key. Omit it to skip the
+     *                                                  cache entirely.
+     * @return {Function}                               The projection function.
+     */
+    const memoizedSwissMapProjection = memoize((width, height, featureCollection,
+    // Part of the signature only so that the memoize resolver below can read it.
+    _featureBoundsCacheKey) => d3.geoMercator().fitSize([width, height], featureCollection),
+    // Memoize resolver
+    (width, height, _, featureBoundsCacheKey) => `${width},${height},${featureBoundsCacheKey}`);
+    function swissMapProjection(width, height, featureCollection, featureBoundsCacheKey) {
+      // Without a key there is nothing that identifies the collection, so caching would hand a second
+      // map the first map's fit. An uncached fitSize is always correct.
+      if (featureBoundsCacheKey === undefined) {
+        return d3.geoMercator().fitSize([width, height], featureCollection);
+      }
+      return memoizedSwissMapProjection(width, height, featureCollection, featureBoundsCacheKey);
+    }
+    /** The bounds cache backing keyed calls. Bounded and LRU-evicted; clearing it releases it early. */
+    swissMapProjection.cache = memoizedSwissMapProjection.cache;
+    /**
+     * This is a special d3.geoPath generator function tailored for rendering maps of
+     * Switzerland. The values are chosen specifically to optimize path generation for
+     * Swiss map regions and is not necessarily optimal for displaying other areas of the globe.
+     *
+     * Note: the projection is the memoized one from swissMapProjection, shared with every other caller
+     * holding the same width, height and cache key, along with that function's cache-key collision
+     * behaviour. The path generator itself is new on every call.
+     *
+     * See test/map/mapUtils.test.ts.
+     *
+     * @param  {number} width                     The width of the available map space
+     * @param  {number} height                    The height of the available map space
+     * @param  {GeoJson} featureCollection        The collection of features to be displayed in the map space
+     * @param  {string} [featureBoundsCacheKey]   A string key to use to cache the result of the bounds calculation, which is expensive.
+     *                                            This key should be the same every time the same featureCollection object
+     *                                            is passed to this function. If the featureCollection is different, use a different
+     *                                            cache key. If provided, this can enable large performance improvements in map rendering.
+     * @return {d3.geoPath}                       A path generator function. This function takes a geojson datum as argument
+     *                                            and returns an svg path string which represents that geojson, projected using
+     *                                            a map projection optimal for Swiss areas.
+     */
+    function swissMapPath(width, height, featureCollection, featureBoundsCacheKey) {
+      return d3.geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
+    }
+    /**
+     * Use this function to calcualate the length in pixels of a distance in meters across the surface of the earth
+     * The earth's radius is not constant, so this function uses an approximation for calculating the degree angle of
+     * a distance in meters.
+     *
+     * Note: the x and y spans of the projected square are averaged, so an anisotropic projection yields
+     * the mean of the two axes rather than either one.
+     *
+     * Note: both spans are taken as absolute values, so a negative meterDistance returns the same
+     * positive size as its positive counterpart rather than raising.
+     *
+     * See test/map/mapUtils.test.ts.
+     *
+     * @param {function} projection     You need to provide a projection function for calculating pixel values from decimal degree
+     *                                  coordinates. This function should accept values as [lon, lat] array pairs (like d3's projection functions).
+     * @param {array} centerPoint       You need to provide a center point. This point is used as the center of a hypothetical square
+     *                                  with side lengths equal to the meter distance to be measured. The center point is required
+     *                                  because the pixel size of a given degree distance will be different if that square is located
+     *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
+     * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
+     * @throws {TypeError}              If the projection clips away either corner of the measured square.
+     */
+    function pixelsFromGeoDistance(projection, centerPoint, meterDistance) {
+      // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
+      // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
+      const APPROX_EARTH_RADIUS = 6_367_475;
+      const APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
+      // Compute the size of the angle made by the meter distance
+      const degrees = meterDistance / APPROX_EARTH_CIRCUMFERENCE * 360;
+      // Construct a square, centered at centerPoint, with sides that span that number of degrees
+      const halfDegrees = degrees / 2;
+      const bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]];
+      // Project those bounds to pixel coordinates using the provided map projection.
+      // The projection is wrapped rather than passed to map() point-free, so it is called with the
+      // point alone and never with map()'s index and array arguments.
+      const [lowerBound, upperBound] = bounds.map(point => projection(point));
+      if (lowerBound == null || upperBound == null) {
+        throw new TypeError("pixelsFromGeoDistance: the projection clipped away the bounds of the measured square");
+      }
+      // Depending on the rotation of the map, the sides of the box are not always positive quantities
+      // For example, on a north-is-up map, the pixel y-scale is inverted, so higher latitude degree
+      // values are lower pixel y-values. On a south-is-up map, the opposite is true.
+      const projXDist = Math.abs(upperBound[0] - lowerBound[0]);
+      const projYDist = Math.abs(upperBound[1] - lowerBound[1]);
+      return (projXDist + projYDist) / 2;
+    }
+    const GEO_KEY_DEFAULT = "geoId";
+    /**
+     * prepareMergedData
+     *
+     * Merges a dataset with a geojson object by matching elements in the dataset to elements in the geojson.
+     * it expects a keyname to be given, which is the key in each data object which has the id of the geojson
+     * element to which that data object should be matched. Expects an array of data objects, and a geojson object
+     * which has a features array. Each feature is mapped to one data object, or to undefined where no
+     * data object matched.
+     *
+     * Note: matching goes through a Map keyed by the stringified id, so a numeric data key still
+     * matches a string feature id, but only data that was actually passed in can ever be matched -
+     * ids such as "constructor" or "__proto__" are ordinary keys here.
+     *
+     * Note: a datum whose key property is missing is not filed under any entry, and a feature with no
+     * id is not looked up, so the two never meet under a shared "undefined" key.
+     *
+     * Note: a symbol data key stays a symbol property, so it can never be matched by a feature id,
+     * which GeoJSON allows only as a string or a number. Two symbols with the same description stay
+     * distinct for the same reason.
+     *
+     * Note: several data sharing a key are not reported; the last one wins.
+     *
+     * Note: a falsy keyName, the empty string included, falls back to GEO_KEY_DEFAULT rather than being
+     * used as given.
+     *
+     * Note: the two required arguments deliberately fail in opposite directions. Missing data is a
+     * state a chart passes through before its load, so a dataset that is not an array is treated as no
+     * data and yields an entry per feature with no datum; a missing geoJson leaves nothing to merge
+     * onto at all, so it is reported by name.
+     *
+     * See test/map/mapUtils.test.ts.
+     *
+     * @param  {Array} [dataset]         The array of input data to match. Anything that is not an array is
+     *                                   treated as no data at all.
+     * @param  {Object} geoJson          The geojson object. This function will attempt to match each geojson feature to a data object.
+     *                                   Required, and reported by name when it is missing.
+     * @param  {String} keyName          The name of the property on each data object which will be matched with each geojson id.
+     * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
+     *                                   geoJson property which is the feature, and a datum property which is the matched datum.
+     */
+    function prepareMergedGeoData(dataset, geoJson, keyName) {
+      // Reported by name, rather than thrown at from the features read below with a bare TypeError
+      // naming neither the argument nor the function. The dataset is guarded instead of rejected -
+      // missing data is a state a chart passes through before its load, and yields a feature per
+      // entry with an undefined datum - but there is no map to merge against without this one, so
+      // the two required arguments deliberately fail in opposite directions.
+      if (geoJson === undefined || geoJson === null) {
+        throw new TypeError("map/mapUtils: prepareMergedGeoData requires a geoJson, since it carries the features the data are merged onto");
+      }
+      // Any falsy key name, the empty string included, falls back to the default.
+      const key = keyName || GEO_KEY_DEFAULT;
+      // group the input data by map entity id
+      const groupedInputData = new Map();
+      if (Array.isArray(dataset)) {
+        for (const datum of dataset) {
+          const value = Reflect.get(datum, key);
+          // A datum with no key is filed under no entry at all, rather than under "undefined".
+          if (value === undefined) continue;
+          groupedInputData.set(toLookupKey(value), datum);
+        }
+      }
+      // merge the map features and the input data into new objects that include both
+      return geoJson.features.map(feature => ({
+        geoJson: feature,
+        datum: feature.id === undefined ? undefined : groupedInputData.get(toLookupKey(feature.id))
+      }));
+    }
+    /**
+     * The key a feature id or datum value is looked up under. Symbols pass through; everything
+     * else is stringified, so numeric and string ids that print the same collide deliberately.
+     */
+    function toLookupKey(value) {
+      return typeof value === "symbol" ? value : String(value);
+    }
+    /**
+     * getGeoJsonCenter
+     *
+     * Gets the geographic centroid of a geojson feature object (note that this is a coordinate
+     * position and is independent of the map projection). If the geoJson object's properties contain
+     * a 'center' property, that is expected to be a string of the form "longitude,latitude" which will
+     * be parsed into a [lon, lat] pair expected by d3's projection functions. These strings can be
+     * added to the properties array using the topojson command line tool's -e option (see the Makefile
+     * rule for the zurich statistical quarters map for an example of this use).
+     *
+     * The centre is computed on every call and nothing is written back to the feature, so a feature
+     * whose geometry or `center` changes between renders gets an anchor that follows it. This
+     * deliberately replaced a cache kept on the caller's own `properties.cachedCenter`, which nothing
+     * invalidated. geoCentroid over the largest map shipped here (432 features) measures around 35% of
+     * the cost of the path generation the same render already does - and that map re-renders only on
+     * resize, while the maps that re-render per pointer move are an order of magnitude smaller.
+     *
+     * Note: a `center` that is not exactly two finite numbers is reported with logger.warn and ignored
+     * in favour of the computed centroid, so a typo in the topojson -e output is visible rather than
+     * silently placing marks at NaN. A warning rather than a throw: the value is authored map data that
+     * the rest of the feature can still render without. Since the value is re-read on every call, a
+     * malformed one now warns once per call rather than once per feature.
+     *
+     * Note: `properties: null` is spec-legal GeoJSON and is accepted - there is no longer anywhere the
+     * centre needs to be stored, so such a feature falls straight through to the computed centroid.
+     *
+     * See test/map/mapUtils.test.ts.
+     *
+     * @param  {Object} geoJson                 The geoJson object for which you want the center.
+     * @return {GeoPoint}                       The geographical coordinates (in the form [lon, lat]) of the centroid
+     *                                          (or user-specified center) of the object.
+     */
+    function getGeoJsonCenter(geoJson) {
+      return parseCenter(geoJson.properties?.center, geoJson.id) ?? d3.geoCentroid(geoJson);
+    }
+    /**
+     * An authored "longitude,latitude" centre, or undefined where none was given or it is not exactly
+     * two finite numbers - the malformed case is warned about, naming the offending feature.
+     *
+     * Each token is parsed whole with Number rather than with parseFloat, which stops at the first
+     * character it cannot read: parseFloat("8.54oops") is 8.54, so a typo would pass the finite check
+     * and place the anchor as though the author had written something they did not. Number("") is 0,
+     * so an empty token is rejected before it can become a coordinate - which also means an authored
+     * empty string reaches the warning instead of being treated as an absent property.
+     */
+    function parseCenter(center, featureId) {
+      // Only an absent property passes silently. An authored null is a value, and a malformed one, so
+      // it is reported like any other non-string.
+      if (center === undefined) return undefined;
+      // Declared a string on MapFeatureProperties, which says what an author should write, but the
+      // properties of a loaded map file are runtime data and nothing checks them on the way in. A
+      // number or an object would otherwise throw from split() rather than degrading to the centroid,
+      // which is what this function exists to guarantee.
+      if (typeof center !== "string") {
+        warn(`getGeoJsonCenter: ignoring the center property of feature ${String(featureId)}, whose ` + `type is ${center === null ? "null" : typeof center} rather than a ` + '"longitude,latitude" string. Falling back to the computed centroid.');
+        return undefined;
+      }
+      const parsed = center.split(",").map(token => token.trim() === "" ? Number.NaN : Number(token));
+      if (parsed.length === 2 && parsed.every(n => Number.isFinite(n))) {
+        return [parsed[0], parsed[1]];
+      }
+      warn(`getGeoJsonCenter: ignoring the center property "${center}" of feature ${String(featureId)}, ` + "which is not two finite numbers. Falling back to the computed centroid.");
+      return undefined;
+    }
+    /**
+     * widthAdaptiveMapPathStroke
+     *
+     * A little "magic" function for automatically calculating map stroke sizes based on
+     * the width of the container they're in. Used for responsive designs.
+     *
+     * Note: a width that is not a finite number - an unmeasured container - yields the 0.8 minimum
+     * rather than NaN, so the result is always within the documented range.
+     *
+     * See test/map/mapUtils.test.ts.
+     *
+     * @param  {number} width    The width of the container holding the map.
+     * @return {number}          The stroke width that the map elements should have, clamped to [0.8, 1.1].
+     */
+    function widthAdaptiveMapPathStroke(width) {
+      // Math.max(0.8, NaN) is NaN, so the clamp alone cannot rescue an unmeasured width.
+      if (!Number.isFinite(width)) return 0.8;
+      return Math.min(Math.max(0.8, width / 400), 1.1);
+    }
+    /**
+     * Whether a fill value references a paint server rather than naming a color. An absent attribute
+     * counts as neither: an entering element has no previous fill, and d3's rgb interpolator treats an
+     * unparseable start as a constant, so it still reaches its color on the first tick.
+     *
+     * The map renderers use this to keep a paint-server reference out of a color tween. d3 has no
+     * interpolator for one, so it falls back to interpolating the numbers embedded in the two strings:
+     * the "-1" of "url(#missing-pattern-1)" pairs with a color's channels and the tween spends its run
+     * pointing at patterns that do not exist, which paint nothing.
+     *
+     * See test/map/mapUtils.test.ts.
+     */
+    function isPaintServer(fill) {
+      return fill?.startsWith("url(") ?? false;
+    }
+    /** Where a layer records the pattern id it was given, so re-renders reuse it. */
+    const MISSING_PATTERN_ID_ATTR = "data-sszvis-missing-pattern-id";
+    let missingPatternCount = 0;
+    /**
+     * The id of this layer's missing-value pattern, assigning one the first time the layer is
+     * rendered.
+     *
+     * Ids are document-global while the pattern definition lives inside each layer's own group, so a
+     * fixed id would have two map layers on one page define it twice and every url(#...) reference in
+     * the document resolve to whichever definition came first. The assigned id is cached on the layer
+     * element rather than counted per render, so re-rendering a layer keeps its own definition.
+     *
+     * The selection parameters are generic because d3's Selection is invariant in its element
+     * parameters - no single non-generic type accepts every selection.
+     *
+     * See test/map/mapUtils.test.ts.
+     */
+    function missingPatternId(selection) {
+      const assigned = selection.attr(MISSING_PATTERN_ID_ATTR);
+      if (assigned) return assigned;
+      const id = `missing-pattern-${++missingPatternCount}`;
+      selection.attr(MISSING_PATTERN_ID_ATTR, id);
+      return id;
+    }
+
+    /**
+     * base renderer component
+     *
+     * @module sszvis/map/renderer/base
+     *
+     * @template T The type of the data values merged onto the map features
+     *
+     * A component used internally for rendering the base layer of maps.
+     * These map entities have a color fill, which is possibly a pattern that represents
+     * missing values. They are also event targets. If your map has nothing else, it should have a
+     * base layer.
+     *
+     * @property {GeoJson} geoJson                        Declared for compatibility but never read: the render takes every
+     *                                                    shape from the geoJson property of each merged datum. Setting it
+     *                                                    has no effect, and omitting it renders the map in full.
+     * @property {d3.geo.path} mapPath                    A path generator used to create the path data string for each merged
+     *                                                    shape. It must be a real d3.geoPath with a projection set, since the
+     *                                                    tooltip anchors are positioned by calling mapPath.projection(); see
+     *                                                    the note below.
+     * @property {Object} mergedData                      This should be an array of merged data objects. Each object should have a datum property (the datum for
+     *                                                    the map entity) and a geoJson property (the geoJson shape for the map entity). This component renders the
+     *                                                    geoJson data and uses the datum to get properties of the shape, like fill color and tooltip data.
+     * @property {Boolean, Function} defined              A predicate used to determine whether a datum has a defined value. Map
+     *                                                    entities that fail it display the missing value texture, as do entities
+     *                                                    that matched no datum at all - the predicate is only consulted for a
+     *                                                    datum that exists. It is stored through storeMapValue, which records whether the
+     *                                                    caller passed an accessor or a constant, and defaults to the
+     *                                                    constant true, so a constant false textures the whole map. It is not
+     *                                                    consulted at all on a geometry-only layer; see encodesData.
+     * @property {Boolean} encodesData                    Whether this layer paints values or plain geometry. No default: left
+     *                                                    unset it is inferred, per the note below. Set true to texture every
+     *                                                    entity the dataset does not cover; set false to draw shapes rather
+     *                                                    than values, where nothing is textured, nothing is classed
+     *                                                    --undefined, and the fill accessor is called with undefined
+     *                                                    throughout.
+     * @property {String, Function} fill                  A string or function for the fill of the map entities. Defaults to the
+     *                                                    constant black - a constant, so that the default layer draws geometry
+     *                                                    until a datum matches rather than encoding data from the start. An accessor is
+     *                                                    called with the entity's datum, and is not called at all for an entity
+     *                                                    the dataset does not cover - that one is textured instead. On a layer
+     *                                                    that draws geometry, though, nothing is textured and the accessor is
+     *                                                    called with undefined for every entity.
+     * @property {Boolean} transitionColor                Whether to transition the fill color of the map entities.
+     *                                                    (default: true) With it set, the fill is only applied through the
+     *                                                    transition, so a color change fades from the previous color; with it
+     *                                                    unset the fill is written synchronously. An entering entity has no
+     *                                                    previous color, so it takes the final color at the first tick. Only a
+     *                                                    color-to-color change is transitioned; an entity entering or leaving
+     *                                                    the missing value texture takes its fill synchronously either way,
+     *                                                    since a paint-server reference cannot be interpolated.
+     *
+     * Note: the fill transition runs for 500ms with easePolyOut, the slow transition's timing.
+     *
+     * Note: "missing" only means something relative to a dataset, so a layer drawing geometry rather
+     * than values has nothing to be missing from. Which one a layer is can be declared outright with
+     * encodesData; left unset, it is inferred from what the layer's own accessors need. A fill or
+     * defined supplied as a function has to be handed a datum, so the layer encodes values even before
+     * its data arrives - the case that used to call that accessor with undefined and crash. Supplied
+     * as constants they need nothing, so the layer draws geometry until a datum actually matches, and
+     * an outline over a raster keeps its fill as it always has. rastermap-bins.js is the canonical
+     * geometry-only layer and says so with encodesData(false) rather than relying on the inference.
+     *
+     * Note: the missing value pattern is written into a defs element inside each map layer, under an id
+     * of that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
+     * element so re-renders reuse it. The id is not part of the public API; do not select on it.
+     *
+     * Note: rendering does not mutate the geojson it is handed. Anchor positions go through
+     * getGeoJsonCenter, which computes the centre on every call and writes nothing back, so a feature
+     * whose geometry or `center` changes between renders gets an anchor that follows it. A malformed
+     * `center` property is warned about and ignored in favour of the computed centroid, so a typo in
+     * an authored map file is visible in the console rather than detaching that entity's tooltip.
+     *
+     * Note: a mapPath that is a bare path function renders all of the areas and then throws a
+     * TypeError from the anchor positions, which read mapPath.projection(). An empty mergedData never
+     * reaches that read, so the failure depends on the data.
+     *
+     * Note: the data join has no key function, so it is an index join. Reordering mergedData repaints
+     * the existing nodes in place instead of moving them. The --entering class is added and removed
+     * within the same chain, so it is never observable from outside a render and offers no enter-only
+     * styling hook. See test/map/renderer/base.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Wraps a constant or an accessor the way fn.functor does, recording which it was. Written out
+     * rather than delegating to fn.functor, whose accessor is nullary while these take the datum.
+     */
+    function storeMapValue(value) {
+      const needsDatum = typeof value === "function";
+      const accessor = value;
+      const stored = needsDatum ? datum => accessor(datum) : () => value;
+      stored.needsDatum = needsDatum;
+      return stored;
+    }
+    function mapRendererBase() {
+      return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", storeMapValue).defined(true) // a predicate function to determine whether a datum has a defined value
+      .prop("encodesData").prop("fill", storeMapValue).fill("black") // a constant: an accessor would make every default layer encode data
+      .prop("transitionColor").transitionColor(true).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // render the missing value pattern, under an id of this layer's own
+        const patternId = missingPatternId(selection);
+        ensureDefsElement(selection, "pattern", patternId).call(mapMissingValuePattern);
+        // Whether this layer paints values or plain geometry. The caller can say so outright; left
+        // unset it is inferred, and the inference asks what the layer's own accessors need rather
+        // than what its data happens to contain. An accessor for the fill or the predicate has to be
+        // handed a datum, so the layer is encoding values whether or not its data has arrived yet -
+        // which is the case that used to crash. Constants need nothing, so a layer built from them
+        // is drawing geometry until a datum actually matches.
+        const encodesData = props.encodesData ?? (props.fill.needsDatum || props.defined.needsDatum || props.mergedData.some(d => defined(d.datum)));
+        // On a data layer, one notion of a missing value is shared by the fill and the --undefined
+        // class: an entity the dataset does not cover is as missing as one the predicate rejects.
+        // Short-circuiting also keeps both accessors from being called with undefined. A layer
+        // drawing geometry has nothing to be missing from, so it skips both.
+        function hasValue(d) {
+          return !encodesData || defined(d.datum) && props.defined(d.datum);
+        }
+        // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
+        function getMapFill(d) {
+          return hasValue(d) ? colorToString(props.fill(d.datum)) : `url(#${patternId})`;
+        }
+        const mapAreas = selection
+        // Typed to the element the join creates, so the fill filters below can read the fill
+        // currently in the DOM without narrowing d3's nullable BaseType at every call.
+        .selectAll(".sszvis-map__area").data(props.mergedData).join("path").classed("sszvis-map__area", true).classed("sszvis-map__area--entering", true).attr("data-event-target", "").classed("sszvis-map__area--entering", false);
+        mapAreas.classed("sszvis-map__area--undefined", d => !hasValue(d)).attr("d", d => props.mapPath(d.geoJson));
+        // The fill is applied exactly once, so the transition has the previous colour to interpolate
+        // from. Writing it to the plain selection first would put the final colour in the DOM before
+        // the tween started, and the tween would then interpolate that colour onto itself.
+        //
+        // Only a colour-to-colour change can be tweened. d3 has no interpolator for a paint-server
+        // reference, so it falls back to interpolating the numbers embedded in the two strings: the
+        // "-1" of "url(#missing-pattern-1)" pairs with a colour's channels and the tween spends its
+        // whole run pointing at patterns that do not exist - "url(#missing-pattern255)" - which paint
+        // nothing, so the area vanishes until the transition lands. An area entering or leaving the
+        // missing-value texture therefore takes its fill synchronously.
+        if (props.transitionColor) {
+          const tweenable = function (d) {
+            return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
+          };
+          mapAreas.filter(tweenable).transition(slowTransition()).attr("fill", getMapFill);
+          mapAreas.filter(function (d) {
+            return !tweenable.call(this, d);
+          }).attr("fill", getMapFill);
+        } else {
+          mapAreas.attr("fill", getMapFill);
+        }
+        // the tooltip anchor generator
+        const ta = tooltipAnchor().position(d => {
+          // Read inside the callback, as the JavaScript did: a mapPath without a projection is only
+          // an error once there is an anchor to place, so an empty mergedData still renders.
+          // d3's own typings expect the projection type as a type argument here. The runtime guard
+          // below still covers a GeoPath whose projection was never set, and a mapPath that is a
+          // bare path function with no projection method at all - which the JSDoc's {d3.geo.path}
+          // contract permits but this component has never supported.
+          const projection = props.mapPath.projection();
+          if (typeof projection !== "function") {
+            throw new TypeError("map/renderer/base: mapPath must be a d3.geoPath with a projection, since the tooltip anchors are positioned with it");
+          }
+          // The centre is handed over whole rather than narrowed to a pair. getGeoJsonCenter returns
+          // number[] because an unvalidated `center` property can parse to any length, and the
+          // JavaScript passed whatever it produced straight to the projection; truncating here would
+          // change what a non-d3 projection function that reads past index 1 receives.
+          const point = projection(getGeoJsonCenter(d.geoJson));
+          // Only a hand-written projection can return null here: d3's own projections clip in the
+          // stream, not in the point call, and return a pair - of NaN, for a malformed centre. A null
+          // is passed on rather than replaced, as the JavaScript did: tooltipAnchor spreads it into
+          // translateString and renders transform="translate(undefined,undefined)". Substituting a
+          // NaN pair here would put a different attribute value in the DOM for the same input.
+          return point;
+        });
+        const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
+        // attach tooltip anchors
+        tooltipGroup.call(ta);
+      });
+    }
+
+    /**
+     * Listener registry
+     *
+     * @module sszvis/map/renderer/listenerRegistry
+     *
+     * Tracks which of a component's own event handlers a consumer has registered, so the component
+     * can decide whether its elements should be a hit area or inert decoration.
+     *
+     * d3's dispatch cannot be asked what it holds: dispatch.on("over") reports only the handler
+     * registered under the bare name and returns undefined for one registered as "over.tooltip", so
+     * a component that wants to know whether *anything* is listening has to tally the typenames as
+     * they go by.
+     *
+     * Shared by src/map/renderer/bubble.ts and src/map/renderer/geojson.ts, which make the same
+     * decision about the same kind of element.
+     */
+    function parseTypename(typename) {
+      const dot = typename.indexOf(".");
+      const type = dot < 0 ? typename : typename.slice(0, dot);
+      const name = dot < 0 ? "" : typename.slice(dot + 1);
+      return {
+        type,
+        name,
+        key: `${type}.${name}`
+      };
+    }
+    /** The name half of a canonical key, which is everything after its single separating dot. */
+    function nameOfKey(key) {
+      return key.slice(key.indexOf(".") + 1);
+    }
+    function listenerRegistry() {
+      const registered = new Set();
+      return {
+        hasListeners: () => registered.size > 0,
+        record(typenames, handler) {
+          // d3 accepts a space-separated list of typenames, and a null handler removes rather than
+          // registers. The rest are d3's own rules, checked against it rather than read off its
+          // source: an empty or whitespace-only list does nothing at all, and for a typename carrying
+          // a name but no type a null handler removes that name from every event type while a non-null
+          // one is ignored.
+          const list = String(typenames).trim();
+          if (list === "") return;
+          for (const typename of list.split(/\s+/)) {
+            const {
+              type,
+              name,
+              key
+            } = parseTypename(typename);
+            if (handler == null) {
+              if (type === "") {
+                // oxlint-disable-next-line unicorn/no-useless-spread -- the copy is required: the loop body deletes from `registered`.
+                for (const held of [...registered]) if (nameOfKey(held) === name) registered.delete(held);
+              } else {
+                registered.delete(key);
+              }
+            } else if (type !== "") {
+              registered.add(key);
+            }
+          }
+        }
+      };
+    }
+
+    /**
+     * bubble renderer component
+     *
+     * @module sszvis/map/renderer/bubble
+     *
+     * @template T The type of the data values merged onto the map features
+     *
+     * Creates circles which are anchored to the positions of map elements. Used in the "bubble chart".
+     * You will usually want to pass this component, configured, as the .anchoredShape property of a base
+     * map component.
+     *
+     * @property {Array<Object>} mergedData             An array of merged data objects, each with a datum property (the datum
+     *                                                  for the map entity) and a geoJson property (its shape). Produced by
+     *                                                  the base map component which renders this. Required and unvalidated:
+     *                                                  omitting it reaches d3's keyed join as undefined, which throws. Every
+     *                                                  feature is present, including those with no matching datum, whose
+     *                                                  datum is undefined.
+     * @property {d3.geo.path} mapPath                  A path generator supplying the projection, passed in by the base map
+     *                                                  component which renders this. Required: omitting it throws, and it
+     *                                                  must be a real d3.geoPath with a projection set, since the anchor
+     *                                                  positions call mapPath.projection(); see the note below.
+     * @property {Number, Function} radius              The radius of the circles. Can be a function which accepts a datum and returns a radius value.
+     *                                                  It has no default and is called unguarded, so omitting it throws -
+     *                                                  and so does an accessor that reads through a datum without checking,
+     *                                                  since a feature with no data is still given a circle.
+     * @property {String, Function} fill                The fill color of the circles. Can be a function. No default, and
+     *                                                  called unguarded, so omitting it throws too.
+     * @property {String, Function} strokeColor         The stroke color of the circles. Can be a function. Default #ffffff.
+     * @property {Number, Function} strokeWidth         The stroke width of the circles. Can be a function. Default 1.
+     *                                                  Documented nowhere else: docs/map-signature/README.md omits it.
+     * @property {Boolean} transition                   Whether or not to transition the sizes of the circles when data
+     *                                                  changes. Default true. An entering circle grows from zero, an
+     *                                                  updating one interpolates to its new radius, and a departing one
+     *                                                  shrinks to zero before it is removed.
+     *
+     * Note: only strokeColor and strokeWidth have defaults. mergedData, mapPath, radius and fill are
+     * all required, and each is reported by name before anything is drawn.
+     *
+     * Note: the over, out and click handlers registered through .on() are called with the hovered map
+     * entity's datum - undefined for a feature that matched no data. Registering one of them is also
+     * what makes the circles a hit area: with no handler registered they carry pointer-events: none
+     * and the pointer falls through to the base layer beneath, so a bubble map's interaction then
+     * comes entirely from the enclosing choropleth's own dispatch (see below).
+     *
+     * Note: on() forwards straight to a d3 dispatch, so it inherits its semantics: it returns the
+     * component for chaining and the handler when called with a name alone, an unknown event name
+     * throws, a namespaced name such as "over.tooltip" is accepted, and null removes a handler.
+     *
+     * Note: the circles are drawn into a group appended after the base layer's areas, so they paint on
+     * top of them. Where no handler is registered on this component they are decoration rather than a
+     * hit area, so they carry pointer-events: none and let the pointer through to the area beneath -
+     * which is what keeps the base layer's handlers, and so choropleth's tooltips, working over the
+     * middle of a bubble. Registering over, out or click restores hit testing on the circles, since a
+     * consumer who wants those handlers is asking for the bubbles to be the target; the base layer's
+     * handlers are then shadowed over each bubble, as they were before this note was written.
+     *
+     * Note: the circles are sorted by radius descending, so the largest paint first and smaller ones sit
+     * on top of them. That is a DOM reordering, so the rendered order does not follow mergedData.
+     *
+     * Note: the exit selection is handled inside join()'s third argument, since join() removes the
+     * departing nodes itself and returns only the merged enter+update selection.
+     *
+     * Note: the join is keyed on geoJson.id. A feature without one is given an identity of its own,
+     * held against the feature object, so a keyless collection keeps its circles across renders too.
+     * The identity is the object, not its contents: a caller who rebuilds equivalent feature objects
+     * between renders gets fresh circles rather than the previous ones, and should author ids if it
+     * needs the circles to persist.
+     *
+     * Note: the radius accessor is called once per circle for the radius itself and again for each
+     * comparison the size sort makes, so it runs several times more often than there are data.
+     *
+     * Note: nothing in sszvis.css styles .sszvis-anchored-circle, so the fill, stroke and stroke width
+     * come entirely from the inline styles this component writes - and a consumer cannot restyle them
+     * from their own stylesheet, since an inline style beats any author rule short of !important.
+     *
+     * Note: this renderer shares three quirks with the base renderer, documented at length in
+     * src/map/renderer/base.ts: the --entering modifier is added and removed within the same render, so
+     * it is never observable and offers no enter-only styling hook; the anchor positions go through
+     * getGeoJsonCenter, which computes the centre on every call and caches nothing, and the transform
+     * is rewritten on the merged enter+update selection, so moving a feature's geometry moves its
+     * bubble on the next render; and mapPath must be a real d3.geoPath, since the positions read
+     * mapPath.projection(), which the render checks up front. The transition is the intended one:
+     * defaultTransition() is passed straight to .transition(t), so its 300ms and easePolyOut survive.
+     *
+     * Note: this component adds no tooltip anchors of its own; a bubble map's tooltips are anchored by
+     * the base renderer underneath it.
+     * See test/map/renderer/bubble.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * A stable identity for a feature carrying no id. It cannot be the feature's position: d3 computes
+     * an existing node's key from the selection that node is in, and this component sorts that
+     * selection by radius, so a positional key means something different on the next render. Two
+     * keyless features would then keep their elements but exchange which feature each one stands for.
+     *
+     * Held against the feature object, which is the same object from one render to the next for a
+     * given collection, and weakly so a discarded collection is still collectable.
+     */
+    const anonymousKeys = new WeakMap();
+    let anonymousCount = 0;
+    function anonymousKey(feature) {
+      const existing = anonymousKeys.get(feature);
+      if (existing !== undefined) return existing;
+      const key = `anonymous:${++anonymousCount}`;
+      anonymousKeys.set(feature, key);
+      return key;
+    }
+    /**
+     * The join key: the feature id, which GeoJSON does not require. A feature without one falls back to
+     * an identity of its own, so a keyless collection still keeps each circle across renders instead of
+     * collapsing every feature onto the key "undefined". The two namespaces are disjoint, so no real id
+     * - not even the string "anonymous:1" - can be read as a fallback key. d3 appends "" to whatever
+     * this returns, so an id is stringified either way; String() only makes that explicit for the type.
+     */
+    function keyOf(d) {
+      return d.geoJson.id == null ? anonymousKey(d.geoJson) : `id:${String(d.geoJson.id)}`;
+    }
+    /** Reads the datum off a merged entry, as the JavaScript's module-level accessor did. */
+    const datumAcc = prop("datum");
+    /**
+     * Reads the anchor position for a feature, as the JavaScript did: through mapPath.projection().
+     * That a mapPath must therefore be a real d3.geoPath is checked in the render before anything is
+     * drawn, so a bare path function is reported rather than failing from in here. The projection's
+     * own result is indexed unguarded, so a clipped point throws from that index.
+     */
+    function anchorPosition(mapPath, geoJson) {
+      // The type argument is unchecked, as in base.ts: GeoPath types projection() as a union that
+      // includes shapes with no call signature, and only the caller knows which one was set.
+      const projection = mapPath.projection();
+      if (projection === null || typeof projection !== "function") {
+        // Reachable only for a real d3.geoPath whose projection was never set, where the JavaScript
+        // threw "projection is not a function" from the call below. A mapPath that is not a geoPath
+        // at all no longer reaches this, since the render rejects it up front. Not covered by the
+        // suite: the message is reconstructed rather than observed.
+        throw new TypeError("projection is not a function");
+      }
+      // The centre is handed over whole rather than narrowed to a pair, as the JavaScript did: an
+      // unvalidated `center` property can parse to any length, and truncating here would change what a
+      // non-d3 projection function that reads past index 1 receives. Follows base.ts.
+      const projected = projection(getGeoJsonCenter(geoJson));
+      if (projected === null) {
+        // The JavaScript indexed this result directly, so a projection that cannot place the point
+        // threw from that index; the message is V8's for it.
+        throw new TypeError("Cannot read properties of null (reading '0')");
+      }
+      return projected;
+    }
+    function mapRendererBubble() {
+      const event = d3.dispatch("over", "out", "click");
+      // The typenames a consumer registered, tallied in on() below. Shared with geojson, which makes
+      // the same hit-area decision from the same information.
+      const {
+        hasListeners,
+        record
+      } = listenerRegistry();
+      const anchoredCirclesComponent = component().prop("mergedData").prop("mapPath").prop("radius", functor).prop("fill", functor).prop("strokeColor", functor).strokeColor("#ffffff").prop("strokeWidth", functor).strokeWidth(1).prop("transition").transition(true).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Validate before anything is created, so a misconfigured layer renders nothing rather
+        // than a half-built one. Each of these used to surface as a bare TypeError naming
+        // neither the property nor the component, and each arrived after part of the layer had
+        // been built: mergedData from d3's join once the group existed, radius from the sort
+        // comparator and fill from the style callback, both once every circle had been created,
+        // positioned and styled. The mesh and raster renderers report their own the same way.
+        if (props.mergedData === undefined) {
+          throw new TypeError("map/renderer/bubble: mergedData is required, since it carries the features to place a circle on");
+        }
+        if (props.radius === undefined) {
+          throw new TypeError("map/renderer/bubble: radius is required, since it sizes each circle and there is no default");
+        }
+        if (props.fill === undefined) {
+          throw new TypeError("map/renderer/bubble: fill is required, since it colours each circle and there is no default");
+        }
+        // mapPath is used two ways: as the d-equivalent callback, and as the source of the
+        // projection the anchor positions read. A bare path function satisfies the first and not
+        // the second, and used to throw from inside the transform callback - after every circle
+        // had been created, sorted and styled - leaving a half-drawn layer behind. Presence and
+        // capability are reported separately, so each says which of the two is wrong; `== null`
+        // rather than `=== undefined`, so an explicit null is reported here too instead of
+        // reaching the capability test and dying anonymously on a property of null.
+        if (props.mapPath == null) {
+          throw new TypeError("map/renderer/bubble: mapPath is required, since it places each circle on its feature");
+        }
+        if (typeof props.mapPath.projection !== "function") {
+          throw new TypeError("map/renderer/bubble: mapPath must be a d3.geoPath, since the anchor positions are read through mapPath.projection()");
+        }
+        // The getter existing is not enough: a real geoPath whose projection was never set has
+        // one and answers null, and the circles were then created, sorted and styled before
+        // anchorPosition threw on the way to placing them. The projection is resolved once here
+        // so that failure lands before the join too.
+        if (typeof props.mapPath.projection() !== "function") {
+          throw new TypeError("map/renderer/bubble: mapPath.projection() must return a projection, since the anchor positions are placed through it");
+        }
+        // Composed rather than written as an arrow: fn.compose invokes each stage with .call(this),
+        // so a radius accessor written as a function receives d3's circle node as `this`, exactly as
+        // the JavaScript did. An arrow here would call it with `this === undefined`.
+        const radiusAcc = compose(props.radius, datumAcc);
+        const anchoredCircles = selection.selectGroup("anchoredCircles").selectAll(".sszvis-anchored-circle").data(props.mergedData, keyOf).join(enter => enter.append("circle")
+        // classed, not attr: the component owns these two class names and leaves whatever
+        // else is on the element alone.
+        .classed("sszvis-anchored-circle sszvis-anchored-circle--entering", true)
+        // Entering circles start at zero so the radius transition has somewhere to come
+        // from; without a starting value the tween would interpolate from null.
+        .attr("r", 0), update => update,
+        // The exit selection has to be handled here: join() removes the departing nodes itself
+        // and returns only the merged enter+update selection, so an .exit() read off its result
+        // is always empty.
+        exit => props.transition ? exit.transition(defaultTransition()).attr("r", 0).remove() : exit.remove())
+        // d3 calls a listener with the event first and the bound datum second; the datum here is
+        // the merged entry, so the handler is handed the map entity's own datum off it.
+        .on("mouseover", function (_event, d) {
+          event.call("over", this, d.datum);
+        }).on("mouseout", function (_event, d) {
+          event.call("out", this, d.datum);
+        }).on("click", function (_event, d) {
+          event.call("click", this, d.datum);
+        }).attr("transform", d => {
+          const position = anchorPosition(props.mapPath, d.geoJson);
+          return translateString(position[0], position[1]);
+        }).style("fill", d => colorToString(props.fill(d.datum))).style("stroke", d => colorToString(props.strokeColor(d.datum))).style("stroke-width", d => props.strokeWidth(d.datum))
+        // The circles paint over the base layer's areas, which carry the map's event targets. Where
+        // this component has no listeners of its own they are decoration, not a hit area, so they
+        // let the pointer through to the area beneath - the same way the mesh and lake overlay
+        // layers stay out of the way. Without that the middle of every bubble is a dead zone:
+        // choropleth binds its handlers to [data-event-target], which a circle is not.
+        //
+        // A consumer who registered over/out/click on the bubbles themselves is asking for exactly
+        // that hit area, though, so it is left in place for them rather than silently withdrawing
+        // the public on() API. Removing the property restores the inherited default.
+        // Written through a value function because d3 types style() as accepting either a value or
+        // null, never a union of the two.
+        .style("pointer-events", () => hasListeners() ? null : "none").sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
+        // Remove the --entering modifier from the updating circles
+        anchoredCircles.classed("sszvis-anchored-circle--entering", false);
+        // The radius is written exactly once, so the transition has the previous value - zero for an
+        // entering circle - to interpolate from. Writing it to the plain selection first would put
+        // the final radius in the DOM before the tween started, and the tween would then interpolate
+        // that radius onto itself.
+        if (props.transition) {
+          anchoredCircles.transition(defaultTransition(OWN_TRANSITION)).attr("r", radiusAcc);
+        } else {
+          // An in-flight tween from an earlier render would overwrite the radius written here,
+          // so it is interrupted first - by name, so a transition the consumer scheduled on
+          // these circles keeps running. The exit transition above is deliberately left
+          // unnamed: it is on departing nodes, and giving it this name would let an interrupt
+          // cancel a pending .remove() and leave them behind.
+          anchoredCircles.interrupt(OWN_TRANSITION).attr("r", radiusAcc);
+        }
+      });
+      // The argument tuple is typed as geojson.ts and src/behavior/panning.ts type their own on():
+      // d3's dispatch.on derives its callback type from a *literal* event name, so a plain string
+      // collapses the callback to never. Narrowing to "over" | "out" | "click" would type the callback
+      // properly but would also reject the namespaced typenames d3 accepts at runtime, such as
+      // "over.tooltip".
+      anchoredCirclesComponent.on = (...args) => {
+        const value = event.on.apply(event, args);
+        if (value !== event) return value;
+        // A setter call, and d3 validated the typenames by returning the dispatch.
+        const [typenames, handler] = args;
+        record(typenames, handler);
+        return anchoredCirclesComponent;
+      };
+      return anchoredCirclesComponent;
+    }
+
+    /**
+     * geojson renderer component
+     *
+     * @module sszvis/map/renderer/geojson
+     *
+     * @template T The type of the data values merged onto the geojson features
+     *
+     * A component used for rendering overlays of geojson above map layers.
+     * It can be used to render any arbitrary GeoJson.
+     *
+     * @property {string} dataKeyName           The keyname in the data which will be used to match data entities
+     *                                          with geographic entities. Default 'geoId'.
+     * @property {string} geoJsonKeyName        The keyname in the geoJson which will be used to match map entities
+     *                                          with data entities. Default 'id'.
+     * @property {GeoJson} geoJson              The GeoJson object which should be rendered. It is read unguarded, so a value
+     *                                          without a 'features' property throws a TypeError.
+     * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
+     * @property {Function, Boolean} defined    A predicate used to determine whether a datum has a defined value. Entities
+     *                                          that fail it, and entities with no datum at all, display the missing value
+     *                                          texture. It is wrapped in fn.functor and defaults to the constant true, so a
+     *                                          constant false textures the whole overlay and the default never rejects
+     *                                          anything.
+     * @property {Function, String} fill        A function that returns a string, or a string, for the fill color of the GeoJson entities. Default black.
+     * @property {String, Function} stroke      The stroke color of the entities. Can be a string or a function returning a
+     *                                          string, called with the datum. Default black. Undefined entities are not
+     *                                          asked for a stroke at all; see the note below.
+     * @property {Number, Function} strokeWidth The thickness of the strokes of the shapes. A number, or a function
+     *                                          returning a number, called with the datum as the fill and stroke
+     *                                          accessors are. Default 1.25. Undefined entities are not asked for a
+     *                                          stroke width; they carry no stroke-width attribute.
+     * @property {Boolean} transitionColor      Whether to transition the fill color of the geojson entities. Default true.
+     *                                          With it set the fill is only applied through the transition, so a color change
+     *                                          fades from the previous color; with it unset the fill is written synchronously.
+     *                                          An entering entity has no previous color, so it takes the final color at the
+     *                                          first tick. Only a color-to-color change is transitioned; an entity entering or
+     *                                          leaving the missing value texture takes its fill synchronously either way,
+     *                                          since a paint-server reference cannot be interpolated.
+     *
+     * Note: lookup keys are stringified, so a numeric and a string id that print the same collide. A
+     * symbol key stays a symbol and can never be matched by a string id. A feature or datum with no
+     * key at all is left unmatched.
+     *
+     * Note: anchor positions go through getGeoJsonCenter, the same source the base renderer uses, so an
+     * authored `center` property is honoured here too and a feature drawn by both renderers anchors in
+     * one place. That centre is computed on every render and nothing is written back to the feature,
+     * so moving a feature's geometry moves its anchor with it.
+     *
+     * Note: an undefined entity is given stroke="", which is not a valid paint value. The presentation
+     * attribute is ignored and the stylesheet's stroke wins; this is not the same as removing the
+     * attribute or asking for no stroke.
+     *
+     * Note: the missing value pattern is written into a defs element inside each layer, under an id of
+     * that layer's own - "missing-pattern-1", "missing-pattern-2" and so on, recorded on the layer
+     * element so re-renders reuse it. The id is not part of the public API; do not select on it.
+     *
+     * Note: one quirk remains, shared with the base renderer. The data join has no key function, so it
+     * is an index join: reordering the features repaints the existing nodes in place instead of moving
+     * them.
+     *
+     * See test/map/renderer/geojson.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Reads a match key off a feature's properties. RFC 7946 permits a null properties member, and a
+     * feature may simply not carry the configured key, so both cases read as undefined - which the
+     * merge treats as unmatched rather than as the lookup key "undefined".
+     */
+    function readFeatureKey(properties, key) {
+      return properties === null || properties === undefined ? undefined : properties[key];
+    }
+    function mapRendererGeoJson() {
+      const event = d3.dispatch("over", "out", "click");
+      // The typenames a consumer registered. Shared with bubble, which makes the same hit-area
+      // decision from the same information.
+      const {
+        hasListeners,
+        record
+      } = listenerRegistry();
+      const geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // render the missing value pattern, under an id of this layer's own
+        const patternId = missingPatternId(selection);
+        ensureDefsElement(selection, "pattern", patternId).call(mapMissingValuePattern);
+        // getDataKeyName will be called on data values. It should return a map entity id.
+        // getMapKeyName will be called on the 'properties' of each map feature. It should
+        // return a map entity id. Data values are matched with corresponding map features using
+        // these entity ids.
+        const getDataKeyName = prop(props.dataKeyName);
+        // A prototype-less table, so a feature keyed after an Object.prototype member - "valueOf",
+        // say - cannot resolve to the inherited function, and so that the caller's data are never
+        // written to.
+        const groupedInputData = Object.create(null);
+        for (const datum of data) {
+          // A datum with no key is skipped rather than filed under the string "undefined", where it
+          // would have become the datum for every feature that also lacks a key.
+          const key = getDataKeyName(datum);
+          if (key === undefined) continue;
+          groupedInputData[toLookupKey(key)] = datum;
+        }
+        const mergedData = props.geoJson.features.map(feature => {
+          const key = readFeatureKey(feature.properties, props.geoJsonKeyName);
+          return {
+            geoJson: feature,
+            datum: key === undefined ? undefined : groupedInputData[toLookupKey(key)]
+          };
+        });
+        function getMapFill(d) {
+          return defined(d.datum) && props.defined(d.datum) ? colorToString(props.fill(d.datum)) : `url(#${patternId})`;
+        }
+        function getMapStroke(d) {
+          return defined(d.datum) && props.defined(d.datum) ? colorToString(props.stroke(d.datum)) : "";
+        }
+        // Guarded like fill and stroke: an unmatched feature is not asked for a stroke width, and
+        // returning null removes the attribute rather than handing the accessor undefined.
+        function getMapStrokeWidth(d) {
+          return defined(d.datum) && props.defined(d.datum) ? props.strokeWidth(d.datum) : null;
+        }
+        const geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData).join("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "")
+        // The elements are marked as event targets and this component binds mouseover, mouseout
+        // and click to them, but .sszvis-map__geojsonelement carried pointer-events: none in
+        // sszvis.css, so none of that could ever fire: the class was written alongside the purely
+        // decorative overlays. Registering a handler now makes the shapes a hit area, exactly as
+        // it does for bubble's circles; with none registered they stay inert and the pointer falls
+        // through to the layer beneath, which is what every consumer has had until now. Written
+        // inline rather than left to the stylesheet because an author rule cannot be conditional,
+        // and because a consumer who does not ship sszvis.css should get the same behaviour.
+        //
+        // "all" rather than "auto": for SVG, auto resolves to visiblePainted, which hit-tests
+        // only where the shape is actually painted - so an overlay drawn with fill "none", an
+        // outline-only idiom, would have had an untouchable interior and the handler would still
+        // never fire over most of it. "all" makes the whole geometry a target regardless of fill.
+        .style("pointer-events", () => hasListeners() ? "all" : "none");
+        geoElements.classed("sszvis-map__geojsonelement--undefined", d => !defined(d.datum) || !props.defined(d.datum)).attr("d", d => props.mapPath(d.geoJson));
+        // The fill is applied exactly once, so the transition has the previous color to interpolate
+        // from, and only a color-to-color change is tweened - a paint-server reference cannot be
+        // interpolated. Both rules are the base renderer's; see src/map/renderer/base.ts.
+        if (props.transitionColor) {
+          const tweenable = function (d) {
+            return !isPaintServer(getMapFill(d)) && !isPaintServer(this.getAttribute("fill"));
+          };
+          geoElements.filter(tweenable).transition(slowTransition()).attr("fill", getMapFill);
+          geoElements.filter(function (d) {
+            return !tweenable.call(this, d);
+          }).attr("fill", getMapFill);
+        } else {
+          geoElements.attr("fill", getMapFill);
+        }
+        geoElements.attr("stroke", getMapStroke).attr("stroke-width", getMapStrokeWidth);
+        // d3 v6 and later call a listener with (event, datum), and the datum here is the merged
+        // { geoJson, datum } wrapper - the handler is given the entity's own datum.
+        geoElements.on("mouseover", function (_pointerEvent, d) {
+          event.call("over", this, d.datum);
+        }).on("mouseout", function (_pointerEvent, d) {
+          event.call("out", this, d.datum);
+        }).on("click", function (_pointerEvent, d) {
+          event.call("click", this, d.datum);
+        });
+        // the tooltip anchor generator
+        const ta = tooltipAnchor().position(d => {
+          // The same centre the base renderer uses, so a feature drawn by both places its tooltip
+          // in one spot: an authored `center` property is honoured, and the result is computed per
+          // render rather than written back onto the caller's feature. A feature with the
+          // spec-legal `properties: null` falls straight through to the computed centroid.
+          const center = getGeoJsonCenter(d.geoJson);
+          // d3's own typings expect the projection type as a type argument here.
+          const point = props.mapPath.projection()(center);
+          // Only a hand-written projection can return null: d3's projections clip in the stream,
+          // not in the point call, and return a pair - of NaN, for a degenerate centroid. A null is
+          // passed on rather than replaced, as the JavaScript did: tooltipAnchor spreads it into
+          // translateString and renders transform="translate(undefined,undefined)". Substituting a
+          // NaN pair here would put a different attribute value in the DOM for the same input.
+          return point;
+        });
+        const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
+        // attach tooltip anchors
+        tooltipGroup.call(ta);
+      });
+      // The argument tuple is typed as src/behavior/panning.ts types its own on(): d3's dispatch.on
+      // derives its callback type from a *literal* event name, so a plain string collapses the
+      // callback to never. Narrowing to "over" | "out" | "click" would type the callback properly but
+      // would also reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
+      geojsonComponent.on = function (...args) {
+        const value = event.on.apply(event, args);
+        if (value !== event) return value;
+        // A setter call, and d3 validated the typenames by returning the dispatch.
+        const [typenames, handler] = args;
+        record(typenames, handler);
+        return geojsonComponent;
+      };
+      return geojsonComponent;
+    }
+
+    /**
+     * highlight renderer component
+     *
+     * @module sszvis/map/renderer/highlight
+     *
+     * @template T The type of the data values in the highlight array
+     *
+     * A component used internally for rendering the highlight layer of maps.
+     * The highlight layer accepts an array of data values to highlight, and renders
+     * The map entities associated with those data values using a special stroke. It is the per-entity
+     * counterpart to the mesh renderer, which draws every border as one path with one shared style.
+     *
+     * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer. It must be a
+     *                                                    feature collection: `features` is read unguarded, so a bare Feature
+     *                                                    throws. Required only when the highlight array is non-empty, and
+     *                                                    never validated, which is why the getter reports it as possibly
+     *                                                    undefined.
+     * @property {d3.geo.path} mapPath                    A path-generator used to create the path data string for each matched
+     *                                                    feature. A d3.geoPath or a bare generator function is accepted; it is
+     *                                                    called only with features that were actually matched.
+     * @property {String} key                             Identifies this highlight layer within the group it renders into,
+     *                                                    so several highlight layers can share one group. Default
+     *                                                    'highlight'. Two layers in one group need distinct keys; two
+     *                                                    renders of the same layer must share one, which is what makes the
+     *                                                    render idempotent. Named to match the mesh and raster renderers'
+     *                                                    key.
+     * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
+     *                                                    A falsy keyName is used as given, unlike prepareMergedGeoData, which
+     *                                                    falls back to the default - so an empty keyName reads datum[""],
+     *                                                    which is undefined, and therefore matches nothing.
+     * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities
+     *                                                    are highlighted. Falsy entries are dropped. Default [].
+     * @property {String, Function} highlightStroke       A colour, or an accessor called with the highlighted datum only.
+     *                                                    Default white. Returning null removes the inline style, leaving SVG's
+     *                                                    initial stroke of 'none' - an invisible highlight, with no error.
+     * @property {Number, Function} highlightStrokeWidth  A width, or an accessor called with the highlighted datum only.
+     *                                                    Default 2. Returning null removes the inline style, leaving SVG's
+     *                                                    initial width of 1.
+     *
+     * Note: an entity id that matches no feature is dropped from the join and reported through
+     * sszvis.logger.warn once per render, naming every unmatched id. It is a warning rather than a throw
+     * because a highlight normally tracks a transient hover or selection, and an id can legitimately
+     * go stale between two renders - crashing a chart mid-interaction would be worse than the missing
+     * highlight. Nothing is appended for an unmatched id, so the renderer no longer leaves a classed,
+     * fully styled path with no geometry behind.
+     *
+     * Note: the feature lookup keys on feature.id, which GeoJSON does not require, and goes through a
+     * Map. Ids are still stringified on both sides - a numeric feature id is matched by either a
+     * numeric or a string data key, which is load-bearing because SSZ geodata uses numeric ids - but
+     * only keys actually put into the Map can be found: a feature without an id is left out of the
+     * lookup, a datum with no entity id matches nothing, and an id naming an Object.prototype member
+     * ("valueOf", "toString", "__proto__", ...) is unmatched like any other absent id. A symbol stays a
+     * symbol key, so it can never be matched by a string id.
+     *
+     * Note: neither geoJson nor mapPath is validated, and once there is something to highlight both
+     * are required. A missing geoJson throws while the lookup table is built, before the join runs, so
+     * nothing is appended; a missing mapPath throws from inside the "d" callback, after the join has
+     * appended the element, so it leaves a classed path behind - with no geometry, and no inline stroke
+     * styles either, since the throw happens in the "d" callback before either .style() call is
+     * reached. The empty
+     * highlight case returns early before either is touched, and is the one configuration that
+     * tolerates having neither.
+     *
+     * Note: highlight is tested as `.length === 0`, so a non-array without a length - a single datum
+     * passed by mistake - skips the early return and then throws a bare TypeError from .reduce. A
+     * string has a length, so "" clears the layer while any other string throws. An array of only falsy entries is the second,
+     * distinct way to clear the layer: it merges to nothing and the exit selection removes the paths,
+     * but unlike the early return it still reads geoJson, to build the lookup table. mapPath is not
+     * read: the join has no elements, so d3 never invokes the "d" callback.
+     *
+     * Note: nothing deduplicates the highlight array, so highlighting one entity twice draws two
+     * stacked paths - harmless while the stroke is opaque, visible with a translucent one.
+     *
+     * Note: both style properties are wrapped in fn.functor and called by the component itself rather
+     * than handed to d3, unlike the mesh renderer's. An accessor therefore receives exactly one
+     * argument, the datum, with no index and no node group - and, because the call is written as a
+     * method access on props, an accessor expecting d3's node as `this` gets the component's internal
+     * props object instead. An accessor returning null removes the style, so a null colour leaves the
+     * highlight with SVG's initial stroke of `none` - invisible, with no error - and a null width
+     * leaves it at the initial width of 1.
+     *
+     * Note: both properties are written as inline styles rather than attributes. Nothing in sszvis.css
+     * sets stroke or stroke-width for .sszvis-map__highlight, so nothing is being overridden - but a
+     * consumer cannot restyle a highlight from their own stylesheet either, since an inline style
+     * beats any author rule short of !important.
+     *
+     * Note: fill: none and pointer-events: none are written as inline styles alongside the stroke, so
+     * a highlight does not need sszvis.css: SVG's initial fill is black, which would cover the entity
+     * the highlight is meant to outline, and without pointer-events it swallows the base layer's hover
+     * - which matters more here than for the mesh, since a highlight is normally driven by exactly
+     * that hover. stroke-linejoin and user-select stay on the class, since both are cosmetic.
+     *
+     * Note: the paths are scoped by key and the join is keyed by map entity. Each layer joins only the
+     * paths inside its own wrapper group, so two highlight layers rendered into one group
+     * coexist as long as they are given different keys - sharing the default key still means
+     * sharing one set of paths, which is what makes an ordinary layer idempotent across renders even
+     * though consumers build a fresh component every time. The keyed join means an element stays with
+     * its entity when the array shrinks or is reordered, so per-entity transitions and enter/exit
+     * styling are now possible. One entity highlighted twice still draws two paths: the join key
+     * carries an occurrence counter.
+     *
+     * Note: the empty-highlight branch used to return a decorative `true`. Nothing consumed it -
+     * d3's selection.each ignores the render callback's return value - so the port returns nothing.
+     *
+     * Note: the paths are drawn into a wrapper group of this layer's own - one per key, classed
+     * sszvis-map__highlight-group and carrying the same data-highlight-key as the paths - rather than
+     * straight into the group they are rendered into. The wrapper is created on every render,
+     * including one with nothing to highlight, and a cleared layer empties it rather than removing it,
+     * because the wrapper is what holds the layer's place among its siblings: a highlight that empties
+     * and refills, or one hovered for the first time after the anchored shape group was drawn, comes
+     * back beneath whatever was drawn into the group meanwhile instead of painting over it. Holding a
+     * place rather than a remembered neighbour also survives that neighbour being moved, removed, or
+     * re-created. The cost is one extra `<g>` in the markup; consumers selecting
+     * .sszvis-map__highlight as a descendant are unaffected. See issue #332, and choropleth's ownGroup
+     * for the same pattern applied to the anchored shape. The class, paired with this layer's key, is
+     * reserved for this component's own wrapper: a direct child of the render group already carrying
+     * both is adopted rather than replaced, and a second one is removed along with its content - the
+     * same exposure ownGroup has.
+     *
+     * Note: no transition is scheduled, so a highlight appears and disappears instantly. Unlike the
+     * base and geojson renderers this component keeps no caches, emits no missing-value pattern, and
+     * adds no tooltip anchors or event targets, so none of that family of quirks applies here.
+     * See test/map/renderer/highlight.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /** The default key, so that a lone highlight layer needs no configuration. */
+    const DEFAULT_KEY$2 = "highlight";
+    /**
+     * Marks the paths a highlight layer owns, so a second layer in the same group draws its own rather
+     * than rebinding these. Read back through d3's filter rather than an attribute selector, which
+     * would have to escape an arbitrary caller-supplied key. The same convention as the mesh
+     * renderer's data-mesh-key and the raster renderer's data-raster-key.
+     */
+    const KEY_ATTRIBUTE$4 = "data-highlight-key";
+    /**
+     * Marks the wrapper group a highlight layer draws into, so it can be found again by class - safe
+     * to put in a selector, unlike an arbitrary caller-supplied key, which is matched off the same
+     * data-highlight-key attribute the paths carry.
+     */
+    const GROUP_CLASS = "sszvis-map__highlight-group";
+    /**
+     * Reads the entity id off a datum. Reflect.get is a property access, so it walks the prototype
+     * chain and reads a falsy keyName as given, exactly as the JavaScript's datum[keyName] did. Only
+     * truthy data reach this, and Object() boxes a primitive one rather than rejecting it, which is
+     * what datum[keyName] did for a datum that is not an object.
+     */
+    function readEntityKey(datum, keyName) {
+      return Reflect.get(toObject(datum), keyName);
+    }
+    /** Object as a boxing function, named so the boxing is explicit rather than an implicit any. */
+    const toObject = Object;
+    /**
+     * Reports the highlight ids no map entity answers to: once per render, with every unmatched id,
+     * rather than once per entry. A warning rather than a throw, because a highlight normally tracks a
+     * transient hover or selection - throwing would take a whole chart down mid-interaction over an id
+     * that may simply have gone stale between two renders.
+     *
+     * Goes through sszvis.logger rather than console directly, like every other diagnostic in the
+     * library, so warnings stay identifiable as sszvis's and can be silenced in one place.
+     */
+    function warnUnmatched(unmatchedIds, keyName) {
+      if (unmatchedIds.length === 0) return;
+      const ids = unmatchedIds.map(id => String(id)).join(", ");
+      warn(`[mapRendererHighlight] no map entity has the ${keyName} ${ids}; nothing was highlighted for it. Check that the highlight ids match the geoJson feature ids, including their format ("01" and "1" are different entities).`);
+    }
+    function mapRendererHighlight() {
+      return component().prop("keyName").keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
+      .prop("key").key(DEFAULT_KEY$2) // scopes this layer's paths, so several can share one group
+      .prop("geoJson").prop("mapPath").prop("highlight").highlight([]) // an array of data values to highlight
+      .prop("highlightStroke", functor).highlightStroke("white") // a function for highlighted entity stroke colors (default: white)
+      .prop("highlightStrokeWidth", functor).highlightStrokeWidth(2).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // This layer's own wrapper, joined against the direct children of the group rather than
+        // searched for with selectGroup, which matches any descendant - a group under the same key
+        // may well sit inside an anchored shape's arbitrary markup. It is created on every render,
+        // including one with nothing to highlight, and a cleared layer empties it rather than
+        // removing it: that is what holds its place among its siblings, so a first hover after the
+        // anchored shape group was drawn still lands beneath it. The same reasoning as choropleth's
+        // ownGroup; see issue #332.
+        const highlightGroup = selection.selectAll(`:scope > g.${GROUP_CLASS}`).filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE$4) === props.key;
+        }).data([null]).join("g").classed(GROUP_CLASS, true).attr(KEY_ATTRIBUTE$4, props.key);
+        // Scoped to this layer by its wrapper, so a second highlight layer in the same group draws
+        // its own paths instead of rebinding these.
+        const highlightBorders = highlightGroup.selectAll(".sszvis-map__highlight");
+        if (props.highlight.length === 0) {
+          highlightBorders.remove();
+          // The JavaScript returned a decorative `true` here ("no highlight, no worry"); d3's
+          // selection.each ignores whatever the render callback returns, so nothing consumed it.
+          return;
+        }
+        const groupedMapData = props.geoJson.features.reduce((m, feature) => {
+          // A feature without an id names no entity, so it is not addressable: keying it would
+          // collapse every such feature onto the single key "undefined" and let a datum with no
+          // entity id match the last of them.
+          if (feature.id != null) {
+            m.set(toLookupKey(feature.id), feature);
+          }
+          return m;
+        }, new Map());
+        // merge the highlight data, collecting the ids no map entity answers to
+        const unmatchedIds = [];
+        const occurrences = new Map();
+        const mergedHighlight = props.highlight.reduce((m, v) => {
+          if (v) {
+            const entityId = readEntityKey(v, props.keyName);
+            const feature = entityId == null ? undefined : groupedMapData.get(toLookupKey(entityId));
+            if (feature === undefined) {
+              unmatchedIds.push(entityId);
+            } else {
+              const entityKey = String(toLookupKey(entityId));
+              const occurrence = occurrences.get(entityKey) ?? 0;
+              occurrences.set(entityKey, occurrence + 1);
+              m.push({
+                geoJson: feature,
+                datum: v,
+                joinKey: `${entityKey}#${occurrence}`
+              });
+            }
+          }
+          return m;
+        }, []);
+        warnUnmatched(unmatchedIds, props.keyName);
+        highlightBorders
+        // Keyed by map entity, so an element stays with its entity when the highlight array
+        // shrinks or is reordered rather than being re-purposed by position.
+        .data(mergedHighlight, d => d.joinKey).join("path").classed("sszvis-map__highlight", true).attr(KEY_ATTRIBUTE$4, props.key).attr("d", d => props.mapPath(d.geoJson))
+        // Written inline alongside the stroke, so a highlight does not need sszvis.css: SVG's
+        // initial fill is black, which without the stylesheet covers the entity it is meant to
+        // outline, and without pointer-events it swallows the base layer's hover - which
+        // matters more here than for the mesh, since a highlight is normally driven by exactly
+        // that hover. stroke-linejoin and user-select stay on the class: both are cosmetic.
+        .style("fill", "none").style("pointer-events", "none").style("stroke", d => colorToString(props.highlightStroke(d.datum))).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
+      });
+    }
+
+    /**
+     * image render component
+     *
+     * @module  sszvis/map/renderer/image
+     *
+     * Used for rendering an image layer, usually as a complement to a map. This is used in examples
+     * for the topographic layer. It could also be used in other contexts, but the map usage is
+     * the most straightforward.
+     *
+     * @property {Function} projection      The map projection function used to position the image in pixels. Uses the upper left
+     *                                      and lower right corners of the image as geographical place markers to align with other map layers.
+     *                                      It is called once per corner, with that corner's coordinates. A corner it answers
+     *                                      null or undefined for is reported, naming the corner.
+     * @property {String, Function} src      The source of the image you want to use. This should be either a URL for an image hosted on the same
+     *                                      server that hosts the page, or a base64-encoded dataURL. For example, the zurich topolayer map module.
+     *                                      Required: a missing src is reported rather than rendering an image with none.
+     * @property {Array} geoBounds          This should be a 2D array containing the upper-left (north-west) and lower-right (south-east)
+     *                                      coordinates of the corresponding corners of the image. The structure expected is:
+     *
+     *                                      [[nw-longitude, nw-latitude], [se-longitude, se-latitude]]
+     *
+     *                                      This is consistent with the way D3 handles similar geographic data. These coordinates are used to represent
+     *                                      the edge of the image being used, and to align the image with other map layers (using the projection function).
+     *                                      Note: it is possible that even with precise corner coordinates, some mismatch may still occur. This
+     *                                      will happen if the image itself is generated using a different type of map projection than the one used by the
+     *                                      projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
+     *                                      Required, and the order matters: corners the wrong way round project to a
+     *                                      negative width or height, which is reported rather than silently dropped.
+     * @property {Number, Function} opacity  The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
+     *                                      Default 1. An invalid value is dropped by the CSS parser rather than reported,
+     *                                      leaving the image fully opaque; 0 renders nothing at all, which is
+     *                                      indistinguishable from a src that failed to load.
+     * @property {String, Function} alt      The alternative text describing the image. Defaults to the
+     *                                      empty string, which marks the layer decorative so that
+     *                                      screen readers skip it - the right default for a
+     *                                      topographic or raster backdrop whose data lives in the svg
+     *                                      layers above. Pass a description when the image itself
+     *                                      carries information.
+     *
+     * Note: this component renders an HTML img element, so it belongs in a createHtmlLayer. Nothing
+     * enforces that: called on an SVG selection it appends an SVG-namespaced img, which no browser
+     * renders, without complaining.
+     *
+     * Note: the component writes position: absolute, display: block and pointer-events: none inline, so
+     * the offsets it computes are never inert and the image never swallows the hover and click events of
+     * the map layers beneath it. sszvis.css sets the same three declarations for the class, plus
+     * user-select: none, which is left to the stylesheet: it only affects text selection over a
+     * decorative image, not whether the renderer works. So the component no longer needs sszvis.css to
+     * position itself. Being inline styles they beat any author rule short of !important, so a consumer
+     * who wants the image in the document flow or clickable can no longer get there through their own
+     * stylesheet.
+     *
+     * Note: the projected coordinates are written unshifted, and createHtmlLayer positions the layer
+     * itself by the bounds padding - so the image's offset is relative to the layer and the padding is
+     * applied exactly once. That is what keeps the image aligned with the svg layer.
+     *
+     * Note: both corners are rounded before the size is taken as their difference, so left + width is
+     * the rounded south-east corner and the image's edges land on the same pixels as the map layers it
+     * is aligned with.
+     *
+     * Note: projection, src and geoBounds are all required and are validated before any element is
+     * created, so each way of getting them wrong is reported with a message naming the property, and a
+     * misconfigured renderer leaves nothing half-built in the layer. Inverted geoBounds - the likely
+     * real-world mistake - are caught by comparing the projected corners before they are rounded, so
+     * an inversion smaller than one pixel is reported rather than collapsing to a zero-size image.
+     *
+     * Note: a projection that answers a non-finite coordinate is still not reported; it produces the
+     * string "Infinitypx", which the CSS parser drops, leaving the image unpositioned. Not reachable
+     * with a d3 projection called this way: clipAngle and clipExtent apply to streams, not to a direct
+     * call.
+     *
+     * Note: a Mercator pole, which is reachable, fails a third way again - log(tan(pi/2)) is merely a
+     * very large float, so a geoBounds latitude of 90 positions and sizes the image tens of thousands
+     * of pixels off rather than failing - the extent stays positive, so the geoBounds check does not
+     * catch it either.
+     *
+     * Note: neither src nor opacity is wrapped in fn.functor, unlike the colour properties of the base,
+     * geojson and highlight renderers - but an accessor works all the same, called with the join's
+     * placeholder datum 0. opacity is handed to d3, which evaluates it; src is resolved by the
+     * component itself, because the resolved value identifies the element.
+     *
+     * Note: the src identifies the image within its layer, so two renderers with different sources
+     * each own an element and stack, while re-rendering the same source reuses the element it drew
+     * before. The element carries the resolved source in a data-image-key attribute for that purpose:
+     * the same key convention as the mesh, raster and highlight renderers, except that this renderer
+     * derives its key from the src rather than taking one as a property.
+     *
+     * Note: no transition is scheduled, so the image jumps to its new position on a resize rather than
+     * animating. Unlike the base and geojson renderers this component keeps no caches, emits no
+     * missing-value pattern, and adds no tooltip anchors or event targets, so none of that family of
+     * quirks applies here. The same img element is reused across renders, with every attribute and
+     * style reapplied each time.
+     * See test/map/renderer/image.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Marks the image a renderer owns, keyed by its resolved src, so the join can find its own
+     * element. Read back through d3's filter rather than an attribute selector, which would have to
+     * escape an arbitrary src - the same idiom as the mesh renderer's data-mesh-key, whose key is a
+     * property rather than being derived.
+     */
+    const KEY_ATTRIBUTE$3 = "data-image-key";
+    /**
+     * Resolves a property that may be a constant or an accessor. d3 would evaluate an accessor against
+     * the bound datum; this calls it the same way, with the join's placeholder datum 0, so that the
+     * resolved value is available before the join needs it.
+     */
+    function resolve(value) {
+      return typeof value === "function" ? value.call(null, 0, 0, []) : value;
+    }
+    /** Reports a required property the caller left unset, naming it. */
+    function required(value, name) {
+      if (value === undefined) {
+        throw new Error(`[mapRendererImage] the ${name} property is required`);
+      }
+      return value;
+    }
+    /**
+     * Projects one corner of the image, reporting a projection that cannot place it rather than
+     * throwing a bare TypeError from indexing null.
+     */
+    function corner(projection, geoBounds, which) {
+      const projected = projection(geoBounds[which]);
+      if (projected == null) {
+        const name = which === 0 ? "north-west" : "south-east";
+        throw new Error(`[mapRendererImage] the projection could not place the ${name} corner of geoBounds`);
+      }
+      return projected;
+    }
+    function mapRendererImage() {
+      return component().prop("projection").prop("src").prop("geoBounds").prop("opacity").prop("alt").opacity(1).alt("").render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Everything the render depends on is validated before any element is created, so a
+        // misconfigured renderer leaves nothing half-built behind in the layer.
+        const projection = required(props.projection, "projection");
+        const src = required(props.src, "src");
+        const geoBounds = required(props.geoBounds, "geoBounds");
+        const topLeft = corner(projection, geoBounds, 0);
+        const bottomRight = corner(projection, geoBounds, 1);
+        // Corners the wrong way round are the mistake the docs examples guard against with an
+        // "Expects longitude, latitude" comment. Tested on the unrounded projection, because two
+        // corners inverted by less than a pixel round to the same coordinate: a rounded extent of
+        // zero would render an invisible image rather than report the mistake.
+        if (bottomRight[0] < topLeft[0] || bottomRight[1] < topLeft[1]) {
+          throw new Error("[mapRendererImage] the geoBounds property expects the north-west corner first; the corners given project to a negative width or height");
+        }
+        // Rounded only after the check, so left + width stays the rounded south-east corner and the
+        // edges land on the same pixels as the map layers this is aligned with. The CSS parser drops
+        // a negative length, which is what the check above keeps out of here.
+        const width = Math.round(bottomRight[0]) - Math.round(topLeft[0]);
+        const height = Math.round(bottomRight[1]) - Math.round(topLeft[1]);
+        // The src identifies the image within its layer, so two renderers with different sources get
+        // an element each instead of the second rebinding the first, while re-rendering the same
+        // source keeps reusing the element it drew before. Filtering rather than building a selector
+        // avoids having to escape a src into an attribute selector.
+        const srcValue = resolve(src);
+        const image = selection.selectAll(".sszvis-map__image").filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE$3) === srcValue;
+        }).data([0]).join("img").classed("sszvis-map__image", true).attr(KEY_ATTRIBUTE$3, srcValue);
+        image.attr("src", srcValue).attr("alt", valueFn(props.alt))
+        // The positioning and event behaviour the component depends on, written inline so it does
+        // not need sszvis.css: absolute makes the offsets below apply at all, block keeps an inline
+        // image from picking up baseline leading, and none lets the map layers underneath be
+        // hovered through it.
+        .style("position", "absolute").style("display", "block").style("pointer-events", "none").style("left", `${Math.round(topLeft[0])}px`).style("top", `${Math.round(topLeft[1])}px`)
+        // Each corner is rounded before the subtraction, so the right and bottom edges land on the
+        // same pixels as the projected south-east corner rather than a pixel either side of it.
+        .style("width", `${width}px`).style("height", `${height}px`).style("opacity", valueFn(props.opacity));
+      });
+    }
+
+    /**
+     * mesh renderer component
+     *
+     * @module sszvis/map/renderer/mesh
+     *
+     * A component used internally for rendering the borders of all map entities as a single mesh.
+     * This component expects a GeoJson object which is a single polyline for the entire mesh of all borders.
+     * All borders will therefore be rendered as one continuous object, which is faster, more memory-efficient,
+     * and prevents overlapping borders from creating strange rendering effects. The downside is that the entire
+     * line must have a single set of styles which all borders share. To highlight individual borders, use the highlight renderer.
+     *
+     * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
+     *                                                    Required: omitting it throws a TypeError, which is why the
+     *                                                    getter reports it as possibly undefined.
+     * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+     *                                                    Required: omitting it throws a TypeError too.
+     * @property {string} key                             Identifies this mesh within its layer. Default "border". Two
+     *                                                    meshes in one group need distinct keys to coexist; two sharing a
+     *                                                    key share one path, the last render winning.
+     * @property {string, function} borderColor           The color of the border path stroke. Default is white
+     * @property {number, function} strokeWidth           The width of the border path stroke. Default is 1.25.
+     *                                                    An invalid value is dropped by the CSS parser rather than
+     *                                                    reported, leaving SVG's initial width of 1.
+     *
+     * Note: both geoJson and mapPath are required, and omitting either throws a TypeError naming it.
+     * The guard runs before the join, so nothing is appended. This replaces the earlier behaviour, in
+     * which either omission left a classed, styled path with no geometry - invisible, silent, and
+     * indistinguishable from having had no borders to draw.
+     *
+     * Note: an accessor passed for borderColor or strokeWidth is called with the mesh object and d3's
+     * index, not with a per-entity datum - there is only one path, so there is no such datum. An
+     * accessor written against a datum, the way every other map renderer's colour accessor is written,
+     * therefore resolves to undefined. A null or undefined result is read as "keep the default" rather
+     * than passed to d3, which would have removed the style and left the borders invisible with no
+     * error. The lake overlay's lakePathColor still has the unguarded shape.
+     *
+     * Note: both properties are written as inline styles rather than attributes. Nothing in sszvis.css
+     * sets stroke or stroke-width for .sszvis-map__border, so nothing is being overridden - but a
+     * consumer cannot restyle a mesh border from their own stylesheet either, since an inline style
+     * beats any author rule short of !important.
+     *
+     * Note: fill: none and pointer-events: none are written as inline styles alongside the stroke, so
+     * the mesh does not need sszvis.css: the border is one single path, so SVG's initial black fill
+     * would otherwise turn it into a shape covering the map, and without pointer-events it swallows
+     * the base layer's hover and click events rather than letting them through. stroke-linejoin and
+     * user-select stay on the class, since both are cosmetic - as does the class itself, so a
+     * consumer's own rule for either still applies.
+     *
+     * Note: the border path is scoped to the rendering group's own children and identified by the key
+     * property, so a mesh only ever rebinds the path it drew itself. Two meshes in one group therefore
+     * coexist as long as they have distinct keys - administrative boundaries and lake outlines, say.
+     * Two meshes sharing a key are still one path, which is what makes a re-render reuse its element,
+     * so the constraint is one mesh per key per layer rather than one mesh per layer.
+     *
+     * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
+     * caches, emits no missing-value pattern, and adds no tooltip anchors or event targets - so none
+     * of that family of quirks applies here. The path data is reapplied on every render rather than
+     * only on enter, so a geoJson mutated in place still repaints.
+     * See test/map/renderer/mesh.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Marks the path a mesh owns, so a second mesh in the same group draws its own rather than
+     * rebinding this one. Read back through d3's filter rather than an attribute selector, which
+     * would have to escape an arbitrary caller-supplied key.
+     */
+    const KEY_ATTRIBUTE$2 = "data-mesh-key";
+    /** The defaults, named here because they are also the fallback for an accessor that resolves to nothing. */
+    const DEFAULT_KEY$1 = "border";
+    const DEFAULT_BORDER_COLOR = "white";
+    const DEFAULT_STROKE_WIDTH = 1.25;
+    /**
+     * Resolves a style prop, substituting the component's default for a null or undefined result. d3
+     * would remove the style for either, and since sszvis.css sets no stroke for .sszvis-map__border,
+     * SVG's initial value `none` would then apply - invisible borders, with no error. That is the
+     * outcome of an accessor written against a datum, the way every other map renderer's colour
+     * accessor is written, so the default stands instead.
+     */
+    function withDefault(value, fallback) {
+      return function (datum, index, groups) {
+        const resolved = valueFn(value).call(this, datum, index, groups);
+        return resolved ?? fallback;
+      };
+    }
+    /**
+     * Renders a resolved colour as the string d3 writes into a style - the same conversion d3 would
+     * do itself, made explicit so one of the library's colour objects reaches d3's style typings.
+     */
+    function asColorString(value) {
+      return function (datum, index, groups) {
+        return colorToString(value.call(this, datum, index, groups));
+      };
+    }
+    function mapRendererMesh() {
+      return component().prop("geoJson").prop("mapPath").prop("key").key(DEFAULT_KEY$1).prop("borderColor").borderColor(DEFAULT_BORDER_COLOR) // A function or string for the color of all borders. Note: all borders have the same color
+      .prop("strokeWidth").strokeWidth(DEFAULT_STROKE_WIDTH).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Validate before the join, so a missing property is reported rather than leaving a
+        // classed, styled path with no geometry behind - invisible, and indistinguishable from
+        // having had no borders to draw.
+        const {
+          geoJson,
+          mapPath
+        } = props;
+        if (geoJson === undefined) {
+          throw new TypeError("map/renderer/mesh: geoJson is required, since it carries the border geometry to render");
+        }
+        if (mapPath === undefined) {
+          throw new TypeError("map/renderer/mesh: mapPath is required, since it turns the geoJson into path data");
+        }
+        // add the map borders. These are rendered as one single path element, the one carrying this
+        // mesh's key: the selector is scoped to this group's own children so a nested mesh is left
+        // alone, and the key filter is what lets two meshes share a group.
+        const meshLine = selection.selectAll(":scope > path.sszvis-map__border").filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE$2) === props.key;
+        }).data([geoJson]).join("path").classed("sszvis-map__border", true).attr(KEY_ATTRIBUTE$2, props.key);
+        meshLine.attr("d", mapPath)
+        // Written inline alongside the stroke, so the borders do not need sszvis.css: SVG's
+        // initial fill is black, which without the stylesheet turns this single path into a
+        // filled shape covering the map, and without pointer-events it swallows the base
+        // layer's hover and click events. The component already owns this element's
+        // presentation - it writes both stroke properties - so the two belong here too.
+        // stroke-linejoin and user-select stay on the class: both are cosmetic.
+        .style("fill", "none").style("pointer-events", "none").style("stroke", asColorString(withDefault(props.borderColor, DEFAULT_BORDER_COLOR))).style("stroke-width", withDefault(props.strokeWidth, DEFAULT_STROKE_WIDTH));
+      });
+    }
+
+    /**
+     * patternedlakeoverlay component
+     *
+     * @module sszvis/map/renderer/patternedlakeoverlay
+     *
+     * A component used internally for rendering Lake Zurich, and the borders of map entities which
+     * lie above Lake Zurich.
+     *
+     * @property {d3.geo.path} mapPath      A path-generator function used to create the path data string of the provided GeoJson.
+     *                                      It is handed straight to d3 as the attribute callback, so it is called with the
+     *                                      geoJson, d3's index and the group; a d3.geoPath returns null for an undefined
+     *                                      feature. Never validated; see the note below.
+     * @property {GeoJson} lakeFeature      A GeoJson object which provides data for the outline shape of Lake Zurich. This shape will
+     *                                      be filled with a special texture fill and masked with an alpha gradient fade.
+     *                                      Left out - or set to null - it means "no lake": the overlay then removes the
+     *                                      paths and the definitions it drew earlier, so it can be switched off without
+     *                                      being wrapped in a group the caller empties.
+     * @property {GeoJson} lakeBounds       A GeoJson object which provides data for the shape of map entity borders which lie over the
+     *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
+     *                                      Optional: a geography can have a lake with no borders reaching over it, and
+     *                                      absent means no border path is drawn at all.
+     * @property {String, Function} lakePathColor  The stroke colour of those borders. Defaults to the grey the
+     *                                      stylesheet used to supply, written inline so the borders draw without it.
+     *                                      A falsy colour - "" - clears the stroke, which means no border rather
+     *                                      than the default. Not wrapped in fn.functor.
+     * @property {Boolean} fadeOut          Whether to fade the lake out towards the bottom of the shape with a gradient mask.
+     *                                      Default true - but choropleth defaults its own lakeFadeOut to false, so the
+     *                                      default branch is the one no in-repo chart takes. Turning it off removes an
+     *                                      existing fade again.
+     * @property {String} key               Optional scope for this overlay's definitions and paths, so that two overlays
+     *                                      drawn into one group each own their elements. Defaults to one scope per group,
+     *                                      generated on first render and remembered on the group as
+     *                                      data-lake-key - so re-rendering, even with a freshly constructed
+     *                                      component, reuses the same elements, while a second map on the page gets its
+     *                                      own. A caller-supplied key must be unique within the document, must start
+     *                                      with a letter and may use only letters, digits, hyphens and underscores -
+     *                                      it is written into the definition ids, so a url(#...) reference has to be
+     *                                      able to name it. Anything else throws. The leading letter also keeps caller
+     *                                      keys apart from the generated scopes, which are bare decimals.
+     *
+     * Note: the definition ids are scoped - "lake-pattern-1", "lake-fade-gradient-1", "lake-fade-mask-1"
+     * and so on - so two maps on one page no longer define the same id twice. Consumers must not rely on
+     * the previously fixed ids.
+     *
+     * Note: the pattern helpers in src/patterns.ts are idempotent - they data-join their contents - so
+     * they can be called on every render, and a redraw updates the definition in place rather than
+     * growing it.
+     *
+     * Note: the mask fades the lake by filling itself with the fade gradient, so the two definitions are
+     * only useful together. Both helpers take the gradient id as a trailing argument, so this overlay's
+     * scoped id is handed to them directly rather than rewritten afterwards.
+     *
+     * Note: the defs element is created inside the map group rather than at the svg root - so this
+     * component shares one defs with the base renderer's missing value pattern when both draw into
+     * the same group. Only the definitions carrying this overlay's scope are ever removed from it.
+     *
+     * Note: an absent lakeFeature is an instruction rather than a mistake - it clears the overlay - so
+     * it is neither validated nor reported. Past that branch there is a lake to draw and mapPath is
+     * required, reported by name before either join the way the mesh renderer reports its own;
+     * without it d3 removed the "d" attribute from both paths without calling anything, leaving two
+     * classed, styled paths with no geometry. An absent lakeBounds is likewise an instruction - a
+     * geography can have a lake and no borders over it - so its join is given nothing and the border
+     * path leaves the DOM, rather than being bound undefined and left behind with no geometry.
+     *
+     * Note: the clearing branch removes only this overlay's own paths and only the three definitions
+     * carrying its scope, so clearing one overlay leaves a sibling overlay in the same group intact.
+     * The shared defs element itself is left in place, since the base renderer may be using it too.
+     *
+     * Note: lakePathColor is not wrapped in fn.functor, unlike the colour properties of the base,
+     * geojson and highlight renderers. An accessor is handed straight to d3 and called with the
+     * lakeBounds object and d3's index, not with a per-border datum - there is only one path, so there
+     * is no such datum. It is written as an inline style, so it cannot be overridden from a consumer's
+     * stylesheet, since an inline style beats any author rule short of !important - which now applies
+     * to the default grey as well as to a colour the caller set. The mesh's borderColor has the same
+     * shape and the same defaulting.
+     *
+     * Note: the colour is written on every render. An unset property takes the renderer's default; a
+     * falsy colour - "", or an accessor returning undefined - clears the stroke, which leaves the
+     * border invisible rather than falling back to the default.
+     *
+     * Note: pointer-events: none is written inline on both paths, and fill: none on the border path,
+     * so neither needs sszvis.css to stay out of the way: SVG's initial fill is black, which would
+     * turn the dotted border into a shape covering the lake, and without pointer-events both paths
+     * swallow the base layer's hover and click events across the whole lake. The lake shape's own fill
+     * is the texture pattern, so only its pointer-events was missing. The border's dash pattern, width
+     * and default grey stroke are written inline too, so a consumer without the stylesheet sees the
+     * dotted borders without having to supply a lakePathColor.
+     *
+     * Note: both path selectors are scoped to the rendering group's own children and filtered by the
+     * overlay's key - so two overlays rendered into one group each draw their own pair of paths as
+     * long as they are given distinct keys, and an overlay in a nested group is left alone even if it
+     * carries the same key. Two unkeyed overlays in one
+     * group still share the scope generated for that group, and so share one pair of paths; that is
+     * what makes a re-render from a freshly constructed component reuse its elements.
+     *
+     * Note: unlike the base and geojson renderers this component schedules no transition, keeps no
+     * caches, and does not mutate the geoJson it is handed, so the whole centroid-caching family of
+     * quirks does not apply. It emits patterns, but not their missing-value one, and adds no tooltip
+     * anchors and no event targets. The path data is reapplied on every render rather than only on
+     * enter, so a geoJson mutated in place still repaints.
+     * See test/map/renderer/patternedlakeoverlay.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /** The dotted grey outline sszvis.css used to supply, owned by the renderer instead. */
+    const DEFAULT_LAKE_PATH_COLOR = "#d3d3d3";
+    const DEFAULT_LAKE_STROKE_WIDTH = 1.25;
+    const DEFAULT_LAKE_DASH_ARRAY = "3 3";
+    /**
+     * Marks both the group whose generated scope it records and the paths belonging to a scope,
+     * mirroring d3-selectgroup's data-d3-selectgroup. Read back through getAttribute in a filter
+     * rather than matched with an attribute selector, so a caller-supplied key needs no CSS
+     * escaping - the same idiom as mesh's data-mesh-key and raster's data-raster-key.
+     */
+    const KEY_ATTRIBUTE$1 = "data-lake-key";
+    let generatedScopes = 0;
+    /**
+     * A caller-supplied key has to be spellable both as an id selector and as a url(#...) fragment,
+     * because the scope is interpolated into the three definition ids and matched back by id. Letters,
+     * digits, hyphens and underscores qualify; a leading letter is required, which is what keeps
+     * caller keys disjoint from the generated scopes below.
+     */
+    const KEY_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
+    /**
+     * Rejects a key that cannot be spelled in an id. The scope is written into the definition ids, and
+     * those ids are named back from the paths as url(#...) references - a fragment that cannot spell a
+     * space or a quote. A key such as "a b" therefore yields definitions no path can reference, which
+     * is silent at render time; this names the property instead.
+     */
+    function requireSpellableKey(key) {
+      if (!KEY_PATTERN.test(key)) {
+        throw new Error(`[mapRendererPatternedLakeOverlay] the key property must start with a letter and use only letters, digits, hyphens and underscores; got "${key}". The key is written into this overlay's definition ids, which a url(#...) reference has to be able to name.`);
+      }
+      return key;
+    }
+    /**
+     * The scope every definition id and both path selectors are qualified with. A caller-supplied key
+     * wins; otherwise a scope is generated once per group and remembered on the group itself, so a
+     * re-render - even from a freshly constructed component, which is how the docs examples are written
+     * - reuses the same definitions and paths, while a second map on the page gets its own.
+     *
+     * Generated scopes are bare decimals and caller keys must begin with a letter, so the two can
+     * never collide: without that, `.key("1")` on one map and the first unkeyed overlay on another
+     * would share the scope "1" and so share document-global definition ids - the very cross-map
+     * reference this scoping exists to prevent.
+     */
+    function overlayScope(group, key) {
+      if (key !== undefined) return requireSpellableKey(key);
+      const recorded = group.getAttribute(KEY_ATTRIBUTE$1);
+      if (recorded !== null) return recorded;
+      const generated = String(++generatedScopes);
+      group.setAttribute(KEY_ATTRIBUTE$1, generated);
+      return generated;
+    }
+    function mapRendererPatternedLakeOverlay() {
+      return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").prop("key").fadeOut(true).render(function () {
+        const selection = d3.select(this);
+        const props = selection.props();
+        const scope = overlayScope(this, props.key);
+        const patternId = `lake-pattern-${scope}`;
+        const gradientId = `lake-fade-gradient-${scope}`;
+        const maskId = `lake-fade-mask-${scope}`;
+        /**
+         * The paths of one class this overlay owns: scoped to the rendering group's own children, so
+         * an overlay in a nested group is never rebound, and filtered by key, which is what lets two
+         * overlays share one group. Read back through getAttribute rather than matched with an
+         * attribute selector, so a caller-supplied key needs no escaping.
+         */
+        const ownPaths = className => selection.selectAll(`:scope > path.${className}`).filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE$1) === scope;
+        });
+        /**
+         * This overlay's definitions: matched inside the group's own defs element, the one
+         * ensureDefsElement writes into. A descendant lookup would reach into a nested group's
+         * defs, where an inner overlay rendered with the same key owns definitions of the same
+         * id - clearing the outer overlay would then strip the definitions the inner overlay's
+         * paths still reference. Scoped like ownPaths, so ownership is the same on both sides.
+         */
+        const ownDefs = (...selectors) => selection.selectAll(":scope > defs").selectAll(selectors.map(selector => `:scope > ${selector}`).join(", "));
+        // No lake to draw: remove what an earlier render left, so a caller can ask this component
+        // for "no lake" rather than wrapping it in a group to empty. Only this overlay's own
+        // definitions are removed - the ids carry its scope - so a sibling overlay keeps its own.
+        // The shared defs element itself is left alone: the base renderer may be using it too.
+        if (props.lakeFeature == null) {
+          ownPaths("sszvis-map__lakezurich").remove();
+          ownPaths("sszvis-map__lakepath").remove();
+          ownDefs(`pattern#${patternId}`, `linearGradient#${gradientId}`, `mask#${maskId}`).remove();
+          return;
+        }
+        // Validated here rather than at the top of the render: an absent lakeFeature means "no
+        // lake", and that state needs no mapPath to clear what an earlier render drew. Past it
+        // there is a lake, and drawing it without a path generator used to leave two classed,
+        // styled paths with no geometry, because d3 removes an attribute set to undefined without
+        // calling anything. The mesh renderer reports its own the same way.
+        //
+        // lakeBounds is deliberately not required alongside it: a geography can have a lake and no
+        // borders reaching over it - the agglomeration is the shipped example, and choropleth
+        // forwards an unset lakeBorders straight through - so its absence is handled at the join
+        // below rather than rejected here.
+        // `== null` rather than `=== undefined`, so an explicit null is reported by name here
+        // instead of reaching d3 and silently removing the attribute, the way lakeFeature - which
+        // is documented as accepting both - is already handled.
+        if (props.mapPath == null) {
+          throw new TypeError("map/renderer/patternedLakeOverlay: mapPath is required, since it turns the lake geometry into path data");
+        }
+        // the lake texture. The helpers join their contents, so calling them on every render updates
+        // the definition rather than growing it.
+        ensureDefsElement(selection, "pattern", patternId).call(mapLakePattern);
+        if (props.fadeOut) {
+          // the fade gradient, and the mask that fills itself with it - both scoped to this overlay
+          // by the id handed to them.
+          ensureDefsElement(selection, "linearGradient", gradientId).call(mapLakeFadeGradient, gradientId);
+          ensureDefsElement(selection, "mask", maskId).call(mapLakeGradientMask, gradientId);
+        } else {
+          // Turning the fade off must undo an existing one, not merely skip writing it.
+          ownDefs(`linearGradient#${gradientId}`, `mask#${maskId}`).remove();
+        }
+        // generate the Lake Zurich path
+        const zurichSee = ownPaths("sszvis-map__lakezurich").data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath).attr("fill", `url(#${patternId})`)
+        // Written inline so the lake does not need sszvis.css to stay out of the way: without
+        // it the shape swallows the base layer's hover and click events across the whole lake.
+        // The fill is the texture above, so only this one is missing. stroke and user-select
+        // stay on the class: neither affects the events.
+        .style("pointer-events", "none");
+        // this mask applies the fade effect
+        zurichSee.attr("mask", props.fadeOut ? `url(#${maskId})` : null);
+        // add a path for the boundaries of map entities which extend over the lake.
+        // This path is rendered as a dotted line over the lake shape
+        // No bounds means no borders reach over this lake, which is a geography's own shape rather
+        // than a misconfiguration - so the join is given nothing and the path leaves the DOM. It
+        // used to be bound undefined, and a d3.geoPath returns null for an undefined feature, so
+        // the result was a classed border path with no geometry: indistinguishable from having had
+        // borders that drew nothing, and still found by CSS rules and hit tests.
+        const lakePath = ownPaths("sszvis-map__lakepath").data(props.lakeBounds === undefined ? [] : [props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr(KEY_ATTRIBUTE$1, scope).attr("d", props.mapPath)
+        // As on the lake shape and the mesh border: SVG's initial fill is black, so without
+        // sszvis.css this dotted outline is a filled shape over the lake, and without
+        // pointer-events it swallows the events beneath it.
+        .style("fill", "none").style("pointer-events", "none")
+        // The dash pattern and width the dotted outline is made of. Written inline for the same
+        // reason as the stroke below: SVG has no dash by default, so a consumer without the
+        // stylesheet used to get a solid line where they had one at all.
+        .style("stroke-width", DEFAULT_LAKE_STROKE_WIDTH).style("stroke-dasharray", DEFAULT_LAKE_DASH_ARRAY);
+        // An unset colour takes the renderer's own default, as the mesh's borderColor does. It used
+        // to write nothing and leave the stroke to .sszvis-map__lakepath, which meant a consumer who
+        // did not ship sszvis.css saw no lake borders at all - SVG's initial stroke is none - unless
+        // they set lakePathColor themselves. A colour that IS set, including a falsy one, is still
+        // written as given, so it can clear a colour an earlier render left behind: an explicit
+        // empty colour means no border rather than "use the default".
+        if (props.lakePathColor === undefined) {
+          lakePath.style("stroke", DEFAULT_LAKE_PATH_COLOR);
+        } else {
+          const resolve = valueFn(props.lakePathColor);
+          lakePath.style("stroke", function (datum, index, groups) {
+            return colorToString(resolve.call(this, datum, index, groups));
+          });
+        }
+      });
+    }
+
+    /**
+     * raster renderer component
+     *
+     * @module  sszvis/map/renderer/raster
+     *
+     * @template T The type of the data values bound to the raster cells
+     *
+     * Used for rendering a raster layer within a map (can also be used in other contexts, but the map usage
+     * is the most straightforward). Requires a width and a height for the raster layer, a function which
+     * returns raster positions, and one which returns fill colors.
+     *
+     * Unlike the other map renderers this one draws into a canvas inside an HTML layer, and it takes its
+     * data from the layer's datum rather than from a property.
+     *
+     * @property {Boolean} debug         Whether to activate debug mode, which shows a red square over the whole
+     *                                   canvas, for testing alignment with other map layers. Default false.
+     * @property {Number} width          The width of the canvas, in CSS pixels. Required: a missing, non-finite
+     *                                   or negative width throws. A fractional value is rounded up to whole
+     *                                   pixels; see the notes below.
+     * @property {Number} height         The height of the canvas. Required and validated like the width.
+     * @property {Function} position     A function which takes a datum and returns a position for the corresponding
+     *                                   raster square, returned as [x, y] pairs. Called with the datum only - no
+     *                                   index, no array - unlike a d3 accessor, though the render callback itself
+     *                                   does receive d3's (data, index, group). Required: a missing position
+     *                                   throws. A result that does not place the datum - nothing, or a
+     *                                   non-finite pair - skips that cell and is reported once per render;
+     *                                   see the notes below.
+     * @property {Number} cellSide       The length (in pixels) of one side of each raster cell. Default 2.
+     *                                   Must be a finite number greater than zero; zero or less throws,
+     *                                   since zero draws nothing and a negative side silently draws its
+     *                                   positive counterpart instead of the size asked for. A
+     *                                   fractional side antialiases; see the notes below.
+     *                                   sszvis.pixelsFromGeoDistance is the intended source for this value, and it
+     *                                   returns a float.
+     * @property {String, Function} fill The fill function. Takes a datum and should return a fill color for the datum's pixel.
+     *                                   Wrapped in fn.functor, so a constant colour is accepted too. Required: a
+     *                                   missing fill throws. A value the canvas cannot parse leaves the cell
+     *                                   unpainted; see the notes below.
+     *                                   Typed as a colour string: fillStyle also takes a CanvasGradient or
+     *                                   CanvasPattern at runtime, which this contract deliberately excludes.
+     * @property {String} key          Identifies this raster within its layer. Default "raster". Two rasters in
+     *                                   one layer need distinct keys to coexist; two sharing a key share one
+     *                                   canvas, and since each render clears it, the last one wins.
+     * @property {String} alt            An accessible description of what the raster shows. Default "", which
+     *                                   marks the canvas decorative so assistive technology skips it
+     *                                   deliberately. A non-empty value is written as an aria-label with
+     *                                   role="img", and as the canvas's fallback content. Named to match the
+     *                                   image renderer's alt, so the two non-SVG layers are labelled the same
+     *                                   way, though on a canvas it is not an HTML attribute.
+     * @property {Number} opacity        The opacity of the canvas. Default 1; use a lower value to reveal the
+     *                                   layers underneath. It is a style on the canvas, so it
+     *                                   fades the whole layer rather than the individual cells, and 0 still draws
+     *                                   every one of them.
+     *
+     * Note: the bitmap is sized in device pixels - the width and height attributes are the layer
+     * dimensions multiplied by devicePixelRatio, with the CSS size pinned to the layer dimensions and
+     * the drawing context scaled to match - so the cells are as sharp as the SVG layers over them on a
+     * high-DPI display. Positions, cell sides and the debug rectangle are all in CSS pixels, as before;
+     * the scale factor costs one fill of ratio-squared as many device pixels per cell.
+     *
+     * Note: a fractional width or height is rounded up, since the bitmap is a whole number of pixels.
+     * Every docs caller passes bounds.innerWidth, which is routinely fractional, so a raster layer
+     * would otherwise be up to a pixel narrower and shorter than the SVG layers it has to line up with,
+     * leaving a hairline gap at the right and bottom edges that shifts as the chart is resized. Rounding
+     * up covers those edges instead, at the cost of up to a pixel of overhang.
+     *
+     * Note: the visible clearing between renders comes from writing the width attribute, which resets
+     * the bitmap per spec; the clearRect call is belt and braces. Both dimensions are validated before
+     * anything is drawn, so a missing one is reported instead of leaving the canvas at its intrinsic
+     * 300x150 with a NaN clearRect that never cleared and each render's cells piling up. The same
+     * canvas element is reused across renders, with the dimensions and opacity reapplied each time, and
+     * a change of dimensions resizes that canvas rather than replacing it - which is what makes the
+     * bitmap reset double as the clear.
+     *
+     * Note: fillStyle is stateful and the canvas API ignores a value it cannot parse, so a cell whose
+     * fill does not parse would otherwise be drawn in whatever colour was last set - the previous
+     * cell's colour, or the debug red. Each fill is therefore probed before it is used and a cell whose
+     * fill does not parse is left unpainted, so a broken colour scale shows as holes in the raster
+     * rather than as plausible data. Debug mode stays purely additive as a result.
+     *
+     * Note: no docs example can turn debug on - rastermap-gradient guards its debug(DEBUG) call with
+     * `if (DEBUG)` on a hardcoded false, and the other three rastermaps never touch the property - so
+     * the feature is exercised only by the tests.
+     *
+     * Note: createHtmlLayer binds 0 as its own datum when the caller binds none, so a layer that has
+     * not been handed data yet arrives with a number rather than an array. That is the state every
+     * chart is in before its data load, so it draws an empty raster of the right size rather than
+     * failing. The four required properties are checked before the canvas is created: width, height,
+     * position and fill are all named whether or not there are data to draw.
+     *
+     * Note: a projection has two ways of failing to place a datum - d3's own answer a pair of NaNs for
+     * a point outside the clip, a hand-written one may answer nothing at all - and both now mean the
+     * same thing: the cell is skipped and the render warns once through sszvis.logger, naming how many
+     * cells it could not place. The JavaScript dropped the non-finite pair silently inside fillRect and
+     * threw a bare TypeError from indexing the null, so one stray datum could take down a whole render
+     * while a whole unplaceable dataset drew a blank canvas indistinguishable from data that had not
+     * loaded. The warning is per render rather than per datum, since a raster redraws on every resize
+     * and holds tens of thousands of cells. A cellSide of zero or less is a misconfiguration rather
+     * than a stale datum, so it is reported by name instead: zero drew nothing at all, and a negative
+     * one drew exactly what its positive counterpart did, since the half-side offset and the width
+     * negate each other. A fractional cellSide is accepted, and puts the cell edges on half pixels, so
+     * they antialias rather than tiling exactly - and pixelsFromGeoDistance, the intended source for
+     * the value, returns a float.
+     *
+     * Note: position: absolute, display: block and pointer-events: none are written as inline styles,
+     * so the canvas aligns over the map and lets the layers beneath it be hovered without sszvis.css -
+     * the same three the image renderer writes, and for the same reason. user-select is still left to
+     * the class, as it is there, since it affects neither the layout nor the events. The opacity and
+     * the CSS width and height that pin the scaled bitmap to the layer size are written inline too.
+     * Everything inline wins over a class rule, so a consumer cannot restyle any of it from their own
+     * stylesheet. The positions themselves are written unshifted, and
+     * createHtmlLayer offsets the layer by the bounds padding, so cell positions are layer-relative and
+     * the padding is applied exactly once.
+     *
+     * Note: the canvas is scoped to the layer's own children and identified by the key prop, so two
+     * rasters can coexist in one layer as long as their keys differ - the same convention as the mesh
+     * renderer's key. Two rasters sharing a key share one canvas, which is what makes a re-render reuse
+     * its element, so the constraint is one raster per key per layer rather than one per layer. The
+     * canvas is appended to the layer, so it stacks over whatever the layer already holds, which is
+     * what rastermap-bins relies on.
+     *
+     * Note: nothing ties this component to an HTML layer. Called on an SVG selection the join creates an
+     * SVG-namespaced canvas, which has no getContext, so it throws - where the image renderer silently
+     * appends an unrenderable img instead.
+     *
+     * Note: the canvas is labelled through the alt property. In the four docs rasters the raster IS the
+     * data - the SVG layers over it are borders and annotations - so a description belongs on it; where
+     * a raster really is decoration, the empty default hides it from assistive technology on purpose
+     * rather than by accident. A canvas has no per-element markup a consumer could annotate instead,
+     * which is why the property has to exist here.
+     *
+     * Note: no transition is scheduled - a canvas cannot be transitioned by d3 anyway - so the raster
+     * repaints in full on every render, one fillStyle write and one fillRect per datum. Unlike the base
+     * and geojson renderers this component keeps no caches, emits no missing-value pattern, and adds no
+     * tooltip anchors or event targets, so none of that family of quirks applies here.
+     * See test/map/renderer/raster.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Marks the canvas a raster owns, so a second raster in the same layer draws its own rather than
+     * clearing and redrawing this one. Read back through d3's filter rather than an attribute selector,
+     * which would have to escape an arbitrary caller-supplied key. The same convention as the mesh
+     * renderer's data-mesh-key.
+     */
+    const KEY_ATTRIBUTE = "data-raster-key";
+    /** The default key, so a caller who never asks for a second raster need not name the first. */
+    const DEFAULT_KEY = "raster";
+    /**
+     * Whether the position accessor managed to place this datum. A projection has two ways of failing
+     * to: d3's own answer a pair of NaNs for a point outside the clip, and a hand-written one may
+     * answer nothing at all. Both mean the same thing, so both answer false here and the cell is
+     * skipped - where the JavaScript dropped the non-finite pair inside fillRect and threw a bare
+     * TypeError from indexing the null. The nullish check covers undefined too, which the contract
+     * does not admit but a caller can still return.
+     */
+    function isPlaced(position) {
+      return position != null && Number.isFinite(position[0]) && Number.isFinite(position[1]);
+    }
+    /**
+     * Reads the drawing context, throwing as the JavaScript did when there is none. That happens when
+     * the join created an SVG-namespaced canvas, which has no getContext at all - the message is the
+     * one that call produced. The check is for the method rather than `instanceof HTMLCanvasElement`,
+     * which would also reject a canvas belonging to another realm - an iframe's document - where the
+     * JavaScript drew quite happily.
+     */
+    function context2d(node) {
+      if (node === null || !("getContext" in node) || typeof node.getContext !== "function") {
+        throw new TypeError("canvas.node(...).getContext is not a function");
+      }
+      const ctx = node.getContext("2d");
+      if (ctx === null) {
+        // A 2d context is only refused when one of another kind was already taken on this element,
+        // which cannot happen here; the JavaScript would have thrown on the next line instead.
+        throw new TypeError("Cannot read properties of null (reading 'clearRect')");
+      }
+      return ctx;
+    }
+    /**
+     * Whether the canvas can parse a fill value, established by assignment rather than by a colour
+     * parser of our own: fillStyle keeps its previous value when the assignment fails, so probing from
+     * two different starting colours tells a parsed value (which normalises to the same colour from
+     * both) from an unparseable one (which leaves each probe in place). A non-string reaching here at
+     * runtime fails the same way, which is the point.
+     */
+    function fillParses(ctx, value) {
+      const before = ctx.fillStyle;
+      ctx.fillStyle = "#000000";
+      ctx.fillStyle = value;
+      const fromBlack = ctx.fillStyle;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = value;
+      const fromWhite = ctx.fillStyle;
+      ctx.fillStyle = before;
+      return fromBlack === fromWhite;
+    }
+    /**
+     * The device pixels per CSS pixel to render at. Read from the global rather than from the canvas's
+     * own realm: an iframe reports its parent's ratio anyway, and a missing or nonsensical value (a
+     * non-browser host, say) falls back to drawing one device pixel per CSS pixel.
+     */
+    function pixelRatio() {
+      const ratio = globalThis.devicePixelRatio;
+      return typeof ratio === "number" && ratio > 0 && Number.isFinite(ratio) ? ratio : 1;
+    }
+    /**
+     * Reads a required dimension, reporting a missing or nonsensical one rather than letting the canvas
+     * fall back to its intrinsic 300x150 size - which also stopped it clearing between renders, since
+     * clearRect was then called with NaN.
+     */
+    function dimension$1(value, name) {
+      if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+        throw new Error(`[mapRendererRaster] the ${name} property is required, and must be a finite, non-negative number`);
+      }
+      return value;
+    }
+    /**
+     * Reads the cell side, reporting a value that can never draw anything. Zero drew an empty canvas
+     * and a negative one drew exactly what its positive counterpart did - the half-side offset and the
+     * width negate each other, and fillRect normalises a negative rectangle - so both were blank or
+     * misleading rather than reported. A fraction is fine, and is what pixelsFromGeoDistance, the
+     * intended source for this value, returns.
+     */
+    function cellSide(value) {
+      if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+        throw new Error("[mapRendererRaster] the cellSide property must be a finite number greater than zero");
+      }
+      return value;
+    }
+    /**
+     * Reads a required accessor, reporting a missing one the way dimension() reports a missing
+     * dimension. Without this the property is read straight out of props inside the per-datum loop, so
+     * a missing one raised a bare TypeError naming nothing - and only when the data were non-empty, so
+     * an empty dataset (the state every chart is in before its data load) hid the misconfiguration
+     * entirely. A constant fill is already a function by the time it is read, since the prop is wrapped
+     * in fn.functor on the way in - which is why `accepts` describes the public contract rather than
+     * the stored value: telling a consumer who omitted `fill` that it "must be a function" would deny
+     * the colour string the component in fact accepts.
+     */
+    function accessor(value, name, accepts) {
+      if (typeof value !== "function") {
+        throw new Error(`[mapRendererRaster] the ${name} property is required, and must be ${accepts}`);
+      }
+      return value;
+    }
+    function mapRendererRaster() {
+      return component().prop("debug").debug(false).prop("width").prop("height").prop("position").prop("cellSide").cellSide(2).prop("fill", functor).prop("key").key(DEFAULT_KEY).prop("alt").alt("").prop("opacity").opacity(1).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // The bitmap is a whole number of pixels, and every caller passes a bounds dimension, which
+        // is routinely fractional - so round up, to cover the layers the raster has to line up with
+        // rather than falling a hairline short of them at the right and bottom edges.
+        const width = Math.ceil(dimension$1(props.width, "width"));
+        const height = Math.ceil(dimension$1(props.height, "height"));
+        // Validated here rather than where they are called, so a misconfigured raster is reported
+        // before anything is created and whether or not there are data to draw.
+        const position = accessor(props.position, "position", "a function");
+        const fill = accessor(props.fill, "fill", "a color string or an accessor returning one");
+        const side = cellSide(props.cellSide);
+        const canvas = selection.selectAll(":scope > canvas.sszvis-map__rasterimage").filter(function () {
+          return this.getAttribute(KEY_ATTRIBUTE) === props.key;
+        }).data([0]).join("canvas").classed("sszvis-map__rasterimage", true).attr(KEY_ATTRIBUTE, props.key);
+        // The bitmap is in device pixels while the element is laid out in CSS pixels, so the cells
+        // are as sharp as the SVG layers over them on a high-DPI display.
+        const ratio = pixelRatio();
+        canvas.attr("width", Math.round(width * ratio)).attr("height", Math.round(height * ratio))
+        // The positioning and event behaviour the component depends on, written inline so it
+        // does not need sszvis.css: absolute is what lets the canvas sit over the map rather
+        // than in the document flow beneath it, block keeps an inline element from picking up
+        // baseline leading, and none lets the layers underneath be hovered through it. The
+        // image renderer writes the same three, for the same reason. user-select is left to
+        // the stylesheet, as it is there: it affects neither the layout nor the events.
+        .style("position", "absolute").style("display", "block").style("pointer-events", "none").style("width", `${width}px`).style("height", `${height}px`).style("opacity", props.opacity);
+        // An empty alt marks the layer decorative, so it is skipped deliberately rather than by
+        // accident; a description is exposed both to assistive technology and as fallback content.
+        const described = props.alt !== "";
+        canvas.attr("role", described ? "img" : null).attr("aria-label", described ? props.alt : null).attr("aria-hidden", described ? null : "true").text(props.alt);
+        const ctx = context2d(canvas.node());
+        // Everything below draws in CSS pixels. setTransform rather than scale, because the
+        // transform is absolute: scale would compound if the bitmap had not just been reset.
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+        if (props.debug) {
+          // Displays a rectangle that fills the canvas.
+          // Useful for checking alignment with other render layers.
+          ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
+          ctx.fillRect(0, 0, width, height);
+        }
+        // createHtmlLayer binds 0 as the layer's own datum when the caller binds none, so a layer
+        // that has not been handed data yet arrives here with a number rather than an array. That
+        // is the state every chart is in before its data load, not a misconfiguration, so it draws
+        // an empty raster of the right size rather than throwing "data is not iterable" - and it
+        // used to throw after the canvas had been created, leaving the layer holding an empty one
+        // anyway. An empty array already behaved this way.
+        const cells = Array.isArray(data) ? data : [];
+        const halfSide = side / 2;
+        // A colour scale usually yields only a handful of distinct values, so parsing each one once
+        // per render keeps the probe off the hot path.
+        const parsed = new Map();
+        let unplaced = 0;
+        for (const datum of cells) {
+          const at = position(datum);
+          if (!isPlaced(at)) {
+            unplaced += 1;
+            continue;
+          }
+          const x = at[0] - halfSide;
+          const y = at[1] - halfSide;
+          // Stringified here because the canvas fillStyle and the parse cache are both keyed by
+          // string; a colour object from one of the library's scales coerces the same way.
+          const colour = String(fill(datum));
+          let parses = parsed.get(colour);
+          if (parses === undefined) {
+            parses = fillParses(ctx, colour);
+            parsed.set(colour, parses);
+          }
+          if (!parses) continue;
+          ctx.fillStyle = colour;
+          ctx.fillRect(x, y, side, side);
+        }
+        // One warning per render rather than one per datum: a raster redraws on every resize and
+        // holds tens of thousands of cells, so per-datum reporting would flood the console. Goes
+        // through sszvis.logger rather than console directly, like every other diagnostic in the
+        // library.
+        if (unplaced > 0) {
+          warn(`[mapRendererRaster] the position property could not place ${unplaced} of ${cells.length} cells; they were not drawn`);
+        }
+      });
+    }
+
+    /**
+     * choropleth Map Component
+     *
+     * @module sszvis/maps/choropleth
+     *
+     * @template T The type of the data values matched onto the map features
+     *
+     * To use this component, pass data in the usual manner. Each data object is expected to have a value which
+     * will be used to match that object with a particular map entity. The possible id values depend on the map type.
+     * They are covered in more detail in the file sszvis/map/map-ids.txt. Which data key is used to fetch this value is configurable.
+     * The default key is GEO_KEY_DEFAULT from src/map/index.js, which is 'geoId', but by changing the keyName
+     * property of the map, you can pass data which use any key. The map component assumes that
+     * datum[keyName] is a valid map ID which is matched with the available map entities.
+     *
+     * @property {Number} width                           The width of the map. Used to create the map projection function.
+     *                                                    Required: no default, and a missing or non-finite width throws
+     *                                                    before anything is drawn.
+     * @property {Number} height                          The height of the map. Same as width, and validated the same way.
+     * @property {Object} features                        The feature collection of map entities, as a geojson FeatureCollection.
+     *                                                    Required: its absence throws, as width's and borders' do.
+     * @property {Object} borders                         The mesh of entity borders, rendered as one path. No default, and
+     *                                                    required in practice: the mesh renderer throws a TypeError naming
+     *                                                    its geoJson property if it is left out.
+     * @property {Object} lakeFeatures                    The shape of the part of Lake Zurich that lies within the city.
+     *                                                    No default; without it no lake is drawn at all.
+     * @property {Object} lakeBorders                     The entity borders which extend over the lake. No default; left
+     *                                                    out, no border path is drawn over the lake at all.
+     * @property {Boolean} lakeFadeOut                    Whether to fade the lake out towards the outer edge. Default false,
+     *                                                    which overrides the lake renderer's own default of true.
+     * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
+     * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities
+     *                                                    are highlighted. Default [], which renders no highlight path.
+     * @property {String, Function} highlightStroke       A function for the stroke of the highlighted entities. Default white.
+     * @property {Number, Function} highlightStrokeWidth  A function for the stroke width of the highlighted entities. Default 2.
+     * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
+     *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
+     *                                                    Defaults to a constant true, so nothing is textured unless it is set.
+     * @property {Boolean} encodesData                    Whether this map paints values or plain geometry. No default: left
+     *                                                    unset it is inferred, first from whether fill and defined are
+     *                                                    accessors or constants - either one supplied as an accessor makes the
+     *                                                    map encode data even before its data arrives - and, when both are
+     *                                                    constants, from the data itself: the map encodes data as soon as any
+     *                                                    feature matches a datum. So a map built from constants alone draws
+     *                                                    geometry while its data is empty and starts texturing unmatched
+     *                                                    features once data arrives. Set false for a map drawn for its shapes alone - an outline
+     *                                                    over a raster, say: nothing is textured as missing and the fill
+     *                                                    accessor is called with undefined throughout.
+     *                                                    See src/map/renderer/base.ts.
+     * @property {String, Function} fill                  A string or function for the fill of the map entities. Default black.
+     *                                                    A feature that matched no datum shows the missing value texture, so an
+     *                                                    accessor is not called for it - including on a map whose data has not
+     *                                                    arrived yet, which is textured throughout. The exception is a map
+     *                                                    drawing geometry. See src/map/renderer/base.ts.
+     * @property {String, Function} borderColor           A string, or a function handed to d3 and so called with the border
+     *                                                    mesh, for the border color of the map entities. Default white. An
+     *                                                    accessor that resolves to nothing keeps that default rather than
+     *                                                    clearing the stroke.
+     * @property {Number, Function} strokeWidth           The width of the border path stroke, delegated to the mesh
+     *                                                    renderer like borderColor. A number, or a function handed to d3
+     *                                                    and so called with the border mesh. Default 1.25, with the same
+     *                                                    resolves-to-nothing fallback as borderColor.
+     * @property {String, Function} lakePathColor         The color of the entity borders which extend over the lake. No
+     *                                                    default: left out, the paths take their stroke from the stylesheet.
+     * @property {Boolean} withLake                       Whether or not to show the textured outline of the end of lake Zurich that is within the city. Default true
+     * @property {AnchoredShape} anchoredShape            A shape to anchor to the base map elements of this map - a component
+     *                                                    carrying mergedData and mapPath properties, which this component sets
+     *                                                    before calling it. For example, mapRendererBubble for a bubble map.
+     *                                                    No default; left out, nothing extra is drawn.
+     * @property {Boolean} transitionColor                Whether or not to transition the color of the base shapes. Default true.
+     * @function on(String, function)                     This component has an event handler interface for binding events to the map entities.
+     *                                                    The available events are 'over', 'out', and 'click'. These are triggered on map
+     *                                                    elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
+     *                                                    A handler is called with the datum of the entity the event happened
+     *                                                    on; see the note below.
+     *
+     * Note: no projection cache key is passed, so swissMapProjection skips its bounds cache and fits
+     * the projection to the features this map was given. Two maps of different areas rendered at the
+     * same size are therefore projected independently. The cost is that the bounds calculation is
+     * redone on every render; sharing a key would trade that for the wrong fit.
+     *
+     * Note: width, height, features and borders are all required and all now fail loudly. This
+     * component validates the first three itself, before it renders anything, and the mesh renderer
+     * validates its own geoJson for the fourth. A missing size used to degrade silently - fitSize got
+     * undefined, the scale was NaN, and every area carried a path of NaN coordinates that the browser
+     * dropped, leaving a blank map with nothing in the console.
+     *
+     * Note: every layer that can be switched off undoes what the previous render drew rather than
+     * merely being skipped. The base, mesh, lake and highlight renderers each clear their own output,
+     * so withLake off is passed on as "no lake feature" and the lake's paths and definitions sit
+     * directly in the map group. Only the anchored shape keeps a wrapper group of this component's
+     * own, because its markup is arbitrary and cannot be asked to clear itself; that group is emptied
+     * rather than removed, to hold its place among its siblings.
+     *
+     * Note: the lake overlay appends its paths at the end of the map group, so this component moves
+     * them back beneath the highlight mesh and the anchored shape after rendering them. Without that,
+     * a lake switched off and on again would be re-appended over both and paint its texture across
+     * them.
+     *
+     * Note: lakeFadeOut defaults to false and is passed through on every render, overriding the lake
+     * renderer's own default of true, so the fade mask and its gradient are not created unless the
+     * caller asks for them. Toggling it is safe in both directions: turning lakeFadeOut back off
+     * removes the mask attribute and its two definitions again.
+     *
+     * Note: withLake defaults to true, but the lake renderer draws nothing without a lakeFeatures
+     * shape - no paths and no definitions - so a non-Zurich map that leaves the lake data out carries
+     * no lake markup whether or not it remembers .withLake(false).
+     *
+     * Note: a handler receives the datum of the map entity the event fired on, which this component
+     * recognises by identity: the value bound to the event target has to be one of the merged entries
+     * it produced for this render. The base layer's areas carry exactly those, so a handler gets the
+     * entity's own datum, undefined where the entity matched no data. An event target an anchored
+     * shape contributed yields undefined unless that shape bound one of the same merged entries to it,
+     * in which case it names an entity like any other target and the handler gets its datum.
+     *
+     * Note: the event dispatch is created once per choropleth() call and closed over, while the four
+     * renderers keep their props on the element they rendered into. So one instance can draw into two
+     * layers, each reflecting its own data, but both layers' event targets are bound to the one
+     * dispatch and share its handlers. Within a layer the handlers are rebound on each render rather
+     * than accumulating, and the binding is selectAll("[data-event-target]") scoped to the rendered
+     * group, so an anchored shape's own event targets are bound too, since it renders before the
+     * binding.
+     *
+     * See test/maps/choropleth.test.ts.
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * The entity datum behind an event target, read off the value d3 has bound to it. The base renderer
+     * binds a merged entry to every area, so the entity's own datum is its `datum` property - undefined
+     * where nothing matched.
+     *
+     * An event target contributed by an anchored shape carries whatever that shape bound, which may
+     * well be an application object with a `datum` property of its own, or one inherited from an
+     * ancestor. Recognising a merged entry by its shape would hand such a value to the handler as
+     * though it were an entity's datum, so membership is tested by identity against the entries this
+     * render actually produced; anything else is reported as undefined.
+     */
+    function entityDatum(bound, entities) {
+      if (!entities.has(bound)) return undefined;
+      return bound.datum;
+    }
+    /**
+     * Reads a required dimension, reporting a missing or nonsensical one rather than fitting the
+     * projection to undefined - which gives it a NaN scale and draws every entity with a path of NaN
+     * coordinates that the browser silently drops, leaving a blank map and nothing in the console.
+     * Thrown before anything is rendered, so a misconfigured map draws nothing at all. The message
+     * follows the raster renderer's.
+     */
+    function dimension(value, name) {
+      if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+        throw new Error(`[choropleth] the ${name} property is required, and must be a finite, non-negative number`);
+      }
+      return value;
+    }
+    /**
+     * Reads the required feature collection. Without it prepareMergedGeoData already threw, on
+     * geoJson.features - a bare TypeError naming neither the component nor the property - so this only
+     * changes what the failure says, and says it in the same shape as the missing-dimension one.
+     */
+    function requireFeatures(value) {
+      if (value === undefined || value === null || value.type !== "FeatureCollection" || !Array.isArray(value.features)) {
+        throw new Error("[choropleth] the features property is required, and must be a GeoJSON feature collection");
+      }
+      return value;
+    }
+    /**
+     * The group key the anchored shape is drawn under. The group carries everything the shape produced,
+     * so emptying it removes the layer whole - which is the only way to clear markup this component
+     * knows nothing about. The lake needs no such wrapper: its renderer clears itself.
+     */
+    const SHAPE_GROUP = "anchoredShape";
+    /**
+     * The lake's paths, once the lake overlay has drawn them straight into the map group. Selected by
+     * class rather than tracked, since this component only ever needs to know where they sit.
+     */
+    const LAKE_PATHS = ":scope > path.sszvis-map__lakezurich, :scope > path.sszvis-map__lakepath";
+    /**
+     * The layers the lake has to stay beneath, in the order this component draws them. The highlight
+     * renderer keeps its paths in a wrapper group of its own - the same place-holding trick as
+     * ownGroup below, see issue #332 - so it is that group, not the paths, that follows the lake.
+     */
+    const ABOVE_THE_LAKE = `:scope > g.sszvis-map__highlight-group, :scope > [data-d3-selectgroup="${SHAPE_GROUP}"]`;
+    /**
+     * The wrapper this component owns for the anchored shape, joined against the direct children of
+     * the map group rather than searched for with selectGroup, which matches any descendant: an
+     * anchored shape is arbitrary caller markup and may well contain a group of its own under the same
+     * key.
+     *
+     * The wrapper is created whether or not the shape is drawn, and a cleared shape empties it rather
+     * than removing it. Removing it would give up its place among its siblings - selectGroup and this
+     * helper both append on a miss - so a shape drawn again later would be inserted at the end of the
+     * group instead of back where it belongs.
+     */
+    function ownGroup(selection, key) {
+      return selection.selectAll(`:scope > [data-d3-selectgroup="${key}"]`).data(d => [d]).join("g").attr("data-d3-selectgroup", key);
+    }
+    /**
+     * Puts the lake back beneath the layers drawn after it. The overlay appends its paths at the end of
+     * the map group, so a lake switched off and on again - or one drawn for the first time into a group
+     * that already has a highlight - would otherwise land over the highlight mesh and the anchored
+     * shape and paint its texture across them.
+     */
+    function keepLakeBeneath(selection) {
+      const group = selection.node();
+      if (group === null || !(group instanceof Element)) return;
+      const firstAbove = group.querySelector(ABOVE_THE_LAKE);
+      if (firstAbove === null) return;
+      for (const path of group.querySelectorAll(LAKE_PATHS)) {
+        if (path.compareDocumentPosition(firstAbove) & Node.DOCUMENT_POSITION_PRECEDING) {
+          group.insertBefore(path, firstAbove);
+        }
+      }
+    }
+    function choropleth() {
+      const event = d3.dispatch("over", "out", "click");
+      const baseRenderer = mapRendererBase();
+      const meshRenderer = mapRendererMesh();
+      const lakeRenderer = mapRendererPatternedLakeOverlay();
+      const highlightRenderer = mapRendererHighlight();
+      const mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("encodesData", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // create a map path generator function.
+        // No cache key: the bounds cache is keyed on width, height and the key alone, so any key
+        // this component could invent would be shared by every choropleth of that size, whatever it
+        // is a map of. Without one the projection is fitted to the features actually given.
+        // Validated before anything is drawn: a map with no size, or none to draw, can never render
+        // correctly, and both used to fail silently or namelessly.
+        const width = dimension(props.width, "width");
+        const height = dimension(props.height, "height");
+        const features = requireFeatures(props.features);
+        const mapPath = swissMapPath(width, height, features);
+        const mergedData = prepareMergedGeoData(data, features, props.keyName);
+        // Base shape
+        baseRenderer.geoJson(features).mergedData(mergedData).mapPath(mapPath);
+        // Border mesh
+        meshRenderer.geoJson(props.borders).mapPath(mapPath);
+        // Lake Zurich shape
+        lakeRenderer.lakeFeature(props.withLake ? props.lakeFeatures : undefined).lakeBounds(props.lakeBorders).mapPath(mapPath).fadeOut(props.lakeFadeOut);
+        // Highlight mesh
+        highlightRenderer.geoJson(features).keyName(props.keyName).mapPath(mapPath);
+        // Rendering
+        selection.call(baseRenderer).call(meshRenderer);
+        // withLake off is passed on as "no lake feature", which the overlay answers by removing the
+        // paths and the definitions it drew - so it needs no wrapper group of this component's own.
+        selection.call(lakeRenderer);
+        keepLakeBeneath(selection);
+        selection.call(highlightRenderer);
+        // An anchored shape is arbitrary caller markup this component cannot ask to clear itself, so
+        // that one keeps its wrapper; see ownGroup and issue #250.
+        const shapeGroup = ownGroup(selection, SHAPE_GROUP);
+        if (props.anchoredShape) {
+          props.anchoredShape.mergedData(mergedData).mapPath(mapPath);
+          shapeGroup.call(props.anchoredShape);
+        } else {
+          shapeGroup.selectAll("*").remove();
+        }
+        // Event Binding
+        // The entries this render bound to the areas, held by identity so an anchored shape's own
+        // event targets cannot be mistaken for them.
+        const entities = new Set(mergedData);
+        selection.selectAll("[data-event-target]")
+        // d3 calls a listener with the event first and the bound datum second.
+        .on("mouseover", function (_event, d) {
+          event.call("over", this, entityDatum(d, entities));
+        }).on("mouseout", function (_event, d) {
+          event.call("out", this, entityDatum(d, entities));
+        }).on("click", function (_event, d) {
+          event.call("click", this, entityDatum(d, entities));
+        });
+      });
+      // The argument tuple is typed as the map renderers type their own on(): d3's dispatch.on derives
+      // its callback type from a *literal* event name, so a plain string collapses the callback to
+      // never. Narrowing to "over" | "out" | "click" would type the callback properly but would also
+      // reject the namespaced typenames d3 accepts at runtime, such as "over.tooltip".
+      mapComponent.on = (...args) => {
+        const value = event.on.apply(event, args);
+        return value === event ? mapComponent : value;
+      };
+      return mapComponent;
+    }
+
+    /**
+     * Parsing functions
+     *
+     * @module sszvis/parse
+     */
+    const timeParse = d3.timeFormatLocale(timeLocale).parse;
+    /**
+     * Parse Swiss date strings, e.g. "17.08.2014".
+     *
+     * Accepts `undefined` and `null`, because a d3 row callback types every CSV
+     * cell as `string | undefined` and a missing cell is normal input. Returns
+     * `null` for a missing or unparseable value.
+     */
+    const dateParser = timeParse("%d.%m.%Y");
+    const parseDate = d => d == null ? null : dateParser(d);
+    /**
+     * Parse a year value like "2014" into a date at the first instant of that year.
+     *
+     * Accepts `undefined` and `null` for the same reason as `parseDate`, and
+     * returns `null` for a missing or unparseable value.
+     */
+    const yearParser = timeParse("%Y");
+    const parseYear = d => d == null ? null : yearParser(d);
+    /**
+     * Parse untyped input as a number.
+     *
+     * Accepts `undefined` and `null`, because a d3 row callback types every CSV
+     * cell as `string | undefined` and a missing cell is normal input. Returns
+     * `NaN` for a missing, empty, or non-numeric value.
+     */
+    const parseNumber = d => d == null || d.trim() === "" ? Number.NaN : +d;
+
+    /**
+     * ResponsiveProps module
+     *
+     * @module sszvis/responsiveProps
+     *
+     *
+     *
+     * The module should be configured with any number of different properties that change
+     * based on breakpoints, plus (optional) breakpoint configuration, and then called
+     * as a function. You must pass in an object with 'width' and 'screenHeight' properties.
+     * This is the kind of thing which is returned from sszvis.bounds and sszvis.measureDimensions.
+     *
+     *
+     * The return value of the function call is an object which has properties corresponding to
+     * the properties you configured before. The property values are decided based on testing the breakpoints
+     * against the measured values and finding the first one in which the measured values fit.
+     *
+     * Example usage:
+     *
+     * var queryProps = sszvis.responsiveProps()
+     *   .breakpoints([
+     *     { name: 'small', width:  400 },
+     *     { name: 'medium', width:  800 },
+     *     { name: 'large', width: 1000 }
+     *   ])
+     *   .prop('axisOrientation', {
+     *     medium: 'left',
+     *     _: 'bottom'
+     *   })
+     *   .prop('height', {
+     *     small: 200,
+     *     medium: function(width) { return width * 3/4; },
+     *     large: function(width) { return width / 2; },
+     *     _: 400
+     *   });
+     *
+     * queryProps({width: 300, screenHeight: 400}).axisOrientation; // returns "left"
+     * queryProps({width: 300, screenHeight: 400}).height; // returns the result of 200 or the function call
+     *
+     * @param arg dimensions object - a measurement, or a bounds object plus the screen measurements.
+     *        Its width may be missing, as it is for an element that could not be measured; in that
+     *        case every property takes its `_` fallback value.
+     * @return An object containing the properties you configured for the matching breakpoint, typed
+     *        from the `.prop()` calls that configured them
+     *
+     * You can also configure different breakpoints than the defaults using:
+     *
+     * @method responsiveProps.breakpoints
+     *
+     * And you can add responsive properties using:
+     *
+     * @method responsiveProps.prop
+     */
+    /* Exported module
+    ----------------------------------------------- */
+    function responsiveProps() {
+      let breakpointSpec = breakpointDefaultSpec();
+      const propsConfig = {};
+      /**
+       * Constructor
+       *
+       * @param   arg1 Accepts a 'measurement' object with a
+       *          width and screenHeight. You can also pass it a 'bounds' object which contains
+       *          measurements, but you must also include the screen measurements. This is the shape
+       *          of object returned by sszvis.measureDimensions
+       * @returns {object} An object containing the configured properties and their values for the current
+       *          breakpoint as defined by the parameter `arg1`
+       */
+      function _responsiveProps(measurement) {
+        if (!isObject(measurement) || !isBounds(measurement)) {
+          warn("Could not determine the current breakpoint, returning the default props");
+          // We choose the _ option for all configured props as a default. There is no width to
+          // pass to a functorized value, so those are invoked with 0.
+          return Object.keys(propsConfig).reduce((memo, propKey) => {
+            const fallback = propsConfig[propKey]._;
+            // Always write the key, even for a propSpec with no '_' (only reachable from
+            // untyped callers). The result type declares every configured prop as present,
+            // so silently omitting one would make `props.foo.bar` throw on a typed read.
+            memo[propKey] = defined(fallback) ? fallback(0) : undefined;
+            return memo;
+          }, {});
+        }
+        // Create results object based on the current measurements and the configured breakpoints and properties
+        return Object.keys(propsConfig).reduce((memo, propKey) => {
+          const propSpec = propsConfig[propKey];
+          // Finds out which breakpoints the provided measurements match up with
+          const matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
+          // Validate the propSpec for the current propKey. An invalid spec is a misconfiguration,
+          // so warn loudly - but keep resolving instead of dropping the key: the result type
+          // declares every configured prop as present, and an absent key turns a developer's
+          // typo into a TypeError at the point of use rather than a visible warning here.
+          // Unknown breakpoint names simply never match, so resolution lands on '_' below.
+          if (!validatePropSpec(propSpec, breakpointSpec)) {
+            warn("ResponsiveProps - invalid propSpec for " + propKey + ". Make sure you define the '_' fallback and that all breakpoint names are valid.");
+          }
+          // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
+          // This function should always at least find '_' at the end of the array.
+          const matchedBreakpoint = find(bp => defined(propSpec[bp.name]), matchingBreakpoints);
+          // the value in the query object for that property equals the propSpec value as a functor,
+          // invoked if necessary with the current width. Providing the width allows aspect ratio
+          // calculations based on element width.
+          if (matchedBreakpoint) {
+            memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
+          } else {
+            // Use fallback value if no breakpoint matches
+            const fallback = propSpec._;
+            memo[propKey] = typeof fallback === "function" ? fallback(measurement.width) : fallback;
+          }
+          return memo;
+        }, {});
+      }
+      /**
+       * responsiveProps.prop
+       *
+       * Define a responsive property that can assume different values depending on the
+       * currently active breakpoint.
+       *
+       * @example
+       * var queryProps = sszvis.responsiveProps()
+       *   .prop('height', {
+       *     palm: function(width) { return width /  (4/3); },
+       *     lap:  function(width) { return width / (16/9); },
+       *     _: 600 // You must always define a default case
+       *   });
+       *
+       * The algorithm looks for the lowest applicable breakpoint. If a breakpoint's width or
+       * screenHeight are larger than the current container and screen dimensions, its properties
+       * will not apply. In case no breakpoint matches, the fallback value is used; it must always
+       * be provided with the key name '_'.
+       *
+       * Each value can be either a raw value or a function which takes the current width
+       * and returns a value for the property. These functions can be used to lazily calculate
+       * properties (they are only executed when the module is called as a function),
+       * and to change property values for a given breakpoint as a function of the width,
+       * for example to do height calculation with a custom aspect ratio.
+       *
+       * @param {string} propName The name of the property you want to define
+       * @param {Object.<string, (Function(number) -> *|*)>} propSpec A map of breakpoint names to
+       *        property values. Key names must be valid breakpoint names. These can either be the
+       *        default breakpoint names (see sszvis.breakpoint) or user-defined names that match up
+       *        to breakpoints you have provided. Additionally, the fallback key `_` must be defined;
+       *        its value will be used for screens larger than the largest breakpoint. You don't
+       *        have to define all breakpoints; if you skip a breakpoint, the next applicable breakpoint
+       *        in the test list will be used. Values can be either plain values or
+       *        functions that accept the current breakpoint width and return a value.
+       *
+       * @return {responsiveProps}
+       */
+      const prop = (propName, propSpec) => {
+        propsConfig[propName] = functorizeValues(propSpec);
+        return _responsiveProps;
+        // The instance accumulates prop types across calls, which the untyped config object
+        // backing it cannot express; the generic signature on the interface is the contract.
+      };
+      _responsiveProps.prop = prop;
+      /**
+       * responsiveProps.breakpoints
+       *
+       * Configure custom breakpoints for the responsiveProps. You don't need to call
+       * this method; there are default breakpoints (see sszvis.breakpoint).
+       * You should provide an array of breakpoint specifiers, each one an object with at
+       * least a 'name' property (used as an identifier for the breakpoint), and one or both
+       * of a 'width' or 'screenHeight' property. When choosing a matching breakpoint, the
+       * 'width' will be compared to the provided container width, and the 'screenHeight'
+       * to the window.innerHeight. These values are inclusive, so if the measured value is
+       * equal to or less than the provided breakpoint value, that breakpoint matches.
+       *
+       * This component has default breakpoints which are equal to the ones described
+       * in the sszvis.breakpoint module. This method can also be called without arguments
+       * to get the breakpoints list.
+       *
+       * @param {Array.<Object.<string, (string|number)>>} [bps] Define the breakpoints to be used.
+       *                                                   Object format is:
+       *                                                     {
+       *                                                       name: breakpointname,
+       *                                                       width: (optional) container width of this bp
+       *                                                       screenHeight: (optional) window.innerHeight of this bp
+       *                                                     }
+       *                                                   if neither width nor screenHeight is provided, the breakpoint
+       *                                                   will match all possible dimensions.
+       *
+       * @example
+       * var queryProps = sszvis.responsiveProps()
+       * .breakpoints([
+       *   { name: 'small', width: 300 },
+       *   { name: 'medium', width: 500 },
+       *   { name: 'large', width: 700 }
+       * ])
+       */
+      const breakpoints = (...args) => {
+        if (args.length === 0) {
+          return breakpointSpec;
+        }
+        breakpointSpec = breakpointCreateSpec(args[0]);
+        return _responsiveProps;
+      };
+      _responsiveProps.breakpoints = breakpoints;
+      return _responsiveProps;
+    }
+    // Helpers
+    function isBounds(arg1) {
+      if (!defined(arg1) || typeof arg1 !== "object") return false;
+      const candidate = arg1;
+      return defined(candidate.width) && defined(candidate.screenWidth) && defined(candidate.screenHeight);
+    }
+    /**
+     * functorizeValues
+     * @prop    {object} obj Original key-value object
+     * @returns {object} Same as input object but with all values transformed to width-accepting functions
+     */
+    function functorizeValues(obj) {
+      const result = {};
+      Object.keys(obj).forEach(key => {
+        const value = obj[key];
+        result[key] = typeof value === "function" ? value : () => value;
+      });
+      return result;
+    }
+    function validatePropSpec(propSpec, breakpointSpec) {
+      // Ensure that the propSpec contains a '_' value.
+      // This is used as the default value when the test width
+      // is larger than any breakpoint.
+      if (!defined(propSpec._)) {
+        return false;
+      }
+      // Validate the properties of the propSpec:
+      // each should be a valid breakpoint name, and its value should be defined
+      for (const breakpointName in propSpec) {
+        if (Object.hasOwn(propSpec, breakpointName) && breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
+          return false;
+        }
+      }
+      // All checks passed, propSpec is valid
+      return true;
+    }
+
+    /**
+     * ModularText component
+     *
+     * Create structured text with formatting and newlines. Use either the HTML or
+     * SVG variant, depending on the output you expect.
+     *
+     * @module sszvis/svgUtils/modularText/html
+     * @module sszvis/svgUtils/modularText/svg
+     *
+     * @example HTML
+     * var fmtHtml = sszvis.modularTextHTML()
+     *   .plain('Artist:')
+     *   .plain(function(d) { return d.name; })
+     *   .newline()
+     *   .bold(function(d) { return d.age; })
+     *   .italic('years old');
+     * fmtHtml({name: 'Patti', age: 67});
+     * //=> "Artist: Patti<br/><strong>67</strong> <em>years old</em>"
+     *
+     * @example SVG
+     * var fmtSvg = sszvis.modularTextSVG()
+     *   .bold(function(d) { return d.items; })
+     *   .plain('items');
+     * fmtSvg({items: 30});
+     * //=> "<tspan x="0" dy="0"><tspan style="font-weight:bold">30</tspan> <tspan>items</tspan></tspan>"
+     *
+     * Words on a line are joined with a single space. The HTML variant separates
+     * lines with <br/>; the SVG variant wraps each line in a <tspan> that resets x
+     * to 0 and advances dy by 1.2em after the first line.
+     *
+     * The two variants differ on the empty case: a builder with no words formats to
+     * "" as HTML, but to a single empty wrapper <tspan> as SVG. Both are harmless
+     * in practice, since a builder is always given at least one word.
+     *
+     * A builder is reusable: it holds the structure, not the data, so the same
+     * builder can be applied to many datums.
+     *
+     * @property {string, function} plain  String without formatting
+     * @property {string, function} italic String with italic style
+     * @property {string, function} bold   String with bold style
+     * @property newline                   Insert a line break
+     *
+     * @return {function} Formatting function that accepts a datum
+     */
+    const TEXT_STYLES = ["bold", "italic", "plain"];
+    function formatHTML() {
+      const styles = {
+        plain: d => d,
+        italic: d => `<em>${d}</em>`,
+        bold: d => `<strong>${d}</strong>`
+      };
+      return (textBody, datum) => textBody.lines().map(line => line.map(word => styles[word.style](word.text(datum))).join(" ")).join("<br/>");
+    }
+    function formatSVG() {
+      const styles = {
+        plain: d => `<tspan>${d}</tspan>`,
+        italic: d => `<tspan style="font-style:italic">${d}</tspan>`,
+        bold: d => `<tspan style="font-weight:bold">${d}</tspan>`
+      };
+      return (textBody, datum) => textBody.lines().reduce((svg, line, i) => {
+        const lineSvg = line.map(word => styles[word.style](word.text(datum))).join(" ");
+        const dy = i === 0 ? 0 : "1.2em";
+        return `${svg}<tspan x="0" dy="${dy}">${lineSvg}</tspan>`;
+      }, "");
+    }
+    function structuredText() {
+      // Always holds at least one line, so the index in addWord is always in range.
+      const lines = [[]];
+      return {
+        addLine() {
+          lines.push([]);
+        },
+        addWord(style, text) {
+          // Equivalent to fn.last(lines); `lines` always holds at least one line.
+          lines[lines.length - 1].push({
+            // fn.functor is typed for nullary thunks, so it cannot express an accessor that
+            // receives the datum. The public methods accept `unknown` so that a consumer's
+            // (d: Artist) => string still type-checks, which leaves this narrowing to us.
+            text: functor(text),
+            style
+          });
+        },
+        lines() {
+          return lines;
+        }
+      };
+    }
+    function makeTextWithFormat(format) {
+      return () => {
+        const textBody = structuredText();
+        // A callable object: the chaining methods are attached below, so the function has to
+        // be narrowed to the builder interface up front.
+        const makeText = d => format(textBody, d);
+        makeText.newline = () => {
+          textBody.addLine();
+          return makeText;
+        };
+        for (const style of TEXT_STYLES) {
+          makeText[style] = text => {
+            textBody.addWord(style, text);
+            return makeText;
+          };
+        }
+        return makeText;
+      };
+    }
+    const modularTextHTML = makeTextWithFormat(formatHTML());
+    const modularTextSVG = makeTextWithFormat(formatSVG());
+
+    exports.AGGLOMERATION_2012_KEY = AGGLOMERATION_2012_KEY;
+    exports.DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;
+    exports.DEFAULT_WIDTH = DEFAULT_WIDTH;
+    exports.GEO_KEY_DEFAULT = GEO_KEY_DEFAULT;
+    exports.LAKE_FADE_GRADIENT_ID = LAKE_FADE_GRADIENT_ID;
+    exports.MEMOIZE_CACHE_LIMIT = MEMOIZE_CACHE_LIMIT;
+    exports.OWN_TRANSITION = OWN_TRANSITION;
+    exports.RATIO = RATIO;
+    exports.STADT_KREISE_KEY = STADT_KREISE_KEY;
+    exports.STATISTISCHE_QUARTIERE_KEY = STATISTISCHE_QUARTIERE_KEY;
+    exports.STATISTISCHE_ZONEN_KEY = STATISTISCHE_ZONEN_KEY;
+    exports.SWITZERLAND_KEY = SWITZERLAND_KEY;
+    exports.WAHL_KREISE_KEY = WAHL_KREISE_KEY;
+    exports.annotationCircle = circle;
+    exports.annotationConfidenceArea = confidenceArea;
+    exports.annotationConfidenceBar = confidenceBar;
+    exports.annotationLine = line$1;
+    exports.annotationRangeFlag = rangeFlag;
+    exports.annotationRangeRuler = rangeRuler;
+    exports.annotationRectangle = rectangle;
+    exports.annotationRuler = annotationRuler;
+    exports.app = app;
+    exports.arity = arity;
+    exports.aspectRatio = aspectRatio;
+    exports.aspectRatio12to5 = aspectRatio12to5;
+    exports.aspectRatio16to10 = aspectRatio16to10;
+    exports.aspectRatio4to3 = aspectRatio4to3;
+    exports.aspectRatioAuto = aspectRatioAuto;
+    exports.aspectRatioPortrait = aspectRatioPortrait;
+    exports.aspectRatioSquare = aspectRatioSquare;
+    exports.axisX = axisX;
+    exports.axisY = axisY;
+    exports.bar = bar;
+    exports.bounds = bounds;
+    exports.breadcrumb = breadcrumb;
+    exports.breakpointCreateSpec = breakpointCreateSpec;
+    exports.breakpointDefaultSpec = breakpointDefaultSpec;
+    exports.breakpointFind = breakpointFind;
+    exports.breakpointFindByName = breakpointFindByName;
+    exports.breakpointLap = breakpointLap;
+    exports.breakpointMatch = breakpointMatch;
+    exports.breakpointPalm = breakpointPalm;
+    exports.breakpointTest = breakpointTest;
+    exports.buttonGroup = buttonGroup;
+    exports.cascade = cascade;
+    exports.choropleth = choropleth;
+    exports.colorLegendDimensions = colorLegendDimensions;
+    exports.colorLegendLayout = colorLegendLayout;
+    exports.colorToString = colorToString;
+    exports.compose = compose;
+    exports.contains = contains$1;
+    exports.createBreadcrumbItems = createBreadcrumbItems;
+    exports.createHtmlLayer = createHtmlLayer;
+    exports.createSvgLayer = createSvgLayer;
+    exports.dataAreaPattern = dataAreaPattern;
+    exports.defaultTransition = defaultTransition;
+    exports.defined = defined;
+    exports.derivedSet = derivedSet;
+    exports.dimensionsHeatTable = dimensionsHeatTable;
+    exports.dimensionsHorizontalBarChart = dimensionsHorizontalBarChart;
+    exports.dimensionsVerticalBarChart = dimensionsVerticalBarChart;
+    exports.dot = dot;
+    exports.ensureDefsElement = ensureDefsElement;
+    exports.every = every;
+    exports.fallbackCanvasUnsupported = fallbackCanvasUnsupported;
+    exports.fallbackRender = fallbackRender;
+    exports.fallbackUnsupported = fallbackUnsupported;
+    exports.fastTransition = fastTransition;
+    exports.filledArray = filledArray;
+    exports.find = find;
+    exports.first = first;
+    exports.firstTouch = firstTouch;
+    exports.fitTooltip = fitTooltip;
+    exports.flatten = flatten;
+    exports.foldPattern = foldPattern;
+    exports.formatAge = formatAge;
+    exports.formatAxisTimeFormat = formatAxisTimeFormat;
+    exports.formatFractionPercent = formatFractionPercent;
+    exports.formatLocale = formatLocale;
+    exports.formatMonth = formatMonth;
+    exports.formatNone = formatNone;
+    exports.formatNumber = formatNumber;
+    exports.formatPercent = formatPercent;
+    exports.formatPreciseNumber = formatPreciseNumber;
+    exports.formatText = formatText;
+    exports.formatYear = formatYear;
+    exports.functor = functor;
+    exports.getAccessibleTextColor = getAccessibleTextColor;
+    exports.getGeoJsonCenter = getGeoJsonCenter;
+    exports.groupedBars = groupedBars;
+    exports.groupedBarsHorizontal = groupedBarsHorizontal;
+    exports.groupedBarsVertical = groupedBarsVertical;
+    exports.halfPixel = halfPixel;
+    exports.handleRuler = handleRuler;
+    exports.hashableSet = hashableSet;
+    exports.heatTableMissingValuePattern = heatTableMissingValuePattern;
+    exports.identity = identity;
+    exports.isFunction = isFunction$1;
+    exports.isNull = isNull;
+    exports.isNumber = isNumber;
+    exports.isObject = isObject;
+    exports.isPaintServer = isPaintServer;
+    exports.isSelection = isSelection;
+    exports.isString = isString;
+    exports.last = last;
+    exports.layoutPopulationPyramid = layoutPopulationPyramid;
+    exports.layoutSmallMultiples = smallMultiples;
+    exports.layoutStackedAreaMultiples = layoutStackedAreaMultiples;
+    exports.legendColorBinned = binnedColorScale;
+    exports.legendColorLinear = legendColorLinear;
+    exports.legendColorOrdinal = legendColorOrdinal;
+    exports.legendRadius = radius;
+    exports.line = line;
+    exports.loadError = loadError;
+    exports.mapLakeFadeGradient = mapLakeFadeGradient;
+    exports.mapLakeGradientMask = mapLakeGradientMask;
+    exports.mapLakePattern = mapLakePattern;
+    exports.mapMissingValuePattern = mapMissingValuePattern;
+    exports.mapRendererBase = mapRendererBase;
+    exports.mapRendererBubble = mapRendererBubble;
+    exports.mapRendererGeoJson = mapRendererGeoJson;
+    exports.mapRendererHighlight = mapRendererHighlight;
+    exports.mapRendererImage = mapRendererImage;
+    exports.mapRendererMesh = mapRendererMesh;
+    exports.mapRendererPatternedLakeOverlay = mapRendererPatternedLakeOverlay;
+    exports.mapRendererRaster = mapRendererRaster;
+    exports.measureAxisLabel = measureAxisLabel;
+    exports.measureDimensions = measureDimensions;
+    exports.measureLegendLabel = measureLegendLabel;
+    exports.measureText = measureText;
+    exports.memoize = memoize;
+    exports.missingPatternId = missingPatternId;
+    exports.modularTextHTML = modularTextHTML;
+    exports.modularTextSVG = modularTextSVG;
+    exports.move = move;
+    exports.muchDarker = muchDarker;
+    exports.nestedStackedBarsVertical = nestedStackedBarsVertical;
+    exports.not = not;
+    exports.pack = pack;
+    exports.panning = panning;
+    exports.parseDate = parseDate;
+    exports.parseNumber = parseNumber;
+    exports.parseYear = parseYear;
+    exports.pie = pie;
+    exports.pixelsFromGeoDistance = pixelsFromGeoDistance;
+    exports.prepareHierarchyData = prepareHierarchyData;
+    exports.prepareMergedGeoData = prepareMergedGeoData;
+    exports.prop = prop;
+    exports.propOr = propOr;
+    exports.pyramid = pyramid;
+    exports.range = range;
+    exports.rangeExtent = rangeExtent;
+    exports.responsiveProps = responsiveProps;
+    exports.roundTransformString = roundTransformString;
+    exports.rulerLabelVerticalSeparate = rulerLabelVerticalSeparate;
+    exports.sankey = sankey;
+    exports.sankeyLayout = computeLayout$1;
+    exports.sankeyPrepareData = prepareData;
+    exports.scaleDeepGry = scaleDeepGry;
+    exports.scaleDimGry = scaleDimGry;
+    exports.scaleDivNtr = scaleDivNtr;
+    exports.scaleDivNtrGry = scaleDivNtrGry;
+    exports.scaleDivVal = scaleDivVal;
+    exports.scaleDivValGry = scaleDivValGry;
+    exports.scaleGender3 = scaleGender3;
+    exports.scaleGender5Wedding = scaleGender5Wedding;
+    exports.scaleGender6Origin = scaleGender6Origin;
+    exports.scaleGry = scaleGry;
+    exports.scaleLightGry = scaleLightGry;
+    exports.scaleMedGry = scaleMedGry;
+    exports.scalePaleGry = scalePaleGry;
+    exports.scaleQual12 = scaleQual12;
+    exports.scaleQual6 = scaleQual6;
+    exports.scaleQual6a = scaleQual6a;
+    exports.scaleQual6b = scaleQual6b;
+    exports.scaleSeqBlu = scaleSeqBlu;
+    exports.scaleSeqBrn = scaleSeqBrn;
+    exports.scaleSeqGrn = scaleSeqGrn;
+    exports.scaleSeqRed = scaleSeqRed;
+    exports.selectMenu = selectMenu;
+    exports.set = set$1;
+    exports.slider = slider;
+    exports.slightlyDarker = slightlyDarker;
+    exports.slowTransition = slowTransition;
+    exports.some = some;
+    exports.stackedArea = stackedArea;
+    exports.stackedAreaMultiples = stackedAreaMultiples;
+    exports.stackedBarHorizontal = stackedBarHorizontal;
+    exports.stackedBarHorizontalData = stackedBarHorizontalData;
+    exports.stackedBarHorizontalLayout = stackedBarHorizontalLayout;
+    exports.stackedBarVertical = stackedBarVertical;
+    exports.stackedBarVerticalData = stackedBarVerticalData;
+    exports.stackedBarVerticalLayout = stackedBarVerticalLayout;
+    exports.stackedPyramid = stackedPyramid;
+    exports.stackedPyramidData = stackedPyramidData;
+    exports.stackedPyramidLayout = stackedPyramidLayout;
+    exports.stringEqual = stringEqual;
+    exports.sunburst = sunburst;
+    exports.sunburstGetRadiusExtent = getRadiusExtent;
+    exports.sunburstLayout = computeLayout;
+    exports.swissMapPath = swissMapPath;
+    exports.swissMapProjection = swissMapProjection;
+    exports.textWrap = textWrap;
+    exports.timeLocale = timeLocale;
+    exports.toLookupKey = toLookupKey;
+    exports.tooltip = tooltip;
+    exports.tooltipAnchor = tooltipAnchor;
+    exports.transformTranslateSubpixelShift = transformTranslateSubpixelShift;
+    exports.translateString = translateString;
+    exports.treemap = treemap;
+    exports.valueFn = valueFn;
+    exports.viewport = viewport;
+    exports.voronoi = voronoi;
+    exports.widthAdaptiveMapPathStroke = widthAdaptiveMapPathStroke;
+    exports.withAlpha = withAlpha;
+    exports.withRootSelection = withRootSelection;
+
+}));
+//# sourceMappingURL=sszvis.js.map

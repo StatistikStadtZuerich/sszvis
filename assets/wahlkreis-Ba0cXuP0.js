@@ -1,0 +1,849 @@
+var e={ts:{raw:`/**
+ * Choropleth map of the electoral districts (Wahlkreise) of Zurich.
+ *
+ * @sszvis   3.5.1
+ * @chart    map-standard
+ * @features tooltip, legend
+ * @date     2026-09-14
+ */
+
+// Magic Numbers
+
+const MAX_LEGEND_WIDTH = 320;
+/** Vertical padding in px above the map. */
+const TOP_PADDING = 30;
+/** Vertical padding in px below the map, which holds the legend. */
+const BOTTOM_PADDING = 90;
+/** Gap in px between the bottom of the map and the legend. */
+const LEGEND_GUTTER = 60;
+/** The fake data runs from 0 to this, so dividing by it yields a fraction. */
+const VALUE_SCALE = 20;
+const TOPO_URL = "../../_static/topo/stadt-zurich.json";
+
+// Types
+
+type Datum = {
+  name: string;
+  value: number;
+};
+
+/**
+ * What the map binds to each area and to each tooltip anchor: the feature paired
+ * with the datum that was matched to it. The pairing is what lets the tooltip be
+ * positioned from the geometry, and it is why reading a value means going through
+ * \`.datum\` rather than treating the bound object as the datum itself.
+ */
+type MapDatum = import("sszvis").MergedGeoDatum<Datum>;
+
+type MapData = {
+  features: import("d3").ExtendedFeatureCollection;
+  borders: import("d3").GeoPermissibleObjects;
+  lakeFeatures: import("d3").GeoPermissibleObjects;
+  lakeBorders: import("d3").GeoPermissibleObjects;
+};
+
+type State = {
+  data: Datum[];
+  mapData: MapData;
+  selection: Datum[];
+  valueDomain: [number, number];
+};
+
+type Actions = {
+  selectHovered: (state: State, e: Event, d: MapDatum) => void;
+  deselectHovered: (state: State) => void;
+};
+
+// Responsive Props
+
+const queryProps = sszvis
+  .responsiveProps()
+  .prop("bounds", {
+    _: (width) => {
+      const innerHeight = sszvis.aspectRatioSquare(width);
+      return {
+        top: TOP_PADDING,
+        bottom: BOTTOM_PADDING,
+        height: TOP_PADDING + innerHeight + BOTTOM_PADDING,
+      };
+    },
+  })
+  .prop("legendWidth", {
+    _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH),
+  });
+
+// Accessors
+
+const vAcc = (d: Datum) => d.value;
+const nameAcc = (d: Datum) => d.name;
+
+// Application
+
+sszvis.app<State, Actions>({
+  fallback: { element: config.id, src: config.fallback },
+
+  // NOTE: The chart needs both the values and the geometry, so it loads them
+  // together; \`app()\` renders nothing until \`init\` has resolved.
+  init: (state) =>
+    Promise.all([
+      d3.csv(config.data, (d) => ({
+        name: d["ID"] ?? "",
+        value: sszvis.parseNumber(d["Value"]) / VALUE_SCALE,
+      })),
+      d3.json<Topology>(TOPO_URL),
+    ]).then(([data, topo]) => {
+      if (topo === undefined) {
+        throw new Error(\`No topology at \${TOPO_URL}\`);
+      }
+      state.data = data;
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects["wahlkreise"]),
+        borders: topojson.mesh(topo, topo.objects["wahlkreise"]),
+        lakeFeatures: topojson.mesh(topo, topo.objects["lakezurich"]),
+        lakeBorders: topojson.mesh(topo, topo.objects["wahlkreis_lakebounds"]),
+      };
+      state.selection = [];
+      state.valueDomain = [0, 1];
+    }),
+
+  actions: {
+    selectHovered(state, _e, d) {
+      if (d.datum === undefined) {
+        return;
+      }
+      state.selection = [d.datum];
+    },
+
+    deselectHovered(state) {
+      state.selection = [];
+    },
+  },
+
+  render(state, actions) {
+    const props = queryProps(sszvis.measureDimensions(config.id));
+    const bounds = sszvis.bounds(props.bounds, config.id);
+
+    // Scales
+
+    const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+
+    // Layers
+
+    const chartLayer = sszvis
+      .createSvgLayer(config.id, bounds, {
+        title: "Anteile nach Wahlkreis",
+        description: "Anteil je Wahlkreis der Stadt Zürich, in Prozent.",
+      })
+      .datum(state.data);
+
+    const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+
+    // Components
+
+    // NOTE: The data has no geo id of its own, so the district name is what the
+    // map matches its features against.
+    const choroplethMap = sszvis
+      .choropleth<Datum>()
+      .features(state.mapData.features)
+      .borders(state.mapData.borders)
+      .lakeFeatures(state.mapData.lakeFeatures)
+      .lakeBorders(state.mapData.lakeBorders)
+      .keyName("name")
+      .highlight(state.selection)
+      .highlightStroke((d) => sszvis.muchDarker(colorScale(vAcc(d))))
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      // NOTE: A feature that matched no datum gets the missing-value texture and
+      // never reaches this accessor, so the undefined branch is only here to name
+      // the case the signature allows.
+      .fill((d) => (d === undefined ? "none" : colorScale(vAcc(d))));
+
+    const tooltipHeader = sszvis
+      .modularTextHTML()
+      .bold((d: MapDatum) =>
+        d.datum === undefined ? "" : sszvis.formatFractionPercent(vAcc(d.datum)),
+      );
+
+    const tooltipBody = sszvis
+      .modularTextHTML()
+      .plain("Wahlkreis ")
+      .plain((d: MapDatum) => (d.datum === undefined ? "" : nameAcc(d.datum)));
+
+    const tooltip = sszvis
+      .tooltip<MapDatum>()
+      .renderInto(tooltipLayer)
+      .header(tooltipHeader)
+      .body(tooltipBody)
+      .orientation(sszvis.fitTooltip("bottom", bounds))
+      .visible(isSelected(state));
+
+    const legend = sszvis
+      .legendColorLinear()
+      .scale(colorScale)
+      .width(props.legendWidth)
+      .labelFormat(sszvis.formatFractionPercent);
+
+    // Rendering
+
+    chartLayer
+      .attr("transform", sszvis.translateString(bounds.padding.left, bounds.padding.top))
+      .call(choroplethMap);
+
+    chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+    chartLayer
+      .selectGroup("legend")
+      .attr(
+        "transform",
+        sszvis.translateString(
+          bounds.width / 2 - props.legendWidth / 2,
+          bounds.innerHeight + LEGEND_GUTTER,
+        ),
+      )
+      .call(legend);
+
+    // Interaction
+
+    const interactionLayer = sszvis
+      .panning<MapDatum>()
+      .elementSelector(".sszvis-map__area")
+      .on("start", actions.selectHovered)
+      .on("pan", actions.selectHovered)
+      .on("end", actions.deselectHovered);
+
+    chartLayer.call(interactionLayer);
+  },
+});
+
+// Helper functions
+
+const isSelected = (state: State) => (d: MapDatum) =>
+  d.datum !== undefined && sszvis.contains(state.selection, d.datum);
+`,html:`<pre class="shiki shiki-themes catalog-light catalog-dark" style="--shiki-light:#00263e;--shiki-dark:#cbd9e3;--shiki-light-bg:#ffffff;--shiki-dark-bg:#111111" tabindex="0"><code><span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * Choropleth map of the electoral districts (Wahlkreise) of Zurich.</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> *</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">@</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">sszvis   3.5.1</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">@</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">chart    map-standard</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">@</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">features tooltip, legend</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">@</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">date     2026-09-14</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> */</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Magic Numbers</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MAX_LEGEND_WIDTH </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 320</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Vertical padding in px above the map. </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">*/</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> TOP_PADDING </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 30</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Vertical padding in px below the map, which holds the legend. </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">*/</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> BOTTOM_PADDING </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 90</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Gap in px between the bottom of the map and the legend. </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">*/</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> LEGEND_GUTTER </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 60</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> The fake data runs from 0 to this, so dividing by it yields a fraction. </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">*/</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> VALUE_SCALE </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 20</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> TOPO_URL </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">../../_static/topo/stadt-zurich.json</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Types</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">type</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Datum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  name</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> string</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  value</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> number</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * What the map binds to each area and to each tooltip anchor: the feature paired</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * with the datum that was matched to it. The pairing is what lets the tooltip be</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * positioned from the geometry, and it is why reading a value means going through</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * \`.datum\` rather than treating the bound object as the datum itself.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> */</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">type</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MapDatum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> import</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">.MergedGeoDatum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">&#x3C;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">>;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">type</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MapData </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  features</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> import</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d3</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">.ExtendedFeatureCollection</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  borders</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> import</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d3</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">.GeoPermissibleObjects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  lakeFeatures</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> import</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d3</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">.GeoPermissibleObjects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  lakeBorders</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> import</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d3</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">.GeoPermissibleObjects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">type</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> State </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  data</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[];</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  mapData</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MapData</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  selection</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[];</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  valueDomain</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> [</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">number</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> number</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">];</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">type</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Actions </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">  selectHovered</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> State</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> e</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Event</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MapDatum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> void</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">  deselectHovered</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> State</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> void</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Responsive Props</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> queryProps </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">responsiveProps</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">prop</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">    _</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">      const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> innerHeight </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">aspectRatioSquare</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">      return</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        top</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> TOP_PADDING</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        bottom</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> BOTTOM_PADDING</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        height</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> TOP_PADDING </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">+</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> innerHeight </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">+</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> BOTTOM_PADDING</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      };</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    },</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  })</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">prop</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legendWidth</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">    _</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Math</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">min</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">/</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 2</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MAX_LEGEND_WIDTH</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">),</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  });</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Accessors</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> vAcc</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> nameAcc</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">name</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Application</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">app</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">&#x3C;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">State</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">>({</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  fallback</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> element</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> src</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">fallback </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">},</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: The chart needs both the values and the geometry, so it loads them</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> together; \`app()\` renders nothing until \`init\` has resolved.</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">  init</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    Promise</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">all</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">([</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      d3</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">csv</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">data</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> ({</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        name</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">ID</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> ??</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> ""</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">parseNumber</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">])</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> /</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> VALUE_SCALE</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      })),</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      d3</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">json</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">&#x3C;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Topology</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">>(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">TOPO_URL</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">),</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    ]).</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">then</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(([</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">data</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">])</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">      if</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">        throw</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> new</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> Error</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">\`</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">No topology at </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">\${</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">TOPO_URL</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">}\`</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      }</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">data </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> data</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        features</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topojson</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">feature</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">objects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">wahlkreise</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]),</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        borders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topojson</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">mesh</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">objects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">wahlkreise</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]),</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        lakeFeatures</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topojson</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">mesh</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">objects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">lakezurich</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]),</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        lakeBorders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topojson</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">mesh</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">objects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">wahlkreis_lakebounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]),</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      };</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> [];</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">valueDomain </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> [</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">0</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 1</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">];</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    }),</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">    selectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> _e</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">      if</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">        return</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      }</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> [</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">];</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    },</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">    deselectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> [];</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    },</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  },</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">  render</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> props </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> queryProps</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">measureDimensions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">));</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Scales</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> colorScale </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">scaleSeqBlu</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">().</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">domain</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">valueDomain</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Layers</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> chartLayer </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">createSvgLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        title</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Anteile nach Wahlkreis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        description</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Anteil je Wahlkreis der Stadt Zürich, in Prozent.</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      })</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">data</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> tooltipLayer </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">createHtmlLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">).</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Components</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: The data has no geo id of its own, so the district name is what the</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> map matches its features against.</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> choroplethMap </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">choropleth</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">&#x3C;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">>()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">features</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">features</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">borders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">borders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">lakeFeatures</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">lakeFeatures</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">lakeBorders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">lakeBorders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">keyName</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">name</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">highlight</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">highlightStroke</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">muchDarker</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">colorScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">vAcc</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">))))</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">innerWidth</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">height</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">innerHeight</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: A feature that matched no datum gets the missing-value texture and</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> never reaches this accessor, so the undefined branch is only here to name</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> the case the signature allows.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">fill</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> ?</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">none</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> :</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> colorScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">vAcc</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">))));</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> tooltipHeader </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">modularTextHTML</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">bold</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MapDatum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> ?</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> ""</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> :</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">formatFractionPercent</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">vAcc</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)),</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      );</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> tooltipBody </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">modularTextHTML</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">plain</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Wahlkreis </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">plain</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MapDatum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> ?</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> ""</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> :</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> nameAcc</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)));</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> tooltip </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">tooltip</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">&#x3C;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">MapDatum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">>()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">renderInto</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">tooltipLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">header</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">tooltipHeader</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">body</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">tooltipBody</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">orientation</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">fitTooltip</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bottom</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">))</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">visible</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">isSelected</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> legend </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">legendColorLinear</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">scale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">colorScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legendWidth</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">labelFormat</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">formatFractionPercent</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Rendering</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    chartLayer</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">attr</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">transform</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">translateString</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">padding</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">left</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">padding</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">top</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">))</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">call</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">choroplethMap</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    chartLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">selectAll</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">[data-tooltip-anchor]</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">).</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">call</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">tooltip</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    chartLayer</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">selectGroup</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legend</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">attr</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">        "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">transform</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">translateString</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">          bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">/</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 2 </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">-</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legendWidth </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">/</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 2</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">          bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">innerHeight </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">+</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> LEGEND_GUTTER</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">        ),</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      )</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">call</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legend</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Interaction</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> interactionLayer </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">panning</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">&#x3C;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">MapDatum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">>()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">elementSelector</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">.sszvis-map__area</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">on</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">start</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">on</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">pan</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">on</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">end</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">deselectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    chartLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">call</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">interactionLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  },</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Helper functions</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> isSelected</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> State</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MapDatum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">!==</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> &#x26;&#x26;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">contains</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span></code></pre>`},js:{raw:`/**
+ * Choropleth map of the electoral districts (Wahlkreise) of Zurich.
+ *
+ * @sszvis   3.5.1
+ * @chart    map-standard
+ * @features tooltip, legend
+ * @date     2026-09-14
+ */
+
+// Magic Numbers
+
+const MAX_LEGEND_WIDTH = 320;
+/** Vertical padding in px above the map. */
+const TOP_PADDING = 30;
+/** Vertical padding in px below the map, which holds the legend. */
+const BOTTOM_PADDING = 90;
+/** Gap in px between the bottom of the map and the legend. */
+const LEGEND_GUTTER = 60;
+/** The fake data runs from 0 to this, so dividing by it yields a fraction. */
+const VALUE_SCALE = 20;
+const TOPO_URL = "../../_static/topo/stadt-zurich.json";
+
+// Types
+
+/**
+ * What the map binds to each area and to each tooltip anchor: the feature paired
+ * with the datum that was matched to it. The pairing is what lets the tooltip be
+ * positioned from the geometry, and it is why reading a value means going through
+ * \`.datum\` rather than treating the bound object as the datum itself.
+ */
+
+// Responsive Props
+
+const queryProps = sszvis
+  .responsiveProps()
+  .prop("bounds", {
+    _: (width) => {
+      const innerHeight = sszvis.aspectRatioSquare(width);
+      return {
+        top: TOP_PADDING,
+        bottom: BOTTOM_PADDING,
+        height: TOP_PADDING + innerHeight + BOTTOM_PADDING,
+      };
+    },
+  })
+  .prop("legendWidth", {
+    _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH),
+  });
+
+// Accessors
+
+const vAcc = (d) => d.value;
+const nameAcc = (d) => d.name;
+
+// Application
+
+sszvis.app({
+  fallback: { element: config.id, src: config.fallback },
+
+  // NOTE: The chart needs both the values and the geometry, so it loads them
+  // together; \`app()\` renders nothing until \`init\` has resolved.
+  init: (state) =>
+    Promise.all([
+      d3.csv(config.data, (d) => ({
+        name: d["ID"] ?? "",
+        value: sszvis.parseNumber(d["Value"]) / VALUE_SCALE,
+      })),
+      d3.json(TOPO_URL),
+    ]).then(([data, topo]) => {
+      if (topo === undefined) {
+        throw new Error(\`No topology at \${TOPO_URL}\`);
+      }
+      state.data = data;
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects["wahlkreise"]),
+        borders: topojson.mesh(topo, topo.objects["wahlkreise"]),
+        lakeFeatures: topojson.mesh(topo, topo.objects["lakezurich"]),
+        lakeBorders: topojson.mesh(topo, topo.objects["wahlkreis_lakebounds"]),
+      };
+      state.selection = [];
+      state.valueDomain = [0, 1];
+    }),
+
+  actions: {
+    selectHovered(state, _e, d) {
+      if (d.datum === undefined) {
+        return;
+      }
+      state.selection = [d.datum];
+    },
+
+    deselectHovered(state) {
+      state.selection = [];
+    },
+  },
+
+  render(state, actions) {
+    const props = queryProps(sszvis.measureDimensions(config.id));
+    const bounds = sszvis.bounds(props.bounds, config.id);
+
+    // Scales
+
+    const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+
+    // Layers
+
+    const chartLayer = sszvis
+      .createSvgLayer(config.id, bounds, {
+        title: "Anteile nach Wahlkreis",
+        description: "Anteil je Wahlkreis der Stadt Zürich, in Prozent.",
+      })
+      .datum(state.data);
+
+    const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+
+    // Components
+
+    // NOTE: The data has no geo id of its own, so the district name is what the
+    // map matches its features against.
+    const choroplethMap = sszvis
+      .choropleth()
+      .features(state.mapData.features)
+      .borders(state.mapData.borders)
+      .lakeFeatures(state.mapData.lakeFeatures)
+      .lakeBorders(state.mapData.lakeBorders)
+      .keyName("name")
+      .highlight(state.selection)
+      .highlightStroke((d) => sszvis.muchDarker(colorScale(vAcc(d))))
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      // NOTE: A feature that matched no datum gets the missing-value texture and
+      // never reaches this accessor, so the undefined branch is only here to name
+      // the case the signature allows.
+      .fill((d) => (d === undefined ? "none" : colorScale(vAcc(d))));
+
+    const tooltipHeader = sszvis
+      .modularTextHTML()
+      .bold((d) => (d.datum === undefined ? "" : sszvis.formatFractionPercent(vAcc(d.datum))));
+
+    const tooltipBody = sszvis
+      .modularTextHTML()
+      .plain("Wahlkreis ")
+      .plain((d) => (d.datum === undefined ? "" : nameAcc(d.datum)));
+
+    const tooltip = sszvis
+      .tooltip()
+      .renderInto(tooltipLayer)
+      .header(tooltipHeader)
+      .body(tooltipBody)
+      .orientation(sszvis.fitTooltip("bottom", bounds))
+      .visible(isSelected(state));
+
+    const legend = sszvis
+      .legendColorLinear()
+      .scale(colorScale)
+      .width(props.legendWidth)
+      .labelFormat(sszvis.formatFractionPercent);
+
+    // Rendering
+
+    chartLayer
+      .attr("transform", sszvis.translateString(bounds.padding.left, bounds.padding.top))
+      .call(choroplethMap);
+
+    chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+    chartLayer
+      .selectGroup("legend")
+      .attr(
+        "transform",
+        sszvis.translateString(
+          bounds.width / 2 - props.legendWidth / 2,
+          bounds.innerHeight + LEGEND_GUTTER,
+        ),
+      )
+      .call(legend);
+
+    // Interaction
+
+    const interactionLayer = sszvis
+      .panning()
+      .elementSelector(".sszvis-map__area")
+      .on("start", actions.selectHovered)
+      .on("pan", actions.selectHovered)
+      .on("end", actions.deselectHovered);
+
+    chartLayer.call(interactionLayer);
+  },
+});
+
+// Helper functions
+
+const isSelected = (state) => (d) =>
+  d.datum !== undefined && sszvis.contains(state.selection, d.datum);`,html:`<pre class="shiki shiki-themes catalog-light catalog-dark" style="--shiki-light:#00263e;--shiki-dark:#cbd9e3;--shiki-light-bg:#ffffff;--shiki-dark-bg:#111111" tabindex="0"><code><span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * Choropleth map of the electoral districts (Wahlkreise) of Zurich.</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> *</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">@</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">sszvis   3.5.1</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">@</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">chart    map-standard</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">@</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">features tooltip, legend</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">@</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">date     2026-09-14</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> */</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Magic Numbers</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MAX_LEGEND_WIDTH </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 320</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Vertical padding in px above the map. </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">*/</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> TOP_PADDING </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 30</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Vertical padding in px below the map, which holds the legend. </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">*/</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> BOTTOM_PADDING </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 90</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Gap in px between the bottom of the map and the legend. </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">*/</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> LEGEND_GUTTER </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 60</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> The fake data runs from 0 to this, so dividing by it yields a fraction. </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">*/</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> VALUE_SCALE </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 20</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> TOPO_URL </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">../../_static/topo/stadt-zurich.json</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Types</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">/**</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * What the map binds to each area and to each tooltip anchor: the feature paired</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * with the datum that was matched to it. The pairing is what lets the tooltip be</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * positioned from the geometry, and it is why reading a value means going through</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> * \`.datum\` rather than treating the bound object as the datum itself.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> */</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Responsive Props</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> queryProps </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">responsiveProps</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">prop</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">    _</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">      const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> innerHeight </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">aspectRatioSquare</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">      return</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        top</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> TOP_PADDING</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        bottom</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> BOTTOM_PADDING</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        height</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> TOP_PADDING </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">+</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> innerHeight </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">+</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> BOTTOM_PADDING</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      };</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    },</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  })</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">prop</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legendWidth</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">    _</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> Math</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">min</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">/</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 2</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> MAX_LEGEND_WIDTH</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">),</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  });</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Accessors</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> vAcc</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> nameAcc</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">name</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Application</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">app</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">({</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  fallback</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> element</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> src</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">fallback </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">},</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: The chart needs both the values and the geometry, so it loads them</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> together; \`app()\` renders nothing until \`init\` has resolved.</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">  init</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    Promise</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">all</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">([</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      d3</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">csv</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">data</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> ({</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        name</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">ID</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> ??</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> ""</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">parseNumber</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Value</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">])</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> /</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> VALUE_SCALE</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      })),</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      d3</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">json</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">TOPO_URL</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">),</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    ]).</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">then</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(([</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">data</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">])</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">      if</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">        throw</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> new</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> Error</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">\`</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">No topology at </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">\${</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">TOPO_URL</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">}\`</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      }</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">data </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> data</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        features</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topojson</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">feature</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">objects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">wahlkreise</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]),</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        borders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topojson</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">mesh</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">objects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">wahlkreise</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]),</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        lakeFeatures</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topojson</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">mesh</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">objects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">lakezurich</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]),</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        lakeBorders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topojson</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">mesh</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> topo</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">objects</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">[</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">wahlkreis_lakebounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">]),</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      };</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> [];</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">valueDomain </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> [</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">0</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 1</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">];</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    }),</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">    selectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> _e</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">      if</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">        return</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">;</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      }</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> [</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">];</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    },</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">    deselectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">      state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> [];</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    },</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  },</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">  render</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> props </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> queryProps</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">measureDimensions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">));</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Scales</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> colorScale </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">scaleSeqBlu</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">().</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">domain</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">valueDomain</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Layers</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> chartLayer </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">createSvgLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> {</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        title</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Anteile nach Wahlkreis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        description</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">:</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Anteil je Wahlkreis der Stadt Zürich, in Prozent.</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      })</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">data</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> tooltipLayer </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">createHtmlLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">config</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">id</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">).</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Components</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: The data has no geo id of its own, so the district name is what the</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> map matches its features against.</span></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> choroplethMap </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">choropleth</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">features</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">features</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">borders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">borders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">lakeFeatures</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">lakeFeatures</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">lakeBorders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">mapData</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">lakeBorders</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">keyName</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">name</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">highlight</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">highlightStroke</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">muchDarker</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">colorScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">vAcc</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">))))</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">innerWidth</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">height</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">innerHeight</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> NOTE: A feature that matched no datum gets the missing-value texture and</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> never reaches this accessor, so the undefined branch is only here to name</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> the case the signature allows.</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">fill</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> ?</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">none</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> :</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> colorScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">vAcc</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">))));</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> tooltipHeader </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">modularTextHTML</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">bold</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> ?</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> ""</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> :</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">formatFractionPercent</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">vAcc</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">))));</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> tooltipBody </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">modularTextHTML</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">plain</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">Wahlkreis </span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">plain</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">((</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">===</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> ?</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> ""</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> :</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> nameAcc</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)));</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> tooltip </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">tooltip</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">renderInto</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">tooltipLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">header</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">tooltipHeader</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">body</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">tooltipBody</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">orientation</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">fitTooltip</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bottom</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">))</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">visible</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">isSelected</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> legend </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">legendColorLinear</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">scale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">colorScale</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">width</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legendWidth</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">labelFormat</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">formatFractionPercent</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Rendering</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    chartLayer</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">attr</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">transform</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">translateString</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">padding</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">left</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">padding</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">top</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">))</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">call</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">choroplethMap</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    chartLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">selectAll</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">[data-tooltip-anchor]</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">).</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">call</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">tooltip</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    chartLayer</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">selectGroup</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legend</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">attr</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">        "</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">transform</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">        sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">translateString</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">          bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">width </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">/</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 2 </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">-</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> props</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legendWidth </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">/</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> 2</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">          bounds</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">innerHeight </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">+</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> LEGEND_GUTTER</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">        ),</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      )</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">call</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">legend</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">    //</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Interaction</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">    const</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> interactionLayer </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">=</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">panning</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">()</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">elementSelector</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">.sszvis-map__area</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">on</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">start</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">on</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">pan</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">      .</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">on</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">end</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">"</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> actions</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">deselectHovered</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">    chartLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">call</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">interactionLayer</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">  },</span></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">//</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> Helper functions</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">const</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F"> isSelected</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C"> (</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">)</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> =></span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">  d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum </span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">!==</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> undefined</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0"> &#x26;&#x26;</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> sszvis</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#D33944;--shiki-dark:#FF8F8F">contains</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">(</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">state</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">selection</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">,</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3"> d</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">.</span><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">datum</span><span style="--shiki-light:#535353;--shiki-dark:#8C8C8C">);</span></span></code></pre>`},csv:{raw:`ID,Value
+1 + 2,18.5
+3,8.237
+4 + 5,16.585
+6,7.095
+7 + 8,12.139
+9,3.082
+10,5.803
+11,17.570
+12,7.284
+`,html:`<pre class="shiki shiki-themes catalog-light catalog-dark" style="--shiki-light:#00263e;--shiki-dark:#cbd9e3;--shiki-light-bg:#ffffff;--shiki-dark-bg:#111111" tabindex="0"><code><span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">ID,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">Value</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">1 + 2,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">18.5</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">3,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">8.237</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">4 + 5,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">16.585</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">6,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">7.095</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">7 + 8,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">12.139</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">9,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">3.082</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">10,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">5.803</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">11,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">17.570</span></span>
+<span class="line"><span style="--shiki-light:#00263E;--shiki-dark:#CBD9E3">12,</span><span style="--shiki-light:#3F7397;--shiki-dark:#7FB0D0">7.284</span></span>
+<span class="line"></span></code></pre>`}};export{e as default};

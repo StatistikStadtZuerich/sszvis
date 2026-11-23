@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Horizontal Grouped Bar Chart</title>
+    <link href="/sszvis/preview/_assets/sszvis.css" rel="stylesheet" />
+    <style>
+      /*
+       * sszvis draws for a light page: its text and axes are dark and it sets
+       * no background of its own. Without this the standalone page inherits the
+       * browser's dark preference and the chart is drawn dark-on-dark.
+       */
+      html {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+      }
+      /*
+       * Breathing room inside the frame: embedded in the docs the page is the
+       * chart, and a chart drawn flush to the edge collides with the frame's
+       * own border. `box-sizing` keeps the padding inside the width the chart
+       * measures itself against, so it still fits the viewport it is given.
+       */
+      body {
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      /*
+       * A chart's marks are not always inside its bounds: sszvis places a point
+       * at its value and draws the symbol around it, so the outer half of an
+       * edge bubble - up to the largest radius - falls outside the SVG, which
+       * clips at its own viewport. Letting the SVG paint outside puts that
+       * overhang in the padding above rather than slicing it off.
+       *
+       * The viewport still clips, which matters: a chart given less width than
+       * it was written for can run far past its bounds (the overlapping line
+       * chart lays out ~240px of labels off its right edge at 800px), and that
+       * has to stay out of sight rather than stretching the page sideways.
+       */
+      svg {
+        overflow: visible;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sszvis-chart"></div>
+
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="/sszvis/preview/_assets/sszvis.js"></script>
+    <script>
+      var config = {
+  "data": "data.csv",
+  "id": "#sszvis-chart",
+  "fallback": "../../_static/fallback.png"
+};
+    </script>
+    <script>
+      /**
+       * Horizontal grouped bar chart example using sszvis.
+       *
+       * @sszvis   3.5.1
+       * @chart    bar-chart-horizontal-grouped
+       * @features tooltip, legend
+       * @date     2026-09-14
+       */
+
+      // Magic Numbers
+
+      const MAX_WIDTH = 800;
+      /** Vertical space in pixels allocated to each region's group of bars. */
+      const GROUP_HEIGHT = 80;
+      /** Distance in pixels between the chart area and the colour legend below it. */
+      const LEGEND_GUTTER = 40;
+      /** Lifts the right-aligned region labels clear of the group they belong to. */
+      const Y_LABEL_OFFSET = 10;
+
+      // Types
+
+      // Responsive Props
+
+      const queryProps = sszvis.responsiveProps().prop("xLabel", { _: "Anzahl" }).prop("ticks", { _: 5 });
+
+      // Accessors
+
+      const regionAcc = (d) => d.region;
+      const categoryAcc = (d) => d.category;
+      const valueAcc = (d) => d.value;
+
+      // Application
+
+      sszvis.app({
+        fallback: { element: config.id, src: config.fallback },
+
+        init: (state) =>
+          d3
+            .csv(config.data, (d) => ({
+              region: d["Region"] ?? "",
+              category: d["Kategorie"] ?? "",
+              value: sszvis.parseNumber(d["Wert"]),
+            }))
+            .then((data) => {
+              state.data = data;
+              state.regions = sszvis.set(data, regionAcc);
+              state.categories = sszvis.set(data, categoryAcc);
+              state.valueExtent = [0, d3.max(data, valueAcc) ?? 0];
+              state.groupedData = sszvis.cascade().arrayBy(regionAcc).apply(data);
+              state.longestGroup = d3.max(state.groupedData, (group) => group.length) ?? 0;
+              state.selection = [];
+            }),
+
+        actions: {
+          showTooltip(state, _e, _xValue, region) {
+            state.selection = state.groupedData.filter((group) =>
+              group.some((d) => regionAcc(d) === region),
+            );
+          },
+
+          hideTooltip(state) {
+            state.selection = [];
+          },
+        },
+
+        render(state, actions) {
+          const props = queryProps(sszvis.measureDimensions(config.id));
+          const totalHeight = state.regions.length * GROUP_HEIGHT;
+          const bounds = sszvis.bounds({ height: 30 + totalHeight + 60, top: 30, bottom: 60 }, config.id);
+          const chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
+
+          // Scales
+
+          const xScale = d3.scaleLinear().range([0, chartWidth]).domain(state.valueExtent).nice();
+
+          const yScale = d3
+            .scaleBand()
+            .domain(state.regions)
+            .range([0, totalHeight])
+            .paddingInner(0.3)
+            .paddingOuter(0.1);
+
+          const cScale = sszvis.scaleQual6().domain(state.categories);
+
+          // Layers
+
+          const chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: "Einwohner und Arbeitsplätze nach Quartier",
+              description: "Einwohnerinnen, Einwohner und Arbeitsplätze je Quartier.",
+            })
+            .datum(state.groupedData);
+
+          const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+
+          // Components
+
+          const barLayout = sszvis
+            .groupedBarsHorizontal()
+            .groupScale((d) => yScale(regionAcc(d)))
+            .groupHeight(yScale.bandwidth())
+            .groupSize(state.longestGroup)
+            // NOTE: required - the horizontal config reads props.x directly, so leaving it
+            // unset makes the renderer call undefined and the bars never draw.
+            .x(0)
+            .width((d) => xScale(valueAcc(d)))
+            .fill((d) => cScale(categoryAcc(d)))
+            .defined((d) => !Number.isNaN(valueAcc(d)));
+
+          const xAxis = sszvis
+            .axisX()
+            .scale(xScale)
+            .orient("bottom")
+            .alignOuterLabels(true)
+            .ticks(props.ticks)
+            .title(props.xLabel);
+
+          const yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
+
+          const colorLegend = sszvis
+            .legendColorOrdinal()
+            .scale(cScale)
+            .horizontalFloat(true)
+            .orientation("horizontal");
+
+          const tooltipHeader = sszvis
+            .modularTextHTML()
+            .plain((group) => (group[0] === undefined ? "" : regionAcc(group[0])));
+
+          const tooltip = sszvis
+            .tooltip()
+            .renderInto(tooltipLayer)
+            .orientation(sszvis.fitTooltip("bottom", bounds))
+            .header(tooltipHeader)
+            .body((group) =>
+              group.map((d) => {
+                const value = valueAcc(d);
+                return [categoryAcc(d), Number.isNaN(value) ? "k. A." : sszvis.formatNumber(value)];
+              }),
+            )
+            .visible((group) => sszvis.contains(state.selection, group));
+
+          // Rendering
+
+          chartLayer.attr(
+            "transform",
+            sszvis.translateString(bounds.innerWidth / 2 - chartWidth / 2, bounds.padding.top),
+          );
+
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, totalHeight))
+            .call(xAxis);
+
+          chartLayer
+            .selectGroup("yAxis")
+            .attr("transform", sszvis.translateString(0, -yScale.bandwidth() / 2 - Y_LABEL_OFFSET))
+            .call(yAxis);
+
+          const bars = chartLayer.selectGroup("bars").call(barLayout);
+
+          bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+          chartLayer
+            .selectGroup("colorLegend")
+            .attr("transform", sszvis.translateString(0, totalHeight + LEGEND_GUTTER))
+            .call(colorLegend);
+
+          // Interaction
+
+          const interactionLayer = sszvis
+            .move()
+            .xScale(xScale)
+            .yScale(yScale)
+            .on("move", actions.showTooltip)
+            .on("end", actions.hideTooltip);
+
+          chartLayer.selectGroup("interaction").call(interactionLayer);
+        },
+      });
+    </script>
+  </body>
+</html>

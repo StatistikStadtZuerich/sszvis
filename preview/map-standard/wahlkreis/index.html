@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Map — Wahlkreis</title>
+    <link href="/sszvis/preview/_assets/sszvis.css" rel="stylesheet" />
+    <style>
+      /*
+       * sszvis draws for a light page: its text and axes are dark and it sets
+       * no background of its own. Without this the standalone page inherits the
+       * browser's dark preference and the chart is drawn dark-on-dark.
+       */
+      html {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+      }
+      /*
+       * Breathing room inside the frame: embedded in the docs the page is the
+       * chart, and a chart drawn flush to the edge collides with the frame's
+       * own border. `box-sizing` keeps the padding inside the width the chart
+       * measures itself against, so it still fits the viewport it is given.
+       */
+      body {
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      /*
+       * A chart's marks are not always inside its bounds: sszvis places a point
+       * at its value and draws the symbol around it, so the outer half of an
+       * edge bubble - up to the largest radius - falls outside the SVG, which
+       * clips at its own viewport. Letting the SVG paint outside puts that
+       * overhang in the padding above rather than slicing it off.
+       *
+       * The viewport still clips, which matters: a chart given less width than
+       * it was written for can run far past its bounds (the overlapping line
+       * chart lays out ~240px of labels off its right edge at 800px), and that
+       * has to stay out of sight rather than stretching the page sideways.
+       */
+      svg {
+        overflow: visible;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sszvis-chart"></div>
+
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+    <script src="/sszvis/preview/_assets/sszvis.js"></script>
+    <script>
+      var config = {
+  "data": "data.csv",
+  "id": "#sszvis-chart",
+  "fallback": "../../_static/fallback.png"
+};
+    </script>
+    <script>
+      /**
+       * Choropleth map of the electoral districts (Wahlkreise) of Zurich.
+       *
+       * @sszvis   3.5.1
+       * @chart    map-standard
+       * @features tooltip, legend
+       * @date     2026-09-14
+       */
+
+      // Magic Numbers
+
+      const MAX_LEGEND_WIDTH = 320;
+      /** Vertical padding in px above the map. */
+      const TOP_PADDING = 30;
+      /** Vertical padding in px below the map, which holds the legend. */
+      const BOTTOM_PADDING = 90;
+      /** Gap in px between the bottom of the map and the legend. */
+      const LEGEND_GUTTER = 60;
+      /** The fake data runs from 0 to this, so dividing by it yields a fraction. */
+      const VALUE_SCALE = 20;
+      const TOPO_URL = "../../_static/topo/stadt-zurich.json";
+
+      // Types
+
+      /**
+       * What the map binds to each area and to each tooltip anchor: the feature paired
+       * with the datum that was matched to it. The pairing is what lets the tooltip be
+       * positioned from the geometry, and it is why reading a value means going through
+       * `.datum` rather than treating the bound object as the datum itself.
+       */
+
+      // Responsive Props
+
+      const queryProps = sszvis
+        .responsiveProps()
+        .prop("bounds", {
+          _: (width) => {
+            const innerHeight = sszvis.aspectRatioSquare(width);
+            return {
+              top: TOP_PADDING,
+              bottom: BOTTOM_PADDING,
+              height: TOP_PADDING + innerHeight + BOTTOM_PADDING,
+            };
+          },
+        })
+        .prop("legendWidth", {
+          _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH),
+        });
+
+      // Accessors
+
+      const vAcc = (d) => d.value;
+      const nameAcc = (d) => d.name;
+
+      // Application
+
+      sszvis.app({
+        fallback: { element: config.id, src: config.fallback },
+
+        // NOTE: The chart needs both the values and the geometry, so it loads them
+        // together; `app()` renders nothing until `init` has resolved.
+        init: (state) =>
+          Promise.all([
+            d3.csv(config.data, (d) => ({
+              name: d["ID"] ?? "",
+              value: sszvis.parseNumber(d["Value"]) / VALUE_SCALE,
+            })),
+            d3.json(TOPO_URL),
+          ]).then(([data, topo]) => {
+            if (topo === undefined) {
+              throw new Error(`No topology at ${TOPO_URL}`);
+            }
+            state.data = data;
+            state.mapData = {
+              features: topojson.feature(topo, topo.objects["wahlkreise"]),
+              borders: topojson.mesh(topo, topo.objects["wahlkreise"]),
+              lakeFeatures: topojson.mesh(topo, topo.objects["lakezurich"]),
+              lakeBorders: topojson.mesh(topo, topo.objects["wahlkreis_lakebounds"]),
+            };
+            state.selection = [];
+            state.valueDomain = [0, 1];
+          }),
+
+        actions: {
+          selectHovered(state, _e, d) {
+            if (d.datum === undefined) {
+              return;
+            }
+            state.selection = [d.datum];
+          },
+
+          deselectHovered(state) {
+            state.selection = [];
+          },
+        },
+
+        render(state, actions) {
+          const props = queryProps(sszvis.measureDimensions(config.id));
+          const bounds = sszvis.bounds(props.bounds, config.id);
+
+          // Scales
+
+          const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+
+          // Layers
+
+          const chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: "Anteile nach Wahlkreis",
+              description: "Anteil je Wahlkreis der Stadt Zürich, in Prozent.",
+            })
+            .datum(state.data);
+
+          const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+
+          // Components
+
+          // NOTE: The data has no geo id of its own, so the district name is what the
+          // map matches its features against.
+          const choroplethMap = sszvis
+            .choropleth()
+            .features(state.mapData.features)
+            .borders(state.mapData.borders)
+            .lakeFeatures(state.mapData.lakeFeatures)
+            .lakeBorders(state.mapData.lakeBorders)
+            .keyName("name")
+            .highlight(state.selection)
+            .highlightStroke((d) => sszvis.muchDarker(colorScale(vAcc(d))))
+            .width(bounds.innerWidth)
+            .height(bounds.innerHeight)
+            // NOTE: A feature that matched no datum gets the missing-value texture and
+            // never reaches this accessor, so the undefined branch is only here to name
+            // the case the signature allows.
+            .fill((d) => (d === undefined ? "none" : colorScale(vAcc(d))));
+
+          const tooltipHeader = sszvis
+            .modularTextHTML()
+            .bold((d) => (d.datum === undefined ? "" : sszvis.formatFractionPercent(vAcc(d.datum))));
+
+          const tooltipBody = sszvis
+            .modularTextHTML()
+            .plain("Wahlkreis ")
+            .plain((d) => (d.datum === undefined ? "" : nameAcc(d.datum)));
+
+          const tooltip = sszvis
+            .tooltip()
+            .renderInto(tooltipLayer)
+            .header(tooltipHeader)
+            .body(tooltipBody)
+            .orientation(sszvis.fitTooltip("bottom", bounds))
+            .visible(isSelected(state));
+
+          const legend = sszvis
+            .legendColorLinear()
+            .scale(colorScale)
+            .width(props.legendWidth)
+            .labelFormat(sszvis.formatFractionPercent);
+
+          // Rendering
+
+          chartLayer
+            .attr("transform", sszvis.translateString(bounds.padding.left, bounds.padding.top))
+            .call(choroplethMap);
+
+          chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+          chartLayer
+            .selectGroup("legend")
+            .attr(
+              "transform",
+              sszvis.translateString(
+                bounds.width / 2 - props.legendWidth / 2,
+                bounds.innerHeight + LEGEND_GUTTER,
+              ),
+            )
+            .call(legend);
+
+          // Interaction
+
+          const interactionLayer = sszvis
+            .panning()
+            .elementSelector(".sszvis-map__area")
+            .on("start", actions.selectHovered)
+            .on("pan", actions.selectHovered)
+            .on("end", actions.deselectHovered);
+
+          chartLayer.call(interactionLayer);
+        },
+      });
+
+      // Helper functions
+
+      const isSelected = (state) => (d) =>
+        d.datum !== undefined && sszvis.contains(state.selection, d.datum);
+    </script>
+  </body>
+</html>

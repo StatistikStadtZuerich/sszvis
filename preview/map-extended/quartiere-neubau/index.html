@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Map — Quartiere Neubau</title>
+    <link href="/sszvis/preview/_assets/sszvis.css" rel="stylesheet" />
+    <style>
+      /*
+       * sszvis draws for a light page: its text and axes are dark and it sets
+       * no background of its own. Without this the standalone page inherits the
+       * browser's dark preference and the chart is drawn dark-on-dark.
+       */
+      html {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+      }
+      /*
+       * Breathing room inside the frame: embedded in the docs the page is the
+       * chart, and a chart drawn flush to the edge collides with the frame's
+       * own border. `box-sizing` keeps the padding inside the width the chart
+       * measures itself against, so it still fits the viewport it is given.
+       */
+      body {
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      /*
+       * A chart's marks are not always inside its bounds: sszvis places a point
+       * at its value and draws the symbol around it, so the outer half of an
+       * edge bubble - up to the largest radius - falls outside the SVG, which
+       * clips at its own viewport. Letting the SVG paint outside puts that
+       * overhang in the padding above rather than slicing it off.
+       *
+       * The viewport still clips, which matters: a chart given less width than
+       * it was written for can run far past its bounds (the overlapping line
+       * chart lays out ~240px of labels off its right edge at 800px), and that
+       * has to stay out of sight rather than stretching the page sideways.
+       */
+      svg {
+        overflow: visible;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sszvis-chart"></div>
+
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+    <script src="/sszvis/preview/_assets/sszvis.js"></script>
+    <script>
+      var config = {
+  "data": "data.csv",
+  "id": "#sszvis-chart",
+  "fallback": "../../_static/fallback.png"
+};
+    </script>
+    <script>
+      /**
+       * Map of the statistical quarters of Zurich with new housing developments drawn on top.
+       *
+       * @sszvis   3.5.1
+       * @chart    map-extended
+       * @features tooltip, geojson-overlay
+       * @date     2026-09-14
+       */
+
+      // Magic Numbers
+
+      /** Vertical padding above and below the map, in px. */
+      const VERTICAL_PADDING = 30;
+
+      // Types
+
+      /** What the GeoJSON renderer binds to each shape: a feature paired with its datum, if any. */
+
+      // Responsive Props
+
+      const queryProps = sszvis.responsiveProps().prop("bounds", {
+        _: (width) => ({
+          top: VERTICAL_PADDING,
+          bottom: VERTICAL_PADDING,
+          height: VERTICAL_PADDING + sszvis.aspectRatioSquare(width) + VERTICAL_PADDING,
+        }),
+      });
+
+      // Accessors
+
+      const nameAcc = (d) => d.name;
+      const yearAcc = (d) => d.year;
+
+      // Application
+
+      sszvis.app({
+        fallback: { element: config.id, src: config.fallback },
+
+        init: (state) =>
+          Promise.all([
+            d3.csv(config.data, (d) => ({
+              id: sszvis.parseNumber(d["id"]),
+              name: d["name"] ?? "",
+              ownership: d["traegerschaft"] ?? "",
+              // NOTE: A missing year is recorded as 0 in the data; it reads as "no value" here, so
+              // that the development is drawn without a colour rather than as the oldest one.
+              year: parseYear(d["bezugsjahr"]),
+            })),
+            d3.json("../../_static/topo/stadt-zurich.json"),
+            d3.json("neubausiedlungen.json"),
+          ]).then(([data, topo, developments]) => {
+            if (topo === undefined || developments === undefined) {
+              throw new Error("The map data could not be loaded");
+            }
+            state.data = data;
+            state.yearRange = [d3.min(data, yearAcc) ?? 0, d3.max(data, yearAcc) ?? 0];
+            state.selection = [];
+            state.developments = developments;
+            state.mapData = {
+              features: topojson.feature(topo, topo.objects["statistische_quartiere"]),
+              borders: topojson.mesh(topo, topo.objects["statistische_quartiere"]),
+              lakeFeatures: topojson.feature(topo, topo.objects["lakezurich"]),
+              lakeBorders: topojson.mesh(topo, topo.objects["statistische_quartiere_lakebounds"]),
+            };
+          }),
+
+        actions: {
+          selectHovered(state, datum) {
+            state.selection = datum === undefined ? [] : [datum];
+          },
+
+          deselectHovered(state) {
+            state.selection = [];
+          },
+        },
+
+        render(state, actions) {
+          if (state.mapData === null || state.developments === null) {
+            return;
+          }
+
+          const props = queryProps(sszvis.measureDimensions(config.id));
+          const bounds = sszvis.bounds(props.bounds, config.id);
+
+          // Scales
+
+          const colorScale = sszvis.scaleSeqBlu().reverse().domain(state.yearRange);
+
+          // Layers
+
+          const chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: "Neubausiedlungen in der Stadt Zürich",
+              description: "Neubausiedlungen nach Bezugsjahr, über den statistischen Quartieren.",
+            })
+            .datum(state.data);
+
+          const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+
+          // Components
+
+          const mapMaker = sszvis
+            .choropleth()
+            .features(state.mapData.features)
+            .borders(state.mapData.borders)
+            .lakeFeatures(state.mapData.lakeFeatures)
+            .lakeBorders(state.mapData.lakeBorders)
+            .lakePathColor("#7C7C7C")
+            .width(bounds.innerWidth)
+            .height(bounds.innerHeight)
+            .fill("none")
+            .borderColor("#7C7C7C");
+
+          const mapPath = sszvis.swissMapPath(
+            bounds.innerWidth,
+            bounds.innerHeight,
+            state.mapData.features,
+            "zurichStadtfeatures",
+          );
+
+          const newBuildings = sszvis
+            .mapRendererGeoJson()
+            .dataKeyName("id")
+            .geoJsonKeyName("OBJECTID")
+            .geoJson(state.developments)
+            .mapPath(mapPath)
+            .defined((d) => sszvis.defined(yearAcc(d)))
+            .fill((d) => colorScale(yearAcc(d)))
+            .stroke((d) => colorScale(yearAcc(d)))
+            .strokeWidth(1.25)
+            .on("over", actions.selectHovered)
+            .on("click", actions.selectHovered)
+            .on("out", actions.deselectHovered);
+
+          const tooltipHeader = sszvis
+            .modularTextHTML()
+            .bold((d) => (d.datum === undefined ? "" : nameAcc(d.datum)));
+
+          const tooltip = sszvis
+            .tooltip()
+            .renderInto(tooltipLayer)
+            .header(tooltipHeader)
+            .body((d) => (d.datum === undefined ? "" : String(yearAcc(d.datum))))
+            .visible((d) => d.datum !== undefined && sszvis.contains(state.selection, d.datum));
+
+          // Rendering
+
+          chartLayer.call(mapMaker);
+
+          chartLayer.call(newBuildings);
+
+          chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
+        },
+      });
+
+      // Helper functions
+
+      /** A bezugsjahr of 0 stands for "not known", which is NaN here so that it reads as missing. */
+      const parseYear = (value) => {
+        const year = sszvis.parseNumber(value);
+        return year === 0 ? Number.NaN : year;
+      };
+    </script>
+  </body>
+</html>

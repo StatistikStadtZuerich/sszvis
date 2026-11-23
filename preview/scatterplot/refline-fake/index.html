@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scatterplot — Reference Line</title>
+    <link href="/sszvis/preview/_assets/sszvis.css" rel="stylesheet" />
+    <style>
+      /*
+       * sszvis draws for a light page: its text and axes are dark and it sets
+       * no background of its own. Without this the standalone page inherits the
+       * browser's dark preference and the chart is drawn dark-on-dark.
+       */
+      html {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+      }
+      /*
+       * Breathing room inside the frame: embedded in the docs the page is the
+       * chart, and a chart drawn flush to the edge collides with the frame's
+       * own border. `box-sizing` keeps the padding inside the width the chart
+       * measures itself against, so it still fits the viewport it is given.
+       */
+      body {
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      /*
+       * A chart's marks are not always inside its bounds: sszvis places a point
+       * at its value and draws the symbol around it, so the outer half of an
+       * edge bubble - up to the largest radius - falls outside the SVG, which
+       * clips at its own viewport. Letting the SVG paint outside puts that
+       * overhang in the padding above rather than slicing it off.
+       *
+       * The viewport still clips, which matters: a chart given less width than
+       * it was written for can run far past its bounds (the overlapping line
+       * chart lays out ~240px of labels off its right edge at 800px), and that
+       * has to stay out of sight rather than stretching the page sideways.
+       */
+      svg {
+        overflow: visible;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sszvis-chart"></div>
+
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="/sszvis/preview/_assets/sszvis.js"></script>
+    <script>
+      var config = {
+  "data": "data.csv",
+  "id": "#sszvis-chart",
+  "fallback": "../../_static/fallback.png"
+};
+    </script>
+    <script>
+      /**
+       * Scatterplot with a voronoi interaction layer and a categorical colour legend.
+       *
+       * @sszvis   3.5.1
+       * @chart    scatterplot
+       * @features tooltip, legend, voronoi
+       * @date     2026-09-14
+       */
+
+      // Magic Numbers
+
+      /** Radius of a single dot, in pixels. */
+      const DOT_RADIUS = 4;
+      /** White outlines help the eye separate dots that overlap. */
+      const DOT_STROKE = "#FFFFFF";
+
+      // Types
+
+      // Responsive Props
+
+      const queryProps = sszvis
+        .responsiveProps()
+        .prop("xFormat", { _: () => sszvis.formatFractionPercent })
+        .prop("yFormat", { _: () => sszvis.formatNumber })
+        .prop("xAxisLabel", { _: "Prozent" })
+        .prop("yAxisLabel", { _: "Wert" })
+        .prop("yTicks", { _: 4 });
+
+      // Accessors
+
+      const xAcc = (d) => d.xPosition;
+      const yAcc = (d) => d.yPosition;
+      const cAcc = (d) => d.category;
+
+      // Application
+
+      sszvis.app({
+        fallback: { element: config.id, src: config.fallback },
+
+        init: (state) =>
+          d3
+            .csv(config.data, (d) => ({
+              xPosition: sszvis.parseNumber(d["Prozent"]),
+              yPosition: sszvis.parseNumber(d["Wert"]),
+              category: d["Stadt"] ?? "",
+            }))
+            .then((data) => {
+              state.data = data;
+              // NOTE: The voronoi behaviour requires that no two input vertices lie at
+              // exactly the same point, so its data is de-duplicated by position.
+              state.voronoiFiltered = sszvis.derivedSet(data, (d) => `${xAcc(d)}__${yAcc(d)}`);
+              state.xExtent = [d3.min(data, xAcc) ?? 0, d3.max(data, xAcc) ?? 0];
+              state.yExtent = [d3.min(data, yAcc) ?? 0, d3.max(data, yAcc) ?? 0];
+              state.categories = sszvis.set(data, cAcc);
+              state.highlightData = [];
+            }),
+
+        actions: {
+          // NOTE: The voronoi behaviour types its datum as optional, because a touch
+          // can end outside every cell; "over" always carries one.
+          setHighlight(state, _e, datum) {
+            state.highlightData = datum === undefined ? [] : [datum];
+          },
+
+          resetHighlight(state) {
+            state.highlightData = [];
+          },
+        },
+
+        render(state, actions) {
+          const props = queryProps(sszvis.measureDimensions(config.id));
+
+          const legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.xExtent.map(props.xFormat),
+              legendLabels: state.categories,
+            },
+            config.id,
+          );
+
+          const cScale = legendLayout.scale;
+          const colorLegend = legendLayout.legend;
+
+          const bounds = sszvis.bounds({ top: 20, bottom: legendLayout.bottomPadding }, config.id);
+
+          // Scales
+
+          const xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
+
+          const yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
+
+          // Layers
+
+          const chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: "Wert nach Prozentanteil",
+              description: "Streudiagramm der Werte gegen ihren Prozentanteil, nach Stadt eingefärbt.",
+            })
+            .datum(state.data);
+
+          const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.highlightData);
+
+          // Components
+
+          const dots = sszvis
+            .dot()
+            .x((d) => xScale(xAcc(d)))
+            .y((d) => yScale(yAcc(d)))
+            .radius(DOT_RADIUS)
+            .fill((d) => String(cScale(cAcc(d))))
+            .stroke(DOT_STROKE);
+
+          const xAxis = sszvis
+            .axisX()
+            .scale(xScale)
+            .orient("bottom")
+            .alignOuterLabels(true)
+            .tickFormat((d) => props.xFormat(Number(d)))
+            .title(props.xAxisLabel);
+
+          const yAxis = sszvis
+            .axisY()
+            .scale(yScale)
+            .ticks(props.yTicks)
+            .orient("right")
+            .contour(true)
+            .showZeroY(true)
+            .tickFormat((d) => props.yFormat(Number(d)))
+            .title(props.yAxisLabel);
+
+          const tooltip = sszvis
+            .tooltip()
+            .renderInto(tooltipLayer)
+            .header(cAcc)
+            .body((d) => [
+              [props.xAxisLabel, props.xFormat(xAcc(d))],
+              [props.yAxisLabel, props.yFormat(yAcc(d))],
+            ])
+            .visible((d) => sszvis.contains(state.highlightData, d))
+            .orientation((d) => (xScale(xAcc(d.datum)) <= bounds.innerWidth / 2 ? "left" : "right"));
+
+          // Rendering
+
+          chartLayer.selectGroup("dots").call(dots);
+
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight))
+            .call(xAxis);
+
+          chartLayer
+            .selectGroup("yAxis")
+            .call(yAxis)
+            .selectAll("text")
+            .each(hideTickLabelBelow(bounds.innerHeight));
+
+          chartLayer
+            .selectGroup("colorLegend")
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding),
+            )
+            .call(colorLegend);
+
+          chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+          // Interaction
+
+          const mouseOverlay = sszvis
+            .voronoi()
+            .x((d) => xScale(xAcc(d)))
+            .y((d) => yScale(yAcc(d)))
+            .bounds([0, 0, bounds.innerWidth, bounds.innerHeight])
+            .on("over", actions.setHighlight)
+            .on("out", actions.resetHighlight);
+
+          chartLayer.selectGroup("voronoiMouse").datum(state.voronoiFiltered).call(mouseOverlay);
+        },
+      });
+
+      // Helper functions
+
+      /**
+       * The y axis is drawn to the full height of the chart, so its lowest label can
+       * collide with the x axis. Any label whose box reaches past `maxBottom` - in
+       * viewport pixels, as reported by `getBoundingClientRect` - is hidden.
+       */
+      const hideTickLabelBelow = (maxBottom) =>
+        function () {
+          if (this.getBoundingClientRect().bottom >= maxBottom) {
+            d3.select(this.parentElement).style("display", "none");
+          }
+        };
+    </script>
+  </body>
+</html>

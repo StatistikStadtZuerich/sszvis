@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Line Chart — Ordinal</title>
+    <link href="/sszvis/preview/_assets/sszvis.css" rel="stylesheet" />
+    <style>
+      /*
+       * sszvis draws for a light page: its text and axes are dark and it sets
+       * no background of its own. Without this the standalone page inherits the
+       * browser's dark preference and the chart is drawn dark-on-dark.
+       */
+      html {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+      }
+      /*
+       * Breathing room inside the frame: embedded in the docs the page is the
+       * chart, and a chart drawn flush to the edge collides with the frame's
+       * own border. `box-sizing` keeps the padding inside the width the chart
+       * measures itself against, so it still fits the viewport it is given.
+       */
+      body {
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      /*
+       * A chart's marks are not always inside its bounds: sszvis places a point
+       * at its value and draws the symbol around it, so the outer half of an
+       * edge bubble - up to the largest radius - falls outside the SVG, which
+       * clips at its own viewport. Letting the SVG paint outside puts that
+       * overhang in the padding above rather than slicing it off.
+       *
+       * The viewport still clips, which matters: a chart given less width than
+       * it was written for can run far past its bounds (the overlapping line
+       * chart lays out ~240px of labels off its right edge at 800px), and that
+       * has to stay out of sight rather than stretching the page sideways.
+       */
+      svg {
+        overflow: visible;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sszvis-chart"></div>
+
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="/sszvis/preview/_assets/sszvis.js"></script>
+    <script>
+      var config = {
+  "data": "data.csv",
+  "id": "#sszvis-chart",
+  "fallback": "../../_static/fallback.png"
+};
+    </script>
+    <script>
+      /**
+       * Line chart example with an ordinal x axis and a ruler highlight.
+       *
+       * @sszvis   3.5.1
+       * @chart    line-chart
+       * @features ruler, legend
+       * @date     2026-09-14
+       */
+
+      // Magic Numbers
+
+      /** Vertical offset of the y axis title, in pixels. */
+      const Y_TITLE_OFFSET = -20;
+      /** Top padding when the chart has a y axis title, and when it has none. */
+      const TOP_PADDING_WITH_TITLE = 30;
+      const TOP_PADDING_WITHOUT_TITLE = 10;
+
+      // Types
+
+      /** d3's tick-value type: what an axis hands its `tickFormat`. */
+
+      /** `app()`'s effect type, which the `sszvis` global cannot name. */
+
+      // Responsive Props
+
+      const queryProps = sszvis
+        .responsiveProps()
+        .prop("rulerLabel", {
+          _: () =>
+            sszvis
+              .modularTextSVG()
+              .bold((d) => yLabelFormat(yAcc(d)) ?? "")
+              .plain((d) => cAcc(d)),
+        })
+        .prop("xLabel", { _: "" })
+        .prop("yLabel", { _: "" });
+
+      // Accessors
+
+      const xAcc = (d) => d.xValue;
+      const yAcc = (d) => d.yValue;
+      const cAcc = (d) => d.category;
+
+      // Application
+
+      sszvis.app({
+        fallback: { element: config.id, src: config.fallback },
+
+        init: (state) =>
+          d3
+            .csv(config.data, (d) => ({
+              xValue: d["Jahr"] ?? "",
+              yValue: sszvis.parseNumber(d["Wert"]),
+              // NOTE: The data is a single unnamed series, so every datum shares one
+              // empty category and the legend is left out; see `showLegend`.
+              category: "",
+            }))
+            .then((data) => {
+              state.data = data;
+              state.lineData = sszvis.cascade().arrayBy(cAcc, d3.ascending).apply(data);
+              state.xValues = sszvis.set(data, xAcc);
+              state.categories = sszvis.set(data, cAcc);
+              state.maxY = d3.max(data, yAcc) ?? 0;
+              state.selection = [];
+              // NOTE: The chart opens with the most recent period highlighted.
+              return (dispatch) => dispatch("resetDate", []);
+            }),
+
+        actions: {
+          resetDate(state) {
+            const mostRecentValue = d3.max(state.data, xAcc) ?? null;
+            return (dispatch) => dispatch("changeDate", [null, mostRecentValue]);
+          },
+
+          changeDate(state, _e, inputValue) {
+            if (inputValue === null) {
+              state.selection = [];
+              return;
+            }
+            // Find the period closest to the pointer, then take the first datum on
+            // each line that shares it and has a value to display.
+            const closestValue = xAcc(closestDatum(state.data, xAcc, inputValue));
+            state.selection = state.lineData.flatMap((linePoints) => {
+              const match = sszvis.find((d) => xAcc(d) === closestValue, linePoints);
+              return match === undefined || Number.isNaN(yAcc(match)) ? [] : [match];
+            });
+          },
+        },
+
+        render(state, actions) {
+          const props = queryProps(sszvis.measureDimensions(config.id));
+
+          const legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.xValues.map(xLabelFormat),
+              legendLabels: state.categories,
+            },
+            config.id,
+          );
+
+          const cScale = legendLayout.scale;
+          const colorLegend = legendLayout.legend;
+
+          const bounds = sszvis.bounds(
+            {
+              top: props.yLabel.length > 0 ? TOP_PADDING_WITH_TITLE : TOP_PADDING_WITHOUT_TITLE,
+              bottom: legendLayout.bottomPadding,
+            },
+            config.id,
+          );
+
+          // Scales
+
+          const xScale = d3.scalePoint().padding(0).domain(state.xValues).range([0, bounds.innerWidth]);
+
+          const yScale = d3.scaleLinear().domain([0, state.maxY]).range([bounds.innerHeight, 0]);
+
+          // Layers
+
+          const chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: "Anteil nach Schuljahr",
+              description: "Entwicklung des Anteils über die Schuljahre hinweg.",
+            })
+            .datum(state.lineData);
+
+          // Components
+
+          const line = sszvis
+            .line()
+            .x((d) => xScale(xAcc(d)) ?? 0)
+            .y((d) => yScale(yAcc(d)))
+            // NOTE: The stroke accessor is handed the whole line, so the colour comes
+            // from the category of its first point.
+            .stroke((linePoints) => String(cScale(cAcc(linePoints[0]))));
+
+          const xAxis = sszvis.axisX
+            .ordinal()
+            .scale(xScale)
+            .orient("bottom")
+            .tickFormat(xLabelFormat)
+            .highlightTick(isSelected(state))
+            .alignOuterLabels(true)
+            .title(props.xLabel);
+
+          const yAxis = sszvis
+            .axisY()
+            .scale(yScale)
+            .orient("right")
+            .tickFormat(yLabelFormat)
+            .contour(true)
+            .title(props.yLabel)
+            .dyTitle(Y_TITLE_OFFSET);
+
+          const highlightLayer = sszvis
+            .annotationRuler()
+            .top(0)
+            .bottom(bounds.innerHeight)
+            .x((d) => xScale(xAcc(d)) ?? 0)
+            .y((d) => yScale(yAcc(d)))
+            .label(props.rulerLabel)
+            .flip((d) => (xScale(xAcc(d)) ?? 0) >= bounds.innerWidth / 2)
+            .color((d) => cScale(cAcc(d)));
+
+          // Rendering
+
+          chartLayer.selectGroup("line").call(line);
+
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight))
+            .call(xAxis);
+
+          chartLayer.selectGroup("yAxis").call(yAxis);
+
+          if (showLegend(state.categories)) {
+            chartLayer
+              .selectGroup("colorLegend")
+              .attr(
+                "transform",
+                sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding),
+              )
+              .call(colorLegend);
+          }
+
+          chartLayer.selectGroup("highlight").datum(state.selection).call(highlightLayer);
+
+          // Interaction
+
+          const interactionLayer = sszvis
+            .move()
+            .xScale(xScale)
+            .yScale(yScale)
+            .on("move", actions.changeDate)
+            .on("end", actions.resetDate);
+
+          chartLayer.selectGroup("interaction").call(interactionLayer);
+        },
+      });
+
+      // Helper functions
+
+      /** The x values are school years like "05/06", so they are shown verbatim. */
+      const xLabelFormat = (d) => sszvis.formatText(d);
+
+      /** The zero tick is drawn by the axis itself, so it carries no label. */
+      const yLabelFormat = (d) => (d === 0 ? null : sszvis.formatFractionPercent(Number(d)));
+
+      /** Whether an axis tick sits under the current ruler position. */
+      const isSelected = (state) => (d) =>
+        sszvis.contains(state.selection.map(xAcc).map(String), String(d));
+
+      /**
+       * The categories are read from the data, so a single unnamed series produces one
+       * empty category - and a legend with one blank entry, which is worse than none.
+       */
+      const showLegend = (categories) => categories[0] != null && categories[0] !== "";
+
+      /** The datum at the pointer's position, falling back to the first one. */
+      const closestDatum = (data, accessor, value) =>
+        sszvis.find((d) => accessor(d) === value, data) ?? data[0];
+    </script>
+  </body>
+</html>

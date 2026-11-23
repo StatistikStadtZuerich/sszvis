@@ -1,0 +1,39 @@
+import{o as e,t}from"./jsx-runtime-B4SJo7uk.js";import{n}from"./lib-BMFDpM32.js";var r=t(),i={toc:[{id:`sszvistreemap`,value:`sszvis.treemap`,depth:2},{id:`data-structure`,value:`Data Structure`,depth:3},{id:`configuration`,value:`Configuration`,depth:3},{id:`treemapcolorscale`,value:`treemap.colorScale`,depth:4},{id:`treemaptransition`,value:`treemap.transition`,depth:4},{id:`treemapcontainerwidth`,value:`treemap.containerWidth`,depth:4},{id:`treemapcontainerheight`,value:`treemap.containerHeight`,depth:4},{id:`treemapshowlabels`,value:`treemap.showLabels`,depth:4},{id:`treemaplabel`,value:`treemap.label`,depth:4},{id:`treemaplabelposition`,value:`treemap.labelPosition`,depth:4},{id:`treemapstroke`,value:`treemap.stroke`,depth:4},{id:`treemapstrokewidth`,value:`treemap.strokeWidth`,depth:4},{id:`chart`,value:`Chart`,depth:2}]};function a(e){let t={a:`a`,blockquote:`blockquote`,code:`code`,h1:`h1`,h2:`h2`,h3:`h3`,h4:`h4`,li:`li`,p:`p`,span:`span`,ul:`ul`,...n(),...e.components},{Example:i}=t;return i||s(`Example`,!0),(0,r.jsxs)(r.Fragment,{children:[(0,r.jsxs)(t.h1,{id:`treemap`,children:[`Treemap`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemap`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsxs)(t.blockquote,{children:[`
+`,(0,r.jsx)(t.p,{children:`Treemaps are suited to visualizing hierarchical data with quantitative values, where the size of each rectangle represents the magnitude of a metric and nested rectangles show the hierarchical structure.`}),`
+`]}),`
+`,(0,r.jsxs)(t.h2,{id:`sszvistreemap`,children:[`sszvis.treemap`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#sszvistreemap`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsxs)(t.h3,{id:`data-structure`,children:[`Data Structure`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#data-structure`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The treemap component expects data in a hierarchical structure, where each node has the following properties:`}),`
+`,(0,r.jsxs)(t.ul,{children:[`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`data`}),` - the associated data as passed to hierarchy`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`depth`}),` - zero for the root, increasing by one for each descendant generation`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`height`}),` - the greatest distance from any descendant leaf, or zero for leaves`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`parent`}),` - the parent node, or null for the root node`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`children`}),` - an array of child nodes, if any, or undefined for leaves`]}),`
+`,(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:`value`}),` - the optional summed value of the node and its descendants`]}),`
+`]}),`
+`,(0,r.jsxs)(t.p,{children:[`Using the `,(0,r.jsx)(t.code,{children:`sszvis.prepareHierarchyData()`}),` function can help structure your data appropriately for the treemap component. For more details, see the D3 `,(0,r.jsx)(t.a,{href:`https://d3js.org/d3-hierarchy/hierarchy`,children:`hierarchy documentation`}),`.`]}),`
+`,(0,r.jsx)(t.p,{children:`The component automatically creates tooltip anchors at the center of each rectangle for easy tooltip integration.`}),`
+`,(0,r.jsxs)(t.h3,{id:`configuration`,children:[`Configuration`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#configuration`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsxs)(t.h4,{id:`treemapcolorscale`,children:[(0,r.jsx)(t.code,{children:`treemap.colorScale`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemapcolorscale`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Function that returns colors based on category keys. This is the preferred way to apply colors, as the component will automatically use the top-level category for coloring.`}),`
+`,(0,r.jsxs)(t.h4,{id:`treemaptransition`,children:[(0,r.jsx)(t.code,{children:`treemap.transition`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemaptransition`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Boolean flag indicating whether to enable transitions for the treemap layout. Defaults to true.`}),`
+`,(0,r.jsxs)(t.h4,{id:`treemapcontainerwidth`,children:[(0,r.jsx)(t.code,{children:`treemap.containerWidth`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemapcontainerwidth`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The width of the container for the treemap. Defaults to 800.`}),`
+`,(0,r.jsxs)(t.h4,{id:`treemapcontainerheight`,children:[(0,r.jsx)(t.code,{children:`treemap.containerHeight`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemapcontainerheight`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The height of the container for the treemap. Defaults to 600.`}),`
+`,(0,r.jsxs)(t.h4,{id:`treemapshowlabels`,children:[(0,r.jsx)(t.code,{children:`treemap.showLabels`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemapshowlabels`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Boolean flag indicating whether to display labels for each rectangle. Defaults to false.`}),`
+`,(0,r.jsxs)(t.h4,{id:`treemaplabel`,children:[(0,r.jsx)(t.code,{children:`treemap.label`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemaplabel`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsxs)(t.p,{children:[`Accessor function for the label text. Defaults to `,(0,r.jsx)(t.code,{children:`d.data.key`}),`.`]}),`
+`,(0,r.jsxs)(t.h4,{id:`treemaplabelposition`,children:[(0,r.jsx)(t.code,{children:`treemap.labelPosition`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemaplabelposition`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`Position of the labels within each rectangle. Options include "top-left", "center", "top-right", "bottom-left", "bottom-right".`}),`
+`,(0,r.jsx)(t.p,{children:`Defaults to "top-left".`}),`
+`,(0,r.jsxs)(t.h4,{id:`treemapstroke`,children:[(0,r.jsx)(t.code,{children:`treemap.stroke`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemapstroke`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The stroke color for rectangle borders. Defaults to white.`}),`
+`,(0,r.jsxs)(t.h4,{id:`treemapstrokewidth`,children:[(0,r.jsx)(t.code,{children:`treemap.strokeWidth`}),(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#treemapstrokewidth`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(t.p,{children:`The stroke width for rectangle borders. Defaults to 1.`}),`
+`,(0,r.jsxs)(t.h2,{id:`chart`,children:[`Chart`,(0,r.jsx)(t.a,{className:`subheading-anchor`,"aria-label":`Link to section`,href:`#chart`,children:(0,r.jsx)(t.span,{className:`icon icon-link`})})]}),`
+`,(0,r.jsx)(i,{id:`treemap/basic`})]})}var o=e(function(e={}){let{wrapper:t}={...n(),...e.components};return t?(0,r.jsx)(t,{...e,children:(0,r.jsx)(a,{...e})}):a(e)});function s(e,t){throw Error(`Expected `+(t?`component`:`object`)+" `"+e+"` to be defined: you likely forgot to import, pass, or provide it.")}export{o as default,i as handle};

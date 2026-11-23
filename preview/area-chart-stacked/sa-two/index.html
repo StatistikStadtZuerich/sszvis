@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Area Chart Stacked — Two</title>
+    <link href="/sszvis/preview/_assets/sszvis.css" rel="stylesheet" />
+    <style>
+      /*
+       * sszvis draws for a light page: its text and axes are dark and it sets
+       * no background of its own. Without this the standalone page inherits the
+       * browser's dark preference and the chart is drawn dark-on-dark.
+       */
+      html {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+      }
+      /*
+       * Breathing room inside the frame: embedded in the docs the page is the
+       * chart, and a chart drawn flush to the edge collides with the frame's
+       * own border. `box-sizing` keeps the padding inside the width the chart
+       * measures itself against, so it still fits the viewport it is given.
+       */
+      body {
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      /*
+       * A chart's marks are not always inside its bounds: sszvis places a point
+       * at its value and draws the symbol around it, so the outer half of an
+       * edge bubble - up to the largest radius - falls outside the SVG, which
+       * clips at its own viewport. Letting the SVG paint outside puts that
+       * overhang in the padding above rather than slicing it off.
+       *
+       * The viewport still clips, which matters: a chart given less width than
+       * it was written for can run far past its bounds (the overlapping line
+       * chart lays out ~240px of labels off its right edge at 800px), and that
+       * has to stay out of sight rather than stretching the page sideways.
+       */
+      svg {
+        overflow: visible;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sszvis-chart"></div>
+
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="/sszvis/preview/_assets/sszvis.js"></script>
+    <script>
+      var config = {
+  "data": "data.csv",
+  "id": "#sszvis-chart",
+  "fallback": "../../_static/fallback.png"
+};
+    </script>
+    <script>
+      /**
+       * Stacked area chart that can be split into small multiples, one band per category.
+       *
+       * @sszvis   3.5.1
+       * @chart    area-chart-stacked
+       * @features tooltip, ruler, range-flag, legend, button-group, small-multiples
+       * @date     2026-09-14
+       */
+
+      // Magic Numbers
+
+      /** Widest the button group is allowed to get, in pixels. */
+      const MAX_CONTROL_WIDTH = 300;
+      /** Vertical space in pixels reserved above the chart for the button group. */
+      const CONTROL_HEIGHT = 70;
+      /** Distance in pixels from the top of the chart container to the button group. */
+      const CONTROL_TOP = 20;
+      /** Share of each multiple's step that is left empty between the bands. */
+      const MULTIPLES_PAD_RATIO = 0.1;
+      /** Number of ticks on the x axis, before the highlighted date is added to them. */
+      const X_TICKS = 5;
+      const SUMMED = "Summiert";
+      const SEPARATED = "Separiert";
+
+      // Types
+
+      /** One date's worth of data, shaped the way d3's stack layout wants it. */
+
+      /**
+       * A point on one band. The category key is carried on the point as well as on the
+       * band, because the multiples components position each point by its own category.
+       */
+
+      /** One band of the stack: its points, plus the category they all belong to. */
+
+      // Responsive Props
+
+      const queryProps = sszvis
+        .responsiveProps()
+        .prop("controlWidth", { _: (width) => Math.min(width, MAX_CONTROL_WIDTH) })
+        .prop("xLabelFormat", { _: () => sszvis.formatYear });
+
+      // Accessors
+
+      const xAcc = (d) => d.year;
+      const yAcc = (d) => d.value;
+      const cAcc = (d) => d.category;
+
+      // Application
+
+      sszvis.app({
+        fallback: { element: config.id, src: config.fallback },
+
+        init: (state) =>
+          d3
+            // NOTE: A row whose year cannot be parsed is skipped - returning null from a
+            // d3 row callback drops the row - because every band is positioned by date.
+            .csv(config.data, (d) => {
+              const year = sszvis.parseYear(d["Jahr"]);
+              return year === null
+                ? null
+                : {
+                    category: d["Nationalität"] ?? "",
+                    year,
+                    value: sszvis.parseNumber(d["Anzahl"]),
+                  };
+            })
+            .then((data) => {
+              const categories = sszvis.set(data, cAcc);
+              const rows = stackRows(data, categories);
+
+              state.data = data;
+              state.categories = categories;
+              state.dates = sszvis.set(data, xAcc);
+              state.timeExtent = [d3.min(data, xAcc) ?? new Date(), d3.max(data, xAcc) ?? new Date()];
+              state.stackedData = stackBands(rows, categories);
+              state.maxValue = d3.max(data, yAcc) ?? 0;
+              state.maxStacked = d3.max(rows, (row) => d3.sum(categories, (c) => row.values[c])) ?? 0;
+              state.isMultiples = false;
+
+              // NOTE: The chart opens on the most recent date.
+              selectDate(state, d3.max(state.dates) ?? new Date(), 0);
+            }),
+
+        actions: {
+          toggleMultiples(state, _e, value) {
+            state.isMultiples = value === SEPARATED;
+          },
+
+          // NOTE: The move behavior inverts the pointer position through both scales, so
+          // it hands back a date anywhere in the domain; the data has one stack per
+          // date, so the nearest one wins.
+          changeDate(state, _e, xValue, yValue) {
+            if (xValue instanceof Date && typeof yValue === "number") {
+              selectDate(state, closestDate(state.dates, xValue), yValue);
+            }
+          },
+
+          resetDate(state) {
+            selectDate(state, d3.max(state.dates) ?? new Date(), 0);
+          },
+        },
+
+        render(state, actions) {
+          const props = queryProps(sszvis.measureDimensions(config.id));
+
+          const legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.timeExtent.map(props.xLabelFormat),
+              legendLabels: state.categories,
+            },
+            config.id,
+          );
+
+          const cScale = legendLayout.scale;
+          const colorLegend = legendLayout.legend;
+
+          const bounds = sszvis.bounds(
+            { top: CONTROL_HEIGHT, bottom: legendLayout.bottomPadding },
+            config.id,
+          );
+
+          const multiplesLayout = sszvis.layoutStackedAreaMultiples(
+            bounds.innerHeight,
+            state.stackedData.length,
+            MULTIPLES_PAD_RATIO,
+          );
+
+          // Scales
+
+          const xScale = d3.scaleTime().domain(state.timeExtent).range([0, bounds.innerWidth]);
+
+          const yScale = d3.scaleLinear().domain([0, state.maxStacked]).range([bounds.innerHeight, 0]);
+
+          // NOTE: In multiples mode each band has its own baseline and its own height, so
+          // a band's top is its baseline minus the value scaled within the band.
+          const yScaleMultiples = d3
+            .scaleLinear()
+            .domain([0, state.maxValue])
+            .range([0, multiplesLayout.bandHeight]);
+
+          const yPositionMultiples = d3
+            .scaleOrdinal()
+            .domain(state.categories)
+            .range(multiplesLayout.range);
+
+          const bandTop = (d) => yPositionMultiples(d.key) - yScaleMultiples(d.data.values[d.key]);
+
+          // Layers
+
+          const chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: "Wohnbevölkerung nach Nationalität",
+              description:
+                "Ausländische und schweizerische Wohnbevölkerung der Stadt Zürich pro Jahr, summiert oder getrennt.",
+            })
+            .datum(state.stackedData);
+
+          const htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
+
+          // Components
+
+          const stackedArea = sszvis
+            .stackedArea()
+            .key((band) => band.key)
+            .x((d) => xScale(d.data.year))
+            .y0((d) => yScale(d[0]))
+            .y1((d) => yScale(d[1]))
+            .fill((band) => String(cScale(band.key)));
+
+          const stackedAreaMultiples = sszvis
+            .stackedAreaMultiples()
+            .key((band) => band.key)
+            .x((d) => xScale(d.data.year))
+            .y0((d) => yPositionMultiples(d.key))
+            .y1(bandTop)
+            .fill((band) => String(cScale(band.key)));
+
+          // NOTE: In multiples mode the ruler spans from the top of the topmost band;
+          // summed, it spans from the top of the whole stack.
+          const topPoint = state.highlightData.at(-1);
+          const rulerTop =
+            state.isMultiples && topPoint !== undefined
+              ? bandTop(topPoint)
+              : yScale(state.totalHighlightValue);
+
+          /**
+           * Whether the pointer is inside this band. Summed, the pointer's value is
+           * compared against the band's own bounds; separated, its pixel position is
+           * compared against the band's baseline and top.
+           */
+          const isUnderPointer = (d) => {
+            if (!state.isMultiples) {
+              return d[0] < state.mouseYValue && d[1] > state.mouseYValue;
+            }
+            const pointerY = yScale(state.mouseYValue);
+            return yPositionMultiples(d.key) > pointerY && bandTop(d) < pointerY;
+          };
+
+          const isFlipped = () => xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
+
+          const rangeRuler = sszvis
+            .annotationRangeRuler()
+            .top(rulerTop)
+            .bottom(bounds.innerHeight)
+            .x(xScale(state.highlightDate))
+            .y0((d) => (state.isMultiples ? yPositionMultiples(d.key) : yScale(d[0])))
+            .y1((d) => (state.isMultiples ? bandTop(d) : yScale(d[1])))
+            // NOTE: the ruler pipes this through formatNumber, so return the number itself.
+            .label((d) => d.data.values[d.key])
+            .total(state.totalHighlightValue)
+            .flip(isFlipped);
+
+          const tooltipText = sszvis
+            .modularTextHTML()
+            .bold((d) => sszvis.formatNumber(d.data.values[d.key]))
+            .plain((d) => d.key);
+
+          const rangeTooltip = sszvis
+            .tooltip()
+            .header(tooltipText)
+            .orientation(() => (isFlipped() ? "right" : "left"))
+            .renderInto(htmlLayer)
+            .visible(true);
+
+          const rangeFlag = sszvis
+            .annotationRangeFlag()
+            .x(xScale(state.highlightDate))
+            .y0((d) => (state.isMultiples ? yPositionMultiples(d.key) : yScale(d[0])))
+            .y1((d) => (state.isMultiples ? bandTop(d) : yScale(d[1])));
+
+          const xAxis = sszvis.axisX
+            .time()
+            .scale(xScale)
+            .orient("bottom")
+            // NOTE: The highlighted date gets a tick of its own, on top of the regular ones.
+            .tickValues([...xScale.ticks(X_TICKS), state.highlightDate])
+            .tickFormat((d) => props.xLabelFormat(new Date(d.valueOf())))
+            .highlightTick((d) => sszvis.stringEqual(d, state.highlightDate));
+
+          const yAxis = sszvis.axisY().scale(yScale).contour(true).orient("right");
+
+          const buttonGroup = sszvis
+            .buttonGroup()
+            .values([SUMMED, SEPARATED])
+            .current(state.isMultiples ? SEPARATED : SUMMED)
+            .change(actions.toggleMultiples)
+            .width(props.controlWidth);
+
+          // Rendering
+
+          chartLayer
+            .selectGroup("areachart")
+            .call(state.isMultiples ? stackedAreaMultiples : stackedArea);
+
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight))
+            .call(xAxis);
+
+          // NOTE: The y axis measures the summed stack, so it is faded out rather than
+          // removed when the bands are separated and it no longer means anything.
+          chartLayer
+            .selectGroup("yAxis")
+            .call(yAxis)
+            .transition(sszvis.defaultTransition())
+            .style("opacity", state.isMultiples ? 0 : 1);
+
+          chartLayer
+            .selectGroup("colorLegend")
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding),
+            )
+            .call(colorLegend);
+
+          htmlLayer
+            .selectDiv("controls")
+            .style("left", `${(bounds.innerWidth - buttonGroup.width()) / 2}px`)
+            .style("top", `${CONTROL_TOP - bounds.padding.top}px`)
+            .call(buttonGroup);
+
+          chartLayer.selectGroup("highlight").datum(state.highlightData).call(rangeRuler);
+
+          // NOTE: Only the band the pointer is inside gets a flag, and with it a tooltip.
+          const flagGroup = chartLayer
+            .selectGroup("flag")
+            .datum(state.highlightData.filter(isUnderPointer))
+            .call(rangeFlag);
+
+          flagGroup.selectAll("[data-tooltip-anchor]").call(rangeTooltip);
+
+          // Interaction
+
+          const interactionLayer = sszvis
+            .move()
+            .xScale(xScale)
+            .yScale(yScale)
+            .on("move", actions.changeDate)
+            .on("end", actions.resetDate);
+
+          chartLayer.selectGroup("interaction").call(interactionLayer);
+        },
+      });
+
+      // Helper functions
+
+      /**
+       * Reshape the flat rows into one row per date, with a value per category, which is
+       * the shape d3's stack layout consumes.
+       */
+      const stackRows = (data, categories) =>
+        sszvis
+          .cascade()
+          .arrayBy((d) => xAcc(d).getTime())
+          .objectBy(cAcc)
+          .apply(data)
+          .map((group) => ({
+            year: xAcc(Object.values(group)[0][0]),
+            values: Object.fromEntries(categories.map((c) => [c, yAcc(group[c][0])])),
+          }));
+
+      /**
+       * Run d3's stack layout and copy each band's category onto its points, because the
+       * multiples components position every point by the category it belongs to.
+       *
+       * NOTE: The keys are reversed so that the first category ends up on top of the
+       * stack rather than at its base.
+       */
+      const stackBands = (rows, categories) =>
+        d3
+          .stack()
+          .keys([...categories].reverse())
+          .value((row, key) => row.values[key])(rows)
+          .map((series) =>
+            Object.assign(
+              series.map((point) => ({
+                0: point[0],
+                1: point[1],
+                data: point.data,
+                key: series.key,
+              })),
+              { key: series.key },
+            ),
+          );
+
+      /**
+       * Move the ruler to `date`: everything it draws is derived from the date and from
+       * the pointer's height, so `init` and both actions go through here.
+       */
+      const selectDate = (state, date, mouseYValue) => {
+        state.highlightDate = date;
+        state.highlightData = state.stackedData.flatMap((band) =>
+          band.filter((point) => sszvis.stringEqual(point.data.year, date)),
+        );
+        state.totalHighlightValue = d3.sum(
+          state.categories,
+          (c) => state.highlightData[0]?.data.values[c] ?? 0,
+        );
+        state.mouseYValue = mouseYValue;
+      };
+
+      /** The date in `dates` - which is sorted ascending - nearest to `target`. */
+      const closestDate = (dates, target) => {
+        const i = d3.bisectLeft(dates, target, 1);
+        const before = dates[i - 1];
+        const after = dates[i] ?? before;
+        return target.valueOf() - before.valueOf() > after.valueOf() - target.valueOf() ? after : before;
+      };
+    </script>
+  </body>
+</html>

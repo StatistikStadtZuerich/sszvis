@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vertical Bar Chart</title>
+    <link href="/sszvis/preview/_assets/sszvis.css" rel="stylesheet" />
+    <style>
+      /*
+       * sszvis draws for a light page: its text and axes are dark and it sets
+       * no background of its own. Without this the standalone page inherits the
+       * browser's dark preference and the chart is drawn dark-on-dark.
+       */
+      html {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+      }
+      /*
+       * Breathing room inside the frame: embedded in the docs the page is the
+       * chart, and a chart drawn flush to the edge collides with the frame's
+       * own border. `box-sizing` keeps the padding inside the width the chart
+       * measures itself against, so it still fits the viewport it is given.
+       */
+      body {
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      /*
+       * A chart's marks are not always inside its bounds: sszvis places a point
+       * at its value and draws the symbol around it, so the outer half of an
+       * edge bubble - up to the largest radius - falls outside the SVG, which
+       * clips at its own viewport. Letting the SVG paint outside puts that
+       * overhang in the padding above rather than slicing it off.
+       *
+       * The viewport still clips, which matters: a chart given less width than
+       * it was written for can run far past its bounds (the overlapping line
+       * chart lays out ~240px of labels off its right edge at 800px), and that
+       * has to stay out of sight rather than stretching the page sideways.
+       */
+      svg {
+        overflow: visible;
+      }
+      html {
+        overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sszvis-chart"></div>
+
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="/sszvis/preview/_assets/sszvis.js"></script>
+    <script>
+      var config = {
+  "data": "data.csv",
+  "id": "#sszvis-chart",
+  "fallback": "../../_static/fallback.png"
+};
+    </script>
+    <script>
+      /**
+       * Basic vertical bar chart example using sszvis.
+       *
+       * @sszvis   3.5.1
+       * @chart    bar-chart-vertical
+       * @features tooltip
+       * @date     2026-09-14
+       */
+
+      // Magic Numbers
+
+      const MAX_WIDTH = 800;
+      // NOTE: One series, so one colour: the categories are already named on the x axis.
+      const SERIES_KEY = "Beschäftigte";
+
+      // Types
+
+      // Responsive Props
+
+      /** Typed here so the slant reads as the axis' own union rather than as `string`. */
+      const SLANT = { palm: "vertical", _: "horizontal" };
+
+      const queryProps = sszvis
+        .responsiveProps()
+        .prop("barPadding", { palm: 0.4, _: 0.2 })
+        .prop("bottomPadding", { palm: 140, _: 60 })
+        .prop("leftPadding", { _: null })
+        .prop("slant", SLANT)
+        .prop("yLabelFormat", { _: () => sszvis.formatNumber });
+
+      // Accessors
+
+      const xAcc = (d) => d.category;
+      const yAcc = (d) => d.yValue;
+
+      // Application
+
+      sszvis.app({
+        fallback: { element: config.id, src: config.fallback },
+
+        init: (state) =>
+          d3
+            .csv(config.data, (d) => ({
+              category: d["Sektor"] ?? "",
+              yValue: sszvis.parseNumber(d["Anzahl"]),
+            }))
+            .then((data) => {
+              state.data = data;
+              state.categories = data.map(xAcc);
+              state.selection = [];
+            }),
+
+        actions: {
+          showTooltip(state, _e, category) {
+            state.selection = state.data.filter((d) => xAcc(d) === category);
+          },
+
+          hideTooltip(state) {
+            state.selection = [];
+          },
+        },
+
+        render(state, actions) {
+          const props = queryProps(sszvis.measureDimensions(config.id));
+          const yMax = d3.max(state.data, yAcc) ?? 0;
+          const bounds = sszvis.bounds(
+            {
+              top: 3,
+              bottom: props.bottomPadding,
+              left:
+                props.leftPadding == null
+                  ? sszvis.measureAxisLabel(props.yLabelFormat(yMax))
+                  : props.leftPadding,
+            },
+            config.id,
+          );
+          const chartDimensions = sszvis.dimensionsVerticalBarChart(
+            Math.min(MAX_WIDTH, bounds.innerWidth),
+            state.categories.length,
+          );
+
+          // Scales
+
+          const xScale = d3
+            .scaleBand()
+            .domain(state.categories)
+            .padding(chartDimensions.padRatio)
+            .paddingOuter(props.barPadding)
+            .range([0, chartDimensions.totalWidth]);
+
+          const heightScale = d3.scaleLinear().domain([0, yMax]).range([0, bounds.innerHeight]);
+
+          const yPosScale = heightScale.copy().range([...heightScale.range()].reverse());
+
+          const cScale = sszvis.scaleQual12().domain([SERIES_KEY]);
+          const barFill = cScale(SERIES_KEY);
+          const barFillHighlight = cScale.darker()(SERIES_KEY);
+
+          // Layers
+
+          const chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: "Beschäftigte nach Sektor",
+              description: "Anzahl Beschäftigte je Wirtschaftssektor.",
+            })
+            .datum(state.data);
+
+          const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+
+          // Components
+
+          const barGen = sszvis
+            .bar()
+            .x((d) => xScale(xAcc(d)) ?? 0)
+            // NOTE: A bar with no value is parked on the baseline rather than being
+            // positioned from a NaN, which would write an invalid attribute.
+            .y((d) => {
+              const yPos = yPosScale(yAcc(d));
+              return Number.isNaN(yPos) ? (yPosScale.range()[0] ?? 0) : yPos;
+            })
+            // NOTE: Because we use sszvis.move in this example, the bars have to be
+            // exactly as wide as the scale's bandwidth. This results in slightly
+            // narrower bars than the default.
+            .width(xScale.bandwidth())
+            .height((d) => heightScale(yAcc(d)))
+            .centerTooltip(true)
+            .fill((d) => (isSelected(state)(d) ? barFillHighlight : barFill));
+
+          const xAxis = sszvis.axisX.ordinal().scale(xScale).orient("bottom").slant(props.slant);
+
+          if (props.slant === "horizontal") {
+            xAxis.textWrap(xScale.step());
+          }
+
+          const yAxis = sszvis.axisY().scale(yPosScale).orient("right");
+
+          const tooltipHeader = sszvis
+            .modularTextHTML()
+            .bold((d) => {
+              const yValue = yAcc(d);
+              return Number.isNaN(yValue) ? "keine" : sszvis.formatNumber(yValue);
+            })
+            .plain("Beschäftigte");
+
+          const tooltip = sszvis
+            .tooltip()
+            .renderInto(tooltipLayer)
+            .orientation(sszvis.fitTooltip("bottom", bounds))
+            .header(tooltipHeader)
+            .visible(isSelected(state));
+
+          // Rendering
+
+          chartLayer.attr(
+            "transform",
+            sszvis.translateString(
+              bounds.innerWidth / 2 - chartDimensions.totalWidth / 2,
+              bounds.padding.top,
+            ),
+          );
+
+          const bars = chartLayer
+            .selectGroup("bars")
+            .attr("transform", sszvis.translateString(bounds.padding.left, 0))
+            .call(barGen);
+
+          bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+          bars
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight))
+            .call(xAxis);
+
+          chartLayer.selectGroup("yAxis").call(yAxis);
+
+          // Interaction
+
+          // NOTE: The move behavior provides tooltips in the absence of a bar, i.e.
+          // when we have missing data.
+          const interactionLayer = sszvis
+            .move()
+            .xScale(xScale)
+            .yScale(yPosScale)
+            .on("move", actions.showTooltip)
+            .on("end", actions.hideTooltip);
+
+          bars.selectGroup("interaction").call(interactionLayer);
+        },
+      });
+
+      // Helper functions
+
+      const isSelected = (state) => (d) => sszvis.contains(state.selection, d);
+    </script>
+  </body>
+</html>
