@@ -76,7 +76,9 @@ const named = (header: readonly string[]): ColumnName[] => {
 const headed = (rows: readonly (readonly string[])[]): Table => {
   const [header, ...body] = rows;
   if (header === undefined) return { columns: [], rows: [] };
-  const width = Math.max(header.length, ...body.map((cells) => cells.length));
+  /* A loop, not a spread: a long table is more arguments than Math.max can take. */
+  let width = header.length;
+  for (const cells of body) width = Math.max(width, cells.length);
   const taken = new Set(header);
   const columns = Array.from({ length: width }, (_, index) => {
     const given = header[index];
