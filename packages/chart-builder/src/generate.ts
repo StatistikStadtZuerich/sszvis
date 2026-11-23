@@ -6,15 +6,13 @@ import { BuilderCompileError } from "./emit";
 import { host } from "./host";
 import { optionValue, TITLE, type Asset, type Recipe, type Spec } from "./spec";
 
-/** Everything a spec turns into: the four files of the bundle, and what else the page loads. */
 export interface Generated {
   readonly ts: string;
   readonly js: string;
   readonly html: string;
   readonly csv: string;
-  /** The extra files the chart reads; the bundle carries them beside the data. */
   readonly assets: readonly Asset[];
-  /** The `LIBRARIES` the page loads for the chart besides d3 and sszvis. */
+  /** `LIBRARIES` names, beyond d3 and sszvis. */
   readonly scripts: readonly string[];
 }
 
@@ -33,10 +31,7 @@ const OPTIONS: Options = {
   trailingComma: "all",
 };
 
-/**
- * Loads a heavy dependency on first use and keeps it. A failed load is not kept, so the
- * next compile tries again rather than reporting the same failure forever.
- */
+/** A failed load is not cached, so the next call retries it. */
 export const lazy = <A>(asset: string, load: () => Promise<A>) =>
   Effect.uninterruptible(
     Effect.tryPromise({
@@ -65,12 +60,7 @@ const loadFormatter = () =>
 
 const loadStripper = () => import("ts-blank-space").then((module) => module.default);
 
-/**
- * Turns a spec into its files: the TypeScript a recipe emits, formatted; the JavaScript
- * the bundle runs, stripped from it and formatted again; the page that loads it; and the
- * data as the spec holds it. An Effect so the loaded dependencies are shared by every
- * call made with the function it yields.
- */
+/** An Effect so every call to the function it yields shares the lazily loaded dependencies. */
 export const makeGenerate: Effect.Effect<Generate> = Effect.gen(function* () {
   const formatter = yield* lazy("code formatter", loadFormatter);
   const stripper = yield* lazy("TypeScript stripper", loadStripper);
@@ -110,10 +100,7 @@ const shared = Effect.runSync(makeGenerate);
 export const generate = (recipe: Recipe, spec: Spec): Promise<Generated> =>
   Effect.runPromise(shared(recipe, spec));
 
-/*
- * A section banner the stripped JavaScript left with nothing under it: a section
- * holding only types is empty once they are gone.
- */
+/* A section holding only types is left as a bare banner once they are stripped. */
 const BANNER = /^\/\/ [A-Z][A-Za-z]*(?: [A-Za-z]+){0,3}$/;
 
 const isComment = (line: string) => /^\s*(?:\/\/|\/\*|\*)/.test(line);

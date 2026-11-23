@@ -1,9 +1,4 @@
-/**
- * What the table editor does to a table as the user works on it: naming and renaming
- * columns, cycling a column's kind, sorting rows. None of it reaches the emitted chart,
- * which reads the table through `@sszvis/chart-builder/csv`, so it stays with the editor rather than
- * with the code the builder shares.
- */
+/* Editor-only table operations: the emitted chart never sees them, so they stay out of @sszvis/chart-builder. */
 import {
   columnKinds,
   distinctName,
@@ -90,7 +85,6 @@ export const sortRows = (
 
 const collator = new Intl.Collator("de-CH", { numeric: true, sensitivity: "base" });
 
-/** `dd.mm.yyyy` to a sortable `yyyymmdd` number. */
 const dateKey = (value: string) => {
   const [day = "", month = "", year = ""] = value.split(".");
   return Number(year.padStart(4, "0") + month.padStart(2, "0") + day.padStart(2, "0"));

@@ -8,10 +8,6 @@ import { BUNDLE } from "@sszvis/chart-builder/host";
 import type { Recipe, Spec } from "@sszvis/chart-builder/spec";
 import type { Generated } from "./domain";
 
-/*
- * The highlighter is this app's: `@sszvis/chart-builder/generate` produces the files, and the code
- * panel wants them rendered with the same options the examples plugin uses at build time.
- */
 const loadHighlighter = () =>
   Promise.all([
     import("shiki/core"),

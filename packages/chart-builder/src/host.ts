@@ -1,14 +1,13 @@
 import { str } from "./emit";
 import type { Asset } from "./spec";
 
-/** Where the page loads d3 and sszvis from. */
 export interface Cdn {
   readonly d3: string;
   readonly sszvis: string;
   readonly sszvisCss: string;
 }
 
-/** The exported page links the published releases, since it has to run anywhere. */
+/** Published releases, so the exported page runs anywhere. */
 export const CDN: Cdn = {
   d3: "https://unpkg.com/d3@7/dist/d3.min.js",
   sszvis: "https://unpkg.com/sszvis@3/build/sszvis.js",
@@ -30,7 +29,6 @@ export const escapeHtml = (value: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
-/** The CDN scripts a recipe may ask for, by the bare name it asks under. */
 export const LIBRARIES = {
   topojson: "https://unpkg.com/topojson-client@3/dist/topojson-client.min.js",
 } satisfies Readonly<Record<string, string>>;
@@ -46,10 +44,7 @@ export const libraryTags = (scripts: readonly string[]): string =>
     .map((name) => `    <script src="${LIBRARIES[name]}"></script>\n`)
     .join("");
 
-/**
- * Where the chart reads its files, as `config` hands them over. The exported page names
- * them beside itself; a preview, with no folder around it, passes URLs instead.
- */
+/** The export names files beside the page; a preview, with no folder, passes URLs. */
 export interface HostFiles {
   readonly data: string;
   readonly fallback: string;
@@ -59,30 +54,24 @@ export interface HostFiles {
 const BESIDE: HostFiles = {
   data: BUNDLE.data,
   fallback: BUNDLE.fallback,
-  /* Each extra file sits beside the data, named the same way the chart asks for it. */
   asset: (asset) => asset.path,
 };
 
 export interface HostPage {
   readonly title: string;
-  /** The extra files the chart loads, each a key on `config`. */
   readonly assets?: readonly Asset[];
-  /** The libraries the chart expects as globals besides d3 and sszvis, by `LIBRARIES` name. */
+  /** `LIBRARIES` names, loaded as globals beyond d3 and sszvis. */
   readonly scripts?: readonly string[];
   /** Overrides `CDN`, e.g. to preview against an unreleased build of sszvis. */
   readonly cdn?: Partial<Cdn>;
-  /** Overrides where `config` points the chart; defaults to the bundle's own file names. */
+  /** Defaults to the bundle's own file names. */
   readonly files?: Partial<HostFiles>;
-  /**
-   * The chart's JavaScript, written into the page instead of loaded from `chart.js`
-   * beside it. A `srcdoc` frame has no folder to load from.
-   */
+  /** Inlined instead of loading `chart.js`: a `srcdoc` frame has no folder to load from. */
   readonly inline?: string;
   /** Markup placed before every script, so it sees whatever they throw; a preview's error reporter. */
   readonly before?: string;
 }
 
-/** The page that runs a generated chart: the exported `index.html`, or a preview of it. */
 export const host = ({
   title,
   assets = [],

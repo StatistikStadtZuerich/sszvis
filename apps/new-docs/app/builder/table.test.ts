@@ -48,7 +48,7 @@ describe("sortOrder", () => {
   });
 
   test("should order an all-non-finite column deterministically, as text", () => {
-    /* Sorted as numbers these went through `Infinity - Infinity`, i.e. a NaN comparator. */
+    /* Numerically, `Infinity - Infinity` is NaN, which breaks the comparator. */
     expect(sortOrder(parse("v\nInfinity\n-Infinity\nInfinity"), 0, "asc", {})).toEqual([1, 0, 2]);
   });
 
@@ -68,13 +68,7 @@ describe("sortOrder", () => {
     expect(reorder(table, [2, 9]).rows).toEqual([["Handel", "42196"]]);
   });
 
-  /*
-   * NOTE: dates rather than numbers, because the collator is numeric-aware - it
-   * already orders "9" before "10" - so a column of plain digits sorts the same
-   * whether it is read as a measure or as labels. Dates are where the two
-   * comparators genuinely part: by date, or by the day each one happens to start
-   * with.
-   */
+  /* Dates, not digits: the numeric-aware collator already sorts plain digits like numbers. */
   test("should sort a column pinned as text by its text, not by the dates it holds", () => {
     const dates = parse("d\n01.02.2020\n10.01.2019\n05.03.2018");
     expect(sortOrder(dates, 0, "asc", {})).toEqual([2, 1, 0]);
@@ -83,23 +77,17 @@ describe("sortOrder", () => {
 });
 
 describe("editing columns", () => {
-  /*
-   * Renaming one column onto another's name. The names are not unique until the
-   * new one settles, so a pin moved by the name a header shows mid-edit would be
-   * taken off whichever column already answered to it.
-   */
+  /* Mid-edit both headers read "Wert", so the pin must move by the edited column's previous name. */
   test("should move only the edited column's pin when its typed name collides with another", () => {
     const table = parse("Jahr,Wert\n1,2");
     const typed = { ...table, columns: [ColumnName.make("Wert"), ColumnName.make("Wert")] };
     const kinds = { ...pin("Jahr", "temporal"), ...pin("Wert", "nominal") };
     const next = settleColumn(typed, 0, ColumnName.make("Jahr"), kinds);
     expect(next.table.columns).toEqual(["Wert 2", "Wert"]);
-    /* The column the user never touched keeps what it was given. */
     expect(next.kinds).toEqual({ "Wert 2": "temporal", Wert: "nominal" });
   });
 
   test("should name an added column distinctly from one the user has already typed", () => {
-    /* Two columns of one name are one column to everything that reads them by name. */
     const columns = [ColumnName.make("Spalte 2")];
     expect(addedName(columns)).toBe("Spalte 2 2");
     expect(addedName([...columns, addedName(columns)])).toBe("Spalte 3");
@@ -116,7 +104,6 @@ describe("editing columns", () => {
     expect(renameKind(kinds, ColumnName.make("Jahr"), ColumnName.make("Year"))).toEqual({
       Year: "nominal",
     });
-    /* A pin for another column is left where it is. */
     expect(renameKind(kinds, ColumnName.make("Anzahl"), ColumnName.make("Count"))).toEqual(kinds);
   });
 });

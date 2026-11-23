@@ -1,8 +1,4 @@
-/*
- * Type-checks the code `compile.test.ts` generates for every feature combination,
- * against sszvis' published types and the globals the host page provides. The
- * generated files are plain scripts with no imports, so each needs its own scope.
- */
+/* Generated charts are import-free scripts; `moduleDetection: force` keeps their top-level bindings from colliding. */
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
