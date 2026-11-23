@@ -139,36 +139,37 @@ describe("annotation/rangeRuler", () => {
     },
   );
 
-  // BUG(#443): the total label is drawn unconditionally. src/annotation/rangeRuler.ts:191 joins
-  // `.data([fn.last(data)])` with no check on props.total, then sets its text to
-  // `Total ${formatNumber(props.total)}`. With no total configured that formats `undefined`
-  // as a dash, so every rangeRuler carries a "Total -" label it was never asked for.
-  // Skipped, not deleted: it fails with "expected [ Array(1) ] to have a length of +0".
-  test.skip("should draw no total label when no total was configured", () => {
+  test("should draw no total label when no total was configured", () => {
     const chartLayer = layer().datum(testData).call(ruler());
 
     expect(chartLayer.selectAll("text.sszvis-rangeRuler__total").nodes()).toHaveLength(0);
   });
 
-  // BUG(#443): an empty data array throws. The same join at src/annotation/rangeRuler.ts:191 binds
-  // `[fn.last([])]`, which is `[undefined]` rather than `[]`, so one total element is still
-  // created and its `x` accessor runs against `undefined`.
-  // Skipped, not deleted: it fails with
-  // "TypeError: Cannot read properties of undefined (reading 'x')".
-  test.skip("should render without throwing when the data array is empty", () => {
+  test("should render without throwing when the data array is empty", () => {
     const chartLayer = layer();
 
     expect(() => chartLayer.datum([]).call(ruler().total(200))).not.toThrow();
     expect(chartLayer.selectAll("g.sszvis-rangeRuler--mark").nodes()).toHaveLength(0);
+    expect(chartLayer.selectAll("text.sszvis-rangeRuler__total").nodes()).toHaveLength(0);
+  });
+
+  test("should remove the total and its contour when the total is unset on a re-render", () => {
+    const rulerComponent = ruler().total(200);
+    const chartLayer = layer().datum(testData).call(rulerComponent);
+    expect(chartLayer.selectAll(".sszvis-rangeRuler__total-contour").nodes()).toHaveLength(1);
+
+    chartLayer.call(rulerComponent.total(undefined));
+
+    expect(chartLayer.selectAll(".sszvis-rangeRuler__total").nodes()).toHaveLength(0);
+    expect(chartLayer.selectAll(".sszvis-rangeRuler__total-contour").nodes()).toHaveLength(0);
   });
 
   test("should match the rendered mark count to the data when the data changes", () => {
     const rulerComponent = ruler();
     const chartLayer = layer();
 
-    // Grows then shrinks: without the shrink this loop never exercises the exit path. It stops
-    // at one rather than at zero because an empty array throws - see the skipped test above.
-    for (const count of [1, 2, 1]) {
+    // Grows then shrinks to nothing: without the shrink this loop never exercises the exit path.
+    for (const count of [1, 2, 1, 0]) {
       chartLayer.datum(testData.slice(0, count)).call(rulerComponent);
       expect(chartLayer.selectAll("g.sszvis-rangeRuler--mark").nodes()).toHaveLength(count);
     }

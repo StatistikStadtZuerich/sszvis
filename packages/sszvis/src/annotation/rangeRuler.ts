@@ -180,51 +180,31 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
         marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
       }
 
+      const lastDatum = fn.last(data);
+      const totalData = props.total === undefined || lastDatum === undefined ? [] : [lastDatum];
+      const totalX = (d: Datum<T>) => crispX(d) + (props.flip(d) ? -10 : 10);
+      const totalAnchor = (d: Datum<T>) => (props.flip(d) ? "end" : "start");
+      const totalText = `Total ${formatNumber(props.total)}`;
+
+      selection
+        .selectAll(".sszvis-rangeRuler__total-contour")
+        .data(totalData)
+        .join("text")
+        .classed("sszvis-rangeRuler__total-contour", true)
+        .attr("x", totalX)
+        .attr("y", props.top - 10)
+        .style("text-anchor", totalAnchor)
+        .text(totalText);
+
       const total = selection
         .selectAll(".sszvis-rangeRuler__total")
-        .data([fn.last(data)])
+        .data(totalData)
         .join("text")
-        .classed("sszvis-rangeRuler__total", true);
-
-      total
-        .attr("x", (d) => {
-          const offset = props.flip(d) ? -10 : 10;
-          return crispX(d) + offset;
-        })
+        .classed("sszvis-rangeRuler__total", true)
+        .attr("x", totalX)
         .attr("y", props.top - 10)
-        .style("text-anchor", (d) => {
-          return props.flip(d) ? "end" : "start";
-        })
-        .text(`Total ${formatNumber(props.total)}`);
-
-      const totalNode = total.node() as SVGTextElement | null;
-      let totalContour = selection.select<SVGTextElement>(".sszvis-rangeRuler__total-contour");
-      if (totalContour.empty()) {
-        if (totalNode) {
-          const clonedTotalNode = totalNode.cloneNode(true) as SVGTextElement;
-          totalContour = select(clonedTotalNode);
-          totalContour
-            .classed("sszvis-rangeRuler__total-contour", true)
-            .classed("sszvis-rangeRuler__total", false);
-          const contourNode = totalContour.node();
-          if (contourNode && this instanceof Element) {
-            this.insertBefore(contourNode, totalNode);
-          }
-        }
-      } else {
-        totalContour
-          .attr("x", (d) => {
-            const offset = props.flip(d) ? -10 : 10;
-            return crispX(d) + offset;
-          })
-          .attr("y", props.top - 10)
-          .style("text-anchor", (d) => {
-            return props.flip(d) ? "end" : "start";
-          });
-      }
-      if (totalNode) {
-        totalContour.text(totalNode.textContent || "");
-      }
+        .style("text-anchor", totalAnchor)
+        .text(totalText);
 
       if (!props.removeStroke) {
         total.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
