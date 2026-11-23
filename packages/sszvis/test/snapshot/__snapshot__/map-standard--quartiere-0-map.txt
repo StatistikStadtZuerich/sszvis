@@ -1,0 +1,1 @@
+area layer 1: 34 elements, 3 textured, 17 distinct fills

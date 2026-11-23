@@ -294,6 +294,8 @@ export default function dot<T = unknown>(): DotComponent<T> {
 
 Vitest in browser mode (Playwright/Chromium) — tests run against real DOM/SVG. Test files are `packages/sszvis/test/**/*.test.{js,ts}`. Playwright snapshots in `packages/sszvis/test/snapshot/snapshot.spec.js` compare every docs example in `apps/docs/dist`, including interactive states, against stored screenshots.
 
+Map pages also get a `*-map.txt` baseline next to their PNG: per map layer, how many elements it draws, how many carry the missing-value texture, and how many distinct fills. The screenshot cannot see that texture — its light grey hatch falls inside the comparator's per-pixel colour tolerance, so a map that textures every district passes its PNG. Unlike the PNGs, these text baselines are platform-independent, so they may be generated on any machine: `pnpm --filter sszvis exec playwright test -g "<page>" --update-snapshots=changed`, then review the diff like code. That flag rewrites any failing PNG too — commit only the `.txt` files it touched.
+
 No feature is complete without tests. When pinning existing behaviour that looks wrong, keep it and mark it `// NOTE:` as a known quirk rather than silently fixing it.
 
 ## Error handling
