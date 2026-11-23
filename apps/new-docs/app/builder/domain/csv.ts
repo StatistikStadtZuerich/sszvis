@@ -19,12 +19,6 @@ const DELIMITERS = { comma: ",", semicolon: ";", tab: "\t" } as const;
 
 export type DelimiterName = keyof typeof DELIMITERS;
 
-export const DELIMITER_LABELS = {
-  comma: "Comma",
-  semicolon: "Semicolon",
-  tab: "Tab",
-} satisfies Record<DelimiterName, string>;
-
 const rowsOf = (text: string, name: DelimiterName): readonly (readonly string[])[] =>
   dsvFormat(DELIMITERS[name])
     .parseRows(text.replace(/^\ufeff/, ""))
@@ -140,33 +134,6 @@ export const fitRank = (column: ColumnKind, role: RoleKind): number | null => {
   return column === "temporal" ? 1 : 2;
 };
 
-export const renameKind = (kinds: ColumnKinds, from: ColumnName, to: ColumnName): ColumnKinds => {
-  const pinned = kinds[from];
-  if (pinned === undefined || from === to) return kinds;
-  const { [from]: _moved, ...rest } = kinds;
-  return { ...rest, [to]: pinned };
-};
-
-export const settleColumn = (
-  table: Table,
-  column: number,
-  from: ColumnName,
-  kinds: ColumnKinds,
-) => {
-  const taken = new Set(table.columns.filter((_, index) => index !== column));
-  const settled = distinctName(table.columns[column] ?? "", taken, column);
-  return {
-    table: {
-      ...table,
-      columns: table.columns.map((name, index) => (index === column ? settled : name)),
-    },
-    kinds: renameKind(kinds, from, settled),
-  };
-};
-
-export const addedName = (columns: readonly ColumnName[]): ColumnName =>
-  distinctName("", new Set(columns), columns.length);
-
 const SWISS_DATE = /^(\d{1,2})\.(\d{1,2})\.(\d{1,4})$/;
 const YEAR = /^\d{1,4}$/;
 
@@ -274,14 +241,6 @@ export const bearsRole = (table: Table, column: ColumnName, role: RoleKind): boo
   return admits(valuesOf(table, index), REQUIRED[role]);
 };
 
-const NEXT = {
-  nominal: "continuous",
-  continuous: "temporal",
-  temporal: "nominal",
-} satisfies Record<ColumnKind, ColumnKind>;
-
-export const nextKind = (kind: ColumnKind): ColumnKind => NEXT[kind];
-
 export const columnKinds = (
   table: Table,
   overrides: ColumnKinds,
@@ -292,60 +251,6 @@ export const columnKinds = (
     if (pinned !== undefined) kinds.set(column, pinned);
   }
   return kinds;
-};
-
-export type SortDirection = "asc" | "desc";
-
-export const sortOrder = (
-  table: Table,
-  column: number,
-  direction: SortDirection,
-  overrides: ColumnKinds,
-): readonly number[] => {
-  const kind = columnKinds(table, overrides).get(table.columns[column] ?? "") ?? "nominal";
-  const sign = direction === "asc" ? 1 : -1;
-  const compare = (a: string, b: string) => {
-    if (a === "") return b === "" ? 0 : 1;
-    if (b === "") return -1;
-    return sign * compareByKind(kind, a, b);
-  };
-  return table.rows
-    .map((cells, index) => ({ cells, index }))
-    .sort((a, b) => compare(a.cells[column] ?? "", b.cells[column] ?? "") || a.index - b.index)
-    .map(({ index }) => index);
-};
-
-export const reorder = (table: Table, order: readonly number[]): Table => ({
-  ...table,
-  rows: order
-    .map((index) => table.rows[index])
-    .filter((cells): cells is readonly string[] => cells !== undefined),
-});
-
-export const sortRows = (
-  table: Table,
-  column: number,
-  direction: SortDirection,
-  overrides: ColumnKinds,
-): Table => reorder(table, sortOrder(table, column, direction, overrides));
-
-const collator = new Intl.Collator("de-CH", { numeric: true, sensitivity: "base" });
-
-/** `dd.mm.yyyy` to a sortable `yyyymmdd` number. */
-const dateKey = (value: string) => {
-  const [day = "", month = "", year = ""] = value.split(".");
-  return Number(year.padStart(4, "0") + month.padStart(2, "0") + day.padStart(2, "0"));
-};
-
-const compareByKind = (kind: ColumnKind, a: string, b: string): number => {
-  switch (kind) {
-    case "continuous":
-      return Number(a) - Number(b);
-    case "temporal":
-      return dateKey(a) - dateKey(b);
-    case "nominal":
-      return collator.compare(a, b);
-  }
 };
 
 export const harmlessValues = (csv: string): string => {

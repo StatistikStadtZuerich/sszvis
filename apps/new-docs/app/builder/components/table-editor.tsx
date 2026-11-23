@@ -30,20 +30,22 @@ import {
 } from "~/components/ui/table";
 
 import {
-  addedName,
   columnKinds,
   hasValues,
-  nextKind,
   parseBlock,
-  reorder,
   serialize,
-  settleColumn,
-  type SortDirection,
-  sortOrder,
   type Table,
   rolledOver,
   unsupportedPins,
 } from "../domain/csv";
+import {
+  addedName,
+  nextKind,
+  reorder,
+  settleColumn,
+  type SortDirection,
+  sortOrder,
+} from "../table";
 import { ColumnName, KIND_LABEL, type ColumnKind, type ColumnKinds } from "../domain/spec";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { PastePanel } from "./paste-panel";
