@@ -1,0 +1,49 @@
+/**
+ * MCP server for the sszvis chart builder, over Streamable HTTP at `/mcp`.
+ *
+ * Scaffolded from stack-effect's `server-mcp` target. Tools and resources are
+ * added to `McpCapabilities`; it is empty until the chart builder's tools land.
+ */
+// `NodeHttpServer.layerConfig` takes Node's own `createServer`; the rule's
+// suggested `HttpClient` is the client side and has no bearing on serving.
+// @effect-diagnostics-next-line nodeBuiltinImport:off
+import { createServer } from "node:http";
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
+import { Config, Effect, Layer } from "effect";
+import { McpProtocol, McpServer } from "effect/ai";
+import { HttpRouter, HttpServer } from "effect/http";
+
+export const McpServerConfig = Config.all({
+  port: Config.Port("MCP_PORT").pipe(Config.withDefault(9009)),
+  // `host`, not `hostname`: the config is Node's own `listen` options.
+  host: Config.String("MCP_HOST").pipe(Config.withDefault("127.0.0.1")),
+  allowedOrigins: Config.String("MCP_ALLOWED_ORIGINS").pipe(
+    Config.withDefault("http://localhost:3000"),
+  ),
+});
+
+const McpCapabilities = Layer.mergeAll(Layer.empty).pipe(
+  Layer.satisfiesServicesType<McpServer.McpServer>(),
+);
+
+const main = Effect.gen(function* () {
+  const config = yield* McpServerConfig;
+  const allowedOrigins = config.allowedOrigins.split(",").map((origin) => origin.trim());
+
+  yield* Effect.logInfo("Starting MCP server at /mcp");
+
+  return McpServer.layerHttp({
+    name: "sszvis chart builder",
+    version: "0.0.0",
+    path: "/mcp",
+    protocols: [McpProtocol.v2026_07_28, McpProtocol.v2025_11_25, McpProtocol.v2025_06_18],
+    allowedOrigins,
+    registrations: McpCapabilities,
+  }).pipe(
+    HttpRouter.serve,
+    HttpServer.withLogAddress,
+    Layer.provide(NodeHttpServer.layerConfig(createServer, McpServerConfig)),
+  );
+}).pipe(Layer.unwrap, Layer.launch, Effect.satisfiesServicesType<never>());
+
+NodeRuntime.runMain(main);

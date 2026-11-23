@@ -29,6 +29,7 @@ This is a pnpm + Turborepo monorepo. Root commands fan out across workspaces; us
 | Consumer regression | `pnpm run regression` (needs `.reference/d3charts-website`)       |
 | Regression sweep    | `pnpm run regression:crawl` (headless, writes a JSON report)      |
 | Regression export   | `pnpm run regression:export` (shareable static folder)            |
+| MCP server          | `pnpm --filter @sszvis/mcp-server start` (port 9009, `/mcp`)      |
 | Search              | `rg "pattern"` — always ripgrep, never grep/find                  |
 
 CI runs `check`, `type-check`, `test`, and the snapshot suite; all four must pass.
@@ -63,6 +64,7 @@ apps/
   project-specimen/  # @sszvis/project-specimen - Catalog widget the docs homepage needs
   regression-cli/    # @sszvis/regression-cli - consumer regression harness (Effect v4 CLI)
     src/commands/    #   serve, crawl, export
+  mcp-server/        # @sszvis/mcp-server - prototype MCP server for the chart builder (Effect McpServer)
 packages/
   sszvis/          # the published library
     src/           # 100% TypeScript
