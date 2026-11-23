@@ -87,6 +87,8 @@ interface HostOptions {
   readonly eager?: boolean;
   /** Milliseconds to hold a tool call back, so an older request can finish after a newer one. */
   readonly delay?: (name: string, args: Record<string, unknown> | undefined) => number;
+  /** Changes the spec render_chart returned before the host passes it on. */
+  readonly spec?: (spec: Record<string, unknown>) => Record<string, unknown>;
 }
 
 async function host(args: Record<string, unknown>, options: HostOptions = {}) {
@@ -119,9 +121,14 @@ async function host(args: Record<string, unknown>, options: HostOptions = {}) {
   };
   bridge.onreadresource = async (params) =>
     ReadResourceResultSchema.parse(wire(await Effect.runPromise(client.readResource(params))));
-  const result = CallToolResultSchema.parse(
+  const rendered = CallToolResultSchema.parse(
     wire(await Effect.runPromise(client.callTool({ name: "render_chart", arguments: args }))),
   );
+  const content = rendered.structuredContent as { spec?: Record<string, unknown> } | undefined;
+  const result =
+    options.spec === undefined || content?.spec === undefined
+      ? rendered
+      : { ...rendered, structuredContent: { spec: options.spec(content.spec) } };
   const initialized = new Promise<void>((resolve) => {
     bridge.oninitialized = () => {
       if (options.eager === true) {
@@ -387,6 +394,47 @@ describe("the chart app in a host", () => {
       ),
     ).toContain("boom in render");
     expect(view.document.querySelector('[role="alert"]')?.textContent).toContain("boom in render");
+  });
+
+  test("should draw the table's text as written, and only as text in a tooltip", async () => {
+    const payload = "<img src=x onerror=window.__pwned=1>";
+    const view = await host(
+      { recipe: "bar-chart-vertical", csv: `Sektor,Anzahl\nR&D,10\n"${payload}",20` },
+      /* The default tooltip shows only the value; this one names the category too. */
+      { spec: (spec) => ({ ...spec, tooltip: { header: "value", body: ["category"] } }) },
+    );
+    await settle(
+      () => count(view, "rect.sszvis-bar"),
+      (n) => n === 2,
+    );
+
+    /* The axis is SVG text: escaping the cells used to draw this as R&amp;D. */
+    const ticks = [...view.document.querySelectorAll("#sszvis-chart .tick text")].map(
+      (tick) => tick.textContent,
+    );
+    expect(ticks).toContain("R&D");
+
+    /* Hover each bar until the payload's tooltip is up. */
+    let shown = "";
+    for (const bar of view.document.querySelectorAll<SVGRectElement>(
+      "#sszvis-chart rect.sszvis-bar",
+    )) {
+      const box = bar.getBoundingClientRect();
+      const at = { clientX: box.x + box.width / 2, clientY: box.y + box.height / 2, bubbles: true };
+      const target = view.document.elementFromPoint(at.clientX, at.clientY);
+      target?.dispatchEvent(new MouseEvent("mouseover", { ...at, view }));
+      target?.dispatchEvent(new MouseEvent("mousemove", { ...at, view }));
+      shown = await settle(
+        () => view.document.querySelector(".sszvis-tooltip")?.textContent ?? "",
+        (text) => text.includes("img"),
+        1000,
+      );
+      if (shown.includes("img")) break;
+    }
+
+    expect(shown).toContain(payload);
+    expect(view.document.querySelector(".sszvis-tooltip img")).toBeNull();
+    expect((view as Window & { __pwned?: number }).__pwned).toBeUndefined();
   });
 
   test("should show the generated code", async () => {
