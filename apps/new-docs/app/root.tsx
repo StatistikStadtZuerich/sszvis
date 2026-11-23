@@ -22,6 +22,7 @@ import { typefaceWordmark } from "~/components/tokens/typeface";
 import { buttonVariants } from "~/components/ui/button";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "~/components/ui/sidebar";
 import { withBase } from "~/lib/base-url";
+import { LEGACY_PATHS } from "~/lib/legacy-paths";
 import { cn } from "~/lib/utils";
 import type { TocHandle, TOCItem } from "~/lib/remark-toc-export";
 import type { Route } from "./+types/root";
@@ -54,14 +55,18 @@ const themeScript = `
 
 /*
  * The previous docs site (Catalog) routed on the hash: `/sszvis/#/bar-chart-vertical`.
- * Its page slugs carried over, so a link to the old site lands on the same page here.
- * Catalog's in-page anchors (`?a=…`) have no equivalent and are dropped.
+ * Most page slugs carried over; `LEGACY_PATHS` says where the rest went, so a link to
+ * the old site lands on the same page here. Catalog's in-page anchors (`?a=…`) have no
+ * equivalent and are dropped.
  */
 const legacyHashScript = `
 (function() {
   var hash = location.hash;
   if (hash.indexOf('#/') !== 0) return;
-  location.replace(${JSON.stringify(import.meta.env.BASE_URL)} + hash.slice(2).split('?')[0]);
+  var slug = hash.slice(2).split('?')[0];
+  var moved = ${JSON.stringify(LEGACY_PATHS)};
+  var to = Object.prototype.hasOwnProperty.call(moved, slug) ? moved[slug] : slug;
+  location.replace(/^https:/.test(to) ? to : ${JSON.stringify(import.meta.env.BASE_URL)} + to);
 })();
 `;
 
