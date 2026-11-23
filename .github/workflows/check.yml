@@ -104,6 +104,6 @@ jobs:
       - name: Build library and docs
         run: pnpm run build
 
-      # playwright.config.js owns the docs server via its `webServer` block.
+      # playwright.config.js serves the built docs via its `webServer` block.
       - name: Run snapshot tests
         run: pnpm run test:snapshot
