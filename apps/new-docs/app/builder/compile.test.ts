@@ -20,7 +20,8 @@ import {
   type Spec,
   type Tooltip,
 } from "./domain/spec";
-import { generate } from "./workers/pipeline";
+import { generate } from "./domain/generate";
+import { generate as highlighted } from "./workers/pipeline";
 
 /* The spec's keys are branded; these are where this file's literals become keys. */
 const mapping = (entries: Readonly<Record<string, string>>): Fields =>
@@ -45,7 +46,7 @@ const emit = async (recipe: Recipe, spec: Omit<Spec, "features">, features: read
     ...spec,
     features: features.map((value) => FeatureKey.make(value)),
   });
-  return { ts: ts.raw, js: js.raw };
+  return { ts, js };
 };
 
 const featureKeys = checkboxFeatures;
@@ -133,7 +134,7 @@ describe("highlighting", () => {
     const entry = Effect.runSync(findRecipe("bar-chart-vertical"));
     const first = cases([entry])[0];
     if (first === undefined) throw new Error("no case");
-    const generated = await generate(entry, { ...first.spec, features: [] });
+    const generated = await highlighted(entry, { ...first.spec, features: [] });
     for (const key of ["ts", "js", "html", "csv"] as const) {
       const { raw, html } = generated[key];
       /* `defaultColor: false`: a variable per theme, no inline colour to fight the page's.
@@ -164,7 +165,7 @@ describe("spec text in the generated code", () => {
       chosen: [],
       ...over,
     });
-    return ts.raw;
+    return ts;
   };
 
   const table = (column: string) =>
@@ -238,7 +239,7 @@ describe("the colours a map is drawn in", () => {
       kinds: {},
       chosen: [],
     });
-    return ts.raw;
+    return ts;
   };
 
   test("should draw in the default blue when the spec names no palette", async () => {

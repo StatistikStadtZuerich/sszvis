@@ -1,51 +1,17 @@
-import { Duration, Effect, Exit } from "effect";
-import type { Options } from "prettier";
+import { Effect } from "effect";
 import { HIGHLIGHT_THEMES, highlightOptions } from "../../lib/highlight";
 import type { Source } from "../../lib/source";
 
-import { assetsFor, compile } from "../domain/compile";
-import { BuilderCompileError } from "../domain/emit";
-import { BUNDLE, host } from "../domain/host";
-import { optionValue, TITLE, type Recipe, type Spec } from "../domain/spec";
+import type { BuilderCompileError } from "../domain/emit";
+import { lazy, makeGenerate } from "../domain/generate";
+import { BUNDLE } from "../domain/host";
+import type { Recipe, Spec } from "../domain/spec";
 import type { Generated } from "./domain";
 
-const OPTIONS: Options = {
-  parser: "typescript",
-  printWidth: 100,
-  tabWidth: 2,
-  useTabs: false,
-  semi: true,
-  singleQuote: false,
-  trailingComma: "all",
-};
-
-const lazy = <A>(asset: string, load: () => Promise<A>) =>
-  Effect.uninterruptible(
-    Effect.tryPromise({
-      try: load,
-      catch: (cause) =>
-        new BuilderCompileError({
-          stage: "load",
-          message: `could not load the ${asset}: ${cause instanceof Error ? cause.message : String(cause)}`,
-        }),
-    }),
-  ).pipe(
-    Effect.cachedWithTTL((exit) => (Exit.isSuccess(exit) ? Duration.infinity : Duration.zero)),
-  );
-
-const loadFormatter = () =>
-  Promise.all([
-    import("prettier/standalone"),
-    import("prettier/plugins/estree"),
-    import("prettier/plugins/typescript"),
-  ]).then(
-    ([standalone, estree, typescript]) =>
-      (source: string) =>
-        standalone.format(source, { ...OPTIONS, plugins: [estree.default ?? estree, typescript] }),
-  );
-
-const loadStripper = () => import("ts-blank-space").then((module) => module.default);
-
+/*
+ * The highlighter is this app's: `domain/generate` produces the files, and the code
+ * panel wants them rendered with the same options the examples plugin uses at build time.
+ */
 const loadHighlighter = () =>
   Promise.all([
     import("shiki/core"),
@@ -67,45 +33,22 @@ const loadHighlighter = () =>
       return { raw, html: options === null ? null : highlighter.codeToHtml(raw, options) };
     });
 
-type Generate = (recipe: Recipe, spec: Spec) => Effect.Effect<Generated, BuilderCompileError>;
+type Pipeline = (recipe: Recipe, spec: Spec) => Effect.Effect<Generated, BuilderCompileError>;
 
-export const makePipeline: Effect.Effect<Generate> = Effect.gen(function* () {
-  const formatter = yield* lazy("code formatter", loadFormatter);
-  const stripper = yield* lazy("TypeScript stripper", loadStripper);
+export const makePipeline: Effect.Effect<Pipeline> = Effect.gen(function* () {
+  const generate = yield* makeGenerate;
   const highlighter = yield* lazy("syntax highlighter", loadHighlighter);
 
-  const format = Effect.fnUntraced(function* (source: string) {
-    const prettier = yield* formatter;
-    return yield* Effect.tryPromise({
-      try: () => prettier(source),
-      catch: (cause) =>
-        new BuilderCompileError({
-          stage: "format",
-          message: cause instanceof Error ? cause.message : String(cause),
-        }),
-    });
-  });
-
   return Effect.fnUntraced(function* (recipe: Recipe, spec: Spec) {
-    const assets = assetsFor(recipe, spec);
-    const ts = yield* format(yield* compile(recipe, spec));
-    const strip = yield* stripper;
-    const js = yield* format(dropEmptySections(strip(ts)));
+    const files = yield* generate(recipe, spec);
     const highlight = yield* highlighter;
     return {
-      ts: highlight(ts, "chart.ts"),
-      js: highlight(js, BUNDLE.chart),
-      html: highlight(
-        host({
-          title: optionValue(recipe.options, spec, TITLE),
-          assets,
-          scripts: recipe.scripts ?? [],
-        }),
-        BUNDLE.html,
-      ),
-      csv: highlight(spec.csv, BUNDLE.data),
-      assets,
-      scripts: recipe.scripts ?? [],
+      ts: highlight(files.ts, "chart.ts"),
+      js: highlight(files.js, BUNDLE.chart),
+      html: highlight(files.html, BUNDLE.html),
+      csv: highlight(files.csv, BUNDLE.data),
+      assets: files.assets,
+      scripts: files.scripts,
     };
   });
 });
@@ -114,32 +57,3 @@ const pipeline = Effect.runSync(makePipeline);
 
 export const generate = (recipe: Recipe, spec: Spec): Promise<Generated> =>
   Effect.runPromise(pipeline(recipe, spec));
-
-const BANNER = /^\/\/ [A-Z][A-Za-z]*(?: [A-Za-z]+){0,3}$/;
-
-const isComment = (line: string) => /^\s*(?:\/\/|\/\*|\*)/.test(line);
-
-const dropEmptySections = (js: string): string => {
-  const lines = js.split("\n");
-  const kept: string[] = [];
-  let index = 0;
-  while (index < lines.length) {
-    const line = lines[index] ?? "";
-    if (BANNER.test(line)) {
-      let end = index + 1;
-      while (end < lines.length) {
-        const candidate = lines[end] ?? "";
-        if (BANNER.test(candidate) || !(candidate.trim() === "" || isComment(candidate))) break;
-        end += 1;
-      }
-      const next = lines[end];
-      if (next === undefined || BANNER.test(next)) {
-        index = end;
-        continue;
-      }
-    }
-    kept.push(line);
-    index += 1;
-  }
-  return kept.join("\n");
-};
