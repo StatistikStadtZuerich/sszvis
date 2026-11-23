@@ -51,7 +51,7 @@
       "outputLogs": "new-only"
     },
     "test:snapshot": {
-      "dependsOn": ["sszvis#build", "@sszvis/docs#build"],
+      "dependsOn": ["sszvis#build", "@sszvis/new-docs#build"],
       "cache": false
     },
     "dev": {

@@ -2,7 +2,7 @@
 const { defineConfig, devices } = require("@playwright/test");
 
 // Kept in sync with test/snapshot/snapshot.spec.js.
-const SNAPSHOT_BASE_URL = process.env.SNAPSHOT_BASE_URL || "http://localhost:8000";
+const SNAPSHOT_BASE_URL = process.env.SNAPSHOT_BASE_URL || "http://localhost:4173";
 
 /**
  * Read environment variables from file.
@@ -31,7 +31,6 @@ module.exports = defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: "http://127.0.0.1:8000",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -96,11 +95,11 @@ module.exports = defineConfig({
 
   /*
    * Serve the built docs ourselves, so `pnpm run test:snapshot` is one command.
-   * Without this the suite needs a docs server in another shell and otherwise
-   * fails all 54 pages with ERR_CONNECTION_REFUSED.
+   * It serves the static build, not the dev server: the examples are screenshot
+   * as they deploy. Without this every page fails with ERR_CONNECTION_REFUSED.
    */
   webServer: {
-    command: "pnpm --filter @sszvis/docs run serve",
+    command: "pnpm --filter @sszvis/new-docs run serve",
     url: SNAPSHOT_BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

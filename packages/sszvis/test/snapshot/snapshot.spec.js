@@ -4,28 +4,33 @@ import { globSync } from "glob";
 // Must exceed the library's longest transition
 const RENDER_DELAY = 700;
 
-// The docs site is built by the `@sszvis/docs` app; turbo runs its build first.
-const DOCS_DIST = "../../../../apps/docs/dist";
-const BASE_URL = process.env.SNAPSHOT_BASE_URL || "http://localhost:8000";
+// The docs site builds every example as a standalone page at /preview/<chart>/<name>/;
+// turbo runs its build first. Kept in sync with playwright.config.js.
+const PREVIEW_DIR = "../../../../apps/new-docs/build/client/preview";
+const BASE_URL = process.env.SNAPSHOT_BASE_URL || "http://localhost:4173";
 
-const files = globSync(`${DOCS_DIST}/[^_]*/*.html`, { cwd: __dirname });
+// `_assets` and `_static` hold the library and shared files, not examples.
+const ids = globSync("[^_]*/[^_]*/index.html", { cwd: `${__dirname}/${PREVIEW_DIR}` })
+  .map((file) => file.replace(/\/index\.html$/, ""))
+  .sort();
 
 /*
  * The suite's size comes from the docs output, so a stale or half-built dist
  * silently shrinks it - an empty glob would report zero tests and pass.
  */
 test("the docs build produced pages to screenshot", () => {
-  expect(files.length).toBeGreaterThan(50);
+  expect(ids.length).toBeGreaterThan(50);
 });
 
-for (const url of files.map(filepathToUrl)) {
-  test(url, async ({ page }) => {
-    await page.goto(url);
+for (const id of ids) {
+  const name = id.replace("/", "--");
+  test(id, async ({ page }) => {
+    await page.goto(`${BASE_URL}/preview/${id}/`);
     await page.waitForTimeout(RENDER_DELAY);
     await removeMapImages(page);
 
-    await expect(page).toHaveScreenshot(`${urlToIdentifier(url)}-0`);
-    await expectMapLayers(page, `${urlToIdentifier(url)}-0`);
+    await expect(page).toHaveScreenshot(`${name}-0`);
+    await expectMapLayers(page, `${name}-0`);
 
     const buttons = await page.$$(".sszvis-control-buttonGroup__item:not(.selected)");
 
@@ -34,8 +39,8 @@ for (const url of files.map(filepathToUrl)) {
       await page.waitForTimeout(RENDER_DELAY);
       await removeMapImages(page);
 
-      await expect(page).toHaveScreenshot(`${urlToIdentifier(url)}-${idx + 1}`);
-      await expectMapLayers(page, `${urlToIdentifier(url)}-${idx + 1}`);
+      await expect(page).toHaveScreenshot(`${name}-${idx + 1}`);
+      await expectMapLayers(page, `${name}-${idx + 1}`);
     }
   });
 }
@@ -80,12 +85,4 @@ async function expectMapLayers(page, name) {
   if (layers.length === 0) return;
 
   expect(`${layers.join("\n")}\n`).toMatchSnapshot(`${name}.map.txt`);
-}
-
-function filepathToUrl(path) {
-  return path.replace(/^.*apps\/docs\/dist/, BASE_URL);
-}
-
-function urlToIdentifier(url) {
-  return url.replace(`${BASE_URL}/`, "").replace(".html", "").replace("/", "--");
 }
