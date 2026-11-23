@@ -1,0 +1,15 @@
+# Build output and dependencies are made inside the image.
+**/node_modules
+**/dist
+**/build
+**/.turbo
+**/.vitest
+apps/mcp-server/ui/dist
+packages/sszvis/.tsbuild
+# Local only.
+.git
+.claude
+.reference
+**/__screenshots__
+**/test-results
+**/playwright-report
