@@ -30,6 +30,23 @@ export default {
     // The first segment of the basename, so `/a/b/` removes the whole `a/` it nested in.
     const top = DOCS_BASE.split("/")[1];
     if (top) {
+      /*
+       * Removing `<top>/` is only safe while the prerendered pages are all it holds. A
+       * basename named like a public folder (`guides/`), a build output (`assets/`,
+       * `preview/`) or one of its own routes would have that merged in, and deleted.
+       */
+      const publicDir = path.resolve(reactRouterConfig.appDirectory, "..", "public");
+      const taken = [...(await fs.readdir(publicDir).catch(() => [])), "assets", "preview"];
+      const routed = await fs.stat(path.join(nested, top)).then(
+        () => true,
+        () => false,
+      );
+      if (taken.includes(top) || routed) {
+        throw new Error(
+          `DOCS_BASE ${DOCS_BASE} starts with ${top}/, which the build also writes; ` +
+            "relocating the pages would delete it. Choose a base path that names nothing in the site.",
+        );
+      }
       await fs.cp(nested, client, { recursive: true, force: true });
       await fs.rm(path.join(client, top), { recursive: true });
     }
