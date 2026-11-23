@@ -1,10 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { bundleEntries, MissingAssetError } from "./bundle";
-import type { Asset } from "./spec";
+import { bundleEntries, MissingAssetError, type Binary } from "./bundle";
 
 const GENERATED = { html: "<html></html>", js: "// chart", csv: "a,b\n1,2" };
-const TOPO: Asset = { key: "topology", path: "topo.json", source: "/app/topo/stadt-zurich.json" };
+const TOPO: Binary = { url: "/app/topo/stadt-zurich.json", name: "topo.json" };
 
 const reply = (body: string, ok = true) =>
   Promise.resolve({

@@ -6,6 +6,7 @@ import { ToggleButtonGroup } from "~/components/ui/toggle-button-group";
 import { cn } from "~/lib/utils";
 
 import fallbackUrl from "../../../examples/_static/fallback.png?url";
+import { assetUrl } from "../assets";
 import { bundleEntries, MissingAssetError } from "../domain/bundle";
 import { BUNDLE } from "../domain/host";
 import { zip } from "../domain/zip";
@@ -42,7 +43,7 @@ export const CodePanel = ({
     try {
       const entries = await bundleEntries(
         { html: generated.html.raw, js: generated.js.raw, csv: generated.csv.raw },
-        generated.assets,
+        generated.assets.map((asset) => ({ url: assetUrl(asset), name: asset.path })),
         fallbackUrl,
       );
       save("chart-bundle.zip", new Blob([zip(entries)], { type: "application/zip" }));

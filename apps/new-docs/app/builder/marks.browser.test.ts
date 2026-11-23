@@ -5,6 +5,7 @@ import * as topojson from "topojson-client";
 import tsBlankSpace from "ts-blank-space";
 import { afterEach, describe, expect, test } from "vitest";
 
+import { assetUrl } from "./assets";
 import { assetsFor, compile } from "./domain/compile";
 import { initialSpec } from "./domain/initial-spec";
 import { sampleFor } from "./domain/samples";
@@ -146,7 +147,7 @@ const draw = async (
   const assets = await Promise.all(
     assetsFor(recipe, spec).map(async (asset) => [
       asset.key,
-      URL.createObjectURL(await (await fetch(asset.source)).blob()),
+      URL.createObjectURL(await (await fetch(assetUrl(asset))).blob()),
     ]),
   );
   const config = {

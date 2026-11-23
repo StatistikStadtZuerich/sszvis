@@ -103,9 +103,7 @@ const DEFAULT_GEOGRAPHY = GEOGRAPHIES[0];
 const geographyFor = (value: string): Geography =>
   GEOGRAPHIES.find((candidate) => candidate.value === value) ?? DEFAULT_GEOGRAPHY;
 
-/** Where the builder reads a topology from. The app serves the same files the examples use. */
-const TOPO_SOURCE = "/preview/_static/topo/";
-/** What it is called in the exported bundle, beside the data. */
+/** What the topology is called in the exported bundle, beside the data. */
 const TOPO_PATH = "topo.json";
 
 export const mapChoropleth: RecipeDef = {
@@ -162,7 +160,7 @@ export const mapChoropleth: RecipeDef = {
     {
       key: "topology",
       path: TOPO_PATH,
-      source: `${TOPO_SOURCE}${geographyFor(option(GEOGRAPHY_OPTION)).file}`,
+      file: geographyFor(option(GEOGRAPHY_OPTION)).file,
     },
   ],
   scripts: ["topojson"],
