@@ -6,8 +6,21 @@
   "description": "Spec in, chart code out: the sszvis chart builder's recipes, templates and code generation",
   "license": "BSD-3-Clause",
   "exports": {
+    "./annotations": "./src/annotations.ts",
+    "./bundle": "./src/bundle.ts",
+    "./controls": "./src/controls.ts",
+    "./csv": "./src/csv.ts",
+    "./emit": "./src/emit.ts",
+    "./generate": "./src/generate.ts",
+    "./host": "./src/host.ts",
+    "./identity": "./src/identity.ts",
+    "./initial-spec": "./src/initial-spec.ts",
+    "./palettes": "./src/palettes.ts",
     "./recipes": "./src/recipes/index.ts",
-    "./*": "./src/*.ts"
+    "./samples": "./src/samples.ts",
+    "./spec": "./src/spec.ts",
+    "./tooltip": "./src/tooltip.ts",
+    "./zip": "./src/zip.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit && tsc --noEmit -p src/recipes/tsconfig.json",
