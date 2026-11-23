@@ -19,14 +19,14 @@ pnpm --filter @sszvis/geodata run build
 [data.stadt-zuerich.ch](https://data.stadt-zuerich.ch) before building, so a normal
 build needs no network — the sources are committed.
 
-`apps/docs` depends on this package and serves `dist/topo/` at both `/topo/…` and
-`/static/topo/…`.
+`apps/docs` copies `dist/topo/` into its build: the examples load it from
+`/preview/_static/topo/…`, and the GitHub Pages deploy also publishes it at `/topo/…`.
 
 ## Reproducibility
 
 `geo2topo`'s `ndjson-join` does not fix the order of the features it emits, so two
 runs over identical input can order `statistische_quartiere` differently. The output
 is therefore not byte-reproducible and cannot be verified by diffing; compare it
-order-insensitively instead. The bundles were previously committed to
-`apps/docs/docs/static/topo/`, and that copy was confirmed semantically identical to
+order-insensitively instead. The bundles were previously committed to the
+old docs site's `static/topo/`, and that copy was confirmed semantically identical to
 a fresh run before it was removed.

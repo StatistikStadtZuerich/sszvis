@@ -16,7 +16,7 @@ This is a pnpm + Turborepo monorepo. Root commands fan out across workspaces; us
 | Test (in a browser) | `pnpm --filter sszvis exec vitest --browser.headless=false`       |
 | Test (watch)        | `pnpm --filter sszvis run test:watch`                             |
 | Chart builder tests | `pnpm --filter @sszvis/chart-builder test` (node, then browser)   |
-| Visual regression   | `pnpm run test:snapshot` (starts the docs server itself)          |
+| Visual regression   | `pnpm run test:snapshot` (serves the built docs itself)           |
 | Type check          | `pnpm run type-check` (tsc over `src/` **and** `test/`)           |
 | Lint                | `pnpm run lint` (oxlint)                                          |
 | Format              | `pnpm run format` (oxfmt)                                         |
@@ -55,13 +55,11 @@ Dev environment is Nix + direnv (`nix develop`); pnpm is the package manager.
 
 ```txt
 apps/
-  docs/              # 11ty documentation site (@sszvis/docs)
-    docs/            #   eleventy input: guides, _includes, static, one dir per chart type
-    dist/            #   eleventy output
-  new-docs/          # @sszvis/docs - React Router + MDX docs site
-    app/builder/     #   the chart builder's form, worker and preview
+  docs/              # @sszvis/docs - React Router + MDX documentation site
+    app/content/     #   MDX pages, registered in app/content-pages.ts
+    app/builder/     #   the chart builder's form, worker and preview (experimental, unlinked)
     examples/        #   one dir per example: chart.ts, data.csv, example.json
-  project-specimen/  # @sszvis/project-specimen - Catalog widget the docs homepage needs
+    build/client/    #   static output, deployed to GitHub Pages
   regression-cli/    # @sszvis/regression-cli - consumer regression harness (Effect v4 CLI)
     src/commands/    #   serve, crawl, export
   mcp-server/        # @sszvis/mcp-server - prototype MCP server for the chart builder (Effect McpServer)
@@ -82,19 +80,16 @@ contrib/           # example projects and experiments
 ```
 
 Every build writes to its own directory — `packages/sszvis/build`,
-`packages/geodata/dist`, `apps/docs/dist`. The docs site pulls `sszvis.js` and the
-TopoJSON bundles in through eleventy passthrough copies; turbo runs those two builds
-first. The topo bundles are served at **both** `/topo/…` (the URL the guides
-document) and `/static/topo/…` (what the examples load); they are build output, not
-committed files.
+`packages/geodata/dist`, `apps/docs/build/client`. The docs build reads `sszvis.js`,
+`sszvis.css` and the TopoJSON bundles from the first two (turbo builds them first)
+and emits them beside the example pages, at `/preview/_assets/…` and
+`/preview/_static/topo/…`; they are build output, not committed files.
 
-GitHub Pages serves the new docs, not this site: `.github/workflows/gh-pages.yml`
-builds `apps/docs` for the `/sszvis/` base (`DOCS_BASE`) and deploys
-`apps/docs/build/client`, with the library bundles and the TopoJSON copied in
-beside it so URLs into the previous site's root keep working.
-
-Do not add a second `addPassthroughCopy` with a source path eleventy has already
-seen — it is silently dropped. Use a glob to distinguish the sources.
+`.github/workflows/gh-pages.yml` builds `apps/docs` for the `/sszvis/` base
+(`DOCS_BASE`) and deploys `apps/docs/build/client`, with the library bundles and
+the TopoJSON also copied to the site root (`/sszvis.js`, `/topo/…`) for consumers
+that load them from there. The previous Catalog site's `#/<slug>` URLs redirect
+through `app/lib/legacy-paths.ts`.
 
 The chart builder is split in two. `@sszvis/chart-builder` turns a spec into a
 chart's files and owns the recipes and their templates; `apps/docs/app/builder`
@@ -105,24 +100,17 @@ needs an `exports` entry. Its `generate` loads prettier, about 1.2MB: keep it of
 any module a page imports eagerly — `apps/docs/app/builder/boundary.test.ts`
 checks that for the builder.
 
-`docs/index.html` needs `ProjectSpecimen.js` from `@sszvis/project-specimen`; without
-it Catalog throws and the entire index — the nav and every `README.md` page — renders
-blank while every chart page still works. The snapshot suite globs one directory deep
-and does **not** cover `index.html`, so check the homepage by hand after touching the
-docs build.
-
 ## Adding a docs example
 
-1. Create `apps/docs/docs/<chart-type>/<name>.html` plus `<name>.js`, copying an
-   existing pair. The layouts live in `apps/docs/docs/_includes/layouts/`: `basic`,
-   `external-config`, `map-basic`, `map-external-config`.
-2. `{% printFileContents "<name>.js" %}` must name your own js file.
-3. Register the page in the hand-maintained `pages:` array in
-   `apps/docs/docs/index.html`, or it is reachable only by direct URL.
-4. **Restart the dev server.** Eleventy's watcher does not re-glob for new
-   templates: it reports a rebuild and keeps serving 404 for the new page.
-5. Every `.html` under `apps/docs/docs/` is a template — an incomplete one aborts the
-   whole docs build with `Wrote 0 files`.
+1. Create `apps/docs/examples/<chart-type>/<name>/` with `chart.ts`, `example.json`
+   and its data, copying an existing example. The `sszvis-styleguide` skill is the
+   house style; `apps/docs/examples/README.md` explains how a folder becomes a page.
+2. Put it on a page with `<Example id="<chart-type>/<name>" />` in the chart type's
+   MDX under `apps/docs/app/content/`. An id with no folder fails the build.
+3. Generate its snapshot baselines (see "Testing"): the suite picks the new page up
+   automatically and fails it until they exist.
+
+The dev server discovers new example folders without a restart.
 
 ## Changesets
 
@@ -180,11 +168,8 @@ There is no tag-triggered or manual publish workflow. If the automated path is
 broken, publish from a clean checkout by hand.
 
 The changelog lives at `packages/sszvis/CHANGELOG.md` — with the package it
-describes, so it ships to npm. The docs site copies it in as a passthrough and
-serves it at `/changelog`.
-
-The snapshot suite serves `apps/docs/dist` on port 8000 and screenshots every
-example, so it needs `pnpm run build` and a running docs server first.
+describes, so it ships to npm. The docs site imports it into its `/changelog` page
+(`apps/docs/app/content/changelog.mdx`), so the page updates with every release.
 
 ## Philosophy
 
@@ -230,7 +215,7 @@ const barChart = sszvis
 
 **Layers** — `createSvgLayer()` for charts, `createHtmlLayer()` for tooltips and overlays. Both accept a selector, an element, or a selection.
 
-**State/actions** — docs examples keep a plain `state` object and an `actions` object whose methods mutate it and call `render()`.
+**State/actions** — docs examples run through `sszvis.app({ init, actions, render })`: actions update an Immer draft of `state`, and the app re-renders on the next frame.
 
 ## TypeScript conventions
 
@@ -288,11 +273,13 @@ export default function dot<T = unknown>(): DotComponent<T> {
 - Every module should open with `@module sszvis/<path>`, barrels included. Not all do yet; add the tag to any file you touch that is missing it.
 - JSDoc carries **prose, not types** — no `@param {Type}`; TypeScript owns types. Document units, defaults, and behavioural quirks instead.
 - Examples in JSDoc use `const`.
-- Every component needs a working example in `apps/docs/docs/`.
+- Every component needs a working example in `apps/docs/examples/`.
 
 ## Testing
 
-Vitest in browser mode (Playwright/Chromium) — tests run against real DOM/SVG. Test files are `packages/sszvis/test/**/*.test.{js,ts}`. Playwright snapshots in `packages/sszvis/test/snapshot/snapshot.spec.js` compare every docs example in `apps/docs/dist`, including interactive states, against stored screenshots.
+Vitest in browser mode (Playwright/Chromium) — tests run against real DOM/SVG. Test files are `packages/sszvis/test/**/*.test.{js,ts}`. Playwright snapshots in `packages/sszvis/test/snapshot/snapshot.spec.js` compare every docs example, including each button-group state, against stored screenshots. The suite globs the example pages in `apps/docs/build/client/preview/` and serves that build with `vite preview` on port 4173, so it needs `pnpm run build` first (`pnpm run test:snapshot` has turbo do it).
+
+The PNG baselines are shared by Chromium, Firefox and WebKit at a 5% pixel tolerance, and they must come from Linux: a Mac rasterizes text differently. Generate them in the Playwright image that matches `@playwright/test` (`mcr.microsoft.com/playwright:v<version>-noble`), from a worktree of the branch alone rather than the GitButler workspace, serving `apps/docs/build/client` with a static server on 4173 inside the container and running `npx playwright test --update-snapshots=changed -g "<page>"` there. The container's fonts differ slightly from the CI runner's — about 1% of pixels on a text-heavy chart — which the tolerance absorbs; check the result with all three browsers at that tolerance before committing.
 
 Map pages also get a `*-map.txt` baseline next to their PNG: per map layer, how many elements it draws, how many carry the missing-value texture, and how many distinct fills. The screenshot cannot see that texture — its light grey hatch falls inside the comparator's per-pixel colour tolerance, so a map that textures every district passes its PNG. Unlike the PNGs, these text baselines are platform-independent, so they may be generated on any machine: `pnpm --filter sszvis exec playwright test -g "<page>" --update-snapshots=changed`, then review the diff like code. That flag rewrites any failing PNG too — commit only the `.txt` files it touched.
 
