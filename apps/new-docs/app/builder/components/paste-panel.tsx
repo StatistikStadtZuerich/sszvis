@@ -19,13 +19,8 @@ import {
 } from "~/components/ui/table";
 import { Textarea } from "~/components/ui/textarea";
 
-import {
-  DELIMITER_LABELS,
-  type DelimiterName,
-  detectDelimiter,
-  parseDelimited,
-  type Table,
-} from "../domain/csv";
+import { type DelimiterName, detectDelimiter, parseDelimited, type Table } from "../domain/csv";
+import { DELIMITER_LABELS } from "../table";
 
 const plural = new Intl.PluralRules("en");
 

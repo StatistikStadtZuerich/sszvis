@@ -26,6 +26,10 @@ export cannot disagree. The spec is the only state; code is a projection of it.
 - `builder-client.ts`, `builder-form.ts` - the main-thread glue: an
   `AtomRpc.Service` over the worker (`recipesAtom`, `useBuilderCompile`,
   `compileErrorMessage`) and the TanStack form whose values are the `Spec`.
+- `assets.ts`, `table.ts` - what only this app can say: the URL it serves a
+  chart's topology under, and the table editor's own operations (renaming,
+  sorting, cycling a column's kind). Neither reaches the emitted code, so neither
+  belongs in `domain/`.
 - `page.tsx`, `components/` - layout only. `code-panel.tsx` renders the sources
   through `~/components/source-view`, which the example source panel also uses;
   it adds nothing of its own beyond the download buttons.
