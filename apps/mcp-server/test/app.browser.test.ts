@@ -161,7 +161,13 @@ describe("the chart app in a host", () => {
         (n) => n === 6,
       ),
     ).toBe(6);
-    expect(status(view)).toBe("");
+    /* The spinner stays until the frame after the chart has drawn. */
+    expect(
+      await settle(
+        () => status(view),
+        (text) => text === "",
+      ),
+    ).toBe("");
   });
 
   test("should draw a map from the topology it reads as a resource", async () => {
@@ -172,7 +178,13 @@ describe("the chart app in a host", () => {
       (n) => n > 0,
     );
     expect(areas).toBeGreaterThan(0);
-    expect(status(view)).toBe("");
+    /* The spinner stays until the frame after the chart has drawn. */
+    expect(
+      await settle(
+        () => status(view),
+        (text) => text === "",
+      ),
+    ).toBe("");
   });
 
   test("should open its panels fullscreen and redraw as the recipe the reader picks", async () => {
@@ -210,6 +222,43 @@ describe("the chart app in a host", () => {
     expect(bars).toHaveLength(6);
     /* Horizontal bars share one height and differ in width. */
     expect(heights.size).toBe(1);
+  });
+
+  test("should hold the chart in place while it redraws", async () => {
+    const view = await host({ recipe: "bar-chart-vertical" });
+    await settle(
+      () => status(view),
+      (text) => text === "",
+    );
+    const card = view.document.querySelector<HTMLElement>(".chart-card");
+    if (card === null) throw new Error("no chart card");
+    const before = card.getBoundingClientRect();
+
+    /* Sampled every frame from the click until the new chart is up. */
+    const samples: DOMRect[] = [];
+    button(view, "Edit").click();
+    const legend = await settle(
+      () => view.document.querySelector<HTMLElement>('[role="checkbox"]'),
+      (found) => found !== null,
+    );
+    if (legend === null) throw new Error("no feature checkbox after Edit");
+    const left = card.getBoundingClientRect().left;
+    legend.click();
+    await new Promise<void>((resolve) => {
+      const sample = () => {
+        samples.push(card.getBoundingClientRect());
+        if (status(view) === "") resolve();
+        else view.requestAnimationFrame(sample);
+      };
+      view.requestAnimationFrame(sample);
+    });
+
+    expect(samples.length).toBeGreaterThan(1);
+    for (const rect of samples.slice(0, -1)) {
+      expect(rect.top).toBe(before.top);
+      expect(rect.left).toBe(left);
+      expect(rect.height).toBeGreaterThanOrEqual(before.height);
+    }
   });
 
   test("should show the generated code", async () => {
