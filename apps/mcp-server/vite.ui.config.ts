@@ -1,3 +1,4 @@
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 
@@ -21,6 +22,6 @@ const libraries = (): Plugin => ({
 
 export default defineConfig({
   root: "ui",
-  plugins: [libraries(), viteSingleFile()],
+  plugins: [tailwindcss(), libraries(), viteSingleFile()],
   build: { outDir: "dist", emptyOutDir: true },
 });

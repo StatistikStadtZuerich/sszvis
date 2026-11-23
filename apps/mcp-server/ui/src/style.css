@@ -1,123 +1,100 @@
-/* The page follows the host's theme through its CSS variables; the chart stays on a light
-   card, because sszvis draws dark text and axes on no background of its own. */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * The components are copied from apps/new-docs and read its tokens (--background,
+ * --primary, ...). Here each token takes the host's own variable first, so the app sits in
+ * Claude's light or dark theme, and falls back to the docs palette in a host that sends
+ * none. `applyDocumentTheme` marks dark mode with data-theme, not a .dark class.
+ */
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
 :root {
-  color-scheme: light dark;
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-size: var(--font-text-sm-size, 14px);
-  color: var(--color-text-primary, CanvasText);
-  background: var(--color-background-primary, Canvas);
+  --radius: var(--border-radius-sm, 0.25rem);
+  --background: var(--color-background-primary, oklch(0.994 0 0));
+  --foreground: var(--color-text-primary, oklch(0.321 0 0));
+  --card: var(--color-background-primary, oklch(1 0 0));
+  --card-foreground: var(--color-text-primary, oklch(0.321 0 0));
+  --popover: var(--color-background-primary, oklch(1 0 0));
+  --popover-foreground: var(--color-text-primary, oklch(0.321 0 0));
+  --primary: var(--color-background-inverse, oklch(0.326 0.216 267));
+  --primary-foreground: var(--color-text-inverse, oklch(0.994 0 0));
+  --secondary: var(--color-background-secondary, oklch(0.97 0 0));
+  --secondary-foreground: var(--color-text-primary, oklch(0.321 0 0));
+  --muted: var(--color-background-secondary, oklch(0.97 0 0));
+  --muted-foreground: var(--color-text-secondary, oklch(0.515 0 0));
+  --accent: var(--color-background-tertiary, oklch(0.94 0 0));
+  --accent-foreground: var(--color-text-primary, oklch(0.326 0.216 267));
+  --destructive: var(--color-text-danger, oklch(0.58 0.22 25));
+  --border: var(--color-border-primary, oklch(0.94 0 0));
+  --input: var(--color-border-primary, oklch(0.94 0 0));
+  --ring: var(--color-ring-primary, oklch(0.326 0.216 267));
 }
 
-body {
-  margin: 0;
+[data-theme="dark"] {
+  --background: var(--color-background-primary, oklch(0.175 0 0));
+  --foreground: var(--color-text-primary, oklch(0.92 0 0));
+  --card: var(--color-background-primary, oklch(0.215 0 0));
+  --card-foreground: var(--color-text-primary, oklch(0.92 0 0));
+  --popover: var(--color-background-primary, oklch(0.215 0 0));
+  --popover-foreground: var(--color-text-primary, oklch(0.92 0 0));
+  --primary: var(--color-background-inverse, oklch(0.72 0.16 267));
+  --primary-foreground: var(--color-text-inverse, oklch(0.175 0 0));
+  --secondary: var(--color-background-secondary, oklch(0.25 0 0));
+  --secondary-foreground: var(--color-text-primary, oklch(0.92 0 0));
+  --muted: var(--color-background-secondary, oklch(0.25 0 0));
+  --muted-foreground: var(--color-text-secondary, oklch(0.66 0 0));
+  --accent: var(--color-background-tertiary, oklch(0.28 0 0));
+  --accent-foreground: var(--color-text-primary, oklch(0.8 0.13 267));
+  --destructive: var(--color-text-danger, oklch(0.7 0.19 22));
+  --border: var(--color-border-primary, oklch(0.28 0 0));
+  --input: var(--color-border-primary, oklch(0.28 0 0));
+  --ring: var(--color-ring-primary, oklch(0.72 0.16 267));
 }
 
-main {
-  display: grid;
-  gap: 12px;
-  padding: 12px;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply m-0 bg-background font-sans text-sm text-foreground;
+  }
 }
 
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  align-items: end;
-}
-
-.controls label {
-  display: grid;
-  gap: 2px;
-  font-size: 12px;
-  color: var(--color-text-secondary, GrayText);
-}
-
-.controls fieldset {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.controls fieldset label {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  color: var(--color-text-primary, CanvasText);
-}
-
-select,
-input,
-button {
-  font: inherit;
-  color: inherit;
-}
-
-select,
-input[type="text"] {
-  min-width: 8em;
-  padding: 2px 4px;
-  border: 1px solid var(--color-border-primary, GrayText);
-  border-radius: var(--border-radius-sm, 4px);
-  background: var(--color-background-secondary, Canvas);
-}
-
-button {
-  padding: 2px 10px;
-  border: 1px solid var(--color-border-primary, GrayText);
-  border-radius: var(--border-radius-sm, 4px);
-  background: var(--color-background-secondary, ButtonFace);
-  cursor: pointer;
-}
-
-.tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.tabs [aria-selected="true"] {
-  background: var(--color-background-inverse, CanvasText);
-  color: var(--color-text-inverse, Canvas);
-}
-
-.status {
-  margin: 0;
-  color: var(--color-text-secondary, GrayText);
-}
-
-.status.error {
-  color: var(--color-text-danger, #c00);
-  white-space: pre-wrap;
-}
-
-.card {
+/* sszvis draws dark text and axes on no background of its own, so the chart keeps a light card. */
+.chart-card {
   color-scheme: light;
-  padding: 16px;
-  border-radius: var(--border-radius-md, 8px);
   background: #fff;
   color: #000;
 }
 
 /* Marks overhang the bounds (a point is centred on its value), so paint into the padding. */
-.card svg {
+.chart-card svg {
   overflow: visible;
-}
-
-.code-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-pre {
-  max-height: 480px;
-  margin: 0;
-  overflow: auto;
-  padding: 12px;
-  border-radius: var(--border-radius-md, 8px);
-  background: var(--color-background-secondary, Canvas);
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 12px;
 }

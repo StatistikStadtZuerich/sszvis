@@ -27,9 +27,15 @@ Test it in MCP Jam's **Strict** CSP mode: its default allows every origin and hi
 
 `render_chart` takes a small input (`recipe`, `csv` or `sample`, and optional `fields`, `options`, `features`) and fills in the rest of chart-builder's `Spec`. Input that names something the recipe or the table does not have comes back as a tool error listing what would be valid, so the model can correct it.
 
+## The page
+
+`ui/` is a React page built to one HTML file (`vite-plugin-singlefile`) that the server inlines. Inline it shows the chart, a Preview/Code switch and an Edit button; Edit asks the host for fullscreen and adds the docs builder's panels beside the chart - chart type, column mapping with the option menus and their swatches, and features.
+
+Those panels and the UI kit under them are copied from `apps/new-docs` (`app/components/ui/*`, `app/builder/components/{chart-type,choice-select}.tsx`, and steps 3 and 4 of `app/builder/page.tsx`) rather than shared, so the docs site and the app can drift. `ui/src/style.css` points the docs tokens at the host's CSS variables first, falling back to the docs palette, and keys dark mode off the `data-theme` the host sets. The tooltip fields, annotations, filter control and table editor stay in the docs builder.
+
 ## How the app runs a chart
 
-`ui/` builds to one HTML file (`vite-plugin-singlefile`) that the server inlines. It loads d3, sszvis and topojson-client from the same unpkg URLs the generated page uses (`@sszvis/chart-builder/host`), declared as `resourceDomains` in the resource's CSP, so the preview is what the download runs.
+The page loads d3, sszvis and topojson-client from the same unpkg URLs the generated page uses (`@sszvis/chart-builder/host`), declared as `resourceDomains` in the resource's CSP, so the preview is what the download runs.
 
 The generated `chart.js` runs unchanged. The host's CSP has `connect-src 'none'` and no `unsafe-eval`, so `ui/src/runtime.ts` answers its `d3.csv` and `d3.json` from memory, and parses the CSV without `d3.csvParse`, which compiles row objects with `new Function`. Each run is wrapped in a function, since classic scripts share one global scope and a chart's top-level `const`s would clash on the next run.
 
