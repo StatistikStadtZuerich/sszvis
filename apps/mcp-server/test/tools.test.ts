@@ -134,17 +134,6 @@ describe("render_chart", () => {
     expect(text(result)).not.toContain("Dienstleistung");
   });
 
-  test("should chart a long, narrow table under the size limit", async () => {
-    /* 240,000 rows in about 960,000 characters: under the limit, and one argument per row
-       to a Math.max spread is past what the runtime takes. */
-    const csv = `Sektor,Anzahl\n${"a,1\n".repeat(120_000)}${"b,2\n".repeat(120_000)}`;
-    expect(csv.length).toBeLessThan(1_000_000);
-    const result = await call("render_chart", { recipe: "bar-chart-vertical", csv });
-
-    expect(text(result)).not.toContain("Maximum call stack");
-    expect(result.isError).toBe(false);
-  });
-
   test("should take the column mapping, options and features it is given", async () => {
     const result = await call("render_chart", {
       recipe: "bar-chart-vertical",
@@ -195,6 +184,10 @@ describe("render_chart", () => {
         csv: `${Array.from({ length: 41 }, (_, at) => `c${at}`).join(",")}\n${"1,".repeat(40)}1`,
       },
       "at most 40",
+    ],
+    [
+      { recipe: "bar-chart-vertical", csv: `Sektor,Anzahl\n${"a,1\n".repeat(5_001)}` },
+      "at most 5,000",
     ],
   ])("should reject %j with a message the model can act on", async (args, message) => {
     const result = await call("render_chart", args);
