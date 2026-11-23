@@ -187,15 +187,25 @@ const fail = (message: string) => Effect.fail(new ChartInputError({ message }));
  */
 const MAX_COLUMNS = 40;
 const MAX_CSV_LENGTH = 1_000_000;
+/*
+ * And the chart draws a mark per row - a bar chart one SVG rectangle each - so a table past
+ * this would swamp the host's frame long before the generated code noticed. A chart with
+ * more rows than this wants the data aggregated first anyway.
+ */
+const MAX_ROWS = 5_000;
 
 /** Why `csv` is too big to chart, or `undefined` if it is not. */
 function oversized(csv: string): string | undefined {
   if (csv.length > MAX_CSV_LENGTH) {
     return `The CSV is ${csv.length.toLocaleString("en")} characters; send at most ${MAX_CSV_LENGTH.toLocaleString("en")}.`;
   }
-  const columns = parse(csv).columns.length;
+  const table = parse(csv);
+  const columns = table.columns.length;
   if (columns > MAX_COLUMNS) {
     return `The CSV has ${columns} columns; send at most ${MAX_COLUMNS}, keeping only the ones the chart needs.`;
+  }
+  if (table.rows.length > MAX_ROWS) {
+    return `The CSV has ${table.rows.length.toLocaleString("en")} rows; send at most ${MAX_ROWS.toLocaleString("en")}, aggregating the data to what the chart shows.`;
   }
   return undefined;
 }

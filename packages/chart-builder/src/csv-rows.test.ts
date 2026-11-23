@@ -143,3 +143,12 @@ describe("surplus columns", () => {
     );
   });
 });
+
+describe("a long table", () => {
+  test("should parse more rows than Math.max takes arguments", () => {
+    /* The width was a Math.max spread over every row, which threw a RangeError here. */
+    const table = parse(`Sektor,Anzahl\n${"a,1\n".repeat(240_000)}`);
+    expect(table.columns).toHaveLength(2);
+    expect(table.rows).toHaveLength(240_000);
+  });
+});
