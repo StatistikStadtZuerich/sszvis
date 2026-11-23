@@ -1,4 +1,21 @@
-import { Field, FieldDescription, FieldError, FieldLabel } from "../components/ui/field.tsx";
+import {
+  bearsRole,
+  columnKinds,
+  fitRank,
+  hasValues,
+  REQUIRED,
+  type Table,
+} from "@sszvis/chart-builder/csv";
+import { unmappedRoles } from "@sszvis/chart-builder/initial-spec";
+import { unkeyedValues } from "@sszvis/chart-builder/palettes";
+import {
+  ColumnName,
+  KIND_LABEL,
+  optionValue,
+  type RecipeSummary,
+  type Spec,
+} from "@sszvis/chart-builder/spec";
+import { Field, FieldError, FieldLabel } from "../components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -8,23 +25,6 @@ import {
 } from "../components/ui/select.tsx";
 import { typefaceCaption } from "../lib/typeface.ts";
 import { ChoiceSelect } from "./choice-select.tsx";
-import {
-  bearsRole,
-  columnKinds,
-  fitRank,
-  hasValues,
-  REQUIRED,
-  type Table,
-} from "@sszvis/chart-builder/csv";
-import { unkeyedValues } from "@sszvis/chart-builder/palettes";
-import { unmappedRoles } from "@sszvis/chart-builder/initial-spec";
-import {
-  ColumnName,
-  KIND_LABEL,
-  optionValue,
-  type RecipeSummary,
-  type Spec,
-} from "@sszvis/chart-builder/spec";
 
 const listing = new Intl.ListFormat("en", { style: "long", type: "conjunction" });
 
@@ -58,6 +58,7 @@ export const Mapping = ({
             table,
             option.keyedTo === undefined ? undefined : spec.fields[option.keyedTo],
           );
+          /* Only a warning, as for the roles below: the option's own hint is left out. */
           const caption =
             superseded !== undefined
               ? `${superseded.label} is on, and it decides this instead.`
@@ -65,7 +66,7 @@ export const Mapping = ({
                 ? `This scale does not colour ${listing.format(unkeyed)}, so ${
                     unkeyed.length === 1 ? "that value takes" : "those values take"
                   } its first colour and the legend names its own values instead.`
-                : (option.hint ?? "");
+                : "";
 
           return (
             <Field key={option.key}>
@@ -134,9 +135,8 @@ export const Mapping = ({
                   ? `The values in ${column} are not all ${KIND_LABEL[REQUIRED[role.kind]]}s, so the chart will drop the rows it cannot read.`
                   : `${column} is empty, so the chart will have nothing to draw.`}
               </FieldError>
-            ) : (
-              <FieldDescription>{role.hint}</FieldDescription>
-            )}
+            ) : // <FieldDescription>{role.hint}</FieldDescription>
+            null}
           </Field>
         );
       })}

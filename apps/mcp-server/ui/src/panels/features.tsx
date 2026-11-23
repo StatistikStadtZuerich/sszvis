@@ -1,12 +1,6 @@
-import { Checkbox } from "../components/ui/checkbox.tsx";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldLabel,
-  FieldTitle,
-} from "../components/ui/field.tsx";
 import type { RecipeSummary, Spec } from "@sszvis/chart-builder/spec";
+import { Checkbox } from "../components/ui/checkbox.tsx";
+import { Field, FieldContent, FieldLabel, FieldTitle } from "../components/ui/field.tsx";
 
 export const Features = ({
   recipe,
@@ -37,7 +31,7 @@ export const Features = ({
             />
             <FieldContent>
               <FieldTitle>{feature.label}</FieldTitle>
-              <FieldDescription>{feature.hint}</FieldDescription>
+              {/* <FieldDescription>{feature.hint}</FieldDescription> */}
             </FieldContent>
           </Field>
         </FieldLabel>
