@@ -19,20 +19,16 @@ jobs:
           persist-credentials: false
       - name: Install Dependencies
         uses: ./.github/actions/setup
-      # GitHub Pages serves this repository at /sszvis/, so the docs are built for
-      # that base path (see apps/new-docs/docs-base.ts).
       - name: Build
         run: pnpm run build
         env:
           DOCS_BASE: /sszvis/
-      # The previous docs site published the library bundles and the TopoJSON at
-      # its root, and its guides pointed readers at /topo/. Keep those URLs alive.
+      # The previous docs served these at its root, and its guides cite /topo/.
       - name: Keep the previous site's public files
         run: |
           cp packages/sszvis/build/sszvis.{js,js.map,min.js,min.js.map,css} apps/new-docs/build/client/
           cp -R packages/geodata/dist/topo apps/new-docs/build/client/topo
-      # Jekyll drops every underscore-prefixed path, and the examples load their
-      # library and shared files from preview/_assets and preview/_static.
+      # Jekyll would drop the underscore-prefixed preview/_assets and preview/_static.
       - name: Disable Jekyll
         run: touch apps/new-docs/build/client/.nojekyll
       - name: Deploy

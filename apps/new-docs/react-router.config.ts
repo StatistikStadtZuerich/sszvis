@@ -8,16 +8,9 @@ export default {
   prerender: true,
   basename: DOCS_BASE,
   /*
-   * Shapes `build/client` into a folder a static host serves as-is.
-   *
-   * Under a basename React Router writes the prerendered pages to
-   * `build/client/<basename>/` while Vite and the examples plugin write `assets/`,
-   * `preview/` and `public/` to `build/client/` itself, so nothing lines up until
-   * the pages are moved up beside them. Hosts that serve the folder at the basename
-   * (GitHub Pages serves the repo at `/sszvis/`) then find every URL.
-   *
-   * The SPA fallback also becomes `404.html`, the page GitHub Pages serves for a
-   * path it has no file for, so an unknown URL gets the site's own not-found page.
+   * Under a basename React Router prerenders into `build/client/<basename>/` while assets and
+   * examples land in `build/client/`; move the pages up so a static host serves the folder as-is.
+   * GitHub Pages serves `404.html` for unknown paths.
    */
   async buildEnd({ reactRouterConfig }) {
     const client = path.join(reactRouterConfig.buildDirectory, "client");
@@ -27,14 +20,8 @@ export default {
     const fallback = DOCS_BASE === "/" ? "__spa-fallback.html" : "index.html";
     await fs.copyFile(path.join(client, fallback), path.join(client, "404.html"));
 
-    // The first segment of the basename, so `/a/b/` removes the whole `a/` it nested in.
     const top = DOCS_BASE.split("/")[1];
     if (top) {
-      /*
-       * Removing `<top>/` is only safe while the prerendered pages are all it holds. A
-       * basename named like a public folder (`guides/`), a build output (`assets/`,
-       * `preview/`) or one of its own routes would have that merged in, and deleted.
-       */
       const publicDir = path.resolve(reactRouterConfig.appDirectory, "..", "public");
       const taken = [...(await fs.readdir(publicDir).catch(() => [])), "assets", "preview"];
       const routed = await fs.stat(path.join(nested, top)).then(

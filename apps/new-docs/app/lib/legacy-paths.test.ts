@@ -9,7 +9,6 @@ import { CHANGELOG_URL, LEGACY_PATHS } from "./legacy-paths";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-/* The previous site's own page list, so a slug it published cannot be missed here. */
 const catalog = fs.readFileSync(path.join(here, "../../../docs/docs/index.html"), "utf8");
 const oldSlugs = [...catalog.matchAll(/\{\s*path:\s*"([^"]+)",\s*title:\s*"[^"]*",\s*src:/g)]
   .map((match) => match[1])
@@ -18,7 +17,6 @@ const oldSlugs = [...catalog.matchAll(/\{\s*path:\s*"([^"]+)",\s*title:\s*"[^"]*
 const routes = new Set(contentPages.map((page) => page.routePath));
 
 test("should read the previous site's page list", () => {
-  /* Guards the guard: a regex that stopped matching would pass every check below. */
   expect(oldSlugs.length).toBeGreaterThan(30);
 });
 

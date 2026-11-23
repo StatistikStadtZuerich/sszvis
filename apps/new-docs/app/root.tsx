@@ -53,12 +53,7 @@ const themeScript = `
 })();
 `;
 
-/*
- * The previous docs site (Catalog) routed on the hash: `/sszvis/#/bar-chart-vertical`.
- * Most page slugs carried over; `LEGACY_PATHS` says where the rest went, so a link to
- * the old site lands on the same page here. Catalog's in-page anchors (`?a=…`) have no
- * equivalent and are dropped.
- */
+/* Redirects the previous Catalog site's hash URLs (`#/slug`); its `?a=` anchors are dropped. */
 const legacyHashScript = `
 (function() {
   var hash = location.hash;

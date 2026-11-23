@@ -25,7 +25,6 @@ const CONTENT_DIR = "app/content";
 const CHART_PAGES = "content/charts/";
 const EXAMPLES_DIR = "examples";
 const EXAMPLE_TAG = /<Example\s+id="([^"]+)"/g;
-/** Where the examples are written in the build output, and served from under the site base. */
 const PREVIEW_DIR = "preview";
 const VIRTUAL_ID = "virtual:examples";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -81,7 +80,6 @@ type CatalogEntry = {
 
 export function examplesPlugin(): Plugin {
   let root = "";
-  /* The URLs the examples are served under, which follow Vite's `base` (see docs-base.ts). */
   let urlPrefix = `/${PREVIEW_DIR}`;
   let staticPrefix = `${urlPrefix}/${STATIC_DIR}/`;
   let topoPrefix = `${staticPrefix}topo/`;
@@ -323,11 +321,7 @@ export function examplesPlugin(): Plugin {
               url === `${urlPrefix}/${example.id}/` || url === `${urlPrefix}/${example.id}`,
           );
           if (match) {
-            /*
-             * The page loads its shared files by relative path (`../../_static/`), which
-             * resolves only from the directory URL. Served without the slash, it would
-             * look one level too high; a static host redirects there, so do the same.
-             */
+            // Its relative `../../_static/` paths resolve only from the directory URL; static hosts redirect too.
             if (!url.endsWith("/")) {
               const query = (req.url ?? "").slice(rawPath.length);
               res.statusCode = 302;

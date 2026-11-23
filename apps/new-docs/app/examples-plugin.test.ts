@@ -7,11 +7,6 @@ import { examplesPlugin } from "../vite-plugin-examples";
 
 const PAGE = "/sszvis/preview/map-extended/topolayer-stadtkreise";
 
-/*
- * An example loads its shared files by relative path (`../../_static/`), which resolves
- * only from the directory URL. The dev server must send a slashless URL there first, as
- * a static host does, or the map's topology and fallback are fetched one level too high.
- */
 test("should redirect an example's slashless URL to the directory, keeping the query", async () => {
   const vite = await createServer({
     configFile: false,
