@@ -6,7 +6,7 @@ import { Button } from "~/components/ui/button";
 import { useAvailableWidth } from "~/hooks/use-available-width";
 
 import { examples } from "virtual:examples";
-import { typefaceCodeLabel, typefaceMeta } from "~/components/tokens/typeface";
+import { typefaceMeta } from "~/components/tokens/typeface";
 
 import {
   DEFAULT_WIDTH,
@@ -23,7 +23,8 @@ const measuredHeights = new Map<string, number>();
 
 export const Example = ({ id }: { readonly id: string }) => {
   const example = examples[id];
-  if (example === undefined) return <PendingExample id={id} />;
+  // The examples plugin fails the build when a page names an unknown id.
+  if (example === undefined) throw new Error(`Unknown example: ${id}`);
   return (
     <ExamplePreview
       url={example.url}
@@ -33,15 +34,6 @@ export const Example = ({ id }: { readonly id: string }) => {
     />
   );
 };
-
-const PendingExample = ({ id }: { readonly id: string }) => (
-  <figure className="my-8 rounded-lg border border-dashed bg-muted/30 px-5 py-6 text-center">
-    <div className={typefaceCodeLabel("text-foreground")}>{id}</div>
-    <figcaption className={typefaceMeta("mt-2 text-muted-foreground")}>
-      Not ported yet — add <code>examples/{id}/</code> and this becomes the live chart.
-    </figcaption>
-  </figure>
-);
 
 const ExamplePreview = ({
   url,

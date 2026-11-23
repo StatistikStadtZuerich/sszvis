@@ -7,7 +7,7 @@
     "react-router.config.ts",
     "docs-base.ts"
   ],
-  "exclude": ["node_modules", "dist", "build", ".next", "coverage"],
+  "exclude": ["node_modules", "build", "coverage"],
   "compilerOptions": {
     "rootDirs": [".", "./.react-router/types"],
     "paths": { "~/*": ["./app/*"] }
