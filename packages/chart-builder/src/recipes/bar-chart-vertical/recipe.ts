@@ -76,7 +76,7 @@ export const barChartVertical: RecipeDef = {
       spec,
       {
         [CATEGORY]: { accessor: "xAcc", kind: "category" },
-        [VALUE]: { accessor: "yAcc", kind: "number", suffix: str(option(UNIT)), missing: "keine" },
+        [VALUE]: { accessor: "yAcc", kind: "number", suffix: option(UNIT), missing: "keine" },
       },
       barChartVertical.defaultTooltip,
     ),

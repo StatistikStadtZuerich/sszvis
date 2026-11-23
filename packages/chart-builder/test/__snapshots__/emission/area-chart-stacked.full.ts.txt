@@ -228,7 +228,9 @@ sszvis.app<State, Actions>({
         return Number.isNaN(value) ? "keine" : sszvis.formatNumber(value);
       })
       .newline()
-      .plain(pointKey);
+      .plain((d: HighlightPoint) =>
+        String(pointKey(d)).replace(/[&<>]/g, (c) => `&#${c.charCodeAt(0)};`),
+      );
 
     const rangeTooltip = sszvis
       .tooltip<HighlightPoint>()

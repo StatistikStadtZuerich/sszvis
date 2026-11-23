@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { typefaceCaption, typefaceMeta } from "~/components/tokens/typeface";
 import { Button } from "~/components/ui/button";
 import { assetUrl } from "../assets";
-import { harmlessValues } from "@sszvis/chart-builder/csv";
 import { host } from "@sszvis/chart-builder/host";
 import type { Asset } from "@sszvis/chart-builder/spec";
 import { Notice } from "./notice";
@@ -126,7 +125,8 @@ export const Preview = ({
           scripts,
           cdn: { sszvis: `${ASSETS}/sszvis.js`, sszvisCss: `${ASSETS}/sszvis.css` },
           files: {
-            data: `data:text/csv;charset=utf-8,${encodeURIComponent(harmlessValues(csv))}`,
+            /* The table as written: the chart escapes the text it writes into its tooltips. */
+            data: `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`,
             fallback: FALLBACK,
             asset: (asset) => new URL(assetUrl(asset), window.location.origin).href,
           },

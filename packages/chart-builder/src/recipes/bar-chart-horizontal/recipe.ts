@@ -80,7 +80,7 @@ export const barChartHorizontal: RecipeDef = {
       spec,
       {
         [CATEGORY]: { accessor: "cAcc", kind: "category" },
-        [VALUE]: { accessor: "xAcc", kind: "number", suffix: str(option(UNIT)), missing: "keine" },
+        [VALUE]: { accessor: "xAcc", kind: "number", suffix: option(UNIT), missing: "keine" },
       },
       barChartHorizontal.defaultTooltip,
     ),
