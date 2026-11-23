@@ -43,12 +43,14 @@ describe("what the server offers a host", () => {
     expect(Object.keys(meta).sort()).toEqual([
       "describe_recipes",
       "list_recipes",
+      "read_topology",
       "render_chart",
       "update_chart",
     ]);
     expect(meta["render_chart"]).toEqual({ ui: { resourceUri: "ui://sszvis/chart" } });
     expect(meta["update_chart"]).toEqual({ ui: { visibility: ["app"] } });
     expect(meta["describe_recipes"]).toEqual({ ui: { visibility: ["app"] } });
+    expect(meta["read_topology"]).toEqual({ ui: { visibility: ["app"] } });
   });
 
   test("should serve the app as an MCP App page that may load from unpkg", async () => {
@@ -106,6 +108,21 @@ describe("describe_recipes", () => {
 
     expect(summaries).toHaveLength(8);
     expect(swatched.some((choice) => choice.swatch !== undefined)).toBe(true);
+  });
+});
+
+describe("read_topology", () => {
+  test("should give the app a map's TopoJSON by the file update_chart names", async () => {
+    const result = await call("read_topology", { file: "stadt-zurich.json" });
+    const { json } = result.structuredContent as { json: string };
+
+    expect(JSON.parse(json)).toMatchObject({ type: "Topology" });
+  });
+
+  test("should refuse a file that is not one of the bundles", async () => {
+    const result = await call("read_topology", { file: "../secrets.json" });
+
+    expect(result.isError).toBe(true);
   });
 });
 

@@ -38,17 +38,31 @@ async function call<T>(app: App, name: string, args: Record<string, unknown>): P
   return result.structuredContent as T;
 }
 
+/*
+ * The map's TopoJSON, through the app-only read_topology tool rather than resources/read,
+ * which a host may refuse outside the app's own widget. Fetched once per file: an edit
+ * redraws the same map.
+ */
+const topologies = new Map<string, Promise<unknown>>();
+
+const topology = (app: App, file: string) => {
+  let found = topologies.get(file);
+  if (found === undefined) {
+    found = call<{ json: string }>(app, "read_topology", { file }).then(
+      ({ json }) => JSON.parse(json) as unknown,
+    );
+    /* A failed read is not kept, so the next draw asks again. */
+    found.catch(() => topologies.delete(file));
+    topologies.set(file, found);
+  }
+  return found;
+};
+
+/** Topology the chart would `d3.json`, keyed by the path it asks for. */
 const loadAssets = async (app: App, update: ChartUpdate) =>
   Object.fromEntries(
     await Promise.all(
-      update.assets.map(async (asset) => {
-        const result = await app.readServerResource({ uri: `sszvis://topo/${asset.file}` });
-        const content = result.contents[0];
-        if (content === undefined || !("text" in content)) {
-          throw new Error(`No topology at sszvis://topo/${asset.file}`);
-        }
-        return [asset.path, JSON.parse(content.text) as unknown] as const;
-      }),
+      update.assets.map(async (asset) => [asset.path, await topology(app, asset.file)] as const),
     ),
   );
 
