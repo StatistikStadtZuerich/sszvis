@@ -7,6 +7,7 @@ import { createSvgLayer } from "../../src/createSvgLayer.js";
 import { component } from "../../src/d3-component.js";
 import "../../src/d3-selectgroup.js";
 import { swissMapPath, swissMapProjection } from "../../src/map/mapUtils.js";
+import mapRendererGeoJson from "../../src/map/renderer/geojson.js";
 import choropleth, { type AnchoredShape } from "../../src/maps/choropleth.js";
 
 type Datum = { geoId: string; value: number | null };
@@ -837,6 +838,43 @@ describe("maps/choropleth", () => {
       );
       dispatchOn(node.querySelector("circle.lookalike-target") as Element, "click");
       expect(seen).toEqual([undefined]);
+    });
+
+    // Issue #464: a geojson overlay drawn into the same layer marks its own paths as event
+    // targets. Each component must keep its handlers on its own elements whichever is called last.
+    test.each([
+      ["choropleth first", true],
+      ["overlay first", false],
+    ])("should keep each component's handlers on its own elements (%s)", (_, choroplethFirst) => {
+      const side = nextSize();
+      const collection = geoJson();
+      const mapSeen: unknown[] = [];
+      const overlaySeen: unknown[] = [];
+      const map = choropleth<Datum>()
+        .features(collection)
+        .borders(mesh())
+        .width(side)
+        .height(side)
+        .on("over", (d: unknown) => mapSeen.push(d));
+      const overlayDatum = { geoId: "o", value: 7 };
+      const overlay = mapRendererGeoJson<Datum>()
+        .dataKeyName("geoId")
+        .geoJsonKeyName("id")
+        .geoJson({ type: "FeatureCollection", features: [square("o", 6, { id: "o" })] })
+        .mapPath(swissMapPath(side, side, collection))
+        .on("over", (d: unknown) => overlaySeen.push(d));
+
+      const node = layer().datum(fullData).node() as SVGGElement;
+      const sel = select(node);
+      if (choroplethFirst) sel.call(map).datum([overlayDatum]).call(overlay);
+      else sel.datum([overlayDatum]).call(overlay).datum(fullData).call(map);
+
+      dispatchOn(node.querySelector("path.sszvis-map__geojsonelement") as Element, "mouseover");
+      dispatchOn(areas(node)[0], "mouseover");
+      expect({ mapSeen, overlaySeen }).toEqual({
+        mapSeen: [fullData[0]],
+        overlaySeen: [overlayDatum],
+      });
     });
   });
 

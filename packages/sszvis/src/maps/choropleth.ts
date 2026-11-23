@@ -116,9 +116,9 @@
  * renderers keep their props on the element they rendered into. So one instance can draw into two
  * layers, each reflecting its own data, but both layers' event targets are bound to the one
  * dispatch and share its handlers. Within a layer the handlers are rebound on each render rather
- * than accumulating, and the binding is selectAll("[data-event-target]") scoped to the rendered
- * group, so an anchored shape's own event targets are bound too, since it renders before the
- * binding.
+ * than accumulating, and the binding covers only this component's own targets - the areas
+ * and the anchored shape's [data-event-target] elements, which are bound too since the shape renders
+ * before the binding. Another renderer's event targets in the same layer are left to it.
  *
  * See test/maps/choropleth.test.ts.
  *
@@ -371,6 +371,14 @@ const LAKE_PATHS = ":scope > path.sszvis-map__lakezurich, :scope > path.sszvis-m
 const ABOVE_THE_LAKE = `:scope > g.sszvis-map__highlight-group, :scope > [data-d3-selectgroup="${SHAPE_GROUP}"]`;
 
 /**
+ * The event targets this component drew: the base layer's areas and whatever the anchored shape
+ * marked inside this component's own wrapper. Not every [data-event-target] in the map group, since
+ * another renderer drawn into the same layer - a geojson overlay, say - marks its own targets too
+ * and binds its own handlers to them; see issue #464.
+ */
+const OWN_EVENT_TARGETS = `:scope > path.sszvis-map__area, :scope > [data-d3-selectgroup="${SHAPE_GROUP}"] [data-event-target]`;
+
+/**
  * The wrapper this component owns for the anchored shape, joined against the direct children of
  * the map group rather than searched for with selectGroup, which matches any descendant: an
  * anchored shape is arbitrary caller markup and may well contain a group of its own under the same
@@ -507,7 +515,7 @@ export default function choropleth<T extends object = object>(): ChoroplethCompo
       const entities: ReadonlySet<unknown> = new Set<unknown>(mergedData);
 
       selection
-        .selectAll<Element, unknown>("[data-event-target]")
+        .selectAll<Element, unknown>(OWN_EVENT_TARGETS)
         // d3 calls a listener with the event first and the bound datum second.
         .on("mouseover", function (_event: Event, d: unknown) {
           event.call("over", this, entityDatum<T>(d, entities));
