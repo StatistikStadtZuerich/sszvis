@@ -1,10 +1,3 @@
-/**
- * @module @sszvis/mcp-server/chartTools
- *
- * The chart builder as MCP tools. The model calls `list_recipes` and `render_chart`; the
- * app calls `update_chart` to get the generated code and to apply the reader's edits, so
- * the code never lands in the model's context.
- */
 import { Array, Effect, Layer, Schema } from "effect";
 import { McpServer, Prompt, Tool, Toolkit } from "effect/ai";
 
@@ -34,7 +27,6 @@ import { appOnly, renderedBy } from "./mcpApp.ts";
 
 export const CHART_APP_URI = "ui://sszvis/chart";
 
-/** A tool input the model can correct: the message says what would have been valid. */
 export class ChartInputError extends Schema.TaggedError<ChartInputError>()("ChartInputError", {
   message: Schema.String,
 }) {}
@@ -162,6 +154,7 @@ const describe = ({ spec }: { readonly spec: Spec }) => {
   const summary = summaries.find((candidate) => candidate.key === spec.recipe);
   const { csv: _csv, ...rest } = spec;
   const rows = parse(spec.csv).rows.length;
+
   return [
     Prompt.textPart({
       text: `Showing the user a ${summary?.label ?? spec.recipe} of ${rows} rows. They can change it in place. The spec, without its CSV:\n${JSON.stringify(rest)}`,
@@ -250,6 +243,7 @@ const specFrom = Effect.fnUntraced(function* (params: RenderChartParams) {
       `No column fits the role(s) ${list(unmapped)}. Map them in \`fields\`; the columns are ${list(columns)}.`,
     );
   }
+
   return spec;
 });
 
@@ -288,7 +282,6 @@ const UpdateChart = Tool.make("update_chart", {
 /** Every recipe as chart-builder describes it, swatches and all, for the app's controls. */
 const DescribeRecipes = Tool.make("describe_recipes", {
   description: "The full recipe summaries the chart app's controls are built from.",
-  /* An object, since MCP's `structuredContent` cannot be an array. */
   success: Schema.Struct({ recipes: Schema.Array(RecipeSummary) }),
 })
   .annotate(Tool.Title, "Describe recipes")
@@ -314,6 +307,7 @@ const handlers = Effect.gen(function* () {
       const spec = yield* specFrom(params);
       /* Generated and thrown away, so a spec the app cannot draw fails here, to the model. */
       yield* compile(spec);
+
       return { spec };
     }),
     update_chart: Effect.fnUntraced(function* ({ spec: current, recipe }) {
@@ -325,6 +319,7 @@ const handlers = Effect.gen(function* () {
       const spec = from === to ? current : switchRecipe(current, from, to);
       const generated = yield* compile(spec);
       const table = parse(spec.csv);
+
       return {
         spec,
         ts: generated.ts,

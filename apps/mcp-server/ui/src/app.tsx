@@ -1,11 +1,3 @@
-/**
- * The chart app. `render_chart` hands it a spec; it asks `update_chart` for the code, runs
- * that code against the published sszvis the generated page loads, and sends every edit
- * back through `update_chart`.
- *
- * Inline it is the chart and an Edit button, since a host caps an inline app's height.
- * Fullscreen adds the docs builder's panels beside it.
- */
 import { type App, useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 import { Maximize2Icon, Minimize2Icon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -32,7 +24,6 @@ const WAITING: Status = { message: "Waiting for a chart…", error: false };
 const DRAWING: Status = { message: "Drawing…", error: false };
 const DONE: Status = { message: "", error: false };
 
-/** A tool's structured result, or the text it failed with. */
 async function call<T>(app: App, name: string, args: Record<string, unknown>): Promise<T> {
   const result = await app.callServerTool({ name, arguments: args });
   if (result.isError === true) {
@@ -42,7 +33,6 @@ async function call<T>(app: App, name: string, args: Record<string, unknown>): P
   return result.structuredContent as T;
 }
 
-/** Topology the chart would `d3.json`, read as MCP resources, keyed by the path it asks for. */
 const loadAssets = async (app: App, update: ChartUpdate) =>
   Object.fromEntries(
     await Promise.all(

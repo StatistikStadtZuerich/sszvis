@@ -1,9 +1,3 @@
-/**
- * @module @sszvis/mcp-server/capabilities
- *
- * Everything the server registers, apart from the transport, so tests can serve it
- * in memory.
- */
 import { Layer } from "effect";
 
 import { ChartApp } from "./chartApp.ts";

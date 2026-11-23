@@ -1,16 +1,7 @@
-/**
- * Runs generated chart code inside the app.
- *
- * The code is the same `chart.js` a reader downloads: it reads a global `config` and loads
- * its data with `d3.csv(config.data)` and its topology with `d3.json`. The host's CSP has
- * `connect-src 'none'`, so those loads are answered from memory instead, and `sszvis.app`
- * is wrapped so the previous chart can be destroyed before the next one draws.
- */
 import type { ChartUpdate } from "../../src/chartTools.ts";
 
 type Loader = (url: string, ...rest: unknown[]) => Promise<unknown>;
 
-/* The globals the CDN scripts define, as far as this file touches them. */
 declare global {
   interface Window {
     config: Record<string, string>;
@@ -25,10 +16,6 @@ declare global {
 
 type Row = (datum: Record<string, string>, index: number, columns: string[]) => unknown;
 
-/**
- * What `d3.csvParse(text, row)` returns, without it: d3-dsv compiles its row objects with
- * `new Function`, and the spec's default CSP has no `unsafe-eval`, so it throws in a host.
- */
 function parseCsv([columns = [], ...rows]: string[][], row: Row | undefined) {
   const parsed: unknown[] = [];
   rows.forEach((cells, index) => {

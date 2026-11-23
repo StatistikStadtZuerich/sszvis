@@ -1,8 +1,3 @@
-/*
- * The docs builder's code panel, cut down to what an iframe can offer: the two scripts and
- * a copy button. No highlighting (shiki would ship its grammars into the page) and no zip
- * download, which the host would have to allow.
- */
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../components/ui/button.tsx";
@@ -12,7 +7,6 @@ import type { ChartUpdate } from "../../../src/chartTools.ts";
 const FILES = { ts: "chart.ts", js: "chart.js" } as const;
 type File = keyof typeof FILES;
 
-/** A sandboxed frame may lack clipboard-write; selecting the text still lets the reader copy it. */
 async function copyText(text: string, fallback: HTMLElement | null) {
   try {
     await navigator.clipboard.writeText(text);
@@ -60,7 +54,7 @@ export const CodePanel = ({ update }: { readonly update: ChartUpdate }) => {
           {copied ? "Copied" : "Copy"}
         </Button>
       </div>
-      <pre className="max-h-[32rem] min-h-0 overflow-auto rounded-md border bg-muted p-3 font-mono text-xs">
+      <pre className="max-h-128 min-h-0 overflow-auto rounded-md border bg-muted p-3 font-mono text-xs">
         <code id="source" ref={setSource}>
           {text}
         </code>
