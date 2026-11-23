@@ -15,6 +15,7 @@ This is a pnpm + Turborepo monorepo. Root commands fan out across workspaces; us
 | Test (one file)     | `pnpm --filter sszvis exec vitest run test/component/bar.test.ts` |
 | Test (in a browser) | `pnpm --filter sszvis exec vitest --browser.headless=false`       |
 | Test (watch)        | `pnpm --filter sszvis run test:watch`                             |
+| Chart builder tests | `pnpm --filter @sszvis/chart-builder test` (node, then browser)   |
 | Visual regression   | `pnpm run test:snapshot` (starts the docs server itself)          |
 | Type check          | `pnpm run type-check` (tsc over `src/` **and** `test/`)           |
 | Lint                | `pnpm run lint` (oxlint)                                          |
@@ -36,6 +37,7 @@ The publish workflow re-runs the first three (not snapshots) before publishing f
 `prepublishOnly`, which builds but does not test.
 
 Test paths passed to `vitest` are relative to `packages/sszvis`, not the repo root.
+The same holds for every package: a `--filter` command runs in that package's directory.
 The library's unit tests run in a real browser (Vitest browser mode, Playwright/Chromium), so
 `playwright install` is required once after cloning. `@sszvis/regression-cli`'s tests are plain
 Node and need no browser. Tests import from `src/` directly; the only shared test code is
@@ -55,6 +57,9 @@ apps/
   docs/              # 11ty documentation site (@sszvis/docs)
     docs/            #   eleventy input: guides, _includes, static, one dir per chart type
     dist/            #   eleventy output
+  new-docs/          # @sszvis/new-docs - React Router + MDX docs site
+    app/builder/     #   the chart builder's form, worker and preview
+    examples/        #   one dir per example: chart.ts, data.csv, example.json
   project-specimen/  # @sszvis/project-specimen - Catalog widget the docs homepage needs
   regression-cli/    # @sszvis/regression-cli - consumer regression harness (Effect v4 CLI)
     src/commands/    #   serve, crawl, export
@@ -67,6 +72,9 @@ packages/
     src/           #   GeoJSON/CSV sources
     topo.sh        #   pipeline
     dist/topo/     #   the four TopoJSON bundles
+  chart-builder/   # @sszvis/chart-builder — spec in, chart code out (private)
+    src/recipes/   #   one dir per chart type: recipe.ts, chart.ts, a .tmpl per feature
+    test/          #   emission baselines, generated-code type-check, browser mark counts
   config-typescript/ # shared tsconfig base (@repo/config-typescript)
 contrib/           # example projects and experiments
 ```
@@ -85,6 +93,15 @@ beside it so URLs into the previous site's root keep working.
 
 Do not add a second `addPassthroughCopy` with a source path eleventy has already
 seen — it is silently dropped. Use a glob to distinguish the sources.
+
+The chart builder is split in two. `@sszvis/chart-builder` turns a spec into a
+chart's files and owns the recipes and their templates; `apps/new-docs/app/builder`
+is the form around it. Each has a README, and the package's is the reference for
+recipes, templates and the spec. The package exports each module as TypeScript
+source by an explicit subpath (no barrel, no build step), so a new public module
+needs an `exports` entry. Its `generate` loads prettier, about 1.2MB: keep it off
+any module a page imports eagerly — `apps/new-docs/app/builder/boundary.test.ts`
+checks that for the builder.
 
 `docs/index.html` needs `ProjectSpecimen.js` from `@sszvis/project-specimen`; without
 it Catalog throws and the entire index — the nav and every `README.md` page — renders
