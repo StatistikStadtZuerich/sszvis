@@ -323,6 +323,18 @@ export function examplesPlugin(): Plugin {
               url === `${urlPrefix}/${example.id}/` || url === `${urlPrefix}/${example.id}`,
           );
           if (match) {
+            /*
+             * The page loads its shared files by relative path (`../../_static/`), which
+             * resolves only from the directory URL. Served without the slash, it would
+             * look one level too high; a static host redirects there, so do the same.
+             */
+            if (!url.endsWith("/")) {
+              const query = (req.url ?? "").slice(rawPath.length);
+              res.statusCode = 302;
+              res.setHeader("location", `${rawPath}/${query}`);
+              res.end();
+              return;
+            }
             const template = await fs.readFile(path.join(examplesRoot(), "_template.html"), "utf8");
             send("text/html", await renderPage(match, `${urlPrefix}/_assets`, template));
             return;
