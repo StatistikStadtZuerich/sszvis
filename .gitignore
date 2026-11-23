@@ -47,8 +47,9 @@ __diff_output__
 .playwright-mcp/
 blob-report
 playwright/.cache
-# vitest browser mode drops failure screenshots next to each test file
+# vitest browser mode drops failure screenshots next to each test file (vitest 5: under .vitest/)
 **/__screenshots__/
+**/.vitest/
 **/test/snapshot/__results__/
 apps/regression-cli/__report__/
 apps/regression-cli/__export__/
