@@ -54,8 +54,33 @@ export function installChartRuntime() {
   };
 }
 
-/** Draws into `host`, which React owns and leaves empty, so the chart's own DOM is never React's. */
-export function runChart(
+/** How long a chart may take to draw before the held height is let go regardless. */
+const DRAW_TIMEOUT_MS = 3000;
+
+/** Resolves once `container` has drawn something and the browser has painted it. */
+function drawn(container: HTMLElement): Promise<void> {
+  return new Promise((resolve) => {
+    const finish = () => {
+      observer.disconnect();
+      clearTimeout(timeout);
+      requestAnimationFrame(() => resolve());
+    };
+    const observer = new MutationObserver(() => {
+      if (container.querySelector("svg, img") !== null) finish();
+    });
+    observer.observe(container, { childList: true, subtree: true });
+    const timeout = setTimeout(finish, DRAW_TIMEOUT_MS);
+  });
+}
+
+/**
+ * Draws into `host`, which React owns and leaves empty, so the chart's own DOM is never
+ * React's. Resolves once the chart has drawn.
+ *
+ * sszvis draws after its data promise settles, so a fresh container is empty for a moment;
+ * `host` keeps the height of the chart it is replacing until then, or the page below jumps.
+ */
+export async function runChart(
   host: HTMLElement,
   update: ChartUpdate,
   assets: Readonly<Record<string, unknown>>,
@@ -65,6 +90,7 @@ export function runChart(
   csv = update.csv;
   files = assets;
 
+  host.style.minHeight = `${host.offsetHeight}px`;
   /* A fresh container, so nothing the last chart drew or bound survives. */
   const container = document.createElement("div");
   container.id = CHART;
@@ -89,5 +115,10 @@ export function runChart(
   document.body.append(script);
   script.remove();
   window.removeEventListener("error", onError);
-  if (thrown !== undefined) throw thrown;
+  if (thrown !== undefined) {
+    host.style.minHeight = "";
+    throw thrown;
+  }
+  await drawn(container);
+  host.style.minHeight = "";
 }
