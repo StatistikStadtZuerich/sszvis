@@ -9,8 +9,8 @@ import type { Asset } from "../domain/spec";
 import { Notice } from "./notice";
 
 /* The workspace's own build of sszvis, so the preview draws with the library as it is in this repo. */
-const ASSETS = "/preview/_assets";
-const FALLBACK = "/preview/_static/fallback.png";
+const ASSETS = `${import.meta.env.BASE_URL}preview/_assets`;
+const FALLBACK = `${import.meta.env.BASE_URL}preview/_static/fallback.png`;
 
 const decodeError = Schema.decodeUnknownOption(
   Schema.Struct({ __sszvisPreviewError: Schema.String }),
