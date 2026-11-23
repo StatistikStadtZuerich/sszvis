@@ -3,7 +3,7 @@
 Prototype MCP server that serves the sszvis chart builder as an [MCP App](https://github.com/modelcontextprotocol/ext-apps): the model asks for a chart, and the host shows it in the conversation, where the reader can change it and copy its code. Built on Effect's `McpServer` (`effect/ai`) over Streamable HTTP.
 
 ```sh
-pnpm --filter @sszvis/mcp-server start       # builds, then serves http://127.0.0.1:9009/mcp
+pnpm --filter @sszvis/mcp-server start       # builds it and what it needs (via turbo), then serves http://127.0.0.1:9009/mcp
 pnpm --filter @sszvis/mcp-server inspector   # MCP Jam; add the URL as a Streamable HTTP server
 ```
 
