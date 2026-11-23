@@ -873,10 +873,10 @@ describe("host", () => {
      * The chart reaches its geometry the same way it reaches its rows: a key on
      * `config`, holding the name the file has in the bundle beside it.
      */
-    const page = host("Title", [{ key: "topology", path: "topo.json", source: "/anywhere.json" }]);
+    const page = host("Title", [{ key: "topology", path: "topo.json", file: "anywhere.json" }]);
     expect(page).toContain('topology: "topo.json"');
-    /* The source is where the builder read the bytes. Shipping it would point the export at the app. */
-    expect(page).not.toContain("/anywhere.json");
+    /* The file is where the builder read the bytes. Shipping it would point the export at the app. */
+    expect(page).not.toContain("anywhere.json");
   });
 
   test("should add a library to the page when a recipe asks for one", () => {

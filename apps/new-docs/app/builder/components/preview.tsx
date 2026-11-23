@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { typefaceCaption, typefaceMeta } from "~/components/tokens/typeface";
 import { Button } from "~/components/ui/button";
 import template from "../../../examples/_template.html?raw";
+import { assetUrl } from "../assets";
 import { harmlessValues } from "../domain/csv";
 import { escapeHtml, libraryTags } from "../domain/host";
 import type { Asset } from "../domain/spec";
@@ -125,7 +126,7 @@ export const Preview = ({
      * the frame has no base URL of its own to resolve a relative path against.
      */
     ...Object.fromEntries(
-      assets.map((asset) => [asset.key, new URL(asset.source, window.location.origin).href]),
+      assets.map((asset) => [asset.key, new URL(assetUrl(asset), window.location.origin).href]),
     ),
   };
 

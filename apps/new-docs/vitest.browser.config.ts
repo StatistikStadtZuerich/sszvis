@@ -5,13 +5,14 @@ import { playwright } from "@vitest/browser-playwright";
 import { defineConfig, type Plugin } from "vitest/config";
 
 const TOPO_DIR = "../../packages/geodata/dist/topo";
+/* `TOPO_BASE` in app/builder/assets.ts; a config import of app code trips Vite's native loader. */
 const TOPO_PREFIX = "/preview/_static/topo/";
 
 /*
- * The map recipe names its topology by the URL the app serves it under, and a test
- * that fetched a fixture instead could pass while the app asked for a file that is
- * not there. This serves the same directory the examples plugin does, so the test
- * reads the bytes through the URL the recipe actually emits.
+ * The map recipe names its topology by file, and `assetUrl` turns that into the URL
+ * the app serves it under. A test that fetched a fixture instead could pass while the
+ * app asked for a file that is not there. This serves the same directory the examples
+ * plugin does, so the test reads the bytes through the URL the app actually requests.
  */
 const topo = (): Plugin => ({
   name: "sszvis-topo",

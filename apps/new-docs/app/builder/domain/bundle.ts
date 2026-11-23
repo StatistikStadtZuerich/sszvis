@@ -1,8 +1,7 @@
 import { BUNDLE } from "./host";
 import { utf8, type ZipEntry } from "./zip";
-import type { Asset } from "./spec";
 
-/** What the bundle carries besides its source: bytes fetched from the app's own build. */
+/** What the bundle carries besides its source: bytes fetched from wherever the app serves them. */
 export type Binary = { readonly url: string; readonly name: string };
 
 /**
@@ -43,19 +42,16 @@ export class MissingAssetError extends Error {
  */
 export const bundleEntries = async (
   generated: { readonly html: string; readonly js: string; readonly csv: string },
-  assets: readonly Asset[],
+  assets: readonly Binary[],
   fallbackUrl: string,
   read: typeof fetch = fetch,
 ): Promise<readonly ZipEntry[]> => {
   const fallback = await fetchEntry(read, { url: fallbackUrl, name: BUNDLE.fallback });
   const fetched = await Promise.all(
-    assets.map(
-      async (asset) =>
-        [asset, await fetchEntry(read, { url: asset.source, name: asset.path })] as const,
-    ),
+    assets.map(async (asset) => [asset, await fetchEntry(read, asset)] as const),
   );
 
-  const missing = fetched.filter(([, entry]) => entry === null).map(([asset]) => asset.path);
+  const missing = fetched.filter(([, entry]) => entry === null).map(([asset]) => asset.name);
   if (missing.length > 0) throw new MissingAssetError(missing);
 
   return [
