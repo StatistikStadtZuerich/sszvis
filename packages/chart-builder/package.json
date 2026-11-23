@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "d3-dsv": "^3.0.1",
-    "effect": "4.0.0-rc.115",
+    "effect": "4.1.5",
     "prettier": "^3.9.6",
     "sszvis": "workspace:^",
     "ts-blank-space": "^0.9.0"

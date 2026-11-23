@@ -14,8 +14,8 @@
 import { Console, DateTime, Effect, Option, Schema } from "effect";
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
-import { Command, Flag } from "effect/unstable/cli";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { Command, Flag } from "effect/cli";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { Charts, SIDES } from "../domain/Chart.ts";
 import { EXPORT_MARKER, ExportMarker, holdsRepo, refuseToReplace } from "../domain/ExportTarget.ts";
 import { Report } from "../domain/Verdict.ts";

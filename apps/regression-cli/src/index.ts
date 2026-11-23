@@ -8,7 +8,7 @@
  */
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { Command } from "effect/unstable/cli";
+import { Command } from "effect/cli";
 import { crawl } from "./commands/crawl.ts";
 import { exportCommand } from "./commands/export.ts";
 import { serve } from "./commands/serve.ts";

@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
-import { AsyncResult } from "effect/unstable/reactivity";
+import { AsyncResult } from "effect/reactivity";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { typefaceCaption, typefaceHeadingSmall } from "~/components/tokens/typeface";
 import { Button } from "~/components/ui/button";

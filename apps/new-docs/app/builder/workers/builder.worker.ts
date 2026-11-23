@@ -2,7 +2,7 @@
 
 import * as BrowserWorkerRunner from "@effect/platform-browser/BrowserWorkerRunner";
 import { Effect, Layer } from "effect";
-import { RpcServer } from "effect/unstable/rpc";
+import { RpcServer } from "effect/rpc";
 
 import { findRecipe, recipes } from "@sszvis/chart-builder/recipes";
 import { summarize } from "@sszvis/chart-builder/spec";

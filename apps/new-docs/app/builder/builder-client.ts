@@ -2,8 +2,8 @@ import { useAtom } from "@effect/atom-react";
 import * as BrowserWorker from "@effect/platform-browser/BrowserWorker";
 import { useSelector } from "@tanstack/react-form";
 import { Effect, Layer, Option } from "effect";
-import { AsyncResult, Atom, AtomRpc } from "effect/unstable/reactivity";
-import { RpcClient } from "effect/unstable/rpc";
+import { AsyncResult, Atom, AtomRpc } from "effect/reactivity";
+import { RpcClient } from "effect/rpc";
 import { useEffect, useMemo } from "react";
 
 import type { BuilderForm } from "./builder-form";
