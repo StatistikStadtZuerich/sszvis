@@ -1,9 +1,10 @@
 import { Array, Effect, Layer, Schema } from "effect";
 import { McpServer, Prompt, Tool, Toolkit } from "effect/ai";
 
-import { harmlessValues, parse } from "@sszvis/chart-builder/csv";
+import { harmlessValues, parse, type Table } from "@sszvis/chart-builder/csv";
 import { makeGenerate } from "@sszvis/chart-builder/generate";
 import {
+  bindRoles,
   initialSpec,
   switchRecipe,
   unmappedRoles,
@@ -14,6 +15,7 @@ import { sampleFor, samples } from "@sszvis/chart-builder/samples";
 import {
   Asset,
   ColumnName,
+  type Fields,
   FeatureKey,
   OptionKey,
   RecipeKey,
@@ -177,6 +179,23 @@ const RenderChart = Tool.make("render_chart", {
 
 const fail = (message: string) => Effect.fail(new ChartInputError({ message }));
 
+/**
+ * The model's own bindings, with the roles it left out matched among the columns it did not
+ * use. Matching every role first and then overriding some lets a guessed role keep a column
+ * the model has just given to another: told only `category: Region`, a stacked bar would
+ * also stack by Region and lose the breakdown the other column held.
+ */
+function bindAround(summary: RecipeSummary, table: Table, given: Fields): Fields {
+  const taken = new Set(Object.values(given));
+  const kept = table.columns.flatMap((column, at) => (taken.has(column) ? [] : [at]));
+  const rest: Table = {
+    columns: kept.map((at) => table.columns[at] ?? ColumnName.make("")),
+    rows: table.rows.map((cells) => kept.map((at) => cells[at] ?? "")),
+  };
+  const open = { ...summary, roles: summary.roles.filter((role) => given[role.key] === undefined) };
+  return { ...bindRoles(open, rest, {}), ...given };
+}
+
 /** Every way the input can name something the recipe or the table does not have. */
 const specFrom = Effect.fnUntraced(function* (params: RenderChartParams) {
   const summary = summaries.find((candidate) => candidate.key === params.recipe);
@@ -223,14 +242,12 @@ const specFrom = Effect.fnUntraced(function* (params: RenderChartParams) {
     }
   }
 
+  const given: Fields = Object.fromEntries(
+    fields.map(([role, column]) => [RoleKey.make(role), ColumnName.make(column)]),
+  );
   const spec: Spec = {
     ...base,
-    fields: {
-      ...base.fields,
-      ...Object.fromEntries(
-        fields.map(([role, column]) => [RoleKey.make(role), ColumnName.make(column)]),
-      ),
-    },
+    fields: fields.length === 0 ? base.fields : bindAround(summary, parse(csv), given),
     chosen: fields.map(([role]) => RoleKey.make(role)),
     options: Object.fromEntries(
       Object.entries(params.options ?? {}).map(([key, value]) => [OptionKey.make(key), value]),

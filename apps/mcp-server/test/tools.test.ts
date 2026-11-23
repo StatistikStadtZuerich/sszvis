@@ -153,6 +153,19 @@ describe("render_chart", () => {
     });
   });
 
+  test("should match the roles it is not given to the columns it is not given", async () => {
+    const result = await call("render_chart", {
+      recipe: "bar-chart-vertical-stacked",
+      csv: "Quarter,Region,Sales\nQ1,Nord,10\nQ1,Süd,20\nQ2,Nord,30\nQ2,Süd,40",
+      fields: { category: "Region" },
+    });
+    const { spec } = result.structuredContent as { spec: { fields: Record<string, string> } };
+
+    expect(spec.fields["category"]).toBe("Region");
+    expect(spec.fields["series"]).toBe("Quarter");
+    expect(spec.fields["value"]).toBe("Sales");
+  });
+
   test.each([
     [{ recipe: "pie-chart" }, "Expected"],
     [{ recipe: "line-chart", fields: { date: "Nope" } }, 'The data has no column "Nope"'],
