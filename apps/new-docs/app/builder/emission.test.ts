@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 import { cases, checkboxFeatures } from "./domain/coverage";
 import { recipes } from "./domain/recipes";
 import { FeatureKey, type Recipe, type Spec } from "./domain/spec";
-import { generate } from "./workers/pipeline";
+import { generate } from "./domain/generate";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,7 +24,7 @@ const emit = async (recipe: Recipe, spec: Omit<Spec, "features">, features: read
     ...spec,
     features: features.map((value) => FeatureKey.make(value)),
   });
-  return undated(ts.raw);
+  return undated(ts);
 };
 
 const baseCase = (recipe: Recipe) => {

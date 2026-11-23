@@ -8,15 +8,17 @@ export cannot disagree. The spec is the only state; code is a projection of it.
 
 ## Layers
 
-- `domain/` - pure and parser-free: the `Spec` schemas (`spec.ts`), the
+- `domain/` - spec in, files out, with no UI: the `Spec` schemas (`spec.ts`), the
   hole-filling emitter (`emit.ts`), `.tmpl` parsing (`recipe.ts`), spec to
   TypeScript (`compile.ts`), the host page (`host.ts`), CSV, ZIP, the initial
   spec, the sample tables (`samples.ts`) and the recipes themselves under
-  `domain/recipes/`. Runs in the worker,
-  and in tests under plain node.
-- `workers/builder/` - prettier, `ts-blank-space` and shiki behind an Effect RPC
-  worker (`domain.ts` is the contract, `pipeline.ts` formats, strips and
-  highlights, `builder.worker.ts` wires the handlers). The parsers are about
+  `domain/recipes/`. `generate.ts` runs the whole of it - compile, format with
+  prettier, strip to JavaScript with `ts-blank-space`, wrap in the host page -
+  and returns the four files as plain strings, loading the two parsers on first
+  use. Runs in the worker, and in tests under plain node.
+- `workers/` - `domain/generate` and shiki behind an Effect RPC worker
+  (`domain.ts` is the contract, `pipeline.ts` highlights what `generate`
+  returns, `builder.worker.ts` wires the handlers). The parsers are about
   1.2MB and the highlighter with its four grammars a few hundred KB more; the
   worker keeps all of it off the thread the user types on. `boundary.test.ts`
   asserts that nothing reachable from `page.tsx` imports them. Each of the four
