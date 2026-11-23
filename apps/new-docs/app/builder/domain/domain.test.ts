@@ -25,7 +25,7 @@ import {
   sortRows,
 } from "./csv";
 import { BuilderCompileError, code, comment, fill, str } from "./emit";
-import { escapeHtml, host, BUNDLE, LIBRARIES } from "./host";
+import { escapeHtml, host, BUNDLE, CDN, LIBRARIES } from "./host";
 import { buildRecipe, parseFeature } from "./recipe";
 import {
   applySample,
@@ -852,7 +852,7 @@ describe("summarize", () => {
 
 describe("host", () => {
   test("should reference the bundle's file names and chart element when rendering the page", () => {
-    const page = host("Title");
+    const page = host({ title: "Title" });
     expect(page).toContain(`src="${BUNDLE.chart}"`);
     expect(page).toContain(`"${BUNDLE.data}"`);
     expect(page).toContain('id="sszvis-chart"');
@@ -860,12 +860,12 @@ describe("host", () => {
 
   test("should define the config with data and id when rendering the page", () => {
     /* A chart's route to its rows is `config.data`; its only target is `config.id`. */
-    expect(host("Title")).toMatch(/var config = \{[\s\S]*data:[\s\S]*id:[\s\S]*\}/);
+    expect(host({ title: "Title" })).toMatch(/var config = \{[\s\S]*data:[\s\S]*id:[\s\S]*\}/);
   });
 
   test("should leave the page untouched when a recipe asks for no assets and no libraries", () => {
     /* Six of the seven recipes load nothing besides their data, and their page must not change. */
-    expect(host("Title", [], [])).toBe(host("Title"));
+    expect(host({ title: "Title", assets: [], scripts: [] })).toBe(host({ title: "Title" }));
   });
 
   test("should name an asset in the config when a recipe loads a second file", () => {
@@ -873,25 +873,67 @@ describe("host", () => {
      * The chart reaches its geometry the same way it reaches its rows: a key on
      * `config`, holding the name the file has in the bundle beside it.
      */
-    const page = host("Title", [{ key: "topology", path: "topo.json", file: "anywhere.json" }]);
+    const page = host({
+      title: "Title",
+      assets: [{ key: "topology", path: "topo.json", file: "anywhere.json" }],
+    });
     expect(page).toContain('topology: "topo.json"');
     /* The file is where the builder read the bytes. Shipping it would point the export at the app. */
     expect(page).not.toContain("anywhere.json");
   });
 
   test("should add a library to the page when a recipe asks for one", () => {
-    const page = host("Title", [], ["topojson"]);
+    const page = host({ title: "Title", scripts: ["topojson"] });
     expect(page).toContain(`<script src="${LIBRARIES.topojson}"></script>`);
     /* Above the chart, or the chart would call it before it exists. */
     expect(page.indexOf("topojson-client")).toBeLessThan(page.indexOf(BUNDLE.chart));
   });
 
   test("should ignore a library it does not know rather than emit a broken tag", () => {
-    expect(host("Title", [], ["not-a-library"])).toBe(host("Title"));
+    expect(host({ title: "Title", scripts: ["not-a-library"] })).toBe(host({ title: "Title" }));
+  });
+
+  test("should link the published releases unless a CDN is given", () => {
+    expect(host({ title: "Title" })).toContain(`src="${CDN.sszvis}"`);
+    /* A preview draws with the workspace's own build; the export must run anywhere. */
+    const page = host({ title: "Title", cdn: { sszvis: "/local/sszvis.js" } });
+    expect(page).toContain('src="/local/sszvis.js"');
+    expect(page).not.toContain(CDN.sszvis);
+    expect(page).toContain(`src="${CDN.d3}"`);
+  });
+
+  test("should point config at the given files instead of the bundle's", () => {
+    const page = host({
+      title: "Title",
+      assets: [{ key: "topology", path: "topo.json", file: "stadt-zurich.json" }],
+      files: {
+        data: "data:text/csv,a",
+        fallback: "/fallback.png",
+        asset: (asset) => `https://app.test/topo/${asset.file}`,
+      },
+    });
+    expect(page).toContain('data: "data:text/csv,a"');
+    expect(page).toContain('fallback: "/fallback.png"');
+    expect(page).toContain('topology: "https://app.test/topo/stadt-zurich.json"');
+  });
+
+  test("should write the chart into the page when it is given inline", () => {
+    /* A srcdoc frame has no folder for chart.js to sit in. */
+    const page = host({ title: "Title", inline: "drawChart();" });
+    expect(page).toContain("drawChart();");
+    expect(page).not.toContain(`src="${BUNDLE.chart}"`);
+    /* After config, which the chart reads as it runs. */
+    expect(page.indexOf("drawChart();")).toBeGreaterThan(page.indexOf("var config"));
+  });
+
+  test("should place extra markup ahead of every script", () => {
+    /* A preview's error reporter has to be listening before anything can throw. */
+    const page = host({ title: "Title", before: "<script>listen();</script>\n" });
+    expect(page.indexOf("listen();")).toBeLessThan(page.indexOf(CDN.d3));
   });
 
   test("should keep markup inert when the title contains a closing tag and a script", () => {
-    expect(host("</title><script>alert(1)</script>")).not.toContain("<script>alert(1)");
+    expect(host({ title: "</title><script>alert(1)</script>" })).not.toContain("<script>alert(1)");
   });
 
   test("should escape every character that ends a quoted attribute or opens a tag", () => {
