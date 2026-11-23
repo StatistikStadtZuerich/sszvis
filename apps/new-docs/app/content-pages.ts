@@ -53,6 +53,14 @@ export const contentPages: readonly ContentPage[] = [
     tocMaxDepth: 3,
   },
   {
+    section: "Introduction",
+    label: "Changelog",
+    href: "/changelog",
+    routePath: "changelog",
+    contentPath: "content/changelog.mdx",
+    tocMaxDepth: 2,
+  },
+  {
     section: "Guides",
     label: "Accessibility",
     href: "/guides/accessibility",
