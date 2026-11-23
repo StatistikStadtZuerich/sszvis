@@ -220,23 +220,19 @@ export default function move<XDomain = number | string, YDomain = number | strin
             target.__dragging__ = true;
           };
 
-          const stopDragging = () => {
+          const stopDragging = (emitEnd: boolean) => {
             target.__dragging__ = false;
-            win.on("mousemove.sszvis-behavior-move", null);
+            win.on("mouseup.sszvis-behavior-move", null);
             doc.on("mouseout.sszvis-behavior-move", null);
-            if (target) event.apply("end", target, args);
+            if (emitEnd) event.apply("end", target, args);
           };
 
-          win.on("mouseup.sszvis-behavior-move", stopDragging);
-          doc.on("mouseout.sszvis-behavior-move", () => {
-            // toElement is a legacy, non-standard alias for relatedTarget and is not in
-            // the DOM types; read it reflectively rather than restating the event's type.
-            const legacyToElement = Reflect.get(args[0], "toElement");
-            const from =
-              args[0].relatedTarget ||
-              (legacyToElement instanceof Element ? legacyToElement : null);
-            if (!from || from.nodeName === "HTML") {
-              stopDragging();
+          win.on("mouseup.sszvis-behavior-move", () => stopDragging(true));
+          doc.on("mouseout.sszvis-behavior-move", (e: MouseEvent) => {
+            // Read the mouseout that fired, not the mousedown closed over above: on a mousedown Chromium reports the legacy `toElement` as the event's own target.
+            const to = e.relatedTarget;
+            if (!to || (to instanceof Element && to.nodeName === "HTML")) {
+              stopDragging(e.target !== target);
             }
           });
 
