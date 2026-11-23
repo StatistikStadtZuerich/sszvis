@@ -20,7 +20,6 @@
     "packages/geodata/src/**",
     "**/contrib/**",
     "**/.reference/**",
-    "apps/docs/docs/**",
     "apps/new-docs/.react-router/**",
     // Critiques written by the impeccable design agent are a record of its review, not source.
     "apps/new-docs/.impeccable/**",
