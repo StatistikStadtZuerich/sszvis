@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
 import { contentPages } from "../content-pages";
-import { CHANGELOG_URL, LEGACY_PATHS } from "./legacy-paths";
+import { LEGACY_PATHS } from "./legacy-paths";
 
 /** Every page of the previous Catalog site, as its `#/<slug>` URL named it. */
 const OLD_SLUGS = [
@@ -46,5 +46,5 @@ const routes = new Set(contentPages.map((page) => page.routePath));
 
 test.each(OLD_SLUGS)("should send #/%s to a page that exists", (slug) => {
   const target = LEGACY_PATHS[slug] ?? slug;
-  expect(target === CHANGELOG_URL || routes.has(target), `${slug} -> ${target}`).toBe(true);
+  expect(routes.has(target), `${slug} -> ${target}`).toBe(true);
 });

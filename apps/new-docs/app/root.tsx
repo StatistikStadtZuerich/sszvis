@@ -61,7 +61,7 @@ const legacyHashScript = `
   var slug = hash.slice(2).split('?')[0];
   var moved = ${JSON.stringify(LEGACY_PATHS)};
   var to = Object.prototype.hasOwnProperty.call(moved, slug) ? moved[slug] : slug;
-  location.replace(/^https:/.test(to) ? to : ${JSON.stringify(import.meta.env.BASE_URL)} + to);
+  location.replace(${JSON.stringify(import.meta.env.BASE_URL)} + to);
 })();
 `;
 

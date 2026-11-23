@@ -9,3 +9,10 @@ declare module "*.mdx" {
   export default Component;
   export const toc: TOCItem[];
 }
+
+declare module "*.md" {
+  import type { ComponentType } from "react";
+
+  const Component: ComponentType;
+  export default Component;
+}

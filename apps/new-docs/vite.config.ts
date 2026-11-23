@@ -59,5 +59,13 @@ export default defineConfig({
    * until a manual reload. Pre-bundling it at startup avoids that.
    */
   optimizeDeps: { include: ["mermaid"] },
-  resolve: { alias: { "~": path.resolve(import.meta.dirname, "app") } },
+  resolve: {
+    alias: { "~": path.resolve(import.meta.dirname, "app") },
+    /*
+     * The changelog page imports packages/sszvis/CHANGELOG.md, and the MDX it
+     * compiles to imports these from a directory that does not depend on them.
+     * Deduping resolves them from this app instead.
+     */
+    dedupe: ["@mdx-js/react", "react"],
+  },
 });
