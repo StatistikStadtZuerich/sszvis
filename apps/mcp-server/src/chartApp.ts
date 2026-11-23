@@ -1,8 +1,3 @@
-/**
- * @module @sszvis/mcp-server/chartApp
- *
- * The chart app: one page for every recipe, built from `ui/` into a single HTML file.
- */
 import { CDN, LIBRARIES } from "@sszvis/chart-builder/host";
 
 import html from "../ui/dist/index.html?raw";

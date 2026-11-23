@@ -1,7 +1,3 @@
-/*
- * Step 4 of apps/new-docs/app/builder/page.tsx, without the tooltip fields, annotations
- * and filter control the app leaves to the docs builder.
- */
 import { Checkbox } from "../components/ui/checkbox.tsx";
 import {
   Field,

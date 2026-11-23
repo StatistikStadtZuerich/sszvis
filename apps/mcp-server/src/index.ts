@@ -1,11 +1,3 @@
-/**
- * MCP server for the sszvis chart builder, over Streamable HTTP at `/mcp`.
- *
- * Scaffolded from stack-effect's `server-mcp` target. What it serves is in
- * `capabilities.ts`; this file is the transport.
- */
-// `NodeHttpServer.layerConfig` takes Node's own `createServer`; the rule's
-// suggested `HttpClient` is the client side and has no bearing on serving.
 // @effect-diagnostics-next-line nodeBuiltinImport:off
 import { createServer } from "node:http";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
@@ -18,7 +10,6 @@ import { EXTENSION } from "./mcpApp.ts";
 
 export const McpServerConfig = Config.all({
   port: Config.Port("MCP_PORT").pipe(Config.withDefault(9009)),
-  // `host`, not `hostname`: the config is Node's own `listen` options.
   host: Config.String("MCP_HOST").pipe(Config.withDefault("127.0.0.1")),
   allowedOrigins: Config.String("MCP_ALLOWED_ORIGINS").pipe(
     Config.withDefault("http://localhost:3000"),

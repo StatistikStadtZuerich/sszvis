@@ -10,21 +10,12 @@ import {
 } from "../components/ui/select.tsx";
 import type { Choice, Swatch } from "@sszvis/chart-builder/spec";
 
-/**
- * The colours a choice stands for.
- *
- * A blended one is drawn as the ramp its stops make, in CSS's default sRGB. The library
- * writes its stops in Lab but leaves `scaleLinear` on d3's default interpolator, which
- * blends a colour in RGB, so sRGB is the space the map's own in-between colours are in.
- * Everything else is drawn as the separate colours it is, in equal blocks, since nothing
- * lies between two categories.
- */
 const SwatchMark = ({ swatch }: { readonly swatch: Swatch }) => {
   const stops = swatch.colors;
   const shared = "h-3 w-10 shrink-0 overflow-hidden rounded-xs border border-border";
 
-  /* One colour is a block whichever it asked for, and `linear-gradient` takes no single stop. */
   if (swatch.blend === true && stops.length > 1) {
+    /* One colour is a block whichever it asked for, and `linear-gradient` takes no single stop. */
     return (
       <span
         aria-hidden="true"
@@ -47,7 +38,6 @@ const SwatchMark = ({ swatch }: { readonly swatch: Swatch }) => {
   );
 };
 
-/** The choices in the order they were given, gathered under the family each one names. */
 const byGroup = (choices: readonly Choice[]): readonly [string, readonly Choice[]][] => {
   const groups = new Map<string, Choice[]>();
   for (const choice of choices) {
@@ -59,13 +49,6 @@ const byGroup = (choices: readonly Choice[]): readonly [string, readonly Choice[
   return [...groups];
 };
 
-/**
- * A menu of an option's choices.
- *
- * Two things a choice can ask for beyond its name, and both are the menu's to draw rather
- * than each option's: a swatch of the colours it stands for, and the family it belongs to,
- * which gathers it under a heading. An option that asks for neither reads as a plain menu.
- */
 export const ChoiceSelect = ({
   id,
   value,
@@ -99,7 +82,6 @@ export const ChoiceSelect = ({
       </SelectTrigger>
       <SelectContent align="start">
         {groups.map(([name, items]) =>
-          /* A heading over everything in the menu names nothing, so one family gets none. */
           name === "" || groups.length === 1 ? (
             <Fragment key={name}>{items.map(item)}</Fragment>
           ) : (
