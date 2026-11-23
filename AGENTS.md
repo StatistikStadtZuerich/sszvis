@@ -54,7 +54,7 @@ Dev environment is Nix + direnv (`nix develop`); pnpm is the package manager.
 apps/
   docs/              # 11ty documentation site (@sszvis/docs)
     docs/            #   eleventy input: guides, _includes, static, one dir per chart type
-    dist/            #   eleventy output, also what gh-pages deploys
+    dist/            #   eleventy output
   project-specimen/  # @sszvis/project-specimen - Catalog widget the docs homepage needs
   regression-cli/    # @sszvis/regression-cli - consumer regression harness (Effect v4 CLI)
     src/commands/    #   serve, crawl, export
@@ -77,6 +77,11 @@ TopoJSON bundles in through eleventy passthrough copies; turbo runs those two bu
 first. The topo bundles are served at **both** `/topo/…` (the URL the guides
 document) and `/static/topo/…` (what the examples load); they are build output, not
 committed files.
+
+GitHub Pages serves the new docs, not this site: `.github/workflows/gh-pages.yml`
+builds `apps/new-docs` for the `/sszvis/` base (`DOCS_BASE`) and deploys
+`apps/new-docs/build/client`, with the library bundles and the TopoJSON copied in
+beside it so URLs into the previous site's root keep working.
 
 Do not add a second `addPassthroughCopy` with a source path eleventy has already
 seen — it is silently dropped. Use a glob to distinguish the sources.
