@@ -6,6 +6,8 @@ import { describe, expect, test } from "vitest";
 // @effect-diagnostics asyncFunction:off
 
 import { Capabilities } from "../src/capabilities.ts";
+import type { RecipeSummary } from "@sszvis/chart-builder/spec";
+
 import type { ChartUpdate, RecipeList } from "../src/chartTools.ts";
 import { EXTENSION } from "../src/mcpApp.ts";
 
@@ -38,9 +40,15 @@ describe("what the server offers a host", () => {
     const { tools } = await withClient((client) => client.listTools());
     const meta = Object.fromEntries(tools.map((tool) => [tool.name, tool._meta]));
 
-    expect(Object.keys(meta).sort()).toEqual(["list_recipes", "render_chart", "update_chart"]);
+    expect(Object.keys(meta).sort()).toEqual([
+      "describe_recipes",
+      "list_recipes",
+      "render_chart",
+      "update_chart",
+    ]);
     expect(meta["render_chart"]).toEqual({ ui: { resourceUri: "ui://sszvis/chart" } });
     expect(meta["update_chart"]).toEqual({ ui: { visibility: ["app"] } });
+    expect(meta["describe_recipes"]).toEqual({ ui: { visibility: ["app"] } });
   });
 
   test("should serve the app as an MCP App page that may load from unpkg", async () => {
@@ -83,6 +91,21 @@ describe("list_recipes", () => {
       "map-choropleth",
     ]);
     expect(samples.every((sample) => sample.columns.length > 0)).toBe(true);
+  });
+});
+
+describe("describe_recipes", () => {
+  test("should give the app the swatches list_recipes leaves out for the model", async () => {
+    const result = await call("describe_recipes", {});
+    const { recipes: summaries } = result.structuredContent as {
+      recipes: readonly RecipeSummary[];
+    };
+    const swatched = summaries.flatMap((recipe) =>
+      recipe.options.flatMap((option) => option.choices ?? []),
+    );
+
+    expect(summaries).toHaveLength(8);
+    expect(swatched.some((choice) => choice.swatch !== undefined)).toBe(true);
   });
 });
 

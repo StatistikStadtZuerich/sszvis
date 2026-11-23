@@ -67,7 +67,12 @@ export function installChartRuntime() {
   };
 }
 
-export function runChart(update: ChartUpdate, assets: Readonly<Record<string, unknown>>) {
+/** Draws into `host`, which React owns and leaves empty, so the chart's own DOM is never React's. */
+export function runChart(
+  host: HTMLElement,
+  update: ChartUpdate,
+  assets: Readonly<Record<string, unknown>>,
+) {
   running?.destroy();
   running = undefined;
   csv = update.csv;
@@ -76,7 +81,7 @@ export function runChart(update: ChartUpdate, assets: Readonly<Record<string, un
   /* A fresh container, so nothing the last chart drew or bound survives. */
   const container = document.createElement("div");
   container.id = CHART;
-  document.getElementById(CHART)?.replaceWith(container);
+  host.replaceChildren(container);
 
   window.config = {
     data: DATA,

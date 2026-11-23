@@ -27,7 +27,7 @@ import {
   RoleKey,
   Spec,
   summarize,
-  type RecipeSummary,
+  RecipeSummary,
 } from "@sszvis/chart-builder/spec";
 
 import { appOnly, renderedBy } from "./mcpApp.ts";
@@ -283,9 +283,21 @@ const UpdateChart = Tool.make("update_chart", {
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Meta, appOnly);
 
+// describe_recipes -----------------------------------------------------------
+
+/** Every recipe as chart-builder describes it, swatches and all, for the app's controls. */
+const DescribeRecipes = Tool.make("describe_recipes", {
+  description: "The full recipe summaries the chart app's controls are built from.",
+  /* An object, since MCP's `structuredContent` cannot be an array. */
+  success: Schema.Struct({ recipes: Schema.Array(RecipeSummary) }),
+})
+  .annotate(Tool.Title, "Describe recipes")
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Meta, appOnly);
+
 // The toolkit ----------------------------------------------------------------
 
-const ChartToolkit = Toolkit.make(ListRecipes, RenderChart, UpdateChart);
+const ChartToolkit = Toolkit.make(ListRecipes, RenderChart, UpdateChart, DescribeRecipes);
 
 const handlers = Effect.gen(function* () {
   const generate = yield* makeGenerate;
@@ -297,6 +309,7 @@ const handlers = Effect.gen(function* () {
 
   return ChartToolkit.of({
     list_recipes: listRecipes,
+    describe_recipes: () => Effect.succeed({ recipes: summaries }),
     render_chart: Effect.fnUntraced(function* (params) {
       const spec = yield* specFrom(params);
       /* Generated and thrown away, so a spec the app cannot draw fails here, to the model. */

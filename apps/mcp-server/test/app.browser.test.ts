@@ -87,7 +87,10 @@ async function host(args: Record<string, unknown>) {
     null,
     { name: "test host", version: "0" },
     { serverTools: {}, serverResources: {} },
+    { hostContext: { displayMode: "inline", availableDisplayModes: ["inline", "fullscreen"] } },
   );
+  /* As Claude does: grant the mode asked for, so the app can open its editing panels. */
+  bridge.onrequestdisplaymode = async ({ mode }) => ({ mode });
   /* Through the SDK's own schemas, which also checks Effect's wire shape satisfies them. */
   bridge.oncalltool = async (params) =>
     CallToolResultSchema.parse(wire(await Effect.runPromise(client.callTool(params))));
@@ -121,6 +124,17 @@ async function settle<T>(read: () => T, done: (value: T) => boolean, ms = 10_000
 const count = (view: Window, selector: string) =>
   view.document.querySelectorAll(`#sszvis-chart ${selector}`).length;
 
+const findButton = (view: Window, label: string) =>
+  [...view.document.querySelectorAll("button")].find((candidate) =>
+    candidate.textContent?.trim().endsWith(label),
+  );
+
+const button = (view: Window, label: string) => {
+  const found = findButton(view, label);
+  if (found === undefined) throw new Error(`no "${label}" button`);
+  return found;
+};
+
 const status = (view: Window) => view.document.getElementById("status")?.textContent ?? "";
 
 describe("the chart app in a host", () => {
@@ -148,17 +162,20 @@ describe("the chart app in a host", () => {
     expect(status(view)).toBe("");
   });
 
-  test("should redraw as the recipe the reader switches to, and stay so on resize", async () => {
+  test("should open its panels fullscreen and redraw as the recipe the reader picks", async () => {
     const view = await host({ recipe: "bar-chart-vertical" });
     await settle(
       () => count(view, "rect.sszvis-bar"),
       (n) => n === 6,
     );
 
-    const recipe = view.document.querySelector<HTMLSelectElement>('select[name="recipe"]');
-    if (recipe === null) throw new Error("no recipe menu");
-    recipe.value = "bar-chart-horizontal";
-    recipe.dispatchEvent(new Event("change"));
+    button(view, "Edit").click();
+    const horizontal = await settle(
+      () => findButton(view, "Horizontal bar"),
+      (found) => found !== undefined,
+    );
+    if (horizontal === undefined) throw new Error("no chart type buttons after Edit");
+    horizontal.click();
     await settle(
       () => status(view),
       (text) => text === "",
@@ -168,7 +185,7 @@ describe("the chart app in a host", () => {
      * A resize redraws the chart. NOTE: this cannot tell whether the vertical chart's app
      * was destroyed - its listener runs first, so the new chart draws last either way.
      */
-    frame?.style.setProperty("width", "700px");
+    frame?.style.setProperty("width", "1000px");
     view.dispatchEvent(new Event("resize"));
     await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -187,6 +204,11 @@ describe("the chart app in a host", () => {
     await settle(
       () => count(view, "path"),
       (n) => n > 0,
+    );
+    button(view, "Code").click();
+    await settle(
+      () => view.document.getElementById("source"),
+      (found) => found !== null,
     );
 
     expect(view.document.getElementById("source")?.textContent).toContain("sszvis.app<");
