@@ -62,7 +62,7 @@ import { rangeExtent } from "../scale.js";
 
 // Type definitions for move behavior component
 type MoveScale<T = number | string> =
-  | ScaleContinuousNumeric<number, number>
+  | (T extends number ? ScaleContinuousNumeric<number, number> : never)
   | (T extends Date ? ScaleTime<number, number> : never)
   | ScaleBand<T extends string ? T : string>
   | ScalePoint<T extends string ? T : string>;
