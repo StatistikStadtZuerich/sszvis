@@ -278,7 +278,10 @@ sszvis.app<State, Actions>({
 const stackRows = (data: Datum[], categories: string[]): StackRow[] =>
   sszvis
     .cascade<Datum>()
-    .arrayBy((d) => xAcc(d).getTime())
+    // NOTE: Keyed by ISO string, not getTime(): cascade groups through an object, and
+    // in UTC 1970's timestamp is the key "0", which an object lists before every
+    // other key. ISO strings for four-digit years sort chronologically.
+    .arrayBy((d) => xAcc(d).toISOString(), d3.ascending)
     .objectBy(cAcc)
     .apply<Record<string, Datum[]>[]>(data)
     .map((group) => ({
