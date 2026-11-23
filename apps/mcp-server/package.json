@@ -44,7 +44,7 @@
   "scripts": {
     "build": "pnpm run build:ui && vite build --configLoader runner",
     "build:ui": "vite build --configLoader runner -c vite.ui.config.ts",
-    "start": "pnpm run build && node dist/index.js",
+    "start": "pnpm -w exec turbo run build --filter=@sszvis/mcp-server && node dist/index.js",
     "inspector": "npx @mcpjam/inspector@latest",
     "type-check": "tsc --noEmit && tsc --noEmit -p ui",
     "test": "pnpm run build:ui && vitest run && vitest run --config vitest.browser.config.ts",
