@@ -18,7 +18,7 @@ const BOTTOM_PADDING = 90;
 const LEGEND_GUTTER = 60;
 /** The fake data runs from 0 to this, so dividing by it yields a fraction. */
 const VALUE_SCALE = 20;
-const TOPO_URL = "/preview/_static/topo/stadt-zurich.json";
+const TOPO_URL = "../../_static/topo/stadt-zurich.json";
 
 // Types
 

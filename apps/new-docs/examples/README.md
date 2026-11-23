@@ -16,9 +16,13 @@ examples/
 
 Anything the example loads at runtime sits beside it and is served from its own
 URL. An asset several examples share goes in `_static/` instead and is loaded
-from `/preview/_static/`; the TopoJSON the maps draw comes from
-`@sszvis/geodata` and is served at `/preview/_static/topo/` without being
+from `../../_static/`; the TopoJSON the maps draw comes from
+`@sszvis/geodata` and is served at `../../_static/topo/` without being
 copied here at all.
+
+Load shared assets by that relative path, never from the site root: the site is
+served under a base path on GitHub Pages (`/sszvis/`), where `/preview/…` does
+not exist.
 
 ## Adding one
 
@@ -56,7 +60,7 @@ for it.
 ## What the build produces
 
 `vite-plugin-examples.ts` renders each folder into a standalone page at
-`/preview/<chart-type>/<name>/` — script tags, a `config` global, and the
+`preview/<chart-type>/<name>/` under the site base — script tags, a `config` global, and the
 example inlined. That page is what the docs embed in an iframe, and it is also
 exactly the file a consumer would write by hand.
 

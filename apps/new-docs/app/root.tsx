@@ -21,6 +21,7 @@ import { proseComponents } from "~/components/tokens/prose-components";
 import { typefaceWordmark } from "~/components/tokens/typeface";
 import { buttonVariants } from "~/components/ui/button";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "~/components/ui/sidebar";
+import { withBase } from "~/lib/base-url";
 import { cn } from "~/lib/utils";
 import type { TocHandle, TOCItem } from "~/lib/remark-toc-export";
 import type { Route } from "./+types/root";
@@ -35,7 +36,7 @@ export const meta: Route.MetaFunction = () => [
 ];
 
 export const links: Route.LinksFunction = () => [
-  { rel: "icon", href: "/favicon.png", type: "image/png" },
+  { rel: "icon", href: withBase("/favicon.png"), type: "image/png" },
 ];
 
 const themeScript = `

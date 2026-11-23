@@ -112,7 +112,7 @@ sszvis.app<State, Actions>({
         ypos: sszvis.parseNumber(d["ykoord"]),
         val: sszvis.parseNumber(d["kinder"]),
       })),
-      d3.json<Topology>("/preview/_static/topo/stadt-zurich.json"),
+      d3.json<Topology>("../../_static/topo/stadt-zurich.json"),
     ]).then(([data, topo]) => {
       if (topo === undefined) {
         throw new Error("The city topology could not be loaded");
@@ -215,7 +215,7 @@ sszvis.app<State, Actions>({
     const topoLayer = sszvis
       .mapRendererImage()
       .projection(projection)
-      .src("/preview/_static/topo_layer_280915.png")
+      .src("../../_static/topo_layer_280915.png")
       // Expects longitude, latitude
       .geoBounds(LAYER_BOUNDS)
       .opacity(0.4);

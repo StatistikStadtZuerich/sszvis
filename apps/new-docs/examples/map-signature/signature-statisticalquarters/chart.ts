@@ -81,7 +81,7 @@ sszvis.app<State, Actions>({
         value: sszvis.parseNumber(d["value"]),
         zonename: d["zonename"] ?? "--",
       })),
-      d3.json<Topology>("/preview/_static/topo/stadt-zurich.json"),
+      d3.json<Topology>("../../_static/topo/stadt-zurich.json"),
     ]).then(([data, topo]) => {
       if (topo === undefined) {
         throw new Error("The city topology could not be loaded");

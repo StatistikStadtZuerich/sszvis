@@ -16,7 +16,7 @@ const MAX_MAP_HEIGHT = 400;
 const LEGEND_PADDING = 40;
 /** Gap in px between the bottom of the map and the legend. */
 const LEGEND_GUTTER = 25;
-const TOPO_URL = "/preview/_static/topo/switzerland.json";
+const TOPO_URL = "../../_static/topo/switzerland.json";
 
 // Types
 

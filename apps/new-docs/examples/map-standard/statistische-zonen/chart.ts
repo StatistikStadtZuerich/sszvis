@@ -10,7 +10,7 @@
 
 /** Vertical padding in px above and below the map. */
 const MAP_PADDING = 30;
-const TOPO_URL = "/preview/_static/topo/stadt-zurich.json";
+const TOPO_URL = "../../_static/topo/stadt-zurich.json";
 
 // Types
 

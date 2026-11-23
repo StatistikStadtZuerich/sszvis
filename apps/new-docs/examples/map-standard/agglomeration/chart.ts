@@ -18,7 +18,7 @@ const LEGEND_GUTTER = 20;
 const LEGEND_COLUMNS = 3;
 /** Cap on a legend column's width in px. */
 const MAX_LEGEND_COLUMN_WIDTH = 100;
-const TOPO_URL = "/preview/_static/topo/agglomeration-zurich.json";
+const TOPO_URL = "../../_static/topo/agglomeration-zurich.json";
 
 // Types
 

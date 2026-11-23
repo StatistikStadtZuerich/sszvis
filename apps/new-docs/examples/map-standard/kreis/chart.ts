@@ -16,7 +16,7 @@ const TOP_PADDING = 30;
 const BOTTOM_PADDING = 90;
 /** Gap in px between the bottom of the map and the legend. */
 const LEGEND_GUTTER = 60;
-const TOPO_URL = "/preview/_static/topo/stadt-zurich.json";
+const TOPO_URL = "../../_static/topo/stadt-zurich.json";
 
 // Types
 

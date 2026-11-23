@@ -8,6 +8,7 @@ import { Demo } from "~/components/demo";
 import { Example } from "~/components/example";
 import { Gallery } from "~/components/gallery";
 import { Mermaid } from "~/components/mermaid";
+import { withBase } from "~/lib/base-url";
 import {
   typefaceAnchor,
   typefaceBody,
@@ -148,8 +149,13 @@ export const proseComponents = {
   figure: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <figure className={cn("my-6", className)} {...props} />
   ),
-  img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    <img style={{ width: "100%", height: "auto" }} {...props} alt={props.alt ?? ""} />
+  img: ({ src, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img
+      style={{ width: "100%", height: "auto" }}
+      {...props}
+      src={typeof src === "string" ? withBase(src) : src}
+      alt={props.alt ?? ""}
+    />
   ),
   mermaid: Mermaid,
   Example,
