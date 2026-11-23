@@ -129,7 +129,9 @@ export default function App() {
   const isWide = location.pathname.startsWith("/builder");
 
   const hasToc = toc.length > 0;
-  const tocMaxDepth = contentPages.find((page) => page.href === location.pathname)?.tocMaxDepth;
+  // Static hosts serve a page's directory index, so the path can carry a trailing slash.
+  const pathname = location.pathname.replace(/(.)\/$/, "$1");
+  const tocMaxDepth = contentPages.find((page) => page.href === pathname)?.tocMaxDepth;
   return (
     <MDXProvider components={proseComponents}>
       {hasToc && <TableOfContents toc={toc} maxDepth={tocMaxDepth} />}
