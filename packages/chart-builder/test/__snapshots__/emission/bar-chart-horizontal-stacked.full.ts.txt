@@ -186,7 +186,9 @@ sszvis.app<State, Actions>({
       })
       .plain("")
       .newline()
-      .plain(sliceSeries);
+      .plain((d: Slice) =>
+        String(sliceSeries(d)).replace(/[&<>]/g, (c) => `&#${c.charCodeAt(0)};`),
+      );
 
     const tooltip = sszvis
       .tooltip<Slice>()

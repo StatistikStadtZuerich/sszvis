@@ -208,7 +208,7 @@ sszvis.app<State, Actions>({
     const rulerLabel = sszvis
       .modularTextSVG()
       .bold((d: Datum) => sszvis.formatNumber(yAcc(d)))
-      .plain(cAcc);
+      .plain((d: Datum) => String(cAcc(d)).replace(/[&<>]/g, (c) => `&#${c.charCodeAt(0)};`));
 
     const highlightLayer = sszvis
       .annotationRuler<Datum>()

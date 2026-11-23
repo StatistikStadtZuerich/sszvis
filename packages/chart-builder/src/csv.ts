@@ -1,7 +1,6 @@
 import { csvFormatRows, dsvFormat } from "d3-dsv";
 import { Option, Schema } from "effect";
 
-import { escapeHtml } from "./host";
 import {
   ColumnName,
   type ColumnKind,
@@ -251,9 +250,4 @@ export const columnKinds = (
     if (pinned !== undefined) kinds.set(column, pinned);
   }
   return kinds;
-};
-
-export const harmlessValues = (csv: string): string => {
-  const table = parse(csv);
-  return serialize({ ...table, rows: table.rows.map((cells) => cells.map(escapeHtml)) });
 };

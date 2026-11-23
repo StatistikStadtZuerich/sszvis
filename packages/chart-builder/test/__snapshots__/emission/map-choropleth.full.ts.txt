@@ -203,7 +203,9 @@ sszvis.app<State, Actions>({
       .header(
         sszvis
           .modularTextHTML()
-          .bold(labelAcc)
+          .bold((d: MapDatum) =>
+            String(labelAcc(d)).replace(/[&<>]/g, (c) => `&#${c.charCodeAt(0)};`),
+          )
           .newline()
           .plain((d: MapDatum) => {
             const value = vAcc(d);

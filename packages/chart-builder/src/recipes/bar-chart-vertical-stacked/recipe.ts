@@ -94,7 +94,7 @@ export const barChartVerticalStacked: RecipeDef = {
         [VALUE]: {
           accessor: "sliceValue",
           kind: "number",
-          suffix: str(option(UNIT)),
+          suffix: option(UNIT),
           missing: "keine",
         },
       },

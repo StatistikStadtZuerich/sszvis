@@ -1279,6 +1279,9 @@ describe("tooltipText", () => {
 
   const bound = mapping({ category: "Sektor", value: "Anzahl", date: "Datum" });
   const fallback = tip("value");
+  /* What a category reads as: the table's own text, escaped, since the text is markup. */
+  const CATEGORY =
+    "(d: Datum) => String(xAcc(d)).replace(/[&<>]/g, (c) => `&#${c.charCodeAt(0)};`)";
 
   test("should bold the header and list the body when every role is bound", () => {
     const out = tooltipText("HTML", spec(tip("value", ["category"]), bound), roles, fallback);
@@ -1287,7 +1290,7 @@ describe("tooltipText", () => {
         "sszvis.modularTextHTML()",
         ".bold((d: Datum) => sszvis.formatNumber(yAcc(d)))",
         ".newline()",
-        ".plain(xAcc)",
+        `.plain(${CATEGORY})`,
       ].join("\n"),
     );
   });
@@ -1295,7 +1298,7 @@ describe("tooltipText", () => {
   test("should keep an SVG label on one line when it has a body", () => {
     const out = tooltipText("SVG", spec(tip("value", ["category"]), bound), roles, fallback);
     expect(out).toBe(
-      "sszvis.modularTextSVG()\n.bold((d: Datum) => sszvis.formatNumber(yAcc(d)))\n.plain(xAcc)",
+      `sszvis.modularTextSVG()\n.bold((d: Datum) => sszvis.formatNumber(yAcc(d)))\n.plain(${CATEGORY})`,
     );
   });
 
@@ -1310,7 +1313,7 @@ describe("tooltipText", () => {
       [RoleKey.make("value")]: {
         accessor: "yAcc",
         kind: "number",
-        suffix: str("Stellen"),
+        suffix: "Stellen",
         missing: "keine",
       },
     };
@@ -1324,6 +1327,32 @@ describe("tooltipText", () => {
         "})",
         '.plain("Stellen")',
       ].join("\n"),
+    );
+  });
+
+  test("should escape the suffix and missing label, which are written into markup", () => {
+    const marked: TooltipRoles = {
+      ...roles,
+      [RoleKey.make("value")]: {
+        accessor: "yAcc",
+        kind: "number",
+        suffix: "<b>R&D</b>",
+        missing: "<i>n/a</i>",
+      },
+    };
+    const out = tooltipText("HTML", spec(tip("value"), bound), marked, fallback);
+    expect(out).toContain('"&lt;i&gt;n/a&lt;/i&gt;"');
+    expect(out).toContain('.plain("&lt;b&gt;R&amp;D&lt;/b&gt;")');
+  });
+
+  test("should escape a category's markup as the emitted code reads it", () => {
+    const out = tooltipText("HTML", spec(tip("category"), bound), roles, fallback);
+    const escape = new Function("xAcc", `return ${CATEGORY.replace("(d: Datum)", "(d)")};`)(
+      (d: string) => d,
+    ) as (d: string) => string;
+    expect(out).toContain(`.bold(${CATEGORY})`);
+    expect(escape("<img src=x onerror=alert(1)> & R&D")).toBe(
+      "&#60;img src=x onerror=alert(1)&#62; &#38; R&#38;D",
     );
   });
 

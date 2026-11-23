@@ -46,10 +46,13 @@ const tooltip = sszvis
   .header(tooltipText)
   // NOTE: One row per member of the group. This is the whole point of a grouped
   // bar's tooltip, so it is not something the roles choose: every bar is listed.
+  // The tooltip writes its rows as HTML, so the category, which is the table's own
+  // text, is escaped.
   .body((group) =>
     group.map((d) => {
       const value = yAcc(d);
-      return [cAcc(d), Number.isNaN(value) ? "keine" : sszvis.formatNumber(value)];
+      const category = String(cAcc(d)).replace(/[&<>]/g, (c) => `&#${c.charCodeAt(0)};`);
+      return [category, Number.isNaN(value) ? "keine" : sszvis.formatNumber(value)];
     }),
   )
   .visible((group) => sszvis.contains(state.selection, group));
