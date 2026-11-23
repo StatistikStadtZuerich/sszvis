@@ -1,7 +1,7 @@
 import { Array, Effect, Layer, Schema } from "effect";
 import { McpServer, Prompt, Tool, Toolkit } from "effect/ai";
 
-import { harmlessValues, parse, type Table } from "@sszvis/chart-builder/csv";
+import { parse, serialize, type Table } from "@sszvis/chart-builder/csv";
 import { makeGenerate } from "@sszvis/chart-builder/generate";
 import {
   bindRoles,
@@ -306,7 +306,10 @@ const ChartUpdate = Schema.Struct({
   spec: Spec,
   ts: Schema.String,
   js: Schema.String,
-  /** Comma-separated with HTML in the values escaped: what the preview draws, as the docs builder's does. */
+  /**
+   * The table as written, comma-separated, since the chart reads it with `d3.csv`. Not
+   * escaped: the generated chart escapes the text it writes into its tooltips.
+   */
   csv: Schema.String,
   assets: Schema.Array(Asset),
   scripts: Schema.Array(Schema.String),
@@ -379,7 +382,7 @@ const handlers = Effect.gen(function* () {
         spec,
         ts: generated.ts,
         js: generated.js,
-        csv: harmlessValues(spec.csv),
+        csv: serialize(parse(spec.csv)),
         assets: generated.assets,
         scripts: generated.scripts,
         columns: [...table.columns],

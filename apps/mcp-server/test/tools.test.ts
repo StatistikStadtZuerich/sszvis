@@ -233,16 +233,16 @@ describe("update_chart", () => {
     expect(update.spec.options).toEqual({ title: "Employees" });
   });
 
-  test("should escape HTML in the values the preview draws", async () => {
+  test("should give the preview the table as written", async () => {
     const result = await call("render_chart", {
       recipe: "bar-chart-vertical",
-      csv: "Sektor,Anzahl\n<img src=x onerror=alert(1)>,10",
+      csv: "Sektor,Anzahl\nR&D,10\n<b>Bau</b>,20",
     });
     const { spec } = result.structuredContent as { spec: unknown };
     const update = (await call("update_chart", { spec })).structuredContent as ChartUpdate;
 
-    expect(update.csv).toContain("&lt;img");
-    expect(update.csv).not.toContain("<img");
+    /* Escaping the cells drew R&D on the axis as R&amp;D; the chart escapes its tooltips. */
+    expect(update.csv).toBe("Sektor,Anzahl\nR&D,10\n<b>Bau</b>,20");
   });
 
   test("should name the map's topology so the app can read it", async () => {
