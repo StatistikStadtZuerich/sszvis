@@ -52,12 +52,26 @@ const themeScript = `
 })();
 `;
 
+/*
+ * The previous docs site (Catalog) routed on the hash: `/sszvis/#/bar-chart-vertical`.
+ * Its page slugs carried over, so a link to the old site lands on the same page here.
+ * Catalog's in-page anchors (`?a=…`) have no equivalent and are dropped.
+ */
+const legacyHashScript = `
+(function() {
+  var hash = location.hash;
+  if (hash.indexOf('#/') !== 0) return;
+  location.replace(${JSON.stringify(import.meta.env.BASE_URL)} + hash.slice(2).split('?')[0]);
+})();
+`;
+
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script dangerouslySetInnerHTML={{ __html: legacyHashScript }} />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Meta />
         <Links />
