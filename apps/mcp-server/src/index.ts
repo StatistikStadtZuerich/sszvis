@@ -12,7 +12,7 @@ export const McpServerConfig = Config.all({
   port: Config.Port("MCP_PORT").pipe(Config.withDefault(9009)),
   host: Config.String("MCP_HOST").pipe(Config.withDefault("127.0.0.1")),
   allowedOrigins: Config.String("MCP_ALLOWED_ORIGINS").pipe(
-    Config.withDefault("http://localhost:3000"),
+    Config.withDefault("http://localhost:8000"),
   ),
 });
 

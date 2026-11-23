@@ -25,7 +25,7 @@
     "**/coverage/**",
     "**/.reference/**",
     "packages/geodata/src/**",
-    "apps/new-docs/.react-router/**",
+    "apps/docs/.react-router/**",
     "contrib/**",
     "apps/regression-cli/__export__/**",
     "apps/regression-cli/__report__/**"
@@ -38,7 +38,7 @@
       }
     },
     {
-      "files": ["apps/new-docs/examples/**/*.ts"],
+      "files": ["apps/docs/examples/**/*.ts"],
       "rules": {
         "typescript/consistent-type-definitions": ["error", "type"],
         "func-style": ["error", "expression"]

@@ -18,7 +18,7 @@
     {
       "id": 2,
       "name": "attribute-a-type-error",
-      "prompt": "In apps/new-docs/examples I'm getting: Type '(d: Datum) => boolean' is not assignable to type '(d: unknown) => boolean'. What's the right fix?",
+      "prompt": "In apps/docs/examples I'm getting: Type '(d: Datum) => boolean' is not assignable to type '(d: unknown) => boolean'. What's the right fix?",
       "expected_output": "Identifies that the component was left at its `unknown` default and the fix is to name the datum - sszvis.tooltip<Datum>() - rather than annotate the callback, cast, or change the library. Should explicitly reject adding an `as` cast or a @ts-expect-error, and should not attribute the error to a library defect.",
       "files": []
     }

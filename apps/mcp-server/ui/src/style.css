@@ -3,7 +3,7 @@
 @import "shadcn/tailwind.css";
 
 /*
- * The components are copied from apps/new-docs and read its tokens (--background,
+ * The components are copied from apps/docs and read its tokens (--background,
  * --primary, ...). Here each token takes the host's own variable first, so the app sits in
  * Claude's light or dark theme, and falls back to the docs palette in a host that sends
  * none. `applyDocumentTheme` marks dark mode with data-theme, not a .dark class.

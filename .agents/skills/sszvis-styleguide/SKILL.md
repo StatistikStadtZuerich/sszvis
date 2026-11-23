@@ -1,11 +1,11 @@
 ---
 name: sszvis-styleguide
-description: House style for writing and reviewing sszvis chart examples in apps/new-docs/examples — the canonical sszvis.app() skeleton, TypeScript typing rules, section banners, naming, and the anti-patterns to reject. Use this whenever you are creating a new chart example, reviewing or refactoring an existing chart.ts, fixing type or lint errors in apps/new-docs/examples, or answering "what should a good sszvis chart look like".
+description: House style for writing and reviewing sszvis chart examples in apps/docs/examples — the canonical sszvis.app() skeleton, TypeScript typing rules, section banners, naming, and the anti-patterns to reject. Use this whenever you are creating a new chart example, reviewing or refactoring an existing chart.ts, fixing type or lint errors in apps/docs/examples, or answering "what should a good sszvis chart look like".
 ---
 
 # sszvis example style
 
-Examples in `apps/new-docs/examples/` are not scratch code. They are what readers
+Examples in `apps/docs/examples/` are not scratch code. They are what readers
 copy into production, and per `examples/README.md` they are the test suite for
 the library's published types. A sloppy example ships its sloppiness onward.
 
@@ -14,7 +14,7 @@ type-checks with **zero errors**. That is the baseline you are working from: if
 an example does not typecheck, the example is wrong. Do not reach for a cast.
 
 The reference implementation is
-`apps/new-docs/examples/bar-chart-horizontal/basic/chart.ts`. Read it before
+`apps/docs/examples/bar-chart-horizontal/basic/chart.ts`. Read it before
 writing a new chart — the skeleton below is its shape, with one deliberate
 difference noted under Typing.
 
@@ -160,7 +160,7 @@ around. Durable facts only, never narration of the next line.
 
 ### What lint enforces
 
-Two rules in `.oxlintrc.json`, scoped to `apps/new-docs/examples/**`:
+Two rules in `.oxlintrc.json`, scoped to `apps/docs/examples/**`:
 
 - `typescript/consistent-type-definitions: ["error", "type"]` — **`type`, never
   `interface`**, for every shape including `Datum`, `State` and `Actions`.
@@ -354,7 +354,7 @@ third of those charts are a full API generation behind. See
 ## Checking your work
 
 ```bash
-pnpm --filter @sszvis/new-docs run type-check   # includes examples/tsconfig.json
+pnpm --filter @sszvis/docs run type-check   # includes examples/tsconfig.json
 pnpm run lint
 pnpm run format
 ```
@@ -363,7 +363,7 @@ The examples compile as one program with `moduleDetection: "force"`, so each
 file gets its own scope and top-level `const`s do not collide. The whole corpus
 is expected to report **zero** errors — any error is a regression you own.
 
-Then open it: `pnpm --filter @sszvis/new-docs run dev`. A chart that typechecks
+Then open it: `pnpm --filter @sszvis/docs run dev`. A chart that typechecks
 and renders nothing is still broken, and the type system cannot tell you that.
 
 ## Review checklist
@@ -402,7 +402,7 @@ Style
 - [ ] No deprecated API
 
 Verify
-- [ ] pnpm --filter @sszvis/new-docs run type-check → 0 errors
+- [ ] pnpm --filter @sszvis/docs run type-check → 0 errors
 - [ ] pnpm run lint && pnpm run format
 - [ ] Opened in the dev server and it actually renders
 ```

@@ -47,7 +47,7 @@ the code is written. The app's `type-check` script runs that check over
 `examples/tsconfig.json` alongside its own:
 
 ```bash
-pnpm --filter @sszvis/new-docs run type-check
+pnpm --filter @sszvis/docs run type-check
 ```
 
 ## What the build produces

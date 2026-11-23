@@ -58,7 +58,7 @@ apps/
   docs/              # 11ty documentation site (@sszvis/docs)
     docs/            #   eleventy input: guides, _includes, static, one dir per chart type
     dist/            #   eleventy output
-  new-docs/          # @sszvis/new-docs - React Router + MDX docs site
+  new-docs/          # @sszvis/docs - React Router + MDX docs site
     app/builder/     #   the chart builder's form, worker and preview
     examples/        #   one dir per example: chart.ts, data.csv, example.json
   project-specimen/  # @sszvis/project-specimen - Catalog widget the docs homepage needs
@@ -89,20 +89,20 @@ document) and `/static/topo/…` (what the examples load); they are build output
 committed files.
 
 GitHub Pages serves the new docs, not this site: `.github/workflows/gh-pages.yml`
-builds `apps/new-docs` for the `/sszvis/` base (`DOCS_BASE`) and deploys
-`apps/new-docs/build/client`, with the library bundles and the TopoJSON copied in
+builds `apps/docs` for the `/sszvis/` base (`DOCS_BASE`) and deploys
+`apps/docs/build/client`, with the library bundles and the TopoJSON copied in
 beside it so URLs into the previous site's root keep working.
 
 Do not add a second `addPassthroughCopy` with a source path eleventy has already
 seen — it is silently dropped. Use a glob to distinguish the sources.
 
 The chart builder is split in two. `@sszvis/chart-builder` turns a spec into a
-chart's files and owns the recipes and their templates; `apps/new-docs/app/builder`
+chart's files and owns the recipes and their templates; `apps/docs/app/builder`
 is the form around it. Each has a README, and the package's is the reference for
 recipes, templates and the spec. The package exports each module as TypeScript
 source by an explicit subpath (no barrel, no build step), so a new public module
 needs an `exports` entry. Its `generate` loads prettier, about 1.2MB: keep it off
-any module a page imports eagerly — `apps/new-docs/app/builder/boundary.test.ts`
+any module a page imports eagerly — `apps/docs/app/builder/boundary.test.ts`
 checks that for the builder.
 
 `docs/index.html` needs `ProjectSpecimen.js` from `@sszvis/project-specimen`; without

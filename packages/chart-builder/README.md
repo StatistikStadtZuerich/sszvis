@@ -9,7 +9,7 @@ previewed or downloaded. The spec is the only state; code is a projection of it.
 A private workspace package, shared within this monorepo. Its modules are
 exported as TypeScript source, one subpath each, so a consumer needs no build
 step but does need Vite: the recipe loader reads its templates with
-`import.meta.glob`. The chart builder in `apps/new-docs/app/builder` is the
+`import.meta.glob`. The chart builder in `apps/docs/app/builder` is the
 first consumer, and its README covers the form around this.
 
 ## Using it

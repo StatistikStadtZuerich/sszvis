@@ -50,6 +50,6 @@ name are one column to everything that reads them by name, pins included.
 
 ## Verifying
 
-From `apps/new-docs`, `pnpm test:node` runs the table editor's tests, the worker's
+From `apps/docs`, `pnpm test:node` runs the table editor's tests, the worker's
 highlighting, and `boundary.test.ts`. The recipes and the code they generate are
 verified in the package; its README says how.
