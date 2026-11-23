@@ -2,6 +2,6 @@
   "title": "Map — Topolayer Stadtkreise",
   "config": {
     "id": "#sszvis-chart",
-    "fallback": "/preview/_static/fallback.png"
+    "fallback": "../../_static/fallback.png"
   }
 }

@@ -25,7 +25,8 @@ const CONTENT_DIR = "app/content";
 const CHART_PAGES = "content/charts/";
 const EXAMPLES_DIR = "examples";
 const EXAMPLE_TAG = /<Example\s+id="([^"]+)"/g;
-const URL_PREFIX = "/preview";
+/** Where the examples are written in the build output, and served from under the site base. */
+const PREVIEW_DIR = "preview";
 const VIRTUAL_ID = "virtual:examples";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 
@@ -36,8 +37,6 @@ const LIB_DIR = "../../packages/sszvis/build";
 const TOPO_DIR = "../../packages/geodata/dist/topo";
 
 const STATIC_DIR = "_static";
-const STATIC_PREFIX = `${URL_PREFIX}/${STATIC_DIR}/`;
-const TOPO_PREFIX = `${STATIC_PREFIX}topo/`;
 
 const TOPOJSON_SCRIPT =
   '    <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>\n';
@@ -82,6 +81,10 @@ type CatalogEntry = {
 
 export function examplesPlugin(): Plugin {
   let root = "";
+  /* The URLs the examples are served under, which follow Vite's `base` (see docs-base.ts). */
+  let urlPrefix = `/${PREVIEW_DIR}`;
+  let staticPrefix = `${urlPrefix}/${STATIC_DIR}/`;
+  let topoPrefix = `${staticPrefix}topo/`;
   let highlighter: ReturnType<typeof createHighlighter> | null = null;
 
   const examplesRoot = () => path.join(root, EXAMPLES_DIR);
@@ -157,7 +160,7 @@ export function examplesPlugin(): Plugin {
     const shown = lines.slice(0, DATA_PREVIEW_LINES).join("\n");
     const html = await highlight(shown, "data.csv");
     if (lines.length <= DATA_PREVIEW_LINES) return { raw: shown, html };
-    return { raw: shown, html, lines: lines.length, url: `${URL_PREFIX}/${example.id}/data.csv` };
+    return { raw: shown, html, lines: lines.length, url: `${urlPrefix}/${example.id}/data.csv` };
   }
 
   /** What a page needs to put an example on screen, and nothing more. */
@@ -168,7 +171,7 @@ export function examplesPlugin(): Plugin {
       const meta = {
         id: example.id,
         title: example.meta.title,
-        url: `${URL_PREFIX}/${example.id}/`,
+        url: `${urlPrefix}/${example.id}/`,
         views: ["ts", "js", ...(example.data === null ? [] : ["csv"])],
       };
       const specifier = JSON.stringify(`${SOURCE_PREFIX}${example.id}`);
@@ -219,6 +222,9 @@ export function examplesPlugin(): Plugin {
 
     configResolved(config) {
       root = config.root;
+      urlPrefix = `${config.base}${PREVIEW_DIR}`;
+      staticPrefix = `${urlPrefix}/${STATIC_DIR}/`;
+      topoPrefix = `${staticPrefix}topo/`;
     },
 
     resolveId(id) {
@@ -256,7 +262,7 @@ export function examplesPlugin(): Plugin {
 
       server.middlewares.use(async (req, res, next) => {
         const [rawPath] = (req.url ?? "").split("?");
-        if (!rawPath.startsWith(`${URL_PREFIX}/`)) return next();
+        if (!rawPath.startsWith(`${urlPrefix}/`)) return next();
 
         const missing = () => {
           res.statusCode = 404;
@@ -276,7 +282,7 @@ export function examplesPlugin(): Plugin {
             return missing(); // malformed percent-encoding
           }
 
-          const asset = ASSET_FILES.find((file) => url === `${URL_PREFIX}/_assets/${file}`);
+          const asset = ASSET_FILES.find((file) => url === `${urlPrefix}/_assets/${file}`);
           if (asset) {
             const file = path.join(root, LIB_DIR, asset);
             const body = await fs.readFile(file).catch(() => null);
@@ -290,8 +296,8 @@ export function examplesPlugin(): Plugin {
             return;
           }
 
-          if (url.startsWith(TOPO_PREFIX)) {
-            const name = url.slice(TOPO_PREFIX.length);
+          if (url.startsWith(topoPrefix)) {
+            const name = url.slice(topoPrefix.length);
             if (!/^[\w-]+\.json$/.test(name)) return missing();
             const body = await fs.readFile(path.join(root, TOPO_DIR, name)).catch(() => null);
             if (!body) return missing();
@@ -299,8 +305,8 @@ export function examplesPlugin(): Plugin {
             return;
           }
 
-          if (url.startsWith(STATIC_PREFIX)) {
-            const name = url.slice(STATIC_PREFIX.length);
+          if (url.startsWith(staticPrefix)) {
+            const name = url.slice(staticPrefix.length);
             const type = RUNTIME_TYPES.get(path.extname(name).toLowerCase());
             if (type === undefined || !/^[\w.-]+$/.test(name)) return missing();
             const body = await fs
@@ -314,11 +320,11 @@ export function examplesPlugin(): Plugin {
           const examples = await readExamplesCached();
           const match = examples.find(
             (example) =>
-              url === `${URL_PREFIX}/${example.id}/` || url === `${URL_PREFIX}/${example.id}`,
+              url === `${urlPrefix}/${example.id}/` || url === `${urlPrefix}/${example.id}`,
           );
           if (match) {
             const template = await fs.readFile(path.join(examplesRoot(), "_template.html"), "utf8");
-            send("text/html", await renderPage(match, `${URL_PREFIX}/_assets`, template));
+            send("text/html", await renderPage(match, `${urlPrefix}/_assets`, template));
             return;
           }
 
@@ -326,7 +332,7 @@ export function examplesPlugin(): Plugin {
           if (type === undefined || path.basename(url) === META_FILE) return missing();
 
           const base = examplesRoot();
-          const file = path.resolve(base, `.${url.slice(URL_PREFIX.length)}`);
+          const file = path.resolve(base, `.${url.slice(urlPrefix.length)}`);
           if (file !== base && !file.startsWith(base + path.sep)) return missing();
 
           const body = await fs.readFile(file).catch(() => null);
@@ -352,13 +358,13 @@ export function examplesPlugin(): Plugin {
               "so build it first (`pnpm --filter sszvis run build`).",
           );
         }
-        this.emitFile({ type: "asset", fileName: `preview/_assets/${asset}`, source });
+        this.emitFile({ type: "asset", fileName: `${PREVIEW_DIR}/_assets/${asset}`, source });
       }
 
       for (const file of await siblingFiles(path.join(examplesRoot(), STATIC_DIR))) {
         this.emitFile({
           type: "asset",
-          fileName: `preview/${STATIC_DIR}/${path.basename(file)}`,
+          fileName: `${PREVIEW_DIR}/${STATIC_DIR}/${path.basename(file)}`,
           source: await fs.readFile(file),
         });
       }
@@ -377,7 +383,7 @@ export function examplesPlugin(): Plugin {
         if (!name.endsWith(".json")) continue;
         this.emitFile({
           type: "asset",
-          fileName: `preview/_static/topo/${name}`,
+          fileName: `${PREVIEW_DIR}/_static/topo/${name}`,
           source: await fs.readFile(path.join(root, TOPO_DIR, name)),
         });
       }
@@ -385,13 +391,13 @@ export function examplesPlugin(): Plugin {
       for (const example of examples) {
         this.emitFile({
           type: "asset",
-          fileName: `preview/${example.id}/index.html`,
-          source: await renderPage(example, `${URL_PREFIX}/_assets`, template),
+          fileName: `${PREVIEW_DIR}/${example.id}/index.html`,
+          source: await renderPage(example, `${urlPrefix}/_assets`, template),
         });
         for (const file of await siblingFiles(example.dir)) {
           this.emitFile({
             type: "asset",
-            fileName: `preview/${example.id}/${path.basename(file)}`,
+            fileName: `${PREVIEW_DIR}/${example.id}/${path.basename(file)}`,
             source: await fs.readFile(file),
           });
         }

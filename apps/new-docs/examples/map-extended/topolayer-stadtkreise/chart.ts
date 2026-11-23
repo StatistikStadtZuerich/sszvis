@@ -78,7 +78,7 @@ sszvis.app<State, Actions>({
   fallback: { element: config.id, src: config.fallback },
 
   init: (state) =>
-    d3.json<Topology>("/preview/_static/topo/stadt-zurich.json").then((topo) => {
+    d3.json<Topology>("../../_static/topo/stadt-zurich.json").then((topo) => {
       if (topo === undefined) {
         throw new Error("The city topology could not be loaded");
       }

@@ -19,7 +19,7 @@ const VALUE_PROXIMITY_THRESHOLD = 800;
 const MAP_TOP_PADDING = 30;
 /** Extra height in px above the line chart's ruler handle that still reacts to the pointer. */
 const HANDLE_TOUCH_PADDING = 30;
-const TOPO_URL = "/preview/_static/topo/stadt-zurich.json";
+const TOPO_URL = "../../_static/topo/stadt-zurich.json";
 
 // Types
 

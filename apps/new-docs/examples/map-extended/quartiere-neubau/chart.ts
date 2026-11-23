@@ -74,7 +74,7 @@ sszvis.app<State, Actions>({
         // that the development is drawn without a colour rather than as the oldest one.
         year: parseYear(d["bezugsjahr"]),
       })),
-      d3.json<Topology>("/preview/_static/topo/stadt-zurich.json"),
+      d3.json<Topology>("../../_static/topo/stadt-zurich.json"),
       d3.json<ReturnType<typeof topojson.feature>>("neubausiedlungen.json"),
     ]).then(([data, topo, developments]) => {
       if (topo === undefined || developments === undefined) {

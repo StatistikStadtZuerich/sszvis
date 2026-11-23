@@ -1,6 +1,7 @@
 # Shared example assets
 
-Files more than one example loads, served at `/preview/_static/`. An asset only
+Files more than one example loads, served at `preview/_static/` under the site base, and loaded from an example
+as `../../_static/`. An asset only
 one example uses belongs in that example's folder instead.
 
 - `fallback.png` — the image sszvis shows in place of a chart on a browser it
