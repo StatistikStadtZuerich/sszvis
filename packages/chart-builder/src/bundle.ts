@@ -1,7 +1,6 @@
 import { BUNDLE } from "./host";
 import { utf8, type ZipEntry } from "./zip";
 
-/** What the bundle carries besides its source: bytes fetched from wherever the app serves them. */
 export type Binary = { readonly url: string; readonly name: string };
 
 /**

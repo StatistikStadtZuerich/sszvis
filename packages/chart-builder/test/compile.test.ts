@@ -38,7 +38,6 @@ const tip = (header: string, body: readonly string[] = []): Tooltip => ({
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
-/* Checked by `generated.tsconfig.json`, against `globals.d.ts` and sszvis' published types. */
 const outDir = path.join(here, "_generated");
 
 const emit = async (recipe: Recipe, spec: Omit<Spec, "features">, features: readonly string[]) => {

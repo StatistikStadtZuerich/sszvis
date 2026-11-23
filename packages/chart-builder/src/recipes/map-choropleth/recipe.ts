@@ -103,7 +103,6 @@ const DEFAULT_GEOGRAPHY = GEOGRAPHIES[0];
 const geographyFor = (value: string): Geography =>
   GEOGRAPHIES.find((candidate) => candidate.value === value) ?? DEFAULT_GEOGRAPHY;
 
-/** What the topology is called in the exported bundle, beside the data. */
 const TOPO_PATH = "topo.json";
 
 export const mapChoropleth: RecipeDef = {

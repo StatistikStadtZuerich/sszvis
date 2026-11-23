@@ -9,11 +9,7 @@ const manifest: { readonly exports: Readonly<Record<string, string>> } = JSON.pa
   fs.readFileSync(path.join(root, "package.json"), "utf8"),
 );
 
-/*
- * The exports map is the package's public surface, written out by hand. A module renamed
- * or moved under it would leave an entry that resolves to nothing, which no test inside
- * the package imports through, so only an app would find out.
- */
+/* Nothing in the package imports through its exports map, so a stale entry would only surface in an app. */
 test.each(Object.entries(manifest.exports))("should point %s at a file", (_subpath, target) => {
   expect(fs.existsSync(path.join(root, target)), target).toBe(true);
 });

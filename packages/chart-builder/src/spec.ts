@@ -223,10 +223,8 @@ const AnnotationAxis = Schema.Struct({
 export type AnnotationAxis = typeof AnnotationAxis.Type;
 
 /**
- * A second file the chart loads, read from `config[key]`. The bundle carries it as
- * `path`, beside the data. `file` names one of `@sszvis/geodata`'s TopoJSON bundles
- * rather than a URL: where those are served is the host app's to say, so a recipe
- * cannot point at one app's routes.
+ * Read from `config[key]` and shipped as `path`. `file` names a `@sszvis/geodata` TopoJSON
+ * bundle, not a URL: where those are served is the host app's to say.
  */
 export const Asset = Schema.Struct({
   key: Schema.String,

@@ -23,7 +23,7 @@ import {
   type Spec,
 } from "../src/spec";
 
-/* Where vitest.browser.config.ts serves `@sszvis/geodata`'s built topologies. */
+/* Must match `TOPO_PREFIX` in vitest.browser.config.ts. */
 const TOPO = "/topo/";
 
 /*

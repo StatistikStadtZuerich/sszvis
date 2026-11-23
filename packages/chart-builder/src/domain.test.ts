@@ -800,7 +800,7 @@ describe("host", () => {
       assets: [{ key: "topology", path: "topo.json", file: "anywhere.json" }],
     });
     expect(page).toContain('topology: "topo.json"');
-    /* The file is where the builder read the bytes. Shipping it would point the export at the app. */
+    /* `file` is where the app serves the bytes; the export must not reference it. */
     expect(page).not.toContain("anywhere.json");
   });
 
@@ -817,7 +817,6 @@ describe("host", () => {
 
   test("should link the published releases unless a CDN is given", () => {
     expect(host({ title: "Title" })).toContain(`src="${CDN.sszvis}"`);
-    /* A preview draws with the workspace's own build; the export must run anywhere. */
     const page = host({ title: "Title", cdn: { sszvis: "/local/sszvis.js" } });
     expect(page).toContain('src="/local/sszvis.js"');
     expect(page).not.toContain(CDN.sszvis);
@@ -840,7 +839,6 @@ describe("host", () => {
   });
 
   test("should write the chart into the page when it is given inline", () => {
-    /* A srcdoc frame has no folder for chart.js to sit in. */
     const page = host({ title: "Title", inline: "drawChart();" });
     expect(page).toContain("drawChart();");
     expect(page).not.toContain(`src="${BUNDLE.chart}"`);
@@ -849,7 +847,6 @@ describe("host", () => {
   });
 
   test("should place extra markup ahead of every script", () => {
-    /* A preview's error reporter has to be listening before anything can throw. */
     const page = host({ title: "Title", before: "<script>listen();</script>\n" });
     expect(page.indexOf("listen();")).toBeLessThan(page.indexOf(CDN.d3));
   });

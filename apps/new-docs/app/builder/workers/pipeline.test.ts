@@ -13,8 +13,7 @@ describe("highlighting", () => {
     const generated = await generate(entry, { ...initialSpec(summarize(entry)), features: [] });
     for (const key of ["ts", "js", "html", "csv"] as const) {
       const { raw, html } = generated[key];
-      /* `defaultColor: false`: a variable per theme, no inline colour to fight the page's.
-         The variables are the decision; the wrapper's class list is shiki's to spell. */
+      /* Per-theme variables, not inline colours, are the contract; shiki's class names are not. */
       expect(html, key).toContain("--shiki-light:");
       expect(html, key).toContain("--shiki-dark:");
       expect(raw.length, key).toBeGreaterThan(0);

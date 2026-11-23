@@ -38,7 +38,6 @@ const read = (base: string): { path: string; source: string } | undefined => {
   return undefined;
 };
 
-/* The builder's own package is source in this workspace, so the walk carries on into it. */
 const BUILDER = "@sszvis/chart-builder";
 const BUILDER_SRC = resolve(APP, "../../../packages/chart-builder/src");
 
@@ -84,7 +83,6 @@ test("should reach no parser when walking the module graph from page.tsx", () =>
      A check against the real built bundle would be truer still, but costs a build. */
   const reached = [...graph.keys()].map((path) => path.replaceAll("\\", "/"));
   expect(reached.some((path) => path.endsWith("/app/components/ui/button.tsx"))).toBe(true);
-  /* And if the package stops resolving, the walk stops at its name and finds nothing there. */
   expect(reached.some((path) => path.endsWith("/packages/chart-builder/src/spec.ts"))).toBe(true);
 });
 

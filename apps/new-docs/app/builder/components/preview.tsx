@@ -8,7 +8,7 @@ import { host } from "@sszvis/chart-builder/host";
 import type { Asset } from "@sszvis/chart-builder/spec";
 import { Notice } from "./notice";
 
-/* The workspace's own build of sszvis, so the preview draws with the library as it is in this repo. */
+/* The workspace's build of sszvis, not the published release. */
 const ASSETS = `${import.meta.env.BASE_URL}preview/_assets`;
 const FALLBACK = `${import.meta.env.BASE_URL}preview/_static/fallback.png`;
 
@@ -117,12 +117,7 @@ export const Preview = ({
   const [height, setHeight] = useState(RESERVED_HEIGHT);
   const frameRef = useRef<HTMLIFrameElement>(null);
 
-  /*
-   * The same page the export ships, with what a frame cannot reach swapped out: the
-   * chart inline rather than beside it, and the data as a URL. The bundle puts the other
-   * files beside the chart; here the app already serves them, and the frame has no base
-   * URL of its own to resolve a relative path against.
-   */
+  /* A srcdoc frame has no base URL, so the chart is inlined and every file is an absolute or data URL. */
   const srcDoc =
     status.kind === "ready" && js !== ""
       ? host({
