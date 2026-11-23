@@ -1,4 +1,4 @@
-import { CallToolResultSchema, ReadResourceResultSchema } from "@modelcontextprotocol/core";
+import { CallToolResultSchema } from "@modelcontextprotocol/core";
 import { AppBridge, PostMessageTransport } from "@modelcontextprotocol/ext-apps/app-bridge";
 import { Effect, Exit, Scope } from "effect";
 import { McpProtocol, McpTest } from "effect/ai";
@@ -128,8 +128,13 @@ async function host(args: Record<string, unknown>, options: HostOptions = {}) {
     if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
     return CallToolResultSchema.parse(wire(await Effect.runPromise(client.callTool(params))));
   };
-  bridge.onreadresource = async (params) =>
-    ReadResourceResultSchema.parse(wire(await Effect.runPromise(client.readResource(params))));
+  /*
+   * As a real host did: it refused the app's resources/read outside its own widget, so the
+   * map has to get its topology some other way.
+   */
+  bridge.onreadresource = async ({ uri }) => {
+    throw new Error(`MCP app cannot read resource outside its widget scope: ${uri}`);
+  };
   const rendered = CallToolResultSchema.parse(
     wire(await Effect.runPromise(client.callTool({ name: "render_chart", arguments: args }))),
   );
@@ -209,7 +214,7 @@ describe("the chart app in a host", () => {
     ).toBe("");
   });
 
-  test("should draw a map from the topology it reads as a resource", async () => {
+  test("should draw a map though the host refuses its resources/read", async () => {
     const view = await host({ recipe: "map-choropleth" });
 
     const areas = await settle(

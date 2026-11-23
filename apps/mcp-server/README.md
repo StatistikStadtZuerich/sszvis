@@ -17,13 +17,14 @@ Test it in MCP Jam's **Strict** CSP mode: its default allows every origin and hi
 
 ## What it serves
 
-| Name                | Kind     | For                                                                                      |
-| ------------------- | -------- | ---------------------------------------------------------------------------------------- |
-| `list_recipes`      | tool     | the model: each chart type's roles, options and features, and the sample tables          |
-| `render_chart`      | tool     | the model: draws a chart in `ui://sszvis/chart`; returns the spec, not the code          |
-| `update_chart`      | tool     | the app only: generates the code for a spec, or switches its recipe                      |
-| `ui://sszvis/chart` | resource | the app page, one for every recipe                                                       |
-| `sszvis://topo/*`   | resource | the `@sszvis/geodata` TopoJSON bundles, which a map's app reads instead of fetching them |
+| Name                | Kind     | For                                                                                |
+| ------------------- | -------- | ---------------------------------------------------------------------------------- |
+| `list_recipes`      | tool     | the model: each chart type's roles, options and features, and the sample tables    |
+| `render_chart`      | tool     | the model: draws a chart in `ui://sszvis/chart`; returns the spec, not the code    |
+| `update_chart`      | tool     | the app only: generates the code for a spec, or switches its recipe                |
+| `ui://sszvis/chart` | resource | the app page, one for every recipe                                                 |
+| `read_topology`     | tool     | the app only: a map's TopoJSON, since a host may refuse the app's `resources/read` |
+| `sszvis://topo/*`   | resource | the same `@sszvis/geodata` TopoJSON bundles, for clients that read resources       |
 
 `render_chart` takes a small input (`recipe`, `csv` or `sample`, and optional `fields`, `options`, `features`) and fills in the rest of chart-builder's `Spec`. Input that names something the recipe or the table does not have comes back as a tool error listing what would be valid, so the model can correct it.
 

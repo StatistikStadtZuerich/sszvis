@@ -26,6 +26,7 @@ import {
 } from "@sszvis/chart-builder/spec";
 
 import { appOnly, renderedBy } from "./mcpApp.ts";
+import { TOPOLOGIES, topologyFiles } from "./topology.ts";
 
 export const CHART_APP_URI = "ui://sszvis/chart";
 
@@ -354,9 +355,30 @@ const DescribeRecipes = Tool.make("describe_recipes", {
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Meta, appOnly);
 
+// read_topology --------------------------------------------------------------
+
+/*
+ * A map's TopoJSON, for the chart app. It is also a resource, but a host may refuse an
+ * app's resources/read outside its own widget, and every host lets the app call a tool.
+ */
+const ReadTopology = Tool.make("read_topology", {
+  description: "The TopoJSON bundle a map recipe draws, by the file name update_chart gives.",
+  parameters: Schema.Struct({ file: Schema.Literals(topologyFiles) }),
+  success: Schema.Struct({ file: Schema.String, json: Schema.String }),
+})
+  .annotate(Tool.Title, "Read a topology")
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Meta, appOnly);
+
 // The toolkit ----------------------------------------------------------------
 
-const ChartToolkit = Toolkit.make(ListRecipes, RenderChart, UpdateChart, DescribeRecipes);
+const ChartToolkit = Toolkit.make(
+  ListRecipes,
+  RenderChart,
+  UpdateChart,
+  DescribeRecipes,
+  ReadTopology,
+);
 
 const handlers = Effect.gen(function* () {
   const generate = yield* makeGenerate;
@@ -369,6 +391,7 @@ const handlers = Effect.gen(function* () {
   return ChartToolkit.of({
     list_recipes: listRecipes,
     describe_recipes: () => Effect.succeed({ recipes: summaries }),
+    read_topology: ({ file }) => Effect.succeed({ file, json: TOPOLOGIES[file] }),
     render_chart: Effect.fnUntraced(function* (params) {
       const spec = yield* specFrom(params);
       /* Generated and thrown away, so a spec the app cannot draw fails here, to the model. */
