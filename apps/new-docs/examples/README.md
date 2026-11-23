@@ -43,19 +43,12 @@ into a page that loads `sszvis.min.js` from a script tag.
 
 They are still TypeScript. `globals.d.ts` declares those three globals, so
 `tsc` checks the example against the library's own types without changing how
-the code is written:
+the code is written. The app's `type-check` script runs that check over
+`examples/tsconfig.json` alongside its own:
 
 ```bash
-pnpm --filter @sszvis/new-docs run type-check:examples
+pnpm --filter @sszvis/new-docs run type-check
 ```
-
-That check is deliberately **not** part of `pnpm type-check`. Checking a
-typical example currently reports around fifteen errors that are in the
-library's published types rather than in the example — `responsiveProps()`
-returning `unknown` for every prop, `measureDimensions()` not being assignable
-to the `Measurement` that `queryProps()` takes, and so on. Fixing those is a
-separate piece of work on `packages/sszvis`; the examples are the test suite
-for it.
 
 ## What the build produces
 

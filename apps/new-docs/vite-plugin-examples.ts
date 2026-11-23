@@ -176,6 +176,12 @@ export function examplesPlugin(): Plugin {
       return `  ${JSON.stringify(example.id)}: { ...${JSON.stringify(meta)}, load: () => import(${specifier}) },`;
     });
     const catalog = await readCatalogCached();
+    const known = new Set(examples.map((example) => example.id));
+    const missing = catalog.filter((entry) => !known.has(entry.id));
+    if (missing.length > 0) {
+      const list = missing.map((entry) => `${entry.id} (on ${entry.page})`).join(", ");
+      throw new Error(`<Example> names an example with no examples/<id>/ folder: ${list}`);
+    }
     return [
       "export const examples = {",
       ...entries,

@@ -1,26 +1,50 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { expect, test } from "vitest";
 
 import { contentPages } from "../content-pages";
 import { CHANGELOG_URL, LEGACY_PATHS } from "./legacy-paths";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-
-const catalog = fs.readFileSync(path.join(here, "../../../docs/docs/index.html"), "utf8");
-const oldSlugs = [...catalog.matchAll(/\{\s*path:\s*"([^"]+)",\s*title:\s*"[^"]*",\s*src:/g)]
-  .map((match) => match[1])
-  .filter((slug) => slug !== "/");
+/** Every page of the previous Catalog site, as its `#/<slug>` URL named it. */
+const OLD_SLUGS = [
+  "getting-started",
+  "faq",
+  "changelog",
+  "accessibility",
+  "annotations",
+  "axes",
+  "behaviors",
+  "breakpoints",
+  "colors",
+  "controls",
+  "formats",
+  "legends",
+  "tooltips",
+  "small-multiples",
+  "area-chart-stacked",
+  "bar-chart-vertical",
+  "bar-chart-vertical-stacked",
+  "bar-chart-vertical-nested",
+  "bar-chart-vertical-grouped",
+  "bar-chart-horizontal",
+  "bar-chart-horizontal-stacked",
+  "bar-chart-horizontal-grouped",
+  "line-charts",
+  "heat-table",
+  "pack",
+  "sunburst",
+  "treemap",
+  "map-standard",
+  "map-extended",
+  "map-signature",
+  "pie-charts",
+  "population-pyramid",
+  "sankey",
+  "scatterplot",
+  "scatterplot-over-time",
+];
 
 const routes = new Set(contentPages.map((page) => page.routePath));
 
-test("should read the previous site's page list", () => {
-  expect(oldSlugs.length).toBeGreaterThan(30);
-});
-
-test.each(oldSlugs)("should send #/%s to a page that exists", (slug) => {
+test.each(OLD_SLUGS)("should send #/%s to a page that exists", (slug) => {
   const target = LEGACY_PATHS[slug] ?? slug;
   expect(target === CHANGELOG_URL || routes.has(target), `${slug} -> ${target}`).toBe(true);
 });

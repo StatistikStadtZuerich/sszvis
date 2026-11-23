@@ -43,7 +43,7 @@ export const typefaceLead = (className?: string) =>
 
 /**
  * Small supporting text set beside something else: a caption under an example,
- * a toolbar readout, a loading or "not ported yet" note. One step below body
+ * a toolbar readout, a loading note. One step below body
  * and a little heavier, so it reads as annotation rather than as prose that
  * happens to be small.
  */

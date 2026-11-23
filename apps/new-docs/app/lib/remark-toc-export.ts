@@ -10,13 +10,13 @@ export interface TOCItem {
   depth: number;
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: remark plugins operate on untyped AST nodes
+// any: remark plugins operate on untyped AST nodes
 const remarkTocExport: () => (tree: any) => void = () => {
-  // biome-ignore lint/suspicious/noExplicitAny: remark plugins operate on untyped AST nodes
+  // any: remark plugins operate on untyped AST nodes
   return (tree: any) => {
     const headings: TOCItem[] = [];
 
-    // biome-ignore lint/suspicious/noExplicitAny: unist visitor callback uses untyped nodes
+    // any: unist visitor callback uses untyped nodes
     visit(tree, "heading", (node: any) => {
       if (node.depth >= 2 && node.depth <= 4) {
         const value = toString(node);
