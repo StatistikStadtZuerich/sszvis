@@ -15,15 +15,16 @@ library.
 
 ## Contents
 
-| Path                         | Package                    | What it is                                             |
-| ---------------------------- | -------------------------- | ------------------------------------------------------ |
-| `packages/sszvis`            | `sszvis` (published)       | The library. TypeScript source, bundled with Rollup.   |
-| `packages/geodata`           | `@sszvis/geodata`          | Swiss geographic sources + the TopoJSON pipeline.      |
-| `packages/config-typescript` | `@repo/config-typescript`  | Shared `tsconfig` bases.                               |
-| `apps/docs`                  | `@sszvis/docs`             | The 11ty documentation site, deployed to GitHub Pages. |
-| `apps/project-specimen`      | `@sszvis/project-specimen` | Catalog widget the docs homepage embeds.               |
-| `scripts`                    | —                          | Visual-regression harness.                             |
-| `contrib`                    | —                          | Example projects and experiments.                      |
+| Path                         | Package                   | What it is                                                    |
+| ---------------------------- | ------------------------- | ------------------------------------------------------------- |
+| `packages/sszvis`            | `sszvis` (published)      | The library. TypeScript source, bundled with Rollup.          |
+| `packages/geodata`           | `@sszvis/geodata`         | Swiss geographic sources + the TopoJSON pipeline.             |
+| `packages/chart-builder`     | `@sszvis/chart-builder`   | The chart builder's recipes, templates and code generation.   |
+| `packages/config-typescript` | `@repo/config-typescript` | Shared `tsconfig` bases.                                      |
+| `apps/docs`                  | `@sszvis/docs`            | The documentation site (React Router + MDX), on GitHub Pages. |
+| `apps/regression-cli`        | `@sszvis/regression-cli`  | Consumer visual-regression harness against production charts. |
+| `apps/mcp-server`            | `@sszvis/mcp-server`      | Prototype MCP server for the chart builder.                   |
+| `contrib`                    | —                         | Example projects and experiments.                             |
 
 > **Note on READMEs.** `packages/sszvis/README.md` is what npm shows for the published
 > package — it must stand on its own, with absolute links, and must not describe the
@@ -70,7 +71,7 @@ Root commands fan out across workspaces; `--filter` targets one.
 | Rebuild the topo data | `pnpm run build:topo`                                             |
 | Unit tests            | `pnpm run test`                                                   |
 | Single test file      | `pnpm --filter sszvis exec vitest run test/component/bar.test.ts` |
-| Visual regression     | `pnpm run test:snapshot` (starts the docs server itself)          |
+| Visual regression     | `pnpm run test:snapshot` (serves the built docs itself)           |
 | Type check            | `pnpm run type-check`                                             |
 | Lint + format check   | `pnpm run check`                                                  |
 | Autofix               | `pnpm run lint:fix && pnpm run format`                            |
@@ -83,37 +84,33 @@ Playwright/Chromium), which is why `playwright install` is a one-time requiremen
 not the repository root.
 
 Build outputs are disjoint: the library writes to `packages/sszvis/build`, the
-TopoJSON bundles to `packages/geodata/dist`, and the docs site to `apps/docs/dist`.
-The docs site copies `sszvis.js`, `sszvis.css` and the topo bundles in from those
-builds.
+TopoJSON bundles to `packages/geodata/dist`, and the docs site to
+`apps/docs/build/client`. The docs build copies `sszvis.js`, `sszvis.css` and the topo
+bundles into each example page from those builds.
 
 `sszvis.css` is part of the library — consumers need it — so it lives at
 `packages/sszvis/src/sszvis.css`, and rollup emits it into `build/` as an asset (the
 `emitStylesheet` plugin in `rollup.config.mjs`, which also registers it as a watched
-file). It sat in `apps/docs/docs/` until the monorepo split and only reached npm
-because the docs used to build into the library's `build/` directory.
+file). It sat in the previous docs site's source until the monorepo split and only
+reached npm because the docs used to build into the library's `build/` directory.
 
 ## Documentation
 
-The site is built with [11ty](https://www.11ty.dev/) from `apps/docs`. Each chart type
-is a directory under `apps/docs/docs/` with a `README.md` and runnable `.html`/`.js`
-examples; [Catalog](https://www.catalog.style/) is the client-side shell that renders
-the index and the source viewers. Adding an example means adding files there — the
-snapshot suite picks them up automatically.
+The site in `apps/docs` is a [React Router](https://reactrouter.com) app whose pages
+are MDX under `apps/docs/app/content`, registered in `app/content-pages.ts`. Each
+example is a folder `apps/docs/examples/<chart>/<name>/` holding `chart.ts`,
+`example.json` and its data; the build turns it into a standalone page at
+`/preview/<chart>/<name>/`, which the docs embed and the snapshot suite screenshots.
+See [`apps/docs/examples/README.md`](apps/docs/examples/README.md).
 
 ## Releasing
 
-Versioning happens in `packages/sszvis`, never at the root, and pushing the tag
-triggers the npm publish workflow.
-
-```sh
-pnpm --filter sszvis exec npm --no-git-tag-version version minor
-git tag v$(node -p "require('./packages/sszvis/package.json').version")
-git push --follow-tags
-```
-
+Releases are driven by [Changesets](https://github.com/changesets/changesets): every
+pull request that changes the library carries a changeset (`pnpm changeset`), a
+"chore: version packages" pull request accumulates them, and merging it publishes
+`sszvis` to npm from CI. The version and changelog are never edited by hand, and
 `pnpm version` at the root is deliberately wired to fail. See the Releasing section of
-[`AGENTS.md`](AGENTS.md) for the full sequence and the reasoning.
+[`AGENTS.md`](AGENTS.md) for the full sequence.
 
 ## License
 

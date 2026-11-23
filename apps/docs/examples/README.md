@@ -28,9 +28,11 @@ not exist.
 
 1. Create `examples/<chart-type>/<name>/` with `chart.ts` and `example.json`,
    plus any data the chart loads.
-2. Reference it from a page: `<Example id="<chart-type>/<name>" />`. Until the
-   folder exists that renders a placeholder naming the folder it wants, so a
-   page can be written before its example is ported.
+2. Reference it from a page: `<Example id="<chart-type>/<name>" />`. A page
+   that names an id with no folder fails the build, naming the id and the page.
+3. Add its snapshot baselines: the Playwright suite in `packages/sszvis`
+   screenshots every example and fails one that has none. See "Testing" in the
+   repository's `AGENTS.md` for how to generate them.
 
 No registration step: `vite-plugin-examples.ts` discovers folders, and the dev
 server picks up a new one without a restart.
