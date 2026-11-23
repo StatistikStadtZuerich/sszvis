@@ -135,6 +135,9 @@ sszvis.app<State, Actions>({
       .scale(xScale)
       .orient("bottom")
       .contour(true)
+      // NOTE: d3's default tick count. sszvis axes default to fewer (3), which
+      // leaves this axis with a tick or two.
+      .ticks(10)
       .tickFormat((d) => {
         const value = Number(d);
         return value < X_TICK_PRECISION_THRESHOLD ? value.toPrecision(1) : String(value);
@@ -147,6 +150,9 @@ sszvis.app<State, Actions>({
       .orient("right")
       .showZeroY(true)
       .contour(true)
+      // NOTE: d3's default tick count. sszvis axes default to fewer (6), which
+      // leaves this axis with a tick or two.
+      .ticks(10)
       .title(props.yAxisLabel);
 
     const radiusLegend = sszvis

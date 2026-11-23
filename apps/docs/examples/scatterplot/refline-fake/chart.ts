@@ -136,6 +136,9 @@ sszvis.app<State, Actions>({
       .scale(xScale)
       .orient("bottom")
       .alignOuterLabels(true)
+      // NOTE: d3's default tick count. sszvis axes default to fewer (3), which
+      // leaves this axis with a tick or two.
+      .ticks(10)
       .tickFormat((d) => props.xFormat(Number(d)))
       .title(props.xAxisLabel);
 
