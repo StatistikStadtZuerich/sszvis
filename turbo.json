@@ -35,7 +35,7 @@
       "outputLogs": "new-only"
     },
     "@sszvis/new-docs#test": {
-      "dependsOn": ["sszvis#build"],
+      "dependsOn": ["sszvis#build", "@sszvis/chart-builder#type-check"],
       "outputLogs": "new-only"
     },
     "@sszvis/chart-builder#type-check": {
