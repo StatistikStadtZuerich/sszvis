@@ -82,7 +82,14 @@ afterEach(() => {
 });
 
 /** Mounts the app, hands it a render_chart call, and resolves once it has connected. */
-async function host(args: Record<string, unknown>) {
+interface HostOptions {
+  /** Send the tool result the moment the app says it is initialised, as a fast host may. */
+  readonly eager?: boolean;
+  /** Milliseconds to hold a tool call back, so an older request can finish after a newer one. */
+  readonly delay?: (name: string, args: Record<string, unknown> | undefined) => number;
+}
+
+async function host(args: Record<string, unknown>, options: HostOptions = {}) {
   const iframe = document.createElement("iframe");
   /*
    * allow-same-origin only so the test can read the frame's DOM; a real host isolates the
@@ -105,22 +112,35 @@ async function host(args: Record<string, unknown>) {
   /* As Claude does: grant the mode asked for, so the app can open its editing panels. */
   bridge.onrequestdisplaymode = async ({ mode }) => ({ mode });
   /* Through the SDK's own schemas, which also checks Effect's wire shape satisfies them. */
-  bridge.oncalltool = async (params) =>
-    CallToolResultSchema.parse(wire(await Effect.runPromise(client.callTool(params))));
+  bridge.oncalltool = async (params) => {
+    const wait = options.delay?.(params.name, params.arguments) ?? 0;
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+    return CallToolResultSchema.parse(wire(await Effect.runPromise(client.callTool(params))));
+  };
   bridge.onreadresource = async (params) =>
     ReadResourceResultSchema.parse(wire(await Effect.runPromise(client.readResource(params))));
-  const initialized = new Promise<void>((resolve) => (bridge.oninitialized = () => resolve()));
+  const result = CallToolResultSchema.parse(
+    wire(await Effect.runPromise(client.callTool({ name: "render_chart", arguments: args }))),
+  );
+  const initialized = new Promise<void>((resolve) => {
+    bridge.oninitialized = () => {
+      if (options.eager === true) {
+        void bridge.sendToolInput({ arguments: args });
+        void bridge.sendToolResult(result);
+      }
+      resolve();
+    };
+  });
 
   /* Listening before the page loads, since the app introduces itself as soon as it runs. */
   await bridge.connect(new PostMessageTransport(view, view));
   iframe.srcdoc = page;
   await initialized;
 
-  const result = CallToolResultSchema.parse(
-    wire(await Effect.runPromise(client.callTool({ name: "render_chart", arguments: args }))),
-  );
-  await bridge.sendToolInput({ arguments: args });
-  await bridge.sendToolResult(result);
+  if (options.eager !== true) {
+    await bridge.sendToolInput({ arguments: args });
+    await bridge.sendToolResult(result);
+  }
   return view;
 }
 
@@ -259,6 +279,88 @@ describe("the chart app in a host", () => {
       expect(rect.left).toBe(left);
       expect(rect.height).toBeGreaterThanOrEqual(before.height);
     }
+  });
+
+  test("should draw a result the host sends the moment the app is ready", async () => {
+    const view = await host({ recipe: "bar-chart-vertical" }, { eager: true });
+
+    expect(
+      await settle(
+        () => count(view, "rect.sszvis-bar"),
+        (n) => n === 6,
+      ),
+    ).toBe(6);
+  });
+
+  test("should show why render_chart failed rather than drawing forever", async () => {
+    const view = await host({ recipe: "line-chart", fields: { date: "Nope" } });
+
+    expect(
+      await settle(
+        () => status(view),
+        (text) => text.includes("Nope"),
+      ),
+    ).toContain('The data has no column "Nope"');
+    expect(view.document.querySelector('[role="alert"]')?.textContent).toContain("Nope");
+  });
+
+  test("should drop an older edit that finishes after a newer one", async () => {
+    /* The switch to horizontal bars is slow, and the feature edit after it is not. */
+    const view = await host(
+      { recipe: "bar-chart-vertical" },
+      {
+        delay: (name, args) =>
+          name === "update_chart" && args?.["recipe"] !== undefined ? 800 : 0,
+      },
+    );
+    await settle(
+      () => status(view),
+      (text) => text === "",
+    );
+    button(view, "Edit").click();
+    const horizontal = await settle(
+      () => findButton(view, "Horizontal bar"),
+      (found) => found !== undefined,
+    );
+    horizontal?.click();
+    /* Let the slow request go out: two clicks in one task are batched into a single request. */
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    view.document.querySelector<HTMLElement>('[role="checkbox"]')?.click();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const bars = [
+      ...view.document.querySelectorAll<SVGRectElement>("#sszvis-chart rect.sszvis-bar"),
+    ];
+    /* Still vertical: the bars share one width, where horizontal ones would share a height. */
+    expect(new Set(bars.map((bar) => bar.getAttribute("width"))).size).toBe(1);
+    expect(new Set(bars.map((bar) => bar.getAttribute("height"))).size).toBeGreaterThan(1);
+  });
+
+  test("should redraw at full width a chart edited while Code was showing", async () => {
+    const view = await host({ recipe: "bar-chart-vertical" });
+    await settle(
+      () => status(view),
+      (text) => text === "",
+    );
+    button(view, "Edit").click();
+    await settle(
+      () => view.document.querySelector('[role="checkbox"]'),
+      (found) => found !== null,
+    );
+    button(view, "Code").click();
+    view.document.querySelector<HTMLElement>('[role="checkbox"]')?.click();
+    await settle(
+      () => status(view),
+      (text) => text === "",
+    );
+    button(view, "Preview").click();
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    const widths = [...view.document.querySelectorAll("#sszvis-chart rect.sszvis-bar")].map((bar) =>
+      Number(bar.getAttribute("width")),
+    );
+    expect(widths).toHaveLength(6);
+    expect(Math.min(...widths)).toBeGreaterThan(10);
   });
 
   test("should show the generated code", async () => {
