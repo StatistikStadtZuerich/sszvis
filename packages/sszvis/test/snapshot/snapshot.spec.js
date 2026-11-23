@@ -25,6 +25,7 @@ for (const url of files.map(filepathToUrl)) {
     await removeMapImages(page);
 
     await expect(page).toHaveScreenshot(`${urlToIdentifier(url)}-0`);
+    await expectMapLayers(page, `${urlToIdentifier(url)}-0`);
 
     const buttons = await page.$$(".sszvis-control-buttonGroup__item:not(.selected)");
 
@@ -34,17 +35,51 @@ for (const url of files.map(filepathToUrl)) {
       await removeMapImages(page);
 
       await expect(page).toHaveScreenshot(`${urlToIdentifier(url)}-${idx + 1}`);
+      await expectMapLayers(page, `${urlToIdentifier(url)}-${idx + 1}`);
     }
   });
 }
 
 // -----------------------------------------------------------------------------
 
-/** Raster map tiles load over the network and would make screenshots flaky. */
+/** Removes the topographic background images that sit underneath some maps. */
 function removeMapImages(page) {
   return page.evaluate(() => {
     for (const element of document.querySelectorAll(".sszvis-map__image")) element.remove();
   });
+}
+
+/*
+ * A screenshot cannot tell whether a map layer is painting its data. The
+ * missing-value texture is a light grey hatch, and every pixel of it falls
+ * inside the comparator's per-pixel colour tolerance, so a map that textures
+ * all 34 of its districts moves the diff by about 15 pixels - less than font
+ * rendering differs between machines. Record what each map layer paints
+ * instead, as text: it is exact, and the same on every platform and browser.
+ */
+async function expectMapLayers(page, name) {
+  const layers = await page.evaluate(() =>
+    // The two renderers that paint the missing-value texture; a layer is the
+    // group a renderer joins its elements into.
+    Object.entries({ area: ".sszvis-map__area", geojson: ".sszvis-map__geojsonelement" }).flatMap(
+      ([kind, selector]) => {
+        const byLayer = new Map();
+        for (const element of document.querySelectorAll(selector)) {
+          const fills = byLayer.get(element.parentElement) ?? [];
+          fills.push(element.getAttribute("fill") ?? "");
+          byLayer.set(element.parentElement, fills);
+        }
+        return [...byLayer.values()].map((fills, i) => {
+          const textured = fills.filter((fill) => fill.startsWith("url(#missing-pattern")).length;
+          const colours = new Set(fills.filter((fill) => !fill.startsWith("url(")));
+          return `${kind} layer ${i + 1}: ${fills.length} elements, ${textured} textured, ${colours.size} distinct fills`;
+        });
+      },
+    ),
+  );
+  if (layers.length === 0) return;
+
+  expect(`${layers.join("\n")}\n`).toMatchSnapshot(`${name}.map.txt`);
 }
 
 function filepathToUrl(path) {

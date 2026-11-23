@@ -1,0 +1,2 @@
+area layer 1: 34 elements, 0 textured, 1 distinct fills
+geojson layer 1: 722 elements, 28 textured, 97 distinct fills

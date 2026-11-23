@@ -15,7 +15,8 @@ const SNAPSHOT_BASE_URL = process.env.SNAPSHOT_BASE_URL || "http://localhost:800
  */
 module.exports = defineConfig({
   testDir: "./test/snapshot",
-  snapshotPathTemplate: "./test/snapshot/__snapshot__/{arg}.png",
+  // {ext} so the map layer summaries (text) and the screenshots (PNG) keep their own extensions.
+  snapshotPathTemplate: "./test/snapshot/__snapshot__/{arg}{ext}",
   outputDir: "./test/snapshot/__results__",
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -37,7 +38,11 @@ module.exports = defineConfig({
   },
 
   expect: {
-    toHaveScreenshot: { maxDiffPixelRatio: 0.05 },
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.05,
+      // Screenshot names carry no extension, which {ext} would reject.
+      pathTemplate: "./test/snapshot/__snapshot__/{arg}.png",
+    },
   },
 
   /*
