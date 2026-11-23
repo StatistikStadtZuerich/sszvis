@@ -99,7 +99,7 @@ module.exports = defineConfig({
    * as they deploy. Without this every page fails with ERR_CONNECTION_REFUSED.
    */
   webServer: {
-    command: "pnpm --filter @sszvis/new-docs run serve",
+    command: "pnpm --filter @sszvis/docs run serve",
     url: SNAPSHOT_BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

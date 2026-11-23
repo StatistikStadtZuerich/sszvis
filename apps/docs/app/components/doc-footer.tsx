@@ -4,7 +4,7 @@ import { NavLink, navLinkVariants } from "~/components/ui/nav-link";
 import { contentPages } from "~/content-pages";
 
 const REPO_URL = "https://github.com/StatistikStadtZuerich/sszvis";
-const CONTENT_BASE = "blob/master/apps/new-docs/app/content";
+const CONTENT_BASE = "blob/master/apps/docs/app/content";
 
 /** Pages in reading order - the same order the sidebar lists them in */
 const flatNav = contentPages;

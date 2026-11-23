@@ -6,7 +6,7 @@ const RENDER_DELAY = 700;
 
 // The docs site builds every example as a standalone page at /preview/<chart>/<name>/;
 // turbo runs its build first. Kept in sync with playwright.config.js.
-const PREVIEW_DIR = "../../../../apps/new-docs/build/client/preview";
+const PREVIEW_DIR = "../../../../apps/docs/build/client/preview";
 const BASE_URL = process.env.SNAPSHOT_BASE_URL || "http://localhost:4173";
 
 // `_assets` and `_static` hold the library and shared files, not examples.

@@ -26,14 +26,14 @@ jobs:
       # The previous docs served these at its root, and its guides cite /topo/.
       - name: Keep the previous site's public files
         run: |
-          cp packages/sszvis/build/sszvis.{js,js.map,min.js,min.js.map,css} apps/new-docs/build/client/
-          cp -R packages/geodata/dist/topo apps/new-docs/build/client/topo
+          cp packages/sszvis/build/sszvis.{js,js.map,min.js,min.js.map,css} apps/docs/build/client/
+          cp -R packages/geodata/dist/topo apps/docs/build/client/topo
       # Jekyll would drop the underscore-prefixed preview/_assets and preview/_static.
       - name: Disable Jekyll
-        run: touch apps/new-docs/build/client/.nojekyll
+        run: touch apps/docs/build/client/.nojekyll
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
-          FOLDER: apps/new-docs/build/client
+          FOLDER: apps/docs/build/client

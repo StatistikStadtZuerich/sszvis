@@ -1,7 +1,7 @@
 # Anti-patterns in sszvis chart examples
 
 The reasoning behind the rules in SKILL.md. Every item was real code in
-`apps/new-docs/examples/` at some point; the corpus is clean of all of them
+`apps/docs/examples/` at some point; the corpus is clean of all of them
 today, which is the state to preserve. For how the production corpus at
 `.reference/d3charts-website` differs, read `production-corpus.md`.
 

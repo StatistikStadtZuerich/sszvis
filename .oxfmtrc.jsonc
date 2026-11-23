@@ -20,14 +20,14 @@
     "packages/geodata/src/**",
     "**/contrib/**",
     "**/.reference/**",
-    "apps/new-docs/.react-router/**",
+    "apps/docs/.react-router/**",
     // Critiques written by the impeccable design agent are a record of its review, not source.
-    "apps/new-docs/.impeccable/**",
-    "apps/new-docs/examples/_template.html",
+    "apps/docs/.impeccable/**",
+    "apps/docs/examples/_template.html",
     // Chart example datasets are generated exports, not hand-written source. The
     // per-example example.json metadata is edited by hand and stays formatted.
-    "apps/new-docs/examples/**/*.json",
-    "!apps/new-docs/examples/**/example.json",
+    "apps/docs/examples/**/*.json",
+    "!apps/docs/examples/**/example.json",
     "**/test/snapshot/__results__/**",
     "apps/regression-cli/__export__/**",
     "apps/regression-cli/__report__/**",

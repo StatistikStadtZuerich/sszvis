@@ -11,7 +11,7 @@ pnpm --filter @sszvis/mcp-server inspector   # MCP Jam; add the URL as a Streama
 | --------------------- | ----------------------- |
 | `MCP_PORT`            | `9009`                  |
 | `MCP_HOST`            | `127.0.0.1`             |
-| `MCP_ALLOWED_ORIGINS` | `http://localhost:3000` |
+| `MCP_ALLOWED_ORIGINS` | `http://localhost:8000` |
 
 Test it in MCP Jam's **Strict** CSP mode: its default allows every origin and hides the failures a real host has. Claude needs the server on a public HTTPS URL (a tunnel such as `cloudflared`) added as a custom connector; a stdio entry in Claude Desktop's config does not get app tools.
 
@@ -32,7 +32,7 @@ Test it in MCP Jam's **Strict** CSP mode: its default allows every origin and hi
 
 `ui/` is a React page built to one HTML file (`vite-plugin-singlefile`) that the server inlines. Inline it shows the chart, a Preview/Code switch and an Edit button; Edit asks the host for fullscreen and adds the docs builder's panels beside the chart - chart type, column mapping with the option menus and their swatches, and features.
 
-Those panels and the UI kit under them are copied from `apps/new-docs` (`app/components/ui/*`, `app/builder/components/{chart-type,choice-select}.tsx`, and steps 3 and 4 of `app/builder/page.tsx`) rather than shared, so the docs site and the app can drift. `ui/src/style.css` points the docs tokens at the host's CSS variables first, falling back to the docs palette, and keys dark mode off the `data-theme` the host sets. The tooltip fields, annotations, filter control and table editor stay in the docs builder.
+Those panels and the UI kit under them are copied from `apps/docs` (`app/components/ui/*`, `app/builder/components/{chart-type,choice-select}.tsx`, and steps 3 and 4 of `app/builder/page.tsx`) rather than shared, so the docs site and the app can drift. `ui/src/style.css` points the docs tokens at the host's CSS variables first, falling back to the docs palette, and keys dark mode off the `data-theme` the host sets. The tooltip fields, annotations, filter control and table editor stay in the docs builder.
 
 ## How the app runs a chart
 
