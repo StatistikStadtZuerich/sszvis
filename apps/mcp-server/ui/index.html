@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>sszvis chart</title>
+  </head>
+  <body>
+    <main>
+      <form id="controls" class="controls" hidden></form>
+      <nav class="tabs" role="tablist" hidden>
+        <button type="button" role="tab" data-view="preview" aria-selected="true">Preview</button>
+        <button type="button" role="tab" data-view="code" aria-selected="false">Code</button>
+      </nav>
+      <p id="status" class="status">Waiting for a chart…</p>
+      <section id="preview" class="card">
+        <div id="sszvis-chart"></div>
+      </section>
+      <section id="code" class="code" hidden>
+        <div class="code-bar">
+          <select id="code-file" aria-label="File">
+            <option value="ts">chart.ts</option>
+            <option value="js">chart.js</option>
+          </select>
+          <button type="button" id="copy">Copy</button>
+        </div>
+        <pre><code id="source"></code></pre>
+      </section>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

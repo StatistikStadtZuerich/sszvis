@@ -1,8 +1,8 @@
 /**
  * MCP server for the sszvis chart builder, over Streamable HTTP at `/mcp`.
  *
- * Scaffolded from stack-effect's `server-mcp` target. Tools and resources are
- * added to `McpCapabilities`; it is empty until the chart builder's tools land.
+ * Scaffolded from stack-effect's `server-mcp` target. What it serves is in
+ * `capabilities.ts`; this file is the transport.
  */
 // `NodeHttpServer.layerConfig` takes Node's own `createServer`; the rule's
 // suggested `HttpClient` is the client side and has no bearing on serving.
@@ -13,6 +13,9 @@ import { Config, Effect, Layer } from "effect";
 import { McpProtocol, McpServer } from "effect/ai";
 import { HttpRouter, HttpServer } from "effect/http";
 
+import { Capabilities } from "./capabilities.ts";
+import { EXTENSION } from "./mcpApp.ts";
+
 export const McpServerConfig = Config.all({
   port: Config.Port("MCP_PORT").pipe(Config.withDefault(9009)),
   // `host`, not `hostname`: the config is Node's own `listen` options.
@@ -21,10 +24,6 @@ export const McpServerConfig = Config.all({
     Config.withDefault("http://localhost:3000"),
   ),
 });
-
-const McpCapabilities = Layer.mergeAll(Layer.empty).pipe(
-  Layer.satisfiesServicesType<McpServer.McpServer>(),
-);
 
 const main = Effect.gen(function* () {
   const config = yield* McpServerConfig;
@@ -38,7 +37,8 @@ const main = Effect.gen(function* () {
     path: "/mcp",
     protocols: [McpProtocol.v2026_07_28, McpProtocol.v2025_11_25, McpProtocol.v2025_06_18],
     allowedOrigins,
-    registrations: McpCapabilities,
+    extensions: { [EXTENSION]: {} },
+    registrations: Capabilities,
   }).pipe(
     HttpRouter.serve,
     HttpServer.withLogAddress,

@@ -4,10 +4,15 @@
     "rootDir": ".",
     "outDir": "dist",
     "noEmit": true,
-    // Effect v4 sources import with explicit `.ts`; tsx and esbuild both resolve it.
+    // Effect v4 sources import with explicit `.ts`; vite resolves it.
     "allowImportingTsExtensions": true,
-    "types": ["node"]
+    // @sszvis/chart-builder ships TypeScript source, so it is checked under this config
+    // too; these match the vite config it is written against.
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
+    "types": ["node", "vite/client"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*", "test/**/*", "vite.config.ts", "vite.ui.config.ts"],
+  "exclude": ["node_modules", "dist", "ui", "test/**/*.browser.test.ts"]
 }

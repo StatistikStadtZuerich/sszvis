@@ -42,6 +42,10 @@
       "dependsOn": ["^type-check", "sszvis#build"],
       "outputLogs": "new-only"
     },
+    "@sszvis/mcp-server#test": {
+      "dependsOn": ["sszvis#build", "@sszvis/geodata#build"],
+      "outputLogs": "new-only"
+    },
     "@sszvis/chart-builder#test": {
       "dependsOn": ["sszvis#build", "@sszvis/geodata#build"],
       "outputLogs": "new-only"
