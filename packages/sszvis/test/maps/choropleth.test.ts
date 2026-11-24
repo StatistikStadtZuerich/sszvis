@@ -412,6 +412,30 @@ describe("maps/choropleth", () => {
       }
     });
 
+    // NOTE: this pins the outcome of a first render, not the ordering pass itself. Every layer
+    // above the lake is appended after it on a fresh group, so the order comes out right whether
+    // or not the pass runs; the toggle test above is the one that fails without it. See #389.
+    test("should draw the lake beneath the highlight and the anchored shape on the first render", () => {
+      const shape = component<AnchoredShape<Datum>>();
+      shape.prop("mergedData").prop("mapPath");
+      shape.render(function (this: Element) {
+        select(this).selectAll("circle").data([0]).join("circle");
+      });
+      const node = render(fullData, (c) => c.highlight([fullData[0]]).anchoredShape(shape));
+
+      const highlight = highlights(node)[0];
+      const shapeGroup = node.querySelector(':scope > [data-d3-selectgroup="anchoredShape"]');
+      expect(highlight).toBeDefined();
+      expect(shapeGroup).not.toBeNull();
+      for (const path of [...lake(node), ...lakePaths(node)]) {
+        for (const above of [highlight, shapeGroup]) {
+          expect(
+            path.compareDocumentPosition(above as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
+          ).toBeTruthy();
+        }
+      }
+    });
+
     // The overlay clears itself, so choropleth no longer wraps it in a group of its own: the lake's
     // paths and definitions sit directly in the map group, one level shallower than before.
     test("should draw the lake straight into the map group, with no wrapper, when rendering", () => {

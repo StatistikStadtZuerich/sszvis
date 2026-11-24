@@ -405,6 +405,7 @@ function keepLakeBeneath<G extends BaseType, D, P extends BaseType, PD>(
   if (group === null || !(group instanceof Element)) return;
   const firstAbove = group.querySelector(ABOVE_THE_LAKE);
   if (firstAbove === null) return;
+
   for (const path of group.querySelectorAll(LAKE_PATHS)) {
     if (path.compareDocumentPosition(firstAbove) & Node.DOCUMENT_POSITION_PRECEDING) {
       group.insertBefore(path, firstAbove);
@@ -485,7 +486,6 @@ export default function choropleth<T extends object = object>(): ChoroplethCompo
       // withLake off is passed on as "no lake feature", which the overlay answers by removing the
       // paths and the definitions it drew - so it needs no wrapper group of this component's own.
       selection.call(lakeRenderer);
-      keepLakeBeneath(selection);
 
       selection.call(highlightRenderer);
 
@@ -499,6 +499,9 @@ export default function choropleth<T extends object = object>(): ChoroplethCompo
       } else {
         shapeGroup.selectAll("*").remove();
       }
+
+      // Run once after every layer the lake must stay beneath has been drawn
+      keepLakeBeneath(selection);
 
       // Event Binding
 
