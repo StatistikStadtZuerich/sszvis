@@ -19,7 +19,15 @@ go. `packages/geodata/README.md` describes the pipeline, and
    pipeline does not emit features in a fixed order.
 4. Check every map page in the documentation site, and the map snapshot baselines,
    including the `*-map.txt` counts.
-5. Run the [consumer chart check](check-consumer-charts.md) over the map charts.
+5. Check the consumer map charts against the new data. The harness serves each chart's
+   map data from `.reference/d3charts-website`, so a normal sweep still renders the
+   old boundaries.
+   1. Run `pnpm run regression:crawl` and keep its report.
+   2. In the reference checkout, replace the map data files of the affected charts
+      with the rebuilt data. Keep each file's name, format and object names.
+   3. Run the crawl again, and open the maps with `pnpm run regression`. Check that
+      the data joins still match every district.
+   4. Restore the reference files with `git -C .reference/d3charts-website checkout .`.
 6. Tell the consumer that the map data changed. Each production map chart carries its
    own copy of the data, so the consumer must replace those copies. See
    [How consumers load sszvis](../explanation/how-consumers-load-sszvis.md).

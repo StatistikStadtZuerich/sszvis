@@ -15,8 +15,9 @@ from a versioned folder on the consumer's own server, so the URL pins the versio
 - `sszvis.css`, the stylesheet for controls, tooltips, axes, rulers, legends and map
   layers. A chart without it still draws, but its HTML layers lose their styling.
 - `d3.js`, one complete d3 build. sszvis reads it as the global `d3`.
-- `topojson.js`, the TopoJSON client, loaded only by map charts. sszvis reads it as
-  the global `topojson` in `src/map/mapUtils.ts`.
+- `topojson.js`, the TopoJSON client, loaded only by map charts. The chart's own
+  script uses the global `topojson` to convert its map data to GeoJSON before it
+  passes the data to sszvis. sszvis itself does not read `topojson`.
 
 A map chart also carries its own copy of the map data next to its script. Current
 charts load a TopoJSON file such as `sszvis-map-zurich-statistischequartiere.json`
@@ -31,7 +32,7 @@ The full list of files and where each comes from is in
 The consumer agrees in advance which files and dependencies it loads, and its
 security review checks them. sszvis is shaped around that agreement. Rollup bundles
 every runtime dependency (`immer`, `nano-throttle`) into `sszvis.js` and keeps only
-`d3` and `topojson` external.
+`d3` external.
 
 Three rules follow from this:
 

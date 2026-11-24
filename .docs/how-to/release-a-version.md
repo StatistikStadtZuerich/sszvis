@@ -59,8 +59,22 @@ docs site then updates, but the copy in the published npm package does not.
 3. Confirm the version at <https://www.npmjs.com/package/sszvis>, including the
    provenance badge.
 
-If `Publish` fails, nothing is tagged. Fix the cause on `master`, and the next run
-publishes the same version.
+If either job fails, first check whether npm has the version:
+
+```bash
+npm view sszvis@<version> version
+```
+
+- If npm does not have it, nothing was published or tagged. Fix the cause on
+  `master`, and the next run publishes the same version.
+- If npm has it but the `Tag` job failed, do not publish again. The workflow checks
+  for the tag, not for the npm version, so the next run tries to publish the same
+  version and npm rejects it. Create the tag and the release yourself, at the commit
+  that was published:
+
+  ```bash
+  gh release create v<version> --target <published-commit-sha> --title v<version> --generate-notes
+  ```
 
 ## Attach the bundles
 

@@ -11,9 +11,12 @@ the reasoning, see [decisions.md](../decisions.md#semver-and-backwards-compatibi
 
    ```ts
    /**
-    * @deprecated since v3.4.0 - use sszvis.layout.hierarchy.prepareHierarchyData instead
+    * @deprecated since v3.4.0 - use sszvis.prepareHierarchyData instead
     */
    ```
+
+   Check that the replacement you name exists on the `sszvis` global. Some older
+   `@deprecated` tags name paths that do not.
 
    To see the existing deprecations, run `rg '@deprecated' packages/sszvis/src`.
 

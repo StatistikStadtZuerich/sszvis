@@ -21,16 +21,19 @@ their source maps.
 
 ## Globals
 
-| Global     | Set by        | Read by                               |
-| ---------- | ------------- | ------------------------------------- |
-| `sszvis`   | `sszvis.js`   | consumer charts                       |
-| `d3`       | `d3.js`       | `sszvis.js` and consumer charts       |
-| `topojson` | `topojson.js` | `sszvis.js`, in `src/map/mapUtils.ts` |
+| Global     | Set by        | Read by                                             |
+| ---------- | ------------- | --------------------------------------------------- |
+| `sszvis`   | `sszvis.js`   | consumer charts                                     |
+| `d3`       | `d3.js`       | `sszvis.js` and consumer charts                     |
+| `topojson` | `topojson.js` | consumer map charts, to convert TopoJSON to GeoJSON |
+
+sszvis takes GeoJSON and does not read the `topojson` global.
 
 ## Bundled dependencies
 
-Rollup bundles `immer` and `nano-throttle` into `sszvis.js`. It treats `d3` and
-`topojson` as external. See `packages/sszvis/rollup.config.mjs`.
+Rollup bundles `immer` and `nano-throttle` into `sszvis.js`. It treats `d3` as
+external. `packages/sszvis/rollup.config.mjs` also lists `topojson` as external, but
+no module imports it.
 
 ## npm entry points
 
