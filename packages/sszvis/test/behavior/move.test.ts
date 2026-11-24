@@ -1,4 +1,4 @@
-import { scaleBand, scaleLinear, scalePoint } from "d3";
+import { scaleBand, scaleLinear, scalePoint, scaleTime } from "d3";
 import { afterEach, assert, beforeEach, describe, expect, expectTypeOf, test, vi } from "vitest";
 import move, { type MoveComponent, type MoveEventHandler } from "../../src/behavior/move.js";
 import { bounds } from "../../src/bounds.js";
@@ -600,10 +600,10 @@ describe("behavior/move", () => {
     describe.each(["mouse", "touch"] as const)("with an inset band range, over %s", (path) => {
       test("should report the band under the pointer without double-counting the origin", () => {
         const xBand = scaleBand<string>().domain(["A", "B", "C"]).range([90, 390]);
-        const seen = valueAt(move<string, string>().xScale(xBand).yScale(yScale), path, 10, 200);
+        const seen = valueAt(move<string, number>().xScale(xBand).yScale(yScale), path, 10, 200);
         expect(seen[0]).toBe("A");
         const seenLast = valueAt(
-          move<string, string>()
+          move<string, number>()
             .xScale(scaleBand<string>().domain(["A", "B", "C"]).range([90, 390]))
             .yScale(yScale),
           path,
@@ -620,7 +620,7 @@ describe("behavior/move", () => {
     describe.each(["mouse", "touch"] as const)("with an inset point range, over %s", (path) => {
       test("should report the point under the pointer without double-counting the origin", () => {
         const seenFirst = valueAt(
-          move<string, string>()
+          move<string, number>()
             .xScale(scalePoint<string>().domain(["A", "B", "C"]).range([90, 390]).padding(0.1))
             .yScale(yScale),
           path,
@@ -629,7 +629,7 @@ describe("behavior/move", () => {
         );
         expect(seenFirst[0]).toBe("A");
         const seenLast = valueAt(
-          move<string, string>()
+          move<string, number>()
             .xScale(scalePoint<string>().domain(["A", "B", "C"]).range([90, 390]).padding(0.1))
             .yScale(yScale),
           path,
@@ -710,6 +710,28 @@ describe("behavior/move", () => {
       expect(seen).toHaveLength(1);
       expect(seen[0][0]).toBeCloseTo(50, 10);
       expect(seen[0][1]).toBe("a");
+    });
+
+    // The handler trusts the declared domains, so a scale whose `invert` cannot produce them must
+    // be refused: a linear scale under a Date domain would hand the handler a number typed Date.
+    // `yScale` is the hoisted fixture on purpose; an inline `scaleLinear()` infers a different
+    // `Unknown` parameter and fails to assign for an unrelated reason, hiding the hole.
+    test("should accept only scales whose inverted values match the declared domain", () => {
+      // @ts-expect-error a linear scale inverts to number, not Date
+      move<number, Date>().yScale(yScale);
+      // @ts-expect-error a linear scale inverts to number, not string
+      move<number, string>().yScale(yScale);
+
+      expectTypeOf(move<number, Date>().yScale(scaleTime())).toEqualTypeOf<
+        MoveComponent<number, Date>
+      >();
+      // A union domain admits each member's scale, which is what the slider relies on.
+      expectTypeOf(move<number | Date>().xScale(xScale)).toEqualTypeOf<
+        MoveComponent<number | Date, number | string>
+      >();
+      expectTypeOf(move<number | Date>().xScale(scaleTime())).toEqualTypeOf<
+        MoveComponent<number | Date, number | string>
+      >();
     });
 
     test("should pass the end handler only the event when the pointer leaves", () => {
