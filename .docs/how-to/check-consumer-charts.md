@@ -36,8 +36,9 @@ The harness needs the consumer chart repository checked out at
    pnpm run regression:crawl --shots
    ```
 
-   It writes `__report__/report.json` and, with `--shots`, before and after images
-   under `__report__/shots/`.
+   It writes `apps/regression-cli/__report__/report.json` and, with `--shots`, before
+   and after images under `apps/regression-cli/__report__/shots/`. The next crawl
+   overwrites them, so copy the report elsewhere if you want to compare two runs.
 
 3. To look at charts side by side instead, run `pnpm run regression` and open
    <http://localhost:8100>.
@@ -48,8 +49,15 @@ Look first at the verdicts your change can cause: `new-errors`, `render-differs`
 `renders-empty`. A `matches baseline` row can still have fewer marks, so compare the
 mark counts for any change to public behavior.
 
-`shared-errors` and `renders-nothing` were broken before your change. `fixed` means
-your change removed an error.
+`renders-nothing` was broken before your change. `shared-errors` and `fixed` compare
+only the number of errors on each side, not the errors themselves. A chart whose
+baseline error your change replaces with a different error shows `shared-errors`. A
+chart that goes from two errors to one shows `fixed`, even if the one is new. For
+those verdicts, read both error logs.
+
+A choropleth's areas come from the map data, not the chart data. A choropleth that
+loses all its values therefore keeps its mark count and shows no verdict. Look at
+map charts side by side.
 
 `apps/regression-cli/README.md` lists every verdict and flag.
 

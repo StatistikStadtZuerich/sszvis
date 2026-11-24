@@ -59,6 +59,10 @@ chart draws its axes and no data. For any change to public behavior, compare the
 rendered mark counts on the consumer charts. The `renders-empty` verdict and the mark
 count in each pane of the regression harness show this.
 
+Mark counts miss one case. A choropleth draws its areas from the map data, so it
+keeps every mark when it loses all its values. For map charts, compare the renders
+side by side.
+
 ## Snapshot tolerance hides real changes
 
 The 5% pixel tolerance absorbs font differences between systems. It also absorbs

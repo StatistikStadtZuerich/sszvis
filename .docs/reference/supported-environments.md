@@ -27,7 +27,9 @@ applies to every agent.
 
 ## Environment variables
 
-Development needs no secrets. The code reads two variables.
+Development needs no secrets. All variables are optional.
+
+### Library and docs
 
 | Variable            | Default                 | Read by                                                                  | Effect                                                        |
 | ------------------- | ----------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------- |
@@ -36,3 +38,20 @@ Development needs no secrets. The code reads two variables.
 
 CI also sets `CI`, which makes Playwright retry, run one worker, and not reuse an
 existing server.
+
+### Regression harness
+
+| Variable      | Default                                       | Effect                                                                        |
+| ------------- | --------------------------------------------- | ----------------------------------------------------------------------------- |
+| `SSZVIS_REPO` | the nearest parent with `pnpm-workspace.yaml` | The repository root. Read in `apps/regression-cli/src/services/Workspace.ts`. |
+| `PORT`        | `8100`                                        | The port of `serve`, when `--port` is not given.                              |
+
+### MCP server
+
+Read in `apps/mcp-server/src/index.ts`.
+
+| Variable              | Default                 | Effect                                                                                            |
+| --------------------- | ----------------------- | ------------------------------------------------------------------------------------------------- |
+| `MCP_PORT`            | `9009`                  | The port the server listens on.                                                                   |
+| `MCP_HOST`            | `127.0.0.1`             | The host the server binds to.                                                                     |
+| `MCP_ALLOWED_ORIGINS` | `http://localhost:8000` | A comma-separated list of origins allowed to call the server. Set it when the docs run elsewhere. |
