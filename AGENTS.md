@@ -315,6 +315,16 @@ If missing, clone:
 - <https://github.com/StatistikStadtZuerich/d3charts-website>
 - <https://github.com/d3/d3>
 
+## Context and history
+
+`.docs/` holds what this file cannot, arranged by Diátaxis kind. `.docs/README.md`
+is the index. It covers why the repository is the way it is (`decisions.md`,
+`explanation/`), traps that pass every check (`pitfalls.md`), guides for releases,
+deprecations, d3 upgrades and geodata (`how-to/`), and the release bundle and
+supported environments (`reference/`). Read
+`.docs/explanation/how-consumers-load-sszvis.md` before you change dependencies,
+public behavior or tooling.
+
 ## When in doubt
 
 Ask rather than guess. Verify file paths and module names before using them.
