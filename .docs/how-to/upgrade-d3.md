@@ -8,8 +8,18 @@ of a planned major release. See
 1. Agree the target version with the consumer before you change anything.
 2. In `packages/sszvis/package.json`, raise the `d3` range in `peerDependencies` and
    the version in `devDependencies`.
-3. Run the unit tests and the snapshot suite.
-4. Check the consumer charts against the new d3. The harness loads the d3 pinned to
+3. Update every hard-coded d3 URL. The docs example pages
+   (`apps/docs/examples/_template.html`) and the charts the chart builder generates
+   (`packages/chart-builder/src/host.ts`) load d3 from unpkg, not from the package
+   dependency. Without this step, the snapshot suite still tests the old d3. To list
+   every place, including the docs pages and the package README, run:
+
+   ```bash
+   rg 'd3@' apps packages -g '!**/CHANGELOG.md'
+   ```
+
+4. Run the unit tests and the snapshot suite.
+5. Check the consumer charts against the new d3. The harness loads the d3 pinned to
    each chart's release on both sides (`apps/regression-cli/src/services/Workspace.ts`),
    so a normal [consumer chart check](check-consumer-charts.md) does not test the
    upgrade.
@@ -18,6 +28,6 @@ of a planned major release. See
       comparable versions with the agreed d3 build.
    3. Run the crawl again and compare the two reports.
    4. Restore the reference files with `git -C .reference/d3charts-website checkout .`.
-5. Write a changeset that names the required d3 version. A d3 major is an sszvis
+6. Write a changeset that names the required d3 version. A d3 major is an sszvis
    major.
-6. Update the d3 range in [supported environments](../reference/supported-environments.md).
+7. Update the d3 range in [supported environments](../reference/supported-environments.md).

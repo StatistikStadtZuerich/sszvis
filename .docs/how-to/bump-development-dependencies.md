@@ -16,7 +16,10 @@ groups, and the checks differ.
 3. Run `pnpm run check`, `pnpm run type-check` and `pnpm test`.
 4. If you bumped a tool that builds the bundle, also check the output:
    1. Build the library before and after the bump, and diff
-      `packages/sszvis/build/sszvis.js` and `packages/sszvis/build/sszvis.d.ts`.
+      `packages/sszvis/build/sszvis.js`, `packages/sszvis/build/sszvis.min.js` and
+      `packages/sszvis/build/sszvis.d.ts`. Terser runs only on `sszvis.min.js`, and
+      the snapshot pages load `sszvis.js`. So a Terser bump shows up only in the
+      `sszvis.min.js` diff.
    2. Run the snapshot suite with `pnpm run test:snapshot`.
    3. If the bundle changed in more than formatting, run the
       [consumer chart check](check-consumer-charts.md).
