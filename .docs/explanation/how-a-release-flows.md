@@ -36,6 +36,12 @@ updates the trusted publisher.
 
 ## What stays manual
 
+The changelog section that Changesets generates is a list of bullets. A maintainer
+rewrites it in the version pull request before merging, so the docs site's
+`/changelog` page and the npm package carry migration guides and examples instead.
+The `version` job rebuilds that pull request on every push to `master`, so the
+rewrite happens last.
+
 The workflow does not attach the built files to the GitHub release, and its notes are
 a raw list of pull requests. Consumers who download a version from GitHub need the
 bundles on the release page and notes written for them. A maintainer adds both after

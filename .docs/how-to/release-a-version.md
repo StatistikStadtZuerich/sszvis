@@ -8,11 +8,48 @@ at each step, read [How a release flows](../explanation/how-a-release-flows.md).
 
 1. Open the "chore: version packages" pull request. Check that its version bump
    matches what the changesets describe.
-2. If the release deserves more than the accumulated bullets, edit its section of
-   `packages/sszvis/CHANGELOG.md` in that pull request. The 3.5.0 entry is the model.
-   A patch release usually needs no edit.
+2. Edit the changelog, as the next section describes.
 3. If the release fixes a behavior that consumer charts may rely on, run the
    [consumer chart check](check-consumer-charts.md) first.
+
+## Edit the changelog
+
+The version pull request writes a new section into `packages/sszvis/CHANGELOG.md`,
+one bullet per changeset. The docs site shows that file on its `/changelog` page, and
+npm ships it with the package. So the section is what consumers read when they
+upgrade. The generated bullets are a first draft. Rewrite them before you merge.
+
+Common edits:
+
+- Add an opening paragraph that says what the release is about.
+- Add a migration guide for a breaking change. Show the old code and the new code.
+- Add a short how-to or example for a new feature.
+- Merge bullets that describe one change into one bullet.
+- Shorten bullets that are too long.
+- Add a `### Deprecated` section for each deprecated API.
+
+The 3.5.0 and 3.4.0 entries are the examples to follow. A patch release often needs
+only small edits.
+
+To make the edits:
+
+1. Check out the pull request's branch, `changeset-release/master`:
+
+   ```bash
+   gh pr checkout <number>
+   ```
+
+2. Edit only the new version's section of `packages/sszvis/CHANGELOG.md`.
+3. Commit and push to the same branch.
+4. Merge the pull request soon after.
+
+If anything merges into `master` after you edit, the `Release` workflow rebuilds
+`changeset-release/master` from the changesets and force-pushes it. Your edits are
+then lost. Keep a copy of your section until the release merges, and edit last, after
+everything else for the release has merged.
+
+You can still fix the changelog after the release with an ordinary pull request. The
+docs site then updates, but the copy in the published npm package does not.
 
 ## Publish
 
