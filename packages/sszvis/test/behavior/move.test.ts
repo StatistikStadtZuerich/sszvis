@@ -174,18 +174,23 @@ describe("behavior/move", () => {
       expect(counts(spies)).toEqual({ start: 0, move: 1, drag: 1, end: 1 });
     });
 
-    // BUG(#442): the second escape hatch, a mouseout on `document`, never ends a drag in Chromium.
-    // It is meant to catch the pointer leaving the page, and it decides that by reading
-    // `relatedTarget` and the legacy `toElement` alias - but it reads them off the *mousedown*
-    // it closed over rather than off the mouseout that fired, and Chromium reports `toElement`
-    // on a mousedown as the event's own target. The element it finds is therefore always the
-    // hit layer, never null and never HTML, so the branch is unreachable and only the window
-    // mouseup above ends a drag.
-    // current: the drag survives the mouseout and the next move is still a drag.
-    // expected: a mouseout that leaves the page ends the drag, so the next move is a plain
-    // move - the same outcome as the window mouseup above.
-    // Skipped, not deleted: it fails with "expected { start: +0, move: +0, drag: 1, end: +0 } to deeply equal { start: +0, move: 1, drag: +0, end: 1 }".
-    test.skip("should end the drag when a mouseout takes the pointer off the page", () => {
+    // Ending a drag tears down its window listener, so a later click anywhere on the page is not
+    // reported as the end of a drag that is already over.
+    test("should report one end per drag however many times the button is released afterwards", () => {
+      const spies = handlers();
+      const node = hitLayerNode();
+
+      mouseAt(node, "mousedown");
+      window.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      window.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      window.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      expect(spies.end).toHaveBeenCalledTimes(1);
+    });
+
+    // The second escape hatch is a mouseout on `document`: a pointer that leaves the page with
+    // the button still held ends the drag, the same outcome as the window mouseup above. It is
+    // decided by the mouseout's own `relatedTarget` - null, or the root element, means off-page.
+    test("should end the drag when a mouseout takes the pointer off the page", () => {
       const spies = handlers();
       const node = hitLayerNode();
 
@@ -194,6 +199,20 @@ describe("behavior/move", () => {
       document.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: null }));
       mouseAt(node, "mousemove");
       expect(counts(spies)).toEqual({ start: 0, move: 1, drag: 0, end: 1 });
+    });
+
+    // Every mouseout in the page bubbles to that same listener, so it must tell leaving the page
+    // apart from crossing into another element - the latter keeps the drag going.
+    test("should keep dragging when a mouseout takes the pointer to another element in the page", () => {
+      const spies = handlers();
+      const node = hitLayerNode();
+
+      mouseAt(node, "mousedown");
+      document.dispatchEvent(
+        new MouseEvent("mouseout", { bubbles: true, relatedTarget: document.body }),
+      );
+      mouseAt(node, "mousemove");
+      expect(counts(spies)).toEqual({ start: 0, move: 0, drag: 1, end: 0 });
     });
   });
 
